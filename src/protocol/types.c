@@ -15,8 +15,13 @@
 
 #include "umicom/protocol/types.h"
 
+/*
+ * Provide the json rpc kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_json_rpc_kind_text(UmiJsonRpcKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_JSON_RPC_REQUEST: return "request";
         case UMI_JSON_RPC_RESPONSE: return "response";
@@ -26,8 +31,13 @@ const char *umi_json_rpc_kind_text(UmiJsonRpcKind kind)
     }
 }
 
+/*
+ * Provide the protocol client state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_protocol_client_state_text(UmiProtocolClientState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_PROTOCOL_CLIENT_CREATED: return "created";
         case UMI_PROTOCOL_CLIENT_READY: return "ready";

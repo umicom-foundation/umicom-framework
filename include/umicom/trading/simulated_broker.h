@@ -28,12 +28,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the simulated broker storage data shared with callers of this public contract.
+ */
 typedef struct UmiSimulatedBrokerStorage {
     UmiTradingEnvironment environment;
     UmiOrderStore orders;
     int connected;
 } UmiSimulatedBrokerStorage;
 
+/**
+ * Initialise simulated broker from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_simulated_broker_create(UmiSimulatedBrokerStorage *storage,
                                       UmiBroker *out_broker);
 #ifdef __cplusplus

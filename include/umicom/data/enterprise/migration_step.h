@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data migration step data shared with callers of this public contract.
+ */
 typedef struct UmiDataMigrationStep {
     char step_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char description[UMI_DATA_ENTERPRISE_TEXT_CAPACITY];

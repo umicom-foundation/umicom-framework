@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/stress_suite.h"
 
-int main(void) { UmiPrudentialStressSuite s={0}; if(umi_pru_stress_suite_add(&s,"BASE")!=UMI_STATUS_OK)return 1; if(umi_pru_stress_suite_add(&s,"BASE")!=UMI_STATUS_ALREADY_EXISTS)return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialStressSuite s={0}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_stress_suite_add(&s,"BASE")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_stress_suite_add(&s,"BASE")!=UMI_STATUS_ALREADY_EXISTS)return 2; return 0; }

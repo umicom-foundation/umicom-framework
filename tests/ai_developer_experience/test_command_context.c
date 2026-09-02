@@ -16,6 +16,10 @@
 #include <assert.h>
 #include "umicom/ai_developer_experience/command_context.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiDeveloperCommandContext context;

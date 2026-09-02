@@ -16,6 +16,10 @@
 
 #include "umicom/application_shell/profiles/run_menu.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiApplicationShellProfileDefinition *profile =

@@ -18,4 +18,5 @@
  */
 #include "umicom/product/service.h"
 #include <stddef.h>
-UmiStatus umi_product_service_validate(const UmiProductService *s){if(s==NULL||s->service_id==NULL||s->service_id[0]=='\0'||s->provider==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that product service satisfies its contract before another service relies on it. */
+UmiStatus umi_product_service_validate(const UmiProductService *s){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||s->service_id==NULL||s->service_id[0]=='\0'||s->provider==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

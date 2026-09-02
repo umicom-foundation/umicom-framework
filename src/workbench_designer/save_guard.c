@@ -18,15 +18,24 @@
 #include "internal.h"
 
 
+/*
+ * Provide the workbench designer save guard evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_save_guard_evaluate(
     const UmiWorkbenchDesignerStatusModel *status,
     bool save_supported,
     bool discard_allowed,
     UmiWorkbenchDesignerSaveGuardResult *out_result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == NULL || out_result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_result, 0, sizeof(*out_result));
     out_result->can_discard = discard_allowed;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (status->save_state) {
         case UMI_WORKBENCH_DESIGNER_SAVE_CLEAN:
             out_result->decision = UMI_WORKBENCH_DESIGNER_CLOSE_ALLOWED;

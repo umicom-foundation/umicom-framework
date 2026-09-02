@@ -17,6 +17,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test desktop monitor add primary and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_desktop_monitor_add_primary(void)
 {
     UmiDesktopMonitorTopology topology;

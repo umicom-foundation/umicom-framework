@@ -20,6 +20,11 @@
 #include "umicom/ui/design/typography.h"
 
 #include <string.h>
+/*
+ * Initialise design typography from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_design_typography_init(UmiDesignTypography *spec,const char *family,double size,uint16_t weight,double line_height)
-{ UmiStatus s; if(spec==NULL||family==NULL||!umi_design_number_valid(size)||!umi_design_number_valid(line_height)||size<=0.0||line_height<1.0||weight<100U||weight>1000U)return UMI_STATUS_INVALID_ARGUMENT; memset(spec,0,sizeof *spec); s=umi_design_copy_text(spec->family,sizeof spec->family,family); if(s!=UMI_STATUS_OK)return s; spec->size=size;spec->weight=weight;spec->line_height=line_height;return UMI_STATUS_OK; }
+{ UmiStatus s; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(spec==NULL||family==NULL||!umi_design_number_valid(size)||!umi_design_number_valid(line_height)||size<=0.0||line_height<1.0||weight<100U||weight>1000U)return UMI_STATUS_INVALID_ARGUMENT; memset(spec,0,sizeof *spec); s=umi_design_copy_text(spec->family,sizeof spec->family,family); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; spec->size=size;spec->weight=weight;spec->line_height=line_height;return UMI_STATUS_OK; }
+/* Check that design typography satisfies its contract before another service relies on it. */
 int umi_design_typography_valid(const UmiDesignTypography *spec) { return spec!=NULL && spec->family[0]!='\0' && umi_design_number_valid(spec->size) && spec->size>0.0 && spec->weight>=100U && spec->weight<=1000U && umi_design_number_valid(spec->line_height) && spec->line_height>=1.0; }

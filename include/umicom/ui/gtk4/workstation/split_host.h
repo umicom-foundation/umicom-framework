@@ -19,6 +19,10 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/split_region.h"
 
+/**
+ * Initialise gtk4 ws split host from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_split_host_create(const UmiWsSplitRegion *split, UmiUiOrientation orientation, GtkWidget *first, GtkWidget *second);
 
 #endif

@@ -35,6 +35,7 @@ static UmiStatus set_string(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set integer operation used by this module and its client applications. */
 static UmiStatus set_integer(UmiUiViewModel *view,
                              const char *key,
                              int64_t number)
@@ -45,6 +46,7 @@ static UmiStatus set_integer(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set boolean operation used by this module and its client applications. */
 static UmiStatus set_boolean(UmiUiViewModel *view,
                              const char *key,
                              int enabled)
@@ -55,6 +57,7 @@ static UmiStatus set_boolean(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set action operation used by this module and its client applications. */
 static UmiStatus set_action(UmiUiViewModel *view,
                             size_t index,
                             const char *action_id,
@@ -70,6 +73,7 @@ static UmiStatus set_action(UmiUiViewModel *view,
     return umi_ui_command_view_set_action(view, index, &action);
 }
 
+/* Provide the base view operation used by this module and its client applications. */
 static UmiStatus base_view(const char *view_id,
                            const char *kind,
                            const char *title,
@@ -77,17 +81,28 @@ static UmiStatus base_view(const char *view_id,
                            UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_view == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_view = NULL;
     status = umi_ui_view_model_create(
         view_id, "umicom.authorengine-ui", UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(*out_view, "umicom.view-kind", kind);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "title", title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(*out_view, "summary", summary);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -95,6 +110,10 @@ static UmiStatus base_view(const char *view_id,
     return status;
 }
 
+/*
+ * Initialise ai ui authorengine overview view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_ai_ui_authorengine_overview_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
@@ -102,69 +121,98 @@ UmiStatus umi_ai_ui_authorengine_overview_view_create(
 {
     UmiAiAuthorEngineServiceSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "authorengine-overview", "AI Workspace",
         "AuthorEngine orchestration, governed context and conversation status.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ai_authorengine_service_snapshot(service, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "authorengine.executable", snapshot.executable);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "authorengine.workspace", snapshot.workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "authorengine.active-session", snapshot.active_session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.providers", (int64_t)snapshot.providers);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.runtimes", (int64_t)snapshot.runtimes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.healthy-runtimes",
         (int64_t)snapshot.healthy_runtimes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.context-sources",
         (int64_t)snapshot.context_sources);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.sessions", (int64_t)snapshot.sessions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.context-limit",
         (int64_t)snapshot.context_limit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "authorengine.reserved-output-tokens",
         (int64_t)snapshot.reserved_output_tokens);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "authorengine.remote-allowed", snapshot.remote_allowed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "authorengine.persistence-allowed",
         snapshot.persistence_allowed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.ai.refresh-health", "Refresh Health",
         "Probe configured AI provider and AuthorEngine runtime boundaries");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.ai.new-session", "New Session",
         "Create a governed AuthorEngine conversation session");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.ai.save-session", "Save Session",
         "Persist the active session when privacy policy permits");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 3U, "studio.action.pane.ai-runtimes", "Runtimes",
         "Open the provider and model runtime catalogue");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 4U, "studio.action.pane.ai-context", "Context",
         "Inspect sources, token budgets and sharing decisions");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 5U, "studio.action.pane.ai-sessions", "Sessions",
         "Inspect conversation session state");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 6U, "studio.action.pane.ai-privacy", "Privacy",
         "Inspect local, remote and persistence controls");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 7U, "studio.action.pane.ai-coding", "Coding Assistant",
         "Open repository-aware coding tasks and reviewed patch workflows");
     return status;
 }
 
+/*
+ * Initialise ai ui chat view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_chat_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
@@ -172,38 +220,55 @@ UmiStatus umi_ai_ui_chat_view_create(
 {
     UmiAiAuthorEngineServiceSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "ai-chat", "Assistant Chat",
         "Ask questions, continue conversations and delegate approved tasks.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_authorengine_service_snapshot(service, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "ai-chat.active-session", snapshot.active_session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-chat.session-count", (int64_t)snapshot.sessions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-chat.provider-count", (int64_t)snapshot.providers);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "ai-chat.remote-allowed", snapshot.remote_allowed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.ai.send-message", "Send",
         "Send the composed message through the selected governed runtime");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.ai.new-session", "New Chat",
         "Start a separate conversation session");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.pane.ai-model-comparison",
         "Compare Models",
         "Ask several approved models and inspect their answers side by side");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 3U, "studio.action.pane.ai-coding", "Agent Task",
         "Open repository-aware tasks and reviewed patch workflows");
     return status;
 }
 
+/*
+ * Initialise ai ui runtime catalogue view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_runtime_catalogue_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
@@ -213,21 +278,29 @@ UmiStatus umi_ai_ui_runtime_catalogue_view_create(
     size_t count;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "ai-runtimes", "AI Runtime Catalogue",
         "Local and remote models available through governed provider boundaries.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     catalogue = umi_ai_authorengine_service_catalogue(service);
     count = umi_ai_runtime_catalogue_count(catalogue);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_AI_UI_VISIBLE_ROWS) count = UMI_AI_UI_VISIBLE_ROWS;
     status = set_integer(*out_view, "ai-runtimes.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiAiRuntimeDescriptor descriptor;
         char key[96];
         char text[512];
         status = umi_ai_runtime_catalogue_at(catalogue, index, &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "ai-runtimes.row.%zu", index);
         (void)snprintf(
@@ -240,15 +313,21 @@ UmiStatus umi_ai_ui_runtime_catalogue_view_create(
             descriptor.health.available ? "healthy" : descriptor.health.message);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.ai.refresh-health", "Refresh Health",
         "Probe provider and AuthorEngine runtime health");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.pane.ai-workspace", "AI Workspace",
         "Return to the AuthorEngine overview");
     return status;
 }
 
+/*
+ * Initialise ai ui context view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_context_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
@@ -259,28 +338,39 @@ UmiStatus umi_ai_ui_context_view_create(
     size_t count;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "ai-context", "AI Context Broker",
         "Project and workspace sources governed by explicit token and privacy budgets.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ai_authorengine_service_snapshot(service, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-context.limit", (int64_t)snapshot.context_limit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-context.reserved-output",
         (int64_t)snapshot.reserved_output_tokens);
     broker = umi_ai_authorengine_service_context(service);
     count = umi_ai_context_broker_count(broker);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_AI_UI_VISIBLE_ROWS) count = UMI_AI_UI_VISIBLE_ROWS;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-context.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiAiContextSource source;
         char key[96];
         char text[512];
         status = umi_ai_context_broker_at(broker, index, &source);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "ai-context.row.%zu", index);
         (void)snprintf(
@@ -293,15 +383,21 @@ UmiStatus umi_ai_ui_context_view_create(
                            : "disabled");
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.pane.ai-workspace", "AI Workspace",
         "Return to the AuthorEngine overview");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.pane.ai-privacy", "Privacy",
         "Inspect rules applied to these context sources");
     return status;
 }
 
+/*
+ * Initialise ai ui sessions view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_sessions_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
@@ -311,21 +407,29 @@ UmiStatus umi_ai_ui_sessions_view_create(
     size_t count;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "ai-sessions", "AI Conversation Sessions",
         "Bounded conversation state with explicit persistence and approval controls.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     archive = umi_ai_authorengine_service_conversations(service);
     count = umi_ai_conversation_archive_count(archive);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_AI_UI_VISIBLE_ROWS) count = UMI_AI_UI_VISIBLE_ROWS;
     status = set_integer(*out_view, "ai-sessions.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiAiConversationRecord record;
         char key[96];
         char text[512];
         status = umi_ai_conversation_archive_at(archive, index, &record);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "ai-sessions.row.%zu", index);
         (void)snprintf(
@@ -335,18 +439,25 @@ UmiStatus umi_ai_ui_sessions_view_create(
             umi_ai_data_classification_text(record.classification));
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.ai.new-session", "New Session",
         "Create a governed AuthorEngine conversation session");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.ai.save-session", "Save Session",
         "Persist the active session when policy permits");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.pane.ai-workspace", "AI Workspace",
         "Return to the AuthorEngine overview");
     return status;
 }
 
+/*
+ * Initialise ai ui privacy view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_privacy_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
@@ -355,32 +466,45 @@ UmiStatus umi_ai_ui_privacy_view_create(
     const UmiAiPrivacyPolicy *privacy;
     UmiAiAuthorEngineServiceSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "ai-privacy", "AI Privacy and Approval Policy",
         "Local, remote, sensitive-data and persistence decisions remain application controlled.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     privacy = umi_ai_authorengine_service_privacy_policy(service);
     status = umi_ai_authorengine_service_snapshot(service, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "ai-privacy.local-maximum",
         umi_ai_data_classification_text(privacy->maximum_local_classification));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "ai-privacy.remote-maximum",
         umi_ai_data_classification_text(privacy->maximum_remote_classification));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "ai-privacy.remote-allowed", snapshot.remote_allowed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "ai-privacy.persist-sessions", privacy->persist_sessions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "ai-privacy.persist-prompt-text", privacy->persist_prompt_text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_boolean(
         *out_view, "ai-privacy.require-sensitive-approval",
         privacy->require_sensitive_approval);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.pane.ai-context", "Context",
         "Inspect sources governed by this privacy policy");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.pane.ai-workspace", "AI Workspace",
         "Return to the AuthorEngine overview");

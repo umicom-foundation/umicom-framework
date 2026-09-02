@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/state_snapshot.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveStateSnapshot item; umi_ui_reactive_state_snapshot_init(&item); return umi_ui_reactive_state_snapshot_valid(&item) ? 0 : 1; }

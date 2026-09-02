@@ -15,5 +15,13 @@
 #include "umicom/editor/workbench/code_map_segment.h"
 
 #include <string.h>
-UmiStatus umi_editor_wb_code_map_segment_init(UmiEditorWbCodeMapSegment *s,const char *id,uint32_t first,uint32_t last,UmiEditorWbSeverity sev){if(s==NULL||!umi_editor_wb_id_valid(id)||first==0U||last<first)return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof *s);(void)umi_editor_wb_copy_text(s->segment_id,sizeof s->segment_id,id);s->first_line=first;s->last_line=last;s->severity=sev;return UMI_STATUS_OK;}
+/*
+ * Initialise editor wb code map segment from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_editor_wb_code_map_segment_init(UmiEditorWbCodeMapSegment *s,const char *id,uint32_t first,uint32_t last,UmiEditorWbSeverity sev){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||!umi_editor_wb_id_valid(id)||first==0U||last<first)return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof *s);(void)umi_editor_wb_copy_text(s->segment_id,sizeof s->segment_id,id);s->first_line=first;s->last_line=last;s->severity=sev;return UMI_STATUS_OK;}
+/*
+ * Provide the editor wb code map segment contains operation used by this module and its
+ * client applications.
+ */
 int umi_editor_wb_code_map_segment_contains(const UmiEditorWbCodeMapSegment *s,uint32_t line){return s!=NULL&&line>=s->first_line&&line<=s->last_line;}

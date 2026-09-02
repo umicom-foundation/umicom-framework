@@ -27,14 +27,23 @@ typedef struct SearchState {
     UmiSearchMatch first;
 } SearchState;
 
+/*
+ * Exercise match sink and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus match_sink(const UmiSearchMatch *match, void *user_data)
 {
     SearchState *state = (SearchState *)user_data;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state->count == 0U) state->first = *match;
     state->count += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char temporary[UMI_PATH_CAPACITY];

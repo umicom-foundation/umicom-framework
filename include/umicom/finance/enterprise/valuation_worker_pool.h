@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/valuation_worker.h"
+/**
+ * Represent the enterprise valuation worker pool data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationWorkerPool { UmiEnterpriseValuationWorker workers[UMI_ENTERPRISE_MAX_WORKERS]; size_t count; } UmiEnterpriseValuationWorkerPool;
 /* Initialise an empty worker pool. */
 void umi_enterprise_valuation_worker_pool_init(UmiEnterpriseValuationWorkerPool *pool);

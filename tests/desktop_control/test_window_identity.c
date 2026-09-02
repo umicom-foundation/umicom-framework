@@ -13,6 +13,10 @@
 #include <string.h>
 #include "umicom/desktop/control/window_identity.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesktopWindowIdentitySnapshot value;

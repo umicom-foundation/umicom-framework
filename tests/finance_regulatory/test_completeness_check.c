@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/completeness_check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ double s=0.0; CHECK(umi_reg_completeness_check(10U,9U,&s)==UMI_STATUS_OK); CHECK(s>0.89&&s<0.91); return 0; }

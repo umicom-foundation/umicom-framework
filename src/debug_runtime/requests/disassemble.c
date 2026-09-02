@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request disassemble operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_disassemble(
     UmiDebugRuntimeAdapter *adapter,
     const char *memory_reference,
@@ -29,6 +33,10 @@ UmiStatus umi_debug_runtime_request_disassemble(
     char arguments[1024];
     UmiLanguageRuntimeJsonWriter writer;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || memory_reference == NULL ||
         memory_reference[0] == '\0' || instruction_count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -53,6 +61,7 @@ UmiStatus umi_debug_runtime_request_disassemble(
     (void)umi_language_runtime_json_writer_bool(
         &writer, resolve_symbols);
     (void)umi_language_runtime_json_writer_raw(&writer, "}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.status != UMI_STATUS_OK) return writer.status;
 
     return umi_debug_runtime_request_raw(

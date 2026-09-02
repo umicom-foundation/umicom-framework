@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/analytics_result.h"
 
-int main(void){UmiAnalyticsResult r;umi_analytics_result_init(&r);if(umi_analytics_result_add(&r,"A",5)!=0)return 1;return r.count==1&&r.rows[0].value==5?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsResult r;umi_analytics_result_init(&r);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_analytics_result_add(&r,"A",5)!=0)return 1;return r.count==1&&r.rows[0].value==5?0:2;}

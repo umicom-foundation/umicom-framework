@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data retry policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataRetryPolicy {
     uint32_t max_attempts;
     uint64_t base_delay_ms;

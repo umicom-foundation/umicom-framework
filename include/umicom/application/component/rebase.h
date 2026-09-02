@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application component rebase report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationComponentRebaseReport {
   size_t preserved_count;
   size_t added_count;
@@ -30,6 +34,10 @@ typedef struct UmiApplicationComponentRebaseReport {
   uint64_t result_revision;
 } UmiApplicationComponentRebaseReport;
 
+/**
+ * Provide the application component workspace rebase operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_component_workspace_rebase(
     UmiApplicationComponentWorkspaceDraft *draft, const UmiApplicationComponentRecipe *new_recipe,
     int keep_removed_components, UmiApplicationComponentRebaseReport *out_report);

@@ -18,13 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad binding wire data shared with callers of this public contract.
+ */
 typedef struct UmiRadBindingWire {
     char wire_id[UMI_RAD_ID_CAPACITY];
     char source_node_id[UMI_RAD_ID_CAPACITY];
     char target_node_id[UMI_RAD_ID_CAPACITY];
     bool enabled;
 } UmiRadBindingWire;
+/**
+ * Initialise rad binding wire from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_binding_wire_init(UmiRadBindingWire *item);
+/**
+ * Check that rad binding wire satisfies its contract before another service relies on it.
+ */
 int umi_rad_binding_wire_is_valid(const UmiRadBindingWire *item);
 #ifdef __cplusplus
 }

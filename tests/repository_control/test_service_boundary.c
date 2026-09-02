@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include "umicom/repository/service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryControlService *s = calloc(1U, sizeof(*s));

@@ -18,4 +18,5 @@
  */
 #include "umicom/sdk/component.h"
 #include <stddef.h>
-UmiStatus umi_sdk_component_validate(const UmiSdkComponent *c){if(c==NULL||c->component_id==NULL||c->component_id[0]=='\0'||c->target_name==NULL||c->target_name[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that sdk component satisfies its contract before another service relies on it. */
+UmiStatus umi_sdk_component_validate(const UmiSdkComponent *c){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||c->component_id==NULL||c->component_id[0]=='\0'||c->target_name==NULL||c->target_name[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

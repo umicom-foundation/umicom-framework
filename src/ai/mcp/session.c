@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai mcp session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_mcp_session_init(
     UmiAiMcpSession *session,
     const UmiAiMcpServerDescriptor *server,
@@ -24,6 +28,10 @@ UmiStatus umi_ai_mcp_session_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL ||
         server == NULL ||
         transport == NULL ||
@@ -32,6 +40,7 @@ UmiStatus umi_ai_mcp_session_init(
     }
 
     status = umi_ai_mcp_server_validate(server);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -45,6 +54,10 @@ UmiStatus umi_ai_mcp_session_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise ai mcp session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_mcp_session_initialize(
     UmiAiMcpSession *session,
     const char *client_name,
@@ -54,11 +67,16 @@ UmiStatus umi_ai_mcp_session_initialize(
     char result[UMI_AI_MCP_TEXT_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL ||
         client_name == NULL ||
         client_version == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (session->state != UMI_AI_MCP_SESSION_CONNECTED) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -68,6 +86,7 @@ UmiStatus umi_ai_mcp_session_initialize(
         client_version,
         params,
         sizeof(params));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         session->state = UMI_AI_MCP_SESSION_FAILED;
         return status;
@@ -79,6 +98,7 @@ UmiStatus umi_ai_mcp_session_initialize(
         params,
         result,
         sizeof(result));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         session->state = UMI_AI_MCP_SESSION_FAILED;
         return status;
@@ -87,6 +107,7 @@ UmiStatus umi_ai_mcp_session_initialize(
     status = umi_ai_mcp_decode_initialize_result(
         result,
         &session->capabilities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         session->state = UMI_AI_MCP_SESSION_FAILED;
         return status;
@@ -98,6 +119,7 @@ UmiStatus umi_ai_mcp_session_initialize(
         &session->transport,
         umi_ai_mcp_method_initialized(),
         "{}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK &&
         status != UMI_STATUS_NOT_IMPLEMENTED) {
         session->state = UMI_AI_MCP_SESSION_FAILED;
@@ -110,11 +132,19 @@ UmiStatus umi_ai_mcp_session_initialize(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp session ping operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_session_ping(
     UmiAiMcpSession *session)
 {
     char result[UMI_AI_MCP_TEXT_CAPACITY];
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL ||
         session->state != UMI_AI_MCP_SESSION_READY) {
         return UMI_STATUS_INVALID_STATE;
@@ -128,9 +158,17 @@ UmiStatus umi_ai_mcp_session_ping(
         sizeof(result));
 }
 
+/*
+ * Provide the ai mcp session disconnect operation used by this module and its client
+ * applications.
+ */
 void umi_ai_mcp_session_disconnect(
     UmiAiMcpSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) {
         return;
     }

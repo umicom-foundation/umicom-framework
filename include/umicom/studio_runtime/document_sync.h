@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime document sync data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeDocumentSync {
     UmiStudioRuntimeDocumentState documents;
     UmiStudioRuntimeWindowTitle window_title;
@@ -32,10 +36,18 @@ typedef struct UmiStudioRuntimeDocumentSync {
     uint64_t revision;
 } UmiStudioRuntimeDocumentSync;
 
+/**
+ * Initialise studio document sync from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_studio_document_sync_init(
     UmiStudioRuntimeDocumentSync *sync,
     const char *workspace_name);
 
+/**
+ * Provide the studio document sync refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_document_sync_refresh(
     UmiStudioRuntimeDocumentSync *sync,
     UmiStudioRuntimeBindings *bindings);

@@ -20,14 +20,24 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg control execution from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_reg_control_execution_init(UmiControlExecution *record, const char *execution_id, const char *control_id, int64_t executed_ms, int passed)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(executed_ms >= 0 && (passed == 0 || passed == 1))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->execution_id, sizeof record->execution_id, execution_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->control_id, sizeof record->control_id, control_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->executed_ms = executed_ms;
     record->passed = passed;

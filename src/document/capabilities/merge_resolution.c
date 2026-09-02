@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/merge_resolution.h"
 
+/*
+ * Provide the document capability merge resolution operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_merge_resolution(void)
 {

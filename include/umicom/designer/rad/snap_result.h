@@ -18,13 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad snap result data shared with callers of this public contract.
+ */
 typedef struct UmiRadSnapResult {
     UmiRadPoint requested;
     UmiRadPoint resolved;
     bool snapped_x;
     bool snapped_y;
 } UmiRadSnapResult;
+/**
+ * Initialise rad snap result from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_snap_result_init(UmiRadSnapResult *item);
+/**
+ * Check that rad snap result satisfies its contract before another service relies on it.
+ */
 int umi_rad_snap_result_is_valid(const UmiRadSnapResult *item);
 #ifdef __cplusplus
 }

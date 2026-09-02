@@ -22,11 +22,19 @@ extern "C" {
 
 #define UMI_AI_DEVELOPER_PERSISTED_TASKS 6U
 
+/**
+ * Write ai developer tasks in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ai_developer_tasks_save(
     UmiSessionStore *store,
     const char *key_prefix,
     const UmiAiDeveloperTaskRegistry *registry);
 
+/**
+ * Provide the ai developer tasks restore operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_tasks_restore(
     const UmiSessionStore *store,
     const char *key_prefix,

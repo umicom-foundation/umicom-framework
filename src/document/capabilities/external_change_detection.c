@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/external_change_detection.h"
 
+/*
+ * Provide the document capability external change detection operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_external_change_detection(void)
 {

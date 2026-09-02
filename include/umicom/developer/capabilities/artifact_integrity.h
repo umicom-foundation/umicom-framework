@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ARTIFACT_INTEGRITY "umicom.developer.security.artifact_integrity"
 
+/**
+ * Provide the developer capability artifact integrity operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_artifact_integrity(void);
 

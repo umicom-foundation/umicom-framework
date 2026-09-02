@@ -15,6 +15,10 @@
 #include "umicom/designer/rad/types.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     char value[16];
     CHECK(umi_rad_copy_text(value, sizeof value, "canvas") == UMI_STATUS_OK);

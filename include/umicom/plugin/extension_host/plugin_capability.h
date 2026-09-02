@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host plugin capability data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostPluginCapability {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,9 +44,25 @@ typedef struct UmiPluginExtensionHostPluginCapability {
     uint64_t revision;
 } UmiPluginExtensionHostPluginCapability;
 
+/**
+ * Initialise plugin extension host plugin capability from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_plugin_capability_init(UmiPluginExtensionHostPluginCapability *value);
+/**
+ * Provide the plugin extension host plugin capability configure operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_plugin_capability_configure(UmiPluginExtensionHostPluginCapability *value, const char *id, const char *subject, uint32_t version, uint32_t risk, uint64_t flags);
+/**
+ * Check that plugin extension host plugin capability satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_plugin_capability_validate(const UmiPluginExtensionHostPluginCapability *value);
+/**
+ * Provide the plugin extension host plugin capability fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_plugin_capability_fingerprint(const UmiPluginExtensionHostPluginCapability *value);
 
 #ifdef __cplusplus

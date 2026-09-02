@@ -1,3 +1,19 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDeveloperCapabilities.cmake
+#
+# PURPOSE:
+#   Configure the umicom developer capabilities build rules without duplicating
+#   product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
 # Generated source inventory for Framework developer capabilities.
 # AUTHOR AND ORGANISATION:
 #   Sammy Hegab
@@ -198,6 +214,7 @@ target_link_libraries(umicom_toolchain PUBLIC
     Umicom::security
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_executable(umicom-toolchain-build-contract-test
         tests/toolchain_lifecycle/test_build_contract.c)

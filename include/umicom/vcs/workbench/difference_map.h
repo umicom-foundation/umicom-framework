@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs workbench difference band data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchDifferenceBand {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,6 +40,10 @@ typedef struct UmiVcsWorkbenchDifferenceBand {
     int selected;
 } UmiVcsWorkbenchDifferenceBand;
 
+/**
+ * Represent the vcs workbench difference map data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchDifferenceMap {
     uint32_t struct_size;
     uint32_t api_version;
@@ -48,14 +56,30 @@ typedef struct UmiVcsWorkbenchDifferenceMap {
     uint64_t revision;
 } UmiVcsWorkbenchDifferenceMap;
 
+/**
+ * Initialise vcs workbench difference map from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_workbench_difference_map_init(
     UmiVcsWorkbenchDifferenceMap *map);
+/**
+ * Provide the vcs workbench difference map build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_difference_map_build(
     UmiVcsWorkbenchDifferenceMap *map,
     const UmiVcsWorkbenchCompareModel *model);
+/**
+ * Provide the vcs workbench difference map select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_difference_map_select(
     UmiVcsWorkbenchDifferenceMap *map,
     size_t index);
+/**
+ * Find vcs workbench difference map band while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiVcsWorkbenchDifferenceBand *
 umi_vcs_workbench_difference_map_band_at(
     const UmiVcsWorkbenchDifferenceMap *map,

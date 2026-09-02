@@ -18,25 +18,34 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(umi_repository_workflow_action_text(
                    UMI_REPOSITORY_WORKFLOW_PUBLISH),
                "publish") != 0) {
         return EXIT_FAILURE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_repository_workflow_action_writes_index(
             UMI_REPOSITORY_WORKFLOW_PUBLISH)) {
         return EXIT_FAILURE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_repository_workflow_action_writes_index(
             UMI_REPOSITORY_WORKFLOW_CLONE)) {
         return EXIT_FAILURE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_repository_workflow_action_uses_remote(
             UMI_REPOSITORY_WORKFLOW_PUSH)) {
         return EXIT_FAILURE;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(umi_repository_workflow_action_text(
                    UMI_REPOSITORY_WORKFLOW_UPDATE),
                "update") != 0 ||

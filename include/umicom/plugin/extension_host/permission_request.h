@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host permission request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostPermissionRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,9 +44,25 @@ typedef struct UmiPluginExtensionHostPermissionRequest {
     uint64_t revision;
 } UmiPluginExtensionHostPermissionRequest;
 
+/**
+ * Initialise plugin extension host permission request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_permission_request_init(UmiPluginExtensionHostPermissionRequest *value);
+/**
+ * Provide the plugin extension host permission request configure operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_permission_request_configure(UmiPluginExtensionHostPermissionRequest *value, const char *id, const char *subject, uint32_t version, uint32_t risk, uint64_t flags);
+/**
+ * Check that plugin extension host permission request satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_permission_request_validate(const UmiPluginExtensionHostPermissionRequest *value);
+/**
+ * Provide the plugin extension host permission request fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_permission_request_fingerprint(const UmiPluginExtensionHostPermissionRequest *value);
 
 #ifdef __cplusplus

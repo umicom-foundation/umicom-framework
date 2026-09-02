@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/layout.h"
+/*
+ * Provide the ui component layout default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentLayout umi_ui_component_layout_default(void){UmiUiComponentLayout v={0,0,0,0,0,0,1,1,false};return v;}

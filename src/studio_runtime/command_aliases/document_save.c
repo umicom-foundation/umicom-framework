@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/document_save.h"
 
+/*
+ * Write studio command alias document in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_document_save(void)
 {

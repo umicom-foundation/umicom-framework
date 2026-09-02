@@ -31,6 +31,7 @@ struct UmiDeveloperProjectWorkbenchPlatform {
     uint64_t revision;
 };
 
+/* Provide the always enabled operation used by this module and its client applications. */
 static int always_enabled(void *user_data, const char *argument)
 {
     (void)user_data;
@@ -38,6 +39,10 @@ static int always_enabled(void *user_data, const char *argument)
     return 1;
 }
 
+/*
+ * Provide the new project action operation used by this module and its client
+ * applications.
+ */
 static UmiStatus new_project_action(
     void *user_data,
     const char *argument,
@@ -49,11 +54,19 @@ static UmiStatus new_project_action(
 
     (void)argument;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     umi_developer_workbench_project_wizard_init(&platform->wizard);
     platform->revision += 1U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -65,6 +78,7 @@ static UmiStatus new_project_action(
     return UMI_STATUS_OK;
 }
 
+/* Provide the preset enabled operation used by this module and its client applications. */
 static int preset_enabled(void *user_data, const char *argument)
 {
     (void)user_data;
@@ -72,6 +86,7 @@ static int preset_enabled(void *user_data, const char *argument)
         umi_application_preset_catalogue_find(argument) != NULL;
 }
 
+/* Provide the preset action operation used by this module and its client applications. */
 static UmiStatus preset_action(
     void *user_data,
     const char *argument,
@@ -82,6 +97,10 @@ static UmiStatus preset_action(
         (UmiDeveloperProjectWorkbenchPlatform *)user_data;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || argument == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -90,9 +109,14 @@ static UmiStatus preset_action(
         &platform->wizard,
         argument);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         platform->revision += 1U;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_message != NULL && message_capacity > 0U) {
             (void)snprintf(
                 out_message,
@@ -105,6 +129,7 @@ static UmiStatus preset_action(
     return status;
 }
 
+/* Provide the create enabled operation used by this module and its client applications. */
 static int create_enabled(void *user_data, const char *argument)
 {
     UmiDeveloperProjectWorkbenchPlatform *platform =
@@ -114,6 +139,7 @@ static int create_enabled(void *user_data, const char *argument)
     return platform != NULL && platform->wizard.ready;
 }
 
+/* Provide the create action operation used by this module and its client applications. */
 static UmiStatus create_action(
     void *user_data,
     const char *argument,
@@ -128,6 +154,10 @@ static UmiStatus create_action(
 
     (void)argument;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_project_generate_from_wizard(
@@ -136,16 +166,22 @@ static UmiStatus create_action(
         0,
         &report,
         &model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_project_workbench_adopt_model(
         platform->workbench,
         &model,
         1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->revision += 1U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -158,6 +194,10 @@ static UmiStatus create_action(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the bind project actions operation used by this module and its client
+ * applications.
+ */
 static UmiStatus bind_project_actions(
     UmiDeveloperProjectWorkbenchPlatform *platform)
 {
@@ -169,6 +209,7 @@ static UmiStatus bind_project_actions(
         new_project_action,
         always_enabled,
         platform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_workbench_bind_action(
@@ -177,6 +218,7 @@ static UmiStatus bind_project_actions(
         preset_action,
         preset_enabled,
         platform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_workbench_bind_action(
@@ -187,6 +229,10 @@ static UmiStatus bind_project_actions(
         platform);
 }
 
+/*
+ * Initialise developer project workbench platform from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_project_workbench_platform_create(
     const UmiDeveloperWorkbenchBindings *bindings,
     UmiDeveloperProjectWorkbenchPlatform **out_platform)
@@ -194,6 +240,10 @@ UmiStatus umi_developer_project_workbench_platform_create(
     UmiDeveloperProjectWorkbenchPlatform *platform;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || out_platform == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -201,6 +251,10 @@ UmiStatus umi_developer_project_workbench_platform_create(
     *out_platform = NULL;
     platform = (UmiDeveloperProjectWorkbenchPlatform *)calloc(
         1U, sizeof(*platform));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     platform->revision = 1U;
@@ -208,14 +262,17 @@ UmiStatus umi_developer_project_workbench_platform_create(
 
     status = umi_developer_workbench_create(
         bindings, &platform->workbench);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_service_create(
             &platform->projects);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = bind_project_actions(platform);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_developer_project_workbench_platform_destroy(platform);
         return status;
@@ -225,9 +282,17 @@ UmiStatus umi_developer_project_workbench_platform_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer project workbench platform so the same storage
+ * can be reused safely.
+ */
 void umi_developer_project_workbench_platform_destroy(
     UmiDeveloperProjectWorkbenchPlatform *platform)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return;
 
     umi_developer_project_service_destroy(platform->projects);
@@ -235,6 +300,10 @@ void umi_developer_project_workbench_platform_destroy(
     free(platform);
 }
 
+/*
+ * Provide the developer project workbench platform workbench operation used by this module
+ * and its client applications.
+ */
 UmiDeveloperWorkbench *
 umi_developer_project_workbench_platform_workbench(
     UmiDeveloperProjectWorkbenchPlatform *platform)
@@ -242,6 +311,10 @@ umi_developer_project_workbench_platform_workbench(
     return platform != NULL ? platform->workbench : NULL;
 }
 
+/*
+ * Provide the developer project workbench platform projects operation used by this module
+ * and its client applications.
+ */
 UmiDeveloperProjectService *
 umi_developer_project_workbench_platform_projects(
     UmiDeveloperProjectWorkbenchPlatform *platform)
@@ -249,6 +322,10 @@ umi_developer_project_workbench_platform_projects(
     return platform != NULL ? platform->projects : NULL;
 }
 
+/*
+ * Provide the developer project workbench platform wizard operation used by this module
+ * and its client applications.
+ */
 UmiDeveloperWorkbenchProjectWizard *
 umi_developer_project_workbench_platform_wizard(
     UmiDeveloperProjectWorkbenchPlatform *platform)
@@ -256,12 +333,20 @@ umi_developer_project_workbench_platform_wizard(
     return platform != NULL ? &platform->wizard : NULL;
 }
 
+/*
+ * Provide the developer project workbench platform snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_project_workbench_platform_snapshot(
     UmiDeveloperProjectWorkbenchPlatform *platform,
     UmiDeveloperProjectWorkbenchPlatformSnapshot *out_snapshot)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -271,11 +356,13 @@ UmiStatus umi_developer_project_workbench_platform_snapshot(
     status = umi_developer_workbench_snapshot(
         platform->workbench,
         &out_snapshot->workbench);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_project_service_snapshot(
         platform->projects,
         &out_snapshot->projects);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_snapshot->new_project_ready = platform->wizard.ready;

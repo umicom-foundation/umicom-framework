@@ -19,5 +19,9 @@
 #ifndef UMICOM_REFERENCE_STUDIO_H
 #define UMICOM_REFERENCE_STUDIO_H
 #include "umicom/product/product.h"
+/**
+ * Provide the example studio profile operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_example_studio_profile(void);
 #endif

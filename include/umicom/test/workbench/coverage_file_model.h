@@ -22,16 +22,39 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the coverage file model data shared with callers of this public contract.
+ */
 typedef struct UmiCoverageFileModel {
     UmiTestWorkbenchEntry value;
     uint64_t generation;
     uint32_t item_count;
     bool active;
 } UmiCoverageFileModel;
+/**
+ * Initialise coverage file model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_coverage_file_model_init(UmiCoverageFileModel *model,const char *id,const char *label);
+/**
+ * Exercise coverage file model set active and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_coverage_file_model_set_active(UmiCoverageFileModel *model,bool active);
+/**
+ * Return the number of records represented by coverage file model set without changing
+ * their state.
+ */
 UmiStatus umi_coverage_file_model_set_count(UmiCoverageFileModel *model,uint32_t item_count);
+/**
+ * Exercise coverage file model set state and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_coverage_file_model_set_state(UmiCoverageFileModel *model,UmiTestWorkbenchState state);
+/**
+ * Check that coverage file model satisfies its contract before another service relies on
+ * it.
+ */
 int umi_coverage_file_model_valid(const UmiCoverageFileModel *model);
 #ifdef __cplusplus
 }

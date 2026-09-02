@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_QUICK_PICK "umicom.developer.experience.quick_pick"
 
+/**
+ * Provide the developer capability quick pick operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_quick_pick(void);
 

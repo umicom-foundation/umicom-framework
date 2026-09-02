@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_SECRET_REDACTION "umicom.developer.security.secret_redaction"
 
+/**
+ * Provide the developer capability secret redaction operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_secret_redaction(void);
 

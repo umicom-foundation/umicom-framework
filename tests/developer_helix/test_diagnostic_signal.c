@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/diagnostic_signal.h"
-int main(void){ UmiHelixDiagnosticSignal r; umi_helix_diagnostic_signal_init(&r,"diagnostic_signal"); if(umi_helix_diagnostic_signal_validate(&r)!=UMI_STATUS_OK){ return 1; } r.risk=0.2; double s=umi_helix_diagnostic_signal_score(&r); if(s<=0.0 || s>1.0){ return 2; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixDiagnosticSignal r; umi_helix_diagnostic_signal_init(&r,"diagnostic_signal"); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_helix_diagnostic_signal_validate(&r)!=UMI_STATUS_OK){ return 1; } r.risk=0.2; double s=umi_helix_diagnostic_signal_score(&r); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(s<=0.0 || s>1.0){ return 2; } return 0; }

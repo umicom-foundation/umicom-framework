@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/context_pack.h"
-int main(void) { UmiAiDevContextPack c; umi_ai_dev_context_pack_init(&c); if(umi_ai_dev_context_pack_add(&c,"a")!=UMI_STATUS_OK) return 1; if(umi_ai_dev_context_pack_add(&c,"a")!=UMI_STATUS_ALREADY_EXISTS) return 2; if(!umi_ai_dev_context_pack_contains(&c,"a")) return 3; if(umi_ai_dev_context_pack_remove(&c,"a")!=UMI_STATUS_OK) return 4; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiAiDevContextPack c; umi_ai_dev_context_pack_init(&c); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ai_dev_context_pack_add(&c,"a")!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ai_dev_context_pack_add(&c,"a")!=UMI_STATUS_ALREADY_EXISTS) return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ai_dev_context_pack_contains(&c,"a")) return 3; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ai_dev_context_pack_remove(&c,"a")!=UMI_STATUS_OK) return 4; return 0; }

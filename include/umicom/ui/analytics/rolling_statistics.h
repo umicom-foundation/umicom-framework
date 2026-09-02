@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the analytics rolling mean operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_rolling_mean(const double *values,size_t count,size_t window,double *out_values,size_t capacity);
 
 #ifdef __cplusplus

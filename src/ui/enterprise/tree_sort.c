@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/tree_sort.h"
 #include <string.h>
-int umi_ui_ent_tree_sort_compare(const UmiUiEntTreeNode *a,const UmiUiEntTreeNode *b,UmiUiEntSortDirection d,int label){int c;if(!a||!b)return 0;c=strcmp(label?a->label:a->node_id,label?b->label:b->node_id);return d==UMI_UI_ENT_SORT_DESCENDING?-c:c;}
+/*
+ * Provide the ui ent tree sort compare operation used by this module and its client
+ * applications.
+ */
+int umi_ui_ent_tree_sort_compare(const UmiUiEntTreeNode *a,const UmiUiEntTreeNode *b,UmiUiEntSortDirection d,int label){int c;/* Use the stable identifier comparison to choose the matching record or policy. */ if(!a||!b)return 0;c=strcmp(label?a->label:a->node_id,label?b->label:b->node_id);return d==UMI_UI_ENT_SORT_DESCENDING?-c:c;}

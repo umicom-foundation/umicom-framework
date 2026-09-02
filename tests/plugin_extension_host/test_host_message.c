@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/host_message.h"
-int main(void) { UmiPluginExtensionHostHostMessage m; if(umi_plugin_extension_host_host_message_build(&m,1U,2U,3U,"s","hello")!=UMI_STATUS_OK) return 1; if(!umi_plugin_extension_host_host_message_valid(&m)) return 2; m.sequence=4U; if(umi_plugin_extension_host_host_message_valid(&m)) return 3; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostHostMessage m; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_host_message_build(&m,1U,2U,3U,"s","hello")!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_plugin_extension_host_host_message_valid(&m)) return 2; m.sequence=4U; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_host_message_valid(&m)) return 3; return 0; }

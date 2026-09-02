@@ -18,11 +18,19 @@
 #include <math.h>
 
 
+/*
+ * Initialise workbench designer viewport from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_viewport_init(
     UmiWorkbenchDesignerViewport *viewport,
     double width,
     double height)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL) return;
     viewport->origin.x = 0.0;
     viewport->origin.y = 0.0;
@@ -34,11 +42,19 @@ void umi_workbench_designer_viewport_init(
     viewport->revision = 1U;
 }
 
+/*
+ * Return the number of records represented by workbench designer viewport set canvas
+ * without changing their state.
+ */
 UmiStatus umi_workbench_designer_viewport_set_canvas_size(
     UmiWorkbenchDesignerViewport *viewport,
     double width,
     double height)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || !isfinite(width) || !isfinite(height) ||
         width <= 0.0 || height <= 0.0) return UMI_STATUS_INVALID_ARGUMENT;
     viewport->canvas_size.width = width;
@@ -47,28 +63,48 @@ UmiStatus umi_workbench_designer_viewport_set_canvas_size(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer viewport screen to world operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchDesignerPoint umi_workbench_designer_viewport_screen_to_world(
     const UmiWorkbenchDesignerViewport *viewport,
     UmiWorkbenchDesignerPoint point)
 {
     UmiWorkbenchDesignerPoint result = {0.0, 0.0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || viewport->zoom <= 0.0) return result;
     result.x = viewport->origin.x + point.x / viewport->zoom;
     result.y = viewport->origin.y + point.y / viewport->zoom;
     return result;
 }
 
+/*
+ * Provide the workbench designer viewport world to screen operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchDesignerPoint umi_workbench_designer_viewport_world_to_screen(
     const UmiWorkbenchDesignerViewport *viewport,
     UmiWorkbenchDesignerPoint point)
 {
     UmiWorkbenchDesignerPoint result = {0.0, 0.0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL) return result;
     result.x = (point.x - viewport->origin.x) * viewport->zoom;
     result.y = (point.y - viewport->origin.y) * viewport->zoom;
     return result;
 }
 
+/*
+ * Provide the workbench designer viewport set zoom operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_viewport_set_zoom(
     UmiWorkbenchDesignerViewport *viewport,
     double zoom,
@@ -77,6 +113,10 @@ UmiStatus umi_workbench_designer_viewport_set_zoom(
     UmiWorkbenchDesignerPoint before;
     UmiWorkbenchDesignerPoint after;
     double clamped;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || !isfinite(zoom)) return UMI_STATUS_INVALID_ARGUMENT;
     before = umi_workbench_designer_viewport_screen_to_world(viewport, anchor_screen);
     clamped = umi_workbench_designer_clamp(
@@ -89,11 +129,19 @@ UmiStatus umi_workbench_designer_viewport_set_zoom(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer viewport pan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_viewport_pan(
     UmiWorkbenchDesignerViewport *viewport,
     double delta_x,
     double delta_y)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || !isfinite(delta_x) || !isfinite(delta_y) ||
         viewport->zoom <= 0.0) return UMI_STATUS_INVALID_ARGUMENT;
     viewport->origin.x -= delta_x / viewport->zoom;
@@ -102,6 +150,10 @@ UmiStatus umi_workbench_designer_viewport_pan(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer viewport fit rect operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_viewport_fit_rect(
     UmiWorkbenchDesignerViewport *viewport,
     const UmiWorkbenchDesignerRect *world_rect,
@@ -111,11 +163,16 @@ UmiStatus umi_workbench_designer_viewport_fit_rect(
     double usable_height;
     double zoom_x;
     double zoom_y;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || !umi_workbench_designer_rect_is_valid(world_rect) ||
         world_rect->width <= 0.0 || world_rect->height <= 0.0 ||
         !isfinite(padding) || padding < 0.0) return UMI_STATUS_INVALID_ARGUMENT;
     usable_width = viewport->canvas_size.width - padding * 2.0;
     usable_height = viewport->canvas_size.height - padding * 2.0;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (usable_width <= 0.0 || usable_height <= 0.0) return UMI_STATUS_INVALID_ARGUMENT;
     zoom_x = usable_width / world_rect->width;
     zoom_y = usable_height / world_rect->height;
@@ -129,10 +186,18 @@ UmiStatus umi_workbench_designer_viewport_fit_rect(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer viewport visible world operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchDesignerRect umi_workbench_designer_viewport_visible_world(
     const UmiWorkbenchDesignerViewport *viewport)
 {
     UmiWorkbenchDesignerRect result = {0.0, 0.0, 0.0, 0.0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || viewport->zoom <= 0.0) return result;
     result.x = viewport->origin.x;
     result.y = viewport->origin.y;

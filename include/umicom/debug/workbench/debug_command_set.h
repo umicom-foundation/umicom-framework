@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench debug command set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugWorkbenchDebugCommandSet {
     uint64_t enabled_commands;
     uint64_t visible_commands;
@@ -33,10 +37,30 @@ typedef struct UmiDebugWorkbenchDebugCommandSet {
     uint64_t revision;
 } UmiDebugWorkbenchDebugCommandSet;
 
+/**
+ * Initialise debug workbench debug command set from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_debug_workbench_debug_command_set_init(UmiDebugWorkbenchDebugCommandSet *model);
+/**
+ * Provide the debug workbench debug command set set enabled operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_command_set_set_enabled(UmiDebugWorkbenchDebugCommandSet *model, UmiDebugWorkbenchCommand command, bool enabled);
+/**
+ * Provide the debug workbench debug command set is enabled operation used by this module
+ * and its client applications.
+ */
 int umi_debug_workbench_debug_command_set_is_enabled(const UmiDebugWorkbenchDebugCommandSet *model, UmiDebugWorkbenchCommand command);
+/**
+ * Provide the debug workbench debug command set set primary operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_command_set_set_primary(UmiDebugWorkbenchDebugCommandSet *model, UmiDebugWorkbenchCommand command);
+/**
+ * Check that debug workbench debug command set satisfies its contract before another
+ * service relies on it.
+ */
 int umi_debug_workbench_debug_command_set_valid(const UmiDebugWorkbenchDebugCommandSet *model);
 
 #ifdef __cplusplus

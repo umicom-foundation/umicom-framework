@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the diagnostic build result ingest operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_build_result_ingest(UmiDiagnosticPipeline *pipeline,
                                              const UmiBuildResult *result,
                                              const char *source);

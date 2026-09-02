@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application shell profile project wizard operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_project_wizard(void);
 
 #ifdef __cplusplus

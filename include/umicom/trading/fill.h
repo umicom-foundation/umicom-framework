@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the order apply execution operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_order_apply_execution(UmiOrder *order, const UmiExecutionReport *report);
 #ifdef __cplusplus
 }

@@ -28,6 +28,10 @@
 
 #include "umicom/debug/disassembly_view.h"
 
+/*
+ * Exercise make instruction and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiDebugInstruction make_instruction(
     const char *id,
     uint64_t address,
@@ -54,6 +58,10 @@ static UmiDebugInstruction make_instruction(
     return instruction;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugDisassemblyView *view = NULL;

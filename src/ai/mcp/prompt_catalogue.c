@@ -17,9 +17,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai mcp prompt catalogue from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_mcp_prompt_catalogue_init(
     UmiAiMcpPromptCatalogue *catalogue)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) {
         return;
     }
@@ -28,17 +36,27 @@ void umi_ai_mcp_prompt_catalogue_init(
     catalogue->revision = 1U;
 }
 
+/*
+ * Find ai mcp prompt catalogue while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiAiMcpPromptDescriptor *umi_ai_mcp_prompt_catalogue_find(
     const UmiAiMcpPromptCatalogue *catalogue,
     const char *identifier)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || identifier == NULL) {
         return NULL;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 catalogue->items[index].name,
                 identifier) == 0) {
@@ -49,22 +67,32 @@ const UmiAiMcpPromptDescriptor *umi_ai_mcp_prompt_catalogue_find(
     return NULL;
 }
 
+/*
+ * Add ai mcp prompt catalogue only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_mcp_prompt_catalogue_add(
     UmiAiMcpPromptCatalogue *catalogue,
     const UmiAiMcpPromptDescriptor *item)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL ||
         item == NULL ||
         item->name[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_prompt_catalogue_find(
             catalogue,
             item->name) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (catalogue->count >= UMI_AI_MCP_MAX_PROMPTS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -74,10 +102,18 @@ UmiStatus umi_ai_mcp_prompt_catalogue_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find ai mcp prompt catalogue while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiAiMcpPromptDescriptor *umi_ai_mcp_prompt_catalogue_at(
     const UmiAiMcpPromptCatalogue *catalogue,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || index >= catalogue->count) {
         return NULL;
     }

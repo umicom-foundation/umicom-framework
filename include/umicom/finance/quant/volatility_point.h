@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant volatility point data shared with callers of this public contract.
+ */
 typedef struct UmiQuantVolatilityPoint {
     double expiry_years;
     double strike;

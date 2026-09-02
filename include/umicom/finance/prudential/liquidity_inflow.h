@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential liquidity inflow data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLiquidityInflow { char item_id[UMI_PRU_ID_CAPACITY]; double base_amount; double factor; double stressed_amount; } UmiPrudentialLiquidityInflow;
 /* Calculate a stressed liquidity or stable-funding amount from a bounded factor. */
 UmiStatus umi_pru_liquidity_inflow_calculate(UmiPrudentialLiquidityInflow *result, const char *item_id, double base_amount, double factor);

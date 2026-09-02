@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the release channel policy data shared with callers of this public contract.
+ */
 typedef struct UmiReleaseChannelPolicy {
     UmiReleaseChannel channel;
     int require_tests;
@@ -35,6 +38,10 @@ typedef struct UmiReleaseChannelPolicy {
     int require_zero_warnings;
 } UmiReleaseChannelPolicy;
 
+/**
+ * Provide the release channel policy operation used by this module and its client
+ * applications.
+ */
 UmiReleaseChannelPolicy umi_release_channel_policy(UmiReleaseChannel channel);
 
 #ifdef __cplusplus

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio command alias view source control operation used by this module and
+ * its client applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_view_source_control(void);
 #ifdef __cplusplus

@@ -28,11 +28,16 @@
 
 #include "umicom/editor/workspace_search_command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiEditorWorkspaceSearchCommandDescriptor *descriptor;
     size_t position;
     assert(umi_editor_workspace_search_command_count() == 22U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U;
          position < umi_editor_workspace_search_command_count();
          ++position) {
@@ -48,6 +53,7 @@ int main(void)
                descriptor);
         assert(umi_editor_workspace_search_command_for_kind(
                    descriptor->kind) == descriptor);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = position + 1U;
              comparison < umi_editor_workspace_search_command_count();
              ++comparison) {

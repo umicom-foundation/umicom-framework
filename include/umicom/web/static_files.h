@@ -23,8 +23,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web static files data shared with callers of this public contract.
+ */
 typedef struct UmiWebStaticFiles { char root[UMI_WEB_PATH_CAPACITY]; } UmiWebStaticFiles;
+/**
+ * Initialise web static files from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_web_static_files_init(UmiWebStaticFiles *files,const char *root);
+/**
+ * Provide the web static files serve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files,const char *request_path,UmiWebResponse *response);
 #ifdef __cplusplus
 }

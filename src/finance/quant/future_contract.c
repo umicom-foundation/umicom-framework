@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_future_contract_init(UmiQuantFutureContract *record, double quantity, double multiplier, double entry_price, double mark_price)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(quantity >= 0.0 && multiplier > 0.0 && entry_price >= 0.0 && mark_price >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->quantity = quantity;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_future_contract_init(UmiQuantFutureContract *record, double 
 /* Return long-side futures mark-to-market value. */
 double umi_quant_future_contract_mark_to_market(const UmiQuantFutureContract *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->quantity * record->multiplier * (record->mark_price - record->entry_price);
 }

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/product_id.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProductId x= {0}; CHECK(umi_product_id_set(&x,"ID")==UMI_STATUS_OK); CHECK(umi_product_id_is_valid(&x));

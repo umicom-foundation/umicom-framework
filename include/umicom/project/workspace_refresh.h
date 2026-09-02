@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_PROJECT_WORKSPACE_REFRESH_API_VERSION 1U
 
+/**
+ * Represent the project workspace refresh snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectWorkspaceRefreshSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,6 +39,10 @@ typedef struct UmiProjectWorkspaceRefreshSnapshot {
     int requires_confirmation;
 } UmiProjectWorkspaceRefreshSnapshot;
 
+/**
+ * Provide the project workspace model plan refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_model_plan_refresh(
     const UmiProjectWorkspaceModel *model,
     const UmiProjectWorkspaceDiscoveryOptions *options,

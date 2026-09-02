@@ -20,10 +20,18 @@
 
 #include <string.h>
 
+/*
+ * Provide the toolchain operation health from context operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_toolchain_operation_health_from_context(
     const UmiToolchainOperationContext *context,
     UmiToolchainOperationHealth *out_health)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_health == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_health, 0, sizeof(*out_health));
     out_health->required_tools = context->discovery.requirement_count +

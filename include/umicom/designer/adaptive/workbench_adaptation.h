@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer workbench adaptation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerWorkbenchAdaptation {
     int left_inline;
     int right_inline;

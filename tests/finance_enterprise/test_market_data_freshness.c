@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/market_data_freshness.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseMarketDataFreshnessPolicy p; CHECK(umi_enterprise_market_data_freshness_policy_init(&p,100)==UMI_STATUS_OK); CHECK(umi_enterprise_market_data_is_fresh(&p,950,1000)==1); CHECK(umi_enterprise_market_data_is_fresh(&p,800,1000)==0); return 0; }

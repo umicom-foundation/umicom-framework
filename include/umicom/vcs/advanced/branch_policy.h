@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced branch policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedBranchPolicy {
     uint32_t struct_size;
     uint32_t api_version;
@@ -31,11 +35,27 @@ typedef struct UmiVcsAdvancedBranchPolicy {
     int allow_delete_current;
     int require_merged_before_delete;
 } UmiVcsAdvancedBranchPolicy;
+/**
+ * Initialise vcs advanced branch policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_branch_policy_init(UmiVcsAdvancedBranchPolicy *policy);
+/**
+ * Provide the vcs advanced branch policy add protected operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_advanced_branch_policy_add_protected(UmiVcsAdvancedBranchPolicy *policy,
                                                         const char *branch);
+/**
+ * Provide the vcs advanced branch policy is protected operation used by this module and
+ * its client applications.
+ */
 int umi_vcs_advanced_branch_policy_is_protected(const UmiVcsAdvancedBranchPolicy *policy,
                                                  const char *branch);
+/**
+ * Provide the vcs advanced branch policy check delete operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_advanced_branch_policy_check_delete(const UmiVcsAdvancedBranchPolicy *policy,
                                                        const char *branch,
                                                        int current_branch,

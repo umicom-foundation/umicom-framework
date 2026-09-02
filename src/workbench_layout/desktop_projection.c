@@ -20,9 +20,11 @@
 
 #include "internal.h"
 
+/* Provide the map dock region operation used by this module and its client applications. */
 static UmiDesktopDockPlacement map_dock_region(
     UmiWorkbenchLayoutDockRegion region)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (region) {
     case UMI_WORKBENCH_LAYOUT_DOCK_DOCUMENT:
         return UMI_DESKTOP_DOCK_DOCUMENT;
@@ -42,9 +44,11 @@ static UmiDesktopDockPlacement map_dock_region(
     }
 }
 
+/* Provide the map desktop dock operation used by this module and its client applications. */
 static UmiWorkbenchLayoutDockRegion map_desktop_dock(
     UmiDesktopDockPlacement placement)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (placement) {
     case UMI_DESKTOP_DOCK_DOCUMENT:
         return UMI_WORKBENCH_LAYOUT_DOCK_DOCUMENT;
@@ -64,6 +68,10 @@ static UmiWorkbenchLayoutDockRegion map_desktop_dock(
     }
 }
 
+/*
+ * Provide the should project node operation used by this module and its client
+ * applications.
+ */
 static bool should_project_node(
     const UmiWorkbenchLayoutNode *node,
     const UmiWorkbenchLayoutProjectionOptions *options,
@@ -73,12 +81,14 @@ static bool should_project_node(
     *out_hidden = false;
     *out_container = false;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node->visibility ==
             UMI_WORKBENCH_LAYOUT_VISIBILITY_HIDDEN &&
         !options->include_hidden_nodes) {
         *out_hidden = true;
         return false;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_node_is_container(node) &&
         node->kind != UMI_WORKBENCH_LAYOUT_NODE_WINDOW &&
         node->kind !=
@@ -93,6 +103,7 @@ static bool should_project_node(
                UMI_WORKBENCH_LAYOUT_NODE_FLOATING_WINDOW;
 }
 
+/* Provide the project one operation used by this module and its client applications. */
 static UmiStatus project_one(
     const UmiWorkbenchLayoutNode *node,
     const UmiWorkbenchLayoutProjectionOptions *options,
@@ -107,6 +118,7 @@ static UmiStatus project_one(
         sizeof(window->window_id),
         node->node_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             window->title,
@@ -116,6 +128,7 @@ static UmiStatus project_one(
                 : node->node_id,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             window->component_id,
@@ -123,6 +136,7 @@ static UmiStatus project_one(
             node->component_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             window->owner_application_id,
@@ -130,6 +144,7 @@ static UmiStatus project_one(
             node->owner_application_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             window->monitor_id,
@@ -139,6 +154,7 @@ static UmiStatus project_one(
                 : options->default_monitor_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             window->context_group_id,
@@ -146,6 +162,7 @@ static UmiStatus project_one(
             node->context_group_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -178,6 +195,10 @@ static UmiStatus project_one(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout projection options default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutProjectionOptions
 umi_workbench_layout_projection_options_default(void)
 {
@@ -200,6 +221,10 @@ umi_workbench_layout_projection_options_default(void)
     return options;
 }
 
+/*
+ * Provide the workbench layout project desktop operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_project_desktop(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutProjectionOptions *options,
@@ -211,6 +236,10 @@ UmiStatus umi_workbench_layout_project_desktop(
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || out_layout == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -253,6 +282,7 @@ UmiStatus umi_workbench_layout_project_desktop(
             UMI_WORKBENCH_LAYOUT_DOCUMENT_LOCKED);
     out_layout->revision = document->version.revision;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < document->node_count &&
          status == UMI_STATUS_OK;
@@ -261,19 +291,23 @@ UmiStatus umi_workbench_layout_project_desktop(
         bool container;
 
         report.inspected_node_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!should_project_node(
                 &document->nodes[index],
                 &effective,
                 &hidden,
                 &container)) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (hidden) {
                 report.skipped_hidden_count += 1U;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (container) {
                 report.skipped_container_count += 1U;
             }
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (out_layout->window_count >=
             UMI_DESKTOP_MAX_LAYOUT_WINDOWS) {
             report.truncated_count += 1U;
@@ -286,18 +320,27 @@ UmiStatus umi_workbench_layout_project_desktop(
             &effective,
             out_layout->window_count,
             &out_layout->windows[out_layout->window_count]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             out_layout->window_count += 1U;
             report.projected_window_count += 1U;
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_report != NULL) {
         *out_report = report;
     }
     return status;
 }
 
+/*
+ * Provide the workbench layout import desktop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_import_desktop(
     const UmiDesktopLayout *desktop_layout,
     const UmiWorkbenchLayoutIdentity *identity,
@@ -310,6 +353,10 @@ UmiStatus umi_workbench_layout_import_desktop(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desktop_layout == NULL || identity == NULL ||
         out_document == NULL ||
         !umi_workbench_layout_text_present(
@@ -326,6 +373,7 @@ UmiStatus umi_workbench_layout_import_desktop(
         desktop_layout->name);
     status = umi_workbench_layout_document_set_identity(
         out_document, identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_metadata(
             out_document,
@@ -333,6 +381,7 @@ UmiStatus umi_workbench_layout_import_desktop(
             desktop_layout->category,
             desktop_layout->description);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -348,11 +397,13 @@ UmiStatus umi_workbench_layout_import_desktop(
         (uint32_t)UMI_WORKBENCH_LAYOUT_NODE_RESIZABLE;
     status = umi_workbench_layout_document_add_node(
         out_document, &root, &root_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_root(
             out_document, root.node_id);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < desktop_layout->window_count &&
          status == UMI_STATUS_OK;
@@ -370,6 +421,7 @@ UmiStatus umi_workbench_layout_import_desktop(
                 : UMI_WORKBENCH_LAYOUT_NODE_PANEL);
         (void)umi_workbench_layout_node_set_title(
             &node, window->title);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (window->component_id[0] != '\0') {
             (void)umi_workbench_layout_node_set_component(
                 &node,
@@ -391,10 +443,12 @@ UmiStatus umi_workbench_layout_import_desktop(
             : UMI_WORKBENCH_LAYOUT_VISIBILITY_HIDDEN;
         node.z_order = window->z_order;
         node.flags = 0U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (window->closable) {
             node.flags |=
                 (uint32_t)UMI_WORKBENCH_LAYOUT_NODE_CLOSABLE;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (window->resizable) {
             node.flags |=
                 (uint32_t)UMI_WORKBENCH_LAYOUT_NODE_RESIZABLE;
@@ -402,6 +456,7 @@ UmiStatus umi_workbench_layout_import_desktop(
 
         status = umi_workbench_layout_document_add_node(
             out_document, &node, &node_index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_workbench_layout_document_attach_child(
                 out_document,
@@ -409,6 +464,7 @@ UmiStatus umi_workbench_layout_import_desktop(
                 node.node_id,
                 UMI_WORKBENCH_LAYOUT_INDEX_NONE);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             report.projected_window_count += 1U;
         }
@@ -416,12 +472,14 @@ UmiStatus umi_workbench_layout_import_desktop(
         (void)node_index;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         out_document->flags =
             desktop_layout->built_in
                 ? (uint32_t)
                     UMI_WORKBENCH_LAYOUT_DOCUMENT_BUILT_IN
                 : 0U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (desktop_layout->locked) {
             out_document->flags |=
                 (uint32_t)
@@ -434,6 +492,10 @@ UmiStatus umi_workbench_layout_import_desktop(
         umi_workbench_layout_document_refresh_hash(
             out_document);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_report != NULL) {
         *out_report = report;
     }

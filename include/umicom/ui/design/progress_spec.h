@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design progress spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignProgressSpec {
     double minimum;
     double maximum;

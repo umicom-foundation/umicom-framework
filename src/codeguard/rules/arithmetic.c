@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-ARITH-001", "CWE-369", UMI_CODEGUARD_LOW, UMI_CODEGUARD_CATEGORY_INTEGER, 55U, UMI_CODEGUARD_MATCH_CODE, "/ 0", "Literal division by zero detected.", "Remove the zero divisor and validate computed denominators."}
 };
 
+/*
+ * Provide the codeguard rules arithmetic operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_arithmetic(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

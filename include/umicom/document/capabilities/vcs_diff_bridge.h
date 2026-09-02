@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_VCS_DIFF_BRIDGE "umicom.document.integration.vcs_diff_bridge"
 
+/**
+ * Provide the document capability vcs diff bridge operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_vcs_diff_bridge(void);
 

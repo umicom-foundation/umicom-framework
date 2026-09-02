@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic context link group data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicContextLinkGroup {
     char group_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char context_type[UMI_UI_MOSAIC_ID_CAPACITY];

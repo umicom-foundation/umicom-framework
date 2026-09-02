@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive multi window policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveMultiWindowPolicy {
     int allow_detach;
     int allow_multiple_top_level;

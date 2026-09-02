@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtAbiDescriptor d;CHECK(umi_ct_riscv_abi_descriptor("lp64d",&d)==UMI_STATUS_OK);CHECK(d.hard_float&&d.pointer_bits==64U);CHECK(umi_ct_riscv_abi_matches_xlen(&d,64U));CHECK(!umi_ct_riscv_abi_matches_xlen(&d,32U));return 0;}

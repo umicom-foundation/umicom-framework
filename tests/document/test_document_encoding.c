@@ -15,6 +15,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     static const char TEXT[] = "Umicom π 😀";
@@ -29,6 +33,7 @@ int main(void)
     assert(umi_document_utf8_validate((const unsigned char *)TEXT,
                                       strlen(TEXT), NULL));
     assert(!umi_document_utf8_validate(INVALID, sizeof(INVALID), NULL));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(encodings) / sizeof(encodings[0]); ++index) {
         unsigned char *encoded = NULL;
         size_t encoded_length = 0U;

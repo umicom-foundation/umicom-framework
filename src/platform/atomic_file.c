@@ -49,6 +49,7 @@
 #include <unistd.h>
 #endif
 
+/* Provide the atomic process id operation used by this module and its client applications. */
 static unsigned long umi_atomic_process_id(void)
 {
 #ifdef _WIN32
@@ -58,8 +59,10 @@ static unsigned long umi_atomic_process_id(void)
 #endif
 }
 
+/* Provide the atomic flush operation used by this module and its client applications. */
 static UmiStatus umi_atomic_flush(FILE *file)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (fflush(file) != 0) {
         return UMI_STATUS_IO_ERROR;
     }
@@ -74,6 +77,7 @@ static UmiStatus umi_atomic_flush(FILE *file)
 #endif
 }
 
+/* Provide the atomic replace operation used by this module and its client applications. */
 static UmiStatus umi_atomic_replace(const char *temporary,
                                     const char *destination)
 {
@@ -90,6 +94,10 @@ static UmiStatus umi_atomic_replace(const char *temporary,
 #endif
 }
 
+/*
+ * Write atomic file in its stable representation and report capacity or input failures to
+ * the caller.
+ */
 UmiStatus umi_atomic_file_write(const char *path,
                                 const void *data,
                                 size_t size)
@@ -101,17 +109,24 @@ UmiStatus umi_atomic_file_write(const char *path,
     UmiStatus status;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || path[0] == '\0' ||
         (data == NULL && size > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_fs_parent(parent, sizeof(parent), path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parent[0] != '\0') {
         status = umi_fs_make_directories(parent);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -124,15 +139,21 @@ UmiStatus umi_atomic_file_write(const char *path,
                        path,
                        umi_atomic_process_id(),
                        sequence);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(temporary)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     file = fopen(temporary, "wb");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (file == NULL) {
         return UMI_STATUS_IO_ERROR;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (size > 0U && fwrite(data, 1U, size, file) != size) {
         (void)fclose(file);
         (void)remove(temporary);
@@ -140,24 +161,35 @@ UmiStatus umi_atomic_file_write(const char *path,
     }
 
     status = umi_atomic_flush(file);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (fclose(file) != 0 && status == UMI_STATUS_OK) {
         status = UMI_STATUS_IO_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)remove(temporary);
         return status;
     }
 
     status = umi_atomic_replace(temporary, path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)remove(temporary);
     }
     return status;
 }
 
+/*
+ * Provide the atomic file write text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_atomic_file_write_text(const char *path,
                                      const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

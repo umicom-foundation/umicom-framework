@@ -52,39 +52,66 @@ static const struct ToolMapping {
     {"umicom.operations.health", "health"}
 };
 
+/*
+ * Provide the mapped component tool id operation used by this module and its client
+ * applications.
+ */
 static const char *mapped_component_tool_id(const char *component_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (component_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(TOOL_MAPPINGS) / sizeof(TOOL_MAPPINGS[0]);
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(component_id, TOOL_MAPPINGS[index].component_id) == 0)
             return TOOL_MAPPINGS[index].tool_id;
     }
     return component_id;
 }
 
+/*
+ * Provide the presentation tool id operation used by this module and its client
+ * applications.
+ */
 static const char *presentation_tool_id(const UmiDesktopWindow *window)
 {
     const char *component_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL) return "unknown";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "debug-console") == 0)
         return "debug-console";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "compare-original") == 0 ||
         strcmp(window->window_id, "compare-modified") == 0)
         return "file-compare";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "compare-results") == 0)
         return "output";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "traces") == 0) return "traces";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "profiler") == 0) return "profiler";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "health") == 0) return "health";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "debug-state") == 0)
         return "debug-workspace";
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->window_id, "output") == 0) return "output";
     component_id = window->component_id;
     return mapped_component_tool_id(component_id);
 }
 
+/* Provide the project window operation used by this module and its client applications. */
 static UmiStatus project_window(
     const UmiDesktopWindow *source,
     const UmiDesktopMonitorTopology *topology,
@@ -95,9 +122,17 @@ static UmiStatus project_window(
     int second;
     int third;
     int fourth = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || topology == NULL || out_window == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     monitor = umi_desktop_monitor_topology_find(topology, source->monitor_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (monitor == NULL || monitor->work_area.width <= 0 ||
         monitor->work_area.height <= 0) return UMI_STATUS_NOT_FOUND;
     (void)memset(out_window, 0, sizeof(*out_window));
@@ -107,9 +142,11 @@ static UmiStatus project_window(
                       source->title);
     third = snprintf(out_window->tool_id, sizeof(out_window->tool_id), "%s",
                      presentation_tool_id(source));
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (source->context_group_id[0] != '\0')
         fourth = snprintf(out_window->group_id, sizeof(out_window->group_id),
                           "%s", source->context_group_id);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first < 0 || second < 0 || third < 0 || fourth < 0 ||
         (size_t)first >= sizeof(out_window->window_id) ||
         (size_t)second >= sizeof(out_window->title) ||
@@ -133,6 +170,7 @@ static UmiStatus project_window(
     return UMI_STATUS_OK;
 }
 
+/* Provide the project layout operation used by this module and its client applications. */
 static UmiStatus project_layout(
     const UmiDesktopLayout *source,
     const UmiDesktopMonitorTopology *topology,
@@ -144,24 +182,33 @@ static UmiStatus project_layout(
     UmiStatus status;
     length = snprintf(preset_layout_id, sizeof(preset_layout_id), "preset-%s",
                       source->layout_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length < 0 || (size_t)length >= sizeof(preset_layout_id))
         return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_ui_workspace_layout_init(
         out_layout, preset_layout_id, source->name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ui_workspace_layout_set_locked(out_layout, false);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < source->window_count;
          ++index) {
         UmiUiWorkspaceWindow window;
         status = project_window(&source->windows[index], topology, &window);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = umi_ui_workspace_layout_add_window(out_layout, &window);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ui_workspace_layout_set_locked(out_layout, source->locked);
     return status;
 }
 
+/*
+ * Provide the desktop seed workspace customisation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_seed_workspace_customisation(
     UmiUiWorkspaceCustomisation *customisation,
     const UmiDesktopLayoutCatalogue *catalogue,
@@ -170,11 +217,17 @@ UmiStatus umi_desktop_seed_workspace_customisation(
 {
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (customisation == NULL || catalogue == NULL || topology == NULL ||
         preset_namespace == NULL || preset_namespace[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (catalogue->count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) {
         const UmiDesktopLayout *source = &catalogue->layouts[index];
         UmiUiLayoutLibraryItem item;
@@ -189,34 +242,48 @@ UmiStatus umi_desktop_seed_workspace_customisation(
                           source->category);
         third = snprintf(item.description, sizeof(item.description), "%s",
                          source->description);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (first < 0 || second < 0 || third < 0 ||
             (size_t)first >= sizeof(item.preset_id) ||
             (size_t)second >= sizeof(item.category) ||
             (size_t)third >= sizeof(item.description))
             return UMI_STATUS_CAPACITY_EXCEEDED;
         status = project_layout(source, topology, &item.layout);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = umi_ui_layout_library_add(&customisation->library, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = umi_ui_layout_library_instantiate(
                 &customisation->library, item.preset_id, source->layout_id,
                 source->name, &instance);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = umi_ui_workspace_customisation_add_layout(
                 customisation, &instance);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return umi_ui_workspace_customisation_activate(
         customisation, catalogue->active_layout_id);
 }
 
+/*
+ * Provide the desktop seed workspace groups operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_seed_workspace_groups(
     UmiUiWindowGroupStore *groups,
     const UmiDesktopContextLinks *context_links)
 {
     size_t group_index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (groups == NULL || context_links == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (group_index = 0U; group_index < context_links->groups.count;
          ++group_index) {
         const UmiUiWindowGroup *source =
@@ -225,45 +292,63 @@ UmiStatus umi_desktop_seed_workspace_groups(
         UmiStatus status = umi_ui_window_group_define(
             groups, source->group_id, source->colour_token,
             source->context_kind);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (member_index = 0U; member_index < source->member_count;
              ++member_index) {
             status = umi_ui_window_group_join(
                 groups, source->group_id,
                 source->members[member_index].window_id,
                 source->members[member_index].role);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the component category operation used by this module and its client
+ * applications.
+ */
 static UmiUiWindowCategory component_category(const char *domain_id)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(domain_id, "development") == 0)
         return UMI_UI_WINDOW_CATEGORY_DEVELOPMENT;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(domain_id, "shell") == 0)
         return UMI_UI_WINDOW_CATEGORY_NAVIGATION;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(domain_id, "operations") == 0 ||
         strcmp(domain_id, "security") == 0)
         return UMI_UI_WINDOW_CATEGORY_OPERATIONS;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(domain_id, "database") == 0 ||
         strcmp(domain_id, "integration") == 0 ||
         strcmp(domain_id, "treasury") == 0)
         return UMI_UI_WINDOW_CATEGORY_DATA;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(domain_id, "ai") == 0 || strcmp(domain_id, "rag") == 0 ||
         strcmp(domain_id, "llm") == 0 || strcmp(domain_id, "author") == 0)
         return UMI_UI_WINDOW_CATEGORY_AI;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(domain_id, "trading") == 0)
         return UMI_UI_WINDOW_CATEGORY_TRADING;
     return UMI_UI_WINDOW_CATEGORY_GENERAL;
 }
 
+/*
+ * Provide the component dimensions operation used by this module and its client
+ * applications.
+ */
 static void component_dimensions(
     UmiApplicationComponentRole role,
     double *width,
     double *height)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
         case UMI_APPLICATION_COMPONENT_EDITOR:
             *width = 0.60; *height = 0.75; break;
@@ -281,6 +366,10 @@ static void component_dimensions(
     }
 }
 
+/*
+ * Provide the desktop seed window catalogue operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_seed_window_catalogue(
     UmiUiWindowCatalogue *catalogue)
 {
@@ -307,7 +396,12 @@ UmiStatus umi_desktop_seed_window_catalogue(
         {"trading-activity","Trading Activity","Orders, executions and operational messages","activity",UMI_UI_WINDOW_CATEGORY_TRADING,true,1.00,0.28}
     };
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(legacy_windows) / sizeof(legacy_windows[0]);
          ++index) {
         /* Experience-specific catalogues may already contain a canonical tool
@@ -319,8 +413,10 @@ UmiStatus umi_desktop_seed_window_catalogue(
         }
         UmiStatus status = umi_ui_window_catalogue_register(
             catalogue, &legacy_windows[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_component_catalogue_count();
          ++index) {
         const UmiApplicationComponentDefinition *component =
@@ -332,6 +428,10 @@ UmiStatus umi_desktop_seed_window_catalogue(
         int third;
         int fourth;
         UmiStatus status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (umi_ui_window_catalogue_find(catalogue, tool_id) != NULL) continue;
         (void)memset(&descriptor, 0, sizeof(descriptor));
         first = snprintf(descriptor.tool_id, sizeof(descriptor.tool_id), "%s",
@@ -342,6 +442,7 @@ UmiStatus umi_desktop_seed_window_catalogue(
                          "%s", component->description);
         fourth = snprintf(descriptor.icon_name, sizeof(descriptor.icon_name),
                           "view-grid-symbolic");
+        /* Apply this branch only when its contract condition is satisfied. */
         if (first < 0 || second < 0 || third < 0 || fourth < 0 ||
             (size_t)first >= sizeof(descriptor.tool_id) ||
             (size_t)second >= sizeof(descriptor.title) ||
@@ -353,6 +454,7 @@ UmiStatus umi_desktop_seed_window_catalogue(
         component_dimensions(component->role, &descriptor.default_width,
                              &descriptor.default_height);
         status = umi_ui_window_catalogue_register(catalogue, &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced diff options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedDiffOptions {
     uint32_t struct_size;
     uint32_t api_version;
@@ -37,8 +41,20 @@ typedef struct UmiVcsAdvancedDiffOptions {
     int treat_crlf_as_lf;
 } UmiVcsAdvancedDiffOptions;
 
+/**
+ * Initialise vcs advanced diff options from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_diff_options_init(UmiVcsAdvancedDiffOptions *value);
+/**
+ * Check that vcs advanced diff options satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_diff_options_validate(const UmiVcsAdvancedDiffOptions *value);
+/**
+ * Provide the vcs advanced diff options fingerprint operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_vcs_advanced_diff_options_fingerprint(const UmiVcsAdvancedDiffOptions *value);
 
 #ifdef __cplusplus

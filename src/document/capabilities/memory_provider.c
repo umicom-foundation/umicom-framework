@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/memory_provider.h"
 
+/*
+ * Provide the document capability memory provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_memory_provider(void)
 {

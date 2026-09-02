@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/asynchronous_load.h"
 
+/*
+ * Read document capability asynchronous into validated module state and return a status
+ * when input cannot be used.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_asynchronous_load(void)
 {

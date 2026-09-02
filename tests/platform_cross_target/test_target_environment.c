@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtEnvironment e;CHECK(umi_ct_environment_parse("native",&e)==UMI_STATUS_OK);CHECK(e==UMI_CT_ENV_UMICOM);CHECK(umi_ct_environment_text(e)[0]=='u');return 0;}

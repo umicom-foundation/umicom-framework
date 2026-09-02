@@ -23,6 +23,10 @@
 
 #include "umicom/terminal/history.h"
 
+/*
+ * Exercise entry and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTerminalHistoryEntry entry(const char *command, int exit_code)
 {
     UmiTerminalHistoryEntry value = {0};
@@ -34,6 +38,10 @@ static UmiTerminalHistoryEntry entry(const char *command, int exit_code)
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTerminalHistory *history = NULL;

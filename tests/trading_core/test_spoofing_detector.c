@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/spoofing_detector.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingSpoofingEvidence e={100U,90U,2U,80U};

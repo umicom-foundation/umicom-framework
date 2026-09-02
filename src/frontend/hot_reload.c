@@ -16,6 +16,18 @@
 /* Umicom Framework | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/frontend/hot_reload.h"
 #include <string.h>
-UmiStatus umi_frontend_hot_reload_init(UmiFrontendHotReload *r,int enabled){if(r==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(r,0,sizeof(*r));r->enabled=enabled?1:0;r->generation=1U;return UMI_STATUS_OK;}
-UmiStatus umi_frontend_hot_reload_queue(UmiFrontendHotReload *r,const char *path,uint64_t revision){size_t i;UmiStatus s;if(r==NULL||path==NULL||path[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;if(!r->enabled)return UMI_STATUS_INVALID_STATE;for(i=0U;i<r->pending_count;++i)if(strcmp(r->pending[i].path,path)==0){r->pending[i].revision=revision;return UMI_STATUS_OK;}if(r->pending_count>=UMI_FRONTEND_DEV_MAX_CHANGES)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->pending_count++;s=umi_frontend_dev_copy_text(r->pending[i].path,sizeof(r->pending[i].path),path);if(s!=UMI_STATUS_OK){r->pending_count-=1U;return s;}r->pending[i].revision=revision;return UMI_STATUS_OK;}
-UmiStatus umi_frontend_hot_reload_complete(UmiFrontendHotReload *r,uint64_t *out){if(r==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(!r->enabled)return UMI_STATUS_INVALID_STATE;if(r->pending_count==0U)return UMI_STATUS_NOT_FOUND;r->generation+=1U;r->completed_generation=r->generation;r->pending_count=0U;*out=r->completed_generation;return UMI_STATUS_OK;}
+/*
+ * Initialise frontend hot reload from caller-provided values so later operations receive a
+ * known state.
+ */
+UmiStatus umi_frontend_hot_reload_init(UmiFrontendHotReload *r,int enabled){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(r,0,sizeof(*r));r->enabled=enabled?1:0;r->generation=1U;return UMI_STATUS_OK;}
+/*
+ * Provide the frontend hot reload queue operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_frontend_hot_reload_queue(UmiFrontendHotReload *r,const char *path,uint64_t revision){size_t i;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||path==NULL||path[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!r->enabled)return UMI_STATUS_INVALID_STATE;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<r->pending_count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(r->pending[i].path,path)==0){r->pending[i].revision=revision;return UMI_STATUS_OK;}/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->pending_count>=UMI_FRONTEND_DEV_MAX_CHANGES)return UMI_STATUS_CAPACITY_EXCEEDED;i=r->pending_count++;s=umi_frontend_dev_copy_text(r->pending[i].path,sizeof(r->pending[i].path),path);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK){r->pending_count-=1U;return s;}r->pending[i].revision=revision;return UMI_STATUS_OK;}
+/*
+ * Provide the frontend hot reload complete operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_frontend_hot_reload_complete(UmiFrontendHotReload *r,uint64_t *out){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!r->enabled)return UMI_STATUS_INVALID_STATE;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->pending_count==0U)return UMI_STATUS_NOT_FOUND;r->generation+=1U;r->completed_generation=r->generation;r->pending_count=0U;*out=r->completed_generation;return UMI_STATUS_OK;}

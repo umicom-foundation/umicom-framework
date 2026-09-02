@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting evidence data shared with callers of this public contract.
+ */
 typedef struct UmiReportingEvidence {
     char evidence_id[UMI_REG_ID_CAPACITY];
     char source_id[UMI_REG_ID_CAPACITY];

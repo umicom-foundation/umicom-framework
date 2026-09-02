@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection trace record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchSelectionTraceRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -40,28 +44,64 @@ typedef struct UmiWorkbenchSelectionTraceRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionTraceRecord;
 
+/**
+ * Initialise workbench selection trace record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_trace_record_init(
     UmiWorkbenchSelectionTraceRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection trace record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_trace_record_validate(
     const UmiWorkbenchSelectionTraceRecord *record);
+/**
+ * Provide the workbench selection trace record set source operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_trace_record_set_source(
     UmiWorkbenchSelectionTraceRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection trace record set subject operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_trace_record_set_subject(
     UmiWorkbenchSelectionTraceRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection trace record set secondary operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_trace_record_set_secondary(
     UmiWorkbenchSelectionTraceRecord *record,
     const char *secondary_id);
+/**
+ * Provide the workbench selection trace record set group operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_trace_record_set_group(
     UmiWorkbenchSelectionTraceRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection trace record set label operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_trace_record_set_label(
     UmiWorkbenchSelectionTraceRecord *record,
     const char *label);
+/**
+ * Provide the workbench selection trace record hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_selection_trace_record_hash(
     const UmiWorkbenchSelectionTraceRecord *record);
+/**
+ * Provide the workbench selection trace record touch operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_selection_trace_record_touch(
     UmiWorkbenchSelectionTraceRecord *record,
     uint64_t sequence,

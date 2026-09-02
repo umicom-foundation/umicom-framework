@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_EDITOR_WORKSPACE_EDIT_TEXT_CAPACITY 512U
 #define UMI_EDITOR_WORKSPACE_EDIT_PROVIDER_CAPACITY 128U
 
+/**
+ * List the named editor workspace edit state values accepted by this public contract.
+ */
 typedef enum UmiEditorWorkspaceEditState {
     UMI_EDITOR_WORKSPACE_EDIT_READY = 1,
     UMI_EDITOR_WORKSPACE_EDIT_APPLIED = 2,
@@ -51,6 +54,10 @@ typedef enum UmiEditorWorkspaceEditState {
     UMI_EDITOR_WORKSPACE_EDIT_UNRESOLVED = 5
 } UmiEditorWorkspaceEditState;
 
+/**
+ * Represent the editor workspace text edit data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceTextEdit {
     uint32_t struct_size;
     uint32_t api_version;
@@ -63,6 +70,10 @@ typedef struct UmiEditorWorkspaceTextEdit {
     int required;
 } UmiEditorWorkspaceTextEdit;
 
+/**
+ * Represent the editor workspace edit snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceEditSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -75,11 +86,27 @@ typedef struct UmiEditorWorkspaceEditSnapshot {
     int applicable;
 } UmiEditorWorkspaceEditSnapshot;
 
+/**
+ * Represent the editor workspace edit set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceEditSet UmiEditorWorkspaceEditSet;
 
+/**
+ * Initialise editor workspace edit set from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_workspace_edit_set_create(
     UmiEditorWorkspaceEditSet **out_edit_set);
+/**
+ * Release or reset state held by editor workspace edit set so the same storage can be
+ * reused safely.
+ */
 void umi_editor_workspace_edit_set_destroy(UmiEditorWorkspaceEditSet *edit_set);
+/**
+ * Release or reset state held by editor workspace edit set so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_workspace_edit_set_clear(
     UmiEditorWorkspaceEditSet *edit_set);
 
@@ -110,26 +137,54 @@ UmiStatus umi_editor_workspace_edit_set_resolve_document(
     const char *document_uri,
     const UmiEditorTextBuffer *buffer);
 
+/**
+ * Remove editor workspace edit set while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_workspace_edit_set_remove(
     UmiEditorWorkspaceEditSet *edit_set,
     const char *edit_id);
+/**
+ * Provide the editor workspace edit set finalize operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_edit_set_finalize(
     UmiEditorWorkspaceEditSet *edit_set);
+/**
+ * Provide the editor workspace edit set apply document operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_edit_set_apply_document(
     UmiEditorWorkspaceEditSet *edit_set,
     const char *document_uri,
     UmiEditorTextBuffer *buffer,
     int require_matching_revision,
     size_t *out_applied_count);
+/**
+ * Find editor workspace edit set while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_editor_workspace_edit_set_at(
     const UmiEditorWorkspaceEditSet *edit_set,
     size_t index,
     UmiEditorWorkspaceTextEdit *out_edit);
+/**
+ * Provide the editor workspace edit set snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_edit_set_snapshot(
     const UmiEditorWorkspaceEditSet *edit_set,
     UmiEditorWorkspaceEditSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor workspace edit set without changing
+ * their state.
+ */
 size_t umi_editor_workspace_edit_set_count(
     const UmiEditorWorkspaceEditSet *edit_set);
+/**
+ * Provide the editor workspace edit set revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_workspace_edit_set_revision(
     const UmiEditorWorkspaceEditSet *edit_set);
 

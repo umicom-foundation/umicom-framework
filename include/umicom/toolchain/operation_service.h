@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * List the named toolchain operation service state values accepted by this public
+ * contract.
+ */
 typedef enum UmiToolchainOperationServiceState {
     UMI_TOOLCHAIN_OPERATION_SERVICE_IDLE = 0,
     UMI_TOOLCHAIN_OPERATION_SERVICE_PREPARING = 1,
@@ -31,6 +35,10 @@ typedef enum UmiToolchainOperationServiceState {
     UMI_TOOLCHAIN_OPERATION_SERVICE_FAILED = 3
 } UmiToolchainOperationServiceState;
 
+/**
+ * Represent the toolchain operation service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainOperationService {
     UmiToolchainOperationContext context;
     UmiToolchainOperationServiceState state;
@@ -38,7 +46,15 @@ typedef struct UmiToolchainOperationService {
     uint64_t revision;
 } UmiToolchainOperationService;
 
+/**
+ * Initialise toolchain operation service from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_operation_service_init(UmiToolchainOperationService *service);
+/**
+ * Provide the toolchain operation service prepare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_operation_service_prepare(
     UmiToolchainOperationService *service,
     UmiToolchainOperationKind kind,
@@ -46,6 +62,10 @@ UmiStatus umi_toolchain_operation_service_prepare(
     const char *preferred_profile,
     UmiDiagnosticSink diagnostic_sink,
     void *diagnostic_user_data);
+/**
+ * Provide the toolchain operation service ready operation used by this module and its
+ * client applications.
+ */
 int umi_toolchain_operation_service_ready(const UmiToolchainOperationService *service);
 
 #ifdef __cplusplus

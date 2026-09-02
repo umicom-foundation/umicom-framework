@@ -21,8 +21,20 @@
 #include "umicom/ui/workstation/waveform_surface.h"
 #include "umicom/ui/workstation/canvas_surface.h"
 
+/**
+ * Initialise gtk4 ws media viewport from caller-provided values so later operations
+ * receive a known state.
+ */
 GtkWidget *umi_gtk4_ws_media_viewport_create(const UmiWsMediaViewport *viewport);
+/**
+ * Initialise gtk4 ws waveform from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_waveform_create(const UmiWsWaveformSurface *waveform);
+/**
+ * Initialise gtk4 ws canvas from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_canvas_create(const UmiWsCanvasSurface *canvas);
 
 #endif

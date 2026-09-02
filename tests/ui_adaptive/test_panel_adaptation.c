@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/panel_adaptation.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAdaptivePanelDecision d = umi_adaptive_panel_adaptation_resolve(UMI_DESIGN_SIZE_COMPACT, UMI_UI_PLACEMENT_RIGHT);

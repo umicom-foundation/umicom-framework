@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise portfolio position data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePortfolioPosition { UmiFinancialId product_id; double quantity; double unit_value; double market_value; } UmiEnterprisePortfolioPosition;
 /* Initialise a finite portfolio position and derive its market value. */
 UmiStatus umi_enterprise_portfolio_position_init(UmiEnterprisePortfolioPosition *position,const char *product_id,double quantity,double unit_value);

@@ -18,7 +18,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding tool debug step into descriptor operation used by this module and
+ * its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_debug_step_into_descriptor(void);
+/**
+ * Provide the ai coding tool debug step into invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_debug_step_into_invoke(
     const char *arguments_json,
     char *output,

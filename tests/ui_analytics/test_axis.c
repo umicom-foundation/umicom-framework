@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/axis.h"
 
-int main(void){UmiAnalyticsAxis a;if(umi_analytics_axis_init(&a,"y","Value",UMI_ANALYTICS_SCALE_LINEAR,-1,1)!=0)return 1;return umi_analytics_axis_valid(&a)?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsAxis a;/* Apply this operation only while the related capability or state is available. */ if(umi_analytics_axis_init(&a,"y","Value",UMI_ANALYTICS_SCALE_LINEAR,-1,1)!=0)return 1;return umi_analytics_axis_valid(&a)?0:2;}

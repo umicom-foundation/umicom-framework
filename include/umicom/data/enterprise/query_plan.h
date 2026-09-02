@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query plan data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryPlan { char plan_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char root_table[UMI_DATA_ENTERPRISE_ID_CAPACITY]; size_t predicate_count; size_t projection_count; size_t join_count; size_t order_count; uint64_t row_limit; bool read_only; } UmiDataQueryPlan;
 /* Initialise a query plan rooted at one logical table. */ UmiStatus umi_data_query_plan_init(UmiDataQueryPlan *plan,const char *plan_id,const char *root_table);
 /* Add bounded structural complexity evidence. */ UmiStatus umi_data_query_plan_shape(UmiDataQueryPlan *plan,size_t predicates,size_t projections,size_t joins,size_t orders,uint64_t row_limit);

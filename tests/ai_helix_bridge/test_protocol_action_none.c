@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test protocol action none and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_protocol_action_none(void){UmiHelixActionKind k=UMI_HELIX_ACTION_READ;TEST_CHECK(umi_ai_helix_protocol_parse_action("none",&k)==UMI_STATUS_OK);TEST_CHECK((uint32_t)k==0U);return 0;}

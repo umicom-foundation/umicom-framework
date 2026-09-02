@@ -47,6 +47,9 @@ extern "C" {
 #define UMI_DEBUG_REGISTER_TYPE_CAPACITY 128U
 #define UMI_DEBUG_REGISTER_FORMAT_CAPACITY 64U
 
+/**
+ * Represent the debug register group data shared with callers of this public contract.
+ */
 typedef struct UmiDebugRegisterGroup {
     uint32_t struct_size;
     uint32_t api_version;
@@ -62,6 +65,9 @@ typedef struct UmiDebugRegisterGroup {
     int available;
 } UmiDebugRegisterGroup;
 
+/**
+ * Represent the debug register value data shared with callers of this public contract.
+ */
 typedef struct UmiDebugRegisterValue {
     uint32_t struct_size;
     uint32_t api_version;
@@ -82,6 +88,10 @@ typedef struct UmiDebugRegisterValue {
     int available;
 } UmiDebugRegisterValue;
 
+/**
+ * Represent the debug register bank snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRegisterBankSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -95,66 +105,153 @@ typedef struct UmiDebugRegisterBankSnapshot {
     int has_selection;
 } UmiDebugRegisterBankSnapshot;
 
+/**
+ * Represent the debug register bank data shared with callers of this public contract.
+ */
 typedef struct UmiDebugRegisterBank UmiDebugRegisterBank;
 
+/**
+ * Initialise debug register bank from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_debug_register_bank_create(
     UmiDebugRegisterBank **out_bank);
+/**
+ * Release or reset state held by debug register bank so the same storage can be reused
+ * safely.
+ */
 void umi_debug_register_bank_destroy(UmiDebugRegisterBank *bank);
+/**
+ * Release or reset state held by debug register bank so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_debug_register_bank_clear(UmiDebugRegisterBank *bank);
+/**
+ * Provide the debug register bank upsert group operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_register_bank_upsert_group(
     UmiDebugRegisterBank *bank,
     const UmiDebugRegisterGroup *group);
+/**
+ * Add debug register bank upsert only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_debug_register_bank_upsert_register(
     UmiDebugRegisterBank *bank,
     const UmiDebugRegisterValue *register_value);
+/**
+ * Provide the debug register bank remove group operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_register_bank_remove_group(
     UmiDebugRegisterBank *bank,
     const char *group_id);
+/**
+ * Add debug register bank remove only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_debug_register_bank_remove_register(
     UmiDebugRegisterBank *bank,
     const char *register_id);
+/**
+ * Provide the debug register bank set group expanded operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_register_bank_set_group_expanded(
     UmiDebugRegisterBank *bank,
     const char *group_id,
     int expanded);
+/**
+ * Provide the debug register bank select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_register_bank_select(
     UmiDebugRegisterBank *bank,
     const char *register_id);
+/**
+ * Provide the debug register bank update value operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_register_bank_update_value(
     UmiDebugRegisterBank *bank,
     const char *register_id,
     const char *value,
     const char *raw_value,
     int changed);
+/**
+ * Provide the debug register bank find group operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_register_bank_find_group(
     const UmiDebugRegisterBank *bank,
     const char *group_id,
     UmiDebugRegisterGroup *out_group);
+/**
+ * Add debug register bank find only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_debug_register_bank_find_register(
     const UmiDebugRegisterBank *bank,
     const char *register_id,
     UmiDebugRegisterValue *out_register);
+/**
+ * Find debug register bank group while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_register_bank_group_at(
     const UmiDebugRegisterBank *bank,
     size_t index,
     UmiDebugRegisterGroup *out_group);
+/**
+ * Find debug register bank register while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_debug_register_bank_register_at(
     const UmiDebugRegisterBank *bank,
     size_t index,
     UmiDebugRegisterValue *out_register);
+/**
+ * Find debug register bank visible register while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_debug_register_bank_visible_register_at(
     const UmiDebugRegisterBank *bank,
     size_t visible_index,
     UmiDebugRegisterValue *out_register);
+/**
+ * Find debug register bank while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_debug_register_bank_selected(
     const UmiDebugRegisterBank *bank,
     UmiDebugRegisterValue *out_register);
+/**
+ * Provide the debug register bank snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_register_bank_snapshot(
     const UmiDebugRegisterBank *bank,
     UmiDebugRegisterBankSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by debug register bank group without changing
+ * their state.
+ */
 size_t umi_debug_register_bank_group_count(const UmiDebugRegisterBank *bank);
+/**
+ * Return the number of records represented by debug register bank register without
+ * changing their state.
+ */
 size_t umi_debug_register_bank_register_count(const UmiDebugRegisterBank *bank);
+/**
+ * Return the number of records represented by debug register bank visible without changing
+ * their state.
+ */
 size_t umi_debug_register_bank_visible_count(const UmiDebugRegisterBank *bank);
+/**
+ * Provide the debug register bank revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_register_bank_revision(const UmiDebugRegisterBank *bank);
 
 #ifdef __cplusplus

@@ -22,9 +22,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote process exit policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTerminalRemoteProcessExitPolicy { int success_code; bool restart_on_failure; } UmiTerminalRemoteProcessExitPolicy;
+/**
+ * Initialise terminal remote process exit policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_process_exit_policy_init(UmiTerminalRemoteProcessExitPolicy *value);
+/**
+ * Provide the terminal remote process exit policy successful operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_process_exit_policy_successful(const UmiTerminalRemoteProcessExitPolicy *value,int exit_code);
+/**
+ * Provide the terminal remote process exit policy restart operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_process_exit_policy_restart(const UmiTerminalRemoteProcessExitPolicy *value,int exit_code);
 #ifdef __cplusplus
 }

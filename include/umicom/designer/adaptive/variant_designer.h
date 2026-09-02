@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer variant designer data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerVariantDesigner {
     UmiDesignerAdaptiveVariantSet variants;
     char selected_variant_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

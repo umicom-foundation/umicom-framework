@@ -32,6 +32,7 @@ umicom_compute_public_contract_fingerprint(
     _umicom_after
     "${_umicom_fixture_root}")
 
+# Use the stable identifier comparison to choose the matching record or policy.
 if(_umicom_before STREQUAL _umicom_after)
     message(FATAL_ERROR
         "Public contract fingerprint did not change with header content.")

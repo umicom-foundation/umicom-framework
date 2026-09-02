@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced directory entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedDirectoryEntry {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +40,20 @@ typedef struct UmiVcsAdvancedDirectoryEntry {
     int symlink;
 } UmiVcsAdvancedDirectoryEntry;
 
+/**
+ * Initialise vcs advanced directory entry from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_directory_entry_init(UmiVcsAdvancedDirectoryEntry *value);
+/**
+ * Check that vcs advanced directory entry satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_directory_entry_validate(const UmiVcsAdvancedDirectoryEntry *value);
+/**
+ * Copy vcs advanced directory entry into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_directory_entry_set(UmiVcsAdvancedDirectoryEntry *value,
                                                  const char *relative_path,
                                                  uint64_t size_bytes,

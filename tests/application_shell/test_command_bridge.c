@@ -18,6 +18,10 @@
 
 #include "umicom/application_shell/command_bridge.h"
 
+/*
+ * Exercise handle command and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus handle_command(void *user_data,
                                 const char *argument,
                                 char *out_message,
@@ -27,12 +31,20 @@ static UmiStatus handle_command(void *user_data,
     (void)argument;
 
     *calls += 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s", "executed");
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationShellRegistry *shell = NULL;

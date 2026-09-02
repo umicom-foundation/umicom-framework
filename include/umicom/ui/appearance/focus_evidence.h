@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance focus evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceFocusEvidence {
     char element_id[UMI_APPEARANCE_ID_CAPACITY];
     bool keyboard_reachable;

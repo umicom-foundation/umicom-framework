@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 
+/* Provide the make key operation used by this module and its client applications. */
 static UmiStatus make_key(
     const char *prefix,
     const char *suffix,
@@ -28,6 +29,7 @@ static UmiStatus make_key(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the set number operation used by this module and its client applications. */
 static UmiStatus set_number(
     UmiSessionStore *store,
     const char *prefix,
@@ -36,10 +38,12 @@ static UmiStatus set_number(
 {
     char key[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status = make_key(prefix, suffix, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_ai_developer_persistence_set_uint64(store, key, value);
 }
 
+/* Provide the get number operation used by this module and its client applications. */
 static UmiStatus get_number(
     const UmiSessionStore *store,
     const char *prefix,
@@ -49,11 +53,16 @@ static UmiStatus get_number(
 {
     char key[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status = make_key(prefix, suffix, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_ai_developer_persistence_get_uint64(
         store, key, default_value, out_value);
 }
 
+/*
+ * Write ai developer preferences in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ai_developer_preferences_save(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -61,39 +70,51 @@ UmiStatus umi_ai_developer_preferences_save(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL || preferences == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_ai_developer_preferences_validate(preferences);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = set_number(
         store, key_prefix, "diffLayout", preferences->diff_layout);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "contextLines",
             preferences->diff_context_lines);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "visibleRows",
             preferences->visible_rows);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "autoFollow",
             preferences->auto_follow_active_task ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "autoReview",
             preferences->auto_open_review ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "toolArguments",
             preferences->show_tool_arguments ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "validationOutput",
             preferences->show_validation_output ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, key_prefix, "contextTokens",
@@ -102,6 +123,10 @@ UmiStatus umi_ai_developer_preferences_save(
     return status;
 }
 
+/*
+ * Provide the ai developer preferences restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_preferences_restore(
     const UmiSessionStore *store,
     const char *key_prefix,
@@ -111,6 +136,10 @@ UmiStatus umi_ai_developer_preferences_restore(
     uint64_t value = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         preferences == NULL || out_restored == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -120,14 +149,17 @@ UmiStatus umi_ai_developer_preferences_restore(
     umi_ai_developer_preferences_init(preferences);
 
     status = get_number(store, key_prefix, "diffLayout", UINT64_MAX, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (value == UINT64_MAX) return UMI_STATUS_OK;
 
     preferences->diff_layout = (UmiAiDeveloperDiffLayout)value;
 
     status = get_number(
         store, key_prefix, "contextLines", 3U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > SIZE_MAX) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_CAPACITY_EXCEEDED;
@@ -136,6 +168,7 @@ UmiStatus umi_ai_developer_preferences_restore(
 
     status = get_number(
         store, key_prefix, "visibleRows", 24U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > SIZE_MAX) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_CAPACITY_EXCEEDED;
@@ -144,6 +177,7 @@ UmiStatus umi_ai_developer_preferences_restore(
 
     status = get_number(
         store, key_prefix, "autoFollow", 1U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > 1U) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_PARSE_ERROR;
@@ -152,6 +186,7 @@ UmiStatus umi_ai_developer_preferences_restore(
 
     status = get_number(
         store, key_prefix, "autoReview", 1U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > 1U) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_PARSE_ERROR;
@@ -160,6 +195,7 @@ UmiStatus umi_ai_developer_preferences_restore(
 
     status = get_number(
         store, key_prefix, "toolArguments", 0U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > 1U) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_PARSE_ERROR;
@@ -168,6 +204,7 @@ UmiStatus umi_ai_developer_preferences_restore(
 
     status = get_number(
         store, key_prefix, "validationOutput", 1U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > 1U) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_PARSE_ERROR;
@@ -176,6 +213,7 @@ UmiStatus umi_ai_developer_preferences_restore(
 
     status = get_number(
         store, key_prefix, "contextTokens", 1U, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > 1U) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_PARSE_ERROR;
@@ -185,6 +223,7 @@ UmiStatus umi_ai_developer_preferences_restore(
     preferences->revision += 1U;
 
     status = umi_ai_developer_preferences_validate(preferences);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     *out_restored = 1;

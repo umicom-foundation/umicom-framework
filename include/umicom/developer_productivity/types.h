@@ -33,6 +33,9 @@ extern "C" {
 #define UMI_DEVELOPER_PRODUCTIVITY_LINE_CAPACITY 1024U
 #define UMI_DEVELOPER_PRODUCTIVITY_OUTPUT_CAPACITY 65536U
 
+/**
+ * List the named developer productivity severity values accepted by this public contract.
+ */
 typedef enum UmiDeveloperProductivitySeverity {
     UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_HINT = 0,
     UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_INFO = 1,
@@ -41,6 +44,10 @@ typedef enum UmiDeveloperProductivitySeverity {
     UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_FATAL = 4
 } UmiDeveloperProductivitySeverity;
 
+/**
+ * Represent the developer productivity location data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProductivityLocation {
     char uri[UMI_DEVELOPER_PRODUCTIVITY_PATH_CAPACITY];
     size_t line;
@@ -49,9 +56,17 @@ typedef struct UmiDeveloperProductivityLocation {
     size_t end_column;
 } UmiDeveloperProductivityLocation;
 
+/**
+ * Provide the developer productivity severity text operation used by this module and its
+ * client applications.
+ */
 const char *umi_developer_productivity_severity_text(
     UmiDeveloperProductivitySeverity severity);
 
+/**
+ * Check that developer productivity location satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_productivity_location_validate(
     const UmiDeveloperProductivityLocation *location);
 

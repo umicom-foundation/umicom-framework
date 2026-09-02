@@ -24,6 +24,10 @@ typedef struct CommandFixture {
     int execution_count;
 } CommandFixture;
 
+/*
+ * Exercise command enabled and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int command_enabled(void *user_data, const char *argument)
 {
     CommandFixture *fixture = (CommandFixture *)user_data;
@@ -31,6 +35,10 @@ static int command_enabled(void *user_data, const char *argument)
     return fixture->enabled;
 }
 
+/*
+ * Exercise command handler and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus command_handler(void *user_data,
                                  const char *argument,
                                  char *out_message,
@@ -38,6 +46,10 @@ static UmiStatus command_handler(void *user_data,
 {
     CommandFixture *fixture = (CommandFixture *)user_data;
     fixture->execution_count += 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message,
                        message_capacity,
@@ -47,6 +59,10 @@ static UmiStatus command_handler(void *user_data,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommandRegistry *registry = NULL;

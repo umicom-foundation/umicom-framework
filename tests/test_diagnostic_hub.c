@@ -21,6 +21,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise count sink and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void count_sink(const UmiDiagnostic *diagnostic, void *user_data)
 {
     size_t *count = (size_t *)user_data;
@@ -28,6 +32,10 @@ static void count_sink(const UmiDiagnostic *diagnostic, void *user_data)
     ++(*count);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticHub hub;

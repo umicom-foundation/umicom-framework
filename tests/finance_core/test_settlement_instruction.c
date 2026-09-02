@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/settlement_instruction.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSettlementInstruction x; CHECK(umi_settlement_instruction_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_settlement_instruction_is_valid(&x));

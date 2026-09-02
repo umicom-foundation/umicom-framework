@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise ai developer view factory from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_view_factory_create(
     UmiAiDeveloperExperiencePlatform *platform,
     UmiAiDeveloperPaneKind pane,

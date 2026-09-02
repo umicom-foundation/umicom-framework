@@ -22,11 +22,19 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap provider descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_provider_descriptor_init(
     UmiBootstrapProviderDescriptor *descriptor,
     const char *provider_id,
     const char *module_id,
     int32_t priority);
+/**
+ * Check that bootstrap provider descriptor satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_bootstrap_provider_descriptor_valid(
     const UmiBootstrapProviderDescriptor *descriptor);
 

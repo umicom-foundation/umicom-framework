@@ -32,6 +32,9 @@ extern "C" {
 #define UMI_APPLICATION_SHELL_MAX_CONTRIBUTIONS 1024U
 #define UMI_APPLICATION_SHELL_MAX_PROFILE_ITEMS 128U
 
+/**
+ * List the named application shell role values accepted by this public contract.
+ */
 typedef enum UmiApplicationShellRole {
     UMI_APPLICATION_SHELL_ROLE_MENU = 1,
     UMI_APPLICATION_SHELL_ROLE_MENU_ITEM = 2,
@@ -47,6 +50,9 @@ typedef enum UmiApplicationShellRole {
     UMI_APPLICATION_SHELL_ROLE_SERVICE_SURFACE = 12
 } UmiApplicationShellRole;
 
+/**
+ * List the named application shell region values accepted by this public contract.
+ */
 typedef enum UmiApplicationShellRegion {
     UMI_APPLICATION_SHELL_REGION_NONE = 0,
     UMI_APPLICATION_SHELL_REGION_MENU_BAR = 1,
@@ -75,6 +81,10 @@ enum {
     UMI_APPLICATION_SHELL_PINNABLE = 1U << 9
 };
 
+/**
+ * Represent the application shell contribution data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationShellContribution {
     uint32_t structure_size;
     uint32_t api_version;
@@ -94,6 +104,10 @@ typedef struct UmiApplicationShellContribution {
     uint64_t revision;
 } UmiApplicationShellContribution;
 
+/**
+ * Initialise application shell contribution from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_shell_contribution_init(
     UmiApplicationShellContribution *contribution,
     const char *contribution_id,
@@ -101,10 +115,22 @@ void umi_application_shell_contribution_init(
     UmiApplicationShellRole role,
     UmiApplicationShellRegion region);
 
+/**
+ * Check that application shell contribution satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_shell_contribution_validate(
     const UmiApplicationShellContribution *contribution);
 
+/**
+ * Provide the application shell role text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_shell_role_text(UmiApplicationShellRole role);
+/**
+ * Provide the application shell region text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_shell_region_text(UmiApplicationShellRegion region);
 
 #ifdef __cplusplus

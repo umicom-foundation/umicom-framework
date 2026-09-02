@@ -26,6 +26,9 @@ extern "C" {
 
 #define UMI_TOOLCHAIN_PROBE_OUTPUT_CAPACITY 1024U
 
+/**
+ * Represent the toolchain probe report data shared with callers of this public contract.
+ */
 typedef struct UmiToolchainProbeReport {
     UmiToolKind kind;
     UmiStatus status;
@@ -37,8 +40,16 @@ typedef struct UmiToolchainProbeReport {
     char detail[UMI_TOOLCHAIN_PROBE_OUTPUT_CAPACITY];
 } UmiToolchainProbeReport;
 
+/**
+ * Initialise toolchain probe report from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_probe_report_init(UmiToolchainProbeReport *report,
                                      UmiToolKind kind);
+/**
+ * Check that toolchain probe report satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_toolchain_probe_report_validate(const UmiToolchainProbeReport *report);
 
 #ifdef __cplusplus

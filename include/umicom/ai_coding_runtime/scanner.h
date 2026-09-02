@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding scan entry data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingScanEntry {
     char relative_path[UMI_AI_CODING_RUNTIME_PATH_CAPACITY];
     uint64_t byte_size;
@@ -33,6 +36,10 @@ typedef UmiStatus (*UmiAiCodingScanVisitor)(
     const UmiAiCodingScanEntry *entry,
     int *out_descend);
 
+/**
+ * Provide the ai coding scan workspace operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_scan_workspace(
     const char *root,
     const UmiAiCodingIgnorePolicy *ignore_policy,

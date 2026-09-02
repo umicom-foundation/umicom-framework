@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcCapability c;
     CHECK(umi_fc_capability_make(UMI_FC_CAP_DOCK, "dock", "Docking", true, &c) == UMI_STATUS_OK);

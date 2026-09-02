@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the debug runtime decode exception info operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_decode_exception_info(
     const char *json,
     UmiDebugRuntimeExceptionInfo *out_result)
@@ -26,11 +30,17 @@ UmiStatus umi_debug_runtime_decode_exception_info(
     int details_token;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || out_result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_result, 0, sizeof(*out_result));
     status = umi_language_runtime_json_parse(json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     body = umi_debug_runtime_decoder_body_token(&document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (body < 0) return UMI_STATUS_PARSE_ERROR;
 
     (void)umi_debug_runtime_decoder_optional_string(
@@ -45,6 +55,7 @@ UmiStatus umi_debug_runtime_decode_exception_info(
 
     details_token = umi_language_runtime_json_object_get(
         &document, body, "details");
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (details_token >= 0) {
         (void)umi_debug_runtime_decoder_optional_string(
             &document, details_token, "message",

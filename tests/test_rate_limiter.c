@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/resilience/rate_limiter.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiRateLimiterConfig c = {2.0,1.0}; UmiRateLimiter *l = NULL;
     assert(umi_rate_limiter_create(&c, 0U, &l) == UMI_STATUS_OK);

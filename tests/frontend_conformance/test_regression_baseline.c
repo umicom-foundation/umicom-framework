@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcRegressionBaseline b; CHECK(umi_fc_regression_baseline_make("gtk4",0.95,0U,123U,5U,&b)==UMI_STATUS_OK); CHECK(b.score==0.95&&b.revision==5U);
     return 0;

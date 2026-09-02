@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics bar chart data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsBarChart { UmiAnalyticsOrientation orientation; double gap_ratio; } UmiAnalyticsBarChart;
+/**
+ * Initialise analytics bar chart from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_analytics_bar_chart_init(UmiAnalyticsBarChart *item);
+/**
+ * Check that analytics bar chart satisfies its contract before another service relies on
+ * it.
+ */
 int umi_analytics_bar_chart_valid(const UmiAnalyticsBarChart *item);
 
 #ifdef __cplusplus

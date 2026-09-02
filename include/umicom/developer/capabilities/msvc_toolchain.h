@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_MSVC_TOOLCHAIN "umicom.developer.integration.msvc_toolchain"
 
+/**
+ * Provide the developer capability msvc toolchain operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_msvc_toolchain(void);
 

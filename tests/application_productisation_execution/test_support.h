@@ -19,6 +19,10 @@
 #include <string.h>
 #include "umicom/application/productisation/execution/execution.h"
 
+/**
+ * Exercise test step and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static inline UmiProductisationCompletionStep test_step(
     UmiProductisationStage stage,
     UmiProductisationSeverity severity,
@@ -39,6 +43,10 @@ static inline UmiProductisationCompletionStep test_step(
     (void)snprintf(step.action, sizeof(step.action), "Complete %s", asset);
     return step;
 }
+/**
+ * Exercise test plan two stage and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiProductisationCompletionPlan test_plan_two_stage(void)
 {
     UmiProductisationCompletionPlan plan;
@@ -52,6 +60,10 @@ static inline UmiProductisationCompletionPlan test_plan_two_stage(void)
     plan.step_count = 2U;
     return plan;
 }
+/**
+ * Exercise test success adapter and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiStatus test_success_adapter(
     void *context,
     const UmiProductExecutionWorkItem *item,
@@ -60,12 +72,20 @@ static inline UmiStatus test_success_adapter(
     UmiProductExecutionOutcome *outcome)
 {
     (void)context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL || evidence == NULL || capacity == 0U || outcome == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)snprintf(evidence, capacity, "evidence:%zu", item->plan_index);
     *outcome = UMI_PRODUCT_EXECUTION_OUTCOME_SUCCESS;
     return UMI_STATUS_OK;
 }
+/**
+ * Exercise test retry adapter and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiStatus test_retry_adapter(
     void *context,
     const UmiProductExecutionWorkItem *item,
@@ -78,6 +98,10 @@ static inline UmiStatus test_retry_adapter(
     *outcome = UMI_PRODUCT_EXECUTION_OUTCOME_RETRYABLE_FAILURE;
     return UMI_STATUS_IO_ERROR;
 }
+/**
+ * Exercise test adapter and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static inline UmiProductExecutionAdapter test_adapter(void)
 {
     UmiProductExecutionAdapter adapter;

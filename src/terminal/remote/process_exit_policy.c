@@ -17,6 +17,18 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/process_exit_policy.h"
-void umi_terminal_remote_process_exit_policy_init(UmiTerminalRemoteProcessExitPolicy *value) { if(value) { value->success_code=0; value->restart_on_failure=true; } }
+/*
+ * Initialise terminal remote process exit policy from caller-provided values so later
+ * operations receive a known state.
+ */
+void umi_terminal_remote_process_exit_policy_init(UmiTerminalRemoteProcessExitPolicy *value) { /* Apply this branch only when its contract condition is satisfied. */ if(value) { value->success_code=0; value->restart_on_failure=true; } }
+/*
+ * Provide the terminal remote process exit policy successful operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_process_exit_policy_successful(const UmiTerminalRemoteProcessExitPolicy *value,int exit_code) { return value&&exit_code==value->success_code; }
+/*
+ * Provide the terminal remote process exit policy restart operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_process_exit_policy_restart(const UmiTerminalRemoteProcessExitPolicy *value,int exit_code) { return value&&value->restart_on_failure&&!umi_terminal_remote_process_exit_policy_successful(value,exit_code); }

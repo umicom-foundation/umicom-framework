@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity storage cost data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityStorageCost {
     UmiCommodityId facility_id;
     int64_t minor_units_per_day_per_unit;

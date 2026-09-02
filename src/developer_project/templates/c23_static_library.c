@@ -61,6 +61,10 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
     }
 };
 
+/*
+ * Provide the developer project template c23 static library operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_c23_static_library(void)
 {
     static const UmiDeveloperProjectTemplate project_template = {

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout placement options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutPlacementOptions {
     uint32_t structure_size;
     int32_t cascade_offset_x;
@@ -34,6 +38,10 @@ typedef struct UmiWorkbenchLayoutPlacementOptions {
     bool relocate_offscreen_windows;
 } UmiWorkbenchLayoutPlacementOptions;
 
+/**
+ * Represent the workbench layout placement report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutPlacementReport {
     uint32_t structure_size;
     size_t inspected_count;
@@ -44,15 +52,27 @@ typedef struct UmiWorkbenchLayoutPlacementReport {
     bool changed;
 } UmiWorkbenchLayoutPlacementReport;
 
+/**
+ * Provide the workbench layout placement options default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutPlacementOptions
 umi_workbench_layout_placement_options_default(void);
 
+/**
+ * Provide the workbench layout place document operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_place_document(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchMonitorTopology *topology,
     const UmiWorkbenchLayoutPlacementOptions *options,
     UmiWorkbenchLayoutPlacementReport *out_report);
 
+/**
+ * Provide the workbench layout place node operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_place_node(
     UmiWorkbenchLayoutNode *node,
     const UmiWorkbenchMonitorTopology *topology,
@@ -60,11 +80,19 @@ UmiStatus umi_workbench_layout_place_node(
     size_t cascade_index,
     bool *out_changed);
 
+/**
+ * Provide the workbench layout clamp rect operation used by this module and its client
+ * applications.
+ */
 UmiWorkbenchLayoutRect umi_workbench_layout_clamp_rect(
     const UmiWorkbenchLayoutRect *rect,
     const UmiWorkbenchLayoutRect *work_area,
     const UmiWorkbenchLayoutSize *minimum_size);
 
+/**
+ * Provide the workbench layout cascade rect operation used by this module and its client
+ * applications.
+ */
 UmiWorkbenchLayoutRect umi_workbench_layout_cascade_rect(
     const UmiWorkbenchLayoutRect *work_area,
     const UmiWorkbenchLayoutSize *size,

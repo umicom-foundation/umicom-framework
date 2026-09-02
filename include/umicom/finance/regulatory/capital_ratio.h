@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the capital ratio data shared with callers of this public contract.
+ */
 typedef struct UmiCapitalRatio { double capital; double risk_weighted_assets; double ratio; } UmiCapitalRatio;
 /* Compute capital divided by risk-weighted assets. */
 UmiStatus umi_reg_capital_ratio_compute(UmiCapitalRatio *result,double capital,double risk_weighted_assets);

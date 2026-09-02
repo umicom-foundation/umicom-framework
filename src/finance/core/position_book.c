@@ -16,13 +16,22 @@
 
 #include <string.h>
 /* Reset collection. */ void umi_financial_position_book_init(UmiFinancialPositionBook *book) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (book != NULL)
     memset(book, 0, sizeof *book);
 }
 /* Append valid item. */ UmiStatus umi_financial_position_book_add(UmiFinancialPositionBook *book,
                                                                    const UmiPosition *item) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (book == NULL || item == NULL || !umi_position_is_valid(item))
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (book->count >= UMI_FINANCIAL_CORE_MAX_ITEMS)
     return UMI_STATUS_CAPACITY_EXCEEDED;
   book->items[book->count++] = *item;

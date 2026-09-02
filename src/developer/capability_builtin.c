@@ -138,11 +138,19 @@ static const CapabilityFn BUILTINS[] = {
     umi_developer_capability_capability_negotiation,
 };
 
+/*
+ * Return the number of records represented by developer capability builtin without
+ * changing their state.
+ */
 size_t umi_developer_capability_builtin_count(void)
 {
     return sizeof(BUILTINS) / sizeof(BUILTINS[0]);
 }
 
+/*
+ * Find developer capability builtin while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_builtin_at(size_t index)
 {

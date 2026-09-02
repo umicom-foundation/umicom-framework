@@ -24,8 +24,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb line number model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbLineNumberModel { UmiEditorWbLineNumberMode mode; uint32_t cursor_line; } UmiEditorWbLineNumberModel;
+/**
+ * Initialise editor wb line number model from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_line_number_model_init(UmiEditorWbLineNumberModel *model,UmiEditorWbLineNumberMode mode,uint32_t cursor_line);
+/**
+ * Provide the editor wb line number model value operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_editor_wb_line_number_model_value(const UmiEditorWbLineNumberModel *model,uint32_t line);
 
 #ifdef __cplusplus

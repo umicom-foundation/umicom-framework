@@ -1,4 +1,20 @@
 #-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDocumentCapabilities.cmake
+#
+# PURPOSE:
+#   Configure the umicom document capabilities build rules without duplicating
+#   product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
 # Umicom Framework document capability source inventory.
 # Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
 #-----------------------------------------------------------------------------

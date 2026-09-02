@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/factor_attribution.h"
+/*
+ * Provide the factor contribution operation used by this module and its client
+ * applications.
+ */
 double umi_factor_contribution(double change,double weight){return change*weight;}

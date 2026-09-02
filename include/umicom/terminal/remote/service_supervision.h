@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named terminal remote service supervision action values accepted by this public
+ * contract.
+ */
 typedef enum UmiTerminalRemoteServiceSupervisionAction { UMI_TERMINAL_REMOTE_SERVICE_SUPERVISION_NONE=0, UMI_TERMINAL_REMOTE_SERVICE_SUPERVISION_START=1, UMI_TERMINAL_REMOTE_SERVICE_SUPERVISION_RESTART=2, UMI_TERMINAL_REMOTE_SERVICE_SUPERVISION_STOP=3 } UmiTerminalRemoteServiceSupervisionAction;
+/**
+ * Provide the terminal remote service supervision decide operation used by this module and
+ * its client applications.
+ */
 UmiTerminalRemoteServiceSupervisionAction umi_terminal_remote_service_supervision_decide(UmiTerminalRemoteState desired,UmiTerminalRemoteState observed,UmiTerminalRemoteHealth health);
 #ifdef __cplusplus
 }

@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data unit of work data shared with callers of this public contract.
+ */
 typedef struct UmiDataUnitOfWork { char unit_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; UmiDataIdentityMap identities; UmiDataChangeTracker changes; bool transaction_open; bool validation_passed; bool committed; } UmiDataUnitOfWork;
 /* Open a new logical unit of work. */ UmiStatus umi_data_unit_of_work_begin(UmiDataUnitOfWork *unit,const char *unit_id);
 /* Mark validation evidence after repository/query preparation. */ UmiStatus umi_data_unit_of_work_validate(UmiDataUnitOfWork *unit,bool passed);

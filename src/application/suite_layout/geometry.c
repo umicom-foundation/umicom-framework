@@ -16,6 +16,10 @@
 #include "umicom/application/suite_layout/geometry.h"
 #include "umicom/ui/workspace_geometry.h"
 
+/*
+ * Provide the application suite layout region supported operation used by this module and
+ * its client applications.
+ */
 int umi_application_suite_layout_region_supported(UmiUiPlacement placement)
 {
     /* Keep the established application API as a compatibility wrapper around

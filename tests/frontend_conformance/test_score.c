@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     CHECK(umi_fc_score_weighted(9.0,10.0)>0.89); CHECK(umi_fc_score_grade(0.96,0U)==UMI_FC_GRADE_A); CHECK(umi_fc_score_grade(1.0,1U)==UMI_FC_GRADE_FAIL);
     return 0;

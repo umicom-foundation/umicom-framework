@@ -17,6 +17,10 @@
 
 #include "umicom/developer_workbench/configuration_registry.h"
 
+/*
+ * Exercise make configuration and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void make_configuration(UmiDeveloperWorkbenchConfiguration *value,
                                const char *id,
                                const char *title)
@@ -26,6 +30,10 @@ static void make_configuration(UmiDeveloperWorkbenchConfiguration *value,
     (void)strcpy(value->build_directory, "build/debug");
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperWorkbenchConfigurationRegistry *registry = NULL;

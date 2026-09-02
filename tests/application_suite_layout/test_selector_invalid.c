@@ -12,6 +12,10 @@
 #include <assert.h>
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/suite_layout/selector_model.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiApplicationExperienceDefinition *experience =

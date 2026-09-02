@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/toolchain/scoped_discovery.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiToolchainScopedDiscoveryReport o; assert(umi_toolchain_discover_scoped(NULL,&o)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

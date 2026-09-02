@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the toolchain operation catalogue profile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_operation_catalogue_profile(
     UmiToolchainOperationKind kind,
     UmiToolchainOperationProfile *out_profile);

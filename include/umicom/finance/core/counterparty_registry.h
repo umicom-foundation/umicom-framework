@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the counterparty registry data shared with callers of this public contract.
+ */
 typedef struct UmiCounterpartyRegistry { UmiCounterparty items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiCounterpartyRegistry;
 /* Reset the bounded registry. */ void umi_counterparty_registry_init(UmiCounterpartyRegistry *registry);
 /* Add a unique item. */ UmiStatus umi_counterparty_registry_add(UmiCounterpartyRegistry *registry,const UmiCounterparty *item);

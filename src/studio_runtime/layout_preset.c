@@ -26,17 +26,27 @@ int umi_studio_layout_preset_contains_surface(
      * public query safe for menu previews and validation tools. */
     if (preset == NULL || preset->visible_surfaces == NULL) return 0;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < preset->visible_surface_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (preset->visible_surfaces[index] == kind) return 1;
     }
     return 0;
 }
 
+/*
+ * Check that studio layout preset satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_studio_layout_preset_validate(
     const UmiStudioRuntimeLayoutPresetDefinition *preset)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preset == NULL ||
         preset->preset_id == NULL || preset->preset_id[0] == '\0' ||
         preset->title == NULL || preset->title[0] == '\0' ||
@@ -48,7 +58,9 @@ UmiStatus umi_studio_layout_preset_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < preset->visible_surface_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (preset->visible_surfaces[index] < UMI_STUDIO_SURFACE_EXPLORER ||
             preset->visible_surfaces[index] > UMI_STUDIO_SURFACE_LAST) {
             return UMI_STATUS_INVALID_ARGUMENT;
@@ -58,6 +70,10 @@ UmiStatus umi_studio_layout_preset_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform studio layout preset through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_studio_layout_preset_apply(
     UmiStudioRuntimeBindings *bindings,
     const UmiStudioRuntimeLayoutPresetDefinition *preset)
@@ -65,14 +81,21 @@ UmiStatus umi_studio_layout_preset_apply(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_studio_runtime_bindings_validate(bindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_layout_preset_validate(preset);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_studio_surface_catalogue_count(); ++index) {
         const UmiStudioRuntimeSurfaceBinding *surface =
             umi_studio_surface_catalogue_at(index);
@@ -81,12 +104,17 @@ UmiStatus umi_studio_layout_preset_apply(
             surface != NULL && umi_studio_layout_preset_contains_surface(
                                    preset, surface->kind);
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (surface == NULL) continue;
 
         status = umi_studio_runtime_surface_resolve(
             bindings->shell_registry,
             surface,
             &contribution);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_application_shell_registry_set_state(
@@ -96,6 +124,7 @@ UmiStatus umi_studio_layout_preset_apply(
             (contribution.flags & UMI_APPLICATION_SHELL_ENABLED) != 0U,
             (contribution.flags & UMI_APPLICATION_SHELL_CHECKED) != 0U,
             contribution.badge_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_application_shell_layout_place(
@@ -105,12 +134,14 @@ UmiStatus umi_studio_layout_preset_apply(
             surface->region,
             (size_t)(surface->order >= 0 ? surface->order : 0),
             visible);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     status = umi_application_shell_state_set_perspective(
         bindings->shell_state,
         preset->perspective_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_application_shell_state_set_regions(

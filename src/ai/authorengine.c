@@ -127,6 +127,7 @@ UmiStatus umi_ai_authorengine_plan_publication_invocation(
     status = invocation_add(out_invocation, command_text);
     /* A site override is meaningful only to the preview server command. */
     if (status == UMI_STATUS_OK && site_path != NULL && site_path[0] != '\0') {
+        /* Use the shared build helper when it is available from the parent composition. */
         if (command != UMI_AI_AUTHOR_ENGINE_SERVE_PREVIEW) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
@@ -181,36 +182,47 @@ UmiStatus umi_ai_authorengine_plan_invocation(
     if (status == UMI_STATUS_OK) {
         status = invocation_add(out_invocation, "--workspace");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = invocation_add(out_invocation, config->workspace);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = invocation_add(out_invocation, "--provider");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = invocation_add(out_invocation, config->provider);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, "--session");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, session_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, "--model");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, model_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, "--input");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, input_path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, "--output");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
         status = invocation_add(out_invocation, output_path);
     }

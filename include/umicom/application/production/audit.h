@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/portfolio_report.h"
 
+/**
+ * Represent the application production gap audit data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationProductionGapAudit {
     size_t application_count;
     size_t panel_count;
@@ -40,6 +44,10 @@ typedef struct UmiApplicationProductionGapAudit {
     size_t manifest_drift_count;
 } UmiApplicationProductionGapAudit;
 
+/**
+ * Provide the application production gap audit build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_production_gap_audit_build(
     const UmiApplicationProductionPortfolio *portfolio,
     UmiApplicationProductionGapAudit *out_audit);

@@ -24,6 +24,9 @@
 #include "umicom/security/approval.h"
 #include "umicom/security/package_trust.h"
 #include "umicom/security/security_audit.h"
+/**
+ * Represent the security access request data shared with callers of this public contract.
+ */
 typedef struct UmiSecurityAccessRequest {
     char identity_id[UMI_SECURITY_GOVERNANCE_ID_CAPACITY];
     char role_id[UMI_SECURITY_GOVERNANCE_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiSecurityAccessRequest {
     uint64_t now_ns;
     uint64_t correlation_id;
 } UmiSecurityAccessRequest;
+/**
+ * Represent the security governance centre data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiSecurityGovernanceCentre {
     UmiSecurityIdentityDirectory identities;
     UmiSecurityRolePolicyStore roles;
@@ -47,6 +54,10 @@ typedef struct UmiSecurityGovernanceCentre {
     UmiSecurityAuditTrail audit;
     uint64_t revision;
 } UmiSecurityGovernanceCentre;
+/**
+ * Represent the security governance snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiSecurityGovernanceSnapshot {
     size_t identities;
     size_t roles;
@@ -59,7 +70,19 @@ typedef struct UmiSecurityGovernanceSnapshot {
     size_t denied_entries;
     uint64_t revision;
 } UmiSecurityGovernanceSnapshot;
+/**
+ * Initialise security governance centre from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_security_governance_centre_init(UmiSecurityGovernanceCentre *centre);
+/**
+ * Provide the security governance authorise operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_security_governance_authorise(UmiSecurityGovernanceCentre *centre,const UmiSecurityAccessRequest *request,UmiSecurityGovernanceDecision *out_decision);
+/**
+ * Provide the security governance snapshot operation used by this module and its client
+ * applications.
+ */
 void umi_security_governance_snapshot(const UmiSecurityGovernanceCentre *centre,UmiSecurityGovernanceSnapshot *out_snapshot);
 #endif

@@ -16,10 +16,22 @@
 #include <string.h>
 /* Initialise and validate represent one integer-normalised venue fill for deterministic aggregation.. */
 UmiStatus umi_trading_execution_fill_init(UmiTradingExecutionFill *value,const UmiFinancialId * execution_id, const UmiFinancialId * client_order_id, UmiTradingQuantityLots quantity_lots, UmiTradingPriceTicks price_ticks, int64_t event_time_ms) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(execution_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->execution_id=*execution_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(client_order_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->client_order_id=*client_order_id;
     value->quantity_lots=quantity_lots;

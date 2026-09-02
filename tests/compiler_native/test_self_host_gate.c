@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/self_host_gate.h"
-int main(void){UmiNativeSelfHostEvidence e={true,true,true,true,true,true,true,true,true,true,100U,100U,0U};UmiNativeSelfHostAssessment a=umi_nc_self_host_assess(&e);if(a.stage!=UMI_NC_SELFHOST_SELFHOST||!a.ready_for_default||a.coverage!=1.0)return 1;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeSelfHostEvidence e={true,true,true,true,true,true,true,true,true,true,100U,100U,0U};UmiNativeSelfHostAssessment a=umi_nc_self_host_assess(&e);/* Apply this operation only while the related capability or state is available. */ if(a.stage!=UMI_NC_SELFHOST_SELFHOST||!a.ready_for_default||a.coverage!=1.0)return 1;return 0;}

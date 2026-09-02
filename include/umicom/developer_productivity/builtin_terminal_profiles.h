@@ -21,11 +21,23 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by developer builtin terminal profile without
+ * changing their state.
+ */
 size_t umi_developer_builtin_terminal_profile_count(void);
 
+/**
+ * Find developer builtin terminal profile while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperTerminalProfile *
 umi_developer_builtin_terminal_profile_at(size_t index);
 
+/**
+ * Find developer builtin terminal profile while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperTerminalProfile *
 umi_developer_builtin_terminal_profile_find(const char *profile_id);
 

@@ -41,6 +41,10 @@ extern "C" {
 
 #define UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_API_VERSION 1U
 
+/**
+ * List the named editor workspace search orchestration state values accepted by this
+ * public contract.
+ */
 typedef enum UmiEditorWorkspaceSearchOrchestrationState {
     UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_EMPTY = 1,
     UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_SEARCHED = 2,
@@ -52,6 +56,10 @@ typedef enum UmiEditorWorkspaceSearchOrchestrationState {
     UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_CONFLICT = 8
 } UmiEditorWorkspaceSearchOrchestrationState;
 
+/**
+ * Represent the editor workspace search orchestration snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchOrchestrationSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -76,35 +84,79 @@ typedef struct UmiEditorWorkspaceSearchOrchestrationSnapshot {
     int transaction_applicable;
 } UmiEditorWorkspaceSearchOrchestrationSnapshot;
 
+/**
+ * Represent the editor workspace search orchestration data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchOrchestration
     UmiEditorWorkspaceSearchOrchestration;
 
+/**
+ * Initialise editor workspace search orchestration from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_create(
     const UmiEditorWorkspaceSearchIndexConfig *index_config,
     UmiEditorWorkspaceSearchOrchestration **out_orchestration);
+/**
+ * Release or reset state held by editor workspace search orchestration so the same storage
+ * can be reused safely.
+ */
 void umi_editor_workspace_search_orchestration_destroy(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
 
+/**
+ * Provide the editor workspace search orchestration search operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_search(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const UmiEditorWorkspaceSearchPatternRequest *pattern_request,
     const UmiEditorWorkspaceSearchQueryRequest *query_request,
     UmiEditorWorkspaceSearchPatternDiagnostic *out_diagnostic);
+/**
+ * Provide the editor workspace search orchestration preview operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_preview(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const UmiEditorWorkspaceReplacementRequest *replacement_request);
+/**
+ * Provide the editor workspace search orchestration plan operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_plan(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration prepare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_prepare(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const UmiEditorEditTransactionDocument *documents,
     size_t document_count);
+/**
+ * Provide the editor workspace search orchestration commit operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_commit(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration cancel operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_cancel(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration clear results operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_clear_results(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_snapshot(
     const UmiEditorWorkspaceSearchOrchestration *orchestration,
     UmiEditorWorkspaceSearchOrchestrationSnapshot *out_snapshot);
@@ -112,18 +164,38 @@ UmiStatus umi_editor_workspace_search_orchestration_snapshot(
 /** Borrowed component accessors for adapters and Framework-backed views. */
 UmiEditorWorkspaceSearchIndex *umi_editor_workspace_search_orchestration_index(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration exclusions operation used by this
+ * module and its client applications.
+ */
 UmiEditorWorkspaceSearchExclusionSet *
 umi_editor_workspace_search_orchestration_exclusions(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration query operation used by this module
+ * and its client applications.
+ */
 UmiEditorWorkspaceSearchQuery *umi_editor_workspace_search_orchestration_query(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration replacement preview operation used by
+ * this module and its client applications.
+ */
 UmiEditorWorkspaceReplacementPreview *
 umi_editor_workspace_search_orchestration_replacement_preview(
     UmiEditorWorkspaceSearchOrchestration *orchestration);
+/**
+ * Provide the editor workspace search orchestration replace plan operation used by this
+ * module and its client applications.
+ */
 const UmiEditorWorkspaceReplacePlan *
 umi_editor_workspace_search_orchestration_replace_plan(
     const UmiEditorWorkspaceSearchOrchestration *orchestration);
 
+/**
+ * Provide the editor workspace search orchestration revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_workspace_search_orchestration_revision(
     const UmiEditorWorkspaceSearchOrchestration *orchestration);
 

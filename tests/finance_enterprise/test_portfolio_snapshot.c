@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/portfolio_snapshot.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterprisePortfolioSnapshot s; UmiEnterprisePortfolioPosition p; CHECK(umi_enterprise_portfolio_snapshot_init(&s,"p",1)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_position_init(&p,"x",1.0,2.0)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_snapshot_add(&s,&p)==UMI_STATUS_OK); CHECK(s.count==1U); return 0; }

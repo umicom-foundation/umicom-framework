@@ -28,6 +28,10 @@
 
 #include "umicom/editor/signature_help_model.h"
 
+/*
+ * Exercise signature and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorSignatureHelpItem signature(const char *id, int32_t score)
 {
     UmiEditorSignatureHelpItem item;
@@ -49,6 +53,10 @@ static UmiEditorSignatureHelpItem signature(const char *id, int32_t score)
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSignatureHelpModel *model = NULL;

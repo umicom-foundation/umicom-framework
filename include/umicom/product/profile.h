@@ -27,7 +27,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product profile data shared with callers of this public contract.
+ */
 typedef struct UmiProductProfile { const UmiProductDescriptor *descriptor; const UmiProductCapability *capabilities; size_t capability_count; const UmiProductFeature *features; size_t feature_count; const UmiProductFrontend *frontends; size_t frontend_count; } UmiProductProfile;
+/**
+ * Check that product profile satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_product_profile_validate(const UmiProductProfile *profile);
 #ifdef __cplusplus
 }

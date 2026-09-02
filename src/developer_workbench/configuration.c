@@ -17,32 +17,56 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the write message operation used by this module and its client applications. */
 static void write_message(char *out_message,
                           size_t capacity,
                           const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message == NULL || capacity == 0U) return;
     (void)snprintf(out_message, capacity, "%s", text != NULL ? text : "");
 }
 
+/*
+ * Initialise developer workbench configuration from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_workbench_configuration_init(
     UmiDeveloperWorkbenchConfiguration *configuration,
     const char *configuration_id,
     const char *title)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (configuration == NULL) return;
 
     (void)memset(configuration, 0, sizeof(*configuration));
@@ -64,11 +88,19 @@ void umi_developer_workbench_configuration_init(
     configuration->revision = 1U;
 }
 
+/*
+ * Check that developer workbench configuration satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_configuration_validate(
     const UmiDeveloperWorkbenchConfiguration *configuration,
     char *out_message,
     size_t message_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (configuration == NULL ||
         configuration->structure_size != sizeof(*configuration) ||
         configuration->api_version != UMI_DEVELOPER_WORKBENCH_API_VERSION ||
@@ -82,6 +114,7 @@ UmiStatus umi_developer_workbench_configuration_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (configuration->preset[0] == '\0' &&
         configuration->build_directory[0] == '\0') {
         write_message(out_message,
@@ -96,18 +129,27 @@ UmiStatus umi_developer_workbench_configuration_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer workbench configuration to build request operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_workbench_configuration_to_build_request(
     const UmiDeveloperWorkbenchConfiguration *configuration,
     UmiBuildRequest *out_request)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (configuration == NULL || out_request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_workbench_configuration_validate(
         configuration, NULL, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_build_request_init(out_request);

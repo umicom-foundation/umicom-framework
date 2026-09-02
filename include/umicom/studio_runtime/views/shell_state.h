@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise studio shell state view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_shell_state_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,

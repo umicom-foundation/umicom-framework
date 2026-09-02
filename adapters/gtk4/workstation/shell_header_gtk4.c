@@ -43,6 +43,10 @@ static UmiStatus copy_text(
 {
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -66,6 +70,10 @@ static char *executable_directory(void)
         : NULL;
 
     g_free(executable);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (error != NULL) g_error_free(error);
     return directory;
 #endif
@@ -81,14 +89,27 @@ static char *resolve_resource(
     char *directory;
     char *candidate;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header == NULL || resource == NULL || resource[0] == '\0') {
         return NULL;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (g_file_test(resource, G_FILE_TEST_IS_REGULAR)) {
         return g_strdup(resource);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header->resource_root != NULL && header->resource_root[0] != '\0') {
         candidate = g_build_filename(header->resource_root, resource, NULL);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (candidate != NULL &&
             g_file_test(candidate, G_FILE_TEST_IS_REGULAR)) {
             return candidate;
@@ -101,6 +122,10 @@ static char *resolve_resource(
         ? g_build_filename(directory, resource, NULL)
         : NULL;
     g_free(directory);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (candidate != NULL &&
         g_file_test(candidate, G_FILE_TEST_IS_REGULAR)) {
         return candidate;
@@ -115,6 +140,10 @@ static void update_optional_label(GtkWidget *label, const char *text)
 {
     const char *safe_text = text != NULL ? text : "";
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (label == NULL) return;
     gtk_label_set_text(GTK_LABEL(label), safe_text);
     gtk_widget_set_visible(label, safe_text[0] != '\0');
@@ -148,6 +177,10 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     GtkWidget *titles;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || out_header == NULL ||
         config->application_id == NULL || config->application_id[0] == '\0' ||
         config->title == NULL || config->title[0] == '\0') {
@@ -155,16 +188,25 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     }
     *out_header = NULL;
     header = calloc(1U, sizeof(*header));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = copy_text(
         header->state.application_id,
         sizeof(header->state.application_id),
         config->application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     header->resource_root = config->resource_root != NULL
         ? g_strdup(config->resource_root)
         : NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config->resource_root != NULL && header->resource_root == NULL) {
         status = UMI_STATUS_OUT_OF_MEMORY;
         goto fail;
@@ -178,6 +220,10 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     header->title = gtk_label_new("");
     header->subtitle = gtk_label_new("");
     header->badge = gtk_label_new("");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header->root == NULL || header->icon == NULL || titles == NULL ||
         header->title == NULL || header->subtitle == NULL ||
         header->badge == NULL) {
@@ -193,6 +239,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     gtk_widget_add_css_class(header->title, "umicom-workstation-identity-title");
     gtk_widget_add_css_class(header->subtitle, "dim-label");
     gtk_widget_add_css_class(header->badge, "umicom-mode-badge");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (config->compact) {
         gtk_widget_add_css_class(header->root, "compact");
     }
@@ -221,6 +268,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
         config->title,
         config->subtitle,
         config->mode_badge);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     gtk_accessible_update_property(
         GTK_ACCESSIBLE(header->root),
@@ -238,21 +286,41 @@ fail:
         gtk_widget_get_parent(header->icon) == NULL) {
         g_object_unref(header->icon);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header->title != NULL &&
         gtk_widget_get_parent(header->title) == NULL) {
         g_object_unref(header->title);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header->subtitle != NULL &&
         gtk_widget_get_parent(header->subtitle) == NULL) {
         g_object_unref(header->subtitle);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header->badge != NULL &&
         gtk_widget_get_parent(header->badge) == NULL) {
         g_object_unref(header->badge);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (titles != NULL && gtk_widget_get_parent(titles) == NULL) {
         g_object_unref(titles);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header->root != NULL) g_object_unref(header->root);
     g_free(header->resource_root);
     free(header);
@@ -263,6 +331,10 @@ fail:
 void umi_gtk4_ws_shell_header_destroy(
     UmiGtk4WorkstationShellHeader *header)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header == NULL) return;
     g_free(header->resource_root);
     header->resource_root = NULL;
@@ -291,26 +363,36 @@ UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
     char *resolved;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header == NULL || profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ui_appearance_profile_validate(
         profile, reason, sizeof(reason));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(
         header->state.icon_resource,
         sizeof(header->state.icon_resource),
         profile->icon_resource);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     resolved = resolve_resource(header, profile->icon_resource);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (resolved != NULL) {
         gtk_picture_set_filename(GTK_PICTURE(header->icon), resolved);
         gtk_widget_set_tooltip_text(header->icon, header->state.title);
         gtk_widget_set_visible(header->icon, TRUE);
         header->state.icon_visible = 1;
         g_free(resolved);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_picture_set_paintable(GTK_PICTURE(header->icon), NULL);
         gtk_widget_set_visible(header->icon, FALSE);
         header->state.icon_visible = 0;
@@ -331,23 +413,30 @@ UmiStatus umi_gtk4_ws_shell_header_set_text(
     const char *safe_badge = mode_badge != NULL ? mode_badge : "";
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header == NULL || title == NULL || title[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = copy_text(
         header->state.title, sizeof(header->state.title), title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             header->state.subtitle,
             sizeof(header->state.subtitle),
             safe_subtitle);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             header->state.mode_badge,
             sizeof(header->state.mode_badge),
             safe_badge);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     gtk_label_set_text(GTK_LABEL(header->title), header->state.title);
@@ -370,6 +459,10 @@ umi_gtk4_ws_shell_header_snapshot(
     UmiGtk4WorkstationShellHeaderSnapshot snapshot;
 
     (void)memset(&snapshot, 0, sizeof(snapshot));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (header != NULL) snapshot = header->state;
     return snapshot;
 }
@@ -393,6 +486,7 @@ GtkWidget *umi_gtk4_ws_shell_header_create(
     config.subtitle = subtitle;
     config.mode_badge = mode_badge;
     config.compact = compact;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_gtk4_ws_shell_header_create_managed(
             &config, &header) != UMI_STATUS_OK) {
         return NULL;

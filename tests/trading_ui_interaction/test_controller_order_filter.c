@@ -15,6 +15,10 @@
 #include "test_support.h"
 #include <assert.h>
 
+/*
+ * Exercise test controller order filter and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_controller_order_filter(void)
 {
     UmiTradingUiTestFixture fixture;

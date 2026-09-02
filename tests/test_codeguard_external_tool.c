@@ -22,4 +22,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/codeguard/codeguard.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){char b[256];assert(umi_codeguard_external_tool_command(UMI_CODEGUARD_TOOL_CLANG_ANALYZER,"x.c",b,sizeof(b)));assert(strstr(b,"--analyze")!=NULL);return 0;}

@@ -24,6 +24,10 @@
 #include "umicom/platform/path.h"
 #include "umicom/toolchain/compilation_database.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCompilationDatabase *database = NULL;
@@ -34,22 +38,28 @@ int main(void)
     char build_directory[UMI_PATH_CAPACITY];
     char conventional_path[UMI_PATH_CAPACITY];
     char discovered_path[UMI_PATH_CAPACITY];
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_temp_directory(temporary, sizeof(temporary)) != UMI_STATUS_OK ||
         umi_path_join(temporary, "umicom-b35-compile-commands.json", path,
                       sizeof(path)) != UMI_STATUS_OK) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_fs_write_text(path,
         "[\n"
         " {\"directory\":\"/src/build\",\"command\":\"clang -c /src/a.c\",\"file\":\"/src/a.c\",\"output\":\"a.o\"},\n"
         " {\"directory\":\"/src/build\",\"arguments\":[\"gcc\",\"-c\",\"/src/b.c\"],\"file\":\"/src/b.c\"}\n"
         "]\n") != UMI_STATUS_OK) return 2;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_compilation_database_create(&database) != UMI_STATUS_OK ||
         umi_compilation_database_load(database, path) != UMI_STATUS_OK) return 3;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_compilation_database_snapshot(database, &snapshot) != UMI_STATUS_OK ||
         snapshot.command_count != 2U || snapshot.clang_command_count != 1U ||
         snapshot.gcc_command_count != 1U) return 4;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_compilation_database_find_file(database, "/src/b.c", &command) !=
             UMI_STATUS_OK ||
         command.compiler_vendor != UMI_COMPILER_VENDOR_GCC) return 5;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_path_join(temporary, "build", build_directory,
                       sizeof(build_directory)) != UMI_STATUS_OK ||
         umi_fs_make_directories(build_directory) != UMI_STATUS_OK ||
@@ -65,6 +75,7 @@ int main(void)
         umi_compilation_database_snapshot(database, &snapshot) !=
             UMI_STATUS_OK || snapshot.command_count != 0U) return 6;
     umi_compilation_database_destroy(database);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_remove_tree(path) != UMI_STATUS_OK ||
         umi_fs_remove_tree(build_directory) != UMI_STATUS_OK) return 7;
     return EXIT_SUCCESS;

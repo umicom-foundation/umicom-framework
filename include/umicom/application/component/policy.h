@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application component workspace policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationComponentWorkspacePolicy {
   size_t maximum_slots;
   uint32_t maximum_weight;
@@ -30,10 +34,22 @@ typedef struct UmiApplicationComponentWorkspacePolicy {
   int allow_floating_components;
 } UmiApplicationComponentWorkspacePolicy;
 
+/**
+ * Provide the application component workspace policy default operation used by this module
+ * and its client applications.
+ */
 void umi_application_component_workspace_policy_default(
     UmiApplicationComponentWorkspacePolicy *policy);
+/**
+ * Provide the application component workspace policy learning operation used by this
+ * module and its client applications.
+ */
 void umi_application_component_workspace_policy_learning(
     UmiApplicationComponentWorkspacePolicy *policy);
+/**
+ * Provide the application component workspace policy evaluate operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_component_workspace_policy_evaluate(
     const UmiApplicationComponentRegistry *registry,
     const UmiApplicationComponentWorkspaceDraft *draft, UmiApplicationComponentFrontend frontend,

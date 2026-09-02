@@ -18,5 +18,13 @@
  */
 
 #include "umicom/finance/business_time.h"
+/*
+ * Provide the business time compare operation used by this module and its client
+ * applications.
+ */
 int umi_business_time_compare(UmiBusinessTime left,UmiBusinessTime right){return left.epoch_millis<right.epoch_millis?-1:(left.epoch_millis>right.epoch_millis?1:0);}
+/*
+ * Provide the business time elapsed ms operation used by this module and its client
+ * applications.
+ */
 int64_t umi_business_time_elapsed_ms(UmiBusinessTime start,UmiBusinessTime end){return end.epoch_millis-start.epoch_millis;}

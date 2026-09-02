@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/analytics_aggregate.h"
 
-int main(void){double v[]={1,2,6},a;if(umi_analytics_aggregate_compute(UMI_ANALYTICS_AGGREGATE_AVERAGE,v,3,&a)!=0)return 1;return a==3.0?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){double v[]={1,2,6},a;/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_aggregate_compute(UMI_ANALYTICS_AGGREGATE_AVERAGE,v,3,&a)!=0)return 1;return a==3.0?0:2;}

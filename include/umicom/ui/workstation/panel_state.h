@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ws panel mode values accepted by this public contract.
+ */
 typedef enum UmiWsPanelMode {
     UMI_WS_PANEL_DOCKED = 1,
     UMI_WS_PANEL_TABBED = 2,
@@ -30,6 +33,9 @@ typedef enum UmiWsPanelMode {
     UMI_WS_PANEL_AUTO_HIDDEN = 4
 } UmiWsPanelMode;
 
+/**
+ * Represent the ws panel state data shared with callers of this public contract.
+ */
 typedef struct UmiWsPanelState {
     char surface_id[UMI_UI_ID_CAPACITY];
     UmiWsPanelMode mode;
@@ -40,8 +46,20 @@ typedef struct UmiWsPanelState {
     uint64_t revision;
 } UmiWsPanelState;
 
+/**
+ * Initialise ws panel state from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_panel_state_init(UmiWsPanelState *state, const char *surface_id, UmiWsDockRegion region);
+/**
+ * Provide the ws panel state set mode operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_panel_state_set_mode(UmiWsPanelState *state, UmiWsPanelMode mode);
+/**
+ * Provide the ws panel state set active operation used by this module and its client
+ * applications.
+ */
 void umi_ws_panel_state_set_active(UmiWsPanelState *state, bool active);
 
 #ifdef __cplusplus

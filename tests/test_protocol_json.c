@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/protocol/json.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char escaped[128];

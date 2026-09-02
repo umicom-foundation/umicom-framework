@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_KEYBOARD_NAVIGATION "umicom.developer.experience.keyboard_navigation"
 
+/**
+ * Provide the developer capability keyboard navigation operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_keyboard_navigation(void);
 

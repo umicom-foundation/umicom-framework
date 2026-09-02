@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic dock direction data shared with callers of this public contract.
+ */
 typedef struct UmiUiMosaicDockDirection {
     char source_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char target_id[UMI_UI_MOSAIC_ID_CAPACITY];

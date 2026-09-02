@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data relation mapping data shared with callers of this public contract.
+ */
 typedef struct UmiDataRelationMapping {
     char relation_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char source_entity[UMI_DATA_ENTERPRISE_ID_CAPACITY];

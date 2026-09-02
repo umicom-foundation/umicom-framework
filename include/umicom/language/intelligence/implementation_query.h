@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_IMPLEMENTATION_QUERY_API_VERSION 1U
+/**
+ * Represent the language intelligence implementation query data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceImplementationQuery {
     uint32_t struct_size;
     uint32_t api_version;
@@ -32,10 +36,22 @@ typedef struct UmiLanguageIntelligenceImplementationQuery {
     size_t limit;
     int case_sensitive;
 } UmiLanguageIntelligenceImplementationQuery;
+/**
+ * Initialise language intelligence implementation query from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_implementation_query_init(UmiLanguageIntelligenceImplementationQuery *query, const char *text);
+/**
+ * Provide the language intelligence implementation query candidate score operation used by
+ * this module and its client applications.
+ */
 uint64_t umi_language_intelligence_implementation_query_candidate_score(
     const UmiLanguageIntelligenceImplementationQuery *query,
     const char *candidate);
+/**
+ * Provide the language intelligence implementation query matches operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_implementation_query_matches(
     const UmiLanguageIntelligenceImplementationQuery *query,
     const char *candidate);

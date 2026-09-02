@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/terminal_profile.h"
 
+/*
+ * Check that developer terminal profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_terminal_profile_validate(
     const UmiDeveloperTerminalProfile *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL ||
         profile->structure_size != sizeof(*profile) ||
         profile->api_version != UMI_DEVELOPER_PRODUCTIVITY_API_VERSION ||

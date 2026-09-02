@@ -19,16 +19,25 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the contains component operation used by this module and its client
+ * applications.
+ */
 static int contains_component(const char *path, const char *component)
 {
     const char *cursor = path;
     const size_t component_length = strlen(component);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cursor != NULL && *cursor != '\0') {
         const char *end = strchr(cursor, '/');
         const size_t length =
             end != NULL ? (size_t)(end - cursor) : strlen(cursor);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length == component_length &&
             strncmp(cursor, component, length) == 0) {
             return 1;
@@ -40,9 +49,17 @@ static int contains_component(const char *path, const char *component)
     return 0;
 }
 
+/*
+ * Initialise ai coding change guard policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_change_guard_policy_init(
     UmiAiCodingChangeGuardPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return;
 
     policy->maximum_files = 12U;
@@ -52,6 +69,10 @@ void umi_ai_coding_change_guard_policy_init(
     policy->allow_dependency_paths = 0;
 }
 
+/*
+ * Provide the ai coding change guard check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_change_guard_check(
     const UmiAiCodingPatch *patch,
     const UmiAiCodingChangeGuardPolicy *policy,
@@ -59,6 +80,10 @@ UmiStatus umi_ai_coding_change_guard_check(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (patch == NULL || policy == NULL || out_result == NULL ||
         policy->maximum_files == 0U ||
         policy->maximum_changed_lines == 0U) {
@@ -68,6 +93,7 @@ UmiStatus umi_ai_coding_change_guard_check(
     (void)memset(out_result, 0, sizeof(*out_result));
     out_result->accepted = 1;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (patch->file_count > policy->maximum_files) {
         out_result->accepted = 0;
         (void)snprintf(
@@ -79,6 +105,7 @@ UmiStatus umi_ai_coding_change_guard_check(
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (patch->changed_lines > policy->maximum_changed_lines) {
         out_result->accepted = 0;
         (void)snprintf(
@@ -90,9 +117,11 @@ UmiStatus umi_ai_coding_change_guard_check(
         return UMI_STATUS_OK;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < patch->file_count; ++index) {
         const UmiAiCodingPatchFile *file = &patch->files[index];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!policy->allow_delete &&
             file->operation == UMI_AI_CODING_PATCH_DELETE) {
             out_result->accepted = 0;
@@ -105,6 +134,7 @@ UmiStatus umi_ai_coding_change_guard_check(
             return UMI_STATUS_OK;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!policy->allow_generated_paths &&
             (contains_component(file->path, "build") ||
              contains_component(file->path, "dist") ||
@@ -120,6 +150,7 @@ UmiStatus umi_ai_coding_change_guard_check(
             return UMI_STATUS_OK;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!policy->allow_dependency_paths &&
             (contains_component(file->path, "node_modules") ||
              contains_component(file->path, "vendor") ||

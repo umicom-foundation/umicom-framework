@@ -16,10 +16,22 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ide_integration/inline_controller.h"
+/*
+ * Exercise revision and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus revision(void *u,const char *d,uint64_t *r)
 {(void)u;(void)d;*r=2U;return UMI_STATUS_OK;}
+/*
+ * Exercise insert and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus insert(void *u,const char*d,uint32_t l,uint32_t c,const char*t,size_t n)
 {(void)u;(void)d;(void)l;(void)c;(void)t;(void)n;return UMI_STATUS_OK;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIdeInlineController controller;

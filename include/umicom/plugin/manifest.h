@@ -28,6 +28,9 @@ extern "C" {
 #define UMI_PLUGIN_NAME_CAPACITY 160U
 #define UMI_PLUGIN_LIST_MAX 32U
 #define UMI_PLUGIN_ITEM_CAPACITY 160U
+/**
+ * Represent the plugin manifest data shared with callers of this public contract.
+ */
 typedef struct UmiPluginManifest {
     char plugin_id[UMI_PLUGIN_ID_CAPACITY];
     char display_name[UMI_PLUGIN_NAME_CAPACITY];
@@ -39,8 +42,19 @@ typedef struct UmiPluginManifest {
     char capabilities[UMI_PLUGIN_LIST_MAX][UMI_PLUGIN_ITEM_CAPACITY];
     size_t capability_count;
 } UmiPluginManifest;
+/**
+ * Read plugin manifest into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_plugin_manifest_parse(const char *text, UmiPluginManifest *out_manifest);
+/**
+ * Read plugin manifest into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_plugin_manifest_load(const char *path, UmiPluginManifest *out_manifest);
+/**
+ * Check that plugin manifest satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_plugin_manifest_validate(const UmiPluginManifest *manifest,
                                        char *out_reason,
                                        size_t reason_capacity);

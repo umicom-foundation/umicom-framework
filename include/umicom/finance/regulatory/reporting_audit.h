@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting audit event data shared with callers of this public contract.
+ */
 typedef struct UmiReportingAuditEvent { uint64_t sequence; char action[UMI_REG_NAME_CAPACITY]; uint64_t evidence_hash; } UmiReportingAuditEvent;
+/**
+ * Represent the reporting audit data shared with callers of this public contract.
+ */
 typedef struct UmiReportingAudit { UmiReportingAuditEvent events[UMI_REG_MAX_HISTORY]; size_t count; } UmiReportingAudit;
 /* Initialise an empty regulatory audit stream. */
 void umi_reg_reporting_audit_init(UmiReportingAudit *audit);

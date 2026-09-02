@@ -29,13 +29,23 @@ extern "C" {
 #endif
 
 #define UMI_AI_DATASET_CAPACITY 64U
+/**
+ * Represent the ai dataset data shared with callers of this public contract.
+ */
 typedef struct UmiAiDataset {
     char dataset_id[UMI_AI_ID_CAPACITY];
     char item_ids[UMI_AI_DATASET_CAPACITY][UMI_AI_ID_CAPACITY];
     size_t count;
 } UmiAiDataset;
 
+/**
+ * Initialise ai dataset from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_dataset_init(UmiAiDataset *dataset, const char *dataset_id);
+/**
+ * Add ai dataset only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ai_dataset_add(UmiAiDataset *dataset, const char *item_id);
 
 #ifdef __cplusplus

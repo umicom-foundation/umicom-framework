@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named terminal remote remote auth method method values accepted by this public
+ * contract.
+ */
 typedef enum UmiTerminalRemoteRemoteAuthMethodMethod { UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_UNKNOWN=0, UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_AGENT=1, UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_KEY=2, UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_PASSWORD=3 } UmiTerminalRemoteRemoteAuthMethodMethod;
+/**
+ * Provide the terminal remote remote auth method risk operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_terminal_remote_remote_auth_method_risk(UmiTerminalRemoteRemoteAuthMethodMethod method,bool interactive);
 #ifdef __cplusplus
 }

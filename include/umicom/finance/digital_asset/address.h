@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital asset address data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalAssetAddress {
     UmiDigitalAssetId network_id;
     char value[UMI_DIGITAL_ASSET_ADDRESS_CAPACITY];

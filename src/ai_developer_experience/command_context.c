@@ -16,9 +16,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai developer command context from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_developer_command_context_init(
     UmiAiDeveloperCommandContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context != NULL) {
         (void)memset(context, 0, sizeof(*context));
     }

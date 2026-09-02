@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide uri to local path operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_uri_to_local_path(
     const char *uri,
     char *out_path,

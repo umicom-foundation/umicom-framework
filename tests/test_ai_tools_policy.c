@@ -24,6 +24,10 @@
 #include <string.h>
 #include "umicom/umicom.h"
 
+/*
+ * Exercise tool call and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus tool_call(const char *args, char *out, size_t cap, void *data)
 {
     int written;
@@ -32,6 +36,10 @@ static UmiStatus tool_call(const char *args, char *out, size_t cap, void *data)
     return written >= 0 && (size_t)written < cap ? UMI_STATUS_OK : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiRuntime runtime;

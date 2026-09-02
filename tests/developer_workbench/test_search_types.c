@@ -16,6 +16,10 @@
 
 #include "umicom/developer_workbench/search_types.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const int32_t prefix = umi_developer_workbench_search_score(

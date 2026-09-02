@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_OPEN_DOCUMENT "umicom.document.lifecycle.open_document"
 
+/**
+ * Provide the document capability open document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_open_document(void);
 

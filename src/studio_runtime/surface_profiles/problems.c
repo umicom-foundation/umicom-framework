@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_profiles/problems.h"
 
+/*
+ * Provide the studio surface profile problems operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_problems(void)
 {
     static const UmiStudioRuntimeSurfaceBinding binding = {

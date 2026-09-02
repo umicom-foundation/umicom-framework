@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_TYPE_DEFINITION_QUERY_API_VERSION 1U
+/**
+ * Represent the language intelligence type definition query data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceTypeDefinitionQuery {
     uint32_t struct_size;
     uint32_t api_version;
@@ -32,10 +36,22 @@ typedef struct UmiLanguageIntelligenceTypeDefinitionQuery {
     size_t limit;
     int case_sensitive;
 } UmiLanguageIntelligenceTypeDefinitionQuery;
+/**
+ * Initialise language intelligence type definition query from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_type_definition_query_init(UmiLanguageIntelligenceTypeDefinitionQuery *query, const char *text);
+/**
+ * Provide the language intelligence type definition query candidate score operation used
+ * by this module and its client applications.
+ */
 uint64_t umi_language_intelligence_type_definition_query_candidate_score(
     const UmiLanguageIntelligenceTypeDefinitionQuery *query,
     const char *candidate);
+/**
+ * Provide the language intelligence type definition query matches operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_type_definition_query_matches(
     const UmiLanguageIntelligenceTypeDefinitionQuery *query,
     const char *candidate);

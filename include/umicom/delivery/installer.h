@@ -22,17 +22,26 @@
 extern "C" {
 #endif
 
+/**
+ * List the named installer platform values accepted by this public contract.
+ */
 typedef enum UmiInstallerPlatform {
     UMI_INSTALLER_WINDOWS = 1,
     UMI_INSTALLER_LINUX = 2
 } UmiInstallerPlatform;
 
+/**
+ * List the named install scope values accepted by this public contract.
+ */
 typedef enum UmiInstallScope {
     UMI_INSTALL_SCOPE_USER = 1,
     UMI_INSTALL_SCOPE_MACHINE = 2,
     UMI_INSTALL_SCOPE_PORTABLE = 3
 } UmiInstallScope;
 
+/**
+ * Represent the installer plan data shared with callers of this public contract.
+ */
 typedef struct UmiInstallerPlan {
     char product_name[UMI_DELIVERY_ID_CAPACITY];
     char vendor[UMI_DELIVERY_ID_CAPACITY];
@@ -47,6 +56,10 @@ typedef struct UmiInstallerPlan {
     int require_signature;
 } UmiInstallerPlan;
 
+/**
+ * Initialise installer plan from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_installer_plan_init(UmiInstallerPlan *plan,
                                       const char *product_name,
                                       const char *vendor,
@@ -55,10 +68,21 @@ UmiStatus umi_installer_plan_init(UmiInstallerPlan *plan,
                                       const char *entrypoint,
                                       UmiInstallerPlatform platform,
                                       UmiInstallScope scope);
+/**
+ * Provide the installer plan set shortcuts operation used by this module and its client
+ * applications.
+ */
 void umi_installer_plan_set_shortcuts(UmiInstallerPlan *plan,
                                           int start_menu,
                                           int desktop);
+/**
+ * Check that installer plan satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_installer_plan_validate(const UmiInstallerPlan *plan);
+/**
+ * Provide the installer plan generator operation used by this module and its client
+ * applications.
+ */
 const char *umi_installer_plan_generator(const UmiInstallerPlan *plan);
 
 #ifdef __cplusplus

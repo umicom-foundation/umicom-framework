@@ -20,6 +20,10 @@
 #include "umicom/runtime/command_registry.h"
 #include "umicom/ui/workbench.h"
 
+/*
+ * Exercise test application runtime workbench binding and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_application_runtime_workbench_binding(void)
 {
     UmiCommandRegistry *commands = NULL;

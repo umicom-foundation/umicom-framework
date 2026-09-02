@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/crash_recovery.h"
 
+/*
+ * Provide the document capability crash recovery operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_crash_recovery(void)
 {

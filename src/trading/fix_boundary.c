@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/fix_boundary.h"
+/* Check that fix session info satisfies its contract before another service relies on it. */
 int umi_fix_session_info_valid(const UmiFixSessionInfo *s){return s!=NULL&&s->sender_comp_id[0]!='\0'&&s->target_comp_id[0]!='\0'&&s->next_out_sequence>0U&&s->next_in_sequence>0U;}

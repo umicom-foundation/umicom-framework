@@ -16,6 +16,10 @@
 
 #include "umicom/data/workbench/transfer_workbench.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDataTransferWorkbench workbench;

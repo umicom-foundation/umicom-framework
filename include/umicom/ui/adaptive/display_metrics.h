@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive display metrics data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveDisplayMetrics {
     int32_t pixel_width;
     int32_t pixel_height;

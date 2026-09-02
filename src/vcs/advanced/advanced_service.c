@@ -21,11 +21,16 @@
 
 #include <string.h>
 
+/*
+ * Provide the vcs advanced service evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_advanced_service_evaluate(
     const UmiVcsAdvancedRepositoryState *repository,
     const UmiVcsAdvancedWorktreeSnapshot *worktree,
     UmiVcsAdvancedServiceSnapshot *out_snapshot)
 {
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_vcs_advanced_repository_state_validate(repository) !=
             UMI_STATUS_OK ||
         umi_vcs_advanced_worktree_snapshot_validate(worktree) !=
@@ -46,28 +51,29 @@ UmiStatus umi_vcs_advanced_service_evaluate(
     out_snapshot->ahead = repository->ahead;
     out_snapshot->behind = repository->behind;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_snapshot->conflicts > 0U) {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_CONFLICTED;
         out_snapshot->recommended_action =
             UMI_VCS_RECOMMEND_RESOLVE_CONFLICTS;
-    } else if (umi_vcs_advanced_repository_state_operation_in_progress(
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (umi_vcs_advanced_repository_state_operation_in_progress(
                    repository)) {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_PENDING;
         out_snapshot->recommended_action =
             UMI_VCS_RECOMMEND_CONTINUE_OPERATION;
-    } else if (out_snapshot->pending_changes > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (out_snapshot->pending_changes > 0U) {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_READY;
         out_snapshot->recommended_action = UMI_VCS_RECOMMEND_COMMIT;
-    } else if (repository->ahead > 0U && repository->behind > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (repository->ahead > 0U && repository->behind > 0U) {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_BLOCKED;
         out_snapshot->recommended_action = UMI_VCS_RECOMMEND_SYNC_REVIEW;
-    } else if (repository->behind > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (repository->behind > 0U) {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_READY;
         out_snapshot->recommended_action = UMI_VCS_RECOMMEND_PULL;
-    } else if (repository->ahead > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (repository->ahead > 0U) {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_READY;
         out_snapshot->recommended_action = UMI_VCS_RECOMMEND_PUSH;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_snapshot->state = UMI_VCS_ADVANCED_STATE_COMPLETED;
         out_snapshot->recommended_action = UMI_VCS_RECOMMEND_NONE;
     }
@@ -80,9 +86,14 @@ UmiStatus umi_vcs_advanced_service_evaluate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced recommended action text operation used by this module and its
+ * client applications.
+ */
 const char *umi_vcs_advanced_recommended_action_text(
     UmiVcsAdvancedRecommendedAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_VCS_RECOMMEND_NONE:
             return "none";

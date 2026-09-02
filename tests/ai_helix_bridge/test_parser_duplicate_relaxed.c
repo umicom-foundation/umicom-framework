@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test parser duplicate relaxed and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_parser_duplicate_relaxed(void){UmiAiHelixParsedResponse p;const char *t="disposition=complete\ndisposition=defer\naction=none\ntarget=-\nsummary=done\nconfidence=1\nrationale=x";TEST_CHECK(umi_ai_helix_response_parse(t,0,&p)==UMI_STATUS_OK);TEST_CHECK(p.disposition==UMI_AI_HELIX_DISPOSITION_DEFER);return 0;}

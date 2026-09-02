@@ -27,29 +27,53 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout lease store repository data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutLeaseStoreRepository {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataRecordRepository records;
 } UmiWorkbenchLayoutLeaseStoreRepository;
 
+/**
+ * Write workbench layout lease store in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_lease_store_encode(
     const UmiWorkbenchLayoutLease *record,
     char *buffer,
     size_t capacity,
     size_t *out_required);
 
+/**
+ * Read workbench layout lease store into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_lease_store_decode(
     const char *value,
     UmiWorkbenchLayoutLease *out_record);
 
+/**
+ * Initialise workbench layout lease store repository from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_lease_store_repository_init(
     UmiWorkbenchLayoutLeaseStoreRepository *repository,
     UmiDataServer *server);
 
+/**
+ * Write workbench layout lease store in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_lease_store_save(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     const UmiWorkbenchLayoutLease *record);
 
+/**
+ * Read workbench layout lease store into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_lease_store_load(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     const char *aggregate_id,
@@ -57,12 +81,20 @@ UmiStatus umi_workbench_layout_lease_store_load(
     uint64_t sequence,
     UmiWorkbenchLayoutLease *out_record);
 
+/**
+ * Provide the workbench layout lease store delete operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_lease_store_delete(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     const char *aggregate_id,
     const char *record_id,
     uint64_t sequence);
 
+/**
+ * Provide the workbench layout lease store list operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_lease_store_list(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     const char *aggregate_id,
@@ -73,6 +105,10 @@ UmiStatus umi_workbench_layout_lease_store_list(
     size_t *out_count,
     size_t *out_total);
 
+/**
+ * Provide the workbench layout lease store acquire operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_lease_store_acquire(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     const char *layout_id,
@@ -81,15 +117,27 @@ UmiStatus umi_workbench_layout_lease_store_acquire(
     uint64_t now_ms,
     uint64_t duration_ms,
     UmiWorkbenchLayoutLease *out_lease);
+/**
+ * Provide the workbench layout lease store renew operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_lease_store_renew(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     UmiWorkbenchLayoutLease *lease,
     uint64_t now_ms,
     uint64_t duration_ms);
+/**
+ * Release or reset state held by workbench layout lease store so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_workbench_layout_lease_store_release(
     const UmiWorkbenchLayoutLeaseStoreRepository *repository,
     UmiWorkbenchLayoutLease *lease,
     uint64_t now_ms);
+/**
+ * Write workbench layout lease store allows in its stable representation and report
+ * capacity or input failures to the caller.
+ */
 bool umi_workbench_layout_lease_store_allows_write(
     const UmiWorkbenchLayoutLease *lease,
     const char *holder_id,

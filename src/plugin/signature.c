@@ -18,11 +18,20 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+/*
+ * Provide the plugin signature verify checksum operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_plugin_signature_verify_checksum(const UmiPluginSignature *signature, uint64_t checksum, UmiPluginSignatureDecision *out_decision)
 {
     char expected[17];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (signature == NULL || out_decision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     out_decision->verified = 0; out_decision->reason[0] = '\0';
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (strcmp(signature->algorithm, "fnv64") != 0) { (void)snprintf(out_decision->reason, sizeof(out_decision->reason), "unsupported signature algorithm"); return UMI_STATUS_NOT_IMPLEMENTED; }
     (void)snprintf(expected, sizeof(expected), "%016llx", (unsigned long long)checksum);
     out_decision->verified = strcmp(signature->value, expected) == 0;

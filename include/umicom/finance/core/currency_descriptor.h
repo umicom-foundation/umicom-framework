@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the currency descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiCurrencyDescriptor { UmiCurrency currency; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; uint8_t minor_scale; bool active; } UmiCurrencyDescriptor;
 /* Initialize normalized currency metadata. */ UmiStatus umi_currency_descriptor_init(UmiCurrencyDescriptor *d,const char *code,const char *name,uint8_t scale);
 /* Validate normalized currency metadata. */ bool umi_currency_descriptor_is_valid(const UmiCurrencyDescriptor *d);

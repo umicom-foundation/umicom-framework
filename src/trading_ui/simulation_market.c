@@ -18,12 +18,18 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
     (void)snprintf(destination, capacity, "%s", source != NULL ? source : "");
 }
 
+/* Provide the make instrument operation used by this module and its client applications. */
 static UmiInstrument make_instrument(const char *id,
                                      const char *symbol,
                                      const char *venue,
@@ -40,6 +46,7 @@ static UmiInstrument make_instrument(const char *id,
     return instrument;
 }
 
+/* Provide the configure default operation used by this module and its client applications. */
 static void configure_default(UmiTradingSimulationInstrumentState *state,
                               const char *id,
                               const char *symbol,
@@ -47,6 +54,10 @@ static void configure_default(UmiTradingSimulationInstrumentState *state,
                               double tick,
                               double spread)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) return;
     (void)memset(state, 0, sizeof(*state));
     state->instrument = make_instrument(id, symbol, "UMISIM", "USD");
@@ -56,6 +67,10 @@ static void configure_default(UmiTradingSimulationInstrumentState *state,
     state->spread = spread;
 }
 
+/*
+ * Provide the publish instrument operation used by this module and its client
+ * applications.
+ */
 static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
                                     UmiTradingSimulationInstrumentState *state,
                                     int64_t event_time_ms,
@@ -91,6 +106,7 @@ static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
     depth.bid_count = 5U;
     depth.ask_count = 5U;
     depth.event_time_ms = event_time_ms;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (level = 0U; level < 5U; ++level) {
         const double offset = state->tick_size * (double)(level + 1U);
         depth.bids[level].price = quote.bid - offset;
@@ -100,11 +116,14 @@ static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
     }
 
     status = umi_trading_workspace_update_quote(market->workspace, &quote);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_workspace_update_bar(
             market->workspace, &bar, state->previous_close);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_workspace_update_depth(market->workspace, &depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_workspace_set_market_state(
             market->workspace,
@@ -113,10 +132,18 @@ static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
     return status;
 }
 
+/*
+ * Initialise trading simulation market from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_simulation_market_init(
     UmiTradingSimulationMarket *market,
     UmiTradingWorkspace *workspace)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (market == NULL || workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(market, 0, sizeof(*market));
@@ -124,6 +151,10 @@ UmiStatus umi_trading_simulation_market_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the trading simulation market seed default operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_simulation_market_seed_default(
     UmiTradingSimulationMarket *market,
     int64_t event_time_ms)
@@ -131,12 +162,19 @@ UmiStatus umi_trading_simulation_market_seed_default(
     UmiTradingWorkspaceSnapshot snapshot;
     UmiStatus status;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (market == NULL || market->workspace == NULL || event_time_ms < 0)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (market->seeded) return UMI_STATUS_ALREADY_EXISTS;
 
     status = umi_trading_workspace_snapshot(market->workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.watchlist_count != 0U)
         return UMI_STATUS_INVALID_STATE;
 
@@ -156,24 +194,32 @@ UmiStatus umi_trading_simulation_market_seed_default(
     market->event_time_ms = event_time_ms;
     market->sequence = 1U;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < market->instrument_count; ++index) {
         status = umi_trading_workspace_add_instrument(
             market->workspace, &market->instruments[index].instrument);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = umi_trading_workspace_set_market_state(
             market->workspace,
             market->instruments[index].instrument.instrument_id.value,
             UMI_MARKET_PREOPEN);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = publish_instrument(
             market, &market->instruments[index], event_time_ms,
             market->instruments[index].previous_close);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     market->seeded = 1;
     return umi_trading_workspace_refresh(market->workspace);
 }
 
+/*
+ * Provide the trading simulation market step operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_simulation_market_step(
     UmiTradingSimulationMarket *market,
     int64_t elapsed_ms)
@@ -181,16 +227,24 @@ UmiStatus umi_trading_simulation_market_step(
     UmiTradingWorkspaceSnapshot snapshot;
     UmiStatus status;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (market == NULL || market->workspace == NULL || elapsed_ms <= 0)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!market->seeded) return UMI_STATUS_INVALID_STATE;
     status = umi_trading_workspace_snapshot(market->workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.environment != UMI_TRADING_SIMULATION)
         return UMI_STATUS_INVALID_STATE;
 
     market->event_time_ms += elapsed_ms;
     market->sequence += 1U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < market->instrument_count; ++index) {
         UmiTradingSimulationInstrumentState *state = &market->instruments[index];
         const double previous = state->mid_price;
@@ -200,17 +254,26 @@ UmiStatus umi_trading_simulation_market_step(
             (double)((market->sequence + (uint64_t)index) % 3U);
         state->mid_price += direction * magnitude * state->tick_size;
         status = publish_instrument(market, state, market->event_time_ms, previous);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return umi_trading_workspace_refresh(market->workspace);
 }
 
+/*
+ * Return the number of records represented by trading simulation market instrument without
+ * changing their state.
+ */
 size_t umi_trading_simulation_market_instrument_count(
     const UmiTradingSimulationMarket *market)
 {
     return market != NULL ? market->instrument_count : 0U;
 }
 
+/*
+ * Provide the trading simulation market sequence operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_trading_simulation_market_sequence(
     const UmiTradingSimulationMarket *market)
 {

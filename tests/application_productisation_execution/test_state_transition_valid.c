@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Check that test state transition satisfies its contract before another service relies on
+ * it.
+ */
 void test_state_transition_valid(void)
 {
     assert(umi_product_execution_state_can_transition(UMI_PRODUCT_EXECUTION_PENDING, UMI_PRODUCT_EXECUTION_READY));

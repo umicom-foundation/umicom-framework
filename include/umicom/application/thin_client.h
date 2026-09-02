@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application thin client data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationThinClient {
     uint32_t structure_size;
     UmiApplicationContract contract;
@@ -32,9 +35,17 @@ typedef struct UmiApplicationThinClient {
     UmiApplicationReadinessReport readiness;
 } UmiApplicationThinClient;
 
+/**
+ * Initialise application thin client from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_thin_client_create(
     const char *application_id,
     UmiApplicationThinClient **out_client);
+/**
+ * Release or reset state held by application thin client so the same storage can be reused
+ * safely.
+ */
 void umi_application_thin_client_destroy(UmiApplicationThinClient *client);
 
 /*

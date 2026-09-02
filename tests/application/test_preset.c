@@ -16,12 +16,17 @@
 
 #include "umicom/application/preset.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
 
     assert(umi_application_preset_catalogue_count() >= 6U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_preset_catalogue_count();
          ++index) {

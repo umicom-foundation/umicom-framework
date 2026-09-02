@@ -59,12 +59,20 @@ static const UmiDeveloperWorkbenchCommandDefinition COMMANDS[] = {
     }
 };
 
+/*
+ * Provide the developer workbench help commands operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchCommandDefinition *
 umi_developer_workbench_help_commands(void)
 {
     return COMMANDS;
 }
 
+/*
+ * Return the number of records represented by developer workbench help command without
+ * changing their state.
+ */
 size_t umi_developer_workbench_help_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);

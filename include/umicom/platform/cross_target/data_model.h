@@ -31,7 +31,14 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/abi_descriptor.h"
+/**
+ * Represent the ct type widths data shared with callers of this public contract.
+ */
 typedef struct UmiCtTypeWidths { uint16_t short_bits; uint16_t int_bits; uint16_t long_bits; uint16_t long_long_bits; uint16_t pointer_bits; uint16_t size_t_bits; } UmiCtTypeWidths;
+/**
+ * Provide the ct data model widths operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_data_model_widths(UmiCtDataModel model,UmiCtTypeWidths *out_widths);
 
 #ifdef __cplusplus

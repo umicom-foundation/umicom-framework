@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/bond_pricer.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double price=0.0; CHECK(umi_quant_bond_pricer_price(1000.0,0.05,2,10,0.05,&price)==UMI_STATUS_OK); CHECK(price>999.0&&price<1001.0);

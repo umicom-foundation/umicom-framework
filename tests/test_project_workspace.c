@@ -19,6 +19,10 @@
 #include "umicom/platform/path.h"
 #include "umicom/project/project.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProjectWorkspace *workspace = NULL;
@@ -36,23 +40,32 @@ int main(void)
     char cmake_file[UMI_PATH_CAPACITY];
     char source_file[UMI_PATH_CAPACITY];
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_project_workspace_create(&workspace) != UMI_STATUS_OK) return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_project_workspace_snapshot(workspace, &before) != UMI_STATUS_OK ||
         before.item_count != 0U) return 2;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_temp_directory(temp_directory, sizeof(temp_directory)) != UMI_STATUS_OK)
         return 3;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_path_join(temp_directory, "umicom-b31-project-import",
                       root, sizeof(root)) != UMI_STATUS_OK) return 4;
     (void)umi_fs_remove_tree(root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_make_directories(root) != UMI_STATUS_OK) return 5;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_path_join(root, "CMakeLists.txt", cmake_file,
                       sizeof(cmake_file)) != UMI_STATUS_OK) return 6;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_path_join(root, "main.c", source_file,
                       sizeof(source_file)) != UMI_STATUS_OK) return 7;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_fs_write_text(cmake_file,
             "cmake_minimum_required(VERSION 3.24)\nproject(sample C)\n") !=
         UMI_STATUS_OK) return 8;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_fs_write_text(source_file,
             "int main(void) { return 0; }\n") != UMI_STATUS_OK) return 9;
 
@@ -68,11 +81,14 @@ int main(void)
     request.create_test_task = 1;
     request.launch_program = "sample-app";
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_project_workspace_import_directory(
             workspace, &request, &imported) != UMI_STATUS_OK) return 10;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!imported.has_cmake || !imported.has_launch_profile ||
         !imported.created_test_task || imported.c_source_count != 1U ||
         strcmp(imported.project_id, "sample") != 0) return 11;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!imported.selection.has_configuration ||
         !imported.selection.has_target ||
         !imported.selection.has_task ||
@@ -80,18 +96,23 @@ int main(void)
         !imported.selection.has_launch_profile ||
         !imported.validation.valid) return 12;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_project_workspace_snapshot(workspace, &after) != UMI_STATUS_OK)
         return 13;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (after.descriptor_count != 1U || after.configuration_count != 1U ||
         after.target_count != 1U || after.environment_count != 1U ||
         after.file_set_count != 1U || after.task_count != 3U ||
         after.launch_profile_count != 1U || after.build_node_count != 4U)
         return 14;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_project_workspace_import_directory(
             workspace, &request, &imported) != UMI_STATUS_OK) return 15;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_project_workspace_snapshot(
             workspace, &after_second_import) != UMI_STATUS_OK) return 16;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (after_second_import.descriptor_count != after.descriptor_count ||
         after_second_import.task_count != after.task_count ||
         after_second_import.build_node_count != after.build_node_count ||
@@ -106,6 +127,7 @@ int main(void)
     strcpy(broken_project.id, "broken");
     strcpy(broken_project.name, "Broken Project");
     broken_project.enabled = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_project_descriptor_registry_upsert(
             umi_project_workspace_descriptor(workspace),
             &broken_project) != UMI_STATUS_OK) return 18;
@@ -114,17 +136,21 @@ int main(void)
     strcpy(broken_task.id, "broken.task");
     strcpy(broken_task.project_id, "broken");
     broken_task.enabled = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_project_task_registry_upsert(
             umi_project_workspace_task(workspace),
             &broken_task) != UMI_STATUS_OK) return 19;
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_project_workspace_validate(
             workspace, &global_validation) != UMI_STATUS_OK ||
         global_validation.valid != 0) return 20;
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_project_workspace_validate_project(
             workspace, "sample", &scoped_validation) != UMI_STATUS_OK ||
         scoped_validation.valid == 0) return 21;
 
     umi_project_workspace_destroy(workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_remove_tree(root) != UMI_STATUS_OK) return 22;
     return 0;
 }

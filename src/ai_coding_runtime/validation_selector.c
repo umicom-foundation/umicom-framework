@@ -42,6 +42,10 @@ static const Candidate CANDIDATES[] = {
     {"make", "Makefile", umi_ai_coding_validation_profile_make}
 };
 
+/*
+ * Provide the ai coding validation select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_validation_select(
     const UmiAiCodingWorkspaceAdapter *workspace,
     const char *workspace_root,
@@ -51,17 +55,23 @@ UmiStatus umi_ai_coding_validation_select(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || workspace_root == NULL ||
         out_selection == NULL || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_ai_coding_workspace_adapter_validate(workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_selection, 0, sizeof(*out_selection));
     umi_ai_coding_validation_plan_init(out_plan);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(CANDIDATES) / sizeof(CANDIDATES[0]);
          ++index) {
         int exists = 0;
@@ -70,11 +80,14 @@ UmiStatus umi_ai_coding_validation_select(
             workspace->user_data,
             CANDIDATES[index].marker,
             &exists);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!exists) continue;
 
         status = CANDIDATES[index].factory(workspace_root, out_plan);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         (void)snprintf(

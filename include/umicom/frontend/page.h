@@ -23,7 +23,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the frontend page data shared with callers of this public contract.
+ */
 typedef struct UmiFrontendPage { char id[UMI_FRONTEND_ID_CAPACITY]; char title[UMI_FRONTEND_TEXT_CAPACITY]; char component_id[UMI_FRONTEND_ID_CAPACITY]; } UmiFrontendPage;
+/**
+ * Initialise frontend page from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_frontend_page_init(UmiFrontendPage *page,const char *id,const char *title,const char *component_id);
 #ifdef __cplusplus
 }

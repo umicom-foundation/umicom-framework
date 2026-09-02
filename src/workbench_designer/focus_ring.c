@@ -18,20 +18,38 @@
 #include "internal.h"
 
 
+/*
+ * Initialise workbench designer focus ring from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_focus_ring_init(UmiWorkbenchDesignerFocusRing *ring)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (ring == NULL) return;
     (void)memset(ring, 0, sizeof(*ring));
     ring->current_index = UMI_WORKBENCH_DESIGNER_INDEX_NONE;
 }
 
+/*
+ * Find workbench designer focus ring while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiWorkbenchDesignerFocusItem *umi_workbench_designer_focus_ring_find(
     const UmiWorkbenchDesignerFocusRing *ring,
     const char *node_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (ring == NULL || node_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < ring->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(ring->items[index].node_id, node_id) == 0) {
             return &ring->items[index];
         }
@@ -39,6 +57,10 @@ const UmiWorkbenchDesignerFocusItem *umi_workbench_designer_focus_ring_find(
     return NULL;
 }
 
+/*
+ * Provide the workbench designer focus ring build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_focus_ring_build(
     UmiWorkbenchDesignerFocusRing *ring,
     const UmiWorkbenchDesignerCanvas *canvas,
@@ -46,18 +68,26 @@ UmiStatus umi_workbench_designer_focus_ring_build(
 {
     char previous[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (ring == NULL || canvas == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     previous[0] = '\0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (ring->current_index < ring->count) {
         (void)umi_workbench_designer_copy_text(
             previous, sizeof(previous), ring->items[ring->current_index].node_id);
     }
     ring->count = 0U;
     ring->current_index = UMI_WORKBENCH_DESIGNER_INDEX_NONE;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < canvas->count; ++index) {
         const UmiWorkbenchDesignerCanvasItem *item = &canvas->items[index];
         UmiWorkbenchDesignerFocusItem *focus;
+        /* Apply this operation only while the related capability or state is available. */
         if (!item->visible || (!include_containers && item->container)) continue;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (ring->count >= UMI_WORKBENCH_DESIGNER_MAX_FOCUS_ITEMS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -71,11 +101,13 @@ UmiStatus umi_workbench_designer_focus_ring_build(
         focus->order = (uint32_t)ring->count;
         focus->enabled = true;
         focus->container = item->container;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (previous[0] != '\0' && strcmp(previous, focus->node_id) == 0) {
             ring->current_index = ring->count;
         }
         ring->count += 1U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (ring->current_index == UMI_WORKBENCH_DESIGNER_INDEX_NONE && ring->count > 0U) {
         ring->current_index = 0U;
     }
@@ -84,13 +116,23 @@ UmiStatus umi_workbench_designer_focus_ring_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy workbench designer focus ring into module-owned storage so callers keep ownership
+ * of their input values.
+ */
 UmiStatus umi_workbench_designer_focus_ring_set(
     UmiWorkbenchDesignerFocusRing *ring,
     const char *node_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (ring == NULL || node_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < ring->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (ring->items[index].enabled && strcmp(ring->items[index].node_id, node_id) == 0) {
             ring->current_index = index;
             ring->revision += 1U;
@@ -100,13 +142,25 @@ UmiStatus umi_workbench_designer_focus_ring_set(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the workbench designer focus ring current operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchDesignerFocusItem *umi_workbench_designer_focus_ring_current(
     const UmiWorkbenchDesignerFocusRing *ring)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (ring == NULL || ring->current_index >= ring->count) return NULL;
     return &ring->items[ring->current_index];
 }
 
+/*
+ * Provide the workbench designer focus ring move operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchDesignerFocusItem *umi_workbench_designer_focus_ring_move(
     UmiWorkbenchDesignerFocusRing *ring,
     int direction,
@@ -114,22 +168,32 @@ const UmiWorkbenchDesignerFocusItem *umi_workbench_designer_focus_ring_move(
 {
     size_t attempts;
     size_t candidate;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (ring == NULL || ring->count == 0U || direction == 0) return NULL;
     candidate = ring->current_index < ring->count ? ring->current_index : 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (attempts = 0U; attempts < ring->count; ++attempts) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (direction > 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (candidate + 1U >= ring->count) {
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (!wrap) return umi_workbench_designer_focus_ring_current(ring);
                 candidate = 0U;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 candidate += 1U;
             }
-        } else if (candidate == 0U) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (candidate == 0U) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!wrap) return umi_workbench_designer_focus_ring_current(ring);
             candidate = ring->count - 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             candidate -= 1U;
         }
+        /* Apply this operation only while the related capability or state is available. */
         if (ring->items[candidate].enabled) {
             ring->current_index = candidate;
             ring->revision += 1U;

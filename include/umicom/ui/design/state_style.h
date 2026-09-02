@@ -30,6 +30,9 @@ extern "C" {
 
 #include "umicom/ui/design/interaction_state.h"
 #include "umicom/ui/design/color_role.h"
+/**
+ * Represent the design state style data shared with callers of this public contract.
+ */
 typedef struct UmiDesignStateStyle { UmiDesignInteractionState state; UmiDesignColorRole foreground; UmiDesignColorRole background; UmiDesignColorRole border; double opacity; } UmiDesignStateStyle;
 /* Initialise a validated state style with normalized opacity. */
 UmiStatus umi_design_state_style_init(UmiDesignStateStyle *style, UmiDesignInteractionState state, UmiDesignColorRole foreground, UmiDesignColorRole background, UmiDesignColorRole border, double opacity);

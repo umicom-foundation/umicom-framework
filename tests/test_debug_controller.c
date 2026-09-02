@@ -16,4 +16,8 @@
 /* Umicom Framework debugger controller test. Sammy Hegab, Umicom Foundation, MIT. */
 #include <assert.h>
 #include "umicom/debug/controller.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiProtocolTransport*t=NULL;UmiProtocolClient*c=NULL;UmiDapClient dap;UmiDebugService*s=NULL;UmiDebugController*d=NULL;UmiDebugControllerSnapshot snap;assert(umi_protocol_transport_create_memory(32U,&t)==UMI_STATUS_OK);assert(umi_protocol_client_create(t,&c)==UMI_STATUS_OK);assert(umi_protocol_client_start(c)==UMI_STATUS_OK);assert(umi_dap_client_init(&dap,c)==UMI_STATUS_OK);assert(umi_debug_service_create(&s)==UMI_STATUS_OK);assert(umi_debug_controller_create(&dap,s,&d)==UMI_STATUS_OK);assert(umi_debug_controller_initialize(d,"cppdbg")==UMI_STATUS_OK);assert(umi_debug_controller_launch(d,"app",".")==UMI_STATUS_OK);assert(umi_debug_controller_mark_stopped(d,1)==UMI_STATUS_OK);assert(umi_debug_controller_next(d,1)==UMI_STATUS_OK);assert(umi_debug_controller_snapshot(d,&snap)==UMI_STATUS_OK&&snap.state==UMI_DEBUG_CONTROLLER_RUNNING);umi_debug_controller_destroy(d);umi_debug_service_destroy(s);umi_protocol_client_destroy(c);umi_protocol_transport_destroy(t);return 0;}

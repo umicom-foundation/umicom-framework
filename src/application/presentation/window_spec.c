@@ -19,14 +19,26 @@
 
 #include "umicom/application/component/recipe_catalogue.h"
 
+/*
+ * Check that application presentation window boolean satisfies its contract before another
+ * service relies on it.
+ */
 static int umi_application_presentation_window_boolean_valid(int value)
 {
     return value == 0 || value == 1;
 }
 
+/*
+ * Check that application presentation window spec satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_presentation_window_spec_validate(
     const UmiApplicationPresentationWindowSpec *spec)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec == NULL || spec->struct_size != sizeof(*spec) ||
         spec->api_version != UMI_APPLICATION_PRESENTATION_API_VERSION ||
         spec->recipe_id == NULL || spec->recipe_id[0] == '\0' ||

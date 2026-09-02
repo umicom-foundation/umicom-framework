@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential liquidity ladder data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLiquidityLadder { UmiPrudentialLiquidityBucket buckets[UMI_PRU_MAX_PERIODS]; size_t count; } UmiPrudentialLiquidityLadder;
 /* Append a horizon bucket while enforcing strictly increasing day order. */
 UmiStatus umi_pru_liquidity_ladder_add(UmiPrudentialLiquidityLadder *ladder, const UmiPrudentialLiquidityBucket *bucket);

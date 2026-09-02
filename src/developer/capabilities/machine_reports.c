@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/machine_reports.h"
 
+/*
+ * Provide the developer capability machine reports operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_machine_reports(void)
 {

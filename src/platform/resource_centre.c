@@ -31,20 +31,38 @@ struct UmiResourceCentre {
     uint64_t revision;
 };
 
+/*
+ * Initialise platform resource centre from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_platform_resource_centre_create(UmiResourceCentre **out_service)
 {
     UmiResourceCentre *service;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_service = NULL;
     service = (UmiResourceCentre *)calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     service->revision = 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_platform_recent_items_registry_create(&service->recent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_platform_bookmarks_registry_create(&service->bookmarks);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_platform_resource_location_registry_create(&service->locations);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_platform_workspace_history_registry_create(&service->workspaces);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_platform_file_operation_queue_registry_create(&service->operations);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_platform_resource_centre_destroy(service);
         return status;
@@ -53,8 +71,16 @@ UmiStatus umi_platform_resource_centre_create(UmiResourceCentre **out_service)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by platform resource centre so the same storage can be
+ * reused safely.
+ */
 void umi_platform_resource_centre_destroy(UmiResourceCentre *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     umi_platform_file_operation_queue_registry_destroy(service->operations);
     umi_platform_workspace_history_registry_destroy(service->workspaces);
@@ -64,8 +90,16 @@ void umi_platform_resource_centre_destroy(UmiResourceCentre *service)
     free(service);
 }
 
+/*
+ * Provide the platform resource centre snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_platform_resource_centre_snapshot(const UmiResourceCentre *service, UmiResourceCentreSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
@@ -79,26 +113,46 @@ UmiStatus umi_platform_resource_centre_snapshot(const UmiResourceCentre *service
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the platform resource centre recent items operation used by this module and its
+ * client applications.
+ */
 UmiRecentItemRegistry *umi_platform_resource_centre_recent_items(UmiResourceCentre *service)
 {
     return service != NULL ? service->recent : NULL;
 }
 
+/*
+ * Provide the platform resource centre bookmarks operation used by this module and its
+ * client applications.
+ */
 UmiBookmarkRegistry *umi_platform_resource_centre_bookmarks(UmiResourceCentre *service)
 {
     return service != NULL ? service->bookmarks : NULL;
 }
 
+/*
+ * Provide the platform resource centre locations operation used by this module and its
+ * client applications.
+ */
 UmiResourceLocationRegistry *umi_platform_resource_centre_locations(UmiResourceCentre *service)
 {
     return service != NULL ? service->locations : NULL;
 }
 
+/*
+ * Provide the platform resource centre workspaces operation used by this module and its
+ * client applications.
+ */
 UmiWorkspaceHistoryRegistry *umi_platform_resource_centre_workspaces(UmiResourceCentre *service)
 {
     return service != NULL ? service->workspaces : NULL;
 }
 
+/*
+ * Provide the platform resource centre operations operation used by this module and its
+ * client applications.
+ */
 UmiFileOperationRegistry *umi_platform_resource_centre_operations(UmiResourceCentre *service)
 {
     return service != NULL ? service->operations : NULL;

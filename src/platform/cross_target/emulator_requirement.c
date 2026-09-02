@@ -21,4 +21,8 @@
 #include "umicom/platform/cross_target/emulator_requirement.h"
 
 #include <string.h>
+/*
+ * Provide the ct emulator requirement satisfied operation used by this module and its
+ * client applications.
+ */
 bool umi_ct_emulator_requirement_satisfied(const UmiCtEmulatorRequirement*r,const UmiCtEmulatorEvidence*e){return r!=NULL&&e!=NULL&&strcmp(r->emulator_id,e->emulator_id)==0&&r->architecture==e->architecture&&e->major>=r->minimum_major&&(!r->system_mode||e->system_mode)&&(!r->user_mode||e->user_mode);}

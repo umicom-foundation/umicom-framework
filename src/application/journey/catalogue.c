@@ -180,20 +180,33 @@ static const UmiApplicationJourney *const JOURNEYS[] = {
     &TRADER_LIVE_RELEASE_GATE
 };
 
+/*
+ * Provide the application journey catalogue build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_journey_catalogue_build(
     UmiApplicationJourneyCatalogue *out_catalogue)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_catalogue, 0, sizeof(*out_catalogue));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (sizeof(JOURNEYS) / sizeof(JOURNEYS[0]) >
         UMI_APPLICATION_JOURNEY_CAPACITY)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(JOURNEYS) / sizeof(JOURNEYS[0]); ++index) {
         size_t other;
         UmiStatus status = umi_application_journey_validate(JOURNEYS[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = 0U; other < index; ++other)
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (strcmp(JOURNEYS[index]->journey_id,
                        JOURNEYS[other]->journey_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
@@ -202,26 +215,46 @@ UmiStatus umi_application_journey_catalogue_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find application journey catalogue while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationJourney *umi_application_journey_catalogue_find(
     const UmiApplicationJourneyCatalogue *catalogue,
     const char *journey_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || journey_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(catalogue->entries[index]->journey_id, journey_id) == 0)
             return catalogue->entries[index];
     return NULL;
 }
 
+/*
+ * Provide the application journey catalogue count for operation used by this module and
+ * its client applications.
+ */
 size_t umi_application_journey_catalogue_count_for(
     const UmiApplicationJourneyCatalogue *catalogue,
     const char *application_id)
 {
     size_t index;
     size_t count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || application_id == NULL) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(catalogue->entries[index]->application_id,
                    application_id) == 0)
             count++;

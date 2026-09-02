@@ -20,5 +20,13 @@
 
 #include "umicom/platform/cross_target/cpu_feature.h"
 
-uint64_t umi_ct_cpu_feature_bit(UmiCtCpuFeature f){if((unsigned)f>=(unsigned)UMI_CT_CPU_COUNT)return 0U;return UINT64_C(1)<<(unsigned)f;}
+/*
+ * Provide the ct cpu feature bit operation used by this module and its client
+ * applications.
+ */
+uint64_t umi_ct_cpu_feature_bit(UmiCtCpuFeature f){/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if((unsigned)f>=(unsigned)UMI_CT_CPU_COUNT)return 0U;return UINT64_C(1)<<(unsigned)f;}
+/*
+ * Provide the ct cpu feature text operation used by this module and its client
+ * applications.
+ */
 const char*umi_ct_cpu_feature_text(UmiCtCpuFeature f){static const char*n[]={"atomics","float","double","compressed","vector","bitmanip","crypto","hypervisor","user-interrupts","mmu"};return (unsigned)f<(unsigned)UMI_CT_CPU_COUNT?n[(unsigned)f]:"unknown";}

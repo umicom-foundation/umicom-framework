@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform build readiness command data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTestPlatformBuildReadinessCommand {
     const char *id;
     const char *label;
@@ -26,9 +30,21 @@ typedef struct UmiTestPlatformBuildReadinessCommand {
     bool mutating;
 } UmiTestPlatformBuildReadinessCommand;
 
+/**
+ * Return the number of records represented by test platform build readiness command
+ * without changing their state.
+ */
 size_t umi_test_platform_build_readiness_command_count(void);
+/**
+ * Find test platform build readiness command while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiTestPlatformBuildReadinessCommand *
 umi_test_platform_build_readiness_command_at(size_t index);
+/**
+ * Find test platform build readiness command while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiTestPlatformBuildReadinessCommand *
 umi_test_platform_build_readiness_command_find(const char *id);
 

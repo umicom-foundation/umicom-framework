@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding validation feedback operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_validation_feedback(
     const UmiAiCodingValidationReport *report,
     char *out_text,

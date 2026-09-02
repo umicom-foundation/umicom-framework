@@ -15,11 +15,20 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make payload and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static char *make_payload(size_t length)
 {
     char *payload = (char *)malloc(length + 1U);
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (payload == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < length; ++index) {
         payload[index] = (char)('a' + (int)(index % 26U));
     }
@@ -27,6 +36,10 @@ static char *make_payload(size_t length)
     return payload;
 }
 
+/*
+ * Exercise test manifest codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_manifest_codec(void)
 {
     UmiWorkbenchLayoutDataChunkManifest source;
@@ -56,6 +69,10 @@ static int test_manifest_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test multi chunk round trip and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_multi_chunk_round_trip(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -87,6 +104,10 @@ static int test_multi_chunk_round_trip(void)
     return 0;
 }
 
+/*
+ * Exercise test rewrite removes stale chunks and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 static int test_rewrite_removes_stale_chunks(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -124,6 +145,10 @@ static int test_rewrite_removes_stale_chunks(void)
     return 0;
 }
 
+/*
+ * Exercise test integrity failure and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_integrity_failure(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -149,6 +174,10 @@ static int test_integrity_failure(void)
     return 0;
 }
 
+/*
+ * Exercise test delete and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int test_delete(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -170,6 +199,10 @@ static int test_delete(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_manifest_codec() == 0, "manifest codec");

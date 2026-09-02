@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio activation profile ai model comparison operation used by this module
+ * and its client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_ai_model_comparison(void);
 

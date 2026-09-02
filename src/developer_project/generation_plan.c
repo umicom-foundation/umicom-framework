@@ -16,32 +16,50 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination,
                            size_t capacity,
                            const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise developer project generation plan from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_project_generation_plan_init(
     UmiDeveloperProjectGenerationPlan *plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) return;
 
     (void)memset(plan, 0, sizeof(*plan));
     plan->revision = 1U;
 }
 
+/*
+ * Provide the developer project generation plan build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_generation_plan_build(
     const UmiDeveloperProjectTemplate *project_template,
     const UmiDeveloperProjectVariableSet *variables,
@@ -51,6 +69,10 @@ UmiStatus umi_developer_project_generation_plan_build(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_template == NULL || variables == NULL ||
         project_root == NULL || project_root[0] == '\0' ||
         out_plan == NULL) {
@@ -58,6 +80,7 @@ UmiStatus umi_developer_project_generation_plan_build(
     }
 
     status = umi_developer_project_template_validate(project_template);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_developer_project_generation_plan_init(out_plan);
@@ -66,19 +89,23 @@ UmiStatus umi_developer_project_generation_plan_build(
         out_plan->project_root,
         sizeof(out_plan->project_root),
         project_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = copy_text(
         out_plan->template_id,
         sizeof(out_plan->template_id),
         project_template->template_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (project_template->file_count >
         UMI_DEVELOPER_PROJECT_GENERATION_FILE_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < project_template->file_count; ++index) {
         const UmiDeveloperProjectTemplateFile *source =
             &project_template->files[index];
@@ -90,6 +117,7 @@ UmiStatus umi_developer_project_generation_plan_build(
             variables,
             destination->relative_path,
             sizeof(destination->relative_path));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_developer_project_render_text(
@@ -97,6 +125,7 @@ UmiStatus umi_developer_project_generation_plan_build(
             variables,
             destination->content,
             sizeof(destination->content));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         destination->executable = source->executable;
@@ -109,12 +138,20 @@ UmiStatus umi_developer_project_generation_plan_build(
     return umi_developer_project_generation_plan_validate(out_plan);
 }
 
+/*
+ * Check that developer project generation plan satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_project_generation_plan_validate(
     const UmiDeveloperProjectGenerationPlan *plan)
 {
     size_t index;
     size_t other;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL ||
         plan->project_root[0] == '\0' ||
         plan->template_id[0] == '\0' ||
@@ -123,16 +160,20 @@ UmiStatus umi_developer_project_generation_plan_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->file_count; ++index) {
         const char *path = plan->files[index].relative_path;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (path[0] == '\0' ||
             path[0] == '/' || path[0] == '\\' ||
             strstr(path, "..") != NULL) {
             return UMI_STATUS_PERMISSION_DENIED;
         }
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U; other < plan->file_count; ++other) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(path, plan->files[other].relative_path) == 0) {
                 return UMI_STATUS_ALREADY_EXISTS;
             }

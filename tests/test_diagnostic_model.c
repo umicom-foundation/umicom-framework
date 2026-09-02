@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/model.h"
+/*
+ * Exercise make item and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDiagnosticSnapshot make_item(const char *id, UmiDiagnosticSeverity severity)
 {
     UmiDiagnosticSnapshot item;
@@ -23,6 +27,10 @@ static UmiDiagnosticSnapshot make_item(const char *id, UmiDiagnosticSeverity sev
         UMI_DIAGNOSTIC_KIND_GENERAL, "test", id) == UMI_STATUS_OK);
     return item;
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticModelConfig config = {2U};

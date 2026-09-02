@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/types.h"
 
+/*
+ * Provide the document encoding text operation used by this module and its client
+ * applications.
+ */
 const char *umi_document_encoding_text(UmiDocumentTextEncoding encoding)
 {
     static const char *const NAMES[] = {
@@ -24,6 +28,10 @@ const char *umi_document_encoding_text(UmiDocumentTextEncoding encoding)
         ? NAMES[encoding] : "invalid";
 }
 
+/*
+ * Provide the document line ending text operation used by this module and its client
+ * applications.
+ */
 const char *umi_document_line_ending_text(UmiDocumentLineEnding line_ending)
 {
     static const char *const NAMES[] = {"none", "LF", "CRLF", "CR", "mixed"};

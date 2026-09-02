@@ -20,6 +20,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/trading/trading.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiReplayEvent e={1U,1000,{0},{0}};(void)snprintf(e.type,sizeof(e.type),"%s","tick");assert(umi_replay_event_valid(&e));
     UmiReplayCursor c;umi_replay_cursor_init(&c,1U);assert(umi_replay_cursor_accept(&c,&e));assert(c.next_sequence==2U);

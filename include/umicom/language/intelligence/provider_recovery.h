@@ -24,11 +24,19 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_PROVIDER_RECOVERY_API_VERSION 1U
+/**
+ * List the named language intelligence provider recovery decision values accepted by this
+ * public contract.
+ */
 typedef enum UmiLanguageIntelligenceProviderRecoveryDecision {
     UMI_LANGUAGE_INTELLIGENCE_PROVIDER_RECOVERY_DENY = 0,
     UMI_LANGUAGE_INTELLIGENCE_PROVIDER_RECOVERY_ALLOW = 1,
     UMI_LANGUAGE_INTELLIGENCE_PROVIDER_RECOVERY_ALLOW_WITH_REFRESH = 2
 } UmiLanguageIntelligenceProviderRecoveryDecision;
+/**
+ * Represent the language intelligence provider recovery input data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceProviderRecoveryInput {
     UmiLanguageIntelligenceCapabilityFlags required_flags;
     UmiLanguageIntelligenceCapabilityFlags available_flags;
@@ -38,8 +46,16 @@ typedef struct UmiLanguageIntelligenceProviderRecoveryInput {
     int hard_block;
     int explicit_override;
 } UmiLanguageIntelligenceProviderRecoveryInput;
+/**
+ * Provide the language intelligence provider recovery evaluate operation used by this
+ * module and its client applications.
+ */
 UmiLanguageIntelligenceProviderRecoveryDecision umi_language_intelligence_provider_recovery_evaluate(
     const UmiLanguageIntelligenceProviderRecoveryInput *input);
+/**
+ * Provide the language intelligence provider recovery capabilities satisfied operation
+ * used by this module and its client applications.
+ */
 int umi_language_intelligence_provider_recovery_capabilities_satisfied(
     const UmiLanguageIntelligenceProviderRecoveryInput *input);
 #ifdef __cplusplus

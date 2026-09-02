@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform hierarchy node data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformHierarchyNode {
     char id[128];
     char parent_id[128];

@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository divergence data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryDivergence { size_t ahead; size_t behind; int has_upstream; } UmiRepositoryDivergence;
 /* Read local commit divergence against @{u}; the probe never fetches or mutates remotes. */
 UmiStatus umi_repository_divergence_probe_read(const UmiRepositoryInspectionContext *context, UmiRepositoryDivergence *out_value);

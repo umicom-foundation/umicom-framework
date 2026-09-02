@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel code action context model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelCodeActionContextModel { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelCodeActionContextModel;
+/**
+ * Initialise editor intel code action context model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_code_action_context_model_init(UmiEditorIntelCodeActionContextModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel code action context model set score operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_intel_code_action_context_model_set_score(UmiEditorIntelCodeActionContextModel *model,uint32_t score);
+/**
+ * Find editor intel code action context model set while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 UmiStatus umi_editor_intel_code_action_context_model_set_selected(UmiEditorIntelCodeActionContextModel *model,bool selected);
+/**
+ * Check that editor intel code action context model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_code_action_context_model_valid(const UmiEditorIntelCodeActionContextModel *model);
 
 #ifdef __cplusplus

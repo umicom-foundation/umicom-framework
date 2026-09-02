@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/workspace_trust.h"
 
+/*
+ * Provide the document capability workspace trust operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_workspace_trust(void)
 {

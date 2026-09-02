@@ -15,9 +15,17 @@
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 
+/*
+ * Provide the gtk4 clipboard set text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_clipboard_set_text(UmiGtk4Adapter *adapter, const char *text)
 {
     GdkClipboard *clipboard;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->window == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

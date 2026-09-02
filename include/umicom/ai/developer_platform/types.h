@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_AI_DEV_SMALL_CAPACITY 32U
 #define UMI_AI_DEV_MEDIUM_CAPACITY 64U
 
+/**
+ * List the named ai dev state values accepted by this public contract.
+ */
 typedef enum UmiAiDevState {
     UMI_AI_DEV_STATE_UNKNOWN = 0,
     UMI_AI_DEV_STATE_READY = 1,
@@ -42,12 +45,18 @@ typedef enum UmiAiDevState {
     UMI_AI_DEV_STATE_FAILED = 4
 } UmiAiDevState;
 
+/**
+ * List the named ai dev locality values accepted by this public contract.
+ */
 typedef enum UmiAiDevLocality {
     UMI_AI_DEV_LOCALITY_ANY = 0,
     UMI_AI_DEV_LOCALITY_LOCAL = 1,
     UMI_AI_DEV_LOCALITY_REMOTE = 2
 } UmiAiDevLocality;
 
+/**
+ * List the named ai dev risk values accepted by this public contract.
+ */
 typedef enum UmiAiDevRisk {
     UMI_AI_DEV_RISK_NONE = 0,
     UMI_AI_DEV_RISK_LOW = 1,
@@ -68,9 +77,22 @@ enum {
     UMI_AI_DEV_CAP_LOCAL = UINT64_C(1) << 7
 };
 
+/**
+ * Provide the ai dev state text operation used by this module and its client applications.
+ */
 const char *umi_ai_dev_state_text(UmiAiDevState state);
+/**
+ * Provide the ai dev locality text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_dev_locality_text(UmiAiDevLocality locality);
+/**
+ * Provide the ai dev risk text operation used by this module and its client applications.
+ */
 const char *umi_ai_dev_risk_text(UmiAiDevRisk risk);
+/**
+ * Provide the ai dev percent operation used by this module and its client applications.
+ */
 uint32_t umi_ai_dev_percent(uint64_t value, uint64_t maximum);
 
 #ifdef __cplusplus

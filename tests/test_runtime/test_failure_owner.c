@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/test_runtime/failure_owner.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestRuntimeFailureOwner v,s;

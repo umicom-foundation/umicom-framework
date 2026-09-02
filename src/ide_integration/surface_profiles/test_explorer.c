@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/test_explorer.h"
 
+/*
+ * Provide the ide surface profile test explorer operation used by this module and its
+ * client applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_test_explorer(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

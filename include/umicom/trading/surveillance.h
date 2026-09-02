@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the surveillance large order operation used by this module and its client
+ * applications.
+ */
 int umi_surveillance_large_order(const UmiOrderRequest *request, double threshold_quantity);
 #ifdef __cplusplus
 }

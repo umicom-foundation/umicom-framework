@@ -20,4 +20,8 @@
  */
 #include <assert.h>
 #include "umicom/codeguard/rules/command.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){size_t count=0U;const UmiCodeGuardRule *rules=umi_codeguard_rules_command(&count);assert(rules!=NULL);assert(count>0U);assert(rules[0].rule_id!=NULL);return 0;}

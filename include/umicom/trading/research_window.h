@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the research window contains operation used by this module and its client
+ * applications.
+ */
 int umi_research_window_contains(int64_t anchor_ms, int64_t event_ms, int64_t forward_ms);
 #ifdef __cplusplus
 }

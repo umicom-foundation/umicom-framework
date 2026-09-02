@@ -23,7 +23,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk installation data shared with callers of this public contract.
+ */
 typedef struct UmiSdkInstallation { char prefix[1024]; char include_dir[1024]; char library_dir[1024]; char cmake_dir[1024]; } UmiSdkInstallation;
+/**
+ * Provide the sdk installation from prefix operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_sdk_installation_from_prefix(const char *prefix,UmiSdkInstallation *out_installation);
 #ifdef __cplusplus
 }

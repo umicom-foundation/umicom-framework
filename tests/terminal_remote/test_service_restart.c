@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/service_restart.h"
-int main(void) { UmiTerminalRemoteServiceRestart v; umi_terminal_remote_service_restart_init(&v,2U); if(!umi_terminal_remote_service_restart_claim_attempt(&v)||!umi_terminal_remote_service_restart_claim_attempt(&v)) return 1; if(umi_terminal_remote_service_restart_claim_attempt(&v)) return 2; umi_terminal_remote_service_restart_reset(&v); return umi_terminal_remote_service_restart_claim_attempt(&v)?0:3; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteServiceRestart v; umi_terminal_remote_service_restart_init(&v,2U); /* Apply this branch only when its contract condition is satisfied. */ if(!umi_terminal_remote_service_restart_claim_attempt(&v)||!umi_terminal_remote_service_restart_claim_attempt(&v)) return 1; /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_service_restart_claim_attempt(&v)) return 2; umi_terminal_remote_service_restart_reset(&v); return umi_terminal_remote_service_restart_claim_attempt(&v)?0:3; }

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_VIRTUAL_DOCUMENT "umicom.document.lifecycle.virtual_document"
 
+/**
+ * Provide the document capability virtual document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_virtual_document(void);
 

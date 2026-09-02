@@ -21,8 +21,13 @@
 
 #include "umicom/designer/types.h"
 
+/*
+ * Provide the designer operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_operation_kind_text(UmiDesignerOperationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DESIGNER_OP_ADD_COMPONENT: return "add-component";
         case UMI_DESIGNER_OP_REMOVE_COMPONENT: return "remove-component";
@@ -32,8 +37,13 @@ const char *umi_designer_operation_kind_text(UmiDesignerOperationKind kind)
     }
 }
 
+/*
+ * Provide the designer alignment text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_alignment_text(UmiDesignerAlignment alignment)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (alignment) {
         case UMI_DESIGNER_ALIGN_LEFT: return "left";
         case UMI_DESIGNER_ALIGN_HORIZONTAL_CENTRE: return "horizontal-centre";
@@ -45,8 +55,13 @@ const char *umi_designer_alignment_text(UmiDesignerAlignment alignment)
     }
 }
 
+/*
+ * Provide the designer distribution text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_distribution_text(UmiDesignerDistribution distribution)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (distribution) {
         case UMI_DESIGNER_DISTRIBUTE_HORIZONTAL: return "horizontal";
         case UMI_DESIGNER_DISTRIBUTE_VERTICAL: return "vertical";
@@ -54,8 +69,13 @@ const char *umi_designer_distribution_text(UmiDesignerDistribution distribution)
     }
 }
 
+/*
+ * Provide the designer preview profile text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_preview_profile_text(UmiDesignerPreviewProfile profile)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (profile) {
         case UMI_DESIGNER_PREVIEW_DESKTOP: return "Desktop";
         case UMI_DESIGNER_PREVIEW_LAPTOP: return "Laptop";

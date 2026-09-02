@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/broker_route_table.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingBrokerRouteTable t;

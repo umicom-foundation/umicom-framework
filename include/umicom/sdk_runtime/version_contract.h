@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk runtime version contract data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiSdkRuntimeVersionContract {
     uint32_t structure_size;
     char id[UMI_SDK_RUNTIME_ID_CAPACITY];
@@ -30,13 +34,45 @@ typedef struct UmiSdkRuntimeVersionContract {
     UmiSdkRuntimeState state;
     bool enabled;
 } UmiSdkRuntimeVersionContract;
+/**
+ * Initialise sdk runtime version contract from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_sdk_runtime_version_contract_init(UmiSdkRuntimeVersionContract *value, const char *id);
+/**
+ * Check that sdk runtime version contract satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_sdk_runtime_version_contract_validate(const UmiSdkRuntimeVersionContract *value);
+/**
+ * Provide the sdk runtime version contract set path operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_version_contract_set_path(UmiSdkRuntimeVersionContract *value, const char *path);
+/**
+ * Provide the sdk runtime version contract set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_version_contract_set_detail(UmiSdkRuntimeVersionContract *value, const char *detail);
+/**
+ * Provide the sdk runtime version contract set major operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_version_contract_set_major(UmiSdkRuntimeVersionContract *value, uint64_t number);
+/**
+ * Provide the sdk runtime version contract set minor operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_version_contract_set_minor(UmiSdkRuntimeVersionContract *value, uint64_t number);
+/**
+ * Provide the sdk runtime version contract set state operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_version_contract_set_state(UmiSdkRuntimeVersionContract *value, UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime version contract same identity operation used by this module and
+ * its client applications.
+ */
 bool umi_sdk_runtime_version_contract_same_identity(const UmiSdkRuntimeVersionContract *left, const UmiSdkRuntimeVersionContract *right);
 #ifdef __cplusplus
 }

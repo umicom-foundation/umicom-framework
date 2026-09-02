@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test parser valid complete and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_parser_valid_complete(void){UmiAiHelixParsedResponse p;const char *t="disposition=complete\naction=none\ntarget=-\nsummary=done\nconfidence=1\nrationale=green";TEST_CHECK(umi_ai_helix_response_parse(t,1,&p)==UMI_STATUS_OK);TEST_CHECK((uint32_t)p.action_kind==0U);return 0;}

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio activation profile outline operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_outline(void);
 #ifdef __cplusplus

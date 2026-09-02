@@ -55,6 +55,10 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
     }
 };
 
+/*
+ * Provide the developer project template integration worker operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_integration_worker(void)
 {
     static const UmiDeveloperProjectTemplate project_template = {

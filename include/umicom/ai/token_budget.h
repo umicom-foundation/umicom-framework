@@ -28,17 +28,32 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai token budget data shared with callers of this public contract.
+ */
 typedef struct UmiAiTokenBudget {
     uint32_t context_limit;
     uint32_t reserved_output;
     uint32_t estimated_input;
 } UmiAiTokenBudget;
 
+/**
+ * Provide the ai estimate tokens operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ai_estimate_tokens(const char *utf8_text);
+/**
+ * Copy ai token budget into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_ai_token_budget_set(UmiAiTokenBudget *budget,
                                   uint32_t context_limit,
                                   uint32_t reserved_output,
                                   const char *input_text);
+/**
+ * Provide the ai token budget available operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ai_token_budget_available(const UmiAiTokenBudget *budget);
 
 #ifdef __cplusplus

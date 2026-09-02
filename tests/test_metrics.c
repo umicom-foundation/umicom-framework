@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/diagnostics/metrics.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiMetricsRegistry *r = NULL; UmiMetricSnapshot m;
     assert(umi_metrics_registry_create(&r) == UMI_STATUS_OK);

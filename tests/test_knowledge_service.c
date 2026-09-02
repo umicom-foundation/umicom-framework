@@ -13,6 +13,10 @@
 #include <string.h>
 #include "umicom/knowledge/service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiKnowledgeServiceConfig config = umi_knowledge_service_config_default();

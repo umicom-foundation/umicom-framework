@@ -52,52 +52,74 @@ struct UmiEditorEditEngine {
     uint64_t command_revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the add overflows operation used by this module and its client applications. */
 static int add_overflows(size_t left, size_t right)
 {
     return right > SIZE_MAX - left;
 }
 
+/* Provide the builder reserve operation used by this module and its client applications. */
 static UmiStatus builder_reserve(TextBuilder *builder, size_t required)
 {
     size_t capacity;
     char *replacement;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= builder->capacity) return UMI_STATUS_OK;
     capacity = builder->capacity > 0U ? builder->capacity : 256U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) {
             capacity = required;
             break;
         }
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity == SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     replacement = (char *)realloc(builder->bytes, capacity + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     builder->bytes = replacement;
     builder->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Add builder only after its inputs and available capacity have been checked. */
 static UmiStatus builder_append(TextBuilder *builder,
                                 const char *bytes,
                                 size_t byte_count)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL || (bytes == NULL && byte_count > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (add_overflows(builder->count, byte_count)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     status = builder_reserve(builder, builder->count + byte_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (byte_count > 0U) {
         (void)memcpy(builder->bytes + builder->count, bytes, byte_count);
     }
@@ -106,13 +128,22 @@ static UmiStatus builder_append(TextBuilder *builder,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the builder append byte operation used by this module and its client
+ * applications.
+ */
 static UmiStatus builder_append_byte(TextBuilder *builder, char byte)
 {
     return builder_append(builder, &byte, 1U);
 }
 
+/* Provide the builder discard operation used by this module and its client applications. */
 static void builder_discard(TextBuilder *builder)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL) return;
     free(builder->bytes);
     builder->bytes = NULL;
@@ -120,25 +151,36 @@ static void builder_discard(TextBuilder *builder)
     builder->capacity = 0U;
 }
 
+/* Copy allocate into module-owned storage so callers keep ownership of their input values. */
 static UmiStatus allocate_copy(const char *bytes,
                                size_t byte_count,
                                char **out_copy)
 {
     char *copy;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_copy == NULL || (bytes == NULL && byte_count > 0U) ||
         byte_count == SIZE_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_copy = NULL;
     copy = (char *)malloc(byte_count + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (byte_count > 0U) (void)memcpy(copy, bytes, byte_count);
     copy[byte_count] = '\0';
     *out_copy = copy;
     return UMI_STATUS_OK;
 }
 
+/* Provide the replace alloc operation used by this module and its client applications. */
 static UmiStatus replace_alloc(const char *source,
                                size_t source_count,
                                size_t offset,
@@ -151,6 +193,10 @@ static UmiStatus replace_alloc(const char *source,
     size_t result_count;
     char *result;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_bytes == NULL || out_count == NULL ||
         (source == NULL && source_count > 0U) ||
         (inserted == NULL && inserted_count > 0U) ||
@@ -161,13 +207,21 @@ static UmiStatus replace_alloc(const char *source,
     *out_bytes = NULL;
     *out_count = 0U;
     result_count = source_count - removed_count + inserted_count;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result_count == SIZE_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     result = (char *)malloc(result_count + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (offset > 0U) (void)memcpy(result, source, offset);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (inserted_count > 0U) {
         (void)memcpy(result + offset, inserted, inserted_count);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (source_count > offset + removed_count) {
         (void)memcpy(result + offset + inserted_count,
                      source + offset + removed_count,
@@ -179,11 +233,13 @@ static UmiStatus replace_alloc(const char *source,
     return UMI_STATUS_OK;
 }
 
+/* Provide the rebuild index operation used by this module and its client applications. */
 static UmiStatus rebuild_index(UmiEditorEditEngine *engine)
 {
     UmiEditorTextBufferView view;
     UmiStatus status = umi_editor_text_buffer_view(engine->buffer, &view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_editor_line_index_rebuild(engine->line_index,
                                           view.bytes,
@@ -191,13 +247,16 @@ static UmiStatus rebuild_index(UmiEditorEditEngine *engine)
                                           view.revision);
 }
 
+/* Provide the content end operation used by this module and its client applications. */
 static size_t content_end(const char *bytes, size_t start, size_t end)
 {
     (void)start;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (end > 0U && bytes[end - 1U] == '\r') return end - 1U;
     return end;
 }
 
+/* Provide the block end operation used by this module and its client applications. */
 static size_t block_end(const UmiEditorEditEngine *engine,
                         size_t line,
                         size_t byte_count)
@@ -205,6 +264,7 @@ static size_t block_end(const UmiEditorEditEngine *engine,
     size_t start;
     size_t end;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (line + 1U < umi_editor_line_index_count(engine->line_index) &&
         umi_editor_line_index_line_range(engine->line_index,
                                          line + 1U,
@@ -215,6 +275,7 @@ static size_t block_end(const UmiEditorEditEngine *engine,
     return byte_count;
 }
 
+/* Provide the selected lines operation used by this module and its client applications. */
 static UmiStatus selected_lines(const UmiEditorEditEngine *engine,
                                 size_t source_count,
                                 const UmiEditorEditCommandRequest *request,
@@ -227,23 +288,29 @@ static UmiStatus selected_lines(const UmiEditorEditEngine *engine,
     UmiEditorLineLocation last;
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (start > end) {
         size_t swap = start;
         start = end;
         end = swap;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (start == end) start = end = request->cursor_offset;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (start > source_count || end > source_count) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_line_index_locate_offset(engine->line_index,
                                                   start,
                                                   &first);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_line_index_locate_offset(engine->line_index,
                                                   end,
                                                   &last);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (end > start && last.column_bytes == 0U && last.line > first.line) {
         last.line -= 1U;
     }
@@ -252,6 +319,7 @@ static UmiStatus selected_lines(const UmiEditorEditEngine *engine,
     return UMI_STATUS_OK;
 }
 
+/* Provide the transform case operation used by this module and its client applications. */
 static UmiStatus transform_case(const UmiEditorTextBufferView *view,
                                 const UmiEditorEditCommandRequest *request,
                                 int uppercase,
@@ -265,16 +333,20 @@ static UmiStatus transform_case(const UmiEditorTextBufferView *view,
     size_t index;
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (start > end) {
         size_t swap = start;
         start = end;
         end = swap;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (start == end || end > view->byte_count) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = allocate_copy(view->bytes, view->byte_count, out_bytes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = start; index < end; ++index) {
         unsigned char byte = (unsigned char)(*out_bytes)[index];
         (*out_bytes)[index] = (char)(uppercase ? toupper(byte) : tolower(byte));
@@ -285,6 +357,7 @@ static UmiStatus transform_case(const UmiEditorTextBufferView *view,
     return UMI_STATUS_OK;
 }
 
+/* Provide the transform trim operation used by this module and its client applications. */
 static UmiStatus transform_trim(const UmiEditorTextBufferView *view,
                                 char **out_bytes,
                                 size_t *out_count,
@@ -297,24 +370,34 @@ static UmiStatus transform_trim(const UmiEditorTextBufferView *view,
     size_t changed_lines = 0U;
     UmiStatus status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (offset = 0U; offset < view->byte_count; ++offset) {
         char byte = view->bytes[offset];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (byte == '\r' || byte == '\n') {
             size_t before = builder.count;
+            /*
+             * Continue only while work remains available; the loop body advances the state on each
+             * pass.
+             */
             while (builder.count > line_start &&
                    (builder.bytes[builder.count - 1U] == ' ' ||
                     builder.bytes[builder.count - 1U] == '\t')) {
                 builder.count -= 1U;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (builder.count != before) changed_lines += 1U;
             status = builder_append_byte(&builder, byte);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 builder_discard(&builder);
                 return status;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (byte == '\n') line_start = builder.count;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = builder_append_byte(&builder, byte);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 builder_discard(&builder);
                 return status;
@@ -323,16 +406,30 @@ static UmiStatus transform_trim(const UmiEditorTextBufferView *view,
     }
     {
         size_t before = builder.count;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (builder.count > line_start &&
                (builder.bytes[builder.count - 1U] == ' ' ||
                 builder.bytes[builder.count - 1U] == '\t')) {
             builder.count -= 1U;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (builder.count != before) changed_lines += 1U;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (builder.bytes != NULL) builder.bytes[builder.count] = '\0';
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder.bytes == NULL) {
         status = allocate_copy("", 0U, &builder.bytes);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     *out_bytes = builder.bytes;
@@ -342,6 +439,10 @@ static UmiStatus transform_trim(const UmiEditorTextBufferView *view,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the transform line prefixes operation used by this module and its client
+ * applications.
+ */
 static UmiStatus transform_line_prefixes(
     const UmiEditorEditEngine *engine,
     const UmiEditorTextBufferView *view,
@@ -364,13 +465,19 @@ static UmiStatus transform_line_prefixes(
     size_t source_cursor = 0U;
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (commenting) {
         token = request->line_comment;
         token_count = request->line_comment_byte_count;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (token == NULL || token_count == 0U) {
             token = "//";
             token_count = 2U;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (line = first_line; line <= last_line; ++line) {
             size_t start;
             size_t end;
@@ -379,26 +486,34 @@ static UmiStatus transform_line_prefixes(
                                                        line,
                                                        &start,
                                                        &end);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             end = content_end(view->bytes, start, end);
             position = start;
+            /*
+             * Continue only while work remains available; the loop body advances the state on each
+             * pass.
+             */
             while (position < end &&
                    (view->bytes[position] == ' ' ||
                     view->bytes[position] == '\t')) {
                 position += 1U;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (position == end) continue;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (token_count > end - position ||
                 memcmp(view->bytes + position, token, token_count) != 0) {
                 remove_comments = 0;
                 break;
             }
         }
-    } else if (token == NULL || token_count == 0U) {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (token == NULL || token_count == 0U) {
         token = "    ";
         token_count = 4U;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (line = 0U; line < umi_editor_line_index_count(engine->line_index);
          ++line) {
         size_t start;
@@ -411,66 +526,88 @@ static UmiStatus transform_line_prefixes(
                                                    line,
                                                    &start,
                                                    &end);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
         end_block = block_end(engine, line, view->byte_count);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (start > source_cursor) {
             status = builder_append(&builder,
                                     view->bytes + source_cursor,
                                     start - source_cursor);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto failure;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (line < first_line || line > last_line) {
             status = builder_append(&builder,
                                     view->bytes + start,
                                     end_block - start);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto failure;
             source_cursor = end_block;
             continue;
         }
 
         position = start;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (position < end &&
                (view->bytes[position] == ' ' ||
                 view->bytes[position] == '\t')) {
             position += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (commenting) {
             status = builder_append(&builder,
                                     view->bytes + start,
                                     position - start);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto failure;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (position < content_end(view->bytes, start, end)) {
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (remove_comments) {
                     skip = token_count;
+                    /* Apply this branch only when its contract condition is satisfied. */
                     if (position + skip < end &&
                         view->bytes[position + skip] == ' ') {
                         skip += 1U;
                     }
-                } else {
+                } /* Use this fallback path when the earlier condition does not apply. */ else {
                     status = builder_append(&builder, token, token_count);
+                    /* Preserve the original failure result so the caller can respond to the correct cause. */
                     if (status == UMI_STATUS_OK) {
                         status = builder_append_byte(&builder, ' ');
                     }
+                    /* Preserve the original failure result so the caller can respond to the correct cause. */
                     if (status != UMI_STATUS_OK) goto failure;
                 }
             }
             status = builder_append(&builder,
                                     view->bytes + position + skip,
                                     end_block - position - skip);
-        } else if (indenting) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (indenting) {
             status = builder_append(&builder, token, token_count);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 status = builder_append(&builder,
                                         view->bytes + start,
                                         end_block - start);
             }
-        } else if (outdenting) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (outdenting) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (token_count <= end - start &&
                 memcmp(view->bytes + start, token, token_count) == 0) {
                 skip = token_count;
-            } else if (start < end && view->bytes[start] == '\t') {
+            } else /* Apply this branch only when its contract condition is satisfied. */ if (start < end && view->bytes[start] == '\t') {
                 skip = 1U;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
+                /*
+                 * Continue only while work remains available; the loop body advances the state on each
+                 * pass.
+                 */
                 while (skip < token_count && start + skip < end &&
                        view->bytes[start + skip] == ' ') {
                     skip += 1U;
@@ -479,25 +616,34 @@ static UmiStatus transform_line_prefixes(
             status = builder_append(&builder,
                                     view->bytes + start + skip,
                                     end_block - start - skip);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = UMI_STATUS_INVALID_ARGUMENT;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
         source_cursor = end_block;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (source_cursor < view->byte_count) {
         status = builder_append(&builder,
                                 view->bytes + source_cursor,
                                 view->byte_count - source_cursor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder.bytes == NULL) {
         status = allocate_copy("", 0U, &builder.bytes);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     *out_bytes = builder.bytes;
     *out_count = builder.count;
     *out_cursor = request->cursor_offset;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*out_cursor > *out_count) *out_cursor = *out_count;
     *out_lines = last_line - first_line + 1U;
     return UMI_STATUS_OK;
@@ -507,6 +653,10 @@ failure:
     return status;
 }
 
+/*
+ * Provide the transform line swap operation used by this module and its client
+ * applications.
+ */
 static UmiStatus transform_line_swap(
     const UmiEditorEditEngine *engine,
     const UmiEditorTextBufferView *view,
@@ -532,62 +682,76 @@ static UmiStatus transform_line_swap(
                                                first_line,
                                                &first_start,
                                                &first_end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_line_index_line_range(engine->line_index,
                                                second_line,
                                                &second_start,
                                                &second_end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     first_content_end = content_end(view->bytes, first_start, first_end);
     second_content_end = content_end(view->bytes, second_start, second_end);
     second_block_end = block_end(engine, second_line, view->byte_count);
 
     status = builder_append(&builder, view->bytes, first_start);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append(&builder,
                                 view->bytes + second_start,
                                 second_content_end - second_start);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append(&builder,
                                 view->bytes + first_content_end,
                                 second_start - first_content_end);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append(&builder,
                                 view->bytes + first_start,
                                 first_content_end - first_start);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append(&builder,
                                 view->bytes + second_content_end,
                                 second_block_end - second_content_end);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append(&builder,
                                 view->bytes + second_block_end,
                                 view->byte_count - second_block_end);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         builder_discard(&builder);
         return status;
     }
     *out_bytes = builder.bytes;
     *out_count = builder.count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (request->cursor_offset >= second_start &&
         request->cursor_offset <= second_content_end) {
         *out_cursor = first_start + request->cursor_offset - second_start;
-    } else if (request->cursor_offset >= first_start &&
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (request->cursor_offset >= first_start &&
                request->cursor_offset <= first_content_end) {
         *out_cursor = second_start + request->cursor_offset - first_start;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         *out_cursor = request->cursor_offset;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*out_cursor > *out_count) *out_cursor = *out_count;
     *out_lines = 2U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the transform line command operation used by this module and its client
+ * applications.
+ */
 static UmiStatus transform_line_command(
     const UmiEditorEditEngine *engine,
     const UmiEditorTextBufferView *view,
@@ -609,7 +773,9 @@ static UmiStatus transform_line_command(
                                       &first_line,
                                       &last_line);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_EDIT_COMMAND_INDENT_LINES ||
         request->kind == UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES ||
         request->kind == UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT) {
@@ -623,7 +789,9 @@ static UmiStatus transform_line_command(
                                        out_cursor,
                                        out_lines);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (first_line == 0U) return UMI_STATUS_NOT_FOUND;
         return transform_line_swap(engine,
                                    view,
@@ -635,8 +803,10 @@ static UmiStatus transform_line_command(
                                    out_cursor,
                                    out_lines);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN ||
         request->kind == UMI_EDITOR_EDIT_COMMAND_TRANSPOSE_LINES) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (first_line + 1U >= count) return UMI_STATUS_NOT_FOUND;
         return transform_line_swap(engine,
                                    view,
@@ -653,21 +823,25 @@ static UmiStatus transform_line_command(
                                                first_line,
                                                &start,
                                                &end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     end_block = block_end(engine, first_line, view->byte_count);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_EDIT_COMMAND_DELETE_LINE) {
         size_t remove_start = start;
         size_t remove_end = end_block;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (count == 1U) {
             remove_start = 0U;
             remove_end = view->byte_count;
-        } else if (first_line + 1U == count) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (first_line + 1U == count) {
             size_t previous_start;
             size_t previous_end;
             status = umi_editor_line_index_line_range(engine->line_index,
                                                        first_line - 1U,
                                                        &previous_start,
                                                        &previous_end);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             remove_start = content_end(view->bytes,
                                        previous_start,
@@ -682,11 +856,14 @@ static UmiStatus transform_line_command(
                                out_bytes,
                                out_count);
         *out_cursor = remove_start;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*out_cursor > *out_count) *out_cursor = *out_count;
         *out_lines = 1U;
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (first_line + 1U < count) {
             status = replace_alloc(view->bytes,
                                    view->byte_count,
@@ -697,14 +874,16 @@ static UmiStatus transform_line_command(
                                    out_bytes,
                                    out_count);
             *out_cursor = end_block + request->cursor_offset - start;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             TextBuilder insertion = {0};
             status = builder_append_byte(&insertion, '\n');
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 status = builder_append(&insertion,
                                         view->bytes + start,
                                         end - start);
             }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 status = replace_alloc(view->bytes,
                                        view->byte_count,
@@ -718,10 +897,12 @@ static UmiStatus transform_line_command(
             builder_discard(&insertion);
             *out_cursor = start;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*out_cursor > *out_count) *out_cursor = *out_count;
         *out_lines = 1U;
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT) {
         size_t next_start;
         size_t next_end;
@@ -730,19 +911,26 @@ static UmiStatus transform_line_command(
         const char *separator = " ";
         size_t separator_count = 1U;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (first_line + 1U >= count) return UMI_STATUS_NOT_FOUND;
         status = umi_editor_line_index_line_range(engine->line_index,
                                                    first_line + 1U,
                                                    &next_start,
                                                    &next_end);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         left_end = content_end(view->bytes, start, end);
         right_start = next_start;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (right_start < next_end &&
                (view->bytes[right_start] == ' ' ||
                 view->bytes[right_start] == '\t')) {
             right_start += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (left_end == start || right_start == next_end) {
             separator = NULL;
             separator_count = 0U;
@@ -762,6 +950,7 @@ static UmiStatus transform_line_command(
     return UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/* Provide the compute delta operation used by this module and its client applications. */
 static void compute_delta(const char *before,
                           size_t before_count,
                           const char *after,
@@ -772,10 +961,18 @@ static void compute_delta(const char *before,
     size_t prefix = 0U;
     size_t suffix = 0U;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (prefix < before_count && prefix < after_count &&
            before[prefix] == after[prefix]) {
         prefix += 1U;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (suffix < before_count - prefix && suffix < after_count - prefix &&
            before[before_count - suffix - 1U] ==
                after[after_count - suffix - 1U]) {
@@ -785,18 +982,25 @@ static void compute_delta(const char *before,
     *out_inserted = after_count - prefix - suffix;
 }
 
+/* Provide the free transaction operation used by this module and its client applications. */
 static void free_transaction(UmiEditorCommandTransaction *transaction)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL) return;
     free(transaction->before_bytes);
     free(transaction->after_bytes);
     (void)memset(transaction, 0, sizeof(*transaction));
 }
 
+/* Provide the truncate redo operation used by this module and its client applications. */
 static void truncate_redo(UmiEditorEditEngine *engine)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = engine->transaction_cursor;
          index < engine->transaction_count;
          ++index) {
@@ -808,12 +1012,15 @@ static void truncate_redo(UmiEditorEditEngine *engine)
     engine->transaction_count = engine->transaction_cursor;
 }
 
+/* Provide the evict oldest operation used by this module and its client applications. */
 static void evict_oldest(UmiEditorEditEngine *engine)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (engine->transaction_count == 0U) return;
     engine->history_byte_count -= engine->transactions[0].before_count +
                                   engine->transactions[0].after_count;
     free_transaction(&engine->transactions[0]);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (engine->transaction_count > 1U) {
         (void)memmove(engine->transactions,
                       engine->transactions + 1U,
@@ -821,19 +1028,26 @@ static void evict_oldest(UmiEditorEditEngine *engine)
                           sizeof(*engine->transactions));
     }
     engine->transaction_count -= 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (engine->transaction_cursor > 0U) engine->transaction_cursor -= 1U;
     (void)memset(&engine->transactions[engine->transaction_count],
                  0,
                  sizeof(*engine->transactions));
 }
 
+/* Provide the prepare history operation used by this module and its client applications. */
 static UmiStatus prepare_history(UmiEditorEditEngine *engine,
                                  size_t transaction_bytes)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (transaction_bytes > engine->history_byte_budget) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     truncate_redo(engine);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (engine->transaction_count >= engine->history_capacity ||
            transaction_bytes >
                engine->history_byte_budget - engine->history_byte_count) {
@@ -842,6 +1056,7 @@ static UmiStatus prepare_history(UmiEditorEditEngine *engine,
     return UMI_STATUS_OK;
 }
 
+/* Provide the generate after operation used by this module and its client applications. */
 static UmiStatus generate_after(
     const UmiEditorEditEngine *engine,
     const UmiEditorTextBufferView *view,
@@ -858,13 +1073,19 @@ static UmiStatus generate_after(
     *out_count = 0U;
     *out_cursor = request->cursor_offset;
     *out_lines = 0U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->cursor_offset > view->byte_count ||
         request->selection_start > view->byte_count ||
         request->selection_end > view->byte_count) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (request->kind) {
         case UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT:
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (request->text == NULL && request->text_byte_count > 0U) {
                 return UMI_STATUS_INVALID_ARGUMENT;
             }
@@ -881,11 +1102,16 @@ static UmiStatus generate_after(
         case UMI_EDITOR_EDIT_COMMAND_REPLACE_RANGE:
             start = request->selection_start;
             end = request->selection_end;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (start > end) {
                 size_t swap = start;
                 start = end;
                 end = swap;
             }
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (request->text == NULL && request->text_byte_count > 0U) {
                 return UMI_STATUS_INVALID_ARGUMENT;
             }
@@ -932,6 +1158,10 @@ static UmiStatus generate_after(
     }
 }
 
+/*
+ * Initialise editor edit engine from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_editor_edit_engine_create(
     const UmiEditorEditEngineConfig *config,
     UmiEditorEditEngine **out_engine)
@@ -942,30 +1172,51 @@ UmiStatus umi_editor_edit_engine_create(
     size_t history_budget = UMI_EDITOR_EDIT_ENGINE_DEFAULT_HISTORY_BYTE_BUDGET;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_engine = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config != NULL) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (config->struct_size != (uint32_t)sizeof(*config) ||
             config->api_version != UMI_EDITOR_EDIT_ENGINE_API_VERSION) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (config->initial_buffer_capacity > 0U) {
             initial_capacity = config->initial_buffer_capacity;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (config->history_capacity > 0U) {
             history_capacity = config->history_capacity;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (config->history_byte_budget > 0U) {
             history_budget = config->history_byte_budget;
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (history_capacity > SIZE_MAX / sizeof(*engine->transactions)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     engine = (UmiEditorEditEngine *)calloc(1U, sizeof(*engine));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     engine->transactions = (UmiEditorCommandTransaction *)calloc(
         history_capacity, sizeof(*engine->transactions));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine->transactions == NULL) {
         free(engine);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -974,10 +1225,13 @@ UmiStatus umi_editor_edit_engine_create(
     engine->history_byte_budget = history_budget;
     engine->command_revision = 1U;
     status = umi_editor_text_buffer_create(initial_capacity, &engine->buffer);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_line_index_create(&engine->line_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = rebuild_index(engine);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_editor_edit_engine_destroy(engine);
         return status;
@@ -986,11 +1240,20 @@ UmiStatus umi_editor_edit_engine_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor edit engine so the same storage can be reused
+ * safely.
+ */
 void umi_editor_edit_engine_destroy(UmiEditorEditEngine *engine)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < engine->transaction_count; ++index) {
         free_transaction(&engine->transactions[index]);
     }
@@ -1000,20 +1263,31 @@ void umi_editor_edit_engine_destroy(UmiEditorEditEngine *engine)
     free(engine);
 }
 
+/*
+ * Read editor edit engine into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_editor_edit_engine_load(UmiEditorEditEngine *engine,
                                       const char *bytes,
                                       size_t byte_count)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || (bytes == NULL && byte_count > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_text_buffer_set(engine->buffer, bytes, byte_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = rebuild_index(engine);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_text_buffer_mark_saved(engine->buffer);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_editor_edit_engine_clear_history(engine);
         engine->cursor_offset = 0U;
@@ -1022,6 +1296,10 @@ UmiStatus umi_editor_edit_engine_load(UmiEditorEditEngine *engine,
     return status;
 }
 
+/*
+ * Perform editor edit engine through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_editor_edit_engine_execute(
     UmiEditorEditEngine *engine,
     const UmiEditorEditCommandRequest *request,
@@ -1036,6 +1314,10 @@ UmiStatus umi_editor_edit_engine_execute(
     size_t transaction_bytes;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || request == NULL || out_result == NULL ||
         request->struct_size != (uint32_t)sizeof(*request) ||
         request->api_version != UMI_EDITOR_EDIT_COMMAND_API_VERSION ||
@@ -1043,6 +1325,7 @@ UmiStatus umi_editor_edit_engine_execute(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_text_buffer_view(engine->buffer, &before_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = generate_after(engine,
                             &before_view,
@@ -1051,6 +1334,7 @@ UmiStatus umi_editor_edit_engine_execute(
                             &after_count,
                             &after_cursor,
                             &affected_lines);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_result, 0, sizeof(*out_result));
@@ -1063,18 +1347,21 @@ UmiStatus umi_editor_edit_engine_execute(
     out_result->selection_start = request->selection_start;
     out_result->selection_end = request->selection_end;
     out_result->affected_line_count = affected_lines;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (after_count == before_view.byte_count &&
         memcmp(after_bytes, before_view.bytes, after_count) == 0) {
         free(after_bytes);
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (add_overflows(before_view.byte_count, after_count)) {
         free(after_bytes);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     transaction_bytes = before_view.byte_count + after_count;
     status = prepare_history(engine, transaction_bytes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(after_bytes);
         return status;
@@ -1082,11 +1369,13 @@ UmiStatus umi_editor_edit_engine_execute(
     status = allocate_copy(before_view.bytes,
                            before_view.byte_count,
                            &transaction.before_bytes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(after_bytes);
         return status;
     }
     status = umi_editor_text_buffer_reserve(engine->buffer, after_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(transaction.before_bytes);
         free(after_bytes);
@@ -1109,7 +1398,9 @@ UmiStatus umi_editor_edit_engine_execute(
     status = umi_editor_text_buffer_set(engine->buffer,
                                          transaction.after_bytes,
                                          transaction.after_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = rebuild_index(engine);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free_transaction(&transaction);
         return status;
@@ -1130,6 +1421,10 @@ UmiStatus umi_editor_edit_engine_execute(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the restore transaction operation used by this module and its client
+ * applications.
+ */
 static UmiStatus restore_transaction(UmiEditorEditEngine *engine,
                                      UmiEditorCommandTransaction *transaction,
                                      int redo,
@@ -1146,7 +1441,9 @@ static UmiStatus restore_transaction(UmiEditorEditEngine *engine,
                                                    bytes,
                                                    byte_count);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = rebuild_index(engine);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     engine->cursor_offset = cursor;
     engine->command_revision = next_revision(engine->command_revision);
@@ -1170,34 +1467,53 @@ static UmiStatus restore_transaction(UmiEditorEditEngine *engine,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor edit engine undo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_edit_engine_undo(
     UmiEditorEditEngine *engine,
     UmiEditorEditCommandResult *out_result)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (engine->transaction_cursor == 0U) return UMI_STATUS_NOT_FOUND;
     status = restore_transaction(engine,
                                  &engine->transactions[
                                      engine->transaction_cursor - 1U],
                                  0,
                                  out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) engine->transaction_cursor -= 1U;
     return status;
 }
 
+/*
+ * Provide the editor edit engine redo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_edit_engine_redo(
     UmiEditorEditEngine *engine,
     UmiEditorEditCommandResult *out_result)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (engine->transaction_cursor >= engine->transaction_count) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -1206,15 +1522,25 @@ UmiStatus umi_editor_edit_engine_redo(
                                      engine->transaction_cursor],
                                  1,
                                  out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) engine->transaction_cursor += 1U;
     return status;
 }
 
+/*
+ * Provide the editor edit engine clear history operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_edit_engine_clear_history(UmiEditorEditEngine *engine)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < engine->transaction_count; ++index) {
         free_transaction(&engine->transactions[index]);
     }
@@ -1225,12 +1551,24 @@ UmiStatus umi_editor_edit_engine_clear_history(UmiEditorEditEngine *engine)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor edit engine mark saved operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_edit_engine_mark_saved(UmiEditorEditEngine *engine)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_editor_text_buffer_mark_saved(engine->buffer);
 }
 
+/*
+ * Provide the editor edit engine snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_edit_engine_snapshot(
     const UmiEditorEditEngine *engine,
     UmiEditorEditEngineSnapshot *out_snapshot)
@@ -1238,10 +1576,15 @@ UmiStatus umi_editor_edit_engine_snapshot(
     UmiEditorTextBufferView view;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_text_buffer_view(engine->buffer, &view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
     out_snapshot->api_version = UMI_EDITOR_EDIT_ENGINE_API_VERSION;
@@ -1262,14 +1605,26 @@ UmiStatus umi_editor_edit_engine_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor edit engine view operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_edit_engine_view(
     const UmiEditorEditEngine *engine,
     UmiEditorTextBufferView *out_view)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_editor_text_buffer_view(engine->buffer, out_view);
 }
 
+/*
+ * Provide the editor edit engine line index operation used by this module and its client
+ * applications.
+ */
 const UmiEditorLineIndex *umi_editor_edit_engine_line_index(
     const UmiEditorEditEngine *engine)
 {

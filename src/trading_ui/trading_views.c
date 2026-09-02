@@ -31,6 +31,7 @@ static size_t visible_rows(size_t count)
         ? count : UMI_TRADING_UI_VISIBLE_ROWS;
 }
 
+/* Provide the set string operation used by this module and its client applications. */
 static UmiStatus set_string(UmiUiViewModel *view, const char *key,
                             const char *text)
 {
@@ -41,6 +42,7 @@ static UmiStatus set_string(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set integer operation used by this module and its client applications. */
 static UmiStatus set_integer(UmiUiViewModel *view, const char *key,
                              int64_t number)
 {
@@ -50,6 +52,7 @@ static UmiStatus set_integer(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set number operation used by this module and its client applications. */
 static UmiStatus set_number(UmiUiViewModel *view, const char *key,
                             double number)
 {
@@ -59,6 +62,7 @@ static UmiStatus set_number(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set boolean operation used by this module and its client applications. */
 static UmiStatus set_boolean(UmiUiViewModel *view, const char *key,
                              int enabled)
 {
@@ -68,6 +72,7 @@ static UmiStatus set_boolean(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set action operation used by this module and its client applications. */
 static UmiStatus set_action(UmiUiViewModel *view, size_t index,
                             const char *action_id, const char *label,
                             const char *tooltip, int enabled)
@@ -82,21 +87,33 @@ static UmiStatus set_action(UmiUiViewModel *view, size_t index,
     return umi_ui_command_view_set_action(view, index, &action);
 }
 
+/* Provide the create view operation used by this module and its client applications. */
 static UmiStatus create_view(const char *view_id, const char *view_kind,
                              const char *title, const char *summary,
                              UmiUiViewModel **out_view)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || view_kind == NULL || out_view == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_ui_view_model_create(view_id, "umicom.trading-ui",
                                       UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "umicom.view-kind", view_kind);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "title", title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "summary", summary);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -104,44 +121,62 @@ static UmiStatus create_view(const char *view_id, const char *view_kind,
     return status;
 }
 
+/*
+ * Provide the set workspace properties operation used by this module and its client
+ * applications.
+ */
 static UmiStatus set_workspace_properties(
     UmiUiViewModel *view, const UmiTradingWorkspaceSnapshot *snapshot)
 {
     UmiStatus status = set_integer(
         view, "trading.revision", (int64_t)snapshot->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(view, "trading.account-id",
                             snapshot->account_id.value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(view, "trading.environment",
             umi_trading_environment_text(snapshot->environment));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(view, "trading.selected-instrument",
                             snapshot->selected_instrument_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(view, "trading.selected-order",
                             snapshot->selected_order_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(view, "trading.market-data-ready",
                              snapshot->market_data_ready);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(view, "trading.broker-ready",
                              snapshot->broker_ready);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(view, "trading.risk-ready",
                              snapshot->risk_ready);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(view, "trading.health-ready",
                              snapshot->health_ready);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(view, "trading.kill-switch-engaged",
                              snapshot->kill_switch_engaged);
     return status;
 }
 
+/* Provide the take snapshot operation used by this module and its client applications. */
 static UmiStatus take_snapshot(UmiTradingWorkspace *workspace,
                                UmiTradingWorkspaceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || out_snapshot == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_trading_workspace_snapshot(workspace, out_snapshot);
@@ -160,6 +195,10 @@ static UmiStatus finish_view(
     return status;
 }
 
+/*
+ * Initialise trading ui dashboard view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_dashboard_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -170,44 +209,58 @@ UmiStatus umi_trading_ui_dashboard_view_create(
         "Environment safety, market health, activity and exposure at a glance.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.instrument-count",
                              (int64_t)snapshot.watchlist_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.order-count",
                              (int64_t)snapshot.order_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.execution-count",
                              (int64_t)snapshot.execution_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.position-count",
                              (int64_t)snapshot.position_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.gross-position-quantity",
                             snapshot.gross_position_quantity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.realised-pnl",
                             snapshot.realised_pnl);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.selected-mid",
                             snapshot.selected_mid);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.selected-change-percent",
                             snapshot.selected_change_percent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh",
         "Reconcile the trading workspace snapshot", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.set-environment", "Environment…",
         "Choose simulation, paper or live with explicit safety gates", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.trading.engage-kill-switch", "Stop Trading",
         "Engage the workspace kill switch immediately",
         !snapshot.kill_switch_engaged);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 3U, "studio.action.trading.reset-kill-switch", "Reset Stop",
         "Reset the kill switch after the cause has been reviewed",
@@ -215,6 +268,10 @@ UmiStatus umi_trading_ui_dashboard_view_create(
     return finish_view(status, out_view);
 }
 
+/*
+ * Initialise trading ui watchlist view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_watchlist_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -227,19 +284,25 @@ UmiStatus umi_trading_ui_watchlist_view_create(
         "Filter and select canonical instruments with live market evidence.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "trading.instrument-filter",
                             snapshot.instrument_filter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.visible-instrument-count",
                              (int64_t)snapshot.visible_instrument_count);
     count = visible_rows(snapshot.visible_instrument_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTradingMarketSnapshot market;
         char key[64];
@@ -249,9 +312,12 @@ UmiStatus umi_trading_ui_watchlist_view_create(
 
         status = umi_trading_workspace_visible_instrument_at(
             workspace, index, &market);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (market.has_bar) {
             change = market.bar.close - market.previous_close;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (market.previous_close != 0.0)
                 change_percent = change / market.previous_close * 100.0;
         }
@@ -267,19 +333,26 @@ UmiStatus umi_trading_ui_watchlist_view_create(
             umi_trading_market_state_text(market.market_state));
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.filter-instruments", "Filter…",
         "Filter the watchlist by symbol, venue or instrument identifier", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.select-instrument", "Select…",
         "Select the active instrument for depth, charts and order entry",
         count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.trading.refresh", "Refresh",
         "Refresh derived market and selection state", 1);
     return finish_view(status, out_view);
 }
 
+/*
+ * Initialise trading ui depth view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_depth_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -293,33 +366,44 @@ UmiStatus umi_trading_ui_depth_view_create(
         "Bid and ask ladders, spread, top liquidity and book imbalance.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.bid", snapshot.selected_bid);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.ask", snapshot.selected_ask);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.spread",
                             snapshot.selected_spread);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.depth-imbalance",
                             snapshot.selected_depth_imbalance);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "trading.top-liquidity",
                             snapshot.selected_top_liquidity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument)
         status = umi_trading_workspace_selected_market(workspace, &market);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument &&
         market.has_depth) {
         count = market.depth.bid_count > market.depth.ask_count
             ? market.depth.bid_count : market.depth.ask_count;
         count = visible_rows(count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         char key[64];
         char text[320];
@@ -338,16 +422,22 @@ UmiStatus umi_trading_ui_depth_view_create(
             bid_price, bid_size, ask_price, ask_size);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.select-instrument", "Instrument…",
         "Choose the instrument whose order book is displayed",
         snapshot.visible_instrument_count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.refresh", "Refresh",
         "Refresh the depth projection", 1);
     return finish_view(status, out_view);
 }
 
+/*
+ * Initialise trading ui chart view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_chart_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -359,52 +449,71 @@ UmiStatus umi_trading_ui_chart_view_create(
         "Selected-market OHLC evidence and the reusable chart workspace.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "chart.pane-count",
                              (int64_t)snapshot.charts.panes_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "chart.scale-count",
                              (int64_t)snapshot.charts.scales_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "chart.annotation-count",
                              (int64_t)snapshot.charts.annotations_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "chart.drawing-count",
                              (int64_t)snapshot.charts.drawings_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument)
         status = umi_trading_workspace_selected_market(workspace, &market);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument) {
         status = set_boolean(*out_view, "trading.has-bar", market.has_bar);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(*out_view, "trading.open",
                                 market.has_bar ? market.bar.open : 0.0);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(*out_view, "trading.high",
                                 market.has_bar ? market.bar.high : 0.0);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(*out_view, "trading.low",
                                 market.has_bar ? market.bar.low : 0.0);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(*out_view, "trading.close",
                                 market.has_bar ? market.bar.close : 0.0);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(*out_view, "trading.volume",
                                 market.has_bar ? market.bar.volume : 0.0);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.select-instrument", "Instrument…",
         "Select the instrument projected into chart analytics",
         snapshot.visible_instrument_count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.refresh", "Refresh",
         "Refresh chart and market evidence", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui order ticket view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_order_ticket_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -415,60 +524,79 @@ UmiStatus umi_trading_ui_order_ticket_view_create(
         "Simulation-first order drafting with visible pre-trade risk evidence.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "order.instrument",
                             snapshot.draft_order.instrument.symbol);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "order.side",
             umi_trading_side_text(snapshot.draft_order.side));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "order.type",
             umi_trading_order_type_text(snapshot.draft_order.type));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "order.time-in-force",
             umi_trading_time_in_force_text(snapshot.draft_order.tif));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "order.quantity",
                             snapshot.draft_order.quantity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "order.limit-price",
                             snapshot.draft_order.limit_price);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "order.stop-price",
                             snapshot.draft_order.stop_price);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "risk.has-decision",
                              snapshot.has_draft_risk);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "risk.allowed",
                              snapshot.draft_risk.allowed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "risk.reason",
                             snapshot.draft_risk.reason);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "order.can-submit",
                              snapshot.can_submit_order);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.set-side", "Side…",
         "Set the draft side to buy or sell", snapshot.has_selected_instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.set-type", "Type / TIF…",
         "Set market, limit, stop or stop-limit and time in force",
         snapshot.has_selected_instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.trading.set-quantity", "Quantity…",
         "Set a positive draft order quantity", snapshot.has_selected_instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 3U, "studio.action.trading.set-prices", "Prices…",
         "Set draft limit and stop prices", snapshot.has_selected_instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 4U, "studio.action.trading.preview-order", "Preview Risk",
         "Run the pre-trade risk decision without submitting",
         snapshot.can_preview_order);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 5U, "studio.action.trading.submit-order", "Submit",
         "Submit only when environment and health safety gates permit",
@@ -476,6 +604,10 @@ UmiStatus umi_trading_ui_order_ticket_view_create(
     return status;
 }
 
+/*
+ * Initialise trading ui orders view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_orders_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -487,19 +619,25 @@ UmiStatus umi_trading_ui_orders_view_create(
         view_id, "trading-orders", "Orders",
         "Filter, inspect and cancel lifecycle-managed orders.", out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "order.filter",
             umi_trading_workspace_order_filter_text(snapshot.order_filter));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "order.visible-count",
                              (int64_t)snapshot.visible_order_count);
     count = visible_rows(snapshot.visible_order_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiOrder order;
         char key[64];
@@ -507,6 +645,7 @@ UmiStatus umi_trading_ui_orders_view_create(
 
         status = umi_trading_workspace_visible_order_at(workspace, index,
                                                          &order);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "trading.row.%zu", index);
         (void)snprintf(text, sizeof(text),
@@ -522,18 +661,25 @@ UmiStatus umi_trading_ui_orders_view_create(
             order.filled_quantity, order.average_fill_price);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.filter-orders", "Filter…",
         "Show all, open, filled, cancelled or rejected orders", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.select-order", "Select…",
         "Select an order by its client order identifier", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.trading.cancel-order", "Cancel Selected",
         "Cancel the selected non-terminal order", snapshot.can_cancel_order);
     return status;
 }
 
+/*
+ * Initialise trading ui executions view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_executions_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -546,22 +692,28 @@ UmiStatus umi_trading_ui_executions_view_create(
         "Newest-first immutable fill evidence for order reconciliation.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
     count = visible_rows(snapshot.execution_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "execution.count",
                              (int64_t)snapshot.execution_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiExecutionReport report;
         char key[64];
         char text[420];
 
         status = umi_trading_workspace_execution_at(workspace, index, &report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "trading.row.%zu", index);
         (void)snprintf(text, sizeof(text),
@@ -571,12 +723,17 @@ UmiStatus umi_trading_ui_executions_view_create(
             (long long)report.event_time_ms);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh",
         "Refresh execution evidence and position reconciliation", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui portfolio risk view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_portfolio_risk_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -589,37 +746,49 @@ UmiStatus umi_trading_ui_portfolio_risk_view_create(
         "Positions, realised P&L, limits, environment gates and emergency stop.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "portfolio.gross-quantity",
                             snapshot.gross_position_quantity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "portfolio.realised-pnl",
                             snapshot.realised_pnl);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "risk.max-order-quantity",
                             snapshot.risk_limit.max_order_quantity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "risk.max-order-notional",
                             snapshot.risk_limit.max_order_notional);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "risk.max-position-quantity",
                             snapshot.risk_limit.max_position_quantity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "risk.max-daily-loss",
                             snapshot.risk_limit.max_daily_loss);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "risk.kill-switch-reason",
                             snapshot.kill_switch_reason);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "risk.live-armed",
                              snapshot.live_armed);
     count = visible_rows(snapshot.position_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiPosition position;
         char key[64];
@@ -627,6 +796,7 @@ UmiStatus umi_trading_ui_portfolio_risk_view_create(
 
         status = umi_trading_workspace_position_at(workspace, index,
                                                     &position);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "trading.row.%zu", index);
         (void)snprintf(text, sizeof(text),
@@ -635,12 +805,15 @@ UmiStatus umi_trading_ui_portfolio_risk_view_create(
             position.average_price, position.realised_pnl);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.set-environment", "Environment…",
         "Select simulation, paper or live environment", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.trading.engage-kill-switch", "Stop Trading",
         "Reject new orders immediately", !snapshot.kill_switch_engaged);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.trading.reset-kill-switch", "Reset Stop",
         "Reset only after reviewing the recorded safety reason",
@@ -648,6 +821,10 @@ UmiStatus umi_trading_ui_portfolio_risk_view_create(
     return status;
 }
 
+/*
+ * Initialise trading ui scanner view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_scanner_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -657,25 +834,35 @@ UmiStatus umi_trading_ui_scanner_view_create(
         view_id, "trading-scanner", "Market Scanner",
         "Cross-market instrument coverage, filters and data-quality state.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "scanner.filter",
                             snapshot.instrument_filter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "scanner.instrument-count",
                              (int64_t)snapshot.watchlist_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "scanner.visible-count",
                              (int64_t)snapshot.visible_instrument_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh",
         "Refresh the scanner from canonical market snapshots", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui predictive lab view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_predictive_lab_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -685,31 +872,43 @@ UmiStatus umi_trading_ui_predictive_lab_view_create(
         view_id, "trading-predictive-lab", "Predictive Research Lab",
         "Evidence-first change, liquidity and movement features for the selected instrument.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "predictive.change",
                             snapshot.selected_change);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "predictive.change-percent",
                             snapshot.selected_change_percent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "predictive.depth-imbalance",
                             snapshot.selected_depth_imbalance);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(*out_view, "predictive.top-liquidity",
                             snapshot.selected_top_liquidity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "predictive.evidence-ready",
                              snapshot.has_bar && snapshot.has_quote);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Evidence",
         "Refresh predictive evidence without issuing an order", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui news view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_news_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -718,23 +917,33 @@ UmiStatus umi_trading_ui_news_view_create(
     UmiStatus status = create_view(
         view_id, "trading-news", "Market News",
         "Instrument-linked news capability and provider readiness.", out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "news.provider-ready", 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "trading.row-count", 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "news.empty-state",
             "No accepted news provider is configured; trading remains available without news.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh",
         "Recheck the optional news-provider capability", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui context inspector view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_context_inspector_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -744,25 +953,35 @@ UmiStatus umi_trading_ui_context_inspector_view_create(
         view_id, "trading-context-inspector", "Context Inspector",
         "Linked account, environment, instrument, order and safety context.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "context.has-instrument",
                              snapshot.has_selected_instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "context.has-order",
                              snapshot.has_selected_order);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "context.workspace-revision",
                              (int64_t)snapshot.revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Context",
         "Refresh linked trading context", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui strategy view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_strategy_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -772,26 +991,36 @@ UmiStatus umi_trading_ui_strategy_view_create(
         view_id, "trading-strategy", "Strategy",
         "Simulation-first strategy readiness, selection and safety evidence.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "strategy.simulation-mode",
                              snapshot.environment == UMI_TRADING_SIMULATION);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "strategy.order-route-disabled",
                              snapshot.environment != UMI_TRADING_LIVE ||
                              !snapshot.live_armed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "strategy.selected-instrument",
                             snapshot.selected_instrument_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Strategy",
         "Refresh strategy evidence without submitting orders", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui replay view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_replay_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -801,23 +1030,33 @@ UmiStatus umi_trading_ui_replay_view_create(
         view_id, "trading-replay", "Market Replay",
         "Deterministic replay attachment, simulation safety and selected context.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "replay.attached", 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_boolean(*out_view, "replay.live-route-disabled", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "replay.empty-state",
             "No replay stream is attached; load accepted market evidence to begin.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Replay",
         "Refresh replay attachment state", 1);
     return status;
 }
 
+/*
+ * Initialise trading ui research output view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_research_output_view_create(
     const char *view_id, UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -827,22 +1066,29 @@ UmiStatus umi_trading_ui_research_output_view_create(
         view_id, "trading-research-output", "Research Output",
         "Backtest, replay and evaluation evidence with workspace provenance.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_workspace_properties(*out_view, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "research.market-count",
                              (int64_t)snapshot.market_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "research.execution-count",
                              (int64_t)snapshot.execution_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "research.position-count",
                              (int64_t)snapshot.position_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "research.workspace-revision",
                              (int64_t)snapshot.revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Output",
         "Refresh research evidence and provenance", 1);
@@ -864,10 +1110,12 @@ UmiStatus umi_trading_ui_time_and_sales_view_create(
         "Sequence-aware public market trades for the linked instrument.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
@@ -876,9 +1124,11 @@ UmiStatus umi_trading_ui_time_and_sales_view_create(
     if (status == UMI_STATUS_OK) {
         status = set_boolean(*out_view, "tape.provider-ready", 0);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "trading.row-count", 0);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(
             *out_view,
@@ -886,6 +1136,7 @@ UmiStatus umi_trading_ui_time_and_sales_view_create(
             "No accepted public trade feed is attached. Quotes and account "
             "executions are kept separate from market trades.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_action(
             *out_view,
@@ -912,10 +1163,12 @@ UmiStatus umi_trading_ui_economic_calendar_view_create(
         "Provider-neutral events linked to the selected market context.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
@@ -924,15 +1177,18 @@ UmiStatus umi_trading_ui_economic_calendar_view_create(
     if (status == UMI_STATUS_OK) {
         status = set_boolean(*out_view, "calendar.provider-ready", 0);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "trading.row-count", 0);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(
             *out_view,
             "calendar.empty-state",
             "No accepted economic-event provider is configured.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_action(
             *out_view,
@@ -960,13 +1216,16 @@ UmiStatus umi_trading_ui_fundamentals_view_create(
         "Instrument identity, venue and market evidence with optional research data.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
     status = take_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument) {
         status = umi_trading_workspace_selected_market(workspace, &market);
     }
@@ -975,10 +1234,12 @@ UmiStatus umi_trading_ui_fundamentals_view_create(
         status = set_string(
             *out_view, "fundamentals.symbol", market.instrument.symbol);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument) {
         status = set_string(
             *out_view, "fundamentals.venue", market.instrument.venue);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_number(
             *out_view, "fundamentals.market-change-percent",
@@ -989,6 +1250,7 @@ UmiStatus umi_trading_ui_fundamentals_view_create(
     if (status == UMI_STATUS_OK) {
         status = set_boolean(*out_view, "fundamentals.provider-ready", 0);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_action(
             *out_view,

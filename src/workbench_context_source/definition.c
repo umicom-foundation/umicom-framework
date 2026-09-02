@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench context source definition from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_source_definition_init(
     UmiWorkbenchContextSourceDefinition *definition,
     const char *source_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL) return;
     memset(definition, 0, sizeof(*definition));
     definition->structure_size = (uint32_t)sizeof(*definition);
@@ -35,6 +43,10 @@ void umi_workbench_context_source_definition_init(
         UMI_WORKBENCH_CONTEXT_SOURCE_ALL_KINDS_MASK;
     definition->enabled = true;
     definition->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_id != NULL) {
         (void)umi_workbench_context_source_copy_text(
             definition->source_id,
@@ -43,6 +55,10 @@ void umi_workbench_context_source_definition_init(
     }
 }
 
+/*
+ * Provide the workbench context source definition set identity operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_definition_set_identity(
     UmiWorkbenchContextSourceDefinition *definition,
     const char *application_id,
@@ -50,6 +66,10 @@ UmiStatus umi_workbench_context_source_definition_set_identity(
     const char *display_name)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL || application_id == NULL ||
         panel_id == NULL || display_name == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -58,25 +78,36 @@ UmiStatus umi_workbench_context_source_definition_set_identity(
         definition->application_id,
         sizeof(definition->application_id),
         application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_context_source_copy_text(
         definition->panel_id,
         sizeof(definition->panel_id),
         panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_context_source_copy_text(
         definition->display_name,
         sizeof(definition->display_name),
         display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++definition->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context source definition set group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_source_definition_set_group(
     UmiWorkbenchContextSourceDefinition *definition,
     const char *group_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL || group_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -84,13 +115,22 @@ UmiStatus umi_workbench_context_source_definition_set_group(
         definition->preferred_group_id,
         sizeof(definition->preferred_group_id),
         group_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++definition->revision;
     return status;
 }
 
+/*
+ * Check that workbench context source definition satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_source_definition_validate(
     const UmiWorkbenchContextSourceDefinition *definition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL ||
         definition->structure_size != sizeof(*definition) ||
         definition->source_id[0] == '\0' ||
@@ -107,16 +147,25 @@ UmiStatus umi_workbench_context_source_definition_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context source definition accepts operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_context_source_definition_accepts(
     const UmiWorkbenchContextSourceDefinition *definition,
     const UmiWorkbenchContextSourceSample *sample)
 {
     uint64_t bit;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL || sample == NULL || !definition->enabled ||
         sample->context_kind < UMI_CONTEXT_KIND_GENERIC ||
         sample->context_kind > UMI_CONTEXT_KIND_SELECTION) {
         return false;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(definition->source_id, sample->source_id) != 0 ||
         strcmp(definition->application_id, sample->application_id) != 0 ||
         strcmp(definition->panel_id, sample->panel_id) != 0) {

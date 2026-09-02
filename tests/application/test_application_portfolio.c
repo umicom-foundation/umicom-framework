@@ -18,6 +18,10 @@
 
 #include "umicom/application/application.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
@@ -26,6 +30,7 @@ int main(void)
     const UmiApplicationDefinition *creator;
 
     assert(umi_application_portfolio_count() >= 22U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_portfolio_count(); ++index) {
         const UmiApplicationDefinition *definition =
             umi_application_portfolio_at(index);

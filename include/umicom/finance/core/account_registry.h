@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the account registry data shared with callers of this public contract.
+ */
 typedef struct UmiAccountRegistry { UmiFinancialCoreAccount items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiAccountRegistry;
 /* Reset the bounded registry. */ void umi_account_registry_init(UmiAccountRegistry *registry);
 /* Add a unique item. */ UmiStatus umi_account_registry_add(UmiAccountRegistry *registry,const UmiFinancialCoreAccount *item);

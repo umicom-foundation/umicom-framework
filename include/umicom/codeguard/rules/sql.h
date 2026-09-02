@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the codeguard rules sql operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_sql(size_t *out_count);
 #ifdef __cplusplus
 }

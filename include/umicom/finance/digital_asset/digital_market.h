@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital market data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalMarket {
     UmiDigitalAssetId id;
     UmiDigitalAssetId base_asset_id;

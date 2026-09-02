@@ -20,16 +20,27 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg reporting entity from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_reg_reporting_entity_init(UmiReportingEntity *record, const char *entity_id, const char *legal_name, const char *jurisdiction, int consolidated)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(consolidated == 0 || consolidated == 1)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->entity_id, sizeof record->entity_id, entity_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->legal_name, sizeof record->legal_name, legal_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->jurisdiction, sizeof record->jurisdiction, jurisdiction);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->consolidated = consolidated;
     return UMI_STATUS_OK;

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the performance crash correlation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPerformanceCrashCorrelation {
     uint32_t structure_size;
     uint32_t api_version;

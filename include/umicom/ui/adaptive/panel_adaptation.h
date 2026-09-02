@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive panel decision data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptivePanelDecision { UmiAdaptivePresentation presentation; UmiUiPlacement placement; } UmiAdaptivePanelDecision;
 /* Adapt a preferred dock placement to current size constraints. */
 UmiAdaptivePanelDecision umi_adaptive_panel_adaptation_resolve(UmiDesignSizeClass size_class, UmiUiPlacement preferred);

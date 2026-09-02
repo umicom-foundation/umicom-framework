@@ -45,6 +45,9 @@ extern "C" {
 #define UMI_AI_CODING_RUNTIME_HISTORY_CAPACITY 64U
 #define UMI_AI_CODING_RUNTIME_MAX_ITERATIONS 8U
 
+/**
+ * List the named ai coding runtime state values accepted by this public contract.
+ */
 typedef enum UmiAiCodingRuntimeState {
     UMI_AI_CODING_RUNTIME_IDLE = 0,
     UMI_AI_CODING_RUNTIME_PREPARING = 1,
@@ -59,6 +62,9 @@ typedef enum UmiAiCodingRuntimeState {
     UMI_AI_CODING_RUNTIME_FAILED = 10
 } UmiAiCodingRuntimeState;
 
+/**
+ * List the named ai coding validation kind values accepted by this public contract.
+ */
 typedef enum UmiAiCodingValidationKind {
     UMI_AI_CODING_VALIDATION_CUSTOM = 0,
     UMI_AI_CODING_VALIDATION_CONFIGURE = 1,
@@ -69,6 +75,9 @@ typedef enum UmiAiCodingValidationKind {
     UMI_AI_CODING_VALIDATION_PACKAGE = 6
 } UmiAiCodingValidationKind;
 
+/**
+ * List the named ai coding event kind values accepted by this public contract.
+ */
 typedef enum UmiAiCodingEventKind {
     UMI_AI_CODING_EVENT_STATE = 1,
     UMI_AI_CODING_EVENT_CONTEXT = 2,
@@ -79,6 +88,10 @@ typedef enum UmiAiCodingEventKind {
     UMI_AI_CODING_EVENT_MESSAGE = 7
 } UmiAiCodingEventKind;
 
+/**
+ * Represent the ai coding materialized file data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingMaterializedFile {
     char path[UMI_AI_CODING_RUNTIME_PATH_CAPACITY];
     char language_id[UMI_AI_ID_CAPACITY];
@@ -89,6 +102,10 @@ typedef struct UmiAiCodingMaterializedFile {
     int active;
 } UmiAiCodingMaterializedFile;
 
+/**
+ * Represent the ai coding materialized context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingMaterializedContext {
     UmiAiCodingMaterializedFile files[UMI_AI_CODING_RUNTIME_CONTEXT_CAPACITY];
     size_t file_count;
@@ -98,6 +115,10 @@ typedef struct UmiAiCodingMaterializedContext {
     int truncated;
 } UmiAiCodingMaterializedContext;
 
+/**
+ * Represent the ai coding validation step data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingValidationStep {
     char id[UMI_AI_CODING_RUNTIME_ID_CAPACITY];
     UmiAiCodingValidationKind kind;
@@ -110,6 +131,10 @@ typedef struct UmiAiCodingValidationStep {
     uint32_t timeout_ms;
 } UmiAiCodingValidationStep;
 
+/**
+ * Represent the ai coding validation result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingValidationResult {
     char step_id[UMI_AI_CODING_RUNTIME_ID_CAPACITY];
     UmiAiCodingValidationKind kind;
@@ -122,6 +147,10 @@ typedef struct UmiAiCodingValidationResult {
     char output[UMI_DEVELOPER_EXECUTION_OUTPUT_CAPACITY];
 } UmiAiCodingValidationResult;
 
+/**
+ * Represent the ai coding validation report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingValidationReport {
     UmiAiCodingValidationResult
         results[UMI_AI_CODING_RUNTIME_VALIDATION_CAPACITY];
@@ -133,6 +162,9 @@ typedef struct UmiAiCodingValidationReport {
     int passed;
 } UmiAiCodingValidationReport;
 
+/**
+ * Represent the ai coding event data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingEvent {
     uint64_t sequence;
     UmiAiCodingEventKind kind;
@@ -142,6 +174,9 @@ typedef struct UmiAiCodingEvent {
     char message[1024];
 } UmiAiCodingEvent;
 
+/**
+ * Represent the ai coding agent snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingAgentSnapshot {
     char task_id[UMI_AI_CODING_RUNTIME_ID_CAPACITY];
     char request_id[UMI_AI_ID_CAPACITY];
@@ -164,8 +199,20 @@ typedef struct UmiAiCodingAgentSnapshot {
     int rolled_back;
 } UmiAiCodingAgentSnapshot;
 
+/**
+ * Provide the ai coding runtime state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_runtime_state_text(UmiAiCodingRuntimeState state);
+/**
+ * Provide the ai coding validation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_validation_kind_text(UmiAiCodingValidationKind kind);
+/**
+ * Provide the ai coding event kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_event_kind_text(UmiAiCodingEventKind kind);
 
 #ifdef __cplusplus

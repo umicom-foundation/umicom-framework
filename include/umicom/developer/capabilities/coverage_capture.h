@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_COVERAGE_CAPTURE "umicom.developer.testing.coverage_capture"
 
+/**
+ * Provide the developer capability coverage capture operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_coverage_capture(void);
 

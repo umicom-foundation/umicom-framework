@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading price band data shared with callers of this public contract.
+ */
 typedef struct UmiTradingPriceBand { UmiTradingPriceTicks reference_price; uint32_t lower_bps; uint32_t upper_bps; } UmiTradingPriceBand;
 /* Initialise a positive reference price and basis-point bands. */
 UmiStatus umi_trading_price_band_init(UmiTradingPriceBand *band,UmiTradingPriceTicks reference_price,uint32_t lower_bps,uint32_t upper_bps);

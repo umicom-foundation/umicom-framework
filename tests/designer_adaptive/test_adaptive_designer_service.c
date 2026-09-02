@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/adaptive_designer_service.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesignerAdaptiveVariantSet v; UmiDesignerPreviewMatrix p; UmiDesignerAdaptiveValidation x={0U,0U,0U,0U}; UmiDesignerAdaptiveServiceSnapshot s;

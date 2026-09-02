@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_MACHINE_REPORTS "umicom.developer.testing.machine_reports"
 
+/**
+ * Provide the developer capability machine reports operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_machine_reports(void);
 

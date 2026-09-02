@@ -27,6 +27,10 @@
 #error "UMICOM_FRAMEWORK_SOURCE_DIR must identify the Framework source root"
 #endif
 
+/*
+ * Exercise file contains and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int file_contains(const char *relative_path, const char *expected)
 {
     char path[1024];
@@ -34,10 +38,23 @@ static int file_contains(const char *relative_path, const char *expected)
     FILE *stream;
     const int written = snprintf(path, sizeof(path), "%s/%s",
                                  UMICOM_FRAMEWORK_SOURCE_DIR, relative_path);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(path)) return 0;
     stream = fopen(path, "r");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stream == NULL) return 0;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (fgets(line, (int)sizeof(line), stream) != NULL) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (strstr(line, expected) != NULL) {
             (void)fclose(stream);
             return 1;
@@ -47,6 +64,10 @@ static int file_contains(const char *relative_path, const char *expected)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(strcmp(UMICOM_FRAMEWORK_VERSION_STRING,

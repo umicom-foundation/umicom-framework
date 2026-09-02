@@ -21,15 +21,24 @@
 
 #include "internal.h"
 
+/* Provide the rect area operation used by this module and its client applications. */
 static int64_t rect_area(
     const UmiWorkbenchLayoutRect *rect)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (rect == NULL || rect->width <= 0 || rect->height <= 0) {
         return 0;
     }
     return (int64_t)rect->width * (int64_t)rect->height;
 }
 
+/*
+ * Provide the rect distance squared operation used by this module and its client
+ * applications.
+ */
 static int64_t rect_distance_squared(
     const UmiWorkbenchLayoutRect *rect,
     const UmiWorkbenchLayoutRect *other)
@@ -50,9 +59,17 @@ static int64_t rect_distance_squared(
     return dx * dx + dy * dy;
 }
 
+/*
+ * Initialise workbench monitor topology from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_monitor_topology_init(
     UmiWorkbenchMonitorTopology *topology)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL) {
         return;
     }
@@ -61,9 +78,14 @@ void umi_workbench_monitor_topology_init(
     topology->revision = 1U;
 }
 
+/* Check that workbench monitor satisfies its contract before another service relies on it. */
 UmiStatus umi_workbench_monitor_validate(
     const UmiWorkbenchMonitor *monitor)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (monitor == NULL ||
         monitor->structure_size < sizeof(*monitor) ||
         !umi_workbench_layout_text_present(monitor->monitor_id) ||
@@ -74,6 +96,7 @@ UmiStatus umi_workbench_monitor_validate(
         monitor->refresh_rate_hz < 0.0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (monitor->work_area.x < monitor->bounds.x ||
         monitor->work_area.y < monitor->bounds.y ||
         (int64_t)monitor->work_area.x + monitor->work_area.width >
@@ -85,22 +108,33 @@ UmiStatus umi_workbench_monitor_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Add workbench monitor topology only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_workbench_monitor_topology_add(
     UmiWorkbenchMonitorTopology *topology,
     const UmiWorkbenchMonitor *monitor)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL || monitor == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_workbench_monitor_validate(monitor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (topology->count >= UMI_WORKBENCH_LAYOUT_MAX_MONITORS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_monitor_topology_find(
             topology, monitor->monitor_id) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
@@ -111,20 +145,26 @@ UmiStatus umi_workbench_monitor_topology_add(
         sizeof(topology->monitors[topology->count]);
     topology->count += 1U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (monitor->primary ||
         topology->primary_monitor_id[0] == '\0') {
         status = umi_workbench_monitor_topology_set_primary(
             topology, monitor->monitor_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             topology->count -= 1U;
             return status;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         topology->revision += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove workbench monitor topology while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_workbench_monitor_topology_remove(
     UmiWorkbenchMonitorTopology *topology,
     const char *monitor_id)
@@ -132,12 +172,18 @@ UmiStatus umi_workbench_monitor_topology_remove(
     size_t index;
     bool removed_primary;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL ||
         !umi_workbench_layout_text_present(monitor_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < topology->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 topology->monitors[index].monitor_id,
                 monitor_id) != 0) {
@@ -145,6 +191,7 @@ UmiStatus umi_workbench_monitor_topology_remove(
         }
 
         removed_primary = topology->monitors[index].primary;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (; index + 1U < topology->count; ++index) {
             topology->monitors[index] =
                 topology->monitors[index + 1U];
@@ -156,8 +203,10 @@ UmiStatus umi_workbench_monitor_topology_remove(
             sizeof(topology->monitors[topology->count]));
         topology->revision += 1U;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (removed_primary) {
             topology->primary_monitor_id[0] = '\0';
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (topology->count > 0U) {
                 return umi_workbench_monitor_topology_set_primary(
                     topology,
@@ -169,6 +218,10 @@ UmiStatus umi_workbench_monitor_topology_remove(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the workbench monitor topology set primary operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_monitor_topology_set_primary(
     UmiWorkbenchMonitorTopology *topology,
     const char *monitor_id)
@@ -177,20 +230,27 @@ UmiStatus umi_workbench_monitor_topology_set_primary(
     bool found = false;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL ||
         !umi_workbench_layout_text_present(monitor_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < topology->count; ++index) {
         bool selected = strcmp(
             topology->monitors[index].monitor_id,
             monitor_id) == 0;
         topology->monitors[index].primary = selected;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (selected) {
             found = true;
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!found) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -200,23 +260,34 @@ UmiStatus umi_workbench_monitor_topology_set_primary(
         sizeof(topology->primary_monitor_id),
         monitor_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         topology->revision += 1U;
     }
     return status;
 }
 
+/*
+ * Find workbench monitor topology while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchMonitor *umi_workbench_monitor_topology_find(
     const UmiWorkbenchMonitorTopology *topology,
     const char *monitor_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL ||
         !umi_workbench_layout_text_present(monitor_id)) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < topology->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 topology->monitors[index].monitor_id,
                 monitor_id) == 0) {
@@ -226,6 +297,10 @@ const UmiWorkbenchMonitor *umi_workbench_monitor_topology_find(
     return NULL;
 }
 
+/*
+ * Provide the workbench monitor topology primary operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchMonitor *umi_workbench_monitor_topology_primary(
     const UmiWorkbenchMonitorTopology *topology)
 {
@@ -235,26 +310,44 @@ const UmiWorkbenchMonitor *umi_workbench_monitor_topology_primary(
         : NULL;
 }
 
+/*
+ * Find workbench monitor topology while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchMonitor *umi_workbench_monitor_topology_at(
     const UmiWorkbenchMonitorTopology *topology,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL || index >= topology->count) {
         return NULL;
     }
     return &topology->monitors[index];
 }
 
+/*
+ * Provide the workbench monitor topology for point operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchMonitor *umi_workbench_monitor_topology_for_point(
     const UmiWorkbenchMonitorTopology *topology,
     UmiWorkbenchLayoutPoint point)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < topology->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (topology->monitors[index].enabled &&
             point.x >= topology->monitors[index].bounds.x &&
             point.y >= topology->monitors[index].bounds.y &&
@@ -270,6 +363,10 @@ const UmiWorkbenchMonitor *umi_workbench_monitor_topology_for_point(
     return NULL;
 }
 
+/*
+ * Provide the workbench monitor topology best for rect operation used by this module and
+ * its client applications.
+ */
 const UmiWorkbenchMonitor *umi_workbench_monitor_topology_best_for_rect(
     const UmiWorkbenchMonitorTopology *topology,
     const UmiWorkbenchLayoutRect *rect)
@@ -279,10 +376,15 @@ const UmiWorkbenchMonitor *umi_workbench_monitor_topology_best_for_rect(
     int64_t best_distance = INT64_MAX;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL || rect == NULL) {
         return NULL;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < topology->count; ++index) {
         const UmiWorkbenchMonitor *monitor =
             &topology->monitors[index];
@@ -290,6 +392,7 @@ const UmiWorkbenchMonitor *umi_workbench_monitor_topology_best_for_rect(
         int64_t overlap_area;
         int64_t distance;
 
+        /* Apply this operation only while the related capability or state is available. */
         if (!monitor->enabled) {
             continue;
         }
@@ -299,6 +402,7 @@ const UmiWorkbenchMonitor *umi_workbench_monitor_topology_best_for_rect(
         distance = rect_distance_squared(
             rect, &monitor->work_area);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (overlap_area > best_overlap ||
             (overlap_area == best_overlap &&
              distance < best_distance)) {

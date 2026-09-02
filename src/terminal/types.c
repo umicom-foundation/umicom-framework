@@ -15,8 +15,13 @@
 
 #include "umicom/terminal/types.h"
 
+/*
+ * Provide the terminal state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_state_text(UmiTerminalState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_TERMINAL_CREATED: return "created";
         case UMI_TERMINAL_READY: return "ready";
@@ -27,8 +32,13 @@ const char *umi_terminal_state_text(UmiTerminalState state)
     }
 }
 
+/*
+ * Provide the terminal stream text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_stream_text(UmiTerminalStream stream)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (stream) {
         case UMI_TERMINAL_STREAM_INPUT: return "input";
         case UMI_TERMINAL_STREAM_OUTPUT: return "output";
@@ -38,14 +48,23 @@ const char *umi_terminal_stream_text(UmiTerminalStream stream)
     }
 }
 
+/*
+ * Provide the terminal orientation text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_orientation_text(UmiTerminalOrientation orientation)
 {
     return orientation == UMI_TERMINAL_ORIENTATION_VERTICAL
         ? "vertical" : "horizontal";
 }
 
+/*
+ * Provide the terminal profile kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_profile_kind_text(UmiTerminalProfileKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_TERMINAL_PROFILE_CUSTOM: return "custom";
         case UMI_TERMINAL_PROFILE_POWERSHELL: return "powershell";
@@ -58,8 +77,13 @@ const char *umi_terminal_profile_kind_text(UmiTerminalProfileKind kind)
     }
 }
 
+/*
+ * Provide the terminal event kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_event_kind_text(UmiTerminalEventKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_TERMINAL_EVENT_SESSION_OPENED: return "session-opened";
         case UMI_TERMINAL_EVENT_SESSION_ACTIVATED: return "session-activated";

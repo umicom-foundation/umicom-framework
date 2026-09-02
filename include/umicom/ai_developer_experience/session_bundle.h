@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Write ai developer session bundle in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_ai_developer_session_bundle_save(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -37,6 +41,10 @@ UmiStatus umi_ai_developer_session_bundle_save(
     const UmiAiDeveloperPresentationState *presentation,
     const UmiAiDeveloperPreferences *preferences);
 
+/**
+ * Provide the ai developer session bundle restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_session_bundle_restore(
     const UmiSessionStore *store,
     const char *key_prefix,

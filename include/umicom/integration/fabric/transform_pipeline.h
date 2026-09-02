@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Check that fabric transform pipeline satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_fabric_transform_pipeline_validate(const UmiFabricTransformPlan *plan,size_t maximum_steps,uint64_t *out_fingerprint);
 
 #ifdef __cplusplus

@@ -19,19 +19,35 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise workbench context host session from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_host_session_init(
     UmiWorkbenchContextHostSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return;
     memset(session, 0, sizeof(*session));
     session->structure_size = (uint32_t)sizeof(*session);
 }
 
+/*
+ * Provide the workbench context host session capture operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_session_capture(
     const UmiWorkbenchContextHost *host,
     UmiWorkbenchContextHostSession *out_session)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -45,11 +61,13 @@ UmiStatus umi_workbench_context_host_session_capture(
         sizeof(out_session->active_group_id),
         host->active_group_id);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (host->endpoints.count >
         UMI_WORKBENCH_CONTEXT_HOST_MAX_SESSION_ASSIGNMENTS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < host->endpoints.count; ++index) {
         const UmiWorkbenchContextHostEndpoint *endpoint =
             &host->endpoints.items[index];
@@ -70,40 +88,54 @@ UmiStatus umi_workbench_context_host_session_capture(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform workbench context host session through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_context_host_session_apply(
     UmiWorkbenchContextHost *host,
     const UmiWorkbenchContextHostSession *session)
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || session == NULL ||
         session->structure_size != sizeof(*session)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (session->host_id[0] != '\0' &&
         strcmp(session->host_id, host->host_id) != 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->assignment_count; ++index) {
         const UmiWorkbenchContextHostSessionAssignment *assignment =
             &session->assignments[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (assignment->group_id[0] == '\0') continue;
         status = umi_workbench_context_host_assign_endpoint_group(
             host,
             assignment->endpoint_id,
             assignment->group_id,
             assignment->mode);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK &&
             status != UMI_STATUS_NOT_FOUND) {
             return status;
         }
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (session->active_group_id[0] != '\0') {
         status = umi_workbench_context_host_set_active_group(
             host,
             session->active_group_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK &&
             status != UMI_STATUS_NOT_FOUND) {
             return status;
@@ -112,10 +144,20 @@ UmiStatus umi_workbench_context_host_session_apply(
     return UMI_STATUS_OK;
 }
 
+/* Provide the safe field operation used by this module and its client applications. */
 static bool safe_field(const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return false;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*text != '\0') {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*text == '|' || *text == '\n' || *text == '\r') {
             return false;
         }
@@ -124,6 +166,10 @@ static bool safe_field(const char *text)
     return true;
 }
 
+/*
+ * Write workbench context host session in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_context_host_session_encode(
     const UmiWorkbenchContextHostSession *session,
     char *out_text,
@@ -133,9 +179,14 @@ UmiStatus umi_workbench_context_host_session_encode(
     size_t index;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!safe_field(session->host_id) ||
         !safe_field(session->active_group_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -149,14 +200,17 @@ UmiStatus umi_workbench_context_host_session_encode(
         "ACTIVE|%s\n",
         session->host_id,
         session->active_group_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     used = (size_t)written;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->assignment_count; ++index) {
         const UmiWorkbenchContextHostSessionAssignment *assignment =
             &session->assignments[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!safe_field(assignment->endpoint_id) ||
             !safe_field(assignment->group_id)) {
             return UMI_STATUS_INVALID_ARGUMENT;
@@ -168,6 +222,7 @@ UmiStatus umi_workbench_context_host_session_encode(
             assignment->endpoint_id,
             assignment->group_id,
             (unsigned)assignment->mode);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= capacity - used) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -176,6 +231,7 @@ UmiStatus umi_workbench_context_host_session_encode(
     return UMI_STATUS_OK;
 }
 
+/* Provide the copy segment operation used by this module and its client applications. */
 static UmiStatus copy_segment(
     char *destination,
     size_t capacity,
@@ -183,17 +239,26 @@ static UmiStatus copy_segment(
     const char *end)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || begin == NULL ||
         end == NULL || end < begin) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = (size_t)(end - begin);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(destination, begin, length);
     destination[length] = '\0';
     return UMI_STATUS_OK;
 }
 
+/*
+ * Read workbench context host session into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_context_host_session_decode(
     const char *text,
     UmiWorkbenchContextHostSession *out_session)
@@ -201,39 +266,51 @@ UmiStatus umi_workbench_context_host_session_decode(
     const char *cursor;
     size_t line_index = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     umi_workbench_context_host_session_init(out_session);
     cursor = text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         const char *end = strchr(cursor, '\n');
         const char *line_end =
             end != NULL ? end : cursor + strlen(cursor);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (line_index == 0U) {
             static const char header[] =
                 "UMICOM-WORKBENCH-CONTEXT-HOST|1";
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((size_t)(line_end - cursor) != sizeof(header) - 1U ||
                 strncmp(cursor, header, sizeof(header) - 1U) != 0) {
                 return UMI_STATUS_PARSE_ERROR;
             }
-        } else if (strncmp(cursor, "HOST|", 5U) == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strncmp(cursor, "HOST|", 5U) == 0) {
             UmiStatus status = copy_segment(
                 out_session->host_id,
                 sizeof(out_session->host_id),
                 cursor + 5U,
                 line_end);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
-        } else if (strncmp(cursor, "ACTIVE|", 7U) == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strncmp(cursor, "ACTIVE|", 7U) == 0) {
             UmiStatus status = copy_segment(
                 out_session->active_group_id,
                 sizeof(out_session->active_group_id),
                 cursor + 7U,
                 line_end);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
-        } else if (strncmp(cursor, "ASSIGN|", 7U) == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strncmp(cursor, "ASSIGN|", 7U) == 0) {
             const char *assignment_begin = cursor + 7U;
             const char *first_separator =
                 strchr(assignment_begin, '|');
@@ -243,15 +320,24 @@ UmiStatus umi_workbench_context_host_session_decode(
             char *tail = NULL;
             unsigned long mode;
 
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (first_separator == NULL ||
                 first_separator >= line_end) {
                 return UMI_STATUS_PARSE_ERROR;
             }
             second_separator = strchr(first_separator + 1U, '|');
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (second_separator == NULL ||
                 second_separator >= line_end) {
                 return UMI_STATUS_PARSE_ERROR;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (out_session->assignment_count >=
                 UMI_WORKBENCH_CONTEXT_HOST_MAX_SESSION_ASSIGNMENTS) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -259,6 +345,7 @@ UmiStatus umi_workbench_context_host_session_decode(
 
             assignment = &out_session->assignments[
                 out_session->assignment_count];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (copy_segment(
                     assignment->endpoint_id,
                     sizeof(assignment->endpoint_id),
@@ -278,6 +365,7 @@ UmiStatus umi_workbench_context_host_session_decode(
             }
 
             mode = strtoul(mode_text, &tail, 10);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (tail == mode_text || *tail != '\0' || mode > 3UL) {
                 return UMI_STATUS_PARSE_ERROR;
             }
@@ -287,6 +375,10 @@ UmiStatus umi_workbench_context_host_session_decode(
         }
 
         ++line_index;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (end == NULL) break;
         cursor = end + 1U;
     }

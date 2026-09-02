@@ -26,9 +26,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the research stats data shared with callers of this public contract.
+ */
 typedef struct UmiResearchStats { uint64_t observations; uint64_t qualifying_moves; double total_absolute_points; } UmiResearchStats;
+/**
+ * Initialise research stats from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_research_stats_init(UmiResearchStats *stats);
+/**
+ * Add research stats only after its inputs and available capacity have been checked.
+ */
 void umi_research_stats_add(UmiResearchStats *stats, const UmiMovementEvent *event);
+/**
+ * Provide the research stats mean points operation used by this module and its client
+ * applications.
+ */
 double umi_research_stats_mean_points(const UmiResearchStats *stats);
 #ifdef __cplusplus
 }

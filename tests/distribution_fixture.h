@@ -20,6 +20,10 @@
 
 #include "umicom/distribution/distribution.h"
 
+/**
+ * Exercise distribution test package and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static inline UmiDistributionPackage distribution_test_package(
     const char *release_id,
     const char *product_id,
@@ -42,6 +46,10 @@ static inline UmiDistributionPackage distribution_test_package(
     return package;
 }
 
+/**
+ * Exercise distribution test evidence and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static inline UmiDistributionEvidence distribution_test_evidence(
     const char *release_id)
 {

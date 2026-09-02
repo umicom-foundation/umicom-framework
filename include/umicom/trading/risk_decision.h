@@ -26,7 +26,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the risk decision allow operation used by this module and its client
+ * applications.
+ */
 void umi_risk_decision_allow(UmiRiskDecision *decision);
+/**
+ * Provide the risk decision deny operation used by this module and its client
+ * applications.
+ */
 void umi_risk_decision_deny(UmiRiskDecision *decision, const char *reason);
 #ifdef __cplusplus
 }

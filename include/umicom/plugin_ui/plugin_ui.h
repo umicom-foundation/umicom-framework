@@ -25,15 +25,31 @@ extern "C" {
 
 #define UMI_PLUGIN_UI_VISIBLE_ROWS 32U
 
+/**
+ * Initialise plugin ui installed view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_plugin_ui_installed_view_create(const char *view_id,
                                               UmiPluginManager *manager,
                                               UmiUiViewModel **out_view);
+/**
+ * Initialise plugin ui catalogue view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_plugin_ui_catalogue_view_create(const char *view_id,
                                               UmiPluginManager *manager,
                                               UmiUiViewModel **out_view);
+/**
+ * Initialise plugin ui permissions view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_plugin_ui_permissions_view_create(const char *view_id,
                                                 UmiPluginManager *manager,
                                                 UmiUiViewModel **out_view);
+/**
+ * Initialise plugin ui audit view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_plugin_ui_audit_view_create(const char *view_id,
                                           UmiPluginManager *manager,
                                           UmiUiViewModel **out_view);

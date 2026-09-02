@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/edit_adapter.h"
 
+/*
+ * Check that ide editor edit adapter satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ide_editor_edit_adapter_validate(
     const UmiIdeEditorEditAdapter *adapter)
 {

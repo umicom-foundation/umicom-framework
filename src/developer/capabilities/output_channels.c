@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/output_channels.h"
 
+/*
+ * Provide the developer capability output channels operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_output_channels(void)
 {

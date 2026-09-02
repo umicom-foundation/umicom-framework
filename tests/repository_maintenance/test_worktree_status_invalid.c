@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/repository/worktree_status.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ assert(!umi_repository_worktree_status_dirty(NULL)); return 0; }

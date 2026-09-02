@@ -28,11 +28,18 @@ UmiStatus umi_repository_divergence_probe_read(const UmiRepositoryInspectionCont
 {
     const char *arguments[] = {"rev-list", "--left-right", "--count", "HEAD...@{u}"};
     UmiRepositoryGitCommandResult result; unsigned long long left = 0U, right = 0U; UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_value, 0, sizeof(*out_value));
     status = umi_repository_git_command_execute(context, arguments, 4U, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result.exit_code != 0) return UMI_STATUS_NOT_FOUND;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (sscanf(result.output, "%llu %llu", &left, &right) != 2) return UMI_STATUS_PARSE_ERROR;
     out_value->ahead = (size_t)left; out_value->behind = (size_t)right; out_value->has_upstream = 1;
     return UMI_STATUS_OK;

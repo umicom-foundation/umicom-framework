@@ -25,12 +25,20 @@ extern "C" {
 #include "umicom/application/production/application_binding.h"
 #include "umicom/application/runtime/command_surface.h"
 
+/**
+ * Represent the application production command binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionCommandBinding {
     const UmiApplicationCommandDescriptor *command;
     int enabled;
     int mutates_workspace;
 } UmiApplicationProductionCommandBinding;
 
+/**
+ * Represent the application production command bindings data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionCommandBindings {
     UmiApplicationCommandSurface surface;
     UmiApplicationProductionCommandBinding
@@ -39,9 +47,17 @@ typedef struct UmiApplicationProductionCommandBindings {
     size_t enabled_count;
 } UmiApplicationProductionCommandBindings;
 
+/**
+ * Provide the application production command bindings build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_command_bindings_build(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionCommandBindings *out_bindings);
+/**
+ * Find application production command bindings while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionCommandBinding *
 umi_application_production_command_bindings_find(
     const UmiApplicationProductionCommandBindings *bindings,

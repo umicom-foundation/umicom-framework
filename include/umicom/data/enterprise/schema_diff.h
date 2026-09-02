@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema diff data shared with callers of this public contract.
+ */
 typedef struct UmiDataSchemaDiff {
     size_t added_tables;
     size_t removed_tables;

@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include "umicom/repository/dependency_graph.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryDependencyGraph *g = calloc(1U, sizeof(*g));

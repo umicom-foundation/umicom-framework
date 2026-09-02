@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/physical_pixel_transform.h"
-int main(void){UmiAppearancePhysicalPixelTransform t;double out=0.0;if(umi_appearance_physical_pixel_transform_init(&t,2.0)!=UMI_STATUS_OK)return 1;if(umi_appearance_physical_pixel_transform_convert(&t,100.0,&out)!=UMI_STATUS_OK||out!=200.0)return 2;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAppearancePhysicalPixelTransform t;double out=0.0;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_appearance_physical_pixel_transform_init(&t,2.0)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_appearance_physical_pixel_transform_convert(&t,100.0,&out)!=UMI_STATUS_OK||out!=200.0)return 2;return 0;}

@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtSyscallPolicy p={0U,127U,UMI_CT_SYSCALL_PRIVILEGED,true};UmiCtSyscallDescriptor d={3U,"file.read",0U,3U};CHECK(umi_ct_syscall_policy_allows(&p,&d));d.flags=UMI_CT_SYSCALL_PRIVILEGED;CHECK(!umi_ct_syscall_policy_allows(&p,&d));return 0;}

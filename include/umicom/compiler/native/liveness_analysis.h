@@ -21,8 +21,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native block liveness data shared with callers of this public contract.
+ */
 typedef struct UmiNativeBlockLiveness { uint32_t block_id; size_t live_in_count; size_t defined_count; size_t used_count; } UmiNativeBlockLiveness;
+/**
+ * Represent the native liveness analysis data shared with callers of this public contract.
+ */
 typedef struct UmiNativeLivenessAnalysis { UmiNativeBlockLiveness blocks[UMI_NC_MAX_IR_BLOCKS]; size_t block_count; size_t peak_live_in; } UmiNativeLivenessAnalysis;
+/**
+ * Provide the nc liveness analyze operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_liveness_analyze(const UmiNativeIrFunction *function,UmiNativeLivenessAnalysis *out_analysis);
 #ifdef __cplusplus
 }

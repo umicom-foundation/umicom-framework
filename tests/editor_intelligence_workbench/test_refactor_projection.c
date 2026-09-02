@@ -17,6 +17,10 @@
 
 #include "umicom/editor/intelligence_workbench/refactor_projection.h"
 
+/*
+ * Exercise edit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorWorkspaceTextEdit edit(
     const char *id, uint64_t start, int required)
 {
@@ -40,6 +44,10 @@ static UmiEditorWorkspaceTextEdit edit(
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorCodeActionOrchestration *orchestration = NULL;

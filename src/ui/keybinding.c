@@ -32,24 +32,40 @@ struct UmiUiKeybindingRegistry {
     UmiMutex *mutex;
 };
 
+/* Provide the find item operation used by this module and its client applications. */
 static size_t find_item(const UmiUiKeybindingRegistry *registry, const char *id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->items[index].binding_id, id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/*
+ * Initialise ui keybinding registry from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ui_keybinding_registry_create(UmiUiKeybindingRegistry **out_registry)
 {
     UmiUiKeybindingRegistry *registry;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiUiKeybindingRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_mutex_create(&registry->mutex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(registry);
         return status;
@@ -59,18 +75,34 @@ UmiStatus umi_ui_keybinding_registry_create(UmiUiKeybindingRegistry **out_regist
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ui keybinding registry so the same storage can be reused
+ * safely.
+ */
 void umi_ui_keybinding_registry_destroy(UmiUiKeybindingRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
     umi_mutex_destroy(registry->mutex);
     free(registry);
 }
 
+/*
+ * Provide the ui keybinding registry upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_keybinding_registry_upsert(UmiUiKeybindingRegistry *registry,
                                             const UmiUiKeybindingSnapshot *item)
 {
     size_t index;
     size_t existing;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || item == NULL ||
         !umi_ui_id_is_valid(item->binding_id) ||
         !umi_ui_id_is_valid(item->command_id) ||
@@ -80,7 +112,9 @@ UmiStatus umi_ui_keybinding_registry_upsert(UmiUiKeybindingRegistry *registry,
 
     (void)umi_mutex_lock(registry->mutex);
     existing = find_item(registry, item->binding_id);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index != existing &&
             registry->items[index].enabled && item->enabled &&
             strcmp(registry->items[index].chord, item->chord) == 0 &&
@@ -95,7 +129,9 @@ UmiStatus umi_ui_keybinding_registry_upsert(UmiUiKeybindingRegistry *registry,
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (existing == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->count >= UMI_UI_KEYBINDING_MAX) {
             (void)umi_mutex_unlock(registry->mutex);
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -108,17 +144,27 @@ UmiStatus umi_ui_keybinding_registry_upsert(UmiUiKeybindingRegistry *registry,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove ui keybinding registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ui_keybinding_registry_remove(UmiUiKeybindingRegistry *registry,
                                             const char *binding_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || binding_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(registry->mutex);
     index = find_item(registry, binding_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(registry->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < registry->count) {
         (void)memmove(&registry->items[index],
                       &registry->items[index + 1U],
@@ -130,16 +176,25 @@ UmiStatus umi_ui_keybinding_registry_remove(UmiUiKeybindingRegistry *registry,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find ui keybinding registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ui_keybinding_registry_find(const UmiUiKeybindingRegistry *registry,
                                           const char *binding_id,
                                           UmiUiKeybindingSnapshot *out_item)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || binding_id == NULL || out_item == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(registry->mutex);
     index = find_item(registry, binding_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(registry->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -149,12 +204,21 @@ UmiStatus umi_ui_keybinding_registry_find(const UmiUiKeybindingRegistry *registr
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find ui keybinding registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ui_keybinding_registry_at(const UmiUiKeybindingRegistry *registry,
                                         size_t index,
                                         UmiUiKeybindingSnapshot *out_item)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(registry->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= registry->count) {
         (void)umi_mutex_unlock(registry->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -164,6 +228,10 @@ UmiStatus umi_ui_keybinding_registry_at(const UmiUiKeybindingRegistry *registry,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui keybinding registry resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_keybinding_registry_resolve(
     const UmiUiKeybindingRegistry *registry,
     const UmiUiContextStore *context,
@@ -172,21 +240,36 @@ UmiStatus umi_ui_keybinding_registry_resolve(
 {
     size_t index;
     const UmiUiKeybindingSnapshot *best = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || chord == NULL || out_resolution == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_resolution, 0, sizeof(*out_resolution));
 
     (void)umi_mutex_lock(registry->mutex);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         const UmiUiKeybindingSnapshot *candidate = &registry->items[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!candidate->enabled || strcmp(candidate->chord, chord) != 0) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (candidate->when_expression[0] != '\0' &&
             !umi_ui_context_evaluate(context, candidate->when_expression)) {
             continue;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (best == NULL || candidate->order < best->order) best = candidate;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (best == NULL) {
         (void)umi_mutex_unlock(registry->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -204,9 +287,17 @@ UmiStatus umi_ui_keybinding_registry_resolve(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by ui keybinding registry without changing
+ * their state.
+ */
 size_t umi_ui_keybinding_registry_count(const UmiUiKeybindingRegistry *registry)
 {
     size_t count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry != NULL) {
         (void)umi_mutex_lock(registry->mutex);
         count = registry->count;
@@ -215,9 +306,17 @@ size_t umi_ui_keybinding_registry_count(const UmiUiKeybindingRegistry *registry)
     return count;
 }
 
+/*
+ * Provide the ui keybinding registry revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ui_keybinding_registry_revision(const UmiUiKeybindingRegistry *registry)
 {
     uint64_t revision = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry != NULL) {
         (void)umi_mutex_lock(registry->mutex);
         revision = registry->revision;

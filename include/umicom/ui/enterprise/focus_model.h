@@ -16,8 +16,19 @@
 #define UMICOM_UI_ENTERPRISE_FOCUS_MODEL_H
 
 #include "umicom/ui/enterprise/types.h"
+/**
+ * Represent the ui ent focus model data shared with callers of this public contract.
+ */
 typedef struct UmiUiEntFocusModel { size_t row,column; int active; uint64_t revision; } UmiUiEntFocusModel;
+/**
+ * Release or reset state held by ui ent focus model so the same storage can be reused
+ * safely.
+ */
 void umi_ui_ent_focus_model_clear(UmiUiEntFocusModel *m);
+/**
+ * Copy ui ent focus model into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_ui_ent_focus_model_set(UmiUiEntFocusModel *m,size_t row,size_t column,size_t row_count,size_t column_count);
 
 #endif

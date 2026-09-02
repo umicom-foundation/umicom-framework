@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/new_command.h"
 
+/*
+ * Provide the document capability new command operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_new_command(void)
 {

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad anchor constraint data shared with callers of this public contract.
+ */
 typedef struct UmiRadAnchorConstraint {
     bool left;
     bool top;
@@ -25,7 +28,15 @@ typedef struct UmiRadAnchorConstraint {
     bool bottom;
     int32_t margin;
 } UmiRadAnchorConstraint;
+/**
+ * Initialise rad anchor constraint from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_anchor_constraint_init(UmiRadAnchorConstraint *item);
+/**
+ * Check that rad anchor constraint satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_anchor_constraint_is_valid(const UmiRadAnchorConstraint *item);
 #ifdef __cplusplus
 }

@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the factor contribution operation used by this module and its client
+ * applications.
+ */
 double umi_factor_contribution(double factor_change, double weight);
 #ifdef __cplusplus
 }

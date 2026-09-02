@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/backup_copy.h"
 
+/*
+ * Copy document capability backup into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_backup_copy(void)
 {

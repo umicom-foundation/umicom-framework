@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/task_status.h"
 
+/*
+ * Provide the developer capability task status operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_task_status(void)
 {

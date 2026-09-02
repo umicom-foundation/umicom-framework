@@ -18,11 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive loop prevention data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveLoopPrevention {
     uint64_t fingerprints[64];
     size_t count;
 } UmiUiReactiveLoopPrevention;
+/**
+ * Initialise ui reactive loop prevention from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ui_reactive_loop_prevention_init(UmiUiReactiveLoopPrevention *item);
+/**
+ * Provide the ui reactive loop prevention remember operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_reactive_loop_prevention_remember(UmiUiReactiveLoopPrevention *item,uint64_t fingerprint);
 #ifdef __cplusplus
 }

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/icon_fallback_chain.h"
 #include <string.h>
-int main(void){UmiAppearanceIconFallbackChain c;if(umi_appearance_icon_fallback_chain_init(&c)!=UMI_STATUS_OK)return 1;if(umi_appearance_icon_fallback_chain_add(&c,"generic.save")!=UMI_STATUS_OK)return 2;if(strcmp(umi_appearance_icon_fallback_chain_at(&c,0),"generic.save")!=0)return 3;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAppearanceIconFallbackChain c;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_appearance_icon_fallback_chain_init(&c)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_appearance_icon_fallback_chain_add(&c,"generic.save")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(strcmp(umi_appearance_icon_fallback_chain_at(&c,0),"generic.save")!=0)return 3;return 0;}

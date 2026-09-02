@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev agent approval gate data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevAgentApprovalGate {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +42,25 @@ typedef struct UmiAiDevAgentApprovalGate {
     int enabled;
 } UmiAiDevAgentApprovalGate;
 
+/**
+ * Initialise ai dev agent approval gate from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_agent_approval_gate_init(UmiAiDevAgentApprovalGate *policy);
+/**
+ * Provide the ai dev agent approval gate configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_agent_approval_gate_configure(UmiAiDevAgentApprovalGate *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev agent approval gate allows operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_agent_approval_gate_allows(const UmiAiDevAgentApprovalGate *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev agent approval gate approval required operation used by this module
+ * and its client applications.
+ */
 int umi_ai_dev_agent_approval_gate_approval_required(const UmiAiDevAgentApprovalGate *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

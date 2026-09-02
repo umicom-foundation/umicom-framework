@@ -19,6 +19,10 @@
 UmiStatus umi_designer_responsive_property_editor_init(UmiDesignerResponsivePropertyEditor *editor,
                                                        const UmiDesignerAdaptiveProperty *property)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(editor==NULL||property==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(editor,0,sizeof *editor); editor->property=*property; return UMI_STATUS_OK;
 }
@@ -28,8 +32,13 @@ UmiStatus umi_designer_responsive_property_editor_override(UmiDesignerResponsive
                                                            const char *text)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(editor==NULL||variant_id==NULL||text==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     status=umi_designer_adaptive_override_init(&editor->override_value,variant_id,editor->property.property_path,text,UMI_DESIGNER_ADAPTIVE_OVERRIDE);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

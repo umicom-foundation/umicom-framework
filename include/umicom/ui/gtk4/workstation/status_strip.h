@@ -19,6 +19,10 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/status_strip.h"
 
+/**
+ * Initialise gtk4 ws status strip from caller-provided values so later operations receive
+ * a known state.
+ */
 GtkWidget *umi_gtk4_ws_status_strip_create(const UmiWsStatusStrip *strip);
 
 #endif

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the submission channel data shared with callers of this public contract.
+ */
 typedef struct UmiSubmissionChannel {
     char channel_id[UMI_REG_ID_CAPACITY];
     char authority_id[UMI_REG_ID_CAPACITY];

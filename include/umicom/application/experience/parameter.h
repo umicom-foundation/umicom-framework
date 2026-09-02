@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience parameter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceParameter {
   const char *parameter_id;
   const char *label;
@@ -32,8 +36,16 @@ typedef struct UmiApplicationExperienceParameter {
   UmiApplicationExperienceValue default_value;
 } UmiApplicationExperienceParameter;
 
+/**
+ * Check that application experience parameter satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus
 umi_application_experience_parameter_validate(const UmiApplicationExperienceParameter *parameter);
+/**
+ * Provide the application experience parameter accepts operation used by this module and
+ * its client applications.
+ */
 UmiStatus
 umi_application_experience_parameter_accepts(const UmiApplicationExperienceParameter *parameter,
                                              const UmiApplicationExperienceValue *value);

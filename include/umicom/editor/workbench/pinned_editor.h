@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb pinned editor data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbPinnedEditor { char item_id[UMI_EDITOR_WB_ID_CAPACITY]; bool enabled; bool promoted; uint64_t revision; } UmiEditorWbPinnedEditor;
+/**
+ * Initialise editor wb pinned editor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_pinned_editor_init(UmiEditorWbPinnedEditor *state,const char *item_id,bool enabled);
+/**
+ * Copy editor wb pinned editor into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_editor_wb_pinned_editor_set(UmiEditorWbPinnedEditor *state,bool enabled);
+/**
+ * Check that editor wb pinned editor satisfies its contract before another service relies
+ * on it.
+ */
 int umi_editor_wb_pinned_editor_valid(const UmiEditorWbPinnedEditor *state);
 
 #ifdef __cplusplus

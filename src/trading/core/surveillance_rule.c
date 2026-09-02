@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise and validate define reusable market-surveillance thresholds and alert severity.. */
 UmiStatus umi_trading_surveillance_rule_init(UmiTradingSurveillanceRule *value,uint32_t threshold, uint32_t window_seconds, UmiTradingCoreSeverity severity) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
     value->threshold=threshold;

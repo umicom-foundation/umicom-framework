@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application runtime catalogue status data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationRuntimeCatalogueStatus {
     uint32_t structure_size;
     size_t portfolio_count;
@@ -31,8 +35,16 @@ typedef struct UmiApplicationRuntimeCatalogueStatus {
     unsigned average_readiness_percent;
 } UmiApplicationRuntimeCatalogueStatus;
 
+/**
+ * Provide the application runtime catalogue status operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_status(
     UmiApplicationRuntimeCatalogueStatus *out_status);
+/**
+ * Check that application runtime catalogue satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_runtime_catalogue_validate(void);
 
 #ifdef __cplusplus

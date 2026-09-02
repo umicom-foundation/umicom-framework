@@ -18,6 +18,10 @@
 #include "internal.h"
 
 
+/*
+ * Provide the workbench designer layout factory request default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchDesignerLayoutFactoryRequest umi_workbench_designer_layout_factory_request_default(void)
 {
     UmiWorkbenchDesignerLayoutFactoryRequest request;
@@ -35,6 +39,7 @@ UmiWorkbenchDesignerLayoutFactoryRequest umi_workbench_designer_layout_factory_r
     return request;
 }
 
+/* Provide the factory add node operation used by this module and its client applications. */
 static UmiStatus factory_add_node(
     UmiWorkbenchLayoutDocument *document,
     const char *node_id,
@@ -48,24 +53,34 @@ static UmiStatus factory_add_node(
     UmiWorkbenchLayoutNode node;
     UmiStatus status;
     umi_workbench_layout_node_init(&node, node_id, kind);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WORKBENCH_LAYOUT_NODE_SPLIT) {
         status = umi_workbench_layout_node_set_split(
             &node, UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL, 0.5);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     (void)umi_workbench_layout_node_set_title(&node, title);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (component_id != NULL && component_id[0] != '\0') {
         status = umi_workbench_layout_node_set_component(
             &node, component_id, application_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (bounds.width > 0 && bounds.height > 0) {
         status = umi_workbench_layout_node_set_bounds(&node, &bounds);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return umi_workbench_layout_document_add_node(document, &node, out_index);
 }
 
+/* Provide the factory attach operation used by this module and its client applications. */
 static UmiStatus factory_attach(
     UmiWorkbenchLayoutDocument *document,
     const char *parent_id,
@@ -76,6 +91,10 @@ static UmiStatus factory_attach(
         document, parent_id, child_id, position);
 }
 
+/*
+ * Provide the factory create blank operation used by this module and its client
+ * applications.
+ */
 static UmiStatus factory_create_blank(UmiWorkbenchLayoutDocument *document)
 {
     size_t root_index;
@@ -83,11 +102,16 @@ static UmiStatus factory_create_blank(UmiWorkbenchLayoutDocument *document)
     UmiStatus status = factory_add_node(
         document, "root", "Canvas", UMI_WORKBENCH_LAYOUT_NODE_EMPTY,
         "", "", bounds, &root_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)root_index;
     return umi_workbench_layout_document_set_root(document, "root");
 }
 
+/*
+ * Provide the factory create coding operation used by this module and its client
+ * applications.
+ */
 static UmiStatus factory_create_coding(UmiWorkbenchLayoutDocument *document)
 {
     size_t index;
@@ -99,42 +123,56 @@ static UmiStatus factory_create_coding(UmiWorkbenchLayoutDocument *document)
     UmiStatus status;
     status = factory_add_node(document, "root", "Coding Workbench",
         UMI_WORKBENCH_LAYOUT_NODE_SPLIT, "", "", full, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     document->nodes[index].orientation = UMI_WORKBENCH_LAYOUT_ORIENTATION_VERTICAL;
     document->nodes[index].split_ratio = 0.75;
     status = factory_add_node(document, "project-explorer", "Project Explorer",
         UMI_WORKBENCH_LAYOUT_NODE_PANEL, "studio.project-explorer",
         "org.umicom.studio", left, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_add_node(document, "editor", "Editor",
         UMI_WORKBENCH_LAYOUT_NODE_EDITOR_GROUP, "studio.editor",
         "org.umicom.studio", centre, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_add_node(document, "assistant", "AI Assistant",
         UMI_WORKBENCH_LAYOUT_NODE_PANEL, "studio.ai-assistant",
         "org.umicom.studio", right, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_add_node(document, "output", "Output and Problems",
         UMI_WORKBENCH_LAYOUT_NODE_TAB_GROUP, "studio.output",
         "org.umicom.studio", bottom, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_attach(document, "root", "project-explorer", 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_attach(document, "root", "editor", 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_attach(document, "root", "assistant", 2U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = factory_attach(document, "root", "output", 3U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_layout_document_set_root(document, "root");
 }
 
+/*
+ * Provide the factory create trading operation used by this module and its client
+ * applications.
+ */
 static UmiStatus factory_create_trading(UmiWorkbenchLayoutDocument *document)
 {
     size_t index;
     UmiWorkbenchLayoutRect full = {0, 0, 1280, 800};
     UmiStatus status = factory_add_node(document, "root", "Trading Mosaic",
         UMI_WORKBENCH_LAYOUT_NODE_SPLIT, "", "", full, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     document->nodes[index].orientation = UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL;
     document->nodes[index].split_ratio = 0.68;
@@ -158,6 +196,10 @@ static UmiStatus factory_create_trading(UmiWorkbenchLayoutDocument *document)
     return umi_workbench_layout_document_set_root(document, "root");
 }
 
+/*
+ * Initialise workbench designer layout factory from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_designer_layout_factory_create(
     const UmiWorkbenchDesignerLayoutFactoryRequest *request,
     const UmiWorkbenchDesignerPalette *palette,
@@ -167,6 +209,10 @@ UmiStatus umi_workbench_designer_layout_factory_create(
     UmiWorkbenchLayoutAudit audit;
     UmiStatus status;
     (void)palette;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || out_document == NULL ||
         request->layout_id[0] == '\0' || request->name[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -187,6 +233,7 @@ UmiStatus umi_workbench_designer_layout_factory_create(
         identity.workspace_id, sizeof(identity.workspace_id),
         request->workspace_id);
     status = umi_workbench_layout_document_set_identity(out_document, &identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&audit, 0, sizeof(audit));
     (void)umi_workbench_designer_copy_text(
@@ -196,30 +243,34 @@ UmiStatus umi_workbench_designer_layout_factory_create(
     audit.created_at_ms = request->timestamp_ms;
     audit.modified_at_ms = request->timestamp_ms;
     status = umi_workbench_layout_document_set_audit(out_document, &audit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->profile == UMI_WORKBENCH_DESIGNER_LAYOUT_BLANK) {
         status = factory_create_blank(out_document);
-    } else if (request->profile == UMI_WORKBENCH_DESIGNER_LAYOUT_TRADING) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (request->profile == UMI_WORKBENCH_DESIGNER_LAYOUT_TRADING) {
         status = factory_create_trading(out_document);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = factory_create_coding(out_document);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK &&
             request->profile == UMI_WORKBENCH_DESIGNER_LAYOUT_DEBUGGING) {
             (void)umi_workbench_layout_document_set_metadata(
                 out_document, request->name, "debugging",
                 "Debugging perspective with editor, variables, call stack and console panels.");
-        } else if (status == UMI_STATUS_OK &&
+        } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_OK &&
                    request->profile == UMI_WORKBENCH_DESIGNER_LAYOUT_OPERATIONS) {
             (void)umi_workbench_layout_document_set_metadata(
                 out_document, request->name, "operations",
                 "Operations perspective with health, logs, tasks and diagnostics panels.");
-        } else if (status == UMI_STATUS_OK &&
+        } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_OK &&
                    request->profile == UMI_WORKBENCH_DESIGNER_LAYOUT_MOSAIC) {
             (void)umi_workbench_layout_document_set_metadata(
                 out_document, request->name, "mosaic",
                 "General cross-application mosaic layout.");
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_workbench_layout_document_refresh_hash(out_document);
     return UMI_STATUS_OK;

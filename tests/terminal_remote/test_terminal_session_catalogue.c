@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_session_catalogue.h"
-int main(void) { UmiTerminalRemoteTerminalSessionCatalogue v; umi_terminal_remote_terminal_session_catalogue_init(&v); if(umi_terminal_remote_terminal_session_catalogue_add(&v,"one","One")!=UMI_STATUS_OK) return 1; if(!umi_terminal_remote_terminal_session_catalogue_find(&v,"one")) return 2; if(umi_terminal_remote_terminal_session_catalogue_add(&v,"one","Again")!=UMI_STATUS_ALREADY_EXISTS) return 3; return umi_terminal_remote_terminal_session_catalogue_enabled_count(&v)==1U?0:4; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteTerminalSessionCatalogue v; umi_terminal_remote_terminal_session_catalogue_init(&v); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_terminal_remote_terminal_session_catalogue_add(&v,"one","One")!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_terminal_remote_terminal_session_catalogue_find(&v,"one")) return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_terminal_remote_terminal_session_catalogue_add(&v,"one","Again")!=UMI_STATUS_ALREADY_EXISTS) return 3; return umi_terminal_remote_terminal_session_catalogue_enabled_count(&v)==1U?0:4; }

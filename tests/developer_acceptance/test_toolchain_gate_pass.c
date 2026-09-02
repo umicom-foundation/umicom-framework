@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer/acceptance/toolchain_gate.h"
+/*
+ * Exercise test developer acceptance toolchain gate pass and return a clear result when
+ * the behaviour no longer matches its contract.
+ */
 int test_developer_acceptance_toolchain_gate_pass(void)
 {
     UmiDeveloperLanguageSupportSnapshot support={0};

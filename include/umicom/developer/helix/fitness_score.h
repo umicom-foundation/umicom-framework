@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix fitness score data shared with callers of this public contract.
+ */
 typedef struct UmiHelixFitnessScore { double correctness; double quality; double performance; double compatibility; double change_cost; double total; } UmiHelixFitnessScore;
 /* Compute a conservative weighted fitness score with change cost treated as a penalty. */
 double umi_helix_fitness_score_compute(UmiHelixFitnessScore *score);

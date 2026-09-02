@@ -17,6 +17,10 @@
 
 #include "umicom/build/deployment_controller.h"
 
+/*
+ * Exercise make plan and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void make_plan(UmiBuildDeploymentPlan *plan)
 {
     UmiBuildArtifactManifest artifact;
@@ -33,6 +37,10 @@ static void make_plan(UmiBuildDeploymentPlan *plan)
                plan, &artifact, &target, 0) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildDeploymentController *controller = NULL;
@@ -46,8 +54,13 @@ int main(void)
     assert(umi_build_deployment_controller_load(controller, &plan) ==
            UMI_STATUS_OK);
     assert(umi_build_deployment_controller_begin(controller) == UMI_STATUS_OK);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (umi_build_deployment_controller_next_step(controller, &step) ==
            UMI_STATUS_OK) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (step.rollback_step) break;
         assert(umi_build_deployment_controller_start_step(
                    controller, step.step_id) == UMI_STATUS_OK);

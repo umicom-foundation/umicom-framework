@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/sdk_runtime/package_root.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSdkRuntimePackageRoot value,same;

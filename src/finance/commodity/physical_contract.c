@@ -24,13 +24,20 @@
 UmiStatus umi_commodity_physical_contract_init(UmiCommodityPhysicalContract *value, const char *id, const char *commodity_id, const UmiFinancialId *buyer_party_id, const UmiFinancialId *seller_party_id, int64_t units, int32_t scale, const char *unit_code, const UmiCurrency *price_currency, int64_t price_minor_units_per_unit, int64_t delivery_start_ms, int64_t delivery_end_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || buyer_party_id == NULL || seller_party_id == NULL || price_currency == NULL || units <= 0 || scale < 0 || price_minor_units_per_unit < 0 || delivery_start_ms < 0 || delivery_end_ms <= delivery_start_ms) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_commodity_copy_text(value->id.value, sizeof value->id.value, id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_commodity_copy_text(value->commodity_id.value, sizeof value->commodity_id.value, commodity_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_commodity_copy_text(value->quantity.unit_code, sizeof value->quantity.unit_code, unit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->buyer_party_id = *buyer_party_id;
     value->seller_party_id = *seller_party_id;

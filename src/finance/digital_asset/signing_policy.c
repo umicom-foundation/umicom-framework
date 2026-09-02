@@ -24,9 +24,14 @@
 UmiStatus umi_digital_asset_signing_policy_init(UmiDigitalSigningPolicy *value, const char *id, uint32_t required_approvals, uint32_t available_approvers, bool hardware_required)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || required_approvals == 0U || available_approvers == 0U || required_approvals > available_approvers) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_digital_asset_copy_text(value->id.value, sizeof value->id.value, id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->required_approvals = required_approvals;
     value->available_approvers = available_approvers;

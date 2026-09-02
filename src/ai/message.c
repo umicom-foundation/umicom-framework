@@ -23,19 +23,32 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Copy ai message into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_ai_message_set(UmiAiMessage *message,
                              UmiAiRole role,
                              const char *name,
                              const char *text)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(message, 0, sizeof(*message));
     message->role = role;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (name != NULL) {
         written = snprintf(message->name, sizeof(message->name), "%s", name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(message->name)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }

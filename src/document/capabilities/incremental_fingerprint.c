@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/incremental_fingerprint.h"
 
+/*
+ * Provide the document capability incremental fingerprint operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_incremental_fingerprint(void)
 {

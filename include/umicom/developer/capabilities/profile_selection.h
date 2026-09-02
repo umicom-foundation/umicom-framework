@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PROFILE_SELECTION "umicom.developer.configuration.profile_selection"
 
+/**
+ * Provide the developer capability profile selection operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_profile_selection(void);
 

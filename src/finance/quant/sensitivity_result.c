@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_sensitivity_result_init(UmiQuantSensitivityResult *record, double down_pv, double base_pv, double up_pv, double bump_size)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(bump_size > 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->down_pv = down_pv;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_sensitivity_result_init(UmiQuantSensitivityResult *record, d
 /* Return central-difference delta from valuation evidence. */
 double umi_quant_sensitivity_result_delta(const UmiQuantSensitivityResult *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return (record->up_pv - record->down_pv) / (2.0 * record->bump_size);
 }

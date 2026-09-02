@@ -26,6 +26,9 @@ extern "C" {
 
 #define UMI_TEST_PLATFORM_COMMAND_API_VERSION 1U
 
+/**
+ * List the named test platform command kind values accepted by this public contract.
+ */
 typedef enum UmiTestPlatformCommandKind {
     UMI_TEST_COMMAND_OPEN_EXPLORER = 1,
     UMI_TEST_COMMAND_REFRESH = 2,
@@ -69,6 +72,10 @@ typedef enum UmiTestPlatformCommandKind {
     UMI_TEST_COMMAND_EXPORT_REPORT = 40
 } UmiTestPlatformCommandKind;
 
+/**
+ * Represent the test platform command descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -84,11 +91,27 @@ typedef struct UmiTestPlatformCommandDescriptor {
     int mutates_workspace;
 } UmiTestPlatformCommandDescriptor;
 
+/**
+ * Return the number of records represented by test platform command without changing their
+ * state.
+ */
 size_t umi_test_platform_command_count(void);
+/**
+ * Find test platform command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiTestPlatformCommandDescriptor *umi_test_platform_command_at(
     size_t position);
+/**
+ * Find test platform command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiTestPlatformCommandDescriptor *umi_test_platform_command_find(
     const char *command_id);
+/**
+ * Provide the test platform command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiTestPlatformCommandDescriptor *umi_test_platform_command_for_kind(
     UmiTestPlatformCommandKind kind);
 

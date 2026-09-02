@@ -30,7 +30,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct socket semantics data shared with callers of this public contract.
+ */
 typedef struct UmiCtSocketSemantics { bool ipv4; bool ipv6; bool local_domain; bool nonblocking; bool async_completion; bool readiness_polling; } UmiCtSocketSemantics;
+/**
+ * Provide the ct socket semantics support operation used by this module and its client
+ * applications.
+ */
 UmiCtSupportLevel umi_ct_socket_semantics_support(const UmiCtSocketSemantics *semantics,bool require_ipv6,bool require_local,bool require_async);
 
 #ifdef __cplusplus

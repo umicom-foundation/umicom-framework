@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application)
     message(FATAL_ERROR "Application Suite Layout requires canonical umicom_application")
 endif()
@@ -47,23 +48,30 @@ if(NOT TARGET umicom-suite-layout-documentation-audit)
         VERBATIM)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add application suite layout test build helper so parent and application
+    # projects apply one consistent rule.
     function(umicom_add_application_suite_layout_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}"
             "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/tests/application_suite_layout/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::application Umicom::ui)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()
         add_test(NAME "${test_name}" COMMAND "${target}")
         set_tests_properties("${test_name}" PROPERTIES
             LABELS "framework;application;layout;suite;studio;trader")
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target("${target}")
         endif()

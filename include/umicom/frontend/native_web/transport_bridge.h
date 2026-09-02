@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/frontend/native_web/types.h"
 #include "umicom/frontend/transport.h"
+/**
+ * Represent the native web transport state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebTransportState { char transport_id[UMI_NATIVE_WEB_ID_CAPACITY]; UmiNativeWebTransportKind kind; char endpoint[UMI_NATIVE_WEB_TEXT_CAPACITY]; uint64_t sent_messages; uint64_t received_messages; bool connected; bool fallback_allowed; } UmiNativeWebTransportState;
 /* Copy canonical frontend transport state into native-web transport state. */
 UmiStatus umi_native_web_transport_bridge(const UmiFrontendTransportSnapshot *snapshot, UmiNativeWebTransportState *out_state);

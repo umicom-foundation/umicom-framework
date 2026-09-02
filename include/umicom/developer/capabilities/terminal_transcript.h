@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_TRANSCRIPT "umicom.developer.terminal.terminal_transcript"
 
+/**
+ * Provide the developer capability terminal transcript operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_transcript(void);
 

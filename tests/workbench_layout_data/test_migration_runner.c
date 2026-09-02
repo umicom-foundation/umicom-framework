@@ -23,27 +23,48 @@ typedef struct MigrationContext {
     size_t rollback_count;
 } MigrationContext;
 
+/*
+ * Exercise apply migration and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus apply_migration(UmiDataServer *server, void *context_value)
 {
     MigrationContext *context = (MigrationContext *)context_value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     context->apply_count += 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (context->fail) return UMI_STATUS_INTERNAL_ERROR;
     return umi_data_server_set(server, context->key, context->value);
 }
 
+/*
+ * Exercise rollback migration and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiStatus rollback_migration(
     UmiDataServer *server,
     void *context_value)
 {
     MigrationContext *context = (MigrationContext *)context_value;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     context->rollback_count += 1U;
     status = umi_data_server_delete(server, context->key);
     return status == UMI_STATUS_NOT_FOUND ? UMI_STATUS_OK : status;
 }
 
+/*
+ * Exercise migration step and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutDataMigrationStep migration_step(
     const char *migration_id,
     uint32_t from_version,
@@ -69,6 +90,10 @@ static UmiWorkbenchLayoutDataMigrationStep migration_step(
     return step;
 }
 
+/*
+ * Write test version read in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 static int test_version_read_write(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -86,6 +111,10 @@ static int test_version_read_write(void)
     return 0;
 }
 
+/*
+ * Exercise test successful plan and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_successful_plan(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -128,6 +157,10 @@ static int test_successful_plan(void)
     return 0;
 }
 
+/*
+ * Exercise test failure rolls back and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_failure_rolls_back(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -166,6 +199,10 @@ static int test_failure_rolls_back(void)
     return 0;
 }
 
+/*
+ * Exercise test plan order validation and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_plan_order_validation(void)
 {
     UmiWorkbenchLayoutDataMigrationPlan plan;
@@ -180,6 +217,10 @@ static int test_plan_order_validation(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_version_read_write() == 0,

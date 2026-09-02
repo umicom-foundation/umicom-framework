@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial position book data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialPositionBook {
   UmiPosition items[UMI_FINANCIAL_CORE_MAX_ITEMS];
   size_t count;

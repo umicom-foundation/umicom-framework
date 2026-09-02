@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer command palette item data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerCommandPaletteItem {
     char command_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char label[UMI_WORKBENCH_DESIGNER_LABEL_CAPACITY];
@@ -37,6 +41,10 @@ typedef struct UmiWorkbenchDesignerCommandPaletteItem {
     bool visible;
 } UmiWorkbenchDesignerCommandPaletteItem;
 
+/**
+ * Represent the workbench designer command palette data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerCommandPalette {
     UmiWorkbenchDesignerCommandPaletteItem items[UMI_WORKBENCH_DESIGNER_MAX_COMMANDS];
     size_t count;
@@ -45,19 +53,43 @@ typedef struct UmiWorkbenchDesignerCommandPalette {
     uint64_t revision;
 } UmiWorkbenchDesignerCommandPalette;
 
+/**
+ * Initialise workbench designer command palette from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_command_palette_init(
     UmiWorkbenchDesignerCommandPalette *palette);
+/**
+ * Provide the workbench designer command palette seed operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_command_palette_seed(
     UmiWorkbenchDesignerCommandPalette *palette,
     const UmiWorkbenchDesignerKeymap *keymap);
+/**
+ * Provide the workbench designer command palette filter operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_command_palette_filter(
     UmiWorkbenchDesignerCommandPalette *palette,
     const char *query);
+/**
+ * Provide the workbench designer command palette move selection operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_designer_command_palette_move_selection(
     UmiWorkbenchDesignerCommandPalette *palette,
     int direction);
+/**
+ * Find workbench designer command palette while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerCommandPaletteItem *umi_workbench_designer_command_palette_selected(
     const UmiWorkbenchDesignerCommandPalette *palette);
+/**
+ * Return the number of records represented by workbench designer command palette visible
+ * without changing their state.
+ */
 size_t umi_workbench_designer_command_palette_visible_count(
     const UmiWorkbenchDesignerCommandPalette *palette);
 

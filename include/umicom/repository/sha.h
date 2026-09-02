@@ -22,7 +22,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that repository sha satisfies its contract before another service relies on it.
+ */
 int umi_repository_sha_is_valid(const char *text);
+/**
+ * Provide the repository sha normalize operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_sha_normalize(
     const char *text, char *out_sha, size_t capacity);
 #ifdef __cplusplus

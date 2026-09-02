@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host command data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextHostCommand {
     uint32_t structure_size;
     char command_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
@@ -29,8 +33,16 @@ typedef struct UmiWorkbenchContextHostCommand {
     UmiWorkbenchContextLinkMode mode;
     uint64_t timestamp_ms;
 } UmiWorkbenchContextHostCommand;
+/**
+ * Initialise workbench context host command from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_host_command_init(
     UmiWorkbenchContextHostCommand *command,UmiWorkbenchContextHostCommandKind kind);
+/**
+ * Perform workbench context host command through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_context_host_command_execute(
     UmiWorkbenchContextHost *host,const UmiWorkbenchContextHostCommand *command);
 #ifdef __cplusplus

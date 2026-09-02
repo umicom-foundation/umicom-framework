@@ -23,8 +23,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi binary data shared with callers of this public contract.
+ */
 typedef struct UmiAbiBinary { const char *name; UmiAbiPlatform platform; uint32_t abi_version; uint64_t contract_fingerprint; } UmiAbiBinary;
+/**
+ * Check that abi binary satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_abi_binary_validate(const UmiAbiBinary *binary);
+/**
+ * Provide the abi binary compatible operation used by this module and its client
+ * applications.
+ */
 int umi_abi_binary_compatible(const UmiAbiBinary *consumer, const UmiAbiBinary *provider);
 #ifdef __cplusplus
 }

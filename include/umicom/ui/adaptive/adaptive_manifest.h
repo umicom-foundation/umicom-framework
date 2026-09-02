@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive manifest data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveManifest {
     char application_id[UMI_ADAPTIVE_ID_CAPACITY];
     char shell_profile_id[UMI_ADAPTIVE_ID_CAPACITY];

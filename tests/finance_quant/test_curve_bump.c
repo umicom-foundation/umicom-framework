@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/curve_bump.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiQuantCurvePoint nodes[2] = {{30,0.02},{365,0.03}};

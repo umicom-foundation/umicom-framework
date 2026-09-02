@@ -31,8 +31,19 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/portability_contract.h"
+/**
+ * Represent the ct platform conformance input data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCtPlatformConformanceInput { uint64_t portability_required; uint64_t portability_available; uint64_t cpu_required; uint64_t cpu_available; uint32_t required_services; uint32_t ready_services; } UmiCtPlatformConformanceInput;
+/**
+ * Represent the ct platform conformance data shared with callers of this public contract.
+ */
 typedef struct UmiCtPlatformConformance { uint8_t score; uint32_t blockers; uint32_t portability_gaps; uint32_t cpu_gaps; uint32_t service_gaps; UmiCtHealth health; } UmiCtPlatformConformance;
+/**
+ * Provide the ct platform conformance evaluate operation used by this module and its
+ * client applications.
+ */
 UmiCtPlatformConformance umi_ct_platform_conformance_evaluate(const UmiCtPlatformConformanceInput *input);
 
 #ifdef __cplusplus

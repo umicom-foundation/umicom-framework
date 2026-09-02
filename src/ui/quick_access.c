@@ -24,25 +24,41 @@
 
 #include "workbench_service_internal.h"
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
     (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the insert sorted operation used by this module and its client applications. */
 static void insert_sorted(UmiUiQuickAccessResults *results,
                           const UmiUiQuickAccessItem *item)
 {
     size_t position = 0U;
     size_t move;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (position < results->count) {
         const UmiUiQuickAccessItem *existing = &results->items[position];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->score > existing->score ||
             (item->score == existing->score &&
              strcmp(item->title, existing->title) < 0) ||
@@ -53,19 +69,23 @@ static void insert_sorted(UmiUiQuickAccessResults *results,
         }
         ++position;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (results->count >= UMI_UI_QUICK_ACCESS_MAX_RESULTS &&
         position >= UMI_UI_QUICK_ACCESS_MAX_RESULTS) {
         return;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (results->count < UMI_UI_QUICK_ACCESS_MAX_RESULTS) {
         ++results->count;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (move = results->count - 1U; move > position; --move) {
         results->items[move] = results->items[move - 1U];
     }
     results->items[position] = *item;
 }
 
+/* Provide the best score operation used by this module and its client applications. */
 static int best_score(const char *query,
                       const char *first,
                       const char *second,
@@ -73,18 +93,26 @@ static int best_score(const char *query,
 {
     int score = umi_ui_fuzzy_score_ci(query, first);
     int candidate = umi_ui_fuzzy_score_ci(query, second);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (candidate > score) score = candidate;
     candidate = umi_ui_fuzzy_score_ci(query, third);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (candidate > score) score = candidate;
     return score;
 }
 
+/*
+ * Provide the command has visible action operation used by this module and its client
+ * applications.
+ */
 static int command_has_visible_action(const UmiUiActionModel *actions,
                                       const char *command_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_action_model_count(actions); ++index) {
         UmiUiActionSnapshot action;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_action_model_at(actions, index, &action) == UMI_STATUS_OK &&
             action.visible && strcmp(action.command_id, command_id) == 0) {
             return 1;
@@ -93,28 +121,42 @@ static int command_has_visible_action(const UmiUiActionModel *actions,
     return 0;
 }
 
+/*
+ * Provide the ui quick access score operation used by this module and its client
+ * applications.
+ */
 int umi_ui_quick_access_score(const char *query, const char *candidate)
 {
     return umi_ui_fuzzy_score_ci(query, candidate);
 }
 
+/*
+ * Provide the ui quick access search commands operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_quick_access_search_commands(
     const UmiCommandRegistry *registry,
     const char *query,
     UmiUiQuickAccessResults *out_results)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || query == NULL || out_results == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_results, 0, sizeof(*out_results));
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_command_registry_count(registry); ++index) {
         UmiCommandSnapshot command;
         UmiUiQuickAccessItem item = {0};
         int title_score;
         int id_score;
         int category_score;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_command_registry_at(registry, index, &command) != UMI_STATUS_OK) {
             continue;
         }
@@ -122,10 +164,13 @@ UmiStatus umi_ui_quick_access_search_commands(
         id_score = umi_ui_fuzzy_score_ci(query, command.command_id);
         category_score = umi_ui_fuzzy_score_ci(query, command.category);
         item.score = title_score;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (id_score > item.score) item.score = id_score;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (category_score >= 0 && category_score + 20 > item.score) {
             item.score = category_score + 20;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (query[0] != '\0' && item.score < 0) continue;
 
         (void)snprintf(item.command_id, sizeof(item.command_id),
@@ -142,6 +187,10 @@ UmiStatus umi_ui_quick_access_search_commands(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui quick access search actions operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_quick_access_search_actions(
     const UmiCommandRegistry *registry,
     const UmiUiActionModel *actions,
@@ -149,17 +198,23 @@ UmiStatus umi_ui_quick_access_search_actions(
     UmiUiQuickAccessResults *out_results)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || actions == NULL || query == NULL ||
         out_results == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_results, 0, sizeof(*out_results));
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_action_model_count(actions); ++index) {
         UmiUiActionSnapshot action;
         UmiCommandSnapshot command;
         UmiUiQuickAccessItem item = {0};
         int command_score;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_action_model_at(actions, index, &action) != UMI_STATUS_OK ||
             !action.visible ||
             umi_command_registry_snapshot(registry, action.command_id,
@@ -170,9 +225,11 @@ UmiStatus umi_ui_quick_access_search_actions(
                                 action.tooltip);
         command_score = best_score(query, command.title, command.command_id,
                                    command.category);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (command_score >= 0 && command_score + 12 > item.score) {
             item.score = command_score + 12;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (query[0] != '\0' && item.score < 0) continue;
 
         copy_text(item.action_id, sizeof(item.action_id), action.action_id);
@@ -198,12 +255,14 @@ UmiStatus umi_ui_quick_access_search_actions(
     for (index = 0U; index < umi_command_registry_count(registry); ++index) {
         UmiCommandSnapshot command;
         UmiUiQuickAccessItem item = {0};
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_command_registry_at(registry, index, &command) != UMI_STATUS_OK ||
             command_has_visible_action(actions, command.command_id)) {
             continue;
         }
         item.score = best_score(query, command.title, command.command_id,
                                 command.category);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (query[0] != '\0' && item.score < 0) continue;
         (void)snprintf(item.command_id, sizeof(item.command_id), "%s",
                        command.command_id);

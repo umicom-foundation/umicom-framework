@@ -22,7 +22,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap collection binding from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_bootstrap_collection_binding_init(UmiBootstrapIdList *collection);
+/**
+ * Add bootstrap collection binding only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_bootstrap_collection_binding_add(UmiBootstrapIdList *collection,
                                                const char *service_id);
 

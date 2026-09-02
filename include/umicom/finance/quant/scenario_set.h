@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant scenario point data shared with callers of this public contract.
+ */
 typedef struct UmiQuantScenarioPoint { double rate_shift; double spot_shift; double vol_shift; double weight; } UmiQuantScenarioPoint;
+/**
+ * Represent the quant scenario set data shared with callers of this public contract.
+ */
 typedef struct UmiQuantScenarioSet { UmiQuantScenarioPoint scenarios[UMI_QUANT_MAX_SCENARIOS]; size_t count; } UmiQuantScenarioSet;
 /* Initialise an empty scenario set. */
 void umi_quant_scenario_set_init(UmiQuantScenarioSet *set);

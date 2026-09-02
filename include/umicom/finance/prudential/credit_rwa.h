@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential credit rwa data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialCreditRwa { double exposure; double risk_weight; double rwa; } UmiPrudentialCreditRwa;
 /* Calculate risk-weighted assets from exposure and risk weight. */
 UmiStatus umi_pru_credit_rwa_calculate(UmiPrudentialCreditRwa *result, double exposure, double risk_weight);

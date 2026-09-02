@@ -19,13 +19,25 @@
 #include <math.h>
 
 
+/*
+ * Initialise workbench designer minimap from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_minimap_init(UmiWorkbenchDesignerMinimap *minimap)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (minimap == NULL) return;
     (void)memset(minimap, 0, sizeof(*minimap));
     minimap->scale = 1.0;
 }
 
+/*
+ * Provide the minimap project rect operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchDesignerRect minimap_project_rect(
     UmiWorkbenchDesignerRect rect,
     UmiWorkbenchDesignerRect content,
@@ -39,6 +51,10 @@ static UmiWorkbenchDesignerRect minimap_project_rect(
     return result;
 }
 
+/*
+ * Provide the workbench designer minimap build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_minimap_build(
     UmiWorkbenchDesignerMinimap *minimap,
     const UmiWorkbenchDesignerCanvas *canvas,
@@ -49,6 +65,10 @@ UmiStatus umi_workbench_designer_minimap_build(
     double scale_x;
     double scale_y;
     UmiWorkbenchDesignerRect visible_world;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (minimap == NULL || canvas == NULL || viewport == NULL ||
         surface_size.width <= 0.0 || surface_size.height <= 0.0 ||
         !umi_workbench_designer_rect_is_valid(&canvas->world_bounds)) {
@@ -60,9 +80,11 @@ UmiStatus umi_workbench_designer_minimap_build(
     scale_x = surface_size.width / canvas->world_bounds.width;
     scale_y = surface_size.height / canvas->world_bounds.height;
     minimap->scale = fmin(scale_x, scale_y);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < canvas->count; ++index) {
         const UmiWorkbenchDesignerCanvasItem *item = &canvas->items[index];
         UmiWorkbenchDesignerMinimapItem *target;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!item->visible || minimap->count >= UMI_WORKBENCH_DESIGNER_MAX_CANVAS_ITEMS) {
             continue;
         }
@@ -88,11 +110,19 @@ UmiStatus umi_workbench_designer_minimap_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer minimap world point operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchDesignerPoint umi_workbench_designer_minimap_world_point(
     const UmiWorkbenchDesignerMinimap *minimap,
     UmiWorkbenchDesignerPoint minimap_point)
 {
     UmiWorkbenchDesignerPoint result = {0.0, 0.0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (minimap == NULL || minimap->scale <= 0.0) return result;
     result.x = minimap->content_bounds.x + minimap_point.x / minimap->scale;
     result.y = minimap->content_bounds.y + minimap_point.y / minimap->scale;

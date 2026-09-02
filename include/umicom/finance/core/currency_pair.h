@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the currency pair data shared with callers of this public contract.
+ */
 typedef struct UmiCurrencyPair { UmiCurrency base; UmiCurrency quote; char symbol[8]; } UmiCurrencyPair;
 /* Initialize an ordered pair. */ UmiStatus umi_currency_pair_init(UmiCurrencyPair *p,UmiCurrency base,UmiCurrency quote);
 /* Invert an ordered pair. */ UmiStatus umi_currency_pair_invert(const UmiCurrencyPair *p,UmiCurrencyPair *out);

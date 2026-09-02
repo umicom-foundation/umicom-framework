@@ -28,12 +28,17 @@
 
 #include "umicom/editor/assistance_command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     size_t comparison;
 
     assert(umi_editor_assistance_command_count() == 14U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_editor_assistance_command_count(); ++index) {
         const UmiEditorAssistanceCommandDescriptor *command =
             umi_editor_assistance_command_at(index);
@@ -46,6 +51,7 @@ int main(void)
         assert(command->label[0] != '\0');
         assert(umi_editor_assistance_command_find(command->id) == command);
         assert(umi_editor_assistance_command_for_kind(command->kind) == command);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = index + 1U;
              comparison < umi_editor_assistance_command_count();
              ++comparison) {

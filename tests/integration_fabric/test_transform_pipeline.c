@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricTransformPlan p; UmiFabricTransformRule r; uint64_t h=0U; umi_fabric_transform_plan_init(&p); CHECK(umi_fabric_transform_rule_init(&r,"r","a","b","copy",true)==UMI_STATUS_OK); CHECK(umi_fabric_transform_plan_add(&p,&r)==UMI_STATUS_OK); CHECK(umi_fabric_transform_pipeline_validate(&p,4U,&h)==UMI_STATUS_OK); CHECK(h!=0U);
     return 0;

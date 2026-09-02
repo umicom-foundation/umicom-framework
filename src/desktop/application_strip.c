@@ -27,26 +27,38 @@ struct UmiDesktopApplicationStrip {
     uint64_t revision;
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination,
                            size_t capacity,
                            const char *source,
                            bool allow_empty)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || source[0] == '\0') {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (!allow_empty) return UMI_STATUS_INVALID_ARGUMENT;
         destination[0] = '\0';
         return UMI_STATUS_OK;
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the compare items operation used by this module and its client applications. */
 static int compare_items(const void *left_value, const void *right_value)
 {
     const UmiDesktopApplicationStripItem *left =
@@ -54,58 +66,76 @@ static int compare_items(const void *left_value, const void *right_value)
     const UmiDesktopApplicationStripItem *right =
         (const UmiDesktopApplicationStripItem *)right_value;
     int group_comparison;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->pinned != right->pinned) return left->pinned ? -1 : 1;
+    /* Apply this operation only while the related capability or state is available. */
     if (left->active != right->active) return left->active ? -1 : 1;
     group_comparison = strcmp(left->taskbar_group, right->taskbar_group);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (group_comparison != 0) return group_comparison;
     return strcmp(left->display_name, right->display_name);
 }
 
+/* Provide the project record operation used by this module and its client applications. */
 static UmiStatus project_record(
     const UmiApplicationRuntimeRecord *record,
     UmiDesktopApplicationStripItem *item)
 {
     const UmiApplicationResourceDescriptor *icon;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(item, 0, sizeof(*item));
     status = copy_text(item->application_id,
                        sizeof(item->application_id),
                        record->application_id, false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(item->display_name,
                            sizeof(item->display_name),
                            record->display_name, false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(item->icon_resource_id,
                            sizeof(item->icon_resource_id),
                            record->icon_resource_id, true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(item->default_layout_id,
                            sizeof(item->default_layout_id),
                            record->default_layout_id, true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(item->taskbar_group,
                            sizeof(item->taskbar_group),
                            record->taskbar_group, true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     icon = record->icon_resource_id[0] != '\0'
         ? umi_application_resource_catalogue_find(
             record->icon_resource_id)
         : NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (icon != NULL &&
         icon->kind == UMI_APPLICATION_RESOURCE_THEME_ICON) {
         status = copy_text(item->icon_name, sizeof(item->icon_name),
                            icon->locator, true);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = copy_text(item->icon_name, sizeof(item->icon_name),
                            "application-x-executable-symbolic", false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     item->state = record->state;
@@ -119,21 +149,34 @@ static UmiStatus project_record(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise desktop application strip from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_application_strip_create(
     UmiApplicationRuntimeCatalogue *catalogue,
     UmiDesktopApplicationStrip **out_strip)
 {
     UmiDesktopApplicationStrip *strip;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || out_strip == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_strip = NULL;
     strip = (UmiDesktopApplicationStrip *)calloc(1U, sizeof(*strip));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strip == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     strip->catalogue = catalogue;
     strip->revision = 1U;
     status = umi_desktop_application_strip_refresh(strip);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(strip);
         return status;
@@ -142,12 +185,20 @@ UmiStatus umi_desktop_application_strip_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by desktop application strip so the same storage can be
+ * reused safely.
+ */
 void umi_desktop_application_strip_destroy(
     UmiDesktopApplicationStrip *strip)
 {
     free(strip);
 }
 
+/*
+ * Provide the desktop application strip refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_application_strip_refresh(
     UmiDesktopApplicationStrip *strip)
 {
@@ -156,19 +207,28 @@ UmiStatus umi_desktop_application_strip_refresh(
             ? umi_application_runtime_catalogue_count(strip->catalogue)
             : 0U;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strip == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     strip->count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiApplicationRuntimeRecord record;
         UmiStatus status = umi_application_runtime_catalogue_at(
             strip->catalogue, index, &record);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this operation only while the related capability or state is available. */
         if (!record.visible && !record.pinned) continue;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strip->count >= UMI_APPLICATION_RUNTIME_MAX_APPLICATIONS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         status = project_record(
             &record, &strip->items[strip->count]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         strip->count += 1U;
     }
@@ -178,30 +238,49 @@ UmiStatus umi_desktop_application_strip_refresh(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find desktop application strip while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_desktop_application_strip_at(
     const UmiDesktopApplicationStrip *strip,
     size_t index,
     UmiDesktopApplicationStripItem *out_item)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strip == NULL || out_item == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= strip->count) return UMI_STATUS_NOT_FOUND;
     *out_item = strip->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find desktop application strip while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_desktop_application_strip_find(
     const UmiDesktopApplicationStrip *strip,
     const char *application_id,
     UmiDesktopApplicationStripItem *out_item)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strip == NULL || application_id == NULL ||
         application_id[0] == '\0' || out_item == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < strip->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(strip->items[index].application_id,
                    application_id) == 0) {
             *out_item = strip->items[index];
@@ -211,6 +290,10 @@ UmiStatus umi_desktop_application_strip_find(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the desktop application strip request operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_application_strip_request(
     UmiDesktopApplicationStrip *strip,
     UmiApplicationLauncher *launcher,
@@ -219,14 +302,20 @@ UmiStatus umi_desktop_application_strip_request(
 {
     UmiDesktopApplicationStripItem item;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strip == NULL || launcher == NULL ||
         application_id == NULL || application_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_desktop_application_strip_find(
         strip, application_id, &item);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
     case UMI_DESKTOP_APPLICATION_STRIP_LAUNCH_OR_ACTIVATE:
         status = umi_application_launcher_request(
@@ -251,29 +340,43 @@ UmiStatus umi_desktop_application_strip_request(
         status = UMI_STATUS_INVALID_ARGUMENT;
         break;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_desktop_application_strip_refresh(strip);
     }
     return status;
 }
 
+/*
+ * Provide the desktop application strip snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_application_strip_snapshot(
     const UmiDesktopApplicationStrip *strip,
     UmiDesktopApplicationStripSnapshot *out_snapshot)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strip == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->item_count = strip->count;
     out_snapshot->revision = strip->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < strip->count; ++index) {
         const UmiDesktopApplicationStripItem *item =
             &strip->items[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->pinned) out_snapshot->pinned_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->running) out_snapshot->running_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->attention) out_snapshot->attention_count += 1U;
+        /* Apply this operation only while the related capability or state is available. */
         if (item->active) {
             (void)copy_text(out_snapshot->active_application_id,
                             sizeof(out_snapshot->active_application_id),
@@ -283,9 +386,14 @@ UmiStatus umi_desktop_application_strip_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop application strip action text operation used by this module and its
+ * client applications.
+ */
 const char *umi_desktop_application_strip_action_text(
     UmiDesktopApplicationStripAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
     case UMI_DESKTOP_APPLICATION_STRIP_LAUNCH_OR_ACTIVATE:
         return "launch-or-activate";

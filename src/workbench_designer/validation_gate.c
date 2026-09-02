@@ -18,13 +18,25 @@
 #include "internal.h"
 
 
+/*
+ * Initialise workbench designer validation gate from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_validation_gate_init(
     UmiWorkbenchDesignerValidationGate *gate)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (gate == NULL) return;
     (void)memset(gate, 0, sizeof(*gate));
 }
 
+/*
+ * Provide the workbench designer validation gate evaluate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_designer_validation_gate_evaluate(
     UmiWorkbenchDesignerValidationGate *gate,
     const UmiWorkbenchLayoutDocument *document,
@@ -35,25 +47,37 @@ UmiStatus umi_workbench_designer_validation_gate_evaluate(
     UmiWorkbenchLayoutValidationReport semantic_diagnostics;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (gate == NULL || document == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_designer_validation_gate_init(gate);
     validation_options = umi_workbench_layout_validation_options_default();
     umi_workbench_layout_validation_report_init(&semantic_diagnostics);
     status = umi_workbench_layout_validate(
         document, &validation_options, &semantic_diagnostics);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < semantic_diagnostics.diagnostic_count; ++index) {
         const UmiWorkbenchLayoutDiagnostic *issue =
             &semantic_diagnostics.diagnostics[index];
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (issue->severity == UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_ERROR) {
             gate->error_count += 1U;
-        } else if (issue->severity == UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_WARNING) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (issue->severity == UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_WARNING) {
             gate->warning_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             gate->info_count += 1U;
         }
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer_diagnostics != NULL) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < designer_diagnostics->count; ++index) {
+            /* Select the behaviour associated with the requested command or state value. */
             switch (designer_diagnostics->issues[index].severity) {
                 case UMI_WORKBENCH_DESIGNER_ISSUE_ERROR:
                     gate->error_count += 1U; break;

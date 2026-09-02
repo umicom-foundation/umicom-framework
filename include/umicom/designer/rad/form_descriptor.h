@@ -18,13 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad form descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiRadFormDescriptor {
     char form_id[UMI_RAD_ID_CAPACITY];
     char title[UMI_RAD_TEXT_CAPACITY];
     char root_component_id[UMI_RAD_ID_CAPACITY];
     char submit_command_id[UMI_RAD_ID_CAPACITY];
 } UmiRadFormDescriptor;
+/**
+ * Initialise rad form descriptor from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_form_descriptor_init(UmiRadFormDescriptor *item);
+/**
+ * Check that rad form descriptor satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_form_descriptor_is_valid(const UmiRadFormDescriptor *item);
 #ifdef __cplusplus
 }

@@ -23,9 +23,17 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug runtime contract adapter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimeContractAdapter
     UmiDebugRuntimeContractAdapter;
 
+/**
+ * Initialise debug runtime contract adapter from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_runtime_contract_adapter_create(
     UmiDebugRuntimeAdapter *adapter,
     const char *descriptor_id,
@@ -36,9 +44,17 @@ UmiStatus umi_debug_runtime_contract_adapter_create(
     UmiDebugRuntimeContractAdapter **out_owner,
     UmiDebugAdapterDescriptor *out_descriptor);
 
+/**
+ * Release or reset state held by debug runtime contract adapter so the same storage can be
+ * reused safely.
+ */
 void umi_debug_runtime_contract_adapter_destroy(
     UmiDebugRuntimeContractAdapter *owner);
 
+/**
+ * Provide the debug runtime contract adapter connection operation used by this module and
+ * its client applications.
+ */
 UmiDebugRuntimeAdapter *umi_debug_runtime_contract_adapter_connection(
     UmiDebugRuntimeContractAdapter *owner);
 

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection correlation record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionCorrelationRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -40,28 +44,64 @@ typedef struct UmiWorkbenchSelectionCorrelationRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionCorrelationRecord;
 
+/**
+ * Initialise workbench selection correlation record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_correlation_record_init(
     UmiWorkbenchSelectionCorrelationRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection correlation record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_correlation_record_validate(
     const UmiWorkbenchSelectionCorrelationRecord *record);
+/**
+ * Provide the workbench selection correlation record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_correlation_record_set_source(
     UmiWorkbenchSelectionCorrelationRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection correlation record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_correlation_record_set_subject(
     UmiWorkbenchSelectionCorrelationRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection correlation record set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_correlation_record_set_secondary(
     UmiWorkbenchSelectionCorrelationRecord *record,
     const char *secondary_id);
+/**
+ * Provide the workbench selection correlation record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_correlation_record_set_group(
     UmiWorkbenchSelectionCorrelationRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection correlation record set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_correlation_record_set_label(
     UmiWorkbenchSelectionCorrelationRecord *record,
     const char *label);
+/**
+ * Provide the workbench selection correlation record hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_selection_correlation_record_hash(
     const UmiWorkbenchSelectionCorrelationRecord *record);
+/**
+ * Provide the workbench selection correlation record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_selection_correlation_record_touch(
     UmiWorkbenchSelectionCorrelationRecord *record,
     uint64_t sequence,

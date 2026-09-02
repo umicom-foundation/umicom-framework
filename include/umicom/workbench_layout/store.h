@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout record summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutRecordSummary {
     uint32_t structure_size;
     char layout_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -37,6 +41,10 @@ typedef struct UmiWorkbenchLayoutRecordSummary {
     uint32_t flags;
 } UmiWorkbenchLayoutRecordSummary;
 
+/**
+ * Represent the workbench layout store query data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutStoreQuery {
     uint32_t structure_size;
     char owner_user_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -51,6 +59,10 @@ typedef struct UmiWorkbenchLayoutStoreQuery {
     size_t limit;
 } UmiWorkbenchLayoutStoreQuery;
 
+/**
+ * Represent the workbench layout store list data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutStoreList {
     uint32_t structure_size;
     UmiWorkbenchLayoutRecordSummary
@@ -60,6 +72,10 @@ typedef struct UmiWorkbenchLayoutStoreList {
     bool truncated;
 } UmiWorkbenchLayoutStoreList;
 
+/**
+ * Represent the workbench layout store adapter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutStoreAdapter {
     uint32_t structure_size;
     UmiWorkbenchLayoutStoreKind kind;
@@ -99,42 +115,78 @@ typedef struct UmiWorkbenchLayoutStoreAdapter {
     UmiStatus (*rollback_transaction)(void *context);
 } UmiWorkbenchLayoutStoreAdapter;
 
+/**
+ * Provide the workbench layout store query default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutStoreQuery
 umi_workbench_layout_store_query_default(void);
 
+/**
+ * Check that workbench layout store adapter satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_layout_store_adapter_validate(
     const UmiWorkbenchLayoutStoreAdapter *adapter);
 
+/**
+ * Provide the workbench layout store supports transactions operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_layout_store_supports_transactions(
     const UmiWorkbenchLayoutStoreAdapter *adapter);
 
+/**
+ * Write workbench layout store in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_store_save(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutDocument *document,
     uint64_t expected_revision,
     uint64_t *out_revision);
 
+/**
+ * Read workbench layout store into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_store_load(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const char *layout_id,
     UmiWorkbenchLayoutDocument *out_document);
 
+/**
+ * Provide the workbench layout store delete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_store_delete(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const char *layout_id,
     uint64_t expected_revision);
 
+/**
+ * Provide the workbench layout store list operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_store_list(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutStoreQuery *query,
     UmiWorkbenchLayoutStoreList *out_list);
 
+/**
+ * Provide the workbench layout store save session operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_store_save_session(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutSession *session,
     uint64_t expected_revision,
     uint64_t *out_revision);
 
+/**
+ * Provide the workbench layout store load session operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_store_load_session(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const char *session_id,

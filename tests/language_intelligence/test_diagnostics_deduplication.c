@@ -13,6 +13,10 @@
 #include "umicom/language/intelligence/diagnostics_deduplication.h"
 #define CHECK(expression) do { if (!(expression)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiLanguageIntelligenceDiagnosticsDeduplicationInput input = {0};

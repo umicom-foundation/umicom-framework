@@ -18,6 +18,10 @@
 /* Reset the bounded navigation collection. */
 void umi_adaptive_navigation_model_init(UmiAdaptiveNavigationModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model != NULL) memset(model, 0, sizeof *model);
 }
 
@@ -25,8 +29,17 @@ void umi_adaptive_navigation_model_init(UmiAdaptiveNavigationModel *model)
 UmiStatus umi_adaptive_navigation_model_add(UmiAdaptiveNavigationModel *model,
                                             const UmiAdaptiveNavigationItem *item)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_adaptive_navigation_model_find(model, item->item_id) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count >= UMI_ADAPTIVE_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED;
     model->items[model->count++] = *item;
     return UMI_STATUS_OK;
@@ -37,8 +50,14 @@ const UmiAdaptiveNavigationItem *umi_adaptive_navigation_model_find(const UmiAda
                                                                     const char *item_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || item_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(model->items[index].item_id, item_id) == 0) return &model->items[index];
     }
     return NULL;

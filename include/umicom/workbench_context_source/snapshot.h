@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context source snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextSourceSnapshot {
     uint32_t structure_size;
     size_t source_count;
@@ -31,6 +35,10 @@ typedef struct UmiWorkbenchContextSourceSnapshot {
     bool suspended;
 } UmiWorkbenchContextSourceSnapshot;
 
+/**
+ * Provide the workbench context source snapshot build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_source_snapshot_build(
     const UmiWorkbenchContextSourceService *service,
     UmiWorkbenchContextSourceSnapshot *out_snapshot);

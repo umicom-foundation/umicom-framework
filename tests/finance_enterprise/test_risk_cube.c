@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/risk_cube.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseRiskCube c; CHECK(umi_enterprise_risk_cube_init(&c,2U,2U)==UMI_STATUS_OK); CHECK(umi_enterprise_risk_cube_set(&c,0U,0U,1.0)==UMI_STATUS_OK); CHECK(umi_enterprise_risk_cube_set(&c,0U,1U,2.0)==UMI_STATUS_OK); CHECK(umi_enterprise_risk_cube_scenario_total(&c,0U)==3.0); return 0; }

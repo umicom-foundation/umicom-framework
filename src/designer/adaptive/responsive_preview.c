@@ -23,8 +23,13 @@ UmiStatus umi_designer_responsive_preview_init(UmiDesignerResponsivePreview *pre
                                                UmiAdaptiveInputMode input_mode,
                                                UmiRadTargetKind renderer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(preview==NULL||preview_id==NULL||viewport.width<=0||viewport.height<=0)return UMI_STATUS_INVALID_ARGUMENT;
     memset(preview,0,sizeof *preview);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_designer_adaptive_copy_text(preview->preview_id,sizeof preview->preview_id,preview_id)!=UMI_STATUS_OK)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     preview->viewport=viewport;

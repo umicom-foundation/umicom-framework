@@ -23,9 +23,17 @@
 #include <ctype.h>
 #include <string.h>
 
+/*
+ * Initialise ai coding request from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ai_coding_request_init(UmiAiCodingRequest *request,
                                 UmiAiCodingTaskKind task)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) return;
     (void)memset(request, 0, sizeof(*request));
     request->structure_size = (uint32_t)sizeof(*request);
@@ -36,14 +44,20 @@ void umi_ai_coding_request_init(UmiAiCodingRequest *request,
     request->maximum_context_files = UMI_AI_CODING_CONTEXT_PLAN_MAX;
 }
 
+/* Check that task satisfies its contract before another service relies on it. */
 static int task_valid(UmiAiCodingTaskKind task)
 {
     return task >= UMI_AI_CODING_TASK_CHAT &&
            task <= UMI_AI_CODING_TASK_GENERATE_TESTS;
 }
 
+/* Check that ai coding request satisfies its contract before another service relies on it. */
 UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL ||
         request->structure_size < sizeof(UmiAiCodingRequest) ||
         request->abi_version != UMI_AI_CODING_ABI_VERSION ||
@@ -56,6 +70,7 @@ UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request)
         request->selection_end_line < request->selection_start_line) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (request->active_path[0] != '\0' &&
         !umi_ai_coding_path_is_safe_relative(request->active_path)) {
         return UMI_STATUS_PERMISSION_DENIED;
@@ -63,28 +78,41 @@ UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding path is safe relative operation used by this module and its client
+ * applications.
+ */
 int umi_ai_coding_path_is_safe_relative(const char *path)
 {
     const char *segment;
     const char *cursor;
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || path[0] == '\0' || path[0] == '/' || path[0] == '\\') {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (isalpha((unsigned char)path[0]) && path[1] == ':') return 0;
     segment = path;
     cursor = path;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '/' || *cursor == '\\' || *cursor == '\0') {
             length = (size_t)(cursor - segment);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (length == 0U ||
                 (length == 1U && segment[0] == '.') ||
                 (length == 2U && segment[0] == '.' && segment[1] == '.')) {
                 return 0;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (*cursor == '\0') break;
             segment = cursor + 1;
-        } else if ((unsigned char)*cursor < 32U || *cursor == ':') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if ((unsigned char)*cursor < 32U || *cursor == ':') {
             return 0;
         }
         ++cursor;
@@ -92,11 +120,20 @@ int umi_ai_coding_path_is_safe_relative(const char *path)
     return 1;
 }
 
+/*
+ * Provide the ai coding text hash operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ai_coding_text_hash(const char *text, size_t length)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL && length != 0U) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < length; ++index) {
         hash ^= (uint64_t)(unsigned char)text[index];
         hash *= UINT64_C(1099511628211);
@@ -104,8 +141,13 @@ uint64_t umi_ai_coding_text_hash(const char *text, size_t length)
     return hash;
 }
 
+/*
+ * Provide the ai coding task kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_task_kind_text(UmiAiCodingTaskKind task)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (task) {
         case UMI_AI_CODING_TASK_CHAT: return "code chat";
         case UMI_AI_CODING_TASK_COMPLETE: return "completion";
@@ -116,9 +158,14 @@ const char *umi_ai_coding_task_kind_text(UmiAiCodingTaskKind task)
     }
 }
 
+/*
+ * Provide the ai coding patch operation text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_patch_operation_text(
     UmiAiCodingPatchOperation operation)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (operation) {
         case UMI_AI_CODING_PATCH_CREATE: return "create";
         case UMI_AI_CODING_PATCH_MODIFY: return "modify";
@@ -127,8 +174,13 @@ const char *umi_ai_coding_patch_operation_text(
     }
 }
 
+/*
+ * Provide the ai coding patch state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_patch_state_text(UmiAiCodingPatchState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_CODING_PATCH_DRAFT: return "draft";
         case UMI_AI_CODING_PATCH_APPROVED: return "approved";

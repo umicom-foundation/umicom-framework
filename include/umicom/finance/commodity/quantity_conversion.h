@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity quantity conversion data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityQuantityConversion {
     char from_code[UMI_COMMODITY_CODE_CAPACITY];
     char to_code[UMI_COMMODITY_CODE_CAPACITY];

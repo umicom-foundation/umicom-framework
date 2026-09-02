@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic detached window data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicDetachedWindow {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char name[UMI_UI_MOSAIC_TEXT_CAPACITY];

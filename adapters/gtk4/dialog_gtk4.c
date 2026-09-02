@@ -23,6 +23,7 @@ typedef struct DialogContext {
     GtkWindow *window;
 } DialogContext;
 
+/* Provide the on dialog button operation used by this module and its client applications. */
 static void on_dialog_button(GtkButton *button, gpointer user_data)
 {
     DialogContext *context = (DialogContext *)user_data;
@@ -37,6 +38,10 @@ static void on_dialog_button(GtkButton *button, gpointer user_data)
     g_free(context);
 }
 
+/*
+ * Provide the gtk4 process dialog operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter,
                                   UmiUiWorkbench *workbench)
 {
@@ -47,12 +52,22 @@ UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter,
     GtkWidget *box;
     GtkWidget *label;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     service = umi_ui_workbench_dialogs(workbench);
     status = umi_ui_dialog_next(service, &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     context = g_new0(DialogContext, 1);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     context->service = service;
     context->request = request;
@@ -63,6 +78,7 @@ UmiStatus umi_gtk4_process_dialog(UmiGtk4Adapter *adapter,
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     label = gtk_label_new(request.message);
     gtk_box_append(GTK_BOX(box), label);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < request.button_count; ++index) {
         GtkWidget *button = gtk_button_new_with_label(request.buttons[index]);
         char *index_text = g_strdup_printf("%zu", index);

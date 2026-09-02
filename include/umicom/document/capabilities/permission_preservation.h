@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_PERMISSION_PRESERVATION "umicom.document.persistence.permission_preservation"
 
+/**
+ * Provide the document capability permission preservation operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_permission_preservation(void);
 

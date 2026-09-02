@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application launch profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationLaunchProfile {
     uint32_t structure_size;
     const char *application_id;
@@ -31,10 +35,18 @@ typedef struct UmiApplicationLaunchProfile {
     bool restore_session;
 } UmiApplicationLaunchProfile;
 
+/**
+ * Provide the application launch profile default operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_launch_profile_default(
     const UmiApplicationExperienceDefinition *experience,
     unsigned frontend,
     UmiApplicationLaunchProfile *out_profile);
+/**
+ * Check that application launch profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_launch_profile_validate(
     const UmiApplicationExperienceDefinition *experience,
     const UmiApplicationLaunchProfile *profile);

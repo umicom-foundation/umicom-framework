@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 #include "umicom/ui/mosaic/layout_snapshot_ref.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiUiMosaicLayoutSnapshotRef value;
     umi_ui_mosaic_layout_snapshot_ref_init(&value);

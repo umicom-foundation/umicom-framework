@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ct target fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ct_target_fingerprint(const UmiCtTarget *target,uint64_t cpu_features,const char *abi,uint32_t page_size);
 
 #ifdef __cplusplus

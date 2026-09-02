@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data consistency policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataConsistencyPolicy {
     UmiDataConsistency minimum_consistency;
     uint64_t session_lag_ms;

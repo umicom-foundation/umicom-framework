@@ -24,11 +24,18 @@ extern "C" {
 
 #define UMI_EDITOR_TYPE_HIERARCHY_API_VERSION 1U
 
+/**
+ * List the named editor type hierarchy direction values accepted by this public contract.
+ */
 typedef enum UmiEditorTypeHierarchyDirection {
     UMI_EDITOR_TYPE_HIERARCHY_SUPERTYPES = 1,
     UMI_EDITOR_TYPE_HIERARCHY_SUBTYPES = 2
 } UmiEditorTypeHierarchyDirection;
 
+/**
+ * Provide the editor type hierarchy build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_type_hierarchy_build(
     UmiEditorSymbolHierarchy *hierarchy,
     const UmiEditorSymbolIndex *symbol_index,

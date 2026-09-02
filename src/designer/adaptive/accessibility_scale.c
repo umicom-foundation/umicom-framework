@@ -22,6 +22,10 @@ UmiStatus umi_designer_accessibility_scale_init(UmiDesignerAccessibilityScale *s
                                                 double target_scale,
                                                 int high_contrast)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(scale==NULL||!(text_scale>0.0)||!(target_scale>0.0))return UMI_STATUS_INVALID_ARGUMENT;
     scale->text_scale=text_scale<0.75?0.75:(text_scale>3.0?3.0:text_scale);
     scale->target_scale=target_scale<0.75?0.75:(target_scale>3.0?3.0:target_scale);
@@ -33,8 +37,13 @@ int32_t umi_designer_accessibility_scale_target(const UmiDesignerAccessibilitySc
                                                 int32_t logical_extent)
 {
     double value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(scale==NULL||logical_extent<0)return -1;
     value=(double)logical_extent*scale->target_scale;
+    /* Apply this branch only when its contract condition is satisfied. */
     if(value>(double)INT32_MAX)return INT32_MAX;
     return (int32_t)(value+0.5);
 }

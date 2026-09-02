@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the fc layout normalizer ratios operation used by this module and its client
+ * applications.
+ */
 void umi_fc_layout_normalizer_ratios(double *values,size_t count,double minimum,double maximum);
+/**
+ * Provide the fc layout normalizer orders operation used by this module and its client
+ * applications.
+ */
 void umi_fc_layout_normalizer_orders(int32_t *orders,size_t count);
 
 #ifdef __cplusplus

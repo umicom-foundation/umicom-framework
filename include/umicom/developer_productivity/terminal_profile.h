@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer terminal profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperTerminalProfile {
     uint32_t structure_size;
     uint32_t api_version;
@@ -35,6 +39,10 @@ typedef struct UmiDeveloperTerminalProfile {
     int login_shell;
 } UmiDeveloperTerminalProfile;
 
+/**
+ * Check that developer terminal profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_terminal_profile_validate(
     const UmiDeveloperTerminalProfile *profile);
 

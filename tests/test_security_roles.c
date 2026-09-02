@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/security/role.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiRoleRegistry *r = NULL; UmiRoleSnapshot role;
     assert(umi_role_registry_create(&r) == UMI_STATUS_OK);

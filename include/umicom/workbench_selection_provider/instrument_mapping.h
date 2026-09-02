@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider instrument mapping data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderInstrumentMapping {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderInstrumentMapping {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderInstrumentMapping;
 
+/**
+ * Initialise workbench selection provider instrument mapping from caller-provided values
+ * so later operations receive a known state.
+ */
 void umi_workbench_selection_provider_instrument_mapping_init(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider instrument mapping satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_validate(
     const UmiWorkbenchSelectionProviderInstrumentMapping *record);
+/**
+ * Provide the workbench selection provider instrument mapping set provider operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_set_provider(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider instrument mapping set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_set_source(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider instrument mapping set subject operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_set_subject(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider instrument mapping set related operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_set_related(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider instrument mapping set group operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_set_group(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider instrument mapping set description operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_instrument_mapping_set_description(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     const char *description);
+/**
+ * Provide the workbench selection provider instrument mapping hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_instrument_mapping_hash(
     const UmiWorkbenchSelectionProviderInstrumentMapping *record);
+/**
+ * Provide the workbench selection provider instrument mapping touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_instrument_mapping_touch(
     UmiWorkbenchSelectionProviderInstrumentMapping *record,
     uint64_t sequence,

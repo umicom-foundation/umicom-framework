@@ -21,6 +21,10 @@ extern "C" {
 
 #include "umicom/ai_developer_experience/patch_review_service.h"
 #include "umicom/ai_developer_experience/preferences.h"
+/**
+ * Initialise ai developer diff view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_diff_view_create(
     const char *view_id,
     const UmiAiDeveloperPatchReviewService *review,

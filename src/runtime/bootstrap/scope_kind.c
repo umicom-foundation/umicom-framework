@@ -23,7 +23,12 @@
 #include "umicom/runtime/bootstrap/scope_kind.h"
 
 
+/*
+ * Provide the bootstrap scope kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_bootstrap_scope_kind_text(UmiBootstrapScopeKind scope) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (scope) {
         case UMI_BOOTSTRAP_SCOPE_SINGLETON: return "singleton";
         case UMI_BOOTSTRAP_SCOPE_APPLICATION: return "application";
@@ -33,7 +38,12 @@ const char *umi_bootstrap_scope_kind_text(UmiBootstrapScopeKind scope) {
         default: return "unknown";
     }
 }
+/*
+ * Provide the bootstrap scope kind rank operation used by this module and its client
+ * applications.
+ */
 int umi_bootstrap_scope_kind_rank(UmiBootstrapScopeKind scope) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (scope) {
         case UMI_BOOTSTRAP_SCOPE_SINGLETON: return 5;
         case UMI_BOOTSTRAP_SCOPE_APPLICATION: return 4;

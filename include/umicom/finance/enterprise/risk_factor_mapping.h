@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise risk factor mapping entry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEnterpriseRiskFactorMappingEntry { UmiFinancialId product_id; char factor_name[UMI_ENTERPRISE_NAME_CAPACITY]; double loading; } UmiEnterpriseRiskFactorMappingEntry;
+/**
+ * Represent the enterprise risk factor mapping data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseRiskFactorMapping { UmiEnterpriseRiskFactorMappingEntry entries[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiEnterpriseRiskFactorMapping;
 /* Initialise an empty factor mapping. */
 void umi_enterprise_risk_factor_mapping_init(UmiEnterpriseRiskFactorMapping *mapping);

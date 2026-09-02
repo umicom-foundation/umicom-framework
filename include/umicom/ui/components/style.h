@@ -23,6 +23,13 @@
 #define UMICOM_UI_COMPONENTS_STYLE_H
 #include <stdbool.h>
 #include "umicom/ui/components/component.h"
+/**
+ * Represent the ui component style data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentStyle { char primary_class[UMI_UI_COMPONENT_CLASS_CAPACITY]; bool suggested_action; bool destructive_action; bool flat; } UmiUiComponentStyle;
+/**
+ * Provide the ui component style default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentStyle umi_ui_component_style_default(void);
 #endif

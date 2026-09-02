@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/atomic_save.h"
 
+/*
+ * Write document capability atomic in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_atomic_save(void)
 {

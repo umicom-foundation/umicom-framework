@@ -29,8 +29,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug runtime platform data shared with callers of this public contract.
+ */
 typedef struct UmiDebugRuntimePlatform UmiDebugRuntimePlatform;
 
+/**
+ * Represent the debug runtime platform snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimePlatformSnapshot {
     UmiDebugServiceSnapshot service;
     UmiDebugAdvancedPlatformSnapshot advanced;
@@ -49,12 +56,24 @@ typedef struct UmiDebugRuntimePlatformSnapshot {
     int paused;
 } UmiDebugRuntimePlatformSnapshot;
 
+/**
+ * Initialise debug runtime platform from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_runtime_platform_create(
     UmiDebugRuntimePlatform **out_platform);
 
+/**
+ * Release or reset state held by debug runtime platform so the same storage can be reused
+ * safely.
+ */
 void umi_debug_runtime_platform_destroy(
     UmiDebugRuntimePlatform *platform);
 
+/**
+ * Provide the debug runtime platform start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_start(
     UmiDebugRuntimePlatform *platform,
     const char *profile_id,
@@ -65,45 +84,81 @@ UmiStatus umi_debug_runtime_platform_start(
     const char *working_directory,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform stop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_stop(
     UmiDebugRuntimePlatform *platform,
     int terminate_debuggee,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform restart operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_restart(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform pump event operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_pump_event(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms,
     int *out_handled);
 
+/**
+ * Provide the debug runtime platform sync breakpoints operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_sync_breakpoints(
     UmiDebugRuntimePlatform *platform,
     const char *source_uri,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform refresh threads operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_threads(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform refresh stack operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_stack(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform refresh scopes operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_scopes(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform refresh variables operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_variables(
     UmiDebugRuntimePlatform *platform,
     const char *scope_id,
     uint64_t variables_reference,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform evaluate watch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_evaluate_watch(
     UmiDebugRuntimePlatform *platform,
     const char *watch_id,
@@ -111,55 +166,99 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
     uint64_t frame_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform continue operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_continue(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform pause operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_pause(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform step over operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_over(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform step into operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_into(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform step out operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_out(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform refresh modules operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_modules(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform refresh registers operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_registers(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform step back operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_back(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform reverse continue operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_reverse_continue(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform restart frame operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_restart_frame(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform set variable operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_set_variable(
     UmiDebugRuntimePlatform *platform,
     uint64_t variables_reference,
@@ -168,6 +267,10 @@ UmiStatus umi_debug_runtime_platform_set_variable(
     uint32_t timeout_ms,
     UmiDebugRuntimeEvaluateResult *out_result);
 
+/**
+ * Provide the debug runtime platform set expression operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_set_expression(
     UmiDebugRuntimePlatform *platform,
     const char *expression,
@@ -176,6 +279,10 @@ UmiStatus umi_debug_runtime_platform_set_expression(
     uint32_t timeout_ms,
     UmiDebugRuntimeEvaluateResult *out_result);
 
+/**
+ * Provide the debug runtime platform read memory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_read_memory(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -184,6 +291,10 @@ UmiStatus umi_debug_runtime_platform_read_memory(
     uint32_t timeout_ms,
     UmiDebugRuntimeMemoryResult *out_result);
 
+/**
+ * Provide the debug runtime platform write memory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_write_memory(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -192,6 +303,10 @@ UmiStatus umi_debug_runtime_platform_write_memory(
     int allow_partial,
     uint32_t timeout_ms);
 
+/**
+ * Provide the debug runtime platform disassemble operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_disassemble(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -201,16 +316,32 @@ UmiStatus umi_debug_runtime_platform_disassemble(
     uint32_t timeout_ms,
     UmiDebugRuntimeDisassembly *out_result);
 
+/**
+ * Provide the debug runtime platform snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_snapshot(
     UmiDebugRuntimePlatform *platform,
     UmiDebugRuntimePlatformSnapshot *out_snapshot);
 
+/**
+ * Provide the debug runtime platform service operation used by this module and its client
+ * applications.
+ */
 UmiDebugService *umi_debug_runtime_platform_service(
     UmiDebugRuntimePlatform *platform);
 
+/**
+ * Provide the debug runtime platform advanced operation used by this module and its client
+ * applications.
+ */
 UmiDebugAdvancedPlatform *umi_debug_runtime_platform_advanced(
     UmiDebugRuntimePlatform *platform);
 
+/**
+ * Provide the debug runtime platform adapter operation used by this module and its client
+ * applications.
+ */
 UmiDebugRuntimeAdapter *umi_debug_runtime_platform_adapter(
     UmiDebugRuntimePlatform *platform);
 

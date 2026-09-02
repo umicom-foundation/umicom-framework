@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise and validate represent minimum and step quantities for a venue listing.. */
 UmiStatus umi_trading_lot_size_rule_init(UmiTradingLotSizeRule *value,UmiTradingQuantityLots minimum_lots, UmiTradingQuantityLots step_lots, UmiTradingQuantityLots maximum_lots) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
     value->minimum_lots=minimum_lots;

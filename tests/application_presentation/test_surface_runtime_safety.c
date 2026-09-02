@@ -18,6 +18,10 @@
 
 #include "umicom/application/presentation/presentation.h"
 
+/*
+ * Exercise safe controller and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus safe_controller(
     void *context,
     const UmiApplicationPresentationPanelPlacement *placement,
@@ -34,6 +38,10 @@ static UmiStatus safe_controller(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise bind and start and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void bind_and_start(
     UmiApplicationPresentationSurfaceRuntime *runtime,
     UmiApplicationPresentationHeadlessSurfaceHost *host)
@@ -47,6 +55,10 @@ static void bind_and_start(
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationPresentationSurfaceRuntime trader;

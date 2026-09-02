@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operations/branch_delete.h"
 
+/*
+ * Provide the developer source control operation branch delete operation used by this
+ * module and its client applications.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_branch_delete(void)
 {
     static const UmiDeveloperSourceControlOperationDefinition definition = {

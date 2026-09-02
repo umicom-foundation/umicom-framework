@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ide surface profile ai validation operation used by this module and its
+ * client applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_ai_validation(void);
 #ifdef __cplusplus
 }

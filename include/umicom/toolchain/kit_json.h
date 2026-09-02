@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Write toolchain kit json in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_toolchain_kit_json_write(
     const UmiToolchainKitSnapshot *kit,
     const UmiToolchainKitHealthSnapshot *health,

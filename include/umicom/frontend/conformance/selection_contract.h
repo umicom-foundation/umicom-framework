@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc selection contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcSelectionContract { uint64_t required_modes; bool keyboard_extend; bool preserve_on_refresh; } UmiFcSelectionContract;
+/**
+ * Check that fc selection contract satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_fc_selection_contract_validate(const UmiFcSelectionContract *item);
 
 #ifdef __cplusplus

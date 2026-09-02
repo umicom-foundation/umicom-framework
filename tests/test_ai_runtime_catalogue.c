@@ -17,6 +17,10 @@
 
 #include "umicom/ai/runtime_catalogue.h"
 
+/*
+ * Exercise descriptor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiAiRuntimeDescriptor descriptor(const char *id,
                                          const char *provider,
                                          uint32_t context_tokens,
@@ -38,6 +42,10 @@ static UmiAiRuntimeDescriptor descriptor(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiRuntimeCatalogue *catalogue = NULL;

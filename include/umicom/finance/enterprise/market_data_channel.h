@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise market data channel data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataChannel {
     char channel_id[UMI_ENTERPRISE_ID_CAPACITY];
     uint64_t last_sequence;

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_AUDIT_TRAIL "umicom.developer.security.audit_trail"
 
+/**
+ * Provide the developer capability audit trail operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_audit_trail(void);
 

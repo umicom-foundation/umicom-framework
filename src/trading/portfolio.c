@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/portfolio.h"
-double umi_portfolio_gross_quantity(const UmiPositionBook *b){if(b==NULL)return 0.0;double total=0.0;for(size_t i=0U;i<b->count;i++){double q=b->positions[i].quantity;total+=q<0.0?-q:q;}return total;}
+/*
+ * Provide the portfolio gross quantity operation used by this module and its client
+ * applications.
+ */
+double umi_portfolio_gross_quantity(const UmiPositionBook *b){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(b==NULL)return 0.0;double total=0.0;/* Visit each bounded item once so every record receives the same rule. */ for(size_t i=0U;i<b->count;i++){double q=b->positions[i].quantity;total+=q<0.0?-q:q;}return total;}

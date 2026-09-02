@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP terminate. Sammy Hegab, Umicom Foundation, MIT. */
 #include "dap_request_internal.h"
+/* Provide the dap terminate operation used by this module and its client applications. */
 UmiStatus umi_dap_terminate(UmiDapClient*c,int restart,int64_t*id){return umi_dap_request(c,"terminate",restart?"{\"restart\":true}":"{\"restart\":false}",id);}

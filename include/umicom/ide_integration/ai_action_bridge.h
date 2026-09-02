@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide ai run selection operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_ai_run_selection(
     UmiIdeIntegrationPlatform *platform,
     const UmiIdeEditorSelection *selection,
@@ -31,6 +35,10 @@ UmiStatus umi_ide_ai_run_selection(
     const char *session_id,
     const char *instruction);
 
+/**
+ * Provide the ide ai fix problem operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_ai_fix_problem(
     UmiIdeIntegrationPlatform *platform,
     const UmiIdeEditorSelection *selection,

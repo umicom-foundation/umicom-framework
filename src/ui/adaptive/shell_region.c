@@ -21,6 +21,10 @@ UmiStatus umi_adaptive_shell_region_init(UmiAdaptiveShellRegion *region,
                                          int collapsible,
                                          int overlay_capable)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (region == NULL || responsive == NULL || preferred_extent < 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

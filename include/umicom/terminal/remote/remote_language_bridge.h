@@ -22,9 +22,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote remote language bridge data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTerminalRemoteRemoteLanguageBridge { char left_id[UMI_TERMINAL_REMOTE_ID_CAPACITY]; char right_id[UMI_TERMINAL_REMOTE_ID_CAPACITY]; uint64_t revision; bool enabled; } UmiTerminalRemoteRemoteLanguageBridge;
+/**
+ * Initialise terminal remote remote language bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_remote_language_bridge_init(UmiTerminalRemoteRemoteLanguageBridge *value,const char *left_id,const char *right_id);
+/**
+ * Check that terminal remote remote language bridge satisfies its contract before another
+ * service relies on it.
+ */
 bool umi_terminal_remote_remote_language_bridge_valid(const UmiTerminalRemoteRemoteLanguageBridge *value);
+/**
+ * Provide the terminal remote remote language bridge fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_terminal_remote_remote_language_bridge_fingerprint(const UmiTerminalRemoteRemoteLanguageBridge *value);
 #ifdef __cplusplus
 }

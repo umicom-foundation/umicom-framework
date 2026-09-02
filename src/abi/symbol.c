@@ -18,4 +18,5 @@
  */
 #include "umicom/abi/symbol.h"
 #include <stddef.h>
-UmiStatus umi_abi_symbol_validate(const UmiAbiSymbol *s){if(s==NULL||s->name==NULL||s->name[0]=='\0'||s->since_abi==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that abi symbol satisfies its contract before another service relies on it. */
+UmiStatus umi_abi_symbol_validate(const UmiAbiSymbol *s){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||s->name==NULL||s->name[0]=='\0'||s->since_abi==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

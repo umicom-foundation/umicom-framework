@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request attach operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_attach(
     UmiDebugRuntimeAdapter *adapter,
     const char *arguments_json,

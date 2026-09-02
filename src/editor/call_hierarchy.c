@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/call_hierarchy.h"
 
+/*
+ * Provide the editor call hierarchy build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_call_hierarchy_build(
     UmiEditorSymbolHierarchy *hierarchy,
     const UmiEditorSymbolIndex *symbol_index,
@@ -26,6 +30,7 @@ UmiStatus umi_editor_call_hierarchy_build(
     UmiEditorSymbolHierarchyRule rules[2] = {0};
     UmiEditorSymbolHierarchyNodeKind node_kind;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (direction != UMI_EDITOR_CALL_HIERARCHY_INCOMING &&
         direction != UMI_EDITOR_CALL_HIERARCHY_OUTGOING) {
         return UMI_STATUS_INVALID_ARGUMENT;

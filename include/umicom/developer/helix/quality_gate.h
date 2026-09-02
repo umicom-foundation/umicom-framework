@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix quality gate data shared with callers of this public contract.
+ */
 typedef struct UmiHelixQualityGate { uint32_t structure_size; uint32_t api_version; double minimum_score; double maximum_regression; } UmiHelixQualityGate;
 /* Initialise conservative gate defaults. */
 void umi_helix_quality_gate_init(UmiHelixQualityGate *gate);

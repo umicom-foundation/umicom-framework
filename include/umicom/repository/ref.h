@@ -22,7 +22,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that repository ref satisfies its contract before another service relies on it.
+ */
 int umi_repository_ref_is_valid(const char *text);
+/**
+ * Copy repository ref into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_repository_ref_copy(
     const char *text, char *out_ref, size_t capacity);
 #ifdef __cplusplus

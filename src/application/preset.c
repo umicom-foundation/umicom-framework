@@ -192,11 +192,19 @@ static const UmiApplicationPresetDefinition PRESETS[] = {
 
 #undef ARRAY_COUNT
 
+/*
+ * Return the number of records represented by application preset catalogue without
+ * changing their state.
+ */
 size_t umi_application_preset_catalogue_count(void)
 {
     return sizeof(PRESETS) / sizeof(PRESETS[0]);
 }
 
+/*
+ * Find application preset catalogue while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationPresetDefinition *
 umi_application_preset_catalogue_at(size_t index)
 {
@@ -205,16 +213,26 @@ umi_application_preset_catalogue_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find application preset catalogue while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationPresetDefinition *
 umi_application_preset_catalogue_find(const char *preset_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preset_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_preset_catalogue_count();
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(PRESETS[index].preset_id, preset_id) == 0) {
             return &PRESETS[index];
         }
@@ -223,11 +241,19 @@ umi_application_preset_catalogue_find(const char *preset_id)
     return NULL;
 }
 
+/*
+ * Check that application preset satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_application_preset_validate(
     const UmiApplicationPresetDefinition *preset)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preset == NULL ||
         preset->structure_size != sizeof(*preset) ||
         preset->api_version != UMI_APPLICATION_PRESET_API_VERSION ||
@@ -243,12 +269,18 @@ UmiStatus umi_application_preset_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < preset->feature_pack_count; ++index) {
         const UmiApplicationFeaturePackDefinition *pack =
             umi_application_feature_pack_catalogue_find(
                 preset->feature_pack_ids[index]);
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (pack == NULL) return UMI_STATUS_NOT_FOUND;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (umi_application_feature_pack_validate(pack) != UMI_STATUS_OK) {
             return UMI_STATUS_INVALID_STATE;
         }

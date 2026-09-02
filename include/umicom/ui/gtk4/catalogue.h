@@ -22,5 +22,9 @@
 #ifndef UMICOM_UI_GTK4_CATALOGUE_H
 #define UMICOM_UI_GTK4_CATALOGUE_H
 #include "umicom/ui/components/component.h"
+/**
+ * Provide the gtk4 component is supported operation used by this module and its client
+ * applications.
+ */
 int umi_gtk4_component_is_supported(UmiUiComponentKind kind);
 #endif

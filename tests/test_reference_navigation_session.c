@@ -37,6 +37,10 @@
 
 #include "umicom/editor/reference_navigation_session.h"
 
+/*
+ * Exercise emit reference and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus emit_reference(UmiEditorNavigationResultSink sink,
                                 void *user_data,
                                 const char *uri,
@@ -61,6 +65,10 @@ static UmiStatus emit_reference(UmiEditorNavigationResultSink sink,
     return sink(&result, user_data);
 }
 
+/*
+ * Exercise fake query and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_query(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -92,6 +100,10 @@ static UmiStatus fake_query(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake preview and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_preview(
     void *instance,
     const UmiEditorNavigationPreviewRequest *request,
@@ -118,6 +130,10 @@ static UmiStatus fake_preview(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;
@@ -166,9 +182,14 @@ int main(void)
     assert(snapshot.group_count == 2U);
     assert(snapshot.result_count == 4U);
     assert(snapshot.visible_result_count == 4U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.group_count; ++index) {
         assert(umi_editor_reference_navigation_session_group_at(
                    session, index, &group) == UMI_STATUS_OK);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (strstr(group.uri, "beta.c") != NULL) beta_group = index;
     }
     assert(beta_group != SIZE_MAX);

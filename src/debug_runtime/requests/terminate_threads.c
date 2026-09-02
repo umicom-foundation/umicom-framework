@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request terminate threads operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_request_terminate_threads(
     UmiDebugRuntimeAdapter *adapter,
     const uint64_t *thread_ids,
@@ -27,6 +31,10 @@ UmiStatus umi_debug_runtime_request_terminate_threads(
     UmiLanguageRuntimeJsonWriter writer;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL ||
         (thread_count > 0U && thread_ids == NULL) ||
         thread_count > 256U) {
@@ -35,7 +43,9 @@ UmiStatus umi_debug_runtime_request_terminate_threads(
 
     umi_language_runtime_json_writer_init(&writer, arguments, sizeof(arguments));
     (void)umi_language_runtime_json_writer_raw(&writer, "{\"threadIds\":[");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < thread_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index > 0U) {
             (void)umi_language_runtime_json_writer_raw(&writer, ",");
         }
@@ -43,6 +53,7 @@ UmiStatus umi_debug_runtime_request_terminate_threads(
             &writer, thread_ids[index]);
     }
     (void)umi_language_runtime_json_writer_raw(&writer, "]}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.status != UMI_STATUS_OK) return writer.status;
 
     return umi_debug_runtime_request_raw(

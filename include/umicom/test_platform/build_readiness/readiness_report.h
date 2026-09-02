@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform build readiness report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTestPlatformBuildReadinessReport {
     size_t total_count;
     size_t ready_count;
@@ -31,6 +35,10 @@ typedef struct UmiTestPlatformBuildReadinessReport {
     bool ready_to_run;
 } UmiTestPlatformBuildReadinessReport;
 
+/**
+ * Initialise test platform build readiness report from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_test_platform_build_readiness_report_create(
     const UmiTestPlatformBuildInventory *inventory,
     UmiTestPlatformBuildReadinessReport *report);

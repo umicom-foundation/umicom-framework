@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced range mapping data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedRangeMapping {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,9 +39,25 @@ typedef struct UmiVcsAdvancedRangeMapping {
     uint32_t confidence_percent;
 } UmiVcsAdvancedRangeMapping;
 
+/**
+ * Initialise vcs advanced range mapping from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_range_mapping_init(UmiVcsAdvancedRangeMapping *value);
+/**
+ * Check that vcs advanced range mapping satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_range_mapping_validate(const UmiVcsAdvancedRangeMapping *value);
+/**
+ * Provide the vcs advanced range mapping delta operation used by this module and its
+ * client applications.
+ */
 long long umi_vcs_advanced_range_mapping_delta(const UmiVcsAdvancedRangeMapping *value);
+/**
+ * Provide the vcs advanced range mapping contains source operation used by this module and
+ * its client applications.
+ */
 int umi_vcs_advanced_range_mapping_contains_source(const UmiVcsAdvancedRangeMapping *value,
                                                      size_t line);
 

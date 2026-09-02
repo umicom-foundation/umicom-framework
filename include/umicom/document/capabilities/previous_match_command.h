@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_PREVIOUS_MATCH_COMMAND "umicom.document.navigation.previous_match_command"
 
+/**
+ * Provide the document capability previous match command operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_previous_match_command(void);
 

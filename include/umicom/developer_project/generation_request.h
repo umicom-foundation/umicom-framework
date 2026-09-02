@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project generation request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectGenerationRequest {
     char template_id[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
     char application_name[UMI_DEVELOPER_PROJECT_NAME_CAPACITY];
@@ -32,14 +36,26 @@ typedef struct UmiDeveloperProjectGenerationRequest {
     int overwrite_existing_files;
 } UmiDeveloperProjectGenerationRequest;
 
+/**
+ * Initialise developer project generation request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_project_generation_request_init(
     UmiDeveloperProjectGenerationRequest *request);
 
+/**
+ * Check that developer project generation request satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_project_generation_request_validate(
     const UmiDeveloperProjectGenerationRequest *request,
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the developer project generation request variables operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_project_generation_request_variables(
     const UmiDeveloperProjectGenerationRequest *request,
     UmiDeveloperProjectVariableSet *out_variables);

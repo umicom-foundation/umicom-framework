@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/profiles/cppvsdbg.h"
 
+/*
+ * Provide the debug runtime profile cppvsdbg operation used by this module and its client
+ * applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_cppvsdbg(void)
 {
     static const UmiDebugAdapterProfile profile = {

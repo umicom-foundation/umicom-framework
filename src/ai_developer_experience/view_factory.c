@@ -16,6 +16,7 @@
 
 #include "umicom/ai_developer_experience/view_ids.h"
 
+/* Provide the active chat operation used by this module and its client applications. */
 static UmiAiCodingToolChatSession *active_chat(
     UmiAiDeveloperExperiencePlatform *platform)
 {
@@ -25,20 +26,34 @@ static UmiAiCodingToolChatSession *active_chat(
         umi_ai_developer_experience_platform_presentation(platform);
     UmiAiCodingToolChatRegistry *chats;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tools == NULL || presentation == NULL) return NULL;
 
     chats = umi_ai_coding_tools_platform_chats(tools);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chats == NULL) return NULL;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (presentation->active_chat_id[0] != '\0') {
         UmiAiCodingToolChatSession *session =
             umi_ai_coding_tool_chat_registry_find(
                 chats,
                 presentation->active_chat_id);
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (session != NULL) return session;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (chats->count > 0U) {
         return &chats->sessions[chats->count - 1U];
     }
@@ -46,6 +61,10 @@ static UmiAiCodingToolChatSession *active_chat(
     return NULL;
 }
 
+/*
+ * Initialise ai developer view factory from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_view_factory_create(
     UmiAiDeveloperExperiencePlatform *platform,
     UmiAiDeveloperPaneKind pane,
@@ -58,6 +77,10 @@ UmiStatus umi_ai_developer_view_factory_create(
     UmiAiCodingRuntimePlatform *coding;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || out_view == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -67,6 +90,7 @@ UmiStatus umi_ai_developer_view_factory_create(
     status = umi_ai_developer_experience_platform_snapshot(
         platform,
         &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     preferences =
@@ -78,11 +102,16 @@ UmiStatus umi_ai_developer_view_factory_create(
     coding =
         umi_ai_developer_experience_platform_coding(platform);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferences == NULL || presentation == NULL ||
         tools == NULL || coding == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (pane) {
         case UMI_AI_DEVELOPER_PANE_OVERVIEW:
             return umi_ai_developer_overview_view_create(

@@ -36,6 +36,10 @@ static const UmiEditorFeatureDescriptor FEATURE = {
     .revision = 1U
 };
 
+/*
+ * Copy editor feature working into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 const UmiEditorFeatureDescriptor *umi_editor_feature_working_copy(void)
 {
     return &FEATURE;

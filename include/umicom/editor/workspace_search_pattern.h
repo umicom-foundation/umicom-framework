@@ -45,11 +45,19 @@ extern "C" {
 #define UMI_EDITOR_WORKSPACE_SEARCH_MAX_CAPTURES 9U
 #define UMI_EDITOR_WORKSPACE_SEARCH_UNBOUNDED_REPEAT UINT32_MAX
 
+/**
+ * List the named editor workspace search pattern mode values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorWorkspaceSearchPatternMode {
     UMI_EDITOR_WORKSPACE_SEARCH_PATTERN_LITERAL = 1,
     UMI_EDITOR_WORKSPACE_SEARCH_PATTERN_REGEX = 2
 } UmiEditorWorkspaceSearchPatternMode;
 
+/**
+ * List the named editor workspace search case mode values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorWorkspaceSearchCaseMode {
     UMI_EDITOR_WORKSPACE_SEARCH_CASE_INSENSITIVE = 1,
     UMI_EDITOR_WORKSPACE_SEARCH_CASE_SENSITIVE = 2,
@@ -93,6 +101,10 @@ typedef struct UmiEditorWorkspaceSearchPatternRequest {
     char expression[UMI_EDITOR_WORKSPACE_SEARCH_EXPRESSION_CAPACITY];
 } UmiEditorWorkspaceSearchPatternRequest;
 
+/**
+ * Represent the editor workspace search pattern diagnostic data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchPatternDiagnostic {
     uint32_t struct_size;
     uint32_t api_version;
@@ -101,12 +113,20 @@ typedef struct UmiEditorWorkspaceSearchPatternDiagnostic {
     char message[UMI_EDITOR_WORKSPACE_SEARCH_DIAGNOSTIC_CAPACITY];
 } UmiEditorWorkspaceSearchPatternDiagnostic;
 
+/**
+ * Represent the editor workspace search capture data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceSearchCapture {
     uint64_t start_byte_offset;
     uint64_t end_byte_offset;
     int matched;
 } UmiEditorWorkspaceSearchCapture;
 
+/**
+ * Represent the editor workspace search pattern match data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchPatternMatch {
     uint32_t struct_size;
     uint32_t api_version;
@@ -119,6 +139,10 @@ typedef struct UmiEditorWorkspaceSearchPatternMatch {
     int empty;
 } UmiEditorWorkspaceSearchPatternMatch;
 
+/**
+ * Represent the editor workspace search pattern snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchPatternSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -135,23 +159,47 @@ typedef struct UmiEditorWorkspaceSearchPatternSnapshot {
     int compiled;
 } UmiEditorWorkspaceSearchPatternSnapshot;
 
+/**
+ * Represent the editor workspace search pattern data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceSearchPattern
     UmiEditorWorkspaceSearchPattern;
 
+/**
+ * Initialise editor workspace search pattern request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_editor_workspace_search_pattern_request_init(
     UmiEditorWorkspaceSearchPatternRequest *request,
     const char *expression);
 
+/**
+ * Initialise editor workspace search pattern from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_pattern_create(
     UmiEditorWorkspaceSearchPattern **out_pattern);
+/**
+ * Release or reset state held by editor workspace search pattern so the same storage can
+ * be reused safely.
+ */
 void umi_editor_workspace_search_pattern_destroy(
     UmiEditorWorkspaceSearchPattern *pattern);
 
+/**
+ * Provide the editor workspace search pattern compile operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_pattern_compile(
     UmiEditorWorkspaceSearchPattern *pattern,
     const UmiEditorWorkspaceSearchPatternRequest *request,
     UmiEditorWorkspaceSearchPatternDiagnostic *out_diagnostic);
 
+/**
+ * Release or reset state held by editor workspace search pattern so the same storage can
+ * be reused safely.
+ */
 UmiStatus umi_editor_workspace_search_pattern_reset(
     UmiEditorWorkspaceSearchPattern *pattern);
 
@@ -172,10 +220,18 @@ UmiStatus umi_editor_workspace_search_pattern_find(
     size_t start_byte_offset,
     UmiEditorWorkspaceSearchPatternMatch *out_match);
 
+/**
+ * Provide the editor workspace search pattern snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_pattern_snapshot(
     const UmiEditorWorkspaceSearchPattern *pattern,
     UmiEditorWorkspaceSearchPatternSnapshot *out_snapshot);
 
+/**
+ * Provide the editor workspace search pattern revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_editor_workspace_search_pattern_revision(
     const UmiEditorWorkspaceSearchPattern *pattern);
 

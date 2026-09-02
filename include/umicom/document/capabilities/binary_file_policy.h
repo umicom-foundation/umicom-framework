@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_BINARY_FILE_POLICY "umicom.document.security.binary_file_policy"
 
+/**
+ * Provide the document capability binary file policy operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_binary_file_policy(void);
 

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 #include "umicom/ui/mosaic/layout_command_set.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiUiMosaicLayoutCommandSet value;
     umi_ui_mosaic_layout_command_set_init(&value);

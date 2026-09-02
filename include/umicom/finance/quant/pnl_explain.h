@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant pnl explain data shared with callers of this public contract.
+ */
 typedef struct UmiQuantPnlExplain {
     double market_pnl;
     double carry_pnl;

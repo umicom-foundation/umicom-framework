@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/outline.h"
 
+/*
+ * Provide the ide surface profile outline operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_outline(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

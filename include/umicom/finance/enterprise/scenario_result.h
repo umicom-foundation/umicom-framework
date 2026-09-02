@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise scenario result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseScenarioResult { char scenario_id[UMI_ENTERPRISE_ID_CAPACITY]; char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; double pnl; double loss; } UmiEnterpriseScenarioResult;
 /* Initialise a scenario result and derive loss as max(-PnL,0). */
 UmiStatus umi_enterprise_scenario_result_init(UmiEnterpriseScenarioResult *result,const char *scenario_id,const char *portfolio_id,double pnl);

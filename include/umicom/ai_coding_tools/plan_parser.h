@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Read ai coding tool plan into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_ai_coding_tool_plan_parse(
     const char *text,
     uint64_t first_call_id,

@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design menu spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignMenuSpec {
     uint16_t max_visible_items;
     int searchable;

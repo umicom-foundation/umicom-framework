@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai developer restore report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperRestoreReport {
     uint32_t schema_version;
     size_t chat_sessions;
@@ -32,6 +36,10 @@ typedef struct UmiAiDeveloperRestoreReport {
     UmiStatus status;
 } UmiAiDeveloperRestoreReport;
 
+/**
+ * Initialise ai developer restore report from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_developer_restore_report_init(
     UmiAiDeveloperRestoreReport *report);
 

@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/runtime_bundle.h"
 #include "umicom/delivery/dependency_scan.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiRuntimeBundle bundle;
     UmiDependencyScan scan;

@@ -19,10 +19,35 @@
 
 
 struct UmiUiNotificationCentre { UmiUiNotification items[UMI_UI_NOTIFICATION_MAX]; size_t count; uint64_t next_id; UmiMutex *mutex; };
-UmiStatus umi_ui_notification_centre_create(UmiUiNotificationCentre **out){UmiUiNotificationCentre *c;UmiStatus s;if(out==NULL)return UMI_STATUS_INVALID_ARGUMENT;*out=NULL;c=calloc(1U,sizeof(*c));if(c==NULL)return UMI_STATUS_OUT_OF_MEMORY;s=umi_mutex_create(&c->mutex);if(s!=UMI_STATUS_OK){free(c);return s;}c->next_id=1U;*out=c;return UMI_STATUS_OK;}
-void umi_ui_notification_centre_destroy(UmiUiNotificationCentre *c){if(c==NULL)return;umi_mutex_destroy(c->mutex);free(c);}
-UmiStatus umi_ui_notification_publish(UmiUiNotificationCentre *c,const UmiUiNotification *n,uint64_t *out_id){UmiUiNotification stored;if(c==NULL||n==NULL||n->title[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(c->mutex);if(c->count>=UMI_UI_NOTIFICATION_MAX){(void)memmove(&c->items[0],&c->items[1],(UMI_UI_NOTIFICATION_MAX-1U)*sizeof(c->items[0]));c->count=UMI_UI_NOTIFICATION_MAX-1U;}stored=*n;stored.notification_id=c->next_id++;stored.dismissed=0;c->items[c->count++]=stored;if(out_id!=NULL)*out_id=stored.notification_id;(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_OK;}
-UmiStatus umi_ui_notification_dismiss(UmiUiNotificationCentre *c,uint64_t id){size_t i;if(c==NULL||id==0U)return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(c->mutex);for(i=0U;i<c->count;++i)if(c->items[i].notification_id==id){c->items[i].dismissed=1;(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_OK;}(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_NOT_FOUND;}
-UmiStatus umi_ui_notification_at(const UmiUiNotificationCentre *c,size_t index,UmiUiNotification *out){if(c==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(c->mutex);if(index>=c->count){(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_NOT_FOUND;}*out=c->items[index];(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_OK;}
-size_t umi_ui_notification_count(const UmiUiNotificationCentre *c,int include){size_t i,n=0U;if(c==NULL)return 0U;(void)umi_mutex_lock(c->mutex);for(i=0U;i<c->count;++i)if(include||!c->items[i].dismissed)n++;(void)umi_mutex_unlock(c->mutex);return n;}
-void umi_ui_notification_clear(UmiUiNotificationCentre *c){if(c==NULL)return;(void)umi_mutex_lock(c->mutex);c->count=0U;(void)umi_mutex_unlock(c->mutex);}
+/*
+ * Initialise ui notification centre from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_ui_notification_centre_create(UmiUiNotificationCentre **out){UmiUiNotificationCentre *c;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(out==NULL)return UMI_STATUS_INVALID_ARGUMENT;*out=NULL;c=calloc(1U,sizeof(*c));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL)return UMI_STATUS_OUT_OF_MEMORY;s=umi_mutex_create(&c->mutex);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK){free(c);return s;}c->next_id=1U;*out=c;return UMI_STATUS_OK;}
+/*
+ * Release or reset state held by ui notification centre so the same storage can be reused
+ * safely.
+ */
+void umi_ui_notification_centre_destroy(UmiUiNotificationCentre *c){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL)return;umi_mutex_destroy(c->mutex);free(c);}
+/*
+ * Provide the ui notification publish operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_ui_notification_publish(UmiUiNotificationCentre *c,const UmiUiNotification *n,uint64_t *out_id){UmiUiNotification stored;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||n==NULL||n->title[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(c->mutex);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c->count>=UMI_UI_NOTIFICATION_MAX){(void)memmove(&c->items[0],&c->items[1],(UMI_UI_NOTIFICATION_MAX-1U)*sizeof(c->items[0]));c->count=UMI_UI_NOTIFICATION_MAX-1U;}stored=*n;stored.notification_id=c->next_id++;stored.dismissed=0;c->items[c->count++]=stored;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(out_id!=NULL)*out_id=stored.notification_id;(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_OK;}
+/*
+ * Provide the ui notification dismiss operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_ui_notification_dismiss(UmiUiNotificationCentre *c,uint64_t id){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||id==0U)return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(c->mutex);/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<c->count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c->items[i].notification_id==id){c->items[i].dismissed=1;(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_OK;}(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_NOT_FOUND;}
+/*
+ * Find ui notification while leaving the underlying catalogue or model owned by this
+ * module.
+ */
+UmiStatus umi_ui_notification_at(const UmiUiNotificationCentre *c,size_t index,UmiUiNotification *out){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(c->mutex);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(index>=c->count){(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_NOT_FOUND;}*out=c->items[index];(void)umi_mutex_unlock(c->mutex);return UMI_STATUS_OK;}
+/*
+ * Return the number of records represented by ui notification without changing their
+ * state.
+ */
+size_t umi_ui_notification_count(const UmiUiNotificationCentre *c,int include){size_t i,n=0U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL)return 0U;(void)umi_mutex_lock(c->mutex);/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<c->count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(include||!c->items[i].dismissed)n++;(void)umi_mutex_unlock(c->mutex);return n;}
+/* Release or reset state held by ui notification so the same storage can be reused safely. */
+void umi_ui_notification_clear(UmiUiNotificationCentre *c){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL)return;(void)umi_mutex_lock(c->mutex);c->count=0U;(void)umi_mutex_unlock(c->mutex);}

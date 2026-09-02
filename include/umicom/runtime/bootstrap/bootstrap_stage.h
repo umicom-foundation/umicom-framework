@@ -22,9 +22,17 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap stage from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_bootstrap_stage_init(UmiBootstrapStage *stage,
                                    const char *stage_id,
                                    int32_t order);
+/**
+ * Provide the bootstrap stage transition operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_stage_transition(UmiBootstrapStage *stage,
                                          UmiBootstrapStageState next_state);
 

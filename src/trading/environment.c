@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/environment.h"
+/*
+ * Provide the trading environment allows live execution operation used by this module and
+ * its client applications.
+ */
 int umi_trading_environment_allows_live_execution(UmiTradingEnvironment env,int armed){return env!=UMI_TRADING_LIVE||armed!=0;}

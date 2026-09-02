@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws status item data shared with callers of this public contract.
+ */
 typedef struct UmiWsStatusItem {
     char item_id[UMI_UI_ID_CAPACITY];
     char text[UMI_UI_TEXT_CAPACITY];
@@ -31,17 +34,32 @@ typedef struct UmiWsStatusItem {
     bool align_right;
 } UmiWsStatusItem;
 
+/**
+ * Represent the ws status strip data shared with callers of this public contract.
+ */
 typedef struct UmiWsStatusStrip {
     UmiWsStatusItem items[UMI_WS_MAX_STATUS_ITEMS];
     size_t count;
 } UmiWsStatusStrip;
 
+/**
+ * Initialise ws status strip from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ws_status_strip_init(UmiWsStatusStrip *strip);
+/**
+ * Copy ws status strip into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_ws_status_strip_set(UmiWsStatusStrip *strip,
                                   const char *item_id,
                                   const char *text,
                                   UmiUiSeverity severity,
                                   bool align_right);
+/**
+ * Find ws status strip while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiWsStatusItem *umi_ws_status_strip_find(const UmiWsStatusStrip *strip, const char *item_id);
 
 #ifdef __cplusplus

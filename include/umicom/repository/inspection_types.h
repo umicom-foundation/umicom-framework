@@ -45,12 +45,20 @@ typedef UmiRepositoryDoctorSeverity UmiRepositoryInspectionSeverity;
 #define UMI_REPOSITORY_INSPECTION_WARNING UMI_REPOSITORY_DOCTOR_WARNING
 #define UMI_REPOSITORY_INSPECTION_ERROR UMI_REPOSITORY_DOCTOR_ERROR
 
+/**
+ * Represent the repository inspection context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryInspectionContext {
     const char *git_program;
     const char *repository_root;
     uint32_t timeout_ms;
 } UmiRepositoryInspectionContext;
 
+/**
+ * Represent the repository inspection identity data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryInspectionIdentity {
     char root[UMI_REPOSITORY_INSPECTION_TEXT_CAPACITY];
     char head[128];
@@ -60,6 +68,10 @@ typedef struct UmiRepositoryInspectionIdentity {
     int shallow;
 } UmiRepositoryInspectionIdentity;
 
+/**
+ * Represent the repository inspection snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryInspectionSnapshot {
     UmiRepositoryStatusSummary maintenance;
     UmiRepositoryInspectionIdentity identity;

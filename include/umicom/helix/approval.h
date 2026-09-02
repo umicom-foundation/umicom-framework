@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix approval data shared with callers of this public contract.
+ */
 typedef struct UmiHelixApproval {
     char candidate_id[UMI_HELIX_ID_CAPACITY];
     char approver[UMI_HELIX_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixApproval {
     char reason[UMI_HELIX_TEXT_CAPACITY];
 } UmiHelixApproval;
 
+/**
+ * Initialise helix approval from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_approval_init(UmiHelixApproval *value);
 
 #ifdef __cplusplus

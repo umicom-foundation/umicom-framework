@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_health.h"
-int main(void) { if(umi_terminal_remote_terminal_health_evaluate(0U,10U,100U)!=UMI_TERMINAL_REMOTE_HEALTH_HEALTHY) return 1; if(umi_terminal_remote_terminal_health_evaluate(1U,10U,100U)!=UMI_TERMINAL_REMOTE_HEALTH_WARNING) return 2; return umi_terminal_remote_terminal_health_evaluate(3U,1U,100U)==UMI_TERMINAL_REMOTE_HEALTH_CRITICAL?0:3; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_terminal_health_evaluate(0U,10U,100U)!=UMI_TERMINAL_REMOTE_HEALTH_HEALTHY) return 1; /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_terminal_health_evaluate(1U,10U,100U)!=UMI_TERMINAL_REMOTE_HEALTH_WARNING) return 2; return umi_terminal_remote_terminal_health_evaluate(3U,1U,100U)==UMI_TERMINAL_REMOTE_HEALTH_CRITICAL?0:3; }

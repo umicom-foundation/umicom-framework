@@ -34,13 +34,22 @@ static const UmiUiWorkspaceWindow *find_window_with_flag(
         umi_ui_workspace_customisation_active_const(customisation);
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || experience == NULL) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->window_count; ++index) {
         const UmiExperiencePanelDefinition *panel =
             umi_application_experience_panel_find(
                 experience, layout->windows[index].tool_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (panel != NULL && (panel->flags & flag) != 0U) {
             return &layout->windows[index];
         }
@@ -48,6 +57,10 @@ static const UmiUiWorkspaceWindow *find_window_with_flag(
     return NULL;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiWorkspaceCustomisation *customisation =
@@ -55,6 +68,10 @@ int main(void)
     size_t index;
 
     assert(customisation != NULL);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (customisation == NULL) {
         return 1;
     }

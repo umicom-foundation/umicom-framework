@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/path_traversal_policy.h"
 
+/*
+ * Provide the document capability path traversal policy operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_path_traversal_policy(void)
 {

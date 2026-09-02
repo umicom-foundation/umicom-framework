@@ -24,6 +24,14 @@
 #include <gtk/gtk.h>
 #include "umicom/base/status.h"
 #include "umicom/ui/components/component.h"
+/**
+ * Initialise gtk4 component from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_component_create(const UmiUiComponentSpec *spec);
+/**
+ * Provide the gtk4 component apply common operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_component_apply_common(GtkWidget *widget,const UmiUiComponentSpec *spec);
 #endif

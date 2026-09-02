@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DOCUMENT_HISTORY "umicom.document.navigation.document_history"
 
+/**
+ * Provide the document capability document history operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_history(void);
 

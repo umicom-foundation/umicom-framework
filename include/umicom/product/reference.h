@@ -24,10 +24,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the reference product studio operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_studio(void);
+/**
+ * Provide the reference product designer operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_designer(void);
+/**
+ * Provide the reference product trader operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_trader(void);
+/**
+ * Provide the reference product tms operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_tms(void);
+/**
+ * Provide the reference product media studio operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_media_studio(void);
 #ifdef __cplusplus
 }

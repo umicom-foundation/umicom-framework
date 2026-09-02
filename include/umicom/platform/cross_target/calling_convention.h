@@ -31,7 +31,15 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/abi_descriptor.h"
+/**
+ * Provide the ct calling convention default operation used by this module and its client
+ * applications.
+ */
 UmiCtCallingConvention umi_ct_calling_convention_default(UmiCtArchitecture architecture,UmiCtOperatingSystem os);
+/**
+ * Provide the ct calling convention text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ct_calling_convention_text(UmiCtCallingConvention convention);
 
 #ifdef __cplusplus

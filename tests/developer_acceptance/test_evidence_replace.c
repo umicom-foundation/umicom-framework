@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer/acceptance/evidence.h"
+/*
+ * Exercise test developer acceptance evidence replace and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_developer_acceptance_evidence_replace(void)
 {
     UmiDeveloperAcceptanceEvidenceStore store;

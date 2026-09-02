@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime activation rule data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeActivationRule {
     const char *command_pattern;
     UmiStudioRuntimeSurfaceKind surface;
@@ -34,15 +38,27 @@ typedef struct UmiStudioRuntimeActivationRule {
     int focus;
 } UmiStudioRuntimeActivationRule;
 
+/**
+ * Represent the studio runtime activation profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeActivationProfile {
     const char *profile_id;
     const UmiStudioRuntimeActivationRule *rules;
     size_t rule_count;
 } UmiStudioRuntimeActivationProfile;
 
+/**
+ * Check that studio activation rule satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_studio_activation_rule_validate(
     const UmiStudioRuntimeActivationRule *rule);
 
+/**
+ * Provide the studio activation rule matches operation used by this module and its client
+ * applications.
+ */
 int umi_studio_activation_rule_matches(
     const UmiStudioRuntimeActivationRule *rule,
     const char *command_id);

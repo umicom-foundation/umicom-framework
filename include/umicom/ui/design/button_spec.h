@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design button spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignButtonSpec {
     char label[UMI_DESIGN_TEXT_CAPACITY];
     UmiDesignSemanticRole role;

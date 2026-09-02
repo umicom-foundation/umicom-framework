@@ -18,4 +18,8 @@
  */
 #include "umicom/product/descriptor.h"
 #include <stddef.h>
-UmiStatus umi_product_descriptor_validate(const UmiProductDescriptor *d){if(d==NULL||d->product_id==NULL||d->product_id[0]=='\0'||d->kind<UMI_PRODUCT_DEVELOPMENT||d->kind>UMI_PRODUCT_GENERAL)return UMI_STATUS_INVALID_ARGUMENT;return umi_product_branding_validate(&d->branding);}
+/*
+ * Check that product descriptor satisfies its contract before another service relies on
+ * it.
+ */
+UmiStatus umi_product_descriptor_validate(const UmiProductDescriptor *d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||d->product_id==NULL||d->product_id[0]=='\0'||d->kind<UMI_PRODUCT_DEVELOPMENT||d->kind>UMI_PRODUCT_GENERAL)return UMI_STATUS_INVALID_ARGUMENT;return umi_product_branding_validate(&d->branding);}

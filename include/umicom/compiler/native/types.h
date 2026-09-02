@@ -37,20 +37,63 @@ extern "C" {
 #define UMI_NC_MAX_MACHINE_INSTRUCTIONS 64U
 #define UMI_NC_MAX_MACHINE_BLOCKS 32U
 
+/**
+ * List the named native token kind values accepted by this public contract.
+ */
 typedef enum UmiNativeTokenKind { UMI_NC_TOKEN_EOF=0, UMI_NC_TOKEN_IDENTIFIER=1, UMI_NC_TOKEN_KEYWORD=2, UMI_NC_TOKEN_NUMBER=3, UMI_NC_TOKEN_STRING=4, UMI_NC_TOKEN_CHARACTER=5, UMI_NC_TOKEN_PUNCTUATION=6, UMI_NC_TOKEN_COMMENT=7, UMI_NC_TOKEN_ERROR=8 } UmiNativeTokenKind;
+/**
+ * List the named native ast kind values accepted by this public contract.
+ */
 typedef enum UmiNativeAstKind { UMI_NC_AST_INVALID=0, UMI_NC_AST_TRANSLATION_UNIT=1, UMI_NC_AST_FUNCTION=2, UMI_NC_AST_DECLARATION=3, UMI_NC_AST_COMPOUND=4, UMI_NC_AST_RETURN=5, UMI_NC_AST_BINARY=6, UMI_NC_AST_UNARY=7, UMI_NC_AST_CALL=8, UMI_NC_AST_IDENTIFIER=9, UMI_NC_AST_LITERAL=10 } UmiNativeAstKind;
+/**
+ * List the named native type kind values accepted by this public contract.
+ */
 typedef enum UmiNativeTypeKind { UMI_NC_TYPE_INVALID=0, UMI_NC_TYPE_VOID=1, UMI_NC_TYPE_BOOL=2, UMI_NC_TYPE_CHAR=3, UMI_NC_TYPE_INT=4, UMI_NC_TYPE_UINT=5, UMI_NC_TYPE_LONG=6, UMI_NC_TYPE_ULONG=7, UMI_NC_TYPE_FLOAT=8, UMI_NC_TYPE_DOUBLE=9, UMI_NC_TYPE_POINTER=10, UMI_NC_TYPE_ARRAY=11, UMI_NC_TYPE_FUNCTION=12, UMI_NC_TYPE_STRUCT=13, UMI_NC_TYPE_UNION=14, UMI_NC_TYPE_ENUM=15 } UmiNativeTypeKind;
+/**
+ * List the named native ir type kind values accepted by this public contract.
+ */
 typedef enum UmiNativeIrTypeKind { UMI_NC_IR_VOID=0, UMI_NC_IR_I1=1, UMI_NC_IR_I8=2, UMI_NC_IR_I16=3, UMI_NC_IR_I32=4, UMI_NC_IR_I64=5, UMI_NC_IR_F32=6, UMI_NC_IR_F64=7, UMI_NC_IR_PTR=8 } UmiNativeIrTypeKind;
+/**
+ * List the named native ir opcode values accepted by this public contract.
+ */
 typedef enum UmiNativeIrOpcode { UMI_NC_IR_NOP=0, UMI_NC_IR_CONST=1, UMI_NC_IR_ADD=2, UMI_NC_IR_SUB=3, UMI_NC_IR_MUL=4, UMI_NC_IR_DIV=5, UMI_NC_IR_MOD=6, UMI_NC_IR_AND=7, UMI_NC_IR_OR=8, UMI_NC_IR_XOR=9, UMI_NC_IR_SHL=10, UMI_NC_IR_SHR=11, UMI_NC_IR_CMP_EQ=12, UMI_NC_IR_CMP_NE=13, UMI_NC_IR_CMP_LT=14, UMI_NC_IR_CMP_LE=15, UMI_NC_IR_CMP_GT=16, UMI_NC_IR_CMP_GE=17, UMI_NC_IR_LOAD=18, UMI_NC_IR_STORE=19, UMI_NC_IR_ALLOCA=20, UMI_NC_IR_PHI=21, UMI_NC_IR_CALL=22, UMI_NC_IR_BR=23, UMI_NC_IR_CBR=24, UMI_NC_IR_RET=25, UMI_NC_IR_COPY=26 } UmiNativeIrOpcode;
+/**
+ * List the named native machine arch values accepted by this public contract.
+ */
 typedef enum UmiNativeMachineArch { UMI_NC_ARCH_UNKNOWN=0, UMI_NC_ARCH_X86_64=1, UMI_NC_ARCH_RISCV64=2 } UmiNativeMachineArch;
+/**
+ * List the named native object format values accepted by this public contract.
+ */
 typedef enum UmiNativeObjectFormat { UMI_NC_OBJECT_UNKNOWN=0, UMI_NC_OBJECT_ELF=1, UMI_NC_OBJECT_COFF=2, UMI_NC_OBJECT_MACHO=3 } UmiNativeObjectFormat;
+/**
+ * List the named native compile stage values accepted by this public contract.
+ */
 typedef enum UmiNativeCompileStage { UMI_NC_STAGE_SOURCE=0, UMI_NC_STAGE_LEX=1, UMI_NC_STAGE_PREPROCESS=2, UMI_NC_STAGE_PARSE=3, UMI_NC_STAGE_SEMANTIC=4, UMI_NC_STAGE_IR=5, UMI_NC_STAGE_OPTIMIZE=6, UMI_NC_STAGE_SELECT=7, UMI_NC_STAGE_ASSEMBLY=8, UMI_NC_STAGE_OBJECT=9, UMI_NC_STAGE_LINK=10, UMI_NC_STAGE_COMPLETE=11 } UmiNativeCompileStage;
 
+/**
+ * Represent the native source span data shared with callers of this public contract.
+ */
 typedef struct UmiNativeSourceSpan { uint32_t file_id; size_t offset; size_t length; uint32_t line; uint32_t column; } UmiNativeSourceSpan;
+/**
+ * Provide the nc copy text operation used by this module and its client applications.
+ */
 UmiStatus umi_nc_copy_text(char *destination,size_t capacity,const char *source);
+/**
+ * Provide the nc hash bytes operation used by this module and its client applications.
+ */
 uint64_t umi_nc_hash_bytes(const void *data,size_t size);
+/**
+ * Provide the nc hash text operation used by this module and its client applications.
+ */
 uint64_t umi_nc_hash_text(const char *text);
+/**
+ * Provide the nc token kind name operation used by this module and its client
+ * applications.
+ */
 const char *umi_nc_token_kind_name(UmiNativeTokenKind kind);
+/**
+ * Provide the nc stage name operation used by this module and its client applications.
+ */
 const char *umi_nc_stage_name(UmiNativeCompileStage stage);
 #ifdef __cplusplus
 }

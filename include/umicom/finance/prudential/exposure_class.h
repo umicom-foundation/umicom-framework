@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential exposure class data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialExposureClass { char exposure_class_id[UMI_PRU_ID_CAPACITY]; double risk_weight; } UmiPrudentialExposureClass;
 /* Initialise a bounded risk-weight rule. */
 UmiStatus umi_pru_exposure_class_init(UmiPrudentialExposureClass *rule, const char *exposure_class_id, double risk_weight);

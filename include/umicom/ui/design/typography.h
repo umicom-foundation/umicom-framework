@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design typography data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTypography { char family[UMI_DESIGN_NAME_CAPACITY]; double size; uint16_t weight; double line_height; double letter_spacing; } UmiDesignTypography;
 
 /* Initialise a typography specification with bounded family text and validated metrics. */

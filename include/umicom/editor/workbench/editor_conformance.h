@@ -24,8 +24,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor conformance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbEditorConformance { bool split_groups; bool navigation; bool search; bool multi_cursor; bool accessibility; bool session_restore; } UmiEditorWbEditorConformance;
+/**
+ * Return the number of records represented by editor wb editor conformance pass without
+ * changing their state.
+ */
 size_t umi_editor_wb_editor_conformance_pass_count(const UmiEditorWbEditorConformance *state);
+/**
+ * Provide the editor wb editor conformance ready operation used by this module and its
+ * client applications.
+ */
 int umi_editor_wb_editor_conformance_ready(const UmiEditorWbEditorConformance *state);
 
 #ifdef __cplusplus

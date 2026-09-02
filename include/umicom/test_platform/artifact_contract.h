@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named test platform artifact kind values accepted by this public contract.
+ */
 typedef enum UmiTestPlatformArtifactKind {
     UMI_TEST_PLATFORM_ARTIFACT_GENERIC = 0,
     UMI_TEST_PLATFORM_ARTIFACT_FAILURE = 1,
@@ -34,6 +37,10 @@ typedef enum UmiTestPlatformArtifactKind {
     UMI_TEST_PLATFORM_ARTIFACT_BENCHMARK = 4
 } UmiTestPlatformArtifactKind;
 
+/**
+ * Represent the test platform artifact contract data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformArtifactContract {
     /* Producer and format identify tools without linking Framework to them. */
     UmiTestPlatformArtifactKind kind;
@@ -47,14 +54,26 @@ typedef struct UmiTestPlatformArtifactContract {
     uint64_t size_bytes;
 } UmiTestPlatformArtifactContract;
 
+/**
+ * Provide the test platform artifact kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_test_platform_artifact_kind_text(
     UmiTestPlatformArtifactKind kind
 );
+/**
+ * Check that test platform artifact satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_test_platform_artifact_validate(
     const UmiTestPlatformArtifactContract *contract,
     char *out_message,
     size_t capacity
 );
+/**
+ * Provide the test platform artifact to attachment operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_artifact_to_attachment(
     const UmiTestPlatformArtifactContract *contract,
     const char *attachment_id,

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading margin profile data shared with callers of this public contract.
+ */
 typedef struct UmiTradingMarginProfile { uint32_t initial_margin_bps; uint32_t maintenance_margin_bps; uint32_t concentration_addon_bps; } UmiTradingMarginProfile;
 /* Initialise and validate define conservative initial and maintenance margin ratios in basis points. */
 UmiStatus umi_trading_margin_profile_init(UmiTradingMarginProfile *value,uint32_t initial_margin_bps, uint32_t maintenance_margin_bps, uint32_t concentration_addon_bps);

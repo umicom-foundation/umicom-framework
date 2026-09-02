@@ -20,17 +20,26 @@
 #include "umicom/delivery/audit.h"
 #include "delivery_internal.h"
 #include <string.h>
+/*
+ * Initialise delivery audit event from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_delivery_audit_event_init(UmiDeliveryAuditEvent *event,
                                         const char *event_id,
                                         const char *actor_id,
                                         UmiDeliveryStage stage,
                                         const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL || event_id == NULL || actor_id == NULL || message == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(event, 0, sizeof(*event));
     event->stage = stage;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_delivery_copy_text(event->event_id, sizeof(event->event_id), event_id) != UMI_STATUS_OK ||
         umi_delivery_copy_text(event->actor_id, sizeof(event->actor_id), actor_id) != UMI_STATUS_OK ||
         umi_delivery_copy_text(event->message, sizeof(event->message), message) != UMI_STATUS_OK) {

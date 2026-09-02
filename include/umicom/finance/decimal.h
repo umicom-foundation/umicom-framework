@@ -24,6 +24,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the decimal rescale operation used by this module and its client applications.
+ */
 UmiStatus umi_decimal_rescale(UmiDecimal value, uint8_t target_scale, UmiDecimal *out);
 #ifdef __cplusplus
 }

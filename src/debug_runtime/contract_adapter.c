@@ -33,6 +33,7 @@ struct UmiDebugRuntimeContractAdapter {
     uint64_t active_dap_sequence;
 };
 
+/* Provide the copy bounded operation used by this module and its client applications. */
 static void copy_bounded(
     char *destination,
     size_t capacity,
@@ -40,23 +41,38 @@ static void copy_bounded(
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(destination, source, length);
     }
     destination[length] = '\0';
 }
 
+/* Provide the parse u64 operation used by this module and its client applications. */
 static uint64_t parse_u64(const char *text)
 {
     char *end = NULL;
     unsigned long long value;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || text[0] == '\0') return 0U;
     value = strtoull(text, &end, 0);
     return end != text && *end == '\0'
@@ -64,8 +80,10 @@ static uint64_t parse_u64(const char *text)
         : 0U;
 }
 
+/* Provide the operation command operation used by this module and its client applications. */
 static const char *operation_command(UmiDebugAdapterOperation operation)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (operation) {
         case UMI_DEBUG_ADAPTER_INITIALIZE: return "initialize";
         case UMI_DEBUG_ADAPTER_LAUNCH: return "launch";
@@ -106,6 +124,10 @@ static const char *operation_command(UmiDebugAdapterOperation operation)
     }
 }
 
+/*
+ * Provide the request payload json operation used by this module and its client
+ * applications.
+ */
 static UmiStatus request_payload_json(
     const UmiDebugAdapterRequest *request,
     char *out_json,
@@ -115,7 +137,9 @@ static UmiStatus request_payload_json(
     UmiLanguageRuntimeJsonWriter writer;
     uint64_t id;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->payload_length > 0U) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (request->payload_length + 1U > capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -128,6 +152,7 @@ static UmiStatus request_payload_json(
 
     *out_arguments = NULL;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (request->operation) {
         case UMI_DEBUG_ADAPTER_CONTINUE:
         case UMI_DEBUG_ADAPTER_PAUSE:
@@ -138,12 +163,14 @@ static UmiStatus request_payload_json(
         case UMI_DEBUG_ADAPTER_REVERSE_CONTINUE:
         case UMI_DEBUG_ADAPTER_STACK_TRACE:
             id = parse_u64(request->thread_id);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
             umi_language_runtime_json_writer_init(
                 &writer, out_json, capacity);
             (void)umi_language_runtime_json_writer_raw(
                 &writer, "{\"threadId\":");
             (void)umi_language_runtime_json_writer_uint64(&writer, id);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (request->operation == UMI_DEBUG_ADAPTER_STACK_TRACE &&
                 request->count > 0U) {
                 (void)umi_language_runtime_json_writer_raw(
@@ -152,6 +179,7 @@ static UmiStatus request_payload_json(
                     &writer, request->count);
             }
             (void)umi_language_runtime_json_writer_raw(&writer, "}");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (writer.status != UMI_STATUS_OK) return writer.status;
             *out_arguments = out_json;
             return UMI_STATUS_OK;
@@ -159,6 +187,7 @@ static UmiStatus request_payload_json(
         case UMI_DEBUG_ADAPTER_SCOPES:
         case UMI_DEBUG_ADAPTER_RESTART_FRAME:
             id = parse_u64(request->frame_id);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
             umi_language_runtime_json_writer_init(
                 &writer, out_json, capacity);
@@ -166,12 +195,14 @@ static UmiStatus request_payload_json(
                 &writer, "{\"frameId\":");
             (void)umi_language_runtime_json_writer_uint64(&writer, id);
             (void)umi_language_runtime_json_writer_raw(&writer, "}");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (writer.status != UMI_STATUS_OK) return writer.status;
             *out_arguments = out_json;
             return UMI_STATUS_OK;
 
         case UMI_DEBUG_ADAPTER_VARIABLES:
             id = parse_u64(request->reference);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
             umi_language_runtime_json_writer_init(
                 &writer, out_json, capacity);
@@ -179,11 +210,13 @@ static UmiStatus request_payload_json(
                 &writer, "{\"variablesReference\":");
             (void)umi_language_runtime_json_writer_uint64(&writer, id);
             (void)umi_language_runtime_json_writer_raw(&writer, "}");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (writer.status != UMI_STATUS_OK) return writer.status;
             *out_arguments = out_json;
             return UMI_STATUS_OK;
 
         case UMI_DEBUG_ADAPTER_EVALUATE:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (request->expression[0] == '\0') {
                 return UMI_STATUS_INVALID_ARGUMENT;
             }
@@ -194,6 +227,7 @@ static UmiStatus request_payload_json(
             (void)umi_language_runtime_json_writer_string(
                 &writer, request->expression);
             id = parse_u64(request->frame_id);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (id != 0U) {
                 (void)umi_language_runtime_json_writer_raw(
                     &writer, ",\"frameId\":");
@@ -201,12 +235,14 @@ static UmiStatus request_payload_json(
             }
             (void)umi_language_runtime_json_writer_raw(
                 &writer, ",\"context\":\"watch\"}");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (writer.status != UMI_STATUS_OK) return writer.status;
             *out_arguments = out_json;
             return UMI_STATUS_OK;
 
         case UMI_DEBUG_ADAPTER_READ_MEMORY:
         case UMI_DEBUG_ADAPTER_DISASSEMBLE:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (request->reference[0] == '\0') {
                 return UMI_STATUS_INVALID_ARGUMENT;
             }
@@ -221,12 +257,13 @@ static UmiStatus request_payload_json(
             (void)umi_language_runtime_json_writer_int64(
                 &writer, request->offset);
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (request->operation == UMI_DEBUG_ADAPTER_READ_MEMORY) {
                 (void)umi_language_runtime_json_writer_raw(
                     &writer, ",\"count\":");
                 (void)umi_language_runtime_json_writer_uint64(
                     &writer, request->count);
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 (void)umi_language_runtime_json_writer_raw(
                     &writer, ",\"instructionCount\":");
                 (void)umi_language_runtime_json_writer_uint64(
@@ -236,6 +273,7 @@ static UmiStatus request_payload_json(
             }
 
             (void)umi_language_runtime_json_writer_raw(&writer, "}");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (writer.status != UMI_STATUS_OK) return writer.status;
             *out_arguments = out_json;
             return UMI_STATUS_OK;
@@ -256,6 +294,7 @@ static UmiStatus request_payload_json(
     }
 }
 
+/* Provide the contract invoke operation used by this module and its client applications. */
 static UmiStatus contract_invoke(
     void *instance,
     const UmiDebugAdapterRequest *request,
@@ -271,10 +310,18 @@ static UmiStatus contract_invoke(
     UmiStatus status;
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL || request == NULL || out_response == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cancellation != NULL &&
         cancellation->is_cancelled != NULL &&
         cancellation->is_cancelled(cancellation->user_data)) {
@@ -282,6 +329,7 @@ static UmiStatus contract_invoke(
     }
 
     command = operation_command(request->operation);
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL) return UMI_STATUS_NOT_IMPLEMENTED;
 
     status = request_payload_json(
@@ -289,6 +337,7 @@ static UmiStatus contract_invoke(
         arguments,
         sizeof(arguments),
         &arguments_json);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     {
@@ -301,6 +350,7 @@ static UmiStatus contract_invoke(
             request->session_id,
             &dap_sequence);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             owner->active_contract_request_id = request->request_id;
             owner->active_dap_sequence = dap_sequence;
@@ -327,12 +377,13 @@ static UmiStatus contract_invoke(
     out_response->complete = 1;
     out_response->cancelled = status == UMI_STATUS_CANCELLED;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (response.message[0] != '\0') {
         copy_bounded(
             out_response->message,
             sizeof(out_response->message),
             response.message);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         (void)snprintf(
             out_response->message,
             sizeof(out_response->message),
@@ -342,11 +393,13 @@ static UmiStatus contract_invoke(
     }
 
     length = strlen(response.json);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > sizeof(out_response->payload)) {
         out_response->status = UMI_STATUS_CAPACITY_EXCEEDED;
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(out_response->payload, response.json, length);
         out_response->payload_length = length;
@@ -355,16 +408,22 @@ static UmiStatus contract_invoke(
     return status;
 }
 
+/* Provide the contract cancel operation used by this module and its client applications. */
 static UmiStatus contract_cancel(void *instance, uint64_t request_id)
 {
     UmiDebugRuntimeContractAdapter *owner =
         (UmiDebugRuntimeContractAdapter *)instance;
     uint64_t sequence = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL || request_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (owner->active_contract_request_id != request_id ||
         owner->active_dap_sequence == 0U) {
         return UMI_STATUS_NOT_FOUND;
@@ -377,6 +436,7 @@ static UmiStatus contract_cancel(void *instance, uint64_t request_id)
         &sequence);
 }
 
+/* Provide the contract health operation used by this module and its client applications. */
 static UmiStatus contract_health(
     void *instance,
     char *out_message,
@@ -385,6 +445,10 @@ static UmiStatus contract_health(
     UmiDebugRuntimeContractAdapter *owner =
         (UmiDebugRuntimeContractAdapter *)instance;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL || out_message == NULL || message_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -402,6 +466,10 @@ static UmiStatus contract_health(
         : UMI_STATUS_UNAVAILABLE;
 }
 
+/*
+ * Initialise debug runtime contract adapter from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_runtime_contract_adapter_create(
     UmiDebugRuntimeAdapter *adapter,
     const char *descriptor_id,
@@ -414,6 +482,10 @@ UmiStatus umi_debug_runtime_contract_adapter_create(
 {
     UmiDebugRuntimeContractAdapter *owner;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || descriptor_id == NULL ||
         label == NULL || debugger_kind == NULL ||
         out_owner == NULL || out_descriptor == NULL) {
@@ -424,6 +496,10 @@ UmiStatus umi_debug_runtime_contract_adapter_create(
     (void)memset(out_descriptor, 0, sizeof(*out_descriptor));
 
     owner = (UmiDebugRuntimeContractAdapter *)calloc(1U, sizeof(*owner));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     owner->adapter = adapter;
@@ -470,15 +546,27 @@ UmiStatus umi_debug_runtime_contract_adapter_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by debug runtime contract adapter so the same storage can be
+ * reused safely.
+ */
 void umi_debug_runtime_contract_adapter_destroy(
     UmiDebugRuntimeContractAdapter *owner)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL) return;
     umi_debug_runtime_adapter_destroy(owner->adapter);
     owner->adapter = NULL;
     free(owner);
 }
 
+/*
+ * Provide the debug runtime contract adapter connection operation used by this module and
+ * its client applications.
+ */
 UmiDebugRuntimeAdapter *umi_debug_runtime_contract_adapter_connection(
     UmiDebugRuntimeContractAdapter *owner)
 {

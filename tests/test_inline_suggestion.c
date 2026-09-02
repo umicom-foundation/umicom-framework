@@ -23,6 +23,10 @@ typedef struct MockInlineProvider {
     size_t cancel_calls;
 } MockInlineProvider;
 
+/*
+ * Initialise suggestion from caller-provided values so later operations receive a known
+ * state.
+ */
 static void suggestion_init(UmiEditorInlineSuggestion *suggestion,
                             const char *provider,
                             const char *id,
@@ -49,6 +53,10 @@ static void suggestion_init(UmiEditorInlineSuggestion *suggestion,
     suggestion->flags = UMI_EDITOR_INLINE_SUGGESTION_COMPLETE;
 }
 
+/*
+ * Exercise capture and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus capture(const UmiEditorInlineSuggestion *suggestion,
                          void *user_data)
 {
@@ -56,6 +64,10 @@ static UmiStatus capture(const UmiEditorInlineSuggestion *suggestion,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise provide and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus provide(const UmiEditorCompletionRequest *request,
                          UmiEditorInlineSuggestionSink sink,
                          void *sink_user_data,
@@ -75,6 +87,10 @@ static UmiStatus provide(const UmiEditorCompletionRequest *request,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise cancel and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus cancel(uint64_t request_id, void *provider_user_data)
 {
     MockInlineProvider *mock = (MockInlineProvider *)provider_user_data;
@@ -83,6 +99,10 @@ static UmiStatus cancel(uint64_t request_id, void *provider_user_data)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorInlineSuggestionCollection *collection = NULL;

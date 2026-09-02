@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity shipment book data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityShipmentBook {
     UmiCommodityShipment items[UMI_COMMODITY_MAX_ITEMS];
     size_t count;

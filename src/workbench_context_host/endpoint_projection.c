@@ -15,12 +15,18 @@
 
 #include "umicom/workbench_context_host/endpoint_projection.h"
 #include <string.h>
+/*
+ * Provide the workbench context host endpoint projection build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_endpoint_projection_build(
     const UmiWorkbenchContextHost *host,UmiWorkbenchContextHostEndpointProjection *out_projection)
 {
-    size_t i;if(!host||!out_projection)return UMI_STATUS_INVALID_ARGUMENT;
+    size_t i;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!host||!out_projection)return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_projection,0,sizeof(*out_projection));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if(host->endpoints.count>UMI_WORKBENCH_CONTEXT_HOST_MAX_ENDPOINT_PROJECTION_ROWS)return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<host->endpoints.count;++i){
         const UmiWorkbenchContextHostEndpoint *e=&host->endpoints.items[i];
         const UmiWorkbenchContextHostInbox *inbox=

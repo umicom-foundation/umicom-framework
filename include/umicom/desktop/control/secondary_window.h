@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_SECONDARY_WINDOW_API_VERSION 1U
 
+/**
+ * Represent the desktop secondary window snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopSecondaryWindowSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

@@ -17,6 +17,10 @@
 
 #include "umicom/developer_workbench/search_engine.h"
 
+/*
+ * Exercise provider search and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus provider_search(
     void *user_data,
     const char *query,
@@ -27,6 +31,7 @@ static UmiStatus provider_search(
     (void)user_data;
     (void)query;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity < 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memset(out_results, 0, 2U * sizeof(out_results[0]));
@@ -42,6 +47,10 @@ static UmiStatus provider_search(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperWorkbenchSearchEngine *engine = NULL;

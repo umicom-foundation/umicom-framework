@@ -27,8 +27,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics chart annotation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsChartAnnotation { char id[UMI_ANALYTICS_ID_CAPACITY]; char text[UMI_ANALYTICS_TEXT_CAPACITY]; double x; double y; } UmiAnalyticsChartAnnotation;
+/**
+ * Initialise analytics chart annotation from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_chart_annotation_init(UmiAnalyticsChartAnnotation *item);
+/**
+ * Check that analytics chart annotation satisfies its contract before another service
+ * relies on it.
+ */
 int umi_analytics_chart_annotation_valid(const UmiAnalyticsChartAnnotation *item);
 
 #ifdef __cplusplus

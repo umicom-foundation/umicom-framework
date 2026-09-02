@@ -18,13 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad hierarchy move data shared with callers of this public contract.
+ */
 typedef struct UmiRadHierarchyMove {
     char node_id[UMI_RAD_ID_CAPACITY];
     char old_parent_id[UMI_RAD_ID_CAPACITY];
     char new_parent_id[UMI_RAD_ID_CAPACITY];
     int32_t new_order;
 } UmiRadHierarchyMove;
+/**
+ * Initialise rad hierarchy move from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_hierarchy_move_init(UmiRadHierarchyMove *item);
+/**
+ * Check that rad hierarchy move satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_hierarchy_move_is_valid(const UmiRadHierarchyMove *item);
 #ifdef __cplusplus
 }

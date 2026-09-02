@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix retry loop data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRetryLoop {
     uint32_t maximum_attempts;
     uint32_t attempts_started;
@@ -28,11 +31,27 @@ typedef struct UmiHelixRetryLoop {
     int completed;
 } UmiHelixRetryLoop;
 
+/**
+ * Initialise helix retry loop from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_retry_loop_init(UmiHelixRetryLoop *loop,
                                       uint32_t maximum_attempts);
+/**
+ * Provide the helix retry loop begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_retry_loop_begin(UmiHelixRetryLoop *loop);
+/**
+ * Provide the helix retry loop record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_retry_loop_record(UmiHelixRetryLoop *loop,
                                        UmiStatus result);
+/**
+ * Provide the helix retry loop can retry operation used by this module and its client
+ * applications.
+ */
 int umi_helix_retry_loop_can_retry(const UmiHelixRetryLoop *loop);
 
 #ifdef __cplusplus

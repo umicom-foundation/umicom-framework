@@ -21,6 +21,10 @@
 
 #include "umicom/ui/components/host.h"
 
+/*
+ * Exercise create test view and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus create_test_view(
     const char *view_id,
     void *user_data,
@@ -31,13 +35,19 @@ static UmiStatus create_test_view(
     (void)user_data;
     status = umi_ui_view_model_create(
         view_id, "test.component-view", UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_value_set_string(&value, "Framework hosted content");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ui_view_model_set_property(*out_view, "summary", &value);
     return status;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiComponentHostService *service = NULL;

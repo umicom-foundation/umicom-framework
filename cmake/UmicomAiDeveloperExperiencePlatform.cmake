@@ -21,6 +21,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_developer)
     message(FATAL_ERROR
         "AI Developer Experience requires the canonical umicom_developer target")
@@ -86,15 +87,18 @@ target_link_libraries(umicom_developer PUBLIC
     Umicom::runtime
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_executable(
         umicom-ai-developer-experience-activity-sync-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_activity_sync.c"
     )
     target_link_libraries(umicom-ai-developer-experience-activity-sync-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-activity-sync-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-activity-sync-test)
     endif()
@@ -105,9 +109,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_approval_persistence.c"
     )
     target_link_libraries(umicom-ai-developer-experience-approval-persistence-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-approval-persistence-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-approval-persistence-test)
     endif()
@@ -118,9 +124,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_approval_queue.c"
     )
     target_link_libraries(umicom-ai-developer-experience-approval-queue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-approval-queue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-approval-queue-test)
     endif()
@@ -131,9 +139,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_approval_service.c"
     )
     target_link_libraries(umicom-ai-developer-experience-approval-service-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-approval-service-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-approval-service-test)
     endif()
@@ -144,9 +154,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_approvals_view.c"
     )
     target_link_libraries(umicom-ai-developer-experience-approvals-view-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-approvals-view-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-approvals-view-test)
     endif()
@@ -157,9 +169,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_chat_persistence.c"
     )
     target_link_libraries(umicom-ai-developer-experience-chat-persistence-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-chat-persistence-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-chat-persistence-test)
     endif()
@@ -170,9 +184,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_command_catalogue.c"
     )
     target_link_libraries(umicom-ai-developer-experience-command-catalogue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-command-catalogue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-command-catalogue-test)
     endif()
@@ -183,9 +199,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_command_context.c"
     )
     target_link_libraries(umicom-ai-developer-experience-command-context-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-command-context-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-command-context-test)
     endif()
@@ -196,9 +214,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_diff_builder.c"
     )
     target_link_libraries(umicom-ai-developer-experience-diff-builder-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-diff-builder-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-diff-builder-test)
     endif()
@@ -209,9 +229,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_diff_create_delete.c"
     )
     target_link_libraries(umicom-ai-developer-experience-diff-create-delete-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-diff-create-delete-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-diff-create-delete-test)
     endif()
@@ -222,9 +244,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_diff_hunks.c"
     )
     target_link_libraries(umicom-ai-developer-experience-diff-hunks-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-diff-hunks-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-diff-hunks-test)
     endif()
@@ -235,9 +259,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_diff_navigation.c"
     )
     target_link_libraries(umicom-ai-developer-experience-diff-navigation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-diff-navigation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-diff-navigation-test)
     endif()
@@ -248,9 +274,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_diff_view.c"
     )
     target_link_libraries(umicom-ai-developer-experience-diff-view-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-diff-view-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-diff-view-test)
     endif()
@@ -261,9 +289,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_history_view.c"
     )
     target_link_libraries(umicom-ai-developer-experience-history-view-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-history-view-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-history-view-test)
     endif()
@@ -274,9 +304,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_ids.c"
     )
     target_link_libraries(umicom-ai-developer-experience-ids-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-ids-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-ids-test)
     endif()
@@ -287,9 +319,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_patch_review.c"
     )
     target_link_libraries(umicom-ai-developer-experience-patch-review-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-patch-review-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-patch-review-test)
     endif()
@@ -300,9 +334,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_patch_review_service.c"
     )
     target_link_libraries(umicom-ai-developer-experience-patch-review-service-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-patch-review-service-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-patch-review-service-test)
     endif()
@@ -313,9 +349,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_patch_review_view.c"
     )
     target_link_libraries(umicom-ai-developer-experience-patch-review-view-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-patch-review-view-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-patch-review-view-test)
     endif()
@@ -326,9 +364,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_persistence_budget.c"
     )
     target_link_libraries(umicom-ai-developer-experience-persistence-budget-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-persistence-budget-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-persistence-budget-test)
     endif()
@@ -339,9 +379,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_persistence_codec.c"
     )
     target_link_libraries(umicom-ai-developer-experience-persistence-codec-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-persistence-codec-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-persistence-codec-test)
     endif()
@@ -352,9 +394,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_perspective.c"
     )
     target_link_libraries(umicom-ai-developer-experience-perspective-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-perspective-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-perspective-test)
     endif()
@@ -365,9 +409,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_preferences.c"
     )
     target_link_libraries(umicom-ai-developer-experience-preferences-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-preferences-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-preferences-test)
     endif()
@@ -378,9 +424,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_preferences_persistence.c"
     )
     target_link_libraries(umicom-ai-developer-experience-preferences-persistence-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-preferences-persistence-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-preferences-persistence-test)
     endif()
@@ -391,9 +439,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_presentation_persistence.c"
     )
     target_link_libraries(umicom-ai-developer-experience-presentation-persistence-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-presentation-persistence-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-presentation-persistence-test)
     endif()
@@ -404,9 +454,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_presentation_state.c"
     )
     target_link_libraries(umicom-ai-developer-experience-presentation-state-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-presentation-state-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-presentation-state-test)
     endif()
@@ -417,9 +469,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_session_bundle.c"
     )
     target_link_libraries(umicom-ai-developer-experience-session-bundle-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-session-bundle-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-session-bundle-test)
     endif()
@@ -430,9 +484,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_side_by_side.c"
     )
     target_link_libraries(umicom-ai-developer-experience-side-by-side-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-side-by-side-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-side-by-side-test)
     endif()
@@ -443,9 +499,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_state_schema_migration.c"
     )
     target_link_libraries(umicom-ai-developer-experience-state-schema-migration-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-state-schema-migration-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-state-schema-migration-test)
     endif()
@@ -456,9 +514,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_task_persistence.c"
     )
     target_link_libraries(umicom-ai-developer-experience-task-persistence-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-task-persistence-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-task-persistence-test)
     endif()
@@ -469,9 +529,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_task_projection.c"
     )
     target_link_libraries(umicom-ai-developer-experience-task-projection-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-task-projection-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-task-projection-test)
     endif()
@@ -482,9 +544,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_task_registry.c"
     )
     target_link_libraries(umicom-ai-developer-experience-task-registry-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-task-registry-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-task-registry-test)
     endif()
@@ -495,9 +559,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_tasks_view.c"
     )
     target_link_libraries(umicom-ai-developer-experience-tasks-view-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-tasks-view-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-tasks-view-test)
     endif()
@@ -508,9 +574,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_timeline.c"
     )
     target_link_libraries(umicom-ai-developer-experience-timeline-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-timeline-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-timeline-test)
     endif()
@@ -521,9 +589,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_timeline_projection.c"
     )
     target_link_libraries(umicom-ai-developer-experience-timeline-projection-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-timeline-projection-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-timeline-projection-test)
     endif()
@@ -534,9 +604,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_developer_experience/test_types.c"
     )
     target_link_libraries(umicom-ai-developer-experience-types-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-developer-experience-types-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-developer-experience-types-test)
     endif()

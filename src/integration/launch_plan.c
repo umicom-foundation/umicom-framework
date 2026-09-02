@@ -24,6 +24,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the integration launch plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_integration_launch_plan_build(
     const UmiIntegrationSuiteDefinition *suite,
     const UmiIntegrationRegistry *registry,
@@ -31,11 +35,16 @@ UmiStatus umi_integration_launch_plan_build(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (suite == NULL || registry == NULL || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(out_plan, 0, sizeof(*out_plan));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < suite->member_count; ++index) {
         const UmiIntegrationSuiteMember *member = &suite->members[index];
         const UmiIntegrationRegistryEntry *entry =
@@ -47,6 +56,7 @@ UmiStatus umi_integration_launch_plan_build(
                                sizeof(item->application_id),
                                "%s",
                                member->application_id);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0 ||
             (size_t)written >= sizeof(item->application_id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -56,27 +66,33 @@ UmiStatus umi_integration_launch_plan_build(
         item->preferred_frontend = member->preferred_frontend;
         ++out_plan->count;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (entry == NULL) {
             item->disposition =
                 member->kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED
                     ? UMI_INTEGRATION_LAUNCH_REQUIRED_MISSING
                     : UMI_INTEGRATION_LAUNCH_OPTIONAL_MISSING;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (member->kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED) {
                 ++out_plan->missing_required;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 ++out_plan->missing_optional;
             }
-        } else if (!entry->application.enabled) {
+        } else /* Apply this operation only while the related capability or state is available. */ if (!entry->application.enabled) {
             item->disposition = UMI_INTEGRATION_LAUNCH_DISABLED;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (member->kind == UMI_INTEGRATION_DEPENDENCY_REQUIRED) {
                 ++out_plan->missing_required;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 ++out_plan->missing_optional;
             }
-        } else if (entry->state == UMI_INTEGRATION_APP_RUNNING) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (entry->state == UMI_INTEGRATION_APP_RUNNING) {
             item->disposition = UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING;
             ++out_plan->ready_count;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             item->disposition = UMI_INTEGRATION_LAUNCH_READY;
             ++out_plan->ready_count;
         }
@@ -87,6 +103,10 @@ UmiStatus umi_integration_launch_plan_build(
         : UMI_STATUS_UNAVAILABLE;
 }
 
+/*
+ * Provide the integration launch plan can start operation used by this module and its
+ * client applications.
+ */
 bool umi_integration_launch_plan_can_start(
     const UmiIntegrationLaunchPlan *plan)
 {

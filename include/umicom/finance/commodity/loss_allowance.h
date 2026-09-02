@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity loss allowance data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityLossAllowance {
     UmiCommodityId contract_id;
     int32_t basis_points;

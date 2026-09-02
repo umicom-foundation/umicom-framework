@@ -27,13 +27,23 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai conversation data shared with callers of this public contract.
+ */
 typedef struct UmiAiConversation {
     char conversation_id[UMI_AI_ID_CAPACITY];
     UmiAiMessage messages[UMI_AI_MAX_MESSAGES];
     size_t message_count;
 } UmiAiConversation;
 
+/**
+ * Initialise ai conversation from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ai_conversation_init(UmiAiConversation *conversation, const char *id);
+/**
+ * Add ai conversation only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ai_conversation_add(UmiAiConversation *conversation,
                                   const UmiAiMessage *message);
 

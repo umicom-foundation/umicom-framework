@@ -28,6 +28,9 @@ extern "C" {
 
 #define UMI_SECRET_VALUE_CAPACITY 4096U
 
+/**
+ * Represent the secret provider data shared with callers of this public contract.
+ */
 typedef struct UmiSecretProvider {
     uint32_t structure_size;
     uint32_t abi_version;
@@ -47,18 +50,40 @@ typedef struct UmiSecretProvider {
                         const char *secret_name);
 } UmiSecretProvider;
 
+/**
+ * Provide the secret provider environment operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_secret_provider_environment(UmiSecretProvider *out_provider);
+/**
+ * Provide the secret get operation used by this module and its client applications.
+ */
 UmiStatus umi_secret_get(const UmiSecretProvider *provider,
                          const char *secret_name,
                          char *out_value,
                          size_t capacity);
+/**
+ * Copy secret into module-owned storage so callers keep ownership of their input values.
+ */
 UmiStatus umi_secret_set(const UmiSecretProvider *provider,
                          const char *secret_name,
                          const char *value);
+/**
+ * Remove secret while keeping the remaining records in a valid and discoverable state.
+ */
 UmiStatus umi_secret_remove(const UmiSecretProvider *provider,
                             const char *secret_name);
+/**
+ * Release or reset state held by secret provider so the same storage can be reused safely.
+ */
 void umi_secret_provider_dispose(UmiSecretProvider *provider);
+/**
+ * Provide the secret redact operation used by this module and its client applications.
+ */
 void umi_secret_redact(char *text);
+/**
+ * Release or reset state held by secret so the same storage can be reused safely.
+ */
 void umi_secret_clear(void *memory, size_t length);
 
 #ifdef __cplusplus

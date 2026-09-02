@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics area chart data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsAreaChart { int stacked; double opacity; } UmiAnalyticsAreaChart;
+/**
+ * Initialise analytics area chart from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_analytics_area_chart_init(UmiAnalyticsAreaChart *item);
+/**
+ * Check that analytics area chart satisfies its contract before another service relies on
+ * it.
+ */
 int umi_analytics_area_chart_valid(const UmiAnalyticsAreaChart *item);
 
 #ifdef __cplusplus

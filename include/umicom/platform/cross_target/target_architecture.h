@@ -30,9 +30,25 @@
 extern "C" {
 #endif
 
+/**
+ * Read ct architecture into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_ct_architecture_parse(const char *text, UmiCtArchitecture *out_architecture);
+/**
+ * Provide the ct architecture text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ct_architecture_text(UmiCtArchitecture architecture);
+/**
+ * Provide the ct architecture pointer bits operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ct_architecture_pointer_bits(UmiCtArchitecture architecture);
+/**
+ * Provide the ct architecture is riscv operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_architecture_is_riscv(UmiCtArchitecture architecture);
 
 #ifdef __cplusplus

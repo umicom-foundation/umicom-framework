@@ -24,11 +24,16 @@ UmiStatus umi_adaptive_shell_profile_init(UmiAdaptiveShellProfile *profile,
                                           const UmiAdaptiveShellLayout *layout)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || profile_id == NULL || layout == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     memset(profile, 0, sizeof *profile);
     status = umi_adaptive_copy_text(profile->profile_id, sizeof profile->profile_id, profile_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

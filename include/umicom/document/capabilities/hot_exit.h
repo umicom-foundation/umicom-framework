@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_HOT_EXIT "umicom.document.recovery.hot_exit"
 
+/**
+ * Provide the document capability hot exit operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_hot_exit(void);
 

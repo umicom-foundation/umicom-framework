@@ -25,6 +25,7 @@ typedef struct ReportWriter {
   size_t required;
 } ReportWriter;
 
+/* Add writer only after its inputs and available capacity have been checked. */
 static void writer_append(ReportWriter *writer, const char *format, ...) {
   va_list arguments;
   va_list sizing_arguments;
@@ -34,10 +35,15 @@ static void writer_append(ReportWriter *writer, const char *format, ...) {
   va_copy(sizing_arguments, arguments);
   length = vsnprintf(NULL, 0U, format, sizing_arguments);
   va_end(sizing_arguments);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (length < 0) {
     va_end(arguments);
     return;
   }
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (writer->output != NULL && writer->required < writer->capacity) {
     (void)vsnprintf(writer->output + writer->required, writer->capacity - writer->required, format,
                     arguments);
@@ -46,22 +52,31 @@ static void writer_append(ReportWriter *writer, const char *format, ...) {
   va_end(arguments);
 }
 
+/*
+ * Provide the writer json string operation used by this module and its client
+ * applications.
+ */
 static void writer_json_string(ReportWriter *writer, const char *value) {
   const unsigned char *cursor = (const unsigned char *)(value != NULL ? value : "");
 
   writer_append(writer, "\"");
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (*cursor != 0U) {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*cursor == '"' || *cursor == '\\') {
       writer_append(writer, "\\%c", *cursor);
-    } else if (*cursor == '\n') {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (*cursor == '\n') {
       writer_append(writer, "\\n");
-    } else if (*cursor == '\r') {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (*cursor == '\r') {
       writer_append(writer, "\\r");
-    } else if (*cursor == '\t') {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (*cursor == '\t') {
       writer_append(writer, "\\t");
-    } else if (*cursor < 0x20U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (*cursor < 0x20U) {
       writer_append(writer, "\\u%04x", (unsigned)*cursor);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
       writer_append(writer, "%c", *cursor);
     }
     cursor += 1U;
@@ -69,6 +84,7 @@ static void writer_json_string(ReportWriter *writer, const char *value) {
   writer_append(writer, "\"");
 }
 
+/* Provide the write text record operation used by this module and its client applications. */
 static void write_text_record(ReportWriter *writer, const UmiComponentGovernanceRecord *record) {
   writer_append(writer, "%s|%s|%s|%s|%s|0x%02x|0x%02x|0x%02x\n", record->definition->component_id,
                 record->definition->domain_id,
@@ -78,6 +94,10 @@ static void write_text_record(ReportWriter *writer, const UmiComponentGovernance
                 (unsigned)record->available_evidence, (unsigned)record->frontend_support);
 }
 
+/*
+ * Provide the write markdown record operation used by this module and its client
+ * applications.
+ */
 static void write_markdown_record(ReportWriter *writer,
                                   const UmiComponentGovernanceRecord *record) {
   writer_append(
@@ -87,6 +107,7 @@ static void write_markdown_record(ReportWriter *writer,
       umi_component_evidence_is_complete(record) ? "complete" : "incomplete");
 }
 
+/* Provide the write json record operation used by this module and its client applications. */
 static void write_json_record(ReportWriter *writer, const UmiComponentGovernanceRecord *record) {
   writer_append(writer, "    {\"component_id\":");
   writer_json_string(writer, record->definition->component_id);
@@ -111,18 +132,24 @@ static void write_json_record(ReportWriter *writer, const UmiComponentGovernance
                 umi_component_evidence_is_complete(record) ? "true" : "false");
   writer_json_string(writer, record->introduced_version);
   writer_append(writer, ",\"replacement_component_id\":");
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (record->replacement_component_id != NULL) {
     writer_json_string(writer, record->replacement_component_id);
-  } else {
+  } /* Use this fallback path when the earlier condition does not apply. */ else {
     writer_append(writer, "null");
   }
   writer_append(writer, "}");
 }
 
+/* Provide the write report operation used by this module and its client applications. */
 static void write_report(ReportWriter *writer, const UmiComponentInventory *inventory,
                          const UmiComponentQueryResult *result, UmiComponentReportFormat format) {
   size_t index;
 
+  /* Apply this branch only when its contract condition is satisfied. */
   if (format == UMI_COMPONENT_REPORT_TEXT) {
     writer_append(writer,
                   "components=%zu domains=%zu evidence_complete=%zu "
@@ -131,7 +158,7 @@ static void write_report(ReportWriter *writer, const UmiComponentInventory *inve
                   inventory->evidence_complete_count, inventory->evidence_incomplete_count,
                   result->count);
     writer_append(writer, "component_id|domain|role|status|owner|required|available|frontends\n");
-  } else if (format == UMI_COMPONENT_REPORT_MARKDOWN) {
+  } else /* Apply this branch only when its contract condition is satisfied. */ if (format == UMI_COMPONENT_REPORT_MARKDOWN) {
     writer_append(writer, "# Umicom Framework Component Inventory\n\n");
     writer_append(writer,
                   "Components: **%zu** · Domains: **%zu** · Evidence complete: "
@@ -141,7 +168,7 @@ static void write_report(ReportWriter *writer, const UmiComponentInventory *inve
                   result->count);
     writer_append(writer, "| Component | Domain | Role | Status | Owner | Evidence |\n"
                           "|---|---|---|---|---|---|\n");
-  } else {
+  } /* Use this fallback path when the earlier condition does not apply. */ else {
     writer_append(writer,
                   "{\n  \"summary\":{\"component_count\":%zu,"
                   "\"domain_count\":%zu,\"evidence_complete_count\":%zu,"
@@ -152,23 +179,30 @@ static void write_report(ReportWriter *writer, const UmiComponentInventory *inve
                   result->count);
   }
 
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < result->count; ++index) {
     const UmiComponentGovernanceRecord *record =
         umi_component_query_result_at(inventory, result, index);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (format == UMI_COMPONENT_REPORT_TEXT) {
       write_text_record(writer, record);
-    } else if (format == UMI_COMPONENT_REPORT_MARKDOWN) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (format == UMI_COMPONENT_REPORT_MARKDOWN) {
       write_markdown_record(writer, record);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
       write_json_record(writer, record);
       writer_append(writer, index + 1U < result->count ? ",\n" : "\n");
     }
   }
+  /* Apply this branch only when its contract condition is satisfied. */
   if (format == UMI_COMPONENT_REPORT_JSON) {
     writer_append(writer, "  ]\n}\n");
   }
 }
 
+/*
+ * Write component inventory report in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_component_inventory_report_write(const UmiComponentInventory *inventory,
                                                const UmiComponentQuery *query,
                                                UmiComponentReportFormat format, char *output,
@@ -179,25 +213,42 @@ UmiStatus umi_component_inventory_report_write(const UmiComponentInventory *inve
   ReportWriter writer;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (inventory == NULL || out_required_capacity == NULL || format < UMI_COMPONENT_REPORT_TEXT ||
       format > UMI_COMPONENT_REPORT_JSON || (output == NULL && output_capacity != 0U)) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (query == NULL) {
     umi_component_query_init(&all_query);
     query = &all_query;
   }
   status = umi_component_inventory_query(inventory, query, &result);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
 
   writer.output = output;
   writer.capacity = output_capacity;
   writer.required = 0U;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (output != NULL && output_capacity > 0U)
     output[0] = '\0';
   write_report(&writer, inventory, &result, format);
   *out_required_capacity = writer.required + 1U;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (output != NULL && output_capacity > 0U) {
     output[output_capacity - 1U] = '\0';
   }

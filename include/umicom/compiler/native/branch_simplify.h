@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the nc branch simplify operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_branch_simplify(UmiNativeIrFunction *function,size_t *out_simplified);
 #ifdef __cplusplus
 }

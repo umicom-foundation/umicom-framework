@@ -18,7 +18,9 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/types.h"
 
+/* Provide the ai dev state text operation used by this module and its client applications. */
 const char *umi_ai_dev_state_text(UmiAiDevState state) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_DEV_STATE_READY: return "ready";
         case UMI_AI_DEV_STATE_DEGRADED: return "degraded";
@@ -28,7 +30,12 @@ const char *umi_ai_dev_state_text(UmiAiDevState state) {
         default: return "unknown";
     }
 }
+/*
+ * Provide the ai dev locality text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_dev_locality_text(UmiAiDevLocality locality) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (locality) {
         case UMI_AI_DEV_LOCALITY_LOCAL: return "local";
         case UMI_AI_DEV_LOCALITY_REMOTE: return "remote";
@@ -36,7 +43,9 @@ const char *umi_ai_dev_locality_text(UmiAiDevLocality locality) {
         default: return "any";
     }
 }
+/* Provide the ai dev risk text operation used by this module and its client applications. */
 const char *umi_ai_dev_risk_text(UmiAiDevRisk risk) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (risk) {
         case UMI_AI_DEV_RISK_LOW: return "low";
         case UMI_AI_DEV_RISK_MEDIUM: return "medium";
@@ -46,8 +55,11 @@ const char *umi_ai_dev_risk_text(UmiAiDevRisk risk) {
         default: return "none";
     }
 }
+/* Provide the ai dev percent operation used by this module and its client applications. */
 uint32_t umi_ai_dev_percent(uint64_t value, uint64_t maximum) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (maximum == 0U) return 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= maximum) return 100U;
     return (uint32_t)((value * UINT64_C(100)) / maximum);
 }

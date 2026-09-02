@@ -19,11 +19,20 @@
 
 #include "gtk4_internal.h"
 
+/* Provide the clear list operation used by this module and its client applications. */
 static void clear_list(GtkWidget *list)
 {
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL || !GTK_IS_LIST_BOX(list)) return;
     child = gtk_widget_get_first_child(list);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_list_box_remove(GTK_LIST_BOX(list), child);
@@ -31,6 +40,10 @@ static void clear_list(GtkWidget *list)
     }
 }
 
+/*
+ * Provide the gtk4 on quick access changed operation used by this module and its client
+ * applications.
+ */
 void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
                                       gpointer user_data)
 {
@@ -40,21 +53,31 @@ void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
     const char *query;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) return;
     workbench = umi_ui_application_shell_workbench(adapter->shell);
     query = gtk_editable_get_text(GTK_EDITABLE(entry));
     clear_list(adapter->quick_access_list);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (query == NULL || query[0] == '\0') {
         gtk_widget_set_visible(adapter->quick_access_list, FALSE);
         return;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_workbench_quick_access(workbench, query, &results) != UMI_STATUS_OK) {
         gtk_widget_set_visible(adapter->quick_access_list, FALSE);
         return;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < results.count; ++index) {
         GtkWidget *row = gtk_list_box_row_new();
         GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
@@ -100,6 +123,7 @@ void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
         gtk_widget_add_css_class(box, "umicom-command-result-content");
         gtk_list_box_row_set_child(GTK_LIST_BOX_ROW(row), box);
         gtk_widget_add_css_class(row, "umicom-command-result");
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (results.items[index].checkable && results.items[index].checked) {
             gtk_widget_add_css_class(row, "checked");
         }
@@ -115,6 +139,7 @@ void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
         gtk_list_box_append(GTK_LIST_BOX(adapter->quick_access_list), row);
     }
     gtk_widget_set_visible(adapter->quick_access_list, results.count > 0U);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (results.count > 0U) {
         GtkListBoxRow *first = gtk_list_box_get_row_at_index(
             GTK_LIST_BOX(adapter->quick_access_list), 0);
@@ -122,6 +147,10 @@ void umi_gtk4_on_quick_access_changed(GtkSearchEntry *entry,
     }
 }
 
+/*
+ * Provide the gtk4 on quick access row activated operation used by this module and its
+ * client applications.
+ */
 void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
                                             GtkListBoxRow *row,
                                             gpointer user_data)
@@ -134,15 +163,27 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
     UmiStatus status;
     (void)list_box;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || row == NULL || adapter->shell == NULL) return;
     action_id = (const char *)g_object_get_data(G_OBJECT(row),
                                                 "umicom-action-id");
     command_id = (const char *)g_object_get_data(G_OBJECT(row),
                                                  "umicom-command-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return;
 
     gtk_editable_set_text(GTK_EDITABLE(adapter->quick_access_entry), "");
     gtk_widget_set_visible(adapter->quick_access_list, FALSE);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_id != NULL && action_id[0] != '\0') {
         umi_gtk4_dispatch_action(adapter, action_id);
         return;
@@ -154,6 +195,7 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
                                           NULL,
                                           message,
                                           sizeof(message));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (message[0] == '\0') {
         (void)g_snprintf(message, sizeof(message), "%s: %s",
                          command_id, umi_status_text(status));
@@ -162,28 +204,52 @@ void umi_gtk4_on_quick_access_row_activated(GtkListBox *list_box,
     (void)umi_gtk4_refresh_workbench(adapter);
 }
 
+/*
+ * Provide the gtk4 on quick access activate operation used by this module and its client
+ * applications.
+ */
 void umi_gtk4_on_quick_access_activate(GtkSearchEntry *entry,
                                        gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     GtkListBoxRow *row;
     (void)entry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->quick_access_list == NULL) return;
     row = gtk_list_box_get_selected_row(GTK_LIST_BOX(adapter->quick_access_list));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (row == NULL) {
         row = gtk_list_box_get_row_at_index(
             GTK_LIST_BOX(adapter->quick_access_list), 0);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (row != NULL) {
         umi_gtk4_on_quick_access_row_activated(
             GTK_LIST_BOX(adapter->quick_access_list), row, adapter);
     }
 }
 
+/*
+ * Provide the gtk4 refresh quick access request operation used by this module and its
+ * client applications.
+ */
 void umi_gtk4_refresh_quick_access_request(UmiGtk4Adapter *adapter,
                                            UmiUiWorkbench *workbench)
 {
     UmiUiContextSnapshot request;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL ||
         umi_ui_context_get(umi_ui_workbench_context(workbench),
                            UMI_UI_QUICK_ACCESS_REQUEST_CONTEXT_KEY,

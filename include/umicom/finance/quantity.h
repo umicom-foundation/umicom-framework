@@ -24,7 +24,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the quantity positive operation used by this module and its client applications.
+ */
 int umi_quantity_positive(UmiQuantity quantity);
+/**
+ * Provide the quantity signed operation used by this module and its client applications.
+ */
 UmiQuantity umi_quantity_signed(UmiQuantity quantity, int direction);
 #ifdef __cplusplus
 }

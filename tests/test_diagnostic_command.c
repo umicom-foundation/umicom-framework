@@ -18,10 +18,15 @@
 
 #include "umicom/diagnostics/command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t position;
     assert(umi_diagnostic_command_count() == 26U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < umi_diagnostic_command_count(); ++position) {
         const UmiDiagnosticCommandDescriptor *command =
             umi_diagnostic_command_at(position);
@@ -33,6 +38,7 @@ int main(void)
         assert(command->label != NULL && command->label[0] != '\0');
         assert(umi_diagnostic_command_find(command->id) == command);
         assert(umi_diagnostic_command_for_kind(command->kind) == command);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = position + 1U;
              comparison < umi_diagnostic_command_count(); ++comparison) {
             assert(strcmp(command->id,

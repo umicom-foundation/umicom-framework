@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/expression_lexer.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveExpressionLexer item; umi_ui_reactive_expression_lexer_init(&item); return umi_ui_reactive_expression_lexer_valid(&item) ? 0 : 1; }

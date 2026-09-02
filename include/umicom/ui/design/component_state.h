@@ -26,7 +26,13 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design component state flag values accepted by this public contract.
+ */
 typedef enum UmiDesignComponentStateFlag { UMI_DESIGN_STATE_NONE=0U, UMI_DESIGN_STATE_HOVERED=1U<<0, UMI_DESIGN_STATE_PRESSED=1U<<1, UMI_DESIGN_STATE_FOCUSED=1U<<2, UMI_DESIGN_STATE_DISABLED=1U<<3, UMI_DESIGN_STATE_SELECTED=1U<<4, UMI_DESIGN_STATE_INVALID=1U<<5, UMI_DESIGN_STATE_BUSY=1U<<6 } UmiDesignComponentStateFlag;
+/**
+ * Represent the design component state data shared with callers of this public contract.
+ */
 typedef struct UmiDesignComponentState { uint32_t flags; } UmiDesignComponentState;
 /* Add a state flag without disturbing existing component state. */
 void umi_design_component_state_add(UmiDesignComponentState *state, UmiDesignComponentStateFlag flag);

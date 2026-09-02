@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/fee.h"
+/* Provide the execution fee operation used by this module and its client applications. */
 double umi_execution_fee(double quantity,double per_unit_fee,double minimum_fee){double fee=quantity>0.0&&per_unit_fee>0.0?quantity*per_unit_fee:0.0;return fee<minimum_fee?minimum_fee:fee;}

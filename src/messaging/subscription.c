@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+/* Provide the subscription all operation used by this module and its client applications. */
 UmiSubscription umi_subscription_all(void)
 {
     UmiSubscription subscription;
@@ -24,22 +25,41 @@ UmiSubscription umi_subscription_all(void)
     return subscription;
 }
 
+/* Provide the text matches operation used by this module and its client applications. */
 static int text_matches(const char *expected,
                         const char *actual,
                         int prefix_match)
 {
     size_t expected_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (expected == NULL || expected[0] == '\0') return 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (actual == NULL) return 0;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!prefix_match) return strcmp(expected, actual) == 0;
     expected_length = strlen(expected);
     return strncmp(expected, actual, expected_length) == 0;
 }
 
+/*
+ * Provide the subscription matches operation used by this module and its client
+ * applications.
+ */
 int umi_subscription_matches(const UmiSubscription *subscription,
                              const UmiMessageEnvelope *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (subscription == NULL || message == NULL) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (subscription->kind != 0 && subscription->kind != message->kind) {
         return 0;
     }

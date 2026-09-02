@@ -17,6 +17,10 @@
 
 #include "test_support.h"
 
+/*
+ * Find test desktop monitor while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 int test_desktop_monitor_find(void)
 {
     UmiDesktopMonitorTopology topology;

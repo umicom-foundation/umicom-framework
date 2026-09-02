@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the repository workflow execute sized operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_repository_workflow_execute_sized(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,

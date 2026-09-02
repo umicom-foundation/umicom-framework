@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design list spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignListSpec {
     size_t estimated_items;
     UmiDesignDensity density;

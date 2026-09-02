@@ -20,8 +20,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named native optimization level values accepted by this public contract.
+ */
 typedef enum UmiNativeOptimizationLevel { UMI_NC_OPT_O0=0, UMI_NC_OPT_O1=1, UMI_NC_OPT_O2=2, UMI_NC_OPT_O3=3, UMI_NC_OPT_SIZE=4 } UmiNativeOptimizationLevel;
+/**
+ * Represent the native optimization profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeOptimizationProfile { UmiNativeOptimizationLevel level; bool preserve_debug; bool vectorize; bool inline_functions; size_t max_pass_iterations; } UmiNativeOptimizationProfile;
+/**
+ * Provide the nc optimization profile default operation used by this module and its client
+ * applications.
+ */
 UmiNativeOptimizationProfile umi_nc_optimization_profile_default(UmiNativeOptimizationLevel level);
 #ifdef __cplusplus
 }

@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr update policy data shared with callers of this public contract.
+ */
 typedef struct UmiDrUpdatePolicy { bool automatic; bool allow_metered; bool maintenance_window; bool require_signature; } UmiDrUpdatePolicy;
+/**
+ * Initialise dr update policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_update_policy_init(UmiDrUpdatePolicy *policy); bool umi_dr_update_policy_eligible(const UmiDrUpdatePolicy *policy,bool metered,bool in_window,bool signed_update);
 
 #ifdef __cplusplus

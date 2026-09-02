@@ -18,8 +18,13 @@
 #include <math.h>
 
 
+/*
+ * Provide the workbench designer state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_designer_state_text(UmiWorkbenchDesignerState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_WORKBENCH_DESIGNER_STATE_CREATED: return "created";
         case UMI_WORKBENCH_DESIGNER_STATE_INITIALISED: return "initialised";
@@ -31,8 +36,13 @@ const char *umi_workbench_designer_state_text(UmiWorkbenchDesignerState state)
     }
 }
 
+/*
+ * Provide the workbench designer mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_designer_mode_text(UmiWorkbenchDesignerMode mode)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (mode) {
         case UMI_WORKBENCH_DESIGNER_MODE_BROWSE: return "browse";
         case UMI_WORKBENCH_DESIGNER_MODE_DESIGN: return "design";
@@ -43,8 +53,13 @@ const char *umi_workbench_designer_mode_text(UmiWorkbenchDesignerMode mode)
     }
 }
 
+/*
+ * Provide the workbench designer tool text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_designer_tool_text(UmiWorkbenchDesignerTool tool)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (tool) {
         case UMI_WORKBENCH_DESIGNER_TOOL_SELECT: return "select";
         case UMI_WORKBENCH_DESIGNER_TOOL_PAN: return "pan";
@@ -58,8 +73,13 @@ const char *umi_workbench_designer_tool_text(UmiWorkbenchDesignerTool tool)
     }
 }
 
+/*
+ * Provide the workbench designer drop zone text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_designer_drop_zone_text(UmiWorkbenchDesignerDropZone zone)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (zone) {
         case UMI_WORKBENCH_DESIGNER_DROP_NONE: return "none";
         case UMI_WORKBENCH_DESIGNER_DROP_LEFT: return "left";
@@ -73,8 +93,13 @@ const char *umi_workbench_designer_drop_zone_text(UmiWorkbenchDesignerDropZone z
     }
 }
 
+/*
+ * Provide the workbench designer command kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_designer_command_kind_text(UmiWorkbenchDesignerCommandKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_WORKBENCH_DESIGNER_COMMAND_NONE: return "none";
         case UMI_WORKBENCH_DESIGNER_COMMAND_ADD_PANEL: return "add-panel";
@@ -100,8 +125,13 @@ const char *umi_workbench_designer_command_kind_text(UmiWorkbenchDesignerCommand
     }
 }
 
+/*
+ * Provide the workbench designer save state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_designer_save_state_text(UmiWorkbenchDesignerSaveState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_WORKBENCH_DESIGNER_SAVE_CLEAN: return "clean";
         case UMI_WORKBENCH_DESIGNER_SAVE_DIRTY: return "dirty";
@@ -113,6 +143,10 @@ const char *umi_workbench_designer_save_state_text(UmiWorkbenchDesignerSaveState
     }
 }
 
+/*
+ * Check that workbench designer rect satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_workbench_designer_rect_is_valid(const UmiWorkbenchDesignerRect *rect)
 {
     return rect != NULL && isfinite(rect->x) && isfinite(rect->y) &&
@@ -120,20 +154,30 @@ bool umi_workbench_designer_rect_is_valid(const UmiWorkbenchDesignerRect *rect)
            rect->width >= 0.0 && rect->height >= 0.0;
 }
 
+/*
+ * Provide the workbench designer rect contains point operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_rect_contains_point(
     const UmiWorkbenchDesignerRect *rect,
     UmiWorkbenchDesignerPoint point)
 {
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_designer_rect_is_valid(rect)) return false;
     return point.x >= rect->x && point.y >= rect->y &&
            point.x <= rect->x + rect->width &&
            point.y <= rect->y + rect->height;
 }
 
+/*
+ * Provide the workbench designer rect intersects operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_rect_intersects(
     const UmiWorkbenchDesignerRect *left,
     const UmiWorkbenchDesignerRect *right)
 {
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_designer_rect_is_valid(left) ||
         !umi_workbench_designer_rect_is_valid(right)) return false;
     return left->x < right->x + right->width &&
@@ -142,6 +186,10 @@ bool umi_workbench_designer_rect_intersects(
            left->y + left->height > right->y;
 }
 
+/*
+ * Provide the workbench designer rect intersection operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchDesignerRect umi_workbench_designer_rect_intersection(
     const UmiWorkbenchDesignerRect *left,
     const UmiWorkbenchDesignerRect *right)
@@ -149,6 +197,7 @@ UmiWorkbenchDesignerRect umi_workbench_designer_rect_intersection(
     UmiWorkbenchDesignerRect result = {0.0, 0.0, 0.0, 0.0};
     double right_edge;
     double bottom_edge;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!umi_workbench_designer_rect_intersects(left, right)) return result;
     result.x = left->x > right->x ? left->x : right->x;
     result.y = left->y > right->y ? left->y : right->y;
@@ -161,9 +210,15 @@ UmiWorkbenchDesignerRect umi_workbench_designer_rect_intersection(
     return result;
 }
 
+/*
+ * Provide the workbench designer clamp operation used by this module and its client
+ * applications.
+ */
 double umi_workbench_designer_clamp(double value, double minimum, double maximum)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value < minimum) return minimum;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value > maximum) return maximum;
     return value;
 }

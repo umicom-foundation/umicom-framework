@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/cell_validation.h"
 #include <stdio.h>
-int main(void){UmiUiEntCellValidationRule r={1,0U,1,1,0.0,10.0};UmiUiEntCellValue v;char m[64];umi_ui_ent_cell_value_set_real(&v,12.0);if(umi_ui_ent_cell_validation_validate(&r,&v,m,sizeof m)==UMI_STATUS_OK)return 1;umi_ui_ent_cell_value_set_real(&v,5.0);if(umi_ui_ent_cell_validation_validate(&r,&v,m,sizeof m)!=UMI_STATUS_OK)return 2;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntCellValidationRule r={1,0U,1,1,0.0,10.0};UmiUiEntCellValue v;char m[64];umi_ui_ent_cell_value_set_real(&v,12.0);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_cell_validation_validate(&r,&v,m,sizeof m)==UMI_STATUS_OK)return 1;umi_ui_ent_cell_value_set_real(&v,5.0);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_cell_validation_validate(&r,&v,m,sizeof m)!=UMI_STATUS_OK)return 2;puts("ok");return 0;}

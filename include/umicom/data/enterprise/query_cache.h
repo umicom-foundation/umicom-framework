@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query cache entry data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryCacheEntry { char cache_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; uint64_t plan_fingerprint; uint64_t created_at; uint64_t hits; bool valid; } UmiDataQueryCacheEntry;
+/**
+ * Represent the data query cache data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryCache { UmiDataQueryCacheEntry items[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiDataQueryCache;
 /* Reset query-plan cache metadata. */ void umi_data_query_cache_init(UmiDataQueryCache *cache);
 /* Upsert fingerprint evidence and preserve hit counters. */ UmiStatus umi_data_query_cache_put(UmiDataQueryCache *cache,const char *cache_id,uint64_t fingerprint,uint64_t created_at);

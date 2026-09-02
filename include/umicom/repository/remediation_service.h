@@ -29,6 +29,10 @@ extern "C" {
 #endif
 #include "umicom/repository/inspection_service.h"
 #include "umicom/repository/remediation_report.h"
+/**
+ * Represent the repository remediation service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryRemediationService { UmiRepositoryInspectionService inspection; UmiRepositoryRemediationPolicy policy; UmiRepositoryRemediationPlan plan; UmiRepositoryRemediationReport report; UmiStatus last_status; uint64_t revision; } UmiRepositoryRemediationService;
 /* Initialise the service with conservative execution policy. */
 void umi_repository_remediation_service_init(UmiRepositoryRemediationService *service);

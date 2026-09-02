@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime capability bits operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_runtime_capability_bits(
     const UmiDebugRuntimeCapabilities *capabilities);
 #ifdef __cplusplus

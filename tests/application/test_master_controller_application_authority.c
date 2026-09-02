@@ -21,12 +21,20 @@
 
 static int authority_destroyed = 0;
 
+/*
+ * Exercise mark authority destroyed and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void mark_authority_destroyed(void *authority)
 {
     assert(authority != NULL);
     authority_destroyed += 1;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMasterController *master = NULL;

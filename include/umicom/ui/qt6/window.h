@@ -22,7 +22,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the qt6 window descriptor operation used by this module and its client
+ * applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_window_descriptor(void);
+/**
+ * Initialise qt6 window from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiQt6WidgetHandle umi_qt6_window_create(const UmiQt6RenderRequest *request);
 
 #ifdef __cplusplus

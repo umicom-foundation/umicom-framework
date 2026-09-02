@@ -25,24 +25,43 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide command router data shared with callers of this public contract.
+ */
 typedef struct UmiIdeCommandRouter {
     UmiIdeIntegrationPlatform *platform;
     UmiIdeCommandContext context;
     uint64_t sequence;
 } UmiIdeCommandRouter;
 
+/**
+ * Initialise ide command router from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_command_router_init(
     UmiIdeCommandRouter *router,
     UmiIdeIntegrationPlatform *platform);
 
+/**
+ * Provide the ide command router set context operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_command_router_set_context(
     UmiIdeCommandRouter *router,
     const UmiIdeCommandContext *context);
 
+/**
+ * Provide the ide command router enabled operation used by this module and its client
+ * applications.
+ */
 int umi_ide_command_router_enabled(
     UmiIdeCommandRouter *router,
     const char *command_id);
 
+/**
+ * Perform ide command router through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ide_command_router_execute(
     UmiIdeCommandRouter *router,
     const char *command_id,

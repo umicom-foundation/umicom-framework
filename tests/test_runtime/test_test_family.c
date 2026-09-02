@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/test_runtime/test_family.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestRuntimeTestFamily v,s;

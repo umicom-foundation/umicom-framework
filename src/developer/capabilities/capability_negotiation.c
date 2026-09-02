@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/capability_negotiation.h"
 
+/*
+ * Provide the developer capability capability negotiation operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_capability_negotiation(void)
 {

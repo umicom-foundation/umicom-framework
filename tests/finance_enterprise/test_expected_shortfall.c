@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/expected_shortfall.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ const double l[5]={1,5,2,4,3};double es=0;CHECK(umi_enterprise_expected_shortfall_historical(l,5U,0.6,&es)==UMI_STATUS_OK);CHECK(es==4.5);return 0; }

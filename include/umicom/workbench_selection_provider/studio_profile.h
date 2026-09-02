@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider studio profile data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderStudioProfile {
     const char *application_id;
     const char *project_panel_id;
@@ -34,9 +38,17 @@ typedef struct UmiWorkbenchSelectionProviderStudioProfile {
     const char *test_source_id;
 } UmiWorkbenchSelectionProviderStudioProfile;
 
+/**
+ * Provide the workbench selection provider studio profile default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchSelectionProviderStudioProfile
 umi_workbench_selection_provider_studio_profile_default(void);
 
+/**
+ * Provide the workbench selection provider register studio profile operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_register_studio_profile(
     UmiWorkbenchSelectionProviderService *service,
     const UmiWorkbenchSelectionProviderStudioProfile *profile);

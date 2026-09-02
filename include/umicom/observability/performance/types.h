@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_PERFORMANCE_TEXT_CAPACITY 256U
 #define UMI_PERFORMANCE_API_VERSION 1U
 
+/**
+ * List the named performance state values accepted by this public contract.
+ */
 typedef enum UmiPerformanceState {
     UMI_PERFORMANCE_STATE_IDLE = 0,
     UMI_PERFORMANCE_STATE_ACTIVE = 1,
@@ -36,6 +39,9 @@ typedef enum UmiPerformanceState {
     UMI_PERFORMANCE_STATE_FAILED = 3
 } UmiPerformanceState;
 
+/**
+ * List the named performance severity values accepted by this public contract.
+ */
 typedef enum UmiPerformanceSeverity {
     UMI_PERFORMANCE_SEVERITY_INFO = 0,
     UMI_PERFORMANCE_SEVERITY_WARNING = 1,

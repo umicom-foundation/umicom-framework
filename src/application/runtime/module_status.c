@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+/*
+ * Initialise application module status from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_module_status_init(
     const UmiApplicationExperienceDefinition *experience,
     int composition_available,
@@ -24,6 +28,10 @@ UmiStatus umi_application_module_status_init(
     int tests_available,
     UmiApplicationModuleStatus *out_status)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_status == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_status, 0, sizeof(*out_status));
     out_status->structure_size = sizeof(*out_status);
@@ -35,6 +43,10 @@ UmiStatus umi_application_module_status_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application module status runnable operation used by this module and its
+ * client applications.
+ */
 int umi_application_module_status_runnable(const UmiApplicationModuleStatus *status)
 {
     return status != NULL && status->composition_available && status->executable_available;

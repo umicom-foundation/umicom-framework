@@ -22,16 +22,39 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the problem quick fix model data shared with callers of this public contract.
+ */
 typedef struct UmiProblemQuickFixModel {
     UmiTestWorkbenchEntry value;
     uint64_t generation;
     uint32_t item_count;
     bool active;
 } UmiProblemQuickFixModel;
+/**
+ * Initialise problem quick fix model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_problem_quick_fix_model_init(UmiProblemQuickFixModel *model,const char *id,const char *label);
+/**
+ * Exercise problem quick fix model set active and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 UmiStatus umi_problem_quick_fix_model_set_active(UmiProblemQuickFixModel *model,bool active);
+/**
+ * Return the number of records represented by problem quick fix model set without changing
+ * their state.
+ */
 UmiStatus umi_problem_quick_fix_model_set_count(UmiProblemQuickFixModel *model,uint32_t item_count);
+/**
+ * Exercise problem quick fix model set state and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 UmiStatus umi_problem_quick_fix_model_set_state(UmiProblemQuickFixModel *model,UmiTestWorkbenchState state);
+/**
+ * Check that problem quick fix model satisfies its contract before another service relies
+ * on it.
+ */
 int umi_problem_quick_fix_model_valid(const UmiProblemQuickFixModel *model);
 #ifdef __cplusplus
 }

@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcSurfaceSupport x; umi_fc_surface_support_init(&x); x.required=UINT64_C(3); x.supported=UINT64_C(1); CHECK(!umi_fc_surface_support_satisfied(&x)); CHECK(umi_fc_surface_support_score(&x) > 0.49); x.supported=UINT64_C(3); CHECK(umi_fc_surface_support_satisfied(&x));
     return 0;

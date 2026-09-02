@@ -30,6 +30,10 @@ extern "C" {
  */
 #define UMI_PROJECT_WORKSPACE_DISCOVERY_CAPACITY 64U
 
+/**
+ * Represent the project workspace discovery options data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiProjectWorkspaceDiscoveryOptions {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,6 +44,10 @@ typedef struct UmiProjectWorkspaceDiscoveryOptions {
     int detect_git_repositories;
 } UmiProjectWorkspaceDiscoveryOptions;
 
+/**
+ * Represent the project workspace discovered project data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiProjectWorkspaceDiscoveredProject {
     uint32_t struct_size;
     uint32_t api_version;
@@ -57,6 +65,10 @@ typedef struct UmiProjectWorkspaceDiscoveredProject {
     int has_git;
 } UmiProjectWorkspaceDiscoveredProject;
 
+/**
+ * Represent the project workspace discovery snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiProjectWorkspaceDiscoverySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -68,8 +80,16 @@ typedef struct UmiProjectWorkspaceDiscoverySnapshot {
     size_t truncated_project_count;
 } UmiProjectWorkspaceDiscoverySnapshot;
 
+/**
+ * Provide the project workspace discovery options default operation used by this module
+ * and its client applications.
+ */
 UmiProjectWorkspaceDiscoveryOptions
 umi_project_workspace_discovery_options_default(void);
+/**
+ * Provide the project workspace model discover operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_model_discover(
     const UmiProjectWorkspaceModel *model,
     const UmiProjectWorkspaceDiscoveryOptions *options,

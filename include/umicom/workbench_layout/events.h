@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout event data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutEvent {
     uint32_t structure_size;
     UmiWorkbenchLayoutEventKind kind;
@@ -42,6 +45,10 @@ typedef void (*UmiWorkbenchLayoutEventListener)(
     void *context,
     const UmiWorkbenchLayoutEvent *event);
 
+/**
+ * Represent the workbench layout event subscription data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutEventSubscription {
     uint32_t structure_size;
     char subscription_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -51,6 +58,10 @@ typedef struct UmiWorkbenchLayoutEventSubscription {
     bool active;
 } UmiWorkbenchLayoutEventSubscription;
 
+/**
+ * Represent the workbench layout event bus data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutEventBus {
     uint32_t structure_size;
     UmiWorkbenchLayoutEventSubscription
@@ -61,30 +72,58 @@ typedef struct UmiWorkbenchLayoutEventBus {
     uint64_t revision;
 } UmiWorkbenchLayoutEventBus;
 
+/**
+ * Initialise workbench layout event bus from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_event_bus_init(
     UmiWorkbenchLayoutEventBus *bus);
 
+/**
+ * Initialise workbench layout event from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_event_init(
     UmiWorkbenchLayoutEvent *event,
     UmiWorkbenchLayoutEventKind kind,
     const char *event_id,
     const char *layout_id);
 
+/**
+ * Provide the workbench layout event bus subscribe operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_event_bus_subscribe(
     UmiWorkbenchLayoutEventBus *bus,
     const UmiWorkbenchLayoutEventSubscription *subscription);
 
+/**
+ * Provide the workbench layout event bus unsubscribe operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_event_bus_unsubscribe(
     UmiWorkbenchLayoutEventBus *bus,
     const char *subscription_id);
 
+/**
+ * Provide the workbench layout event bus publish operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_event_bus_publish(
     UmiWorkbenchLayoutEventBus *bus,
     UmiWorkbenchLayoutEvent *event);
 
+/**
+ * Provide the workbench layout event mask operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_workbench_layout_event_mask(
     UmiWorkbenchLayoutEventKind kind);
 
+/**
+ * Provide the workbench layout event subscription accepts operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_layout_event_subscription_accepts(
     const UmiWorkbenchLayoutEventSubscription *subscription,
     UmiWorkbenchLayoutEventKind kind);

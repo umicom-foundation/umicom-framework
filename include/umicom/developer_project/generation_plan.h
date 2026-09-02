@@ -26,6 +26,10 @@ extern "C" {
 #define UMI_DEVELOPER_PROJECT_GENERATED_CONTENT_CAPACITY 16384U
 #define UMI_DEVELOPER_PROJECT_GENERATION_FILE_CAPACITY 32U
 
+/**
+ * Represent the developer project generated file data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectGeneratedFile {
     char relative_path[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
     char content[UMI_DEVELOPER_PROJECT_GENERATED_CONTENT_CAPACITY];
@@ -33,6 +37,10 @@ typedef struct UmiDeveloperProjectGeneratedFile {
     int optional;
 } UmiDeveloperProjectGeneratedFile;
 
+/**
+ * Represent the developer project generation plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectGenerationPlan {
     char project_root[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
     char template_id[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
@@ -44,15 +52,27 @@ typedef struct UmiDeveloperProjectGenerationPlan {
     uint64_t revision;
 } UmiDeveloperProjectGenerationPlan;
 
+/**
+ * Initialise developer project generation plan from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_project_generation_plan_init(
     UmiDeveloperProjectGenerationPlan *plan);
 
+/**
+ * Provide the developer project generation plan build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_generation_plan_build(
     const UmiDeveloperProjectTemplate *project_template,
     const UmiDeveloperProjectVariableSet *variables,
     const char *project_root,
     UmiDeveloperProjectGenerationPlan *out_plan);
 
+/**
+ * Check that developer project generation plan satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_project_generation_plan_validate(
     const UmiDeveloperProjectGenerationPlan *plan);
 

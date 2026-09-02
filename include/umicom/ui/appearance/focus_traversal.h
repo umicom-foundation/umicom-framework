@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance focus traversal data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceFocusTraversal { char ids[UMI_APPEARANCE_MAX_FOCUS_ITEMS][UMI_APPEARANCE_ID_CAPACITY]; size_t count; } UmiAppearanceFocusTraversal;
 /* Initialise an empty logical focus order. */
 UmiStatus umi_appearance_focus_traversal_init(UmiAppearanceFocusTraversal *order);

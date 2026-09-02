@@ -24,6 +24,7 @@ get_target_property(
     umicom_application
     UMICOM_APPLICATION_EXPERIENCE_INTEGRATED)
 
+# Apply this branch only when its contract condition is satisfied.
 if(NOT _umicom_experience_integrated)
     # Application runtime metadata now projects into the existing canonical UI models.
     target_link_libraries(umicom_application PUBLIC Umicom::ui)
@@ -83,6 +84,7 @@ if(NOT _umicom_experience_integrated)
         "${CMAKE_CURRENT_LIST_DIR}/../src/application/runtime/workspace_runtime.c"
     )
 
+    # Configure the optional target only when its feature has created it.
     if(TARGET umicom_application_ui)
         target_sources(umicom_application_ui PRIVATE
             "${CMAKE_CURRENT_LIST_DIR}/../src/application_ui/summary_view.c"
@@ -101,6 +103,7 @@ if(NOT _umicom_experience_integrated)
         TARGET umicom_application
         PROPERTY UMICOM_APPLICATION_EXPERIENCE_INTEGRATED TRUE)
 
+    # Register verification targets only when the developer has enabled testing.
     if(BUILD_TESTING AND NOT TARGET umicom-application-experience-test)
         add_executable(umicom-application-experience-test
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_experience/test_main.c"
@@ -120,6 +123,7 @@ if(NOT _umicom_experience_integrated)
             COMMAND umicom-application-experience-test)
     endif()
 
+    # Register verification targets only when the developer has enabled testing.
     if(BUILD_TESTING AND NOT TARGET umicom-application-runtime-test)
         add_executable(umicom-application-runtime-test
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_main.c"
@@ -151,9 +155,11 @@ if(NOT _umicom_experience_integrated)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_ui_session.c"
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_workbench_binding.c"
         )
+        # Configure the optional target only when its feature has created it.
         if(TARGET Umicom::application_ui)
             target_link_libraries(umicom-application-runtime-test PRIVATE
                 Umicom::application_ui)
+        # Use this fallback path when the earlier condition does not apply.
         else()
             target_link_libraries(umicom-application-runtime-test PRIVATE
                 Umicom::application)
@@ -165,6 +171,7 @@ if(NOT _umicom_experience_integrated)
             COMMAND umicom-application-runtime-test)
     endif()
 
+    # Register verification targets only when the developer has enabled testing.
     if(BUILD_TESTING AND NOT TARGET umicom-application-thin-client-test)
         add_executable(umicom-application-thin-client-test
             "${CMAKE_CURRENT_LIST_DIR}/../tests/application_runtime/test_thin_client.c")

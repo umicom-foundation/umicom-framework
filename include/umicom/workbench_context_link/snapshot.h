@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextLinkSnapshot {
     uint32_t structure_size;
     size_t group_count;
@@ -34,6 +38,10 @@ typedef struct UmiWorkbenchContextLinkSnapshot {
     uint64_t revision;
 } UmiWorkbenchContextLinkSnapshot;
 
+/**
+ * Provide the workbench context link snapshot build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_snapshot_build(
     const UmiWorkbenchContextLinkService *service,
     UmiWorkbenchContextLinkSnapshot *out_snapshot);

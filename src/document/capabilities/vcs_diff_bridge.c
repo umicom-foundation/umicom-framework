@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/vcs_diff_bridge.h"
 
+/*
+ * Provide the document capability vcs diff bridge operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_vcs_diff_bridge(void)
 {

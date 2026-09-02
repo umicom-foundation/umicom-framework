@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalProjection { double opening_capital; double earnings; double distributions; double issuance; double deductions; double closing_capital; } UmiPrudentialCapitalProjection;
 /* Project closing capital from transparent additive sources and uses. */
 UmiStatus umi_pru_capital_projection_calculate(UmiPrudentialCapitalProjection *result, double opening_capital, double earnings, double distributions, double issuance, double deductions);

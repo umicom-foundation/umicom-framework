@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_quant_pricing_result_init(UmiQuantQuantPricingResult *record, double present_value, double clean_price, double accrued)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(umi_quant_number_valid(present_value) && umi_quant_number_valid(clean_price) && umi_quant_number_valid(accrued))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->present_value = present_value;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_quant_pricing_result_init(UmiQuantQuantPricingResult *record
 /* Return clean price plus accrued amount. */
 double umi_quant_quant_pricing_result_dirty_price(const UmiQuantQuantPricingResult *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->clean_price + record->accrued;
 }

@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project provider cmake operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_cmake(void);
 
 #ifdef __cplusplus

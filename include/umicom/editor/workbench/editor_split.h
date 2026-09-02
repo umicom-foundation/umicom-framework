@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor split data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbEditorSplit { char split_id[UMI_EDITOR_WB_ID_CAPACITY]; UmiEditorWbOrientation orientation; double ratio; } UmiEditorWbEditorSplit;
+/**
+ * Initialise editor wb editor split from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_editor_split_init(UmiEditorWbEditorSplit *split,const char *id,UmiEditorWbOrientation orientation,double ratio);
+/**
+ * Provide the editor wb editor split set ratio operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_wb_editor_split_set_ratio(UmiEditorWbEditorSplit *split,double ratio);
+/**
+ * Check that editor wb editor split satisfies its contract before another service relies
+ * on it.
+ */
 int umi_editor_wb_editor_split_valid(const UmiEditorWbEditorSplit *split);
 
 #ifdef __cplusplus

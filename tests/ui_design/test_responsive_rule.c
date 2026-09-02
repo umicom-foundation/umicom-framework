@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/responsive_rule.h"
 
-int main(void){UmiDesignBreakpoint b;UmiDesignResponsiveRule r;if(umi_design_breakpoint_init(&b,"phone",0,599,UMI_DESIGN_SIZE_COMPACT)!=UMI_STATUS_OK)return 1;if(umi_design_responsive_rule_init(&r,&b,UMI_DESIGN_DENSITY_TOUCH,1U,1)!=UMI_STATUS_OK)return 2;return umi_design_responsive_rule_matches(&r,480)?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignBreakpoint b;UmiDesignResponsiveRule r;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_breakpoint_init(&b,"phone",0,599,UMI_DESIGN_SIZE_COMPACT)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_responsive_rule_init(&r,&b,UMI_DESIGN_DENSITY_TOUCH,1U,1)!=UMI_STATUS_OK)return 2;return umi_design_responsive_rule_matches(&r,480)?0:3;}

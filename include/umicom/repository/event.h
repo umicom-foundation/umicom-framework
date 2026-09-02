@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository control event data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryControlEvent {
     uint64_t sequence;
     UmiRepositoryControlState state;
@@ -29,6 +32,10 @@ typedef struct UmiRepositoryControlEvent {
     char path[UMI_REPOSITORY_CONTROL_PATH_CAPACITY];
     char message[UMI_REPOSITORY_CONTROL_TEXT_CAPACITY];
 } UmiRepositoryControlEvent;
+/**
+ * Initialise repository event from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_repository_event_init(
     UmiRepositoryControlEvent *event,
     uint64_t sequence,

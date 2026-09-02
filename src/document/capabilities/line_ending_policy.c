@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/line_ending_policy.h"
 
+/*
+ * Provide the document capability line ending policy operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_line_ending_policy(void)
 {

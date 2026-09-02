@@ -18,6 +18,10 @@
 
 #include "umicom/application/production/production.h"
 
+/**
+ * Exercise test application production studio adoption and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static inline UmiProductApplicationAdoption
 umi_test_application_production_studio_adoption(void)
 {
@@ -33,6 +37,10 @@ umi_test_application_production_studio_adoption(void)
     return adoption;
 }
 
+/**
+ * Exercise test application production all available and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static inline int umi_test_application_production_all_available(
     const char *capability_id, void *context)
 {
@@ -40,6 +48,10 @@ static inline int umi_test_application_production_all_available(
     return capability_id != NULL && capability_id[0] != '\0';
 }
 
+/**
+ * Exercise test application production none available and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static inline int umi_test_application_production_none_available(
     const char *capability_id, void *context)
 {

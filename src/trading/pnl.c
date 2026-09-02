@@ -18,5 +18,13 @@
  */
 
 #include "umicom/trading/pnl.h"
+/*
+ * Provide the position unrealised pnl operation used by this module and its client
+ * applications.
+ */
 double umi_position_unrealised_pnl(const UmiPosition *p,double mark){return p!=NULL&&mark>0.0?(mark-p->average_price)*p->quantity*p->instrument.multiplier:0.0;}
+/*
+ * Provide the position total pnl operation used by this module and its client
+ * applications.
+ */
 double umi_position_total_pnl(const UmiPosition *p,double mark){return p!=NULL?p->realised_pnl+umi_position_unrealised_pnl(p,mark):0.0;}

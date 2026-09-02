@@ -21,6 +21,10 @@
 #include "delivery_internal.h"
 #include <string.h>
 
+/*
+ * Initialise package provider from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_package_provider_init(UmiPackageProvider *provider,
                                     const char *provider_id,
                                     UmiPackageFormat format,
@@ -28,12 +32,17 @@ UmiStatus umi_package_provider_init(UmiPackageProvider *provider,
                                     UmiPackageCreateFn create)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL || provider_id == NULL || create == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(provider, 0, sizeof(*provider));
     status = umi_delivery_copy_text(provider->provider_id,
                                     sizeof(provider->provider_id), provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     provider->format = format;
     provider->instance = instance;
@@ -41,13 +50,22 @@ UmiStatus umi_package_provider_init(UmiPackageProvider *provider,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise package provider from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_package_provider_create(const UmiPackageProvider *provider,
                                       const UmiPackageSpec *spec,
                                       UmiPackageResult *result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL || spec == NULL || result == NULL || provider->create == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (provider->format != spec->format) return UMI_STATUS_INVALID_ARGUMENT;
     return provider->create(provider->instance, spec, result);
 }

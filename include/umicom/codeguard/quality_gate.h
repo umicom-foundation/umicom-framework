@@ -24,13 +24,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the code guard quality gate data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardQualityGate {
     size_t max_critical;
     size_t max_high;
     size_t max_medium;
     size_t max_architecture;
 } UmiCodeGuardQualityGate;
+/**
+ * Provide the codeguard quality gate default operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardQualityGate umi_codeguard_quality_gate_default(void);
+/**
+ * Provide the codeguard quality gate pass operation used by this module and its client
+ * applications.
+ */
 int umi_codeguard_quality_gate_pass(const UmiCodeGuardQualityGate *gate,
                                     const UmiCodeGuardResult *result);
 #ifdef __cplusplus

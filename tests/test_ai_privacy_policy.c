@@ -16,6 +16,10 @@
 
 #include "umicom/ai/privacy_policy.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiPrivacyPolicy policy = umi_ai_privacy_policy_default();

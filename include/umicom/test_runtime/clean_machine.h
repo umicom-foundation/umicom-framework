@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test runtime clean machine data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeCleanMachine {
     uint32_t structure_size;
     char id[UMI_TEST_RUNTIME_ID_CAPACITY];
@@ -34,13 +38,45 @@ typedef struct UmiTestRuntimeCleanMachine {
     bool enabled;
 } UmiTestRuntimeCleanMachine;
 
+/**
+ * Initialise test runtime clean machine from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_runtime_clean_machine_init(UmiTestRuntimeCleanMachine *value, const char *id);
+/**
+ * Check that test runtime clean machine satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_clean_machine_validate(const UmiTestRuntimeCleanMachine *value);
+/**
+ * Provide the test runtime clean machine set name operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_clean_machine_set_name(UmiTestRuntimeCleanMachine *value, const char *name);
+/**
+ * Provide the test runtime clean machine set detail operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_clean_machine_set_detail(UmiTestRuntimeCleanMachine *value, const char *detail);
+/**
+ * Return the number of records represented by test runtime clean machine set requirement
+ * without changing their state.
+ */
 UmiStatus umi_test_runtime_clean_machine_set_requirement_count(UmiTestRuntimeCleanMachine *value, uint64_t number);
+/**
+ * Return the number of records represented by test runtime clean machine set missing
+ * without changing their state.
+ */
 UmiStatus umi_test_runtime_clean_machine_set_missing_count(UmiTestRuntimeCleanMachine *value, uint64_t number);
+/**
+ * Provide the test runtime clean machine touch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_clean_machine_touch(UmiTestRuntimeCleanMachine *value, uint64_t updated_at_ms);
+/**
+ * Provide the test runtime clean machine same identity operation used by this module and
+ * its client applications.
+ */
 bool umi_test_runtime_clean_machine_same_identity(const UmiTestRuntimeCleanMachine *left, const UmiTestRuntimeCleanMachine *right);
 
 #ifdef __cplusplus

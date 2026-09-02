@@ -20,8 +20,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise toolchain operation service from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_operation_service_init(UmiToolchainOperationService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     (void)memset(service, 0, sizeof(*service));
     service->state = UMI_TOOLCHAIN_OPERATION_SERVICE_IDLE;
@@ -29,6 +37,10 @@ void umi_toolchain_operation_service_init(UmiToolchainOperationService *service)
     service->revision = 1U;
 }
 
+/*
+ * Provide the toolchain operation service prepare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_operation_service_prepare(
     UmiToolchainOperationService *service,
     UmiToolchainOperationKind kind,
@@ -38,6 +50,10 @@ UmiStatus umi_toolchain_operation_service_prepare(
     void *diagnostic_user_data)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     service->state = UMI_TOOLCHAIN_OPERATION_SERVICE_PREPARING;
     status = umi_toolchain_operation_context_prepare(
@@ -51,6 +67,10 @@ UmiStatus umi_toolchain_operation_service_prepare(
     return status;
 }
 
+/*
+ * Provide the toolchain operation service ready operation used by this module and its
+ * client applications.
+ */
 int umi_toolchain_operation_service_ready(const UmiToolchainOperationService *service)
 {
     return service != NULL && service->state == UMI_TOOLCHAIN_OPERATION_SERVICE_READY &&

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/problem_registry.h"
 
+/*
+ * Provide the developer capability problem registry operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_problem_registry(void)
 {

@@ -26,12 +26,18 @@ typedef struct UmiGtk4DesktopDesignerControls {
     double last_drag_y;
 } UmiGtk4DesktopDesignerControls;
 
+/* Provide the refresh desktop operation used by this module and its client applications. */
 static void refresh_desktop(UmiGtk4DesktopDesignerControls *controls)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls != NULL && controls->adapter != NULL)
         (void)umi_gtk4_refresh_workbench(controls->adapter);
 }
 
+/* Provide the draw monitor operation used by this module and its client applications. */
 static void draw_monitor(cairo_t *context,
                          const UmiDesktopCanvasMonitor *monitor)
 {
@@ -39,7 +45,9 @@ static void draw_monitor(cairo_t *context,
     cairo_rectangle(context, monitor->bounds.x, monitor->bounds.y,
                     monitor->bounds.width, monitor->bounds.height);
     cairo_fill_preserve(context);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (monitor->primary) cairo_set_source_rgb(context, 0.79, 0.30, 0.33);
+    /* Use this fallback path when the earlier condition does not apply. */
     else cairo_set_source_rgb(context, 0.30, 0.40, 0.48);
     cairo_set_line_width(context, monitor->primary ? 3.0 : 1.5);
     cairo_stroke(context);
@@ -49,11 +57,14 @@ static void draw_monitor(cairo_t *context,
     cairo_show_text(context, monitor->name);
 }
 
+/* Provide the draw window operation used by this module and its client applications. */
 static void draw_window(cairo_t *context,
                         const UmiDesktopCanvasWindow *window)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (window->selected) cairo_set_source_rgba(context, 0.79, 0.30, 0.33, 0.76);
-    else if (window->locked) cairo_set_source_rgba(context, 0.18, 0.25, 0.31, 0.94);
+    else /* Apply this branch only when its contract condition is satisfied. */ if (window->locked) cairo_set_source_rgba(context, 0.18, 0.25, 0.31, 0.94);
+    /* Use this fallback path when the earlier condition does not apply. */
     else cairo_set_source_rgba(context, 0.20, 0.33, 0.42, 0.94);
     cairo_rectangle(context, window->bounds.x, window->bounds.y,
                     window->bounds.width, window->bounds.height);
@@ -63,6 +74,7 @@ static void draw_window(cairo_t *context,
                          window->selected ? 0.82 : 0.70);
     cairo_set_line_width(context, window->selected ? 3.0 : 1.0);
     cairo_stroke(context);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (window->bounds.width >= 70.0 && window->bounds.height >= 28.0) {
         cairo_save(context);
         cairo_rectangle(context, window->bounds.x + 4.0,
@@ -78,6 +90,7 @@ static void draw_window(cairo_t *context,
     }
 }
 
+/* Provide the draw canvas operation used by this module and its client applications. */
 static void draw_canvas(GtkDrawingArea *area,
                         cairo_t *context,
                         int width,
@@ -89,10 +102,15 @@ static void draw_canvas(GtkDrawingArea *area,
     UmiDesktopShellSnapshot snapshot;
     size_t index;
     (void)area;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL || controls->adapter == NULL ||
         controls->adapter->desktop_shell == NULL) return;
     (void)umi_desktop_shell_model_set_viewport(
         controls->adapter->desktop_shell, (double)width, (double)height);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_shell_model_snapshot(
             controls->adapter->desktop_shell, &snapshot) != UMI_STATUS_OK)
         return;
@@ -101,20 +119,25 @@ static void draw_canvas(GtkDrawingArea *area,
     cairo_select_font_face(context, "Sans", CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(context, 11.0);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.monitor_count; ++index) {
         UmiDesktopCanvasMonitor monitor;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_desktop_shell_model_monitor_at(
                 controls->adapter->desktop_shell, index, &monitor) ==
             UMI_STATUS_OK) draw_monitor(context, &monitor);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.window_count; ++index) {
         UmiDesktopCanvasWindow window;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_desktop_shell_model_window_at(
                 controls->adapter->desktop_shell, index, &window) ==
             UMI_STATUS_OK && window.visible) draw_window(context, &window);
     }
 }
 
+/* Provide the on canvas pressed operation used by this module and its client applications. */
 static void on_canvas_pressed(GtkGestureClick *gesture,
                               int press_count,
                               double x,
@@ -125,12 +148,17 @@ static void on_canvas_pressed(GtkGestureClick *gesture,
         (UmiGtk4DesktopDesignerControls *)user_data;
     (void)gesture;
     (void)press_count;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL || controls->adapter->desktop_shell == NULL) return;
     (void)umi_desktop_shell_model_select_at(
         controls->adapter->desktop_shell, x, y);
     gtk_widget_queue_draw(controls->canvas);
 }
 
+/* Provide the on drag begin operation used by this module and its client applications. */
 static void on_drag_begin(GtkGestureDrag *gesture,
                           double start_x,
                           double start_y,
@@ -139,6 +167,10 @@ static void on_drag_begin(GtkGestureDrag *gesture,
     UmiGtk4DesktopDesignerControls *controls =
         (UmiGtk4DesktopDesignerControls *)user_data;
     (void)gesture;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL || controls->adapter->desktop_shell == NULL) return;
     controls->last_drag_x = 0.0;
     controls->last_drag_y = 0.0;
@@ -147,6 +179,7 @@ static void on_drag_begin(GtkGestureDrag *gesture,
     gtk_widget_queue_draw(controls->canvas);
 }
 
+/* Provide the on drag update operation used by this module and its client applications. */
 static void on_drag_update(GtkGestureDrag *gesture,
                            double offset_x,
                            double offset_y,
@@ -157,9 +190,14 @@ static void on_drag_update(GtkGestureDrag *gesture,
     double delta_x;
     double delta_y;
     (void)gesture;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL || controls->adapter->desktop_shell == NULL) return;
     delta_x = offset_x - controls->last_drag_x;
     delta_y = offset_y - controls->last_drag_y;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_shell_model_move_selected_canvas(
             controls->adapter->desktop_shell, delta_x, delta_y) ==
         UMI_STATUS_OK) {
@@ -169,6 +207,7 @@ static void on_drag_update(GtkGestureDrag *gesture,
     }
 }
 
+/* Provide the on desktop action operation used by this module and its client applications. */
 static void on_desktop_action(GtkButton *button, gpointer user_data)
 {
     UmiGtk4DesktopDesignerControls *controls =
@@ -178,15 +217,28 @@ static void on_desktop_action(GtkButton *button, gpointer user_data)
     UmiDesktopShellSnapshot snapshot;
     const char *action_id;
     UmiStatus status = UMI_STATUS_NOT_FOUND;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL || controls->adapter == NULL) return;
     shell = controls->adapter->desktop_shell;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (shell == NULL) return;
     designer = umi_desktop_shell_model_designer(shell);
     action_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-desktop-action-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_id == NULL ||
         umi_desktop_shell_model_snapshot(shell, &snapshot) != UMI_STATUS_OK)
         return;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(action_id, UMI_DESKTOP_ACTION_NEW_LAYOUT) == 0) {
         char layout_id[UMI_DESKTOP_ID_CAPACITY];
         char name[UMI_DESKTOP_TITLE_CAPACITY];
@@ -196,33 +248,35 @@ static void on_desktop_action(GtkButton *button, gpointer user_data)
         (void)snprintf(name, sizeof(name), "%.183s Custom",
                        snapshot.active_layout_name);
         status = umi_desktop_shell_model_begin_design(shell, layout_id, name);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_SAVE_LAYOUT) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_SAVE_LAYOUT) == 0) {
         status = umi_desktop_shell_model_end_design(shell, true);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_CANCEL_LAYOUT) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_CANCEL_LAYOUT) == 0) {
         status = umi_desktop_shell_model_end_design(shell, false);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_UNDO) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_UNDO) == 0) {
         status = umi_desktop_layout_designer_undo(designer);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_REDO) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_REDO) == 0) {
         status = umi_desktop_layout_designer_redo(designer);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_LEFT) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_LEFT) == 0) {
         status = umi_desktop_layout_designer_dock_selected(
             designer, UMI_DESKTOP_DOCK_LEFT);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_RIGHT) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_RIGHT) == 0) {
         status = umi_desktop_layout_designer_dock_selected(
             designer, UMI_DESKTOP_DOCK_RIGHT);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_TOP) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_TOP) == 0) {
         status = umi_desktop_layout_designer_dock_selected(
             designer, UMI_DESKTOP_DOCK_TOP);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_BOTTOM) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_DOCK_BOTTOM) == 0) {
         status = umi_desktop_layout_designer_dock_selected(
             designer, UMI_DESKTOP_DOCK_BOTTOM);
-    } else if (strcmp(action_id, UMI_DESKTOP_ACTION_FLOAT) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(action_id, UMI_DESKTOP_ACTION_FLOAT) == 0) {
         status = umi_desktop_layout_designer_dock_selected(
             designer, UMI_DESKTOP_DOCK_FLOATING);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) refresh_desktop(controls);
 }
 
+/* Provide the action button operation used by this module and its client applications. */
 static GtkWidget *action_button(
     UmiGtk4DesktopDesignerControls *controls,
     const UmiDesktopShellAction *action)
@@ -231,6 +285,7 @@ static GtkWidget *action_button(
     gtk_widget_set_sensitive(button, action->enabled);
     gtk_widget_set_tooltip_text(button, action->tooltip);
     gtk_widget_add_css_class(button, "umicom-desktop-action");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action->destructive)
         gtk_widget_add_css_class(button, "destructive-action");
     g_object_set_data_full(G_OBJECT(button), "umicom-desktop-action-id",
@@ -240,6 +295,10 @@ static GtkWidget *action_button(
     return button;
 }
 
+/*
+ * Provide the gtk4 desktop designer popover operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_desktop_designer_popover(UmiGtk4Adapter *adapter)
 {
     UmiGtk4DesktopDesignerControls *controls;
@@ -254,10 +313,19 @@ GtkWidget *umi_gtk4_desktop_designer_popover(UmiGtk4Adapter *adapter)
     GtkGesture *drag;
     char summary_text[UMI_DESKTOP_DESCRIPTION_CAPACITY];
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->desktop_shell == NULL) return NULL;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_shell_model_snapshot(
             adapter->desktop_shell, &snapshot) != UMI_STATUS_OK) return NULL;
     controls = g_new0(UmiGtk4DesktopDesignerControls, 1);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL) return NULL;
     controls->adapter = adapter;
     popover = gtk_popover_new();
@@ -293,16 +361,20 @@ GtkWidget *umi_gtk4_desktop_designer_popover(UmiGtk4Adapter *adapter)
                               GTK_EVENT_CONTROLLER(drag));
     primary_actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     dock_actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_desktop_shell_action_count(); ++index) {
         UmiDesktopShellAction action;
         GtkWidget *button;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_desktop_shell_action_at(
                 umi_desktop_shell_model_designer(adapter->desktop_shell),
                 index, &action) != UMI_STATUS_OK ||
             strcmp(action.action_id, UMI_DESKTOP_ACTION_MONITORS) == 0)
             continue;
         button = action_button(controls, &action);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index < 5U) gtk_box_append(GTK_BOX(primary_actions), button);
+        /* Use this fallback path when the earlier condition does not apply. */
         else gtk_box_append(GTK_BOX(dock_actions), button);
     }
     gtk_box_append(GTK_BOX(root), heading);

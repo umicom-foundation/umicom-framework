@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_DIAGNOSTIC_POLICY_ID_CAPACITY 128U
 #define UMI_DIAGNOSTIC_POLICY_PATTERN_CAPACITY 512U
 
+/**
+ * List the named diagnostic severity action values accepted by this public contract.
+ */
 typedef enum UmiDiagnosticSeverityAction {
     UMI_DIAGNOSTIC_SEVERITY_KEEP = 1,
     UMI_DIAGNOSTIC_SEVERITY_SET = 2,
@@ -39,6 +42,9 @@ typedef enum UmiDiagnosticSeverityAction {
     UMI_DIAGNOSTIC_SEVERITY_DISABLE = 5
 } UmiDiagnosticSeverityAction;
 
+/**
+ * Represent the diagnostic severity rule data shared with callers of this public contract.
+ */
 typedef struct UmiDiagnosticSeverityRule {
     uint32_t struct_size;
     uint32_t api_version;
@@ -57,6 +63,10 @@ typedef struct UmiDiagnosticSeverityRule {
     int enabled;
 } UmiDiagnosticSeverityRule;
 
+/**
+ * Represent the diagnostic severity decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSeverityDecision {
     uint32_t struct_size;
     uint32_t api_version;
@@ -69,6 +79,10 @@ typedef struct UmiDiagnosticSeverityDecision {
     int disabled;
 } UmiDiagnosticSeverityDecision;
 
+/**
+ * Represent the diagnostic severity policy snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDiagnosticSeverityPolicySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -80,33 +94,77 @@ typedef struct UmiDiagnosticSeverityPolicySnapshot {
     uint64_t revision;
 } UmiDiagnosticSeverityPolicySnapshot;
 
+/**
+ * Represent the diagnostic severity policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSeverityPolicy UmiDiagnosticSeverityPolicy;
 
+/**
+ * Initialise diagnostic severity policy from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_diagnostic_severity_policy_create(
     UmiDiagnosticSeverityPolicy **out_policy);
+/**
+ * Release or reset state held by diagnostic severity policy so the same storage can be
+ * reused safely.
+ */
 void umi_diagnostic_severity_policy_destroy(
     UmiDiagnosticSeverityPolicy *policy);
+/**
+ * Release or reset state held by diagnostic severity policy so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_diagnostic_severity_policy_clear(
     UmiDiagnosticSeverityPolicy *policy);
+/**
+ * Provide the diagnostic severity policy upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_severity_policy_upsert(
     UmiDiagnosticSeverityPolicy *policy,
     const UmiDiagnosticSeverityRule *rule);
+/**
+ * Remove diagnostic severity policy while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_diagnostic_severity_policy_remove(
     UmiDiagnosticSeverityPolicy *policy,
     const char *rule_id);
+/**
+ * Find diagnostic severity policy while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_diagnostic_severity_policy_at(
     const UmiDiagnosticSeverityPolicy *policy,
     size_t position,
     UmiDiagnosticSeverityRule *out_rule);
+/**
+ * Provide the diagnostic severity policy evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_severity_policy_evaluate(
     const UmiDiagnosticSeverityPolicy *policy,
     const UmiDiagnosticProviderFinding *finding,
     UmiDiagnosticSeverityDecision *out_decision);
+/**
+ * Provide the diagnostic severity policy snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_severity_policy_snapshot(
     const UmiDiagnosticSeverityPolicy *policy,
     UmiDiagnosticSeverityPolicySnapshot *out_snapshot);
+/**
+ * Return the number of records represented by diagnostic severity policy without changing
+ * their state.
+ */
 size_t umi_diagnostic_severity_policy_count(
     const UmiDiagnosticSeverityPolicy *policy);
+/**
+ * Provide the diagnostic severity policy revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_diagnostic_severity_policy_revision(
     const UmiDiagnosticSeverityPolicy *policy);
 

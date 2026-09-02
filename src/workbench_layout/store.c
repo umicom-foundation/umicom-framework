@@ -20,6 +20,10 @@
 
 #include "internal.h"
 
+/*
+ * Provide the workbench layout store query default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutStoreQuery
 umi_workbench_layout_store_query_default(void)
 {
@@ -35,12 +39,20 @@ umi_workbench_layout_store_query_default(void)
     return query;
 }
 
+/*
+ * Check that workbench layout store adapter satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_layout_store_adapter_validate(
     const UmiWorkbenchLayoutStoreAdapter *adapter)
 {
     bool any_transaction;
     bool all_transaction;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL ||
         adapter->structure_size < sizeof(*adapter) ||
         adapter->kind < UMI_WORKBENCH_LAYOUT_STORE_MEMORY ||
@@ -70,6 +82,10 @@ UmiStatus umi_workbench_layout_store_adapter_validate(
         : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Provide the workbench layout store supports transactions operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_layout_store_supports_transactions(
     const UmiWorkbenchLayoutStoreAdapter *adapter)
 {
@@ -79,6 +95,10 @@ bool umi_workbench_layout_store_supports_transactions(
            adapter->rollback_transaction != NULL;
 }
 
+/*
+ * Write workbench layout store in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_store_save(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutDocument *document,
@@ -87,6 +107,10 @@ UmiStatus umi_workbench_layout_store_save(
 {
     UmiStatus status =
         umi_workbench_layout_store_adapter_validate(adapter);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || document == NULL ||
         out_revision == NULL) {
         return status != UMI_STATUS_OK
@@ -100,6 +124,10 @@ UmiStatus umi_workbench_layout_store_save(
         out_revision);
 }
 
+/*
+ * Read workbench layout store into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_store_load(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const char *layout_id,
@@ -107,6 +135,7 @@ UmiStatus umi_workbench_layout_store_load(
 {
     UmiStatus status =
         umi_workbench_layout_store_adapter_validate(adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         !umi_workbench_layout_text_present(layout_id) ||
         out_document == NULL) {
@@ -118,6 +147,10 @@ UmiStatus umi_workbench_layout_store_load(
         adapter->context, layout_id, out_document);
 }
 
+/*
+ * Provide the workbench layout store delete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_store_delete(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const char *layout_id,
@@ -125,6 +158,7 @@ UmiStatus umi_workbench_layout_store_delete(
 {
     UmiStatus status =
         umi_workbench_layout_store_adapter_validate(adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         !umi_workbench_layout_text_present(layout_id)) {
         return status != UMI_STATUS_OK
@@ -135,6 +169,10 @@ UmiStatus umi_workbench_layout_store_delete(
         adapter->context, layout_id, expected_revision);
 }
 
+/*
+ * Provide the workbench layout store list operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_store_list(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutStoreQuery *query,
@@ -144,6 +182,10 @@ UmiStatus umi_workbench_layout_store_list(
     UmiStatus status =
         umi_workbench_layout_store_adapter_validate(adapter);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || out_list == NULL) {
         return status != UMI_STATUS_OK
             ? status
@@ -152,6 +194,7 @@ UmiStatus umi_workbench_layout_store_list(
     effective = query != NULL
         ? *query
         : umi_workbench_layout_store_query_default();
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (effective.limit == 0U ||
         effective.limit >
             UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS) {
@@ -162,6 +205,10 @@ UmiStatus umi_workbench_layout_store_list(
         adapter->context, &effective, out_list);
 }
 
+/*
+ * Provide the workbench layout store save session operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_store_save_session(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutSession *session,
@@ -170,6 +217,10 @@ UmiStatus umi_workbench_layout_store_save_session(
 {
     UmiStatus status =
         umi_workbench_layout_store_adapter_validate(adapter);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || session == NULL ||
         out_revision == NULL) {
         return status != UMI_STATUS_OK
@@ -183,6 +234,10 @@ UmiStatus umi_workbench_layout_store_save_session(
         out_revision);
 }
 
+/*
+ * Provide the workbench layout store load session operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_store_load_session(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const char *session_id,
@@ -190,6 +245,7 @@ UmiStatus umi_workbench_layout_store_load_session(
 {
     UmiStatus status =
         umi_workbench_layout_store_adapter_validate(adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         !umi_workbench_layout_text_present(session_id) ||
         out_session == NULL) {

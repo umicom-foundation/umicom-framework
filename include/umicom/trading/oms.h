@@ -31,8 +31,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the oms data shared with callers of this public contract.
+ */
 typedef struct UmiOms { UmiOrderStore orders; UmiTradingKillSwitch kill_switch; UmiOrderThrottle throttle; UmiRiskLimit risk_limit; } UmiOms;
+/**
+ * Initialise oms from caller-provided values so later operations receive a known state.
+ */
 void umi_oms_init(UmiOms *oms, UmiRiskLimit risk_limit);
+/**
+ * Provide the oms submit operation used by this module and its client applications.
+ */
 UmiStatus umi_oms_submit(UmiOms *oms, const UmiOrderRequest *request, double current_position, double daily_pnl, int64_t now_ms, UmiRiskDecision *decision);
 #ifdef __cplusplus
 }

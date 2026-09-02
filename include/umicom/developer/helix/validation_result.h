@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix validation result data shared with callers of this public contract.
+ */
 typedef struct UmiHelixValidationResult { size_t passed; size_t failed; size_t blocked; size_t missing; double score; UmiHelixDecision decision; } UmiHelixValidationResult;
 /* Initialise aggregate validation counters. */
 void umi_helix_validation_result_init(UmiHelixValidationResult *result);

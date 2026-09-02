@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data operation queue data shared with callers of this public contract.
+ */
 typedef struct UmiDataOperationQueue { UmiDataOperation items[UMI_DATA_ENTERPRISE_MAX_OPERATIONS]; size_t count; uint64_t revision; } UmiDataOperationQueue;
 /* Reset operation queue state. */ void umi_data_data_operation_queue_init(UmiDataOperationQueue *queue);
 /* Enqueue a unique operation and retain stable submission evidence. */ UmiStatus umi_data_data_operation_queue_push(UmiDataOperationQueue *queue,const UmiDataOperation *operation);

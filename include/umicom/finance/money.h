@@ -24,7 +24,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Add money only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_money_add(const UmiMoney *left, const UmiMoney *right, UmiMoney *out);
+/**
+ * Provide the money subtract operation used by this module and its client applications.
+ */
 UmiStatus umi_money_subtract(const UmiMoney *left, const UmiMoney *right, UmiMoney *out);
 #ifdef __cplusplus
 }

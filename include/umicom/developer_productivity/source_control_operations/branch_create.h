@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise developer source control operation branch from caller-provided values so
+ * later operations receive a known state.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_branch_create(void);
 
 #ifdef __cplusplus

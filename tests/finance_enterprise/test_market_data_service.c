@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/market_data_service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseMarketDataService s; UmiEnterpriseMarketDataUpdate u; CHECK(umi_enterprise_market_data_service_init(&s,1000)==UMI_STATUS_OK); CHECK(umi_enterprise_market_data_update_init(&u,"X",1.0,1U,1)==UMI_STATUS_OK); CHECK(umi_enterprise_market_data_service_publish(&s,&u)==UMI_STATUS_OK); CHECK(s.accepted_updates==1U); return 0; }

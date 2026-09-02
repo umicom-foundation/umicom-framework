@@ -22,6 +22,13 @@
 #ifndef UMICOM_UI_COMPONENTS_SURFACE_H
 #define UMICOM_UI_COMPONENTS_SURFACE_H
 #include <stdint.h>
+/**
+ * Represent the ui surface data shared with callers of this public contract.
+ */
 typedef struct UmiUiSurface { int32_t width; int32_t height; uint64_t revision; } UmiUiSurface;
+/**
+ * Provide the ui surface default operation used by this module and its client
+ * applications.
+ */
 UmiUiSurface umi_ui_surface_default(void);
 #endif

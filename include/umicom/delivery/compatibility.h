@@ -27,12 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the compatibility data shared with callers of this public contract.
+ */
 typedef struct UmiCompatibility {
     uint32_t required_framework_abi;
     uint32_t available_framework_abi;
     uint32_t minimum_schema;
     uint32_t available_schema;
 } UmiCompatibility;
+/**
+ * Provide the compatibility passed operation used by this module and its client
+ * applications.
+ */
 int umi_compatibility_passed(const UmiCompatibility *compatibility);
 
 #ifdef __cplusplus

@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/tool.h"
 
+/* Provide the tool kind name operation used by this module and its client applications. */
 const char *umi_tool_kind_name(UmiToolKind kind)
 {
     static const char *const names[UMI_TOOL_COUNT] = {
@@ -50,6 +51,10 @@ const char *umi_tool_kind_name(UmiToolKind kind)
         : "Unknown tool";
 }
 
+/*
+ * Provide the tool default executable operation used by this module and its client
+ * applications.
+ */
 const char *umi_tool_default_executable(UmiToolKind kind)
 {
 #ifdef _WIN32
@@ -76,8 +81,10 @@ const char *umi_tool_default_executable(UmiToolKind kind)
         : "";
 }
 
+/* Provide the tool state text operation used by this module and its client applications. */
 const char *umi_tool_state_text(UmiToolState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_TOOL_MISSING: return "MISSING";
         case UMI_TOOL_FOUND: return "FOUND";

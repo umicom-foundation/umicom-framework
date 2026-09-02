@@ -24,6 +24,7 @@
 
 #define UMI_KNOWLEDGE_UI_VISIBLE_ROWS 24U
 
+/* Provide the set string operation used by this module and its client applications. */
 static UmiStatus set_string(UmiUiViewModel *view,
                             const char *key,
                             const char *text)
@@ -35,6 +36,7 @@ static UmiStatus set_string(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set integer operation used by this module and its client applications. */
 static UmiStatus set_integer(UmiUiViewModel *view,
                              const char *key,
                              int64_t number)
@@ -45,6 +47,7 @@ static UmiStatus set_integer(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set action operation used by this module and its client applications. */
 static UmiStatus set_action(UmiUiViewModel *view,
                             size_t index,
                             const char *action_id,
@@ -59,6 +62,7 @@ static UmiStatus set_action(UmiUiViewModel *view,
     return umi_ui_command_view_set_action(view, index, &action);
 }
 
+/* Provide the base view operation used by this module and its client applications. */
 static UmiStatus base_view(const char *view_id,
                            const char *kind,
                            const char *title,
@@ -66,13 +70,24 @@ static UmiStatus base_view(const char *view_id,
                            UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || out_view == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_view = NULL;
     status = umi_ui_view_model_create(
         view_id, "umicom.knowledge-centre", UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "umicom.view-kind", kind);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "title", title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "summary", summary);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -80,50 +95,74 @@ static UmiStatus base_view(const char *view_id,
     return status;
 }
 
+/*
+ * Initialise knowledge ui overview view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_knowledge_ui_overview_view_create(
     const char *view_id, UmiKnowledgeService *service,
     UmiUiViewModel **out_view)
 {
     UmiKnowledgeServiceSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "knowledge-overview", "Knowledge Centre",
         "Offline-first document, project and code retrieval with citations.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_knowledge_service_snapshot(service, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge.collections", (int64_t)snapshot.collection_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge.sources", (int64_t)snapshot.source_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge.chunks", (int64_t)snapshot.chunk_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge.embedding-dimension",
         (int64_t)snapshot.embedding_dimension);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge.provider", snapshot.default_provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge.last-source", snapshot.last_source_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge.last-query", snapshot.last_query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge.last-results",
         (int64_t)snapshot.last_result_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.knowledge.search", "Search",
         "Search indexed project, code and document evidence");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.knowledge.ingest", "Add Source",
         "Ingest a source into the selected collection");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.knowledge.refresh", "Refresh",
         "Incrementally refresh changed sources");
     return status;
 }
 
+/*
+ * Initialise knowledge ui collections view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_knowledge_ui_collections_view_create(
     const char *view_id, UmiKnowledgeService *service,
     UmiUiViewModel **out_view)
@@ -132,18 +171,26 @@ UmiStatus umi_knowledge_ui_collections_view_create(
     size_t count;
     size_t position;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "knowledge-collections", "Knowledge Collections",
         "Independent retrieval scopes for project, code and document corpora.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_knowledge_service_snapshot(service, &snapshot);
     }
     count = status == UMI_STATUS_OK ? snapshot.collection_count : 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_KNOWLEDGE_UI_VISIBLE_ROWS) count = UMI_KNOWLEDGE_UI_VISIBLE_ROWS;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge-collections.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; status == UMI_STATUS_OK && position < count; ++position) {
         UmiKnowledgeCollection collection;
         char key[96];
@@ -154,14 +201,20 @@ UmiStatus umi_knowledge_ui_collections_view_create(
         (void)snprintf(text, sizeof(text), "%s | %s | %s",
                        collection.collection_id, collection.display_name,
                        collection.enabled ? "enabled" : "disabled");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.knowledge.collection-create",
         "New Collection", "Create an isolated knowledge collection");
     return status;
 }
 
+/*
+ * Initialise knowledge ui sources view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_knowledge_ui_sources_view_create(
     const char *view_id, UmiKnowledgeService *service,
     UmiUiViewModel **out_view)
@@ -170,6 +223,10 @@ UmiStatus umi_knowledge_ui_sources_view_create(
     size_t count;
     size_t position;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "knowledge-sources", "Knowledge Sources",
@@ -177,9 +234,12 @@ UmiStatus umi_knowledge_ui_sources_view_create(
         out_view);
     catalogue = umi_knowledge_service_catalogue(service);
     count = umi_knowledge_catalogue_count(catalogue);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_KNOWLEDGE_UI_VISIBLE_ROWS) count = UMI_KNOWLEDGE_UI_VISIBLE_ROWS;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge-sources.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; status == UMI_STATUS_OK && position < count; ++position) {
         UmiKnowledgeSource source;
         char key[96];
@@ -190,14 +250,20 @@ UmiStatus umi_knowledge_ui_sources_view_create(
                        source.source_id, source.title,
                        umi_knowledge_source_kind_text(source.kind),
                        (unsigned long long)source.revision);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.knowledge.refresh", "Refresh Sources",
         "Index only sources whose content identity changed");
     return status;
 }
 
+/*
+ * Initialise knowledge ui results view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_knowledge_ui_results_view_create(
     const char *view_id, UmiKnowledgeService *service,
     const UmiKnowledgeMatch *matches, size_t match_count,
@@ -206,15 +272,22 @@ UmiStatus umi_knowledge_ui_results_view_create(
     size_t count = match_count;
     size_t position;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || (match_count > 0U && matches == NULL)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = base_view(
         view_id, "knowledge-results", "Knowledge Search Results",
         "Ranked evidence with exact source and line provenance.", out_view);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_KNOWLEDGE_UI_VISIBLE_ROWS) count = UMI_KNOWLEDGE_UI_VISIBLE_ROWS;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge-results.row-count", (int64_t)count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; status == UMI_STATUS_OK && position < count; ++position) {
         char key[96];
         char text[1024];
@@ -228,34 +301,49 @@ UmiStatus umi_knowledge_ui_results_view_create(
                        matches[position].chunk.text);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.knowledge.search", "Search Again",
         "Run another filtered knowledge query");
     return status;
 }
 
+/*
+ * Initialise knowledge ui source view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_knowledge_ui_source_view_create(
     const char *view_id, const UmiKnowledgeMatch *match,
     UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (match == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = base_view(
         view_id, "knowledge-source", "Knowledge Source Viewer",
         "The exact retrieved source range; generated text is not substituted.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge-source.id", match->citation.source_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge-source.title", match->citation.title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge-source.uri", match->citation.uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge-source.line-start",
         (int64_t)match->citation.line_start);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "knowledge-source.line-end",
         (int64_t)match->citation.line_end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "knowledge-source.text", match->chunk.text);
     return status;

@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema table change data shared with callers of this public contract.
+ */
 typedef struct UmiDataSchemaTableChange {
     char table_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char before_name[UMI_DATA_ENTERPRISE_ID_CAPACITY];
@@ -33,6 +36,10 @@ typedef struct UmiDataSchemaTableChange {
     int selected;
 } UmiDataSchemaTableChange;
 
+/**
+ * Represent the data schema compare model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataSchemaCompareModel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -47,14 +54,30 @@ typedef struct UmiDataSchemaCompareModel {
     uint64_t revision;
 } UmiDataSchemaCompareModel;
 
+/**
+ * Initialise data schema compare model from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_data_schema_compare_model_init(UmiDataSchemaCompareModel *model);
+/**
+ * Provide the data schema compare model build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_schema_compare_model_build(
     UmiDataSchemaCompareModel *model,
     const UmiDataSchemaSnapshot *before,
     const UmiDataSchemaSnapshot *after);
+/**
+ * Provide the data schema compare model select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_data_schema_compare_model_select(
     UmiDataSchemaCompareModel *model,
     size_t change_index);
+/**
+ * Find data schema compare model change while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDataSchemaTableChange *umi_data_schema_compare_model_change_at(
     const UmiDataSchemaCompareModel *model,
     size_t change_index);

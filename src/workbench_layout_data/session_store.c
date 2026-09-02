@@ -30,17 +30,23 @@ typedef struct SessionWriter {
     bool overflow;
 } SessionWriter;
 
+/* Add writer only after its inputs and available capacity have been checked. */
 static void writer_append(SessionWriter *writer, const char *text)
 {
     const size_t length = strlen(text);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer->text != NULL && writer->required + length < writer->capacity) {
         (void)memcpy(writer->text + writer->required, text, length);
-    } else if (writer->text != NULL) {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (writer->text != NULL) {
         writer->overflow = true;
     }
     writer->required += length;
 }
 
+/* Provide the writer field operation used by this module and its client applications. */
 static void writer_field(
     SessionWriter *writer,
     const char *name,
@@ -48,6 +54,7 @@ static void writer_field(
 {
     size_t required = 0U;
     char *escaped;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_value_escape(
             value != NULL ? value : "", NULL, 0U, &required) !=
         UMI_STATUS_OK) {
@@ -55,10 +62,15 @@ static void writer_field(
         return;
     }
     escaped = (char *)calloc(required, sizeof(char));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (escaped == NULL) {
         writer->overflow = true;
         return;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_value_escape(
             value != NULL ? value : "",
             escaped, required, NULL) == UMI_STATUS_OK) {
@@ -66,12 +78,13 @@ static void writer_field(
         writer_append(writer, "=");
         writer_append(writer, escaped);
         writer_append(writer, "\n");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         writer->overflow = true;
     }
     free(escaped);
 }
 
+/* Provide the writer u64 operation used by this module and its client applications. */
 static void writer_u64(
     SessionWriter *writer,
     const char *name,
@@ -83,6 +96,7 @@ static void writer_u64(
     writer_field(writer, name, text);
 }
 
+/* Provide the writer bool operation used by this module and its client applications. */
 static void writer_bool(
     SessionWriter *writer,
     const char *name,
@@ -91,6 +105,7 @@ static void writer_bool(
     writer_field(writer, name, value ? "true" : "false");
 }
 
+/* Provide the writer panel operation used by this module and its client applications. */
 static void writer_panel(
     SessionWriter *writer,
     size_t index,
@@ -121,6 +136,10 @@ static void writer_panel(
     writer_u64(writer, name, panel->revision);
 }
 
+/*
+ * Write workbench layout session in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_session_encode(
     const UmiWorkbenchLayoutSession *session,
     char **out_text,
@@ -128,11 +147,19 @@ UmiStatus umi_workbench_layout_session_encode(
 {
     SessionWriter writer;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_text == NULL ||
         session->structure_size < sizeof(*session)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_text = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_size != NULL) *out_size = 0U;
     (void)memset(&writer, 0, sizeof(writer));
     writer_field(&writer, "schema", "umicom.workbench-session/1");
@@ -155,12 +182,18 @@ UmiStatus umi_workbench_layout_session_encode(
     writer_bool(&writer, "clean_shutdown", session->clean_shutdown);
     writer_bool(&writer, "recovery_available",
                 session->recovery_available);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->panel_count; ++index) {
         writer_panel(&writer, index, &session->panels[index]);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.overflow) return UMI_STATUS_INTERNAL_ERROR;
     writer.capacity = writer.required + 1U;
     writer.text = (char *)calloc(writer.capacity, sizeof(char));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer.text == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     writer.required = 0U;
     writer_field(&writer, "schema", "umicom.workbench-session/1");
@@ -183,19 +216,26 @@ UmiStatus umi_workbench_layout_session_encode(
     writer_bool(&writer, "clean_shutdown", session->clean_shutdown);
     writer_bool(&writer, "recovery_available",
                 session->recovery_available);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->panel_count; ++index) {
         writer_panel(&writer, index, &session->panels[index]);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (writer.overflow) {
         free(writer.text);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     writer.text[writer.required] = '\0';
     *out_text = writer.text;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_size != NULL) *out_size = writer.required;
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse fields operation used by this module and its client applications. */
 static UmiStatus parse_fields(
     const char *text,
     UmiWorkbenchLayoutDataFieldSet *out_fields)
@@ -203,6 +243,7 @@ static UmiStatus parse_fields(
     return umi_workbench_layout_data_value_decode(text, out_fields);
 }
 
+/* Provide the copy field operation used by this module and its client applications. */
 static UmiStatus copy_field(
     const UmiWorkbenchLayoutDataFieldSet *fields,
     const char *name,
@@ -218,6 +259,7 @@ static UmiStatus copy_field(
         : UMI_STATUS_NOT_FOUND;
 }
 
+/* Provide the panel from fields operation used by this module and its client applications. */
 static UmiStatus panel_from_fields(
     const UmiWorkbenchLayoutDataFieldSet *fields,
     size_t index,
@@ -247,14 +289,17 @@ static UmiStatus panel_from_fields(
     (void)snprintf(name, sizeof(name), "%svisible", prefix);
     status = umi_workbench_layout_data_field_set_get_bool(
         fields, name, &panel->visible);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(name, sizeof(name), "%sactive", prefix);
     status = umi_workbench_layout_data_field_set_get_bool(
         fields, name, &panel->active);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(name, sizeof(name), "%sdirty", prefix);
     status = umi_workbench_layout_data_field_set_get_bool(
         fields, name, &panel->dirty);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(name, sizeof(name), "%srevision", prefix);
     status = umi_workbench_layout_data_field_set_get_u64(
@@ -263,6 +308,10 @@ static UmiStatus panel_from_fields(
     return status;
 }
 
+/*
+ * Read workbench layout session into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_session_decode(
     const char *text,
     UmiWorkbenchLayoutSession *out_session)
@@ -272,6 +321,10 @@ UmiStatus umi_workbench_layout_session_decode(
     uint64_t panel_count = 0U;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -279,6 +332,7 @@ UmiStatus umi_workbench_layout_session_decode(
     out_session->structure_size = sizeof(*out_session);
     status = parse_fields(text, &fields);
     schema = umi_workbench_layout_data_field_set_get(&fields, "schema");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         (schema == NULL ||
          strcmp(schema, "umicom.workbench-session/1") != 0)) {
@@ -297,9 +351,11 @@ UmiStatus umi_workbench_layout_session_decode(
     READ_SESSION_FIELD(active_node_id, true)
     READ_SESSION_FIELD(active_panel_instance_id, true)
 #undef READ_SESSION_FIELD
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_u64(
             &fields, "panel_count", &panel_count);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (panel_count > UMI_WORKBENCH_LAYOUT_MAX_OPEN_PANELS) {
             status = UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -313,21 +369,25 @@ UmiStatus umi_workbench_layout_session_decode(
     READ_SESSION_U64(last_checkpoint_at_ms)
     READ_SESSION_U64(revision)
 #undef READ_SESSION_U64
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_bool(
             &fields, "clean_shutdown", &out_session->clean_shutdown);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_bool(
             &fields, "recovery_available",
             &out_session->recovery_available);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < (size_t)panel_count;
          ++index) {
         status = panel_from_fields(
             &fields, index, &out_session->panels[index]);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         out_session->panel_count = (size_t)panel_count;
         status = umi_workbench_layout_session_validate(out_session);
@@ -335,10 +395,18 @@ UmiStatus umi_workbench_layout_session_decode(
     return status;
 }
 
+/*
+ * Initialise workbench layout session store from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_session_store_init(
     UmiWorkbenchLayoutSessionStore *store,
     UmiDataServer *server)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || server == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -352,6 +420,7 @@ UmiStatus umi_workbench_layout_session_store_init(
         UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK);
 }
 
+/* Provide the session revision operation used by this module and its client applications. */
 static UmiStatus session_revision(
     const UmiWorkbenchLayoutSessionStore *store,
     const char *session_id,
@@ -362,12 +431,18 @@ static UmiStatus session_revision(
     *out_revision = 0U;
     status = umi_workbench_layout_chunk_store_verify(
         &store->chunks, session_id, &manifest);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     *out_revision = manifest.revision;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Write workbench layout session store in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_session_store_save(
     const UmiWorkbenchLayoutSessionStore *store,
     const UmiWorkbenchLayoutSession *session,
@@ -378,12 +453,18 @@ UmiStatus umi_workbench_layout_session_store_save(
     char *text = NULL;
     uint64_t stored_revision = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = session_revision(
         store, session->session_id, &stored_revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (expected_revision != stored_revision) {
         return expected_revision == 0U && stored_revision > 0U
             ? UMI_STATUS_ALREADY_EXISTS
@@ -393,18 +474,27 @@ UmiStatus umi_workbench_layout_session_store_save(
     copy.revision = stored_revision + 1U;
     status = umi_workbench_layout_session_encode(
         &copy, &text, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_chunk_store_save(
             &store->chunks, copy.session_id, text,
             copy.revision, copy.last_checkpoint_at_ms, NULL);
     }
     free(text);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && out_revision != NULL) {
         *out_revision = copy.revision;
     }
     return status;
 }
 
+/*
+ * Read workbench layout session store into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_session_store_load(
     const UmiWorkbenchLayoutSessionStore *store,
     const char *session_id,
@@ -412,12 +502,17 @@ UmiStatus umi_workbench_layout_session_store_load(
 {
     char *text = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || session_id == NULL ||
         out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_workbench_layout_chunk_store_load(
         &store->chunks, session_id, &text, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_session_decode(
             text, out_session);
@@ -426,6 +521,10 @@ UmiStatus umi_workbench_layout_session_store_load(
     return status;
 }
 
+/*
+ * Provide the workbench layout session store delete operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_session_store_delete(
     const UmiWorkbenchLayoutSessionStore *store,
     const char *session_id,
@@ -433,12 +532,19 @@ UmiStatus umi_workbench_layout_session_store_delete(
 {
     uint64_t stored_revision = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || session_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = session_revision(store, session_id, &stored_revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (stored_revision == 0U) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (expected_revision != stored_revision) {
         return UMI_STATUS_INVALID_STATE;
     }

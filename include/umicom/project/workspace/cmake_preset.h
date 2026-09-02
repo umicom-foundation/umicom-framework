@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace cmake preset data shared with callers of this public
+ * contract.
+ */
     typedef struct UmiProjectWorkspaceCmakePreset {
         UmiProjectWorkspaceNamedState base;
         uint64_t metric;

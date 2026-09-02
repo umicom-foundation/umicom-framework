@@ -24,8 +24,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc frontend health data shared with callers of this public contract.
+ */
 typedef struct UmiFcFrontendHealth { size_t passed; size_t degraded; size_t failed; size_t blockers; double score; } UmiFcFrontendHealth;
+/**
+ * Provide the fc frontend health outcome operation used by this module and its client
+ * applications.
+ */
 UmiFcOutcome umi_fc_frontend_health_outcome(const UmiFcFrontendHealth *health);
+/**
+ * Provide the fc frontend health healthy operation used by this module and its client
+ * applications.
+ */
 bool umi_fc_frontend_health_healthy(const UmiFcFrontendHealth *health,double minimum);
 
 #ifdef __cplusplus

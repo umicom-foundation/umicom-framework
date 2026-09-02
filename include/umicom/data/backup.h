@@ -22,8 +22,16 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise data backup from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_data_backup_create(UmiDataServer *server,
                                  const char *backup_path);
+/**
+ * Provide the data backup restore operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_backup_restore(const char *backup_path,
                                   const char *database_path);
 

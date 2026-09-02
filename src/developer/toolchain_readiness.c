@@ -18,31 +18,46 @@
 #include <ctype.h>
 #include <string.h>
 
+/* Provide the copy candidate operation used by this module and its client applications. */
 static void copy_candidate(
     char *destination,
     size_t capacity,
     const char *begin,
     size_t length)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) {
         return;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         length = capacity - 1U;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(destination, begin, length);
     }
     destination[length] = '\0';
 }
 
+/*
+ * Provide the default program probe operation used by this module and its client
+ * applications.
+ */
 static int default_program_probe(const char *program, void *user_data)
 {
     char path[UMI_DEVELOPER_PATH_CAPACITY];
     (void)user_data;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (program == NULL || program[0] == '\0') {
         return 0;
     }
@@ -53,6 +68,10 @@ static int default_program_probe(const char *program, void *user_data)
                sizeof(path)) == UMI_STATUS_OK;
 }
 
+/*
+ * Provide the candidate available operation used by this module and its client
+ * applications.
+ */
 static int candidate_available(
     const char *candidate,
     UmiDeveloperToolAvailabilityProbe probe,
@@ -60,6 +79,10 @@ static int candidate_available(
 {
     UmiDeveloperCommandLine command;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (candidate == NULL || candidate[0] == '\0') {
         return 0;
     }
@@ -72,12 +95,17 @@ static int candidate_available(
         return 1;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_developer_command_line_parse(
             candidate,
             &command) != UMI_STATUS_OK) {
         return 0;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (probe == NULL) {
         return default_program_probe(command.program, NULL);
     }
@@ -85,6 +113,10 @@ static int candidate_available(
     return probe(command.program, user_data) != 0;
 }
 
+/*
+ * Provide the developer toolchain command available operation used by this module and its
+ * client applications.
+ */
 int umi_developer_toolchain_command_available(
     const char *command_candidates,
     UmiDeveloperToolAvailabilityProbe probe,
@@ -92,39 +124,61 @@ int umi_developer_toolchain_command_available(
 {
     const char *cursor;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_candidates == NULL) {
         return 0;
     }
 
     cursor = command_candidates;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         const char *begin;
         const char *end;
         char candidate[UMI_DEVELOPER_TOOLCHAIN_COMMAND_CAPACITY];
         size_t length;
 
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*cursor == ';' ||
                isspace((unsigned char)*cursor)) {
             ++cursor;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '\0') {
             break;
         }
 
         begin = cursor;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*cursor != '\0' && *cursor != ';') {
             ++cursor;
         }
         end = cursor;
 
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (end > begin &&
                isspace((unsigned char)end[-1])) {
             --end;
         }
 
         length = (size_t)(end - begin);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length == 0U) {
             continue;
         }
@@ -135,6 +189,7 @@ int umi_developer_toolchain_command_available(
             begin,
             length);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (candidate_available(
                 candidate,
                 probe,
@@ -146,6 +201,10 @@ int umi_developer_toolchain_command_available(
     return 0;
 }
 
+/*
+ * Provide the operation readiness operation used by this module and its client
+ * applications.
+ */
 static int operation_readiness(
     const UmiDeveloperToolchainBindingSnapshot *binding,
     UmiLanguageCapabilityFlags capability,
@@ -156,12 +215,14 @@ static int operation_readiness(
     size_t *ready_count,
     size_t *missing_count)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((binding->capabilities & capability) != capability) {
         return 0;
     }
 
     *supported_count += 1U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_developer_toolchain_command_available(
             command_candidates,
             probe,
@@ -174,12 +235,20 @@ static int operation_readiness(
     return 0;
 }
 
+/*
+ * Provide the developer toolchain binding readiness operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_readiness(
     const UmiDeveloperToolchainBindingSnapshot *binding,
     UmiDeveloperToolAvailabilityProbe probe,
     void *user_data,
     UmiDeveloperToolchainReadiness *out_readiness)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL ||
         out_readiness == NULL ||
         binding->id[0] == '\0' ||

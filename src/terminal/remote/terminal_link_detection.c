@@ -18,4 +18,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_link_detection.h"
 #include <string.h>
-size_t umi_terminal_remote_terminal_link_detection_find_first(const char *text,char *out,size_t capacity) { const char *p; size_t n=0U; if(!text||!out||capacity==0U) return 0U; p=strstr(text,"https://"); if(!p) p=strstr(text,"http://"); if(!p) { out[0]='\0'; return 0U; } while(p[n]&&p[n]!=' '&&p[n]!='\n'&&n+1U<capacity) { out[n]=p[n]; n++; } out[n]='\0'; return n; }
+/*
+ * Provide the terminal remote terminal link detection find first operation used by this
+ * module and its client applications.
+ */
+size_t umi_terminal_remote_terminal_link_detection_find_first(const char *text,char *out,size_t capacity) { const char *p; size_t n=0U; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!text||!out||capacity==0U) return 0U; p=strstr(text,"https://"); if(!p) p=strstr(text,"http://"); if(!p) { out[0]='\0'; return 0U; } while(p[n]&&p[n]!=' '&&p[n]!='\n'&&n+1U<capacity) { out[n]=p[n]; n++; } out[n]='\0'; return n; }

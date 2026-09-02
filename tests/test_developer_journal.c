@@ -17,6 +17,10 @@
 
 #include "umicom/developer/journal.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperJournal *journal = NULL;
@@ -26,6 +30,7 @@ int main(void)
 
     assert(umi_developer_journal_create(&journal) == UMI_STATUS_OK);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_DEVELOPER_JOURNAL_CAPACITY + 1U; ++index) {
         assert(umi_developer_journal_append(
             journal,

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider trade row record data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderTradeRowRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderTradeRowRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderTradeRowRecord;
 
+/**
+ * Initialise workbench selection provider trade row record from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_trade_row_record_init(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider trade row record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_validate(
     const UmiWorkbenchSelectionProviderTradeRowRecord *record);
+/**
+ * Provide the workbench selection provider trade row record set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_set_provider(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider trade row record set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_set_source(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider trade row record set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_set_subject(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider trade row record set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_set_related(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider trade row record set group operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_set_group(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider trade row record set description operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trade_row_record_set_description(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider trade row record hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_trade_row_record_hash(
     const UmiWorkbenchSelectionProviderTradeRowRecord *record);
+/**
+ * Provide the workbench selection provider trade row record touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_trade_row_record_touch(
     UmiWorkbenchSelectionProviderTradeRowRecord *record,
     uint64_t sequence,

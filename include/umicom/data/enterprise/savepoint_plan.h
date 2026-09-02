@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data savepoint plan data shared with callers of this public contract.
+ */
 typedef struct UmiDataSavepointPlan {
     char savepoint_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     uint32_t ordinal;

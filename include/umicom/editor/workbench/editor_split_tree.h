@@ -24,10 +24,29 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb split node data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbSplitNode { char node_id[UMI_EDITOR_WB_ID_CAPACITY]; char parent_id[UMI_EDITOR_WB_ID_CAPACITY]; } UmiEditorWbSplitNode;
+/**
+ * Represent the editor wb editor split tree data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbEditorSplitTree { UmiEditorWbSplitNode nodes[UMI_EDITOR_WB_MAX_GROUPS]; size_t count; } UmiEditorWbEditorSplitTree;
+/**
+ * Initialise editor wb editor split tree from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_editor_split_tree_init(UmiEditorWbEditorSplitTree *tree);
+/**
+ * Add editor wb editor split tree only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_editor_wb_editor_split_tree_add(UmiEditorWbEditorSplitTree *tree,const char *node_id,const char *parent_id);
+/**
+ * Provide the editor wb editor split tree acyclic operation used by this module and its
+ * client applications.
+ */
 int umi_editor_wb_editor_split_tree_acyclic(const UmiEditorWbEditorSplitTree *tree);
 
 #ifdef __cplusplus

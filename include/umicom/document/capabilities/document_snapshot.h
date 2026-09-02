@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DOCUMENT_SNAPSHOT "umicom.document.recovery.document_snapshot"
 
+/**
+ * Provide the document capability document snapshot operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_snapshot(void);
 

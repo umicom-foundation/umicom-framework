@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiCommoditySnapshot {
     size_t commodity_count;
     size_t contract_count;

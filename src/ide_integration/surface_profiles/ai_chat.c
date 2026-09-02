@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/ai_chat.h"
 
+/*
+ * Provide the ide surface profile ai chat operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_ai_chat(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

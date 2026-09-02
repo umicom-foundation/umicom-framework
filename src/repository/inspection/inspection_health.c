@@ -36,6 +36,7 @@ int umi_repository_inspection_health_code(
     if (service->maintenance.report.errors > 0U || service->report.errors > 0U) {
         return 2;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->maintenance.report.warnings > 0U || service->report.warnings > 0U) {
         return 1;
     }

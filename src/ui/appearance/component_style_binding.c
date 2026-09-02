@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_component_style_binding_init(UmiAppearanceComponentStyleBinding *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(item, 0, sizeof *item);
     (void)umi_appearance_copy_text(item->component_id,sizeof item->component_id,"button.primary");
@@ -26,6 +30,10 @@ UmiStatus umi_appearance_component_style_binding_init(UmiAppearanceComponentStyl
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_component_style_binding_is_valid(const UmiAppearanceComponentStyleBinding *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->component_id) && umi_appearance_id_valid(item->style_id));
 }

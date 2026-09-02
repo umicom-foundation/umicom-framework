@@ -18,4 +18,5 @@
  */
 #include "umicom/product/branding.h"
 #include <stddef.h>
-UmiStatus umi_product_branding_validate(const UmiProductBranding *b){if(b==NULL||b->display_name==NULL||b->display_name[0]=='\0'||b->vendor==NULL||b->executable_name==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that product branding satisfies its contract before another service relies on it. */
+UmiStatus umi_product_branding_validate(const UmiProductBranding *b){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(b==NULL||b->display_name==NULL||b->display_name[0]=='\0'||b->vendor==NULL||b->executable_name==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

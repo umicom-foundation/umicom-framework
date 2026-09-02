@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive service snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveServiceSnapshot {
     size_t variant_count;
     size_t preview_count;

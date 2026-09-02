@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data failover policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataFailoverPolicy {
     uint64_t maximum_promotion_lag_ms;
     bool automatic_failover;

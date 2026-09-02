@@ -21,6 +21,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_editor)
     message(FATAL_ERROR "UmicomEditorIntelligenceWorkbenchPlatform.cmake requires canonical umicom_editor")
 endif()
@@ -101,16 +102,22 @@ target_sources(umicom_editor PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/editor/intelligence_workbench/editor_code_intelligence_service.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add editor intelligence workbench test build helper so parent and application
+    # projects apply one consistent rule.
     function(umicom_add_editor_intelligence_workbench_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_EDITOR_INTELLIGENCE_WORKBENCH_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::editor)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

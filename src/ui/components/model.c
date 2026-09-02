@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/model.h"
+/*
+ * Provide the ui component model default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentModel umi_ui_component_model_default(UmiUiComponentKind k){UmiUiComponentModel m;m.spec=umi_ui_component_spec_default(k);m.state=umi_ui_component_state_default();m.style=umi_ui_component_style_default();return m;}

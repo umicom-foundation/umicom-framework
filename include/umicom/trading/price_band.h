@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the price within band operation used by this module and its client applications.
+ */
 int umi_price_within_band(double price, double reference_price, double maximum_fraction);
 #ifdef __cplusplus
 }

@@ -56,12 +56,20 @@ UmiStatus umi_media_animation_track_create(
     UmiMediaAnimationTrack **out_track)
 {
     UmiMediaAnimationTrack *track;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_track == NULL || keyframe_capacity == 0U ||
         keyframe_capacity > SIZE_MAX / sizeof(UmiMediaAnimationKeyframe)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_track = NULL;
     track = (UmiMediaAnimationTrack *)calloc(1U, sizeof(*track));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     track->keyframes = (UmiMediaAnimationKeyframe *)calloc(
         keyframe_capacity, sizeof(*track->keyframes));
@@ -79,6 +87,10 @@ UmiStatus umi_media_animation_track_create(
 /* Release keyframes and owner; NULL destruction is intentionally safe. */
 void umi_media_animation_track_destroy(UmiMediaAnimationTrack *track)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL) return;
     free(track->keyframes);
     free(track);
@@ -90,9 +102,14 @@ UmiStatus umi_media_animation_track_add(
     const UmiMediaAnimationKeyframe *keyframe)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL || !valid_keyframe(keyframe)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (track->count >= track->capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     index = lower_bound(track, keyframe->time_seconds);
     /* Exact duplicate timestamps are updated explicitly, never overwritten here. */
@@ -100,6 +117,7 @@ UmiStatus umi_media_animation_track_add(
         track->keyframes[index].time_seconds == keyframe->time_seconds) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index < track->count) {
         /* memmove supports overlapping source and destination ranges safely. */
         (void)memmove(&track->keyframes[index + 1U], &track->keyframes[index],
@@ -117,10 +135,15 @@ UmiStatus umi_media_animation_track_update(
     const UmiMediaAnimationKeyframe *keyframe)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL || !valid_keyframe(keyframe)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = lower_bound(track, keyframe->time_seconds);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= track->count ||
         track->keyframes[index].time_seconds != keyframe->time_seconds) {
         return UMI_STATUS_NOT_FOUND;
@@ -136,14 +159,20 @@ UmiStatus umi_media_animation_track_remove(
     double time_seconds)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL || !isfinite(time_seconds) || time_seconds < 0.0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = lower_bound(track, time_seconds);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= track->count ||
         track->keyframes[index].time_seconds != time_seconds) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < track->count) {
         (void)memmove(&track->keyframes[index], &track->keyframes[index + 1U],
             (track->count - index - 1U) * sizeof(*track->keyframes));
@@ -165,15 +194,21 @@ UmiStatus umi_media_animation_track_sample(
     const UmiMediaAnimationKeyframe *left;
     const UmiMediaAnimationKeyframe *right;
     double progress;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL || out_value == NULL || !isfinite(time_seconds)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (track->count == 0U) return UMI_STATUS_INVALID_STATE;
     /* Sampling before or after the track clamps to the nearest endpoint. */
     if (time_seconds <= track->keyframes[0].time_seconds) {
         *out_value = track->keyframes[0].value;
         return UMI_STATUS_OK;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (time_seconds >= track->keyframes[track->count - 1U].time_seconds) {
         *out_value = track->keyframes[track->count - 1U].value;
         return UMI_STATUS_OK;
@@ -198,7 +233,12 @@ UmiStatus umi_media_animation_track_at(
     size_t index,
     UmiMediaAnimationKeyframe *out_keyframe)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL || out_keyframe == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= track->count) return UMI_STATUS_NOT_FOUND;
     *out_keyframe = track->keyframes[index];
     return UMI_STATUS_OK;
@@ -209,6 +249,10 @@ UmiStatus umi_media_animation_track_snapshot(
     const UmiMediaAnimationTrack *track,
     UmiMediaAnimationTrackSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (track == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);

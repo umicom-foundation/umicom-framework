@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make operation and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutOfflineOperation make_operation(
     const char *operation_id,
     const char *layout_id,
@@ -44,6 +48,10 @@ static UmiWorkbenchLayoutOfflineOperation make_operation(
     return operation;
 }
 
+/*
+ * Exercise test offline codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_offline_codec(void)
 {
     UmiWorkbenchLayoutOfflineOperation source = make_operation(
@@ -66,6 +74,10 @@ static int test_offline_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test claim and complete and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_claim_and_complete(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -100,6 +112,10 @@ static int test_claim_and_complete(void)
     return 0;
 }
 
+/*
+ * Exercise test retry then fail and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_retry_then_fail(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -134,6 +150,10 @@ static int test_retry_then_fail(void)
     return 0;
 }
 
+/*
+ * Exercise test future operation not claimed and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 static int test_future_operation_not_claimed(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -153,6 +173,10 @@ static int test_future_operation_not_claimed(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_offline_codec() == 0, "offline codec");

@@ -22,8 +22,13 @@ UmiStatus umi_designer_preview_case_init(UmiDesignerPreviewCase *preview_case,
                                          UmiDesignSizeClass expected_size_class,
                                          UmiAdaptiveNavigationPattern expected_navigation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(preview_case==NULL||case_id==NULL||preview==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(preview_case,0,sizeof *preview_case);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_designer_adaptive_copy_text(preview_case->case_id,sizeof preview_case->case_id,case_id)!=UMI_STATUS_OK)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     preview_case->preview=*preview;

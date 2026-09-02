@@ -28,6 +28,10 @@
 
 #include "umicom/editor/formatting_profile.h"
 
+/*
+ * Exercise profile and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorFormattingProfileItem profile(const char *id,
                                               const char *language,
                                               int32_t priority)
@@ -53,6 +57,10 @@ static UmiEditorFormattingProfileItem profile(const char *id,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorFormattingProfileRegistry *registry = NULL;

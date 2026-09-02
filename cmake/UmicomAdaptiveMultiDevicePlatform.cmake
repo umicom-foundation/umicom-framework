@@ -21,6 +21,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_ADAPTIVE_DEVICE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ui OR NOT TARGET umicom_designer)
     message(FATAL_ERROR "UmicomAdaptiveMultiDevicePlatform.cmake requires canonical umicom_ui and umicom_designer")
 endif()
@@ -99,16 +100,22 @@ target_sources(umicom_designer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/designer/adaptive/workbench_adaptation.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add ui adaptive test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_ui_adaptive_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_ADAPTIVE_DEVICE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::ui)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()
@@ -116,15 +123,20 @@ if(BUILD_TESTING)
         set_tests_properties("${test_name}" PROPERTIES LABELS "framework;adaptive-shell;multi-device;ui-adaptive")
     endfunction()
 
+    # Define the add designer adaptive test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_designer_adaptive_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_ADAPTIVE_DEVICE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::designer)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

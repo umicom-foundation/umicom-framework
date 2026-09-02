@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data connection pool data shared with callers of this public contract.
+ */
 typedef struct UmiDataConnectionPool { UmiDataConnectionSlot slots[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; size_t leased_count; uint64_t revision; } UmiDataConnectionPool;
 /* Reset connection-pool metadata. */ void umi_data_connection_pool_init(UmiDataConnectionPool *pool);
 /* Register a backend-owned connection token as a pool slot. */ UmiStatus umi_data_connection_pool_add(UmiDataConnectionPool *pool,const UmiDataConnectionSlot *slot);

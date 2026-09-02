@@ -27,14 +27,28 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix agent registry data shared with callers of this public contract.
+ */
 typedef struct UmiHelixAgentRegistry {
     UmiHelixAgent agents[UMI_HELIX_MAX_AGENTS];
     size_t count;
 } UmiHelixAgentRegistry;
 
+/**
+ * Initialise helix agent registry from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_helix_agent_registry_init(UmiHelixAgentRegistry *registry);
+/**
+ * Add helix agent registry only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_helix_agent_registry_add(UmiHelixAgentRegistry *registry,
                                        const UmiHelixAgent *agent);
+/**
+ * Find helix agent registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiHelixAgent *umi_helix_agent_registry_find(UmiHelixAgentRegistry *registry,
                                              const char *agent_id);
 

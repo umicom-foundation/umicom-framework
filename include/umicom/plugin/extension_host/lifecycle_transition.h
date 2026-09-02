@@ -29,7 +29,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the plugin extension host lifecycle transition allowed operation used by this
+ * module and its client applications.
+ */
 int umi_plugin_extension_host_lifecycle_transition_allowed(UmiPluginExtensionHostLifecycle current, UmiPluginExtensionHostLifecycle next);
+/**
+ * Check that plugin extension host lifecycle transition satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_lifecycle_transition_validate(UmiPluginExtensionHostLifecycle current, UmiPluginExtensionHostLifecycle next);
 
 #ifdef __cplusplus

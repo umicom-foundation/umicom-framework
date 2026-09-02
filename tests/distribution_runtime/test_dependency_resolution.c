@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrDependencyResolution g; umi_dr_dependency_resolution_init(&g,3U); CHECK(umi_dr_dependency_resolution_add(&g,0U,1U)==UMI_STATUS_OK); CHECK(umi_dr_dependency_resolution_add(&g,1U,2U)==UMI_STATUS_OK); CHECK(!umi_dr_dependency_resolution_has_cycle(&g)); CHECK(umi_dr_dependency_resolution_add(&g,2U,0U)==UMI_STATUS_OK); CHECK(umi_dr_dependency_resolution_has_cycle(&g));
     return 0;

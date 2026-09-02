@@ -12,6 +12,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/test_platform/build_readiness/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     assert(strcmp(umi_test_platform_build_readiness_state_text(
         UMI_TEST_PLATFORM_BUILD_STATE_ARTIFACT_MISSING), "artifact-missing") == 0);

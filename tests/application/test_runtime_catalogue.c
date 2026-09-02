@@ -27,6 +27,10 @@
         }                                                                      \
     } while (0)
 
+/*
+ * Exercise registration and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiApplicationRuntimeRegistration registration(
     const char *id,
     const char *name,
@@ -52,6 +56,10 @@ static UmiApplicationRuntimeRegistration registration(
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationRuntimeCatalogue *catalogue = NULL;

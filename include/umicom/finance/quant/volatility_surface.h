@@ -25,7 +25,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant volatility surface point data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantVolatilitySurfacePoint { double expiry_years; double strike; double volatility; } UmiQuantVolatilitySurfacePoint;
+/**
+ * Represent the quant volatility surface data shared with callers of this public contract.
+ */
 typedef struct UmiQuantVolatilitySurface { UmiQuantVolatilitySurfacePoint points[UMI_QUANT_MAX_SURFACE_POINTS]; size_t count; } UmiQuantVolatilitySurface;
 /* Initialise an empty volatility surface. */
 void umi_quant_volatility_surface_init(UmiQuantVolatilitySurface *surface);

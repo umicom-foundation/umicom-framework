@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/management_action.h"
 
-int main(void) { UmiPrudentialManagementAction a; if(umi_pru_management_action_init(&a,"DIV-CUT",10.0,5.0,1.0)!=UMI_STATUS_OK)return 1; return a.capital_benefit==10.0&&a.approved==0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialManagementAction a; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_management_action_init(&a,"DIV-CUT",10.0,5.0,1.0)!=UMI_STATUS_OK)return 1; return a.capital_benefit==10.0&&a.approved==0?0:2; }

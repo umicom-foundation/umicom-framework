@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ATTACH_PROCESS "umicom.developer.execution.attach_process"
 
+/**
+ * Provide the developer capability attach process operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_attach_process(void);
 

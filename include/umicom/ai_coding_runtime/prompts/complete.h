@@ -17,6 +17,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding prompt complete operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_prompt_complete(void);
 #ifdef __cplusplus
 }

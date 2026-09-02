@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric route rule data shared with callers of this public contract.
+ */
 typedef struct UmiFabricRouteRule {
     char route_id[UMI_FABRIC_ID_CAPACITY];
     char source_pattern[UMI_FABRIC_TEXT_CAPACITY];
@@ -34,7 +37,14 @@ typedef struct UmiFabricRouteRule {
     bool enabled;
 } UmiFabricRouteRule;
 
+/**
+ * Initialise fabric route rule from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_fabric_route_rule_init(UmiFabricRouteRule *item, const char *route_id, const char *source_pattern, const char *message_pattern, const char *destination_id, uint32_t priority);
+/**
+ * Check that fabric route rule satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_fabric_route_rule_validate(const UmiFabricRouteRule *item);
 
 #ifdef __cplusplus

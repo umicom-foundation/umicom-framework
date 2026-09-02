@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/runtime_metrics.h"
 
+/*
+ * Provide the developer capability runtime metrics operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_runtime_metrics(void)
 {

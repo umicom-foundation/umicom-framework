@@ -17,6 +17,10 @@
 
 /* Defaults favour bounded, reviewable behaviour over aggressive execution. */
 void umi_data_pool_policy_default(UmiDataPoolPolicy *policy) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return;
     (void)memset(policy, 0, sizeof(*policy));
     policy->minimum_size = 3U;
@@ -26,6 +30,10 @@ void umi_data_pool_policy_default(UmiDataPoolPolicy *policy) {
 
 /* Evaluation is side-effect free so callers can preview decisions. */
 UmiStatus umi_data_pool_policy_evaluate(const UmiDataPoolPolicy *policy, size_t current_size, double utilisation_percent, bool *out_allowed) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL || out_allowed == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_allowed = current_size < policy->maximum_size && utilisation_percent >= policy->high_utilisation_percent;
     return UMI_STATUS_OK;

@@ -20,6 +20,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiOrderStore store;umi_order_store_init(&store);UmiOrder o={0};o.request=test_order_request();o.status=UMI_ORDER_ACCEPTED;o.version=1;
     assert(umi_order_store_add(&store,&o)==UMI_STATUS_OK);UmiOrder *stored=NULL;assert(umi_order_store_find(&store,"ORDER-1",&stored)==UMI_STATUS_OK);assert(stored!=NULL);

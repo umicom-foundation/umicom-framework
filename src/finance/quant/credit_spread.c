@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_credit_spread_init(UmiQuantCreditSpread *record, double risky_yield, double benchmark_yield)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(risky_yield >= 0.0 && benchmark_yield >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->risky_yield = risky_yield;
@@ -35,6 +40,10 @@ UmiStatus umi_quant_credit_spread_init(UmiQuantCreditSpread *record, double risk
 /* Return risky yield minus benchmark yield. */
 double umi_quant_credit_spread_spread(const UmiQuantCreditSpread *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->risky_yield - record->benchmark_yield;
 }

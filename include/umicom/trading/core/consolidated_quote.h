@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading consolidated quote data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingConsolidatedQuote { UmiFinancialId instrument_id; UmiFinancialId venue_id; UmiTradingPriceTicks bid_ticks; UmiTradingQuantityLots bid_lots; UmiTradingPriceTicks ask_ticks; UmiTradingQuantityLots ask_lots; int64_t event_time_ms; } UmiTradingConsolidatedQuote;
 /* Initialise and validate an integer-normalised quote. */
 UmiStatus umi_trading_consolidated_quote_init(UmiTradingConsolidatedQuote *quote,const UmiFinancialId *instrument_id,const UmiFinancialId *venue_id,UmiTradingPriceTicks bid,UmiTradingQuantityLots bid_lots,UmiTradingPriceTicks ask,UmiTradingQuantityLots ask_lots,int64_t event_time_ms);

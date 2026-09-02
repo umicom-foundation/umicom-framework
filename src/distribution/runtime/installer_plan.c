@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/installer_plan.h"
 
-void umi_dr_installer_plan_init(UmiDrInstallerPlan*p){if(p!=NULL)*p=(UmiDrInstallerPlan){0};}UmiStatus umi_dr_installer_plan_complete_step(UmiDrInstallerPlan*p){if(p==NULL||p->completed_steps>=p->required_steps)return UMI_STATUS_INVALID_STATE;p->completed_steps++;return UMI_STATUS_OK;}bool umi_dr_installer_plan_ready(const UmiDrInstallerPlan*p){return p!=NULL&&p->required_steps>0U&&p->completed_steps==p->required_steps;}
+/*
+ * Initialise dr installer plan from caller-provided values so later operations receive a
+ * known state.
+ */
+void umi_dr_installer_plan_init(UmiDrInstallerPlan*p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p!=NULL)*p=(UmiDrInstallerPlan){0};}UmiStatus umi_dr_installer_plan_complete_step(UmiDrInstallerPlan*p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||p->completed_steps>=p->required_steps)return UMI_STATUS_INVALID_STATE;p->completed_steps++;return UMI_STATUS_OK;}bool umi_dr_installer_plan_ready(const UmiDrInstallerPlan*p){return p!=NULL&&p->required_steps>0U&&p->completed_steps==p->required_steps;}

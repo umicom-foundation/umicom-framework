@@ -16,6 +16,10 @@
 #include "umicom/project/workspace/workspace_session.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspaceWorkspaceSession a,b;
     CHECK(umi_project_workspace_workspace_session_init(&a,"item")==UMI_STATUS_OK);

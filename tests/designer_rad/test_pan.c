@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/pan.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiRadPanState item;CHECK(umi_rad_pan_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_pan_is_valid(&item));return 0;}

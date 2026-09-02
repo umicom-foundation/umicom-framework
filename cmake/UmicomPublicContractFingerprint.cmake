@@ -16,7 +16,10 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Define the compute public contract fingerprint build helper so parent and application
+# projects apply one consistent rule.
 function(umicom_compute_public_contract_fingerprint out_value header_root)
+    # Apply this branch only when its contract condition is satisfied.
     if(NOT IS_DIRECTORY "${header_root}")
         message(FATAL_ERROR
             "Public contract header directory was not found: ${header_root}")
@@ -29,6 +32,7 @@ function(umicom_compute_public_contract_fingerprint out_value header_root)
         file(GLOB_RECURSE _umicom_contract_headers
             LIST_DIRECTORIES FALSE
             "${header_root}/umicom/*.h")
+    # Use this fallback path when the earlier condition does not apply.
     else()
         file(GLOB_RECURSE _umicom_contract_headers
             CONFIGURE_DEPENDS
@@ -36,6 +40,7 @@ function(umicom_compute_public_contract_fingerprint out_value header_root)
             "${header_root}/umicom/*.h")
     endif()
 
+    # Apply this branch only when its contract condition is satisfied.
     if(NOT _umicom_contract_headers)
         message(FATAL_ERROR
             "No public Umicom headers were found below: ${header_root}")
@@ -44,6 +49,7 @@ function(umicom_compute_public_contract_fingerprint out_value header_root)
     list(SORT _umicom_contract_headers)
     set(_umicom_contract_manifest "")
 
+    # Visit each bounded item once so every record receives the same rule.
     foreach(_umicom_contract_header IN LISTS _umicom_contract_headers)
         file(RELATIVE_PATH _umicom_contract_relative
             "${header_root}"
@@ -58,7 +64,10 @@ function(umicom_compute_public_contract_fingerprint out_value header_root)
     set(${out_value} "${_umicom_contract_fingerprint}" PARENT_SCOPE)
 endfunction()
 
+# Define the attach public contract fingerprint build helper so parent and application
+# projects apply one consistent rule.
 function(umicom_attach_public_contract_fingerprint target header_root)
+    # Load the dependency only when the parent build has not already provided its target.
     if(NOT TARGET "${target}")
         message(FATAL_ERROR
             "Cannot attach the public contract fingerprint to missing target: ${target}")

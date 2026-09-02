@@ -17,11 +17,17 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/branch_operation.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiVcsAdvancedBranchOperation op;
     umi_vcs_advanced_branch_operation_init(&op);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_branch_operation_create(&op, "feature/vcs", "HEAD", 1) != UMI_STATUS_OK) return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_branch_operation_rename(&op, "feature/vcs", "feature/diff") != UMI_STATUS_OK) return 2;
     return 0;
 }

@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the signature record data shared with callers of this public contract.
+ */
 typedef struct UmiSignatureRecord {
     char artifact_id[UMI_DELIVERY_ID_CAPACITY];
     char signer_id[UMI_DELIVERY_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiSignatureRecord {
     int verified;
 } UmiSignatureRecord;
 
+/**
+ * Initialise signature record from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_signature_record_init(UmiSignatureRecord *record,
                                     const char *artifact_id,
                                     const char *signer_id,

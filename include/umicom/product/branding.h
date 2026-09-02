@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product branding data shared with callers of this public contract.
+ */
 typedef struct UmiProductBranding { const char *display_name; const char *vendor; const char *executable_name; } UmiProductBranding;
+/**
+ * Check that product branding satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_product_branding_validate(const UmiProductBranding *branding);
 #ifdef __cplusplus
 }

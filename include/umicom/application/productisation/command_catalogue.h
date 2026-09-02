@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the productisation command definition data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductisationCommandDefinition {
     const char *command_id;
     const char *title;

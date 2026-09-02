@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_GTK4_DOCUMENT_HOST "umicom.document.integration.gtk4_document_host"
 
+/**
+ * Provide the document capability gtk4 document host operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_gtk4_document_host(void);
 

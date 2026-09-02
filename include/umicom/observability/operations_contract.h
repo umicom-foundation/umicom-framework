@@ -24,6 +24,12 @@
 #define UMI_OPERATIONS_MAX_RESOURCE_SAMPLES 512U
 #define UMI_OPERATIONS_MAX_BENCHMARKS 256U
 #define UMI_OPERATIONS_MAX_CRASHES 128U
+/**
+ * List the named operations trend values accepted by this public contract.
+ */
 typedef enum UmiOperationsTrend { UMI_OPERATIONS_TREND_UNKNOWN = 0, UMI_OPERATIONS_TREND_IMPROVED, UMI_OPERATIONS_TREND_STABLE, UMI_OPERATIONS_TREND_REGRESSED } UmiOperationsTrend;
+/**
+ * List the named operations health values accepted by this public contract.
+ */
 typedef enum UmiOperationsHealth { UMI_OPERATIONS_HEALTH_UNKNOWN = 0, UMI_OPERATIONS_HEALTH_READY, UMI_OPERATIONS_HEALTH_DEGRADED, UMI_OPERATIONS_HEALTH_FAILED } UmiOperationsHealth;
 #endif

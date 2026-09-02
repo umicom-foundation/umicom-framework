@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the web workbench deployment projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWebWorkbenchDeploymentProjection {
     UmiBuildDeploymentTargetSnapshot targets[
         UMI_BUILD_DEPLOYMENT_TARGET_CAPACITY];
@@ -33,13 +37,25 @@ typedef struct UmiWebWorkbenchDeploymentProjection {
     uint64_t source_revision;
 } UmiWebWorkbenchDeploymentProjection;
 
+/**
+ * Initialise web workbench deployment projection from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_web_workbench_deployment_projection_init(
     UmiWebWorkbenchDeploymentProjection *projection);
+/**
+ * Provide the web workbench deployment projection capture operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_web_workbench_deployment_projection_capture(
     UmiWebWorkbenchDeploymentProjection *projection,
     const UmiBuildDeploymentTargetRegistry *registry,
     const char *environment,
     bool enabled_only);
+/**
+ * Find web workbench deployment projection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiBuildDeploymentTargetSnapshot *
 umi_web_workbench_deployment_projection_find(
     const UmiWebWorkbenchDeploymentProjection *projection,

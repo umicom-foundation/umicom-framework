@@ -28,7 +28,14 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/token_set.h"
+/**
+ * Represent the design token registry entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignTokenRegistryEntry { UmiDesignThemeMode mode; UmiDesignTokenSet set; } UmiDesignTokenRegistryEntry;
+/**
+ * Represent the design token registry data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTokenRegistry { UmiDesignTokenRegistryEntry entries[8]; size_t count; } UmiDesignTokenRegistry;
 /* Register or replace a token set for one theme mode. */
 UmiStatus umi_design_token_registry_set(UmiDesignTokenRegistry *registry, UmiDesignThemeMode mode, const UmiDesignTokenSet *set);

@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make monitor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchMonitor make_monitor(
     const char *monitor_id,
     int32_t x,
@@ -46,6 +50,10 @@ static UmiWorkbenchMonitor make_monitor(
     return monitor;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchLayoutDocument *document =

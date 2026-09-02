@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide inline executor data shared with callers of this public contract.
+ */
 typedef struct UmiIdeInlineExecutor {
     UmiAiRuntime *runtime;
     char provider_id[UMI_AI_ID_CAPACITY];
@@ -32,12 +35,20 @@ typedef struct UmiIdeInlineExecutor {
     int provider_approved;
 } UmiIdeInlineExecutor;
 
+/**
+ * Initialise ide inline executor from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_inline_executor_init(
     UmiIdeInlineExecutor *executor,
     UmiAiRuntime *runtime,
     const char *provider_id,
     const char *model_id);
 
+/**
+ * Perform ide inline through the module contract so client applications do not duplicate
+ * its policy.
+ */
 UmiStatus umi_ide_inline_execute(
     UmiIdeInlineExecutor *executor,
     const UmiIdeEditorSelection *context,

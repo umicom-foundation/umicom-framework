@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the trading alert crossed operation used by this module and its client
+ * applications.
+ */
 int umi_trading_alert_crossed(double previous_value, double current_value, double threshold);
 #ifdef __cplusplus
 }

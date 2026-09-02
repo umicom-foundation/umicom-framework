@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_FILE_LOCK "umicom.document.conflict.file_lock"
 
+/**
+ * Provide the document capability file lock operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_file_lock(void);
 

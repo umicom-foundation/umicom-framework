@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/ide_integration/surface_profiles/source_control.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiIdeSurfaceDescriptor *surface =

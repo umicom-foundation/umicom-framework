@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital requirement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalRequirement { double minimum_requirement; double conservation_buffer; double countercyclical_buffer; double systemic_buffer; double total_requirement; } UmiPrudentialCapitalRequirement;
 /* Aggregate minimum capital and named additional buffer requirements. */
 UmiStatus umi_pru_capital_requirement_calculate(UmiPrudentialCapitalRequirement *result, double minimum_requirement, double conservation_buffer, double countercyclical_buffer, double systemic_buffer);

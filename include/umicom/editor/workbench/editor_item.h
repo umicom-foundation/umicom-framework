@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor item data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbEditorItem { char item_id[UMI_EDITOR_WB_ID_CAPACITY]; char path[UMI_EDITOR_WB_PATH_CAPACITY]; UmiEditorWbOpenMode open_mode; bool dirty; bool pinned; uint64_t revision; } UmiEditorWbEditorItem;
+/**
+ * Initialise editor wb editor item from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_editor_wb_editor_item_init(UmiEditorWbEditorItem *item,const char *id,const char *path,UmiEditorWbOpenMode mode);
+/**
+ * Provide the editor wb editor item set dirty operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_wb_editor_item_set_dirty(UmiEditorWbEditorItem *item,bool dirty);
+/**
+ * Check that editor wb editor item satisfies its contract before another service relies on
+ * it.
+ */
 int umi_editor_wb_editor_item_valid(const UmiEditorWbEditorItem *item);
 
 #ifdef __cplusplus

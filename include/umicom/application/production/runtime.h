@@ -31,6 +31,10 @@ extern "C" {
 #include "umicom/application/production/panel_binding.h"
 #include "umicom/application/production/workspace_recovery.h"
 
+/**
+ * Represent the application production runtime data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationProductionRuntime {
     UmiApplicationProductionBinding binding;
     UmiApplicationProductionPanelBindings panels;
@@ -54,12 +58,24 @@ typedef struct UmiApplicationProductionRuntime {
     int initialised;
 } UmiApplicationProductionRuntime;
 
+/**
+ * Initialise application production runtime from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_production_runtime_init(
     const UmiProductApplicationAdoption *adoption,
     UmiApplicationCapabilityProbe probe, void *probe_context,
     UmiApplicationProductionRuntime *out_runtime);
+/**
+ * Provide the application production runtime refresh acceptance operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_runtime_refresh_acceptance(
     UmiApplicationProductionRuntime *runtime);
+/**
+ * Provide the application production runtime checkpoint operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_production_runtime_checkpoint(
     UmiApplicationProductionRuntime *runtime, const char *reason,
     int clean_shutdown);

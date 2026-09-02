@@ -18,22 +18,32 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the contains case insensitive operation used by this module and its client
+ * applications.
+ */
 static int contains_case_insensitive(const char *text, const char *query)
 {
     size_t text_index;
     size_t query_index;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query[0] == '\0') return 1;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (text_index = 0U; text[text_index] != '\0'; ++text_index) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (query_index = 0U; query[query_index] != '\0'; ++query_index) {
             unsigned char left = (unsigned char)text[text_index + query_index];
             unsigned char right = (unsigned char)query[query_index];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (left == '\0' || tolower(left) != tolower(right)) break;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (query[query_index] == '\0') return 1;
     }
     return 0;
 }
 
+/* Provide the add node operation used by this module and its client applications. */
 static UmiStatus add_node(
     UmiDataNavigatorModel *model,
     const char *node_id,
@@ -46,6 +56,7 @@ static UmiStatus add_node(
 {
     UmiDataNavigatorNode *node;
     UmiStatus status;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count >= UMI_DATA_WORKBENCH_MAX_NAVIGATOR_NODES) {
         model->truncated = 1;
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -56,12 +67,16 @@ static UmiStatus add_node(
     node->api_version = UMI_DATA_WORKBENCH_API_VERSION;
     status = umi_data_workbench_copy_text(
         node->node_id, sizeof(node->node_id), node_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_data_workbench_copy_text(
         node->parent_id, sizeof(node->parent_id), parent_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_data_workbench_copy_text(
         node->label, sizeof(node->label), label);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_data_workbench_copy_text(
         node->detail, sizeof(node->detail), detail);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     node->kind = kind;
     node->depth = depth;
@@ -71,32 +86,47 @@ static UmiStatus add_node(
     return UMI_STATUS_OK;
 }
 
+/* Provide the find node operation used by this module and its client applications. */
 static size_t find_node(const UmiDataNavigatorModel *model, const char *node_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(model->nodes[index].node_id, node_id) == 0) return index;
     }
     return model->count;
 }
 
+/* Provide the rebuild visible operation used by this module and its client applications. */
 static void rebuild_visible(UmiDataNavigatorModel *model)
 {
     size_t index;
     model->visible_count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (contains_case_insensitive(model->nodes[index].label, model->filter) ||
             contains_case_insensitive(model->nodes[index].detail, model->filter)) {
             model->visible_indices[model->visible_count++] = index;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->selected_index >= model->visible_count) {
         model->selected_index = 0U;
     }
 }
 
+/*
+ * Initialise data navigator model from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_data_navigator_model_init(UmiDataNavigatorModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return;
     (void)memset(model, 0, sizeof(*model));
     model->struct_size = (uint32_t)sizeof(*model);
@@ -104,18 +134,28 @@ void umi_data_navigator_model_init(UmiDataNavigatorModel *model)
     model->revision = 1U;
 }
 
+/*
+ * Provide the data navigator model build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_navigator_model_build(
     UmiDataNavigatorModel *model,
     const UmiDatabaseExplorer *explorer)
 {
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || explorer == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_data_navigator_model_init(model);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < explorer->connections.count; ++index) {
         char id[UMI_DATABASE_ID_CAPACITY];
         int written = snprintf(id, sizeof(id), "connection:%s",
                                explorer->connections.items[index].id);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -123,8 +163,10 @@ UmiStatus umi_data_navigator_model_build(
                           explorer->connections.items[index].display_name,
                           explorer->connections.items[index].endpoint,
                           UMI_DATA_NAVIGATOR_CONNECTION, 0U, index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < explorer->schema.table_count; ++index) {
         const UmiDatabaseTableInfo *table = &explorer->schema.tables[index];
         char schema_id[UMI_DATABASE_ID_CAPACITY];
@@ -134,16 +176,20 @@ UmiStatus umi_data_navigator_model_build(
             ? table->schema_name : "default";
         int written = snprintf(schema_id, sizeof(schema_id), "schema:%s",
                                schema_name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(schema_id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (find_node(model, schema_id) == model->count) {
             status = add_node(model, schema_id, "", schema_name, "Schema",
                               UMI_DATA_NAVIGATOR_SCHEMA, 0U, index);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
         written = snprintf(table_id, sizeof(table_id), "table:%s.%s",
                            schema_name, table->name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(table_id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -152,12 +198,15 @@ UmiStatus umi_data_navigator_model_build(
                           table->view ? UMI_DATA_NAVIGATOR_VIEW
                                       : UMI_DATA_NAVIGATOR_TABLE,
                           1U, index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (column = 0U; column < table->column_count; ++column) {
             char column_id[UMI_DATABASE_ID_CAPACITY];
             written = snprintf(column_id, sizeof(column_id), "column:%s.%s.%s",
                                schema_name, table->name,
                                table->columns[column].name);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (written < 0 || (size_t)written >= sizeof(column_id)) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
             }
@@ -165,6 +214,7 @@ UmiStatus umi_data_navigator_model_build(
                               table->columns[column].name,
                               table->columns[column].type_name,
                               UMI_DATA_NAVIGATOR_COLUMN, 2U, column);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
     }
@@ -173,27 +223,46 @@ UmiStatus umi_data_navigator_model_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the data navigator model set filter operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_navigator_model_set_filter(
     UmiDataNavigatorModel *model,
     const char *filter)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_data_workbench_copy_text(
         model->filter, sizeof(model->filter), filter != NULL ? filter : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     rebuild_visible(model);
     model->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the data navigator model select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_navigator_model_select(
     UmiDataNavigatorModel *model,
     size_t visible_index)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (visible_index >= model->visible_count) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         model->nodes[index].selected = 0;
     }
@@ -203,20 +272,33 @@ UmiStatus umi_data_navigator_model_select(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the data navigator model set expanded operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_data_navigator_model_set_expanded(
     UmiDataNavigatorModel *model,
     const char *node_id,
     int expanded)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || node_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     index = find_node(model, node_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= model->count) return UMI_STATUS_NOT_FOUND;
     model->nodes[index].expanded = expanded != 0;
     model->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find data navigator model visible while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiDataNavigatorNode *umi_data_navigator_model_visible_at(
     const UmiDataNavigatorModel *model,
     size_t visible_index)

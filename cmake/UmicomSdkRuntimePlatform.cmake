@@ -92,22 +92,30 @@ target_include_directories(umicom_sdk_runtime PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(umicom_sdk_runtime PUBLIC Umicom::base Umicom::test_runtime)
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_sdk_runtime)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_sdk_runtime)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE Umicom::sdk_runtime)
 endif()
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add sdk runtime test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_sdk_runtime_test target test_name source)
         add_executable("${target}" "${UMICOM_SDK_RUNTIME_FRAMEWORK_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::sdk_runtime)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

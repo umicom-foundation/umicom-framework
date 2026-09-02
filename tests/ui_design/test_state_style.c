@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/state_style.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiDesignStateStyle s;return umi_design_state_style_init(&s,UMI_DESIGN_INTERACTION_DISABLED,UMI_DESIGN_COLOR_MUTED,UMI_DESIGN_COLOR_SURFACE,UMI_DESIGN_COLOR_BORDER,0.5)==UMI_STATUS_OK&&s.opacity==0.5?0:1;}

@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_palette_override_init(UmiAppearancePaletteOverride *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(item, 0, sizeof *item);
     (void)umi_appearance_copy_text(item->override_id,sizeof item->override_id,"override.accent");
@@ -27,6 +31,10 @@ UmiStatus umi_appearance_palette_override_init(UmiAppearancePaletteOverride *ite
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_palette_override_is_valid(const UmiAppearancePaletteOverride *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->override_id) && umi_appearance_id_valid(item->role_id) && umi_appearance_id_valid(item->token_id));
 }

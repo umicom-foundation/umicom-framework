@@ -14,5 +14,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/logical_pixel_transform.h"
 #include <math.h>
-UmiStatus umi_appearance_logical_pixel_transform_init(UmiAppearanceLogicalPixelTransform *item,double scale){if(item==NULL||!isfinite(scale)||scale<=0.0)return UMI_STATUS_INVALID_ARGUMENT;item->scale=scale;return UMI_STATUS_OK;}
-UmiStatus umi_appearance_logical_pixel_transform_convert(const UmiAppearanceLogicalPixelTransform *item,double input,double *output){if(item==NULL||output==NULL||!isfinite(input)||item->scale<=0.0)return UMI_STATUS_INVALID_ARGUMENT;*output=input/item->scale;return UMI_STATUS_OK;}
+/*
+ * Initialise appearance logical pixel transform from caller-provided values so later
+ * operations receive a known state.
+ */
+UmiStatus umi_appearance_logical_pixel_transform_init(UmiAppearanceLogicalPixelTransform *item,double scale){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL||!isfinite(scale)||scale<=0.0)return UMI_STATUS_INVALID_ARGUMENT;item->scale=scale;return UMI_STATUS_OK;}
+/*
+ * Provide the appearance logical pixel transform convert operation used by this module and
+ * its client applications.
+ */
+UmiStatus umi_appearance_logical_pixel_transform_convert(const UmiAppearanceLogicalPixelTransform *item,double input,double *output){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL||output==NULL||!isfinite(input)||item->scale<=0.0)return UMI_STATUS_INVALID_ARGUMENT;*output=input/item->scale;return UMI_STATUS_OK;}

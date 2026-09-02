@@ -25,6 +25,10 @@ extern "C" {
 #include "umicom/application/production/application_binding.h"
 #include "umicom/application/productisation/surface_projection.h"
 
+/**
+ * Represent the application production panel binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionPanelBinding {
     const UmiExperiencePanelDefinition *panel;
     UmiProductSurfaceProjection surface;
@@ -33,6 +37,10 @@ typedef struct UmiApplicationProductionPanelBinding {
     int covered;
 } UmiApplicationProductionPanelBinding;
 
+/**
+ * Represent the application production panel bindings data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionPanelBindings {
     UmiApplicationProductionPanelBinding
         entries[UMI_APPLICATION_PRODUCTION_MAX_PANELS];
@@ -41,10 +49,18 @@ typedef struct UmiApplicationProductionPanelBindings {
     size_t uncovered_count;
 } UmiApplicationProductionPanelBindings;
 
+/**
+ * Provide the application production panel bindings build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_panel_bindings_build(
     const UmiApplicationProductionBinding *binding,
     const UmiProductSurfacePortfolio *surfaces,
     UmiApplicationProductionPanelBindings *out_bindings);
+/**
+ * Find application production panel bindings while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionPanelBinding *
 umi_application_production_panel_bindings_find(
     const UmiApplicationProductionPanelBindings *bindings,

@@ -20,10 +20,18 @@
 extern "C" {
 #endif
 #define UMI_WORKBENCH_CONTEXT_HOST_MAX_INSPECTOR_ROWS 32U
+/**
+ * Represent the workbench context host inspector row data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextHostInspectorRow {
     char name[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
     char value[UMI_WORKBENCH_CONTEXT_HOST_TEXT_CAPACITY];
 } UmiWorkbenchContextHostInspectorRow;
+/**
+ * Represent the workbench context host inspector projection data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchContextHostInspectorProjection {
     char group_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
     char context_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
@@ -36,6 +44,10 @@ typedef struct UmiWorkbenchContextHostInspectorProjection {
     uint64_t revision;
     bool available;
 } UmiWorkbenchContextHostInspectorProjection;
+/**
+ * Provide the workbench context host inspector projection build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_inspector_projection_build(
     const UmiWorkbenchContextHost *host,const char *group_id,
     UmiWorkbenchContextHostInspectorProjection *out_projection);

@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-ERR-001", "CWE-252", UMI_CODEGUARD_LOW, UMI_CODEGUARD_CATEGORY_QUALITY, 50U, UMI_CODEGUARD_MATCH_CODE, "malloc(0", "Zero-sized allocation is implementation-sensitive and often indicates a size bug.", "Validate the requested element count and byte size before allocating."}
 };
 
+/*
+ * Provide the codeguard rules error operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_error(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

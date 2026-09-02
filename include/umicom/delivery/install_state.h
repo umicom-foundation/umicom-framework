@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the install state data shared with callers of this public contract.
+ */
 typedef struct UmiInstallState {
     char application_id[UMI_DELIVERY_ID_CAPACITY];
     char version[UMI_DELIVERY_VERSION_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiInstallState {
     int healthy;
 } UmiInstallState;
 
+/**
+ * Initialise install state from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_install_state_init(UmiInstallState *state,
                                  const char *application_id,
                                  const char *version,

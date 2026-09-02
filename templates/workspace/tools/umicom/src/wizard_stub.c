@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "wizard.h"
 #include <stdio.h>
+/*
+ * Perform wizard through the module contract so client applications do not duplicate its
+ * policy.
+ */
 int umi_wizard_run(int argc, char **argv, const char *template_root)
 {
     (void)argc; (void)argv; (void)template_root;

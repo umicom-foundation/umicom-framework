@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/command_context.h"
 
+/*
+ * Provide the editor wb command context can edit operation used by this module and its
+ * client applications.
+ */
 int umi_editor_wb_command_context_can_edit(const UmiEditorWbCommandContext *s){return s!=NULL&&s->has_document&&s->writable;} int umi_editor_wb_command_context_can_find(const UmiEditorWbCommandContext *s){return s!=NULL&&s->has_document;}

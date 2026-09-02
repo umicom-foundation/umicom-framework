@@ -22,8 +22,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise helix mutation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_mutation_init(UmiHelixMutation *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

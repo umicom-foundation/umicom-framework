@@ -17,12 +17,20 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise accept events and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int accept_events(const UmiMessageEnvelope *message, void *user_data)
 {
     (void)user_data;
     return message->kind == UMI_MESSAGE_EVENT;
 }
 
+/*
+ * Exercise rename message and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus rename_message(const UmiMessageEnvelope *input,
                                 UmiOwnedMessage *output,
                                 void *user_data)
@@ -32,6 +40,10 @@ static UmiStatus rename_message(const UmiMessageEnvelope *input,
     return umi_message_copy(&transformed, output);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFilterChain *filters = NULL;

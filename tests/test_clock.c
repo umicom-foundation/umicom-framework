@@ -22,6 +22,10 @@
 #include <assert.h>
 #include <stddef.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiClock fake = umi_clock_fake(100U);

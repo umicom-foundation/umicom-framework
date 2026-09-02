@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  Umicom Framework
+  File: resources/brand/umicom-logo-on-dark.svg
+
+  PURPOSE:
+  Store scalable umicom logo on dark artwork with accessible metadata for
+  every supported frontend.
+
+  AUTHOR AND ORGANISATION:
+  Sammy Hegab
+  Umicom Foundation
+
+  LICENCE:
+  MIT
+-->
+
+<!--
   This transparent wordmark keeps the Umicom name readable on dark surfaces.
   Applications select this variant through the Framework resource catalogue.
 -->
@@ -9,12 +25,19 @@
      aria-labelledby="umicom-dark-logo-title umicom-dark-logo-description">
   <title id="umicom-dark-logo-title">Umicom</title>
   <desc id="umicom-dark-logo-description">The Umicom code mark and light wordmark.</desc>
+  <!-- The same geometry uses brighter colours for contrast on dark surfaces. -->
   <g>
+    <!-- The upper red band starts the left-facing half of the mark. -->
     <path fill="#D04B55" d="M22 57 101 12v37L22 94Z"/>
+    <!-- The upper blue band forms the open right edge. -->
     <path fill="#5B91B8" d="m115 12 119 68-30 17-89-51Z"/>
+    <!-- This folded path forms the left chevron and lower return. -->
     <path fill="#5B91B8" d="m22 104 79-45 30 17-79 45 52 30v37l-82-47Z"/>
+    <!-- The centre chevron keeps the identity clear at smaller sizes. -->
     <path fill="#5B91B8" d="m116 58 88 51-56 32-30-17 56-32-58-34Z"/>
+    <!-- The lower red band closes the right-facing half of the mark. -->
     <path fill="#D04B55" d="m148 153 86-49v37l-86 49Z"/>
+    <!-- The final blue band provides a stable lower edge. -->
     <path fill="#5B91B8" d="m22 149 87 50v36l-87-50Z"/>
   </g>
   <!-- The pale wordmark provides clear contrast without a background tile. -->

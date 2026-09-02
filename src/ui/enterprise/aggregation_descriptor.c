@@ -14,5 +14,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/aggregation_descriptor.h"
 #include <string.h>
-UmiStatus umi_ui_ent_aggregation_descriptor_init(UmiUiEntAggregationDescriptor *value){if(!value)return UMI_STATUS_INVALID_ARGUMENT;memset(value,0,sizeof *value);value->aggregation_id[0]='\0';value->column_id[0]='\0';value->kind=0;return UMI_STATUS_OK;}
+/*
+ * Initialise ui ent aggregation descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_ui_ent_aggregation_descriptor_init(UmiUiEntAggregationDescriptor *value){/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!value)return UMI_STATUS_INVALID_ARGUMENT;memset(value,0,sizeof *value);value->aggregation_id[0]='\0';value->column_id[0]='\0';value->kind=0;return UMI_STATUS_OK;}
+/*
+ * Check that ui ent aggregation descriptor satisfies its contract before another service
+ * relies on it.
+ */
 int umi_ui_ent_aggregation_descriptor_validate(const UmiUiEntAggregationDescriptor *value){return value!=NULL&&umi_ui_ent_id_valid(value->aggregation_id)&&umi_ui_ent_id_valid(value->column_id)&&value->kind>=UMI_UI_ENT_AGG_COUNT&&value->kind<=UMI_UI_ENT_AGG_AVERAGE;}

@@ -16,20 +16,31 @@
 
 #include <stdio.h>
 
+/*
+ * Provide the gtk4 refresh status operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_status(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench)
 {
     UmiUiStatusModel *model;
     char combined[1024];
     size_t length = 0U;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     combined[0] = '\0';
     model = umi_ui_workbench_status(workbench);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_status_model_count(model); ++index) {
         UmiUiStatusSnapshot item;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_status_model_at(model, index, &item) == UMI_STATUS_OK && item.visible) {
             int written = snprintf(combined + length, sizeof(combined) - length,
                                    "%s%s", length > 0U ? " | " : "", item.text);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (written > 0 && (size_t)written < sizeof(combined) - length) length += (size_t)written;
         }
     }

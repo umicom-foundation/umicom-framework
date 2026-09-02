@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading best execution score data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingBestExecutionScore { int64_t price_component; int64_t cost_component; int64_t latency_component; int64_t total_score; } UmiTradingBestExecutionScore;
 /* Build a deterministic best-execution score where higher is better. */
 UmiStatus umi_trading_best_execution_score(int64_t improvement_ticks,int64_t explicit_cost_minor,uint32_t latency_score,UmiTradingBestExecutionScore *out_score);

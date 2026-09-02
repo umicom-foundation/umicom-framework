@@ -21,6 +21,10 @@
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/experience_registry.h"
 
+/*
+ * Exercise test experience registry and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_experience_registry(void)
 {
     UmiApplicationExperienceRegistry registry;

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the performance io telemetry data shared with callers of this public contract.
+ */
 typedef struct UmiPerformanceIoTelemetry {
     uint32_t structure_size;
     uint32_t api_version;

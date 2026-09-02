@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace project graph data shared with callers of this public
+ * contract.
+ */
     typedef struct UmiProjectWorkspaceProjectGraph {
         char nodes[UMI_PROJECT_WORKSPACE_SMALL_CAPACITY][UMI_PROJECT_WORKSPACE_ID_CAPACITY];
         bool edges[UMI_PROJECT_WORKSPACE_SMALL_CAPACITY][UMI_PROJECT_WORKSPACE_SMALL_CAPACITY];

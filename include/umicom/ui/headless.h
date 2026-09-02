@@ -28,8 +28,14 @@ extern "C" {
 
 #define UMI_UI_HEADLESS_RENDER_CAPACITY 131072U
 
+/**
+ * Represent the ui headless adapter data shared with callers of this public contract.
+ */
 typedef struct UmiUiHeadlessAdapter UmiUiHeadlessAdapter;
 
+/**
+ * Represent the ui headless snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiUiHeadlessSnapshot {
     uint64_t render_revision;
     size_t pane_count;
@@ -38,14 +44,42 @@ typedef struct UmiUiHeadlessSnapshot {
     char text[UMI_UI_HEADLESS_RENDER_CAPACITY];
 } UmiUiHeadlessSnapshot;
 
+/**
+ * Initialise ui headless adapter from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ui_headless_adapter_create(UmiUiHeadlessAdapter **out_adapter);
+/**
+ * Release or reset state held by ui headless adapter so the same storage can be reused
+ * safely.
+ */
 void umi_ui_headless_adapter_destroy(UmiUiHeadlessAdapter *adapter);
+/**
+ * Provide the ui headless adapter interface operation used by this module and its client
+ * applications.
+ */
 UmiUiAdapter umi_ui_headless_adapter_interface(UmiUiHeadlessAdapter *adapter);
+/**
+ * Provide the ui headless adapter present operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_headless_adapter_present(UmiUiHeadlessAdapter *adapter,
                                           UmiUiApplicationShell *shell);
+/**
+ * Provide the ui headless adapter refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_headless_adapter_refresh(UmiUiHeadlessAdapter *adapter);
+/**
+ * Provide the ui headless adapter snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_headless_adapter_snapshot(const UmiUiHeadlessAdapter *adapter,
                                            UmiUiHeadlessSnapshot *out_snapshot);
+/**
+ * Provide the ui headless adapter complete next dialog operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_headless_adapter_complete_next_dialog(
     UmiUiHeadlessAdapter *adapter,
     int accepted,

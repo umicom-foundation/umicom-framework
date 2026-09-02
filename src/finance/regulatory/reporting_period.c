@@ -20,12 +20,21 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg reporting period from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_reg_reporting_period_init(UmiReportingPeriod *record, const char *period_id, int32_t start_day, int32_t end_day, int year_end)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(start_day >= 0 && end_day >= start_day && (year_end == 0 || year_end == 1))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->period_id, sizeof record->period_id, period_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->start_day = start_day;
     record->end_day = end_day;

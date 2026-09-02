@@ -37,6 +37,10 @@ typedef struct RetentionScan {
     UmiWorkbenchLayoutRetentionResult *result;
 } RetentionScan;
 
+/*
+ * Provide the workbench layout retention policy default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutRetentionPolicy
 umi_workbench_layout_retention_policy_default(void)
 {
@@ -53,6 +57,7 @@ umi_workbench_layout_retention_policy_default(void)
     return policy;
 }
 
+/* Provide the field u64 operation used by this module and its client applications. */
 static uint64_t field_u64(
     const UmiWorkbenchLayoutDataFieldSet *fields,
     const char *name)
@@ -63,6 +68,7 @@ static uint64_t field_u64(
     return value;
 }
 
+/* Provide the field bool operation used by this module and its client applications. */
 static bool field_bool(
     const UmiWorkbenchLayoutDataFieldSet *fields,
     const char *name)
@@ -73,6 +79,7 @@ static bool field_bool(
     return value;
 }
 
+/* Provide the retention accept operation used by this module and its client applications. */
 static UmiStatus retention_accept(
     const char *key,
     const char *value,
@@ -86,15 +93,19 @@ static UmiStatus retention_accept(
     uint64_t timestamp = 0U;
     bool eligible = false;
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_data_key_is_owned(key)) {
         return UMI_STATUS_OK;
     }
     scan->result->examined_count += 1U;
     status = umi_workbench_layout_data_key_parse(key, &parts);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return UMI_STATUS_OK;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (scan->count >= UMI_WORKBENCH_LAYOUT_DATA_MAX_BACKUP_RECORDS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parts.kind != UMI_WORKBENCH_LAYOUT_DATA_RECORD_OUTBOX &&
         parts.kind != UMI_WORKBENCH_LAYOUT_DATA_RECORD_CONFLICT &&
         parts.kind !=
@@ -104,7 +115,9 @@ static UmiStatus retention_accept(
         return UMI_STATUS_OK;
     }
     status = umi_workbench_layout_data_value_decode(value, &fields);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return UMI_STATUS_OK;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (parts.kind) {
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_OUTBOX:
         (void)umi_workbench_layout_data_field_set_get_u32(
@@ -162,10 +175,15 @@ static UmiStatus retention_accept(
     candidate->eligible = eligible;
     (void)umi_workbench_layout_data_copy_text(
         candidate->key, sizeof(candidate->key), key, false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (eligible) scan->result->eligible_count += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform workbench layout retention through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_retention_apply(
     UmiDataServer *server,
     const UmiWorkbenchLayoutRetentionPolicy *policy,
@@ -178,11 +196,16 @@ UmiStatus umi_workbench_layout_retention_apply(
     size_t index;
     bool transaction_started = false;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     effective = policy != NULL
         ? *policy : umi_workbench_layout_retention_policy_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -193,23 +216,28 @@ UmiStatus umi_workbench_layout_retention_apply(
     scan.now_ms = now_ms;
     scan.result = &result;
     status = umi_data_server_visit(server, retention_accept, &scan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && !effective.dry_run) {
         status = umi_workbench_layout_data_transaction_begin(
             server, &transaction_started);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < scan.count;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!scan.candidates[index].eligible) {
             result.preserved_count += 1U;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (effective.dry_run) continue;
         status = umi_data_server_delete(
             server, scan.candidates[index].key);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             result.deleted_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             (void)umi_workbench_layout_data_copy_text(
                 result.failed_key, sizeof(result.failed_key),
                 scan.candidates[index].key, true);

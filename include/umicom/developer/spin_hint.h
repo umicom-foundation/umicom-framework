@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer spin hint operation used by this module and its client
+ * applications.
+ */
 void umi_developer_spin_hint(unsigned iterations);
 
 #ifdef __cplusplus

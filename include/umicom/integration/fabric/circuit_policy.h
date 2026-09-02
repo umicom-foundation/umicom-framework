@@ -26,9 +26,23 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric circuit policy data shared with callers of this public contract.
+ */
 typedef struct UmiFabricCircuitPolicy { uint32_t failure_threshold; uint64_t open_interval_ms; uint32_t half_open_successes; } UmiFabricCircuitPolicy;
+/**
+ * Represent the fabric circuit evidence data shared with callers of this public contract.
+ */
 typedef struct UmiFabricCircuitEvidence { UmiFabricCircuitState state; uint32_t consecutive_failures; uint32_t half_open_success_count; uint64_t opened_ms; } UmiFabricCircuitEvidence;
+/**
+ * Provide the fabric circuit policy default operation used by this module and its client
+ * applications.
+ */
 void umi_fabric_circuit_policy_default(UmiFabricCircuitPolicy *policy);
+/**
+ * Provide the fabric circuit record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_circuit_record(const UmiFabricCircuitPolicy *policy,UmiFabricCircuitEvidence *evidence,bool success,uint64_t now_ms);
 
 #ifdef __cplusplus

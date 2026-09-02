@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "gcc", "clang", "cmake", "ninja"
 };
 
+/*
+ * Provide the developer project language c23 operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_c23(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

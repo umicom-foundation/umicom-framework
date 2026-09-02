@@ -33,6 +33,10 @@ typedef struct FakeAdapter {
     uint64_t cancelled_request_id;
 } FakeAdapter;
 
+/*
+ * Exercise fake invoke and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_invoke(
     void *instance,
     const UmiDebugAdapterRequest *request,
@@ -45,6 +49,7 @@ static UmiStatus fake_invoke(
     out_response->status = UMI_STATUS_OK;
     out_response->complete = 1;
     out_response->payload_length = request->payload_length;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->payload_length != 0U) {
         (void)memcpy(out_response->payload, request->payload,
                      request->payload_length);
@@ -54,6 +59,10 @@ static UmiStatus fake_invoke(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake cancel and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_cancel(void *instance, uint64_t request_id)
 {
     FakeAdapter *adapter = (FakeAdapter *)instance;
@@ -61,6 +70,10 @@ static UmiStatus fake_cancel(void *instance, uint64_t request_id)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise make descriptor and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiDebugAdapterDescriptor make_descriptor(
     const char *id,
     int32_t priority,
@@ -91,6 +104,10 @@ static UmiDebugAdapterDescriptor make_descriptor(
     return descriptor;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugAdapterRegistry *registry = NULL;

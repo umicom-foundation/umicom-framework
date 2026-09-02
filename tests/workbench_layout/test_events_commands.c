@@ -21,6 +21,10 @@ typedef struct EventCapture {
     UmiWorkbenchLayoutEvent last;
 } EventCapture;
 
+/*
+ * Exercise capture event and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void capture_event(
     void *context,
     const UmiWorkbenchLayoutEvent *event)
@@ -30,6 +34,10 @@ static void capture_event(
     capture->last = *event;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchLayoutCommand command;

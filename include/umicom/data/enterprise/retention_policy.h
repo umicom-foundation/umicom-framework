@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data retention policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataRetentionPolicy {
     uint64_t max_age_ms;
     size_t minimum_copies;

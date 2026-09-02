@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the component query data shared with callers of this public contract.
+ */
 typedef struct UmiComponentQuery {
   const char *domain_id;
   const char *search_text;
@@ -32,15 +35,30 @@ typedef struct UmiComponentQuery {
   int evidence_complete;
 } UmiComponentQuery;
 
+/**
+ * Represent the component query result data shared with callers of this public contract.
+ */
 typedef struct UmiComponentQueryResult {
   size_t indexes[UMI_COMPONENT_GOVERNANCE_MAX_COMPONENTS];
   size_t count;
 } UmiComponentQueryResult;
 
+/**
+ * Initialise component query from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_component_query_init(UmiComponentQuery *query);
+/**
+ * Provide the component inventory query operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_component_inventory_query(const UmiComponentInventory *inventory,
                                         const UmiComponentQuery *query,
                                         UmiComponentQueryResult *out_result);
+/**
+ * Find component query result while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiComponentGovernanceRecord *
 umi_component_query_result_at(const UmiComponentInventory *inventory,
                               const UmiComponentQueryResult *result, size_t index);

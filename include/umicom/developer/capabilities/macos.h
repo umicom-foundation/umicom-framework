@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_MACOS "umicom.developer.portability.macos"
 
+/**
+ * Provide the developer capability macos operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_macos(void);
 

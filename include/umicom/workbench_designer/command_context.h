@@ -29,6 +29,10 @@ extern "C" {
 
 #define UMI_WORKBENCH_DESIGNER_MAX_COMMAND_STATES 64U
 
+/**
+ * Represent the workbench designer command state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerCommandState {
     UmiWorkbenchDesignerCommandKind kind;
     char command_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -39,6 +43,10 @@ typedef struct UmiWorkbenchDesignerCommandState {
     bool checked;
 } UmiWorkbenchDesignerCommandState;
 
+/**
+ * Represent the workbench designer command context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerCommandContext {
     UmiWorkbenchDesignerCommandState states[UMI_WORKBENCH_DESIGNER_MAX_COMMAND_STATES];
     size_t count;
@@ -52,8 +60,20 @@ typedef struct UmiWorkbenchDesignerCommandContext {
     uint64_t revision;
 } UmiWorkbenchDesignerCommandContext;
 
+/**
+ * Initialise workbench designer command context from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_command_context_init(UmiWorkbenchDesignerCommandContext *context);
+/**
+ * Provide the workbench designer command context build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_command_context_build(UmiWorkbenchDesignerCommandContext *context, UmiWorkbenchDesignerMode mode, const UmiWorkbenchDesignerSelection *selection, const UmiWorkbenchDesignerClipboard *clipboard, const UmiWorkbenchDesignerCommandHistory *history, const UmiWorkbenchDesignerLockState *lock_state, UmiWorkbenchDesignerSaveState save_state);
+/**
+ * Find workbench designer command context while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerCommandState *umi_workbench_designer_command_context_find(const UmiWorkbenchDesignerCommandContext *context, UmiWorkbenchDesignerCommandKind kind);
 
 #ifdef __cplusplus

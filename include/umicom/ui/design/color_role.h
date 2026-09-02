@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design color role values accepted by this public contract.
+ */
 typedef enum UmiDesignColorRole {
     UMI_DESIGN_COLOR_BACKGROUND = 1,
     UMI_DESIGN_COLOR_SURFACE = 2,

@@ -17,12 +17,20 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise ide debug bridge from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_debug_bridge_init(
     UmiIdeDebugBridge *bridge,
     UmiDebugRuntimePlatform *runtime,
     UmiIdeDebugFrameLocationResolver resolver,
     void *user_data)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || runtime == NULL || resolver == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -33,6 +41,10 @@ UmiStatus umi_ide_debug_bridge_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide debug active frame target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_debug_active_frame_target(
     UmiIdeDebugBridge *bridge,
     UmiIdeNavigationTarget *out_target)
@@ -40,6 +52,10 @@ UmiStatus umi_ide_debug_active_frame_target(
     UmiDebugRuntimePlatformSnapshot snapshot;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || bridge->runtime == NULL ||
         bridge->resolve_frame == NULL || out_target == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -48,8 +64,10 @@ UmiStatus umi_ide_debug_active_frame_target(
     status = umi_debug_runtime_platform_snapshot(
         bridge->runtime,
         &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!snapshot.active || snapshot.active_frame_id == 0U) {
         return UMI_STATUS_NOT_FOUND;
     }

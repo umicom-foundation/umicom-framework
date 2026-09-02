@@ -15,6 +15,10 @@
 #ifndef UMICOM_AI_CODING_RUNTIME_SCANNER_INTERNAL_H
 #define UMICOM_AI_CODING_RUNTIME_SCANNER_INTERNAL_H
 #include "umicom/ai_coding_runtime/scanner.h"
+/**
+ * Provide the ai coding platform scan workspace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_platform_scan_workspace(
     const char *root,
     const UmiAiCodingIgnorePolicy *ignore_policy,

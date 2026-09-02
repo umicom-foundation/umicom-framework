@@ -19,6 +19,10 @@
 
 #include "umicom/ai_developer_experience/action_ids.h"
 
+/*
+ * Initialise ai developer checkpoints view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_checkpoints_view_create(
     const char *view_id,
     const UmiAiCodingCheckpointStore *checkpoints,
@@ -30,10 +34,15 @@ UmiStatus umi_ai_developer_checkpoints_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (checkpoints == NULL || visible_rows == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (visible_rows > UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY) {
         visible_rows = UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY;
     }
@@ -44,6 +53,7 @@ UmiStatus umi_ai_developer_checkpoints_view_create(
         "AI Checkpoints",
         "Rollback checkpoints captured before approved multi-step workspace changes.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     count =
@@ -56,10 +66,12 @@ UmiStatus umi_ai_developer_checkpoints_view_create(
         *out_view,
         "ai-checkpoints.total-count",
         (int64_t)checkpoints->count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view, "ai-checkpoints.row-count", (int64_t)count);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         const UmiAiCodingCheckpoint *checkpoint =
             &checkpoints->checkpoints[first + index];
@@ -79,6 +91,7 @@ UmiStatus umi_ai_developer_checkpoints_view_create(
         status = umi_ai_developer_view_set_string(*out_view, key, row);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 0U,

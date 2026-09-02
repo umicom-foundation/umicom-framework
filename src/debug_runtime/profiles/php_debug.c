@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/profiles/php_debug.h"
 
+/*
+ * Provide the debug runtime profile php debug operation used by this module and its client
+ * applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_php_debug(void)
 {
     static const UmiDebugAdapterProfile profile = {

@@ -3,6 +3,22 @@
  * File: adapters/qt6/workstation/dock_overlay_qt6.cpp
  *
  * PURPOSE:
+ *   Implement the dock overlay qt6 behaviour used by its public contract and
+ *   client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/qt6/workstation/dock_overlay_qt6.cpp
+ *
+ * PURPOSE:
  *   Render docking targets and drop previews without modifying the Framework layout graph directly.
  *
  * Created by: Sammy Hegab
@@ -47,14 +63,26 @@ static const UmiQt6SurfaceDescriptor UMI_QT6_WS_DESCRIPTOR = {
     UMI_QT6_CAP_FOCUS | UMI_QT6_CAP_KEYBOARD | UMI_QT6_CAP_ACCESSIBILITY | UMI_QT6_CAP_DENSITY | UMI_QT6_CAP_THEME | UMI_QT6_CAP_DOCK | UMI_QT6_CAP_FLOAT
 };
 
+/*
+ * Provide the qt6 ws dock overlay descriptor operation used by this module and its client
+ * applications.
+ */
 extern "C" const UmiQt6SurfaceDescriptor *umi_qt6_ws_dock_overlay_descriptor(void) { return &UMI_QT6_WS_DESCRIPTOR; }
 
 
+/*
+ * Initialise qt6 ws dock overlay from caller-provided values so later operations receive a
+ * known state.
+ */
 extern "C" UmiQt6WidgetHandle umi_qt6_ws_dock_overlay_create(UmiQt6WidgetHandle content) {
 #if defined(UMICOM_QT6_NATIVE) && UMICOM_QT6_NATIVE
     auto *root = new QWidget();
     auto *layout = new QVBoxLayout(root);
     layout->setContentsMargins(0, 0, 0, 0);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (content != nullptr) {
         layout->addWidget(static_cast<QWidget *>(content));
     }
@@ -64,11 +92,23 @@ extern "C" UmiQt6WidgetHandle umi_qt6_ws_dock_overlay_create(UmiQt6WidgetHandle 
     (void)content; return nullptr;
 #endif
 }
+/*
+ * Provide the qt6 ws dock overlay set preview operation used by this module and its client
+ * applications.
+ */
 extern "C" UmiStatus umi_qt6_ws_dock_overlay_set_preview(UmiQt6WidgetHandle overlay, const UmiWsDockPreview *preview, const char *label) {
 #if defined(UMICOM_QT6_NATIVE) && UMICOM_QT6_NATIVE
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (overlay == nullptr || preview == nullptr) return UMI_STATUS_INVALID_ARGUMENT;
     auto *root = static_cast<QWidget *>(overlay);
     auto *indicator = root->findChild<QLabel *>(QStringLiteral("umicomDockPreviewLabel"));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (indicator == nullptr) {
         indicator = new QLabel(root);
         indicator->setObjectName(QStringLiteral("umicomDockPreviewLabel"));

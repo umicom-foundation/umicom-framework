@@ -29,11 +29,34 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev review baseline data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevReviewBaseline { char ids[UMI_AI_DEV_MEDIUM_CAPACITY][UMI_AI_DEV_ID_CAPACITY]; size_t count; uint64_t revision; } UmiAiDevReviewBaseline;
+/**
+ * Initialise ai dev review baseline from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_review_baseline_init(UmiAiDevReviewBaseline *collection);
+/**
+ * Add ai dev review baseline only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_dev_review_baseline_add(UmiAiDevReviewBaseline *collection, const char *id);
+/**
+ * Remove ai dev review baseline while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ai_dev_review_baseline_remove(UmiAiDevReviewBaseline *collection, const char *id);
+/**
+ * Provide the ai dev review baseline contains operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_review_baseline_contains(const UmiAiDevReviewBaseline *collection, const char *id);
+/**
+ * Return the number of records represented by ai dev review baseline without changing
+ * their state.
+ */
 size_t umi_ai_dev_review_baseline_count(const UmiAiDevReviewBaseline *collection);
 
 #ifdef __cplusplus

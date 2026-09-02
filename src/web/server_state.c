@@ -19,5 +19,13 @@
 
 #include "umicom/web/server_state.h"
 #include <string.h>
-void umi_web_server_state_init(UmiWebServerState *state){if(state==NULL)return;(void)memset(state,0,sizeof(*state));state->phase=UMI_WEB_SERVER_STOPPED;state->last_status=UMI_STATUS_OK;}
-const char *umi_web_server_phase_text(UmiWebServerPhase phase){switch(phase){case UMI_WEB_SERVER_STOPPED:return "stopped";case UMI_WEB_SERVER_STARTING:return "starting";case UMI_WEB_SERVER_READY:return "ready";case UMI_WEB_SERVER_STOPPING:return "stopping";case UMI_WEB_SERVER_FAILED:return "failed";default:return "unknown";}}
+/*
+ * Initialise web server state from caller-provided values so later operations receive a
+ * known state.
+ */
+void umi_web_server_state_init(UmiWebServerState *state){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(state==NULL)return;(void)memset(state,0,sizeof(*state));state->phase=UMI_WEB_SERVER_STOPPED;state->last_status=UMI_STATUS_OK;}
+/*
+ * Provide the web server phase text operation used by this module and its client
+ * applications.
+ */
+const char *umi_web_server_phase_text(UmiWebServerPhase phase){/* Select the behaviour associated with the requested command or state value. */ switch(phase){case UMI_WEB_SERVER_STOPPED:return "stopped";case UMI_WEB_SERVER_STARTING:return "starting";case UMI_WEB_SERVER_READY:return "ready";case UMI_WEB_SERVER_STOPPING:return "stopping";case UMI_WEB_SERVER_FAILED:return "failed";default:return "unknown";}}

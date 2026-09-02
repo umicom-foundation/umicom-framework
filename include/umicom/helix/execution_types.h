@@ -30,6 +30,9 @@ extern "C" {
 #define UMI_HELIX_RUNTIME_MAX_COMPENSATIONS 16U
 #define UMI_HELIX_RUNTIME_HASH_CAPACITY 32U
 
+/**
+ * List the named helix agent role values accepted by this public contract.
+ */
 typedef enum UmiHelixAgentRole {
     UMI_HELIX_AGENT_ROLE_DESIGNER = 1,
     UMI_HELIX_AGENT_ROLE_BUILDER = 2,
@@ -38,6 +41,9 @@ typedef enum UmiHelixAgentRole {
     UMI_HELIX_AGENT_ROLE_TEST = 5
 } UmiHelixAgentRole;
 
+/**
+ * List the named helix action kind values accepted by this public contract.
+ */
 typedef enum UmiHelixActionKind {
     UMI_HELIX_ACTION_READ = 1,
     UMI_HELIX_ACTION_FILESYSTEM = 2,
@@ -47,6 +53,9 @@ typedef enum UmiHelixActionKind {
     UMI_HELIX_ACTION_SOURCE_CONTROL = 6
 } UmiHelixActionKind;
 
+/**
+ * List the named helix operation state values accepted by this public contract.
+ */
 typedef enum UmiHelixOperationState {
     UMI_HELIX_OPERATION_DRAFT = 1,
     UMI_HELIX_OPERATION_PLANNED = 2,
@@ -60,10 +69,30 @@ typedef enum UmiHelixOperationState {
     UMI_HELIX_OPERATION_CANCELLED = 10
 } UmiHelixOperationState;
 
+/**
+ * Provide the helix agent role text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_agent_role_text(UmiHelixAgentRole role);
+/**
+ * Provide the helix action kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_action_kind_text(UmiHelixActionKind kind);
+/**
+ * Provide the helix operation state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_operation_state_text(UmiHelixOperationState state);
+/**
+ * Provide the helix action kind is mutating operation used by this module and its client
+ * applications.
+ */
 int umi_helix_action_kind_is_mutating(UmiHelixActionKind kind);
+/**
+ * Provide the helix operation state can transition operation used by this module and its
+ * client applications.
+ */
 int umi_helix_operation_state_can_transition(
     UmiHelixOperationState current,
     UmiHelixOperationState next);

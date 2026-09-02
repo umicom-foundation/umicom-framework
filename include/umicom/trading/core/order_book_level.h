@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading order book level data shared with callers of this public contract.
+ */
 typedef struct UmiTradingOrderBookLevel { UmiTradingPriceTicks price_ticks; UmiTradingQuantityLots quantity_lots; uint32_t order_count; } UmiTradingOrderBookLevel;
 /* Initialise and validate represent aggregated price-time liquidity at one book level. */
 UmiStatus umi_trading_order_book_level_init(UmiTradingOrderBookLevel *value,UmiTradingPriceTicks price_ticks, UmiTradingQuantityLots quantity_lots, uint32_t order_count);

@@ -14,7 +14,15 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/parent_constraint.h"
 #include <string.h>
+/*
+ * Initialise rad parent constraint from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_parent_constraint_init(UmiRadParentConstraint *item){
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(item,0,sizeof *item);
     (void)umi_rad_copy_text(item->parent_type, sizeof item->parent_type, "parent_constraint");
@@ -22,4 +30,8 @@ UmiStatus umi_rad_parent_constraint_init(UmiRadParentConstraint *item){
     item->accepted = true;
     return UMI_STATUS_OK;
 }
-int umi_rad_parent_constraint_is_valid(const UmiRadParentConstraint *item){if(item==NULL)return 0;return umi_rad_id_valid(item->parent_type) && umi_rad_id_valid(item->child_family);}
+/*
+ * Check that rad parent constraint satisfies its contract before another service relies on
+ * it.
+ */
+int umi_rad_parent_constraint_is_valid(const UmiRadParentConstraint *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return umi_rad_id_valid(item->parent_type) && umi_rad_id_valid(item->child_family);}

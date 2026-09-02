@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/checkpoint_store.h"
 
+/**
+ * Represent the application production recovery report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionRecoveryReport {
     int checkpoint_found;
     int restored;
@@ -33,6 +37,10 @@ typedef struct UmiApplicationProductionRecoveryReport {
     UmiStatus status;
 } UmiApplicationProductionRecoveryReport;
 
+/**
+ * Provide the application production workspace recover operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_production_workspace_recover(
     const UmiApplicationProductionCheckpointStore *store,
     const UmiApplicationExperienceDefinition *experience,

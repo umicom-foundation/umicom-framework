@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/price_band.h"
-int umi_price_within_band(double price,double reference,double fraction){if(price<=0.0||reference<=0.0||fraction<0.0)return 0;double diff=price-reference;if(diff<0.0)diff=-diff;return diff/reference<=fraction;}
+/* Provide the price within band operation used by this module and its client applications. */
+int umi_price_within_band(double price,double reference,double fraction){/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(price<=0.0||reference<=0.0||fraction<0.0)return 0;double diff=price-reference;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(diff<0.0)diff=-diff;return diff/reference<=fraction;}

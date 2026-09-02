@@ -23,17 +23,26 @@ typedef struct UmiGtk4VcsBinding {
     char action_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4VcsBinding;
 
+/* Provide the vcs binding free operation used by this module and its client applications. */
 static void vcs_binding_free(gpointer data, GClosure *closure)
 {
     (void)closure;
     g_free(data);
 }
 
+/*
+ * Provide the vcs action clicked operation used by this module and its client
+ * applications.
+ */
 static void vcs_action_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4VcsBinding *binding =
         (UmiGtk4VcsBinding *)user_data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding != NULL && binding->adapter != NULL) {
         umi_gtk4_dispatch_action(
             binding->adapter,
@@ -41,17 +50,24 @@ static void vcs_action_clicked(GtkButton *button, gpointer user_data)
     }
 }
 
+/* Provide the property string operation used by this module and its client applications. */
 static const char *property_string(
     const UmiUiViewPresentation *presentation,
     const char *key)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (presentation == NULL || key == NULL) return "";
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < presentation->property_count;
          ++index) {
         const UmiUiPropertySnapshot *property =
             &presentation->properties[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(property->key, key) == 0 &&
             property->value.kind == UMI_UI_VALUE_STRING) {
             return property->value.string_value;
@@ -60,17 +76,20 @@ static const char *property_string(
     return "";
 }
 
+/* Return the number of records represented by property without changing their state. */
 static size_t property_count(
     const UmiUiViewPresentation *presentation,
     const char *key)
 {
     UmiUiPropertySnapshot property;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_view_presentation_find_property(
             presentation, key, &property) != UMI_STATUS_OK ||
         property.value.kind != UMI_UI_VALUE_INTEGER ||
         property.value.integer_value <= 0) {
         return 0U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((uint64_t)property.value.integer_value >
         (uint64_t)SIZE_MAX) {
         return SIZE_MAX;
@@ -78,6 +97,7 @@ static size_t property_count(
     return (size_t)property.value.integer_value;
 }
 
+/* Provide the append heading operation used by this module and its client applications. */
 static void append_heading(GtkWidget *box, const char *text)
 {
     GtkWidget *label = gtk_label_new(text);
@@ -86,6 +106,7 @@ static void append_heading(GtkWidget *box, const char *text)
     gtk_box_append(GTK_BOX(box), label);
 }
 
+/* Provide the append rows operation used by this module and its client applications. */
 static void append_rows(
     GtkWidget *box,
     const UmiUiViewPresentation *presentation,
@@ -94,6 +115,7 @@ static void append_rows(
     size_t count)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         char key[96];
         const char *text;
@@ -106,6 +128,7 @@ static void append_rows(
             prefix,
             index);
         text = property_string(presentation, key);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (text[0] == '\0') continue;
 
         label = gtk_label_new(text);
@@ -130,6 +153,7 @@ static void append_rows(
     }
 }
 
+/* Provide the append actions operation used by this module and its client applications. */
 static void append_actions(
     GtkWidget *box,
     UmiGtk4Adapter *adapter,
@@ -140,6 +164,7 @@ static void append_actions(
     size_t count;
     GtkWidget *actions;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_view_presentation_find_property(
             presentation,
             UMI_UI_COMMAND_VIEW_ACTION_COUNT_KEY,
@@ -150,6 +175,7 @@ static void append_actions(
     }
 
     count = (size_t)count_property.value.integer_value;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_UI_COMMAND_VIEW_ACTION_MAX) {
         count = UMI_UI_COMMAND_VIEW_ACTION_MAX;
     }
@@ -162,6 +188,7 @@ static void append_actions(
         GTK_FLOW_BOX(actions),
         4);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         char id_key[96];
         char label_key[96];
@@ -190,9 +217,11 @@ static void append_actions(
 
         id = property_string(presentation, id_key);
         label = property_string(presentation, label_key);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (id[0] == '\0' || label[0] == '\0') continue;
 
         button = gtk_button_new_with_label(label);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_view_presentation_find_property(
                 presentation,
                 enabled_key,
@@ -204,6 +233,10 @@ static void append_actions(
         }
 
         binding = g_new0(UmiGtk4VcsBinding, 1);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (binding == NULL) continue;
         binding->adapter = adapter;
         (void)g_strlcpy(
@@ -225,6 +258,10 @@ static void append_actions(
     gtk_box_append(GTK_BOX(box), actions);
 }
 
+/*
+ * Provide the gtk4 source control widget operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_source_control_widget(
     UmiGtk4Adapter *adapter,
     const UmiUiViewPresentation *presentation)
@@ -235,6 +272,10 @@ GtkWidget *umi_gtk4_source_control_widget(
     const char *summary;
     const char *kind;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || presentation == NULL) return NULL;
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
@@ -248,6 +289,7 @@ GtkWidget *umi_gtk4_source_control_widget(
     kind = property_string(presentation, "umicom.view-kind");
 
     append_heading(box, title);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (summary[0] != '\0') {
         GtkWidget *label = gtk_label_new(summary);
         gtk_label_set_wrap(GTK_LABEL(label), TRUE);
@@ -258,6 +300,7 @@ GtkWidget *umi_gtk4_source_control_widget(
 
     append_actions(box, adapter, presentation);
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(kind, "source-control") == 0) {
         append_rows(
             box,
@@ -265,21 +308,21 @@ GtkWidget *umi_gtk4_source_control_widget(
             kind,
             "vcs",
             property_count(presentation, "vcs.row-count"));
-    } else if (strcmp(kind, "vcs-history") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(kind, "vcs-history") == 0) {
         append_rows(
             box,
             presentation,
             kind,
             "vcs-history",
             property_count(presentation, "vcs-history.row-count"));
-    } else if (strcmp(kind, "vcs-branches") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(kind, "vcs-branches") == 0) {
         append_rows(
             box,
             presentation,
             kind,
             "vcs-branches",
             property_count(presentation, "vcs-branches.row-count"));
-    } else if (strcmp(kind, "vcs-remotes") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(kind, "vcs-remotes") == 0) {
         append_heading(box, "Remote Endpoints");
         append_rows(
             box,
@@ -294,7 +337,7 @@ GtkWidget *umi_gtk4_source_control_widget(
             kind,
             "vcs-operations",
             property_count(presentation, "vcs-operations.row-count"));
-    } else if (strcmp(kind, "vcs-diff") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(kind, "vcs-diff") == 0) {
         append_rows(
             box,
             presentation,

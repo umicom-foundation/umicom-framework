@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/multi_window_policy.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAdaptiveMultiWindowPolicy p = umi_adaptive_multi_window_policy_resolve(UMI_ADAPTIVE_DEVICE_DESKTOP, UMI_DESIGN_SIZE_WIDE);

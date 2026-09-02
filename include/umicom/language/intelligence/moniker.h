@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_LANGUAGE_INTELLIGENCE_MONIKER_API_VERSION 1U
 
+/**
+ * Represent the language intelligence moniker data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageIntelligenceMoniker {
     uint32_t struct_size;
     uint32_t api_version;
@@ -41,18 +45,42 @@ typedef struct UmiLanguageIntelligenceMoniker {
     int enabled;
 } UmiLanguageIntelligenceMoniker;
 
+/**
+ * Initialise language intelligence moniker from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_language_intelligence_moniker_init(
     UmiLanguageIntelligenceMoniker *value,
     const char *id);
+/**
+ * Check that language intelligence moniker satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_language_intelligence_moniker_validate(
     const UmiLanguageIntelligenceMoniker *value);
+/**
+ * Provide the language intelligence moniker set subject operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_intelligence_moniker_set_subject(
     UmiLanguageIntelligenceMoniker *value,
     const char *subject_id);
+/**
+ * Provide the language intelligence moniker set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_intelligence_moniker_set_detail(
     UmiLanguageIntelligenceMoniker *value,
     const char *detail);
+/**
+ * Provide the language intelligence moniker touch operation used by this module and its
+ * client applications.
+ */
 void umi_language_intelligence_moniker_touch(UmiLanguageIntelligenceMoniker *value);
+/**
+ * Provide the language intelligence moniker same identity operation used by this module
+ * and its client applications.
+ */
 int umi_language_intelligence_moniker_same_identity(
     const UmiLanguageIntelligenceMoniker *left,
     const UmiLanguageIntelligenceMoniker *right);

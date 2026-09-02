@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that trading venue satisfies its contract before another service relies on it.
+ */
 int umi_trading_venue_valid(const char *venue);
 #ifdef __cplusplus
 }

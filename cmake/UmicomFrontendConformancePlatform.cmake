@@ -21,9 +21,11 @@
 include_guard(GLOBAL)
 
 set(UMICOM_FRONTEND_CONFORMANCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_frontend)
     message(FATAL_ERROR "UmicomFrontendConformancePlatform.cmake requires umicom_frontend")
 endif()
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ui)
     message(FATAL_ERROR "UmicomFrontendConformancePlatform.cmake requires umicom_ui")
 endif()
@@ -101,16 +103,22 @@ target_sources(umicom_frontend PRIVATE
 # existing frontend target explicitly consumes the canonical toolkit-neutral UI.
 target_link_libraries(umicom_frontend PUBLIC Umicom::ui)
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add frontend conformance test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_frontend_conformance_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_FRONTEND_CONFORMANCE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::frontend)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

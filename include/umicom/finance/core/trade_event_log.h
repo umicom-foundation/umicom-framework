@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trade event log data shared with callers of this public contract.
+ */
 typedef struct UmiTradeEventLog { UmiTradeEvent items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiTradeEventLog;
 /* Reset collection. */ void umi_trade_event_log_init(UmiTradeEventLog *c);
 /* Append valid item. */ UmiStatus umi_trade_event_log_add(UmiTradeEventLog *c,const UmiTradeEvent *item);

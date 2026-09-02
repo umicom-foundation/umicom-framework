@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading instrument listing data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingInstrumentListing { UmiFinancialId listing_id; UmiInstrument instrument; UmiFinancialId venue_id; UmiTradingPriceTicks tick_size; UmiTradingQuantityLots lot_size; bool active; } UmiTradingInstrumentListing;
 /* Initialise a venue-specific instrument listing. */
 UmiStatus umi_trading_instrument_listing_init(UmiTradingInstrumentListing *listing,const char *listing_id,const UmiInstrument *instrument,const UmiFinancialId *venue_id,UmiTradingPriceTicks tick_size,UmiTradingQuantityLots lot_size);

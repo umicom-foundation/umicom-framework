@@ -23,8 +23,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web server state data shared with callers of this public contract.
+ */
 typedef struct UmiWebServerState { UmiWebServerPhase phase; uint16_t port; uint64_t requests; UmiStatus last_status; } UmiWebServerState;
+/**
+ * Initialise web server state from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_web_server_state_init(UmiWebServerState *state);
+/**
+ * Provide the web server phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_server_phase_text(UmiWebServerPhase phase);
 #ifdef __cplusplus
 }

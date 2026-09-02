@@ -17,47 +17,95 @@
 #include "umicom/integration/connection_profile.h"
 #include <string.h>
 
+/*
+ * Check that integration connection profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_integration_connection_profile_validate(const UmiIntegrationConnectionProfile *profile,UmiIntegrationDesignerValidation *validation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || validation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     validation->count = 0U;
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->id[0] == '\0') (void)umi_integration_designer_validation_add(validation,"profile.id","Connection id is required");
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->name[0] == '\0') (void)umi_integration_designer_validation_add(validation,"profile.name","Connection name is required");
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->transport < UMI_INTEGRATION_DESIGNER_REST || profile->transport > UMI_INTEGRATION_DESIGNER_MESSAGE_BUS) (void)umi_integration_designer_validation_add(validation,"profile.transport","A supported transport is required");
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->base_uri[0] == '\0') (void)umi_integration_designer_validation_add(validation,"profile.base_uri","Endpoint or topic address is required");
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->timeout_ms == 0U) (void)umi_integration_designer_validation_add(validation,"profile.timeout_ms","Timeout must be greater than zero");
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->auth != UMI_INTEGRATION_DESIGNER_AUTH_NONE && profile->secret_reference[0] == '\0') (void)umi_integration_designer_validation_add(validation,"profile.secret_reference","Authenticated profiles require a secret reference");
     return validation->count == 0U ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
 }
 
+/*
+ * Find integration connection catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiIntegrationConnectionProfile *umi_integration_connection_catalogue_find(const UmiIntegrationConnectionCatalogue *catalogue,const char *id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || id == NULL) return NULL;
-    for (index = 0U; index < catalogue->count; ++index) if (strcmp(catalogue->items[index].id,id) == 0) return &catalogue->items[index];
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < catalogue->count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(catalogue->items[index].id,id) == 0) return &catalogue->items[index];
     return NULL;
 }
 
+/*
+ * Add integration connection catalogue only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_integration_connection_catalogue_add(UmiIntegrationConnectionCatalogue *catalogue,const UmiIntegrationConnectionProfile *profile)
 {
     UmiIntegrationDesignerValidation validation = {0};
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_integration_connection_profile_validate(profile,&validation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_integration_connection_catalogue_find(catalogue,profile->id) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (catalogue->count >= UMI_INTEGRATION_DESIGNER_MAX_PROFILES) return UMI_STATUS_CAPACITY_EXCEEDED;
     catalogue->items[catalogue->count] = *profile;
     catalogue->count += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove integration connection catalogue while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_integration_connection_catalogue_remove(UmiIntegrationConnectionCatalogue *catalogue,const char *id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(catalogue->items[index].id,id) == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index + 1U < catalogue->count) (void)memmove(&catalogue->items[index],&catalogue->items[index + 1U],(catalogue->count - index - 1U) * sizeof(catalogue->items[0]));
             catalogue->count -= 1U;
             return UMI_STATUS_OK;

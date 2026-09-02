@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 #include "umicom/ui/mosaic/workbench_designer_service.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiUiMosaicWorkbenchDesignerService value;
     umi_ui_mosaic_workbench_designer_service_init(&value);

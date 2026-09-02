@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "umicom/plugin/checksum.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     const char *path = "umicom-plugin-checksum.tmp"; FILE *f = fopen(path,"wb"); uint64_t checksum,size; char text[17];
     assert(f != NULL); assert(fwrite("abc",1U,3U,f) == 3U); assert(fclose(f) == 0);

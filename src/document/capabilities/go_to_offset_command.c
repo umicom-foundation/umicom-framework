@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/go_to_offset_command.h"
 
+/*
+ * Provide the document capability go to offset command operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_go_to_offset_command(void)
 {

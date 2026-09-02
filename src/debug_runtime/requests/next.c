@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/next.h"
 
+/*
+ * Provide the debug runtime request next operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_next(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,

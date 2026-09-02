@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/form.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiUiFormField f;return umi_ui_form_field_init(&f,"name","Name")==UMI_STATUS_OK?0:1;}

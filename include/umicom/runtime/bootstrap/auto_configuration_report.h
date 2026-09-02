@@ -22,8 +22,16 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap auto configuration report from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_bootstrap_auto_configuration_report_init(
     UmiBootstrapAutoConfigurationReport *report);
+/**
+ * Provide the bootstrap auto configuration report record operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_bootstrap_auto_configuration_report_record(
     UmiBootstrapAutoConfigurationReport *report,
     UmiBootstrapStageState outcome,

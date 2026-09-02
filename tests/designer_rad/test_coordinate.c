@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/coordinate.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiRadCoordinate p=umi_rad_coordinate_translate(umi_rad_coordinate_make(2,3),4,-1);CHECK(p.x==6&&p.y==2);return 0;}

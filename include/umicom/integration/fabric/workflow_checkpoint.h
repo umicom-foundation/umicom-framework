@@ -26,8 +26,20 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric workflow checkpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricWorkflowCheckpoint { char workflow_id[UMI_FABRIC_ID_CAPACITY]; size_t next_step; uint64_t plan_fingerprint; uint64_t updated_ms; } UmiFabricWorkflowCheckpoint;
+/**
+ * Initialise fabric workflow checkpoint from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_workflow_checkpoint_init(UmiFabricWorkflowCheckpoint *checkpoint,const char *workflow_id,const UmiFabricWorkflowPlan *plan,uint64_t now_ms);
+/**
+ * Provide the fabric workflow checkpoint advance operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_fabric_workflow_checkpoint_advance(UmiFabricWorkflowCheckpoint *checkpoint,const UmiFabricWorkflowPlan *plan,uint64_t now_ms);
 
 #ifdef __cplusplus

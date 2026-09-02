@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer/acceptance/gate.h"
+/*
+ * Exercise test developer acceptance gate blocked and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_developer_acceptance_gate_blocked(void)
 {
     UmiDeveloperAcceptanceEvidenceStore store;

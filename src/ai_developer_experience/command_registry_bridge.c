@@ -33,6 +33,10 @@ typedef struct BridgeStorage {
     CommandBinding bindings[32];
 } BridgeStorage;
 
+/*
+ * Perform binding through the module contract so client applications do not duplicate its
+ * policy.
+ */
 static UmiStatus binding_execute(
     void *user_data,
     const char *argument,
@@ -42,6 +46,10 @@ static UmiStatus binding_execute(
     CommandBinding *binding = (CommandBinding *)user_data;
     UmiAiDeveloperCommandContext context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->bridge == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -55,6 +63,7 @@ static UmiStatus binding_execute(
     if (argument != NULL && argument[0] != '\0') {
         const size_t length = strlen(argument);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length < sizeof(context.approval_id)) {
             (void)memcpy(context.approval_id, argument, length + 1U);
         }
@@ -68,6 +77,7 @@ static UmiStatus binding_execute(
         message_capacity);
 }
 
+/* Provide the binding enabled operation used by this module and its client applications. */
 static int binding_enabled(
     void *user_data,
     const char *argument)
@@ -75,10 +85,18 @@ static int binding_enabled(
     CommandBinding *binding = (CommandBinding *)user_data;
     UmiAiDeveloperCommandContext context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->bridge == NULL) return 0;
 
     context = binding->bridge->context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (argument != NULL && argument[0] != '\0' &&
         strlen(argument) < sizeof(context.approval_id)) {
         (void)strcpy(context.approval_id, argument);
@@ -90,6 +108,10 @@ static int binding_enabled(
         &context);
 }
 
+/*
+ * Initialise ai developer command registry bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_ai_developer_command_registry_bridge_create(
     UmiCommandRegistry *registry,
     UmiAiDeveloperExperiencePlatform *platform,
@@ -97,6 +119,10 @@ UmiStatus umi_ai_developer_command_registry_bridge_create(
 {
     BridgeStorage *storage;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || platform == NULL || out_bridge == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -104,6 +130,10 @@ UmiStatus umi_ai_developer_command_registry_bridge_create(
     *out_bridge = NULL;
 
     storage = (BridgeStorage *)calloc(1U, sizeof(*storage));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (storage == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     storage->base.registry = registry;
@@ -114,16 +144,28 @@ UmiStatus umi_ai_developer_command_registry_bridge_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ai developer command registry bridge so the same storage
+ * can be reused safely.
+ */
 void umi_ai_developer_command_registry_bridge_destroy(
     UmiAiDeveloperCommandRegistryBridge *bridge)
 {
     free(bridge);
 }
 
+/*
+ * Provide the ai developer command registry bridge set context operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_ai_developer_command_registry_bridge_set_context(
     UmiAiDeveloperCommandRegistryBridge *bridge,
     const UmiAiDeveloperCommandContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || context == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -132,6 +174,10 @@ UmiStatus umi_ai_developer_command_registry_bridge_set_context(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Add ai developer command registry bridge only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_ai_developer_command_registry_bridge_register(
     UmiAiDeveloperCommandRegistryBridge *bridge)
 {
@@ -139,23 +185,34 @@ UmiStatus umi_ai_developer_command_registry_bridge_register(
     size_t count;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || bridge->registry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     count = umi_ai_developer_command_count();
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > sizeof(storage->bindings) / sizeof(storage->bindings[0])) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         const UmiAiDeveloperCommandDescriptor *source =
             umi_ai_developer_command_at(index);
         UmiCommandDescriptor descriptor;
         UmiStatus status;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (source == NULL) return UMI_STATUS_INTERNAL_ERROR;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_command_registry_contains(
                 bridge->registry,
                 source->command_id)) {
@@ -186,6 +243,7 @@ UmiStatus umi_ai_developer_command_registry_bridge_register(
         status = umi_command_registry_register(
             bridge->registry,
             &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

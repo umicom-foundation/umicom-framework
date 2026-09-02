@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress path data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialStressPath { char path_id[UMI_PRU_ID_CAPACITY]; double multipliers[UMI_PRU_MAX_PERIODS]; size_t count; } UmiPrudentialStressPath;
 /* Append a non-negative stress multiplier to a bounded time path. */
 UmiStatus umi_pru_stress_path_add(UmiPrudentialStressPath *path, double multiplier);

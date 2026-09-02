@@ -24,8 +24,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc adaptation plan data shared with callers of this public contract.
+ */
 typedef struct UmiFcAdaptationPlan { uint64_t missing; uint64_t emulated; uint64_t hidden; size_t operations; bool review_required; } UmiFcAdaptationPlan;
+/**
+ * Provide the fc adaptation plan build operation used by this module and its client
+ * applications.
+ */
 void umi_fc_adaptation_plan_build(uint64_t missing,uint64_t emulatable,uint64_t hideable,UmiFcAdaptationPlan *out_plan);
+/**
+ * Provide the fc adaptation plan outcome operation used by this module and its client
+ * applications.
+ */
 UmiFcOutcome umi_fc_adaptation_plan_outcome(const UmiFcAdaptationPlan *plan);
 
 #ifdef __cplusplus

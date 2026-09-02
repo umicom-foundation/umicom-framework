@@ -31,8 +31,19 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/riscv_isa.h"
+/**
+ * Represent the ct riscv profile data shared with callers of this public contract.
+ */
 typedef struct UmiCtRiscvProfile { char profile_id[UMI_CT_ID_CAPACITY]; UmiCtRiscvIsa minimum_isa; uint32_t minimum_cores; bool requires_mmu; bool supervisor_mode; } UmiCtRiscvProfile;
+/**
+ * Provide the ct riscv profile builtin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_riscv_profile_builtin(const char *profile_id,UmiCtRiscvProfile *out_profile);
+/**
+ * Provide the ct riscv profile satisfied operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_riscv_profile_satisfied(const UmiCtRiscvProfile *profile,const UmiCtRiscvIsa *available,uint32_t cores,bool mmu);
 
 #ifdef __cplusplus

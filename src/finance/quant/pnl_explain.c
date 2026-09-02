@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_pnl_explain_init(UmiQuantPnlExplain *record, double market_pnl, double carry_pnl, double total_pnl)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(umi_quant_number_valid(market_pnl) && umi_quant_number_valid(carry_pnl) && umi_quant_number_valid(total_pnl))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->market_pnl = market_pnl;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_pnl_explain_init(UmiQuantPnlExplain *record, double market_p
 /* Return residual P&L not explained by market and carry components. */
 double umi_quant_pnl_explain_unexplained(const UmiQuantPnlExplain *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->total_pnl - record->market_pnl - record->carry_pnl;
 }

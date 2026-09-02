@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws layout item data shared with callers of this public contract.
+ */
 typedef struct UmiWsLayoutItem {
     char surface_id[UMI_UI_ID_CAPACITY];
     UmiWsDockRegion region;
@@ -35,6 +38,9 @@ typedef struct UmiWsLayoutItem {
     bool visible;
 } UmiWsLayoutItem;
 
+/**
+ * Represent the ws layout template data shared with callers of this public contract.
+ */
 typedef struct UmiWsLayoutTemplate {
     char layout_id[UMI_UI_ID_CAPACITY];
     char label[UMI_UI_TEXT_CAPACITY];
@@ -46,18 +52,33 @@ typedef struct UmiWsLayoutTemplate {
     bool locked_by_default;
 } UmiWsLayoutTemplate;
 
+/**
+ * Initialise ws layout template from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_layout_template_init(UmiWsLayoutTemplate *layout,
                                       const char *layout_id,
                                       const char *label,
                                       UmiWsApplicationDomain domain);
+/**
+ * Add ws layout template only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ws_layout_template_add(UmiWsLayoutTemplate *layout,
                                      const char *surface_id,
                                      UmiWsDockRegion region,
                                      int32_t row,
                                      int32_t column,
                                      double weight);
+/**
+ * Find ws layout template while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiWsLayoutItem *umi_ws_layout_template_find(const UmiWsLayoutTemplate *layout,
                                                    const char *surface_id);
+/**
+ * Provide the ws layout template fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ws_layout_template_fingerprint(const UmiWsLayoutTemplate *layout);
 
 #ifdef __cplusplus

@@ -18,6 +18,10 @@
 
 #include "umicom/editor/intelligence_workbench/navigation_projection.h"
 
+/*
+ * Exercise result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorNavigationResult result(
     const char *uri, const char *label, uint64_t sequence, int primary)
 {
@@ -37,6 +41,10 @@ static UmiEditorNavigationResult result(
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationInsights *insights = NULL;

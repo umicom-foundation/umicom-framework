@@ -26,13 +26,22 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the task queue data shared with callers of this public contract.
+ */
 typedef struct UmiTaskQueue UmiTaskQueue;
 
+/**
+ * Represent the task queue config data shared with callers of this public contract.
+ */
 typedef struct UmiTaskQueueConfig {
     size_t worker_count;
     size_t capacity;
 } UmiTaskQueueConfig;
 
+/**
+ * Represent the task queue stats data shared with callers of this public contract.
+ */
 typedef struct UmiTaskQueueStats {
     size_t worker_count;
     size_t capacity;
@@ -44,13 +53,38 @@ typedef struct UmiTaskQueueStats {
     uint64_t failed;
 } UmiTaskQueueStats;
 
+/**
+ * Provide the task queue config default operation used by this module and its client
+ * applications.
+ */
 UmiTaskQueueConfig umi_task_queue_config_default(void);
+/**
+ * Initialise task queue from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_task_queue_create(const UmiTaskQueueConfig *config,
                                 UmiTaskQueue **out_queue);
+/**
+ * Release or reset state held by task queue so the same storage can be reused safely.
+ */
 void umi_task_queue_destroy(UmiTaskQueue *queue);
+/**
+ * Provide the task queue submit operation used by this module and its client applications.
+ */
 UmiStatus umi_task_queue_submit(UmiTaskQueue *queue, UmiTask *task);
+/**
+ * Provide the task queue wait idle operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_task_queue_wait_idle(UmiTaskQueue *queue, uint32_t timeout_ms);
+/**
+ * Provide the task queue shutdown operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_task_queue_shutdown(UmiTaskQueue *queue, int cancel_pending);
+/**
+ * Provide the task queue stats operation used by this module and its client applications.
+ */
 UmiTaskQueueStats umi_task_queue_stats(const UmiTaskQueue *queue);
 
 #ifdef __cplusplus

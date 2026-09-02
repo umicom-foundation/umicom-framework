@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_UNTITLED_DOCUMENT "umicom.document.lifecycle.untitled_document"
 
+/**
+ * Provide the document capability untitled document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_untitled_document(void);
 

@@ -18,12 +18,14 @@
 
 #include "umicom/application/presentation/presentation.h"
 
+/* Provide the print behavior operation used by this module and its client applications. */
 static void print_behavior(
     const UmiApplicationPresentationSurfaceBehavior *behavior)
 {
     (void)printf("Component: %s\n", behavior->component_id);
     (void)printf("  Refresh: %s", umi_application_presentation_refresh_policy_text(
         behavior->refresh_policy));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (behavior->refresh_interval_seconds > 0U) {
         (void)printf(" every %u second(s)",
                      (unsigned int)behavior->refresh_interval_seconds);
@@ -40,6 +42,7 @@ static void print_behavior(
         behavior->accept_context ? "yes" : "no");
 }
 
+/* Provide the print workspace operation used by this module and its client applications. */
 static void print_workspace(
     const UmiApplicationPresentationWorkspaceRuntimePolicy *policy)
 {
@@ -52,6 +55,7 @@ static void print_workspace(
     (void)printf("  Checkpoint: %s",
         umi_application_presentation_checkpoint_policy_text(
             policy->checkpoint_policy));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (policy->checkpoint_interval_seconds > 0U) {
         (void)printf(" every %u second(s)",
                      (unsigned int)policy->checkpoint_interval_seconds);
@@ -61,18 +65,31 @@ static void print_workspace(
         policy->allow_background_commands ? "yes" : "no");
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(int argc, char **argv)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (argc == 2) {
         const UmiApplicationPresentationSurfaceBehavior *behavior =
             umi_application_presentation_surface_behavior_catalogue_find(argv[1]);
         const UmiApplicationPresentationWorkspaceRuntimePolicy *workspace =
             umi_application_presentation_workspace_runtime_policy_catalogue_find(
                 argv[1]);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (behavior != NULL) {
             print_behavior(behavior);
             return 0;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (workspace != NULL) {
             print_workspace(workspace);
             return 0;
@@ -81,6 +98,7 @@ int main(int argc, char **argv)
                       argv[1]);
         return 2;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (argc != 1) {
         (void)fprintf(stderr,
             "Usage: umicom-application-runtime-policy [component-or-recipe-id]\n");

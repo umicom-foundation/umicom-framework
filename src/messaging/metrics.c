@@ -27,17 +27,34 @@ struct UmiMessageMetricsCounter {
     atomic_uint_fast64_t replayed;
 };
 
+/*
+ * Initialise message metrics from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_message_metrics_init(UmiMessageMetricsCounter *counter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (counter == NULL) return;
     (void)memset(counter, 0, sizeof(*counter));
 }
 
+/*
+ * Provide the message metrics increment operation used by this module and its client
+ * applications.
+ */
 void umi_message_metrics_increment(UmiMessageMetricsCounter *counter,
                                    UmiMessageMetric metric)
 {
     atomic_uint_fast64_t *value = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (counter == NULL) return;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (metric) {
     case UMI_MESSAGE_METRIC_ACCEPTED: value = &counter->accepted; break;
     case UMI_MESSAGE_METRIC_DELIVERED: value = &counter->delivered; break;
@@ -50,11 +67,19 @@ void umi_message_metrics_increment(UmiMessageMetricsCounter *counter,
     (void)atomic_fetch_add_explicit(value, 1U, memory_order_relaxed);
 }
 
+/*
+ * Provide the message metrics snapshot operation used by this module and its client
+ * applications.
+ */
 UmiMessageMetrics umi_message_metrics_snapshot(
     const UmiMessageMetricsCounter *counter)
 {
     UmiMessageMetrics metrics;
     (void)memset(&metrics, 0, sizeof(metrics));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (counter == NULL) return metrics;
     metrics.accepted = atomic_load_explicit(&counter->accepted,
                                             memory_order_relaxed);
@@ -71,6 +96,10 @@ UmiMessageMetrics umi_message_metrics_snapshot(
     return metrics;
 }
 
+/*
+ * Return the number of records represented by message metrics counter without changing
+ * their state.
+ */
 size_t umi_message_metrics_counter_size(void)
 {
     return sizeof(UmiMessageMetricsCounter);

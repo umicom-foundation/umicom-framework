@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/scenario_partition.h"
 
-UmiStatus umi_enterprise_scenario_partition_init(UmiEnterpriseScenarioPartition *p,size_t index,size_t first,size_t count,size_t total){if(p==NULL||count==0U||total==0U||first>=total||count>total-first)return UMI_STATUS_INVALID_ARGUMENT;p->partition_index=index;p->first_scenario=first;p->scenario_count=count;p->total_scenarios=total;return UMI_STATUS_OK;}
+/*
+ * Initialise enterprise scenario partition from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_enterprise_scenario_partition_init(UmiEnterpriseScenarioPartition *p,size_t index,size_t first,size_t count,size_t total){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||count==0U||total==0U||first>=total||count>total-first)return UMI_STATUS_INVALID_ARGUMENT;p->partition_index=index;p->first_scenario=first;p->scenario_count=count;p->total_scenarios=total;return UMI_STATUS_OK;}

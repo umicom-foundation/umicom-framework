@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+/* Provide the scan directory operation used by this module and its client applications. */
 static UmiStatus scan_directory(
     const char *root,
     const char *relative,
@@ -40,13 +41,22 @@ static UmiStatus scan_directory(
         ? snprintf(directory_path, sizeof(directory_path), "%s/%s", root, relative)
         : snprintf(directory_path, sizeof(directory_path), "%s", root);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(directory_path)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     directory = opendir(directory_path);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (directory == NULL) return UMI_STATUS_IO_ERROR;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while ((entry = readdir(directory)) != NULL) {
         char child_relative[UMI_AI_CODING_RUNTIME_PATH_CAPACITY];
         char child_full[UMI_AI_CODING_RUNTIME_PATH_CAPACITY * 2U];
@@ -55,6 +65,7 @@ static UmiStatus scan_directory(
         int descend = 1;
         UmiStatus status;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(entry->d_name, ".") == 0 ||
             strcmp(entry->d_name, "..") == 0) {
             continue;
@@ -68,6 +79,7 @@ static UmiStatus scan_directory(
                 child_relative, sizeof(child_relative),
                 "%s", entry->d_name);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0 ||
             (size_t)written >= sizeof(child_relative)) {
             (void)closedir(directory);
@@ -77,18 +89,22 @@ static UmiStatus scan_directory(
         written = snprintf(
             child_full, sizeof(child_full),
             "%s/%s", root, child_relative);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0 ||
             (size_t)written >= sizeof(child_full)) {
             (void)closedir(directory);
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (lstat(child_full, &info) != 0) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (errno == ENOENT) continue;
             (void)closedir(directory);
             return UMI_STATUS_IO_ERROR;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (S_ISLNK(info.st_mode)) {
             continue;
         }
@@ -103,6 +119,7 @@ static UmiStatus scan_directory(
         item.byte_size =
             info.st_size > 0 ? (uint64_t)info.st_size : 0U;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ai_coding_ignore_path(
                 ignore_policy,
                 item.relative_path,
@@ -111,11 +128,13 @@ static UmiStatus scan_directory(
         }
 
         status = visitor(user_data, &item, &descend);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             (void)closedir(directory);
             return status;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item.directory && descend) {
             status = scan_directory(
                 root,
@@ -124,11 +143,12 @@ static UmiStatus scan_directory(
                 visitor,
                 user_data,
                 file_count);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 (void)closedir(directory);
                 return status;
             }
-        } else if (!item.directory) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (!item.directory) {
             *file_count += 1U;
         }
     }
@@ -138,6 +158,10 @@ static UmiStatus scan_directory(
         : UMI_STATUS_IO_ERROR;
 }
 
+/*
+ * Provide the ai coding platform scan workspace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_platform_scan_workspace(
     const char *root,
     const UmiAiCodingIgnorePolicy *ignore_policy,

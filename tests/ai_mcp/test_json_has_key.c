@@ -15,4 +15,8 @@
 
 #include <assert.h>
 #include "umicom/ai/mcp/json.h"
+/*
+ * Exercise test ai mcp json has key and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_ai_mcp_json_has_key(void){assert(umi_ai_mcp_json_has_key("{\"tools\":{}}","tools"));assert(!umi_ai_mcp_json_has_key("{}","tools"));return 0;}

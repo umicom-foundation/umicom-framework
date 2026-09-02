@@ -24,7 +24,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product validation data shared with callers of this public contract.
+ */
 typedef struct UmiProductValidation { int descriptor_valid; int profile_valid; int capabilities_valid; int passed; } UmiProductValidation;
+/**
+ * Perform product validation through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_product_validation_run(const UmiProductProfile *profile,UmiProductValidation *out_result);
 #ifdef __cplusplus
 }

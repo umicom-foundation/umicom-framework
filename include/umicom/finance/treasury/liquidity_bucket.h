@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the treasury liquidity bucket data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTreasuryLiquidityBucket {
     char id[UMI_TREASURY_ID_CAPACITY];
     int32_t start_days;
@@ -25,13 +29,25 @@ typedef struct UmiTreasuryLiquidityBucket {
     int64_t inflow_minor;
     int64_t outflow_minor;
 } UmiTreasuryLiquidityBucket;
+/**
+ * Initialise treasury liquidity bucket from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_treasury_liquidity_bucket_init(UmiTreasuryLiquidityBucket *value,
     const char *id,
     int32_t start_days,
     int32_t end_days,
     int64_t inflow_minor,
     int64_t outflow_minor);
+/**
+ * Check that treasury liquidity bucket satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_treasury_liquidity_bucket_valid(const UmiTreasuryLiquidityBucket *value);
+/**
+ * Provide the treasury liquidity bucket gap minor operation used by this module and its
+ * client applications.
+ */
 int64_t umi_treasury_liquidity_bucket_gap_minor(const UmiTreasuryLiquidityBucket *value);
 #ifdef __cplusplus
 }

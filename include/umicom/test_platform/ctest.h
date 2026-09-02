@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform ctest import options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformCtestImportOptions {
     char project_id[128];
     char suite_id[128];
@@ -34,6 +38,10 @@ typedef struct UmiTestPlatformCtestImportOptions {
     char build_directory[1024];
 } UmiTestPlatformCtestImportOptions;
 
+/**
+ * Represent the test platform ctest import summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformCtestImportSummary {
     size_t discovered_count;
     size_t disabled_count;
@@ -41,6 +49,10 @@ typedef struct UmiTestPlatformCtestImportSummary {
     size_t timed_count;
 } UmiTestPlatformCtestImportSummary;
 
+/**
+ * Provide the test platform ctest parse json operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_ctest_parse_json(
     const char *json,
     const UmiTestPlatformCtestImportOptions *options,

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/developer_productivity/directory_compare.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperDirectoryCompareModel model;

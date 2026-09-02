@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request write memory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_write_memory(
     UmiDebugRuntimeAdapter *adapter,
     const char *memory_reference,
@@ -28,6 +32,10 @@ UmiStatus umi_debug_runtime_request_write_memory(
     char arguments[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
     UmiLanguageRuntimeJsonWriter writer;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || memory_reference == NULL ||
         memory_reference[0] == '\0' ||
         base64_data == NULL || base64_data[0] == '\0') {
@@ -46,6 +54,7 @@ UmiStatus umi_debug_runtime_request_write_memory(
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"data\":");
     (void)umi_language_runtime_json_writer_string(&writer, base64_data);
     (void)umi_language_runtime_json_writer_raw(&writer, "}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.status != UMI_STATUS_OK) return writer.status;
 
     return umi_debug_runtime_request_raw(

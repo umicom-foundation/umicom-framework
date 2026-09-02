@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the workbench context source studio profile default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchContextSourceStudioProfile
 umi_workbench_context_source_studio_profile_default(void)
 {
@@ -29,6 +33,7 @@ umi_workbench_context_source_studio_profile_default(void)
     return profile;
 }
 
+/* Provide the register source operation used by this module and its client applications. */
 static UmiStatus register_source(
     UmiWorkbenchContextSourceService *service,
     const UmiWorkbenchContextSourceStudioProfile *profile,
@@ -52,11 +57,17 @@ static UmiStatus register_source(
         profile->application_id,
         panel_id,
         display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferred_group != NULL && preferred_group[0] != '\0') {
         status = umi_workbench_context_source_definition_set_group(
             &definition,
             preferred_group);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     definition.source_kind = source_kind;
@@ -72,16 +83,28 @@ static UmiStatus register_source(
         service, &definition);
 }
 
+/*
+ * Provide the workbench context source register studio profile operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_register_studio_profile(
     UmiWorkbenchContextSourceService *service,
     const UmiWorkbenchContextSourceStudioProfile *profile)
 {
     UmiWorkbenchContextSourceStudioProfile effective;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     effective = profile != NULL
         ? *profile
         : umi_workbench_context_source_studio_profile_default();
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (effective.application_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -98,6 +121,7 @@ UmiStatus umi_workbench_context_source_register_studio_profile(
         effective.development_group_id,
         40U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -112,6 +136,7 @@ UmiStatus umi_workbench_context_source_register_studio_profile(
         effective.development_group_id,
         35U,
         10U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -126,6 +151,7 @@ UmiStatus umi_workbench_context_source_register_studio_profile(
         effective.development_group_id,
         50U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -140,6 +166,7 @@ UmiStatus umi_workbench_context_source_register_studio_profile(
         effective.development_group_id,
         50U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -154,6 +181,7 @@ UmiStatus umi_workbench_context_source_register_studio_profile(
         effective.testing_group_id,
         50U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -168,6 +196,7 @@ UmiStatus umi_workbench_context_source_register_studio_profile(
         effective.development_group_id,
         25U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return register_source(

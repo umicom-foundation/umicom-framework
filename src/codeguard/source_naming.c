@@ -40,7 +40,12 @@ static int umi_codeguard_source_name_is_boundary(const char *name,
 static int umi_codeguard_source_name_has_prefix(const char *text,
                                                 const char *prefix)
 {
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*prefix != '\0') {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*text == '\0' ||
             tolower((unsigned char)*text) !=
                 tolower((unsigned char)*prefix)) {
@@ -56,6 +61,10 @@ static int umi_codeguard_source_name_has_prefix(const char *text,
 static size_t umi_codeguard_source_name_consume_digits(const char *name,
                                                        size_t index)
 {
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (isdigit((unsigned char)name[index]) != 0) {
         ++index;
     }
@@ -78,7 +87,9 @@ static const char *umi_codeguard_source_name_basename(const char *path)
     const char *name = path;
     const char *cursor;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (cursor = path; *cursor != '\0'; ++cursor) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '/' || *cursor == '\\') {
             name = cursor + 1;
         }
@@ -92,52 +103,65 @@ umi_codeguard_source_name_classify_word_label(const char *name, size_t index)
 {
     size_t digit_index;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!umi_codeguard_source_name_is_boundary(name, index)) {
         return UMI_CODEGUARD_SOURCE_NAME_OK;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (tolower((unsigned char)name[index]) == 'v' &&
         isdigit((unsigned char)name[index + 1U]) != 0) {
         digit_index = umi_codeguard_source_name_consume_digits(name,
                                                                index + 1U);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_codeguard_source_name_is_label_end(name, digit_index)) {
             return UMI_CODEGUARD_SOURCE_NAME_VERSION_LABEL;
         }
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (umi_codeguard_source_name_has_prefix(name + index, "version")) {
         digit_index = index + strlen("version");
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_codeguard_source_name_is_label_separator(name[digit_index])) {
             ++digit_index;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (isdigit((unsigned char)name[digit_index]) != 0) {
             digit_index = umi_codeguard_source_name_consume_digits(
                 name, digit_index);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_codeguard_source_name_is_label_end(name, digit_index)) {
                 return UMI_CODEGUARD_SOURCE_NAME_VERSION_LABEL;
             }
         }
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (umi_codeguard_source_name_has_prefix(name + index, "batch")) {
         digit_index = index + strlen("batch");
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_codeguard_source_name_is_label_separator(name[digit_index])) {
             ++digit_index;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (isdigit((unsigned char)name[digit_index]) != 0) {
             digit_index = umi_codeguard_source_name_consume_digits(
                 name, digit_index);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_codeguard_source_name_is_label_end(name, digit_index)) {
                 return UMI_CODEGUARD_SOURCE_NAME_BATCH_LABEL;
             }
         }
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (tolower((unsigned char)name[index]) == 'm' &&
         tolower((unsigned char)name[index + 1U]) == 'b' &&
         isdigit((unsigned char)name[index + 2U]) != 0) {
         digit_index = umi_codeguard_source_name_consume_digits(name,
                                                                index + 2U);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_codeguard_source_name_is_label_end(name, digit_index)) {
             return UMI_CODEGUARD_SOURCE_NAME_BATCH_LABEL;
         }
@@ -154,12 +178,17 @@ static int umi_codeguard_source_name_has_semantic_version(const char *name,
     size_t cursor;
     unsigned separators = 0U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!umi_codeguard_source_name_is_boundary(name, index) ||
         isdigit((unsigned char)name[index]) == 0) {
         return 0;
     }
 
     cursor = umi_codeguard_source_name_consume_digits(name, index);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (name[cursor] == '.' &&
            isdigit((unsigned char)name[cursor + 1U]) != 0 &&
            separators < 2U) {
@@ -171,24 +200,35 @@ static int umi_codeguard_source_name_has_semantic_version(const char *name,
            umi_codeguard_source_name_is_label_end(name, cursor);
 }
 
+/*
+ * Provide the codeguard source name classify operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardSourceNameIssue umi_codeguard_source_name_classify(
     const char *path)
 {
     const char *name;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || path[0] == '\0') {
         return UMI_CODEGUARD_SOURCE_NAME_OK;
     }
 
     name = umi_codeguard_source_name_basename(path);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; name[index] != '\0'; ++index) {
         UmiCodeGuardSourceNameIssue issue =
             umi_codeguard_source_name_classify_word_label(name, index);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (issue != UMI_CODEGUARD_SOURCE_NAME_OK) {
             return issue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_codeguard_source_name_has_semantic_version(name, index)) {
             return UMI_CODEGUARD_SOURCE_NAME_VERSION_LABEL;
         }
@@ -197,9 +237,14 @@ UmiCodeGuardSourceNameIssue umi_codeguard_source_name_classify(
     return UMI_CODEGUARD_SOURCE_NAME_OK;
 }
 
+/*
+ * Provide the codeguard source name issue text operation used by this module and its
+ * client applications.
+ */
 const char *umi_codeguard_source_name_issue_text(
     UmiCodeGuardSourceNameIssue issue)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (issue) {
         case UMI_CODEGUARD_SOURCE_NAME_VERSION_LABEL:
             return "version label";
@@ -210,17 +255,26 @@ const char *umi_codeguard_source_name_issue_text(
     }
 }
 
+/*
+ * Provide the codeguard source name audit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_source_name_audit(const char *path,
                                           UmiCodeGuardResult *result)
 {
     UmiCodeGuardSourceNameIssue issue;
     UmiCodeGuardFinding finding = {0};
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     issue = umi_codeguard_source_name_classify(path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (issue == UMI_CODEGUARD_SOURCE_NAME_OK) {
         return UMI_STATUS_OK;
     }

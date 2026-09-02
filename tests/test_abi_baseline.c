@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/abi/abi.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiAbiBaseline a=umi_abi_baseline_current(42U),b=umi_abi_baseline_current(42U);assert(umi_abi_baseline_matches(&a,&b));return 0;}

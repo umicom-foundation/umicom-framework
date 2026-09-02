@@ -20,6 +20,7 @@
 #include "umicom/developer_project/run_plan.h"
 
 
+/* Provide the plan build operation used by this module and its client applications. */
 static UmiStatus plan_build(
     const UmiDeveloperProjectModel *model,
     int include_test,
@@ -34,6 +35,10 @@ static UmiStatus plan_build(
         include_test);
 }
 
+/*
+ * Perform plan through the module contract so client applications do not duplicate its
+ * policy.
+ */
 static UmiStatus plan_run(
     const UmiDeveloperProjectModel *model,
     UmiDeveloperProjectRunPlan *out_plan)
@@ -45,6 +50,10 @@ static UmiStatus plan_run(
 }
 
 
+/*
+ * Provide the developer project provider cargo operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_cargo(void)
 {
     static const UmiDeveloperProjectLanguageProvider provider = {

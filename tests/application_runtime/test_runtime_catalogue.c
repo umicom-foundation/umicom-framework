@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test runtime catalogue and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_runtime_catalogue(void){ UmiApplicationRuntimeCatalogueStatus s; assert(umi_application_runtime_catalogue_status(&s)==UMI_STATUS_OK); assert(s.aligned_count>0U); return 0; }

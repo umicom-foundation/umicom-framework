@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressEvidence { uint64_t sequence; uint64_t fingerprint; char source[UMI_PRU_TEXT_CAPACITY]; } UmiPrudentialStressEvidence;
 /* Initialise immutable stress evidence with deterministic source fingerprinting. */
 UmiStatus umi_pru_stress_evidence_init(UmiPrudentialStressEvidence *evidence, uint64_t sequence, const char *source);

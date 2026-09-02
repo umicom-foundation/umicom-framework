@@ -17,8 +17,10 @@
 
 #include <string.h>
 
+/* Provide the mode icon operation used by this module and its client applications. */
 static const char *mode_icon(UmiUiThemeMode mode)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (mode) {
         case UMI_UI_THEME_MODE_LIGHT: return "weather-clear-symbolic";
         case UMI_UI_THEME_MODE_DARK: return "weather-clear-night-symbolic";
@@ -29,8 +31,10 @@ static const char *mode_icon(UmiUiThemeMode mode)
     }
 }
 
+/* Provide the density name operation used by this module and its client applications. */
 static const char *density_name(UmiUiDensity density)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (density) {
         case UMI_UI_DENSITY_COMPACT: return "Compact";
         case UMI_UI_DENSITY_SPACIOUS: return "Spacious";
@@ -39,12 +43,18 @@ static const char *density_name(UmiUiDensity density)
     }
 }
 
+/*
+ * Provide the sync active context operation used by this module and its client
+ * applications.
+ */
 static void sync_active_context(UmiUiWorkbench *workbench,
                                 const UmiUiAppearanceProfile *profile)
 {
     UmiUiContextStore *context = umi_ui_workbench_context(workbench);
     const char *density = "comfortable";
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->density == UMI_UI_DENSITY_COMPACT) density = "compact";
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->density == UMI_UI_DENSITY_SPACIOUS) density = "spacious";
     (void)umi_ui_context_set_string(context, "studio.ui.theme",
                                     profile->profile_id);
@@ -60,17 +70,27 @@ static void sync_active_context(UmiUiWorkbench *workbench,
                                      profile->reduce_motion);
 }
 
+/* Find on appearance while leaving the underlying catalogue or model owned by this module. */
 static void on_appearance_selected(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     UmiUiWorkbench *workbench;
     UmiUiAppearanceProfile active;
     const char *profile_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) return;
     profile_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-appearance-profile-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile_id == NULL) return;
     workbench = umi_ui_application_shell_workbench(adapter->shell);
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_ui_appearance_model_set_active(
             umi_ui_workbench_appearance(workbench), profile_id) !=
         UMI_STATUS_OK ||
@@ -88,6 +108,7 @@ static void on_appearance_selected(GtkButton *button, gpointer user_data)
     (void)umi_gtk4_refresh_appearance(adapter, workbench);
 }
 
+/* Provide the brand header operation used by this module and its client applications. */
 static GtkWidget *brand_header(UmiUiWorkbench *workbench)
 {
     UmiUiContextSnapshot value;
@@ -96,6 +117,7 @@ static GtkWidget *brand_header(UmiUiWorkbench *workbench)
     GtkWidget *subtitle;
 
     gtk_widget_add_css_class(box, "umicom-appearance-header");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_context_get(umi_ui_workbench_context(workbench),
                            "studio.brand.logo-path", &value) ==
             UMI_STATUS_OK &&
@@ -120,6 +142,7 @@ static GtkWidget *brand_header(UmiUiWorkbench *workbench)
     return box;
 }
 
+/* Provide the profile row operation used by this module and its client applications. */
 static GtkWidget *profile_row(UmiGtk4Adapter *adapter,
                               const UmiUiAppearanceProfile *profile)
 {
@@ -148,6 +171,7 @@ static GtkWidget *profile_row(UmiGtk4Adapter *adapter,
     gtk_box_append(GTK_BOX(copy), description);
     gtk_box_append(GTK_BOX(row), icon);
     gtk_box_append(GTK_BOX(row), copy);
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->active) {
         selected = gtk_image_new_from_icon_name("object-select-symbolic");
         gtk_image_set_pixel_size(GTK_IMAGE(selected), 17);
@@ -164,6 +188,10 @@ static GtkWidget *profile_row(UmiGtk4Adapter *adapter,
     return button;
 }
 
+/*
+ * Provide the gtk4 refresh appearance operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_appearance(UmiGtk4Adapter *adapter,
                                      UmiUiWorkbench *workbench)
 {
@@ -174,14 +202,19 @@ UmiStatus umi_gtk4_refresh_appearance(UmiGtk4Adapter *adapter,
     GtkWidget *separator;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->appearance_button == NULL ||
         workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     model = umi_ui_workbench_appearance(workbench);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_appearance_model_active(model, &profile) == UMI_STATUS_OK) {
         gtk_label_set_text(GTK_LABEL(adapter->appearance_label), profile.label);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_label_set_text(GTK_LABEL(adapter->appearance_label), "Appearance");
     }
 
@@ -191,7 +224,9 @@ UmiStatus umi_gtk4_refresh_appearance(UmiGtk4Adapter *adapter,
     gtk_box_append(GTK_BOX(content), brand_header(workbench));
     separator = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
     gtk_box_append(GTK_BOX(content), separator);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_appearance_model_count(model); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_appearance_model_at(model, index, &profile) ==
             UMI_STATUS_OK) {
             gtk_box_append(GTK_BOX(content), profile_row(adapter, &profile));

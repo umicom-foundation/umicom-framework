@@ -66,6 +66,10 @@ static const char *const CAPABILITIES[] = {
     "abi"
 };
 
+/*
+ * Provide the ide self host manifest operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSelfHostManifest *umi_ide_self_host_manifest(void)
 {
     static const UmiIdeSelfHostManifest manifest = {
@@ -81,12 +85,20 @@ const UmiIdeSelfHostManifest *umi_ide_self_host_manifest(void)
     return &manifest;
 }
 
+/*
+ * Check that ide self host manifest satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ide_self_host_manifest_validate(
     const UmiIdeSelfHostManifest *manifest)
 {
     size_t index;
     size_t other;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manifest == NULL ||
         manifest->required_surface_ids == NULL ||
         manifest->required_surface_count == 0U ||
@@ -97,15 +109,22 @@ UmiStatus umi_ide_self_host_manifest_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < manifest->required_surface_count; ++index) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (manifest->required_surface_ids[index] == NULL ||
             manifest->required_surface_ids[index][0] == '\0') {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U;
              other < manifest->required_surface_count;
              ++other) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(
                     manifest->required_surface_ids[index],
                     manifest->required_surface_ids[other]) == 0) {

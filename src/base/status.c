@@ -15,8 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/base/status.h"
 
+/* Provide the status text operation used by this module and its client applications. */
 const char *umi_status_text(UmiStatus status)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (status) {
         case UMI_STATUS_OK: return "OK";
         case UMI_STATUS_INVALID_ARGUMENT: return "Invalid argument";

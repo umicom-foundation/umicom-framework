@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ENVIRONMENT_OVERLAY "umicom.developer.execution.environment_overlay"
 
+/**
+ * Provide the developer capability environment overlay operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_environment_overlay(void);
 

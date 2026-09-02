@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Add developer workbench recent projects only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_developer_workbench_recent_projects_add(
     UmiRecentItemRegistry *registry,
     const char *project_id,

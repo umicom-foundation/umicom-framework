@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCodeGuardDependencyAuditRequest request;
@@ -28,20 +32,24 @@ int main(void)
 
     umi_toolchain_profile_init(&profile);
     umi_codeguard_dependency_audit_request_init(&request);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request.format != UMI_CODEGUARD_DEPENDENCY_FORMAT_VERTICAL ||
         request.timeout_ms != 900000U || !request.recursive)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_codeguard_dependency_report_format_parse("json", &format) ||
         format != UMI_CODEGUARD_DEPENDENCY_FORMAT_JSON ||
         umi_codeguard_dependency_report_format_parse("xml", &format))
         return EXIT_FAILURE;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_codeguard_dependency_audit_execute(
             &profile, &request, &report) != UMI_STATUS_OK ||
         report.outcome != UMI_CODEGUARD_DEPENDENCY_SKIPPED ||
         report.scanner_available)
         return EXIT_FAILURE;
     request.strict = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_codeguard_dependency_audit_execute(
             &profile, &request, &report) != UMI_STATUS_UNAVAILABLE ||
         report.outcome != UMI_CODEGUARD_DEPENDENCY_SKIPPED)
@@ -49,11 +57,16 @@ int main(void)
 
     scanner = umi_toolchain_profile_tool_mutable(
         &profile, UMI_TOOL_OSV_SCANNER);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scanner == NULL) return EXIT_FAILURE;
     scanner->state = UMI_TOOL_VALIDATED;
     (void)strcpy(scanner->path, "not-started-during-dry-run");
     (void)strcpy(scanner->version, "test-version");
     request.dry_run = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_codeguard_dependency_audit_execute(
             &profile, &request, &report) != UMI_STATUS_OK ||
         report.outcome != UMI_CODEGUARD_DEPENDENCY_PLANNED ||

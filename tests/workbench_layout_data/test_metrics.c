@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test save load delete metrics and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_save_load_delete_metrics(void)
 {
     UmiWorkbenchLayoutMetricsCollector collector;
@@ -42,6 +46,10 @@ static int test_save_load_delete_metrics(void)
     return 0;
 }
 
+/*
+ * Exercise test sync metrics and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_sync_metrics(void)
 {
     UmiWorkbenchLayoutMetricsCollector collector;
@@ -66,6 +74,10 @@ static int test_sync_metrics(void)
     return 0;
 }
 
+/*
+ * Exercise test outbox offline metrics and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_outbox_offline_metrics(void)
 {
     UmiWorkbenchLayoutMetricsCollector collector;
@@ -90,6 +102,7 @@ static int test_outbox_offline_metrics(void)
     return 0;
 }
 
+/* Release or reset state held by test so the same storage can be reused safely. */
 static int test_reset(void)
 {
     UmiWorkbenchLayoutMetricsCollector collector;
@@ -106,6 +119,10 @@ static int test_reset(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid snapshot and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_invalid_snapshot(void)
 {
     UmiWorkbenchLayoutMetricsCollector collector;
@@ -119,6 +136,10 @@ static int test_invalid_snapshot(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_save_load_delete_metrics() == 0,

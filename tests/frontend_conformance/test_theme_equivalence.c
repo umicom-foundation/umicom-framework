@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcThemeEquivalence e={10U,9U,1U}; CHECK(umi_fc_theme_equivalence_evaluate(&e)>0.89);
     return 0;

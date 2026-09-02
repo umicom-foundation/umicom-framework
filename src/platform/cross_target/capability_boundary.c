@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/capability_boundary.h"
 
+/*
+ * Provide the ct capability boundary allows operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_capability_boundary_allows(const UmiCtCapabilityBoundary*b,UmiCtKernelCapability g){return b!=NULL&&(g&b->required)==b->required&&(g&b->denied)==0U;}

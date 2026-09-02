@@ -18,6 +18,10 @@
 #include "umicom/developer_project/language_health.h"
 #include "umicom/developer_project/languages/markdown.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperProjectLanguageHealth health;

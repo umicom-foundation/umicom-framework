@@ -21,11 +21,17 @@ UmiStatus umi_adaptive_manifest_init(UmiAdaptiveManifest *manifest,
                                      const char *shell_profile_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manifest == NULL || application_id == NULL || shell_profile_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(manifest, 0, sizeof *manifest);
     status = umi_adaptive_copy_text(manifest->application_id, sizeof manifest->application_id, application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_adaptive_copy_text(manifest->shell_profile_id, sizeof manifest->shell_profile_id, shell_profile_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     manifest->renderer_mask = 0x07U;
     manifest->supports_orientation_change = 1;

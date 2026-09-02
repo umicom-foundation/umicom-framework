@@ -18,6 +18,10 @@
 #include "umicom/ai_ui/ai_ui.h"
 #include "umicom/ui/command_view.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiRuntime runtime;

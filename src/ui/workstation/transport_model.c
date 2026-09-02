@@ -15,7 +15,15 @@
 
 #include "umicom/ui/workstation/transport_model.h"
 
+/*
+ * Initialise ws transport model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_transport_model_init(UmiWsTransportModel *model, int64_t duration_ms) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || duration_ms < 0) return UMI_STATUS_INVALID_ARGUMENT;
     *model = (UmiWsTransportModel){0};
     model->duration_ms = duration_ms;
@@ -23,26 +31,59 @@ UmiStatus umi_ws_transport_model_init(UmiWsTransportModel *model, int64_t durati
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws transport model play operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_play(UmiWsTransportModel *model) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     model->state = UMI_WS_TRANSPORT_PLAYING;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws transport model pause operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_pause(UmiWsTransportModel *model) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     model->state = UMI_WS_TRANSPORT_PAUSED;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws transport model seek operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_seek(UmiWsTransportModel *model, int64_t position_ms) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || position_ms < 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (model->duration_ms > 0 && position_ms > model->duration_ms) position_ms = model->duration_ms;
     model->position_ms = position_ms;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws transport model set rate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_set_rate(UmiWsTransportModel *model, double rate) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || rate <= 0.0 || rate > 64.0) return UMI_STATUS_INVALID_ARGUMENT;
     model->rate = rate;
     return UMI_STATUS_OK;

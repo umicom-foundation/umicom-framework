@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct cross target health input data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCtCrossTargetHealthInput { bool toolchain_required; bool toolchain_ready; bool sysroot_required; bool sysroot_ready; bool emulator_required; bool emulator_ready; bool runtime_conformant; uint32_t warnings; } UmiCtCrossTargetHealthInput;
+/**
+ * Represent the ct cross target health data shared with callers of this public contract.
+ */
 typedef struct UmiCtCrossTargetHealth { UmiCtHealth health; uint32_t blockers; uint32_t warnings; uint8_t readiness_percent; } UmiCtCrossTargetHealth;
+/**
+ * Provide the ct cross target health evaluate operation used by this module and its client
+ * applications.
+ */
 UmiCtCrossTargetHealth umi_ct_cross_target_health_evaluate(const UmiCtCrossTargetHealthInput *input);
 
 #ifdef __cplusplus

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/aarch64.h"
 
+/*
+ * Provide the developer capability aarch64 operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_aarch64(void)
 {

@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_replay.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseValuationReplay r;UmiEnterpriseValuationCheckpoint c;umi_enterprise_valuation_replay_init(&r);CHECK(umi_enterprise_valuation_checkpoint_init(&c,"j",1U,2U,1U,1)==UMI_STATUS_OK);CHECK(umi_enterprise_valuation_replay_append(&r,&c)==UMI_STATUS_OK);CHECK(umi_enterprise_valuation_replay_latest(&r,"j")!=NULL);return 0;}

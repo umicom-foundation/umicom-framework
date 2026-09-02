@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial balance data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialBalance { UmiFinancialId id; UmiMoney amount; UmiFinancialDate date; uint32_t state; } UmiFinancialBalance;
 /* Initialize monetary record. */ UmiStatus umi_balance_init(UmiFinancialBalance *x,const char *id,UmiMoney amount,UmiFinancialDate date,uint32_t state);
 /* Validate monetary record. */ bool umi_balance_is_valid(const UmiFinancialBalance *x);

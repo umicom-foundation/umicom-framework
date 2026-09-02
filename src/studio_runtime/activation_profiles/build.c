@@ -23,6 +23,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "developer.package", .surface = UMI_STUDIO_SURFACE_BUILD, .prefix_match = 0, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile build operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_build(void)
 {

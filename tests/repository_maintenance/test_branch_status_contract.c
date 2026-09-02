@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/repository/branch_status.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiRepositoryBranchStatus s; assert(umi_repository_branch_status_set(&s,"main","origin/main",1U,0U,0)==UMI_STATUS_OK); assert(s.ahead==1U); return 0; }

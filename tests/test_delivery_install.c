@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/install_plan.h"
 #include "umicom/delivery/install_state.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiInstallPlan plan;
     UmiInstallState state;

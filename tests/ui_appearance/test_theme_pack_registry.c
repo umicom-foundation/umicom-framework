@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/appearance/theme_pack_registry.h"
-int main(void) { UmiAppearanceThemePackRegistry registry; UmiAppearanceThemePack item; if(umi_appearance_theme_pack_registry_init(&registry)!=UMI_STATUS_OK) return 1; if(umi_appearance_theme_pack_init(&item)!=UMI_STATUS_OK) return 2; if(umi_appearance_theme_pack_registry_upsert(&registry,&item)!=UMI_STATUS_OK) return 3; if(umi_appearance_theme_pack_registry_count(&registry)!=1U) return 4; if(umi_appearance_theme_pack_registry_find(&registry,item.pack_id)==NULL) return 5; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiAppearanceThemePackRegistry registry; UmiAppearanceThemePack item; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_appearance_theme_pack_registry_init(&registry)!=UMI_STATUS_OK) return 1; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_appearance_theme_pack_init(&item)!=UMI_STATUS_OK) return 2; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_appearance_theme_pack_registry_upsert(&registry,&item)!=UMI_STATUS_OK) return 3; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_appearance_theme_pack_registry_count(&registry)!=1U) return 4; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_appearance_theme_pack_registry_find(&registry,item.pack_id)==NULL) return 5; return 0; }

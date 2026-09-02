@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Provide the on menu action clicked operation used by this module and its client
+ * applications.
+ */
 static void on_menu_action_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
@@ -27,46 +31,68 @@ static void on_menu_action_clicked(GtkButton *button, gpointer user_data)
         G_OBJECT(button), "umicom-action-id");
     GtkWidget *menu_button = (GtkWidget *)g_object_get_data(
         G_OBJECT(button), "umicom-menu-button");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL || action_id == NULL) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (menu_button != NULL && GTK_IS_MENU_BUTTON(menu_button)) {
         gtk_menu_button_popdown(GTK_MENU_BUTTON(menu_button));
     }
     umi_gtk4_dispatch_action(adapter, action_id);
 }
 
+/* Provide the menu title operation used by this module and its client applications. */
 static void menu_title(const char *menu_id, char *out_title, size_t capacity)
 {
     size_t index;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(menu_id, "source-control") == 0) {
         (void)g_strlcpy(out_title, "VCS", capacity);
         return;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(menu_id, "go") == 0) {
         (void)g_strlcpy(out_title, "Navigate", capacity);
         return;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(menu_id, "ai") == 0) {
         (void)g_strlcpy(out_title, "AI", capacity);
         return;
     }
     (void)g_strlcpy(out_title, menu_id, capacity);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_title[0] != '\0') {
         out_title[0] = (char)toupper((unsigned char)out_title[0]);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; out_title[index] != '\0'; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (out_title[index] == '-' || out_title[index] == '_') out_title[index] = ' ';
     }
 }
 
+/*
+ * Provide the compare menu items operation used by this module and its client
+ * applications.
+ */
 static int compare_menu_items(const void *left, const void *right)
 {
     const UmiUiMenuSnapshot *first = (const UmiUiMenuSnapshot *)left;
     const UmiUiMenuSnapshot *second = (const UmiUiMenuSnapshot *)right;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first->order < second->order) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first->order > second->order) return 1;
     return strcmp(first->item_id, second->item_id);
 }
 
+/* Provide the create menu item operation used by this module and its client applications. */
 static GtkWidget *create_menu_item(UmiGtk4Adapter *adapter,
                                    GtkWidget *menu_button,
                                    const UmiUiMenuSnapshot *item,
@@ -105,6 +131,7 @@ static GtkWidget *create_menu_item(UmiGtk4Adapter *adapter,
     gtk_widget_set_halign(button, GTK_ALIGN_FILL);
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-menu-item");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action->checkable && action->checked) {
         gtk_widget_add_css_class(button, "checked");
     }
@@ -116,15 +143,21 @@ static GtkWidget *create_menu_item(UmiGtk4Adapter *adapter,
     return button;
 }
 
+/* Provide the gtk4 refresh menu operation used by this module and its client applications. */
 UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench)
 {
     UmiUiMenuModel *model;
     UmiUiActionModel *actions;
     size_t outer;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_gtk4_clear_box(adapter->menu_bar);
     model = umi_ui_workbench_menus(workbench);
     actions = umi_ui_workbench_actions(workbench);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (outer = 0U; outer < umi_ui_menu_model_count(model); ++outer) {
         UmiUiMenuSnapshot root;
         size_t previous;
@@ -139,15 +172,19 @@ UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workben
         char previous_section[UMI_UI_ID_CAPACITY] = "";
         int has_item = 0;
         int last_was_separator = 0;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (umi_ui_menu_model_at(model, outer, &root) != UMI_STATUS_OK) continue;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (previous = 0U; previous < outer; ++previous) {
             UmiUiMenuSnapshot candidate;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (umi_ui_menu_model_at(model, previous, &candidate) == UMI_STATUS_OK &&
                 strcmp(candidate.menu_id, root.menu_id) == 0) {
                 already_rendered = 1;
                 break;
             }
         }
+        /* Apply this operation only while the related capability or state is available. */
         if (already_rendered) continue;
         menu_title(root.menu_id, title, sizeof(title));
         menu_button = gtk_menu_button_new();
@@ -161,16 +198,22 @@ UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workben
         gtk_widget_set_margin_bottom(items_box, 6);
         gtk_widget_set_margin_start(items_box, 6);
         gtk_widget_set_margin_end(items_box, 6);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (inner = 0U; inner < umi_ui_menu_model_count(model); ++inner) {
             UmiUiMenuSnapshot item;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (umi_ui_menu_model_at(model, inner, &item) != UMI_STATUS_OK ||
                 strcmp(item.menu_id, root.menu_id) != 0) continue;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (item_count < UMI_UI_MENU_MAX) items[item_count++] = item;
         }
         qsort(items, item_count, sizeof(items[0]), compare_menu_items);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (inner = 0U; inner < item_count; ++inner) {
             const UmiUiMenuSnapshot *item = &items[inner];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (item->separator) {
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (has_item && !last_was_separator) {
                     GtkWidget *separator = gtk_separator_new(
                         GTK_ORIENTATION_HORIZONTAL);
@@ -179,11 +222,13 @@ UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workben
                     gtk_box_append(GTK_BOX(items_box), separator);
                     last_was_separator = 1;
                 }
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 UmiUiActionSnapshot action;
+                /* Use the stable identifier comparison to choose the matching record or policy. */
                 if (umi_ui_action_model_find(actions, item->action_id,
                                              &action) == UMI_STATUS_OK &&
                     action.visible) {
+                    /* Apply this branch only when its contract condition is satisfied. */
                     if (has_item && !last_was_separator &&
                         previous_section[0] != '\0' &&
                         item->section_id[0] != '\0' &&

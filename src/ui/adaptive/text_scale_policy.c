@@ -20,9 +20,15 @@ UmiStatus umi_adaptive_text_scale_policy_resolve(double baseline_scale,
                                                  double *out_scale)
 {
     double value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_scale == NULL || !(baseline_scale > 0.0) || !(user_scale > 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     value = baseline_scale * user_scale;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value < 0.75) value = 0.75;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value > 3.0) value = 3.0;
     *out_scale = value;
     return UMI_STATUS_OK;

@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_queue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationQueue q; UmiEnterpriseValuationJob a,b,o; umi_enterprise_valuation_queue_init(&q); CHECK(umi_enterprise_valuation_job_init(&a,"a","p",1,1)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_job_init(&b,"b","p",1,9)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_queue_push(&q,&a)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_queue_push(&q,&b)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_queue_pop(&q,&o)==UMI_STATUS_OK); CHECK(o.priority==9); return 0; }

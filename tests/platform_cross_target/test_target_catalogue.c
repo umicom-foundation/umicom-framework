@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtTargetCatalogue c;UmiCtTarget t={0};UmiCtTargetProfile p;umi_ct_target_catalogue_init(&c);CHECK(umi_ct_target_profile_init(&p,"rv64",&t,"lp64")==UMI_STATUS_OK);CHECK(umi_ct_target_catalogue_add(&c,&p)==UMI_STATUS_OK);CHECK(umi_ct_target_catalogue_add(&c,&p)==UMI_STATUS_ALREADY_EXISTS);CHECK(umi_ct_target_catalogue_find(&c,"rv64")!=NULL);return 0;}

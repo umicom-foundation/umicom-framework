@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiProductDescriptor { UmiFinancialId product_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; uint32_t state; bool active; } UmiProductDescriptor;
 /* Initialize the typed financial record. */ UmiStatus umi_product_descriptor_init(UmiProductDescriptor *item,const char *id,const char *name,const char *code,uint32_t state);
 /* Validate the typed financial record. */ bool umi_product_descriptor_is_valid(const UmiProductDescriptor *item);

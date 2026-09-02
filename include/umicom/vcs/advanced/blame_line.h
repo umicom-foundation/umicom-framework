@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced blame line data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedBlameLine {
     uint32_t struct_size;
     uint32_t api_version;
@@ -37,8 +40,20 @@ typedef struct UmiVcsAdvancedBlameLine {
     uint64_t content_fingerprint;
 } UmiVcsAdvancedBlameLine;
 
+/**
+ * Initialise vcs advanced blame line from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_blame_line_init(UmiVcsAdvancedBlameLine *value);
+/**
+ * Check that vcs advanced blame line satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_blame_line_validate(const UmiVcsAdvancedBlameLine *value);
+/**
+ * Copy vcs advanced blame line into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_blame_line_set(UmiVcsAdvancedBlameLine *value,
                                             size_t line_number,
                                             const char *commit_oid,

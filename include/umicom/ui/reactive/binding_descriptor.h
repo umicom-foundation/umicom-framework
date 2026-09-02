@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive binding descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveBindingDescriptor {
     char binding_id[UMI_UI_REACTIVE_ID_CAPACITY];
     char source_path[UMI_UI_REACTIVE_PATH_CAPACITY];
@@ -26,7 +30,15 @@ typedef struct UmiUiReactiveBindingDescriptor {
     UmiUiReactiveUpdateTrigger trigger;
     bool enabled;
 } UmiUiReactiveBindingDescriptor;
+/**
+ * Initialise ui reactive binding descriptor from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_ui_reactive_binding_descriptor_init(UmiUiReactiveBindingDescriptor *item);
+/**
+ * Check that ui reactive binding descriptor satisfies its contract before another service
+ * relies on it.
+ */
 int umi_ui_reactive_binding_descriptor_valid(const UmiUiReactiveBindingDescriptor *item);
 #ifdef __cplusplus
 }

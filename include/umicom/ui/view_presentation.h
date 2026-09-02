@@ -41,12 +41,19 @@ extern "C" {
  */
 #define UMI_UI_VIEW_PRESENTATION_PROPERTY_MAX UMI_UI_PROPERTY_MAX
 
+/**
+ * Represent the ui view presentation data shared with callers of this public contract.
+ */
 typedef struct UmiUiViewPresentation {
     UmiUiViewSnapshot view;
     UmiUiPropertySnapshot properties[UMI_UI_VIEW_PRESENTATION_PROPERTY_MAX];
     size_t property_count;
 } UmiUiViewPresentation;
 
+/**
+ * Provide the ui view presentation build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_view_presentation_build(
     const UmiUiViewFactoryRegistry *registry,
     const char *view_type,
@@ -54,12 +61,20 @@ UmiStatus umi_ui_view_presentation_build(
     UmiUiViewPresentation *out_presentation
 );
 
+/**
+ * Provide the ui view presentation find property operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_view_presentation_find_property(
     const UmiUiViewPresentation *presentation,
     const char *key,
     UmiUiPropertySnapshot *out_property
 );
 
+/**
+ * Provide the ui view presentation value text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_view_presentation_value_text(
     const UmiUiValue *value,
     char *out_text,

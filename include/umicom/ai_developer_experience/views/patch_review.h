@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_developer_experience/patch_review_service.h"
+/**
+ * Initialise ai developer patch review view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_ai_developer_patch_review_view_create(
     const char *view_id,
     const UmiAiDeveloperPatchReviewService *review,

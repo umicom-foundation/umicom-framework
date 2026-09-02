@@ -19,16 +19,28 @@
 
 #include "umicom/application/component_catalogue.h"
 
+/*
+ * Check that application presentation boolean satisfies its contract before another
+ * service relies on it.
+ */
 static int umi_application_presentation_boolean_valid(int value)
 {
     return value == 0 || value == 1;
 }
 
+/*
+ * Check that application presentation panel spec satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_presentation_panel_spec_validate(
     const UmiApplicationPresentationPanelSpec *spec)
 {
     const UmiApplicationComponentDefinition *definition;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec == NULL || spec->struct_size != sizeof(*spec) ||
         spec->api_version != UMI_APPLICATION_PRESENTATION_API_VERSION ||
         spec->component_id == NULL || spec->component_id[0] == '\0' ||
@@ -49,7 +61,12 @@ UmiStatus umi_application_presentation_panel_spec_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     definition = umi_application_component_catalogue_find(spec->component_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (spec->allow_multiple != definition->multi_instance) {
         return UMI_STATUS_INVALID_STATE;
     }

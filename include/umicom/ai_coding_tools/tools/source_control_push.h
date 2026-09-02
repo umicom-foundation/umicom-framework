@@ -18,7 +18,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding tool source control push descriptor operation used by this module
+ * and its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_source_control_push_descriptor(void);
+/**
+ * Provide the ai coding tool source control push invoke operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_coding_tool_source_control_push_invoke(
     const char *arguments_json,
     char *output,

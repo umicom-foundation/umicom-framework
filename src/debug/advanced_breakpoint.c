@@ -28,25 +28,33 @@ struct UmiDebugAdvancedBreakpointRegistry {
     uint64_t revision;
 };
 
+/* Provide the valid kind operation used by this module and its client applications. */
 static int valid_kind(UmiDebugAdvancedBreakpointKind kind)
 {
     return kind >= UMI_DEBUG_ADVANCED_BREAKPOINT_FUNCTION &&
            kind <= UMI_DEBUG_ADVANCED_BREAKPOINT_EXCEPTION;
 }
 
+/* Provide the valid access operation used by this module and its client applications. */
 static int valid_access(UmiDebugDataBreakpointAccess access)
 {
     return access >= UMI_DEBUG_DATA_BREAKPOINT_ACCESS_READ &&
            access <= UMI_DEBUG_DATA_BREAKPOINT_ACCESS_READ_WRITE;
 }
 
+/* Provide the has terminator operation used by this module and its client applications. */
 static int has_terminator(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the valid breakpoint operation used by this module and its client applications. */
 static int valid_breakpoint(const UmiDebugAdvancedBreakpoint *breakpoint)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (breakpoint == NULL ||
         breakpoint->struct_size != (uint32_t)sizeof(*breakpoint) ||
         breakpoint->api_version != UMI_DEBUG_ADVANCED_BREAKPOINT_API_VERSION ||
@@ -69,19 +77,23 @@ static int valid_breakpoint(const UmiDebugAdvancedBreakpoint *breakpoint)
         breakpoint->sequence == UINT64_MAX) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (breakpoint->kind == UMI_DEBUG_ADVANCED_BREAKPOINT_FUNCTION &&
         breakpoint->name[0] == '\0') {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (breakpoint->kind == UMI_DEBUG_ADVANCED_BREAKPOINT_DATA &&
         (breakpoint->reference[0] == '\0' ||
          !valid_access(breakpoint->access))) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (breakpoint->kind == UMI_DEBUG_ADVANCED_BREAKPOINT_INSTRUCTION &&
         breakpoint->reference[0] == '\0' && breakpoint->address == 0U) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (breakpoint->kind == UMI_DEBUG_ADVANCED_BREAKPOINT_EXCEPTION &&
         breakpoint->reference[0] == '\0') {
         return 0;
@@ -89,14 +101,21 @@ static int valid_breakpoint(const UmiDebugAdvancedBreakpoint *breakpoint)
     return 1;
 }
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id)
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || breakpoint_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < registry->count; ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(registry->items[position].id, breakpoint_id) == 0) {
             return position;
         }
@@ -104,6 +123,7 @@ static size_t find_index(
     return SIZE_MAX;
 }
 
+/* Provide the reserve operation used by this module and its client applications. */
 static UmiStatus reserve(
     UmiDebugAdvancedBreakpointRegistry *registry,
     size_t required_capacity)
@@ -111,31 +131,49 @@ static UmiStatus reserve(
     UmiDebugAdvancedBreakpoint *replacement;
     size_t new_capacity;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required_capacity <= registry->capacity) return UMI_STATUS_OK;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (required_capacity > UMI_DEBUG_ADVANCED_BREAKPOINT_MAXIMUM_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     new_capacity = registry->capacity;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (new_capacity == 0U) {
         new_capacity = UMI_DEBUG_ADVANCED_BREAKPOINT_DEFAULT_CAPACITY;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (new_capacity < required_capacity) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (new_capacity >
             UMI_DEBUG_ADVANCED_BREAKPOINT_MAXIMUM_CAPACITY / 2U) {
             new_capacity = UMI_DEBUG_ADVANCED_BREAKPOINT_MAXIMUM_CAPACITY;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             new_capacity *= 2U;
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (new_capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (UmiDebugAdvancedBreakpoint *)realloc(
         registry->items, new_capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (new_capacity > registry->capacity) {
         (void)memset(&replacement[registry->capacity], 0,
                      (new_capacity - registry->capacity) *
@@ -146,11 +184,13 @@ static UmiStatus reserve(
     return UMI_STATUS_OK;
 }
 
+/* Provide the lower ascii operation used by this module and its client applications. */
 static unsigned char lower_ascii(unsigned char value)
 {
     return (unsigned char)tolower((int)value);
 }
 
+/* Provide the contains text operation used by this module and its client applications. */
 static int contains_text(const char *text, const char *needle)
 {
     size_t text_length;
@@ -158,40 +198,70 @@ static int contains_text(const char *text, const char *needle)
     size_t start;
     size_t offset;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (needle == NULL || needle[0] == '\0') return 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0;
     text_length = strlen(text);
     needle_length = strlen(needle);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (needle_length > text_length) return 0;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (start = 0U; start + needle_length <= text_length; ++start) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (offset = 0U; offset < needle_length; ++offset) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (lower_ascii((unsigned char)text[start + offset]) !=
                 lower_ascii((unsigned char)needle[offset])) {
                 break;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (offset == needle_length) return 1;
     }
     return 0;
 }
 
+/* Provide the matches filter operation used by this module and its client applications. */
 static int matches_filter(
     const UmiDebugAdvancedBreakpoint *breakpoint,
     const UmiDebugAdvancedBreakpointFilter *filter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (filter == NULL) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (filter->struct_size != (uint32_t)sizeof(*filter) ||
         filter->api_version != UMI_DEBUG_ADVANCED_BREAKPOINT_API_VERSION) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (filter->kind != 0 && breakpoint->kind != filter->kind) return 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (filter->session_id != NULL && filter->session_id[0] != '\0' &&
         strcmp(breakpoint->session_id, filter->session_id) != 0) {
         return 0;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (filter->enabled_only && !breakpoint->enabled) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (filter->verified_only && !breakpoint->verified) return 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (filter->text != NULL && filter->text[0] != '\0' &&
         !contains_text(breakpoint->id, filter->text) &&
         !contains_text(breakpoint->name, filter->text) &&
@@ -203,6 +273,10 @@ static int matches_filter(
     return 1;
 }
 
+/*
+ * Provide the compare breakpoints operation used by this module and its client
+ * applications.
+ */
 static int compare_breakpoints(const void *left_pointer,
                                const void *right_pointer)
 {
@@ -212,14 +286,22 @@ static int compare_breakpoints(const void *left_pointer,
         (const UmiDebugAdvancedBreakpoint *)right_pointer;
     int text_order;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->kind < right->kind) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->kind > right->kind) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->sequence < right->sequence) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->sequence > right->sequence) return 1;
     text_order = strcmp(left->id, right->id);
     return text_order < 0 ? -1 : (text_order > 0 ? 1 : 0);
 }
 
+/*
+ * Initialise debug advanced breakpoint registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_create(
     size_t initial_capacity,
     UmiDebugAdvancedBreakpointRegistry **out_registry)
@@ -227,6 +309,10 @@ UmiStatus umi_debug_advanced_breakpoint_registry_create(
     UmiDebugAdvancedBreakpointRegistry *registry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL ||
         initial_capacity > UMI_DEBUG_ADVANCED_BREAKPOINT_MAXIMUM_CAPACITY) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -234,12 +320,18 @@ UmiStatus umi_debug_advanced_breakpoint_registry_create(
     *out_registry = NULL;
     registry = (UmiDebugAdvancedBreakpointRegistry *)calloc(
         1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->revision = 1U;
     registry->next_sequence = 1U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (initial_capacity != 0U) {
         status = reserve(registry, initial_capacity);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             free(registry);
             return status;
@@ -249,19 +341,39 @@ UmiStatus umi_debug_advanced_breakpoint_registry_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by debug advanced breakpoint registry so the same storage
+ * can be reused safely.
+ */
 void umi_debug_advanced_breakpoint_registry_destroy(
     UmiDebugAdvancedBreakpointRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
     free(registry->items);
     (void)memset(registry, 0, sizeof(*registry));
     free(registry);
 }
 
+/*
+ * Release or reset state held by debug advanced breakpoint registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_clear(
     UmiDebugAdvancedBreakpointRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry->items != NULL) {
         (void)memset(registry->items, 0,
                      registry->capacity * sizeof(registry->items[0]));
@@ -271,6 +383,10 @@ UmiStatus umi_debug_advanced_breakpoint_registry_clear(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug advanced breakpoint registry upsert operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_upsert(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const UmiDebugAdvancedBreakpoint *breakpoint)
@@ -280,17 +396,24 @@ UmiStatus umi_debug_advanced_breakpoint_registry_upsert(
     UmiStatus status;
     int existing;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || !valid_breakpoint(breakpoint)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_index(registry, breakpoint->id);
     existing = position != SIZE_MAX;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!existing && breakpoint->sequence == 0U &&
         registry->next_sequence == UINT64_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!existing) {
         status = reserve(registry, registry->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         position = registry->count;
         registry->count += 1U;
@@ -307,12 +430,13 @@ UmiStatus umi_debug_advanced_breakpoint_registry_upsert(
     copy.hit_condition[sizeof(copy.hit_condition) - 1U] = '\0';
     copy.log_message[sizeof(copy.log_message) - 1U] = '\0';
     copy.message[sizeof(copy.message) - 1U] = '\0';
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy.sequence == 0U && existing) {
         copy.sequence = registry->items[position].sequence;
-    } else if (copy.sequence == 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (copy.sequence == 0U) {
         copy.sequence = registry->next_sequence;
         registry->next_sequence += 1U;
-    } else if (copy.sequence >= registry->next_sequence) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (copy.sequence >= registry->next_sequence) {
         registry->next_sequence = copy.sequence + 1U;
     }
     registry->revision += 1U;
@@ -321,19 +445,29 @@ UmiStatus umi_debug_advanced_breakpoint_registry_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove debug advanced breakpoint registry while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_remove(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id)
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || breakpoint_id == NULL ||
         breakpoint_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_index(registry, breakpoint_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position + 1U < registry->count) {
         (void)memmove(&registry->items[position],
                       &registry->items[position + 1U],
@@ -347,6 +481,10 @@ UmiStatus umi_debug_advanced_breakpoint_registry_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug advanced breakpoint registry remove session operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_remove_session(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const char *session_id,
@@ -356,30 +494,46 @@ UmiStatus umi_debug_advanced_breakpoint_registry_remove_session(
     size_t write_position = 0U;
     size_t removed_count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || session_id == NULL || session_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (read_position = 0U; read_position < registry->count;
          ++read_position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(registry->items[read_position].session_id, session_id) == 0) {
             removed_count += 1U;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (write_position != read_position) {
             registry->items[write_position] = registry->items[read_position];
         }
         write_position += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (removed_count != 0U) {
         (void)memset(&registry->items[write_position], 0,
                      removed_count * sizeof(registry->items[0]));
         registry->count = write_position;
         registry->revision += 1U;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_removed_count != NULL) *out_removed_count = removed_count;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug advanced breakpoint registry set enabled operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_set_enabled(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id,
@@ -388,12 +542,18 @@ UmiStatus umi_debug_advanced_breakpoint_registry_set_enabled(
     size_t position;
     int normalized;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || breakpoint_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_index(registry, breakpoint_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     normalized = enabled != 0;
+    /* Apply this operation only while the related capability or state is available. */
     if (registry->items[position].enabled != normalized) {
         registry->items[position].enabled = normalized;
         registry->revision += 1U;
@@ -402,6 +562,10 @@ UmiStatus umi_debug_advanced_breakpoint_registry_set_enabled(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find debug advanced breakpoint registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_find(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id,
@@ -409,28 +573,46 @@ UmiStatus umi_debug_advanced_breakpoint_registry_find(
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || breakpoint_id == NULL || out_breakpoint == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_index(registry, breakpoint_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_breakpoint = registry->items[position];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find debug advanced breakpoint registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_at(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     size_t index,
     UmiDebugAdvancedBreakpoint *out_breakpoint)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_breakpoint == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
     *out_breakpoint = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug advanced breakpoint registry query operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_query(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     const UmiDebugAdvancedBreakpointFilter *filter,
@@ -441,10 +623,18 @@ UmiStatus umi_debug_advanced_breakpoint_registry_query(
     size_t position;
     size_t matched_count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_breakpoint_count == NULL ||
         (breakpoint_capacity != 0U && out_breakpoints == NULL)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (filter != NULL &&
         (filter->struct_size != (uint32_t)sizeof(*filter) ||
          filter->api_version != UMI_DEBUG_ADVANCED_BREAKPOINT_API_VERSION ||
@@ -452,8 +642,11 @@ UmiStatus umi_debug_advanced_breakpoint_registry_query(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < registry->count; ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!matches_filter(&registry->items[position], filter)) continue;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (matched_count >= breakpoint_capacity) {
             *out_breakpoint_count = matched_count;
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -461,6 +654,7 @@ UmiStatus umi_debug_advanced_breakpoint_registry_query(
         out_breakpoints[matched_count] = registry->items[position];
         matched_count += 1U;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (matched_count > 1U) {
         qsort(out_breakpoints, matched_count, sizeof(out_breakpoints[0]),
               compare_breakpoints);
@@ -469,12 +663,20 @@ UmiStatus umi_debug_advanced_breakpoint_registry_query(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug advanced breakpoint registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_snapshot(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     UmiDebugAdvancedBreakpointSnapshot *out_snapshot)
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -484,9 +686,11 @@ UmiStatus umi_debug_advanced_breakpoint_registry_snapshot(
     out_snapshot->breakpoint_count = registry->count;
     out_snapshot->revision = registry->revision;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < registry->count; ++position) {
         const UmiDebugAdvancedBreakpoint *breakpoint =
             &registry->items[position];
+        /* Select the behaviour associated with the requested command or state value. */
         switch (breakpoint->kind) {
             case UMI_DEBUG_ADVANCED_BREAKPOINT_FUNCTION:
                 out_snapshot->function_count += 1U;
@@ -503,18 +707,28 @@ UmiStatus umi_debug_advanced_breakpoint_registry_snapshot(
             default:
                 break;
         }
+        /* Apply this operation only while the related capability or state is available. */
         if (breakpoint->enabled) out_snapshot->enabled_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (breakpoint->verified) out_snapshot->verified_count += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by debug advanced breakpoint registry without
+ * changing their state.
+ */
 size_t umi_debug_advanced_breakpoint_registry_count(
     const UmiDebugAdvancedBreakpointRegistry *registry)
 {
     return registry != NULL ? registry->count : 0U;
 }
 
+/*
+ * Provide the debug advanced breakpoint registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_debug_advanced_breakpoint_registry_revision(
     const UmiDebugAdvancedBreakpointRegistry *registry)
 {

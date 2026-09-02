@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test contract resolver and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_contract_resolver(void){ UmiApplicationContract c; assert(umi_application_contract_resolve("org.umicom.trader",&c)==UMI_STATUS_OK); assert(c.definition!=NULL && c.experience!=NULL); return 0; }

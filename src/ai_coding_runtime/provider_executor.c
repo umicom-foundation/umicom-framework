@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Perform ai coding provider through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_provider_execute(
     UmiAiRuntime *runtime,
     const UmiAiCodingRuntimeConfig *config,
@@ -27,6 +31,10 @@ UmiStatus umi_ai_coding_provider_execute(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || config == NULL || request == NULL ||
         out_response == NULL || out_execution == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;

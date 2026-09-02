@@ -44,6 +44,10 @@ struct UmiDebugRuntimePlatform {
     int paused;
 };
 
+/*
+ * Provide the project memory view operation used by this module and its client
+ * applications.
+ */
 static UmiStatus project_memory_view(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -51,10 +55,15 @@ static UmiStatus project_memory_view(
     uint32_t requested_count,
     const UmiDebugRuntimeMemoryResult *result);
 
+/*
+ * Provide the project disassembly view operation used by this module and its client
+ * applications.
+ */
 static UmiStatus project_disassembly_view(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugRuntimeDisassembly *result);
 
+/* Find profile while leaving the underlying catalogue or model owned by this module. */
 static UmiStatus profile_find(
     UmiDebugRuntimePlatform *platform,
     const char *profile_id,
@@ -67,43 +76,68 @@ static UmiStatus profile_find(
         umi_debug_service_adapter_profiles(platform->service),
         profile_id,
         out_profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) return status;
 
     builtin = umi_debug_runtime_builtin_profile_find(profile_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builtin == NULL) {
         builtin = umi_debug_runtime_builtin_profile_for_kind(profile_id);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builtin == NULL) return UMI_STATUS_NOT_FOUND;
     *out_profile = *builtin;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise debug runtime platform from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_runtime_platform_create(
     UmiDebugRuntimePlatform **out_platform)
 {
     UmiDebugRuntimePlatform *platform;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_platform = NULL;
 
     platform = (UmiDebugRuntimePlatform *)calloc(1U, sizeof(*platform));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_debug_service_create(&platform->service);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_debug_runtime_register_builtin_profiles(
             platform->service);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_debug_advanced_platform_create(
             platform->service,
             &platform->advanced);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_debug_runtime_platform_destroy(platform);
         return status;
@@ -114,11 +148,20 @@ UmiStatus umi_debug_runtime_platform_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by debug runtime platform so the same storage can be reused
+ * safely.
+ */
 void umi_debug_runtime_platform_destroy(
     UmiDebugRuntimePlatform *platform)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (platform->active) {
         (void)umi_debug_runtime_platform_stop(
             platform, 1, 100U);
@@ -127,6 +170,10 @@ void umi_debug_runtime_platform_destroy(
     umi_debug_advanced_platform_destroy(platform->advanced);
     platform->advanced = NULL;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform->contract_owner != NULL) {
         umi_debug_runtime_contract_adapter_destroy(
             platform->contract_owner);
@@ -139,6 +186,10 @@ void umi_debug_runtime_platform_destroy(
     free(platform);
 }
 
+/*
+ * Provide the build default launch arguments operation used by this module and its client
+ * applications.
+ */
 static UmiStatus build_default_launch_arguments(
     UmiDebugRuntimePlatform *platform,
     const char *configuration_id,
@@ -156,11 +207,13 @@ static UmiStatus build_default_launch_arguments(
         umi_debug_service_launch_configuration(platform->service),
         configuration_id,
         &configuration);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_language_runtime_arguments_parse(
         configuration.arguments,
         &arguments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_language_runtime_json_writer_init(&writer, out_json, capacity);
@@ -182,7 +235,9 @@ static UmiStatus build_default_launch_arguments(
         &writer, configuration.stop_on_entry);
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"args\":[");
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < arguments.count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index > 0U) {
             (void)umi_language_runtime_json_writer_raw(&writer, ",");
         }
@@ -194,6 +249,10 @@ static UmiStatus build_default_launch_arguments(
     return writer.status;
 }
 
+/*
+ * Provide the publish event envelope operation used by this module and its client
+ * applications.
+ */
 static UmiStatus publish_event_envelope(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugRuntimeEnvelope *envelope)
@@ -202,14 +261,17 @@ static UmiStatus publish_event_envelope(
     UmiStatus status;
 
     status = umi_debug_runtime_decode_event(envelope->json, &event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_publish_event(&platform->bridge, &event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(event.event, "initialized") == 0) {
         platform->initialized = 1;
-    } else if (strcmp(event.event, "stopped") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "stopped") == 0) {
         platform->paused = 1;
         platform->active_thread_id = event.thread_id;
         (void)umi_debug_runtime_adapter_set_state(
@@ -218,7 +280,7 @@ static UmiStatus publish_event_envelope(
         (void)umi_debug_inspection_session_set_state(
             umi_debug_advanced_platform_inspection(platform->advanced),
             UMI_DEBUG_INSPECTION_PAUSED);
-    } else if (strcmp(event.event, "continued") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "continued") == 0) {
         platform->paused = 0;
         (void)umi_debug_runtime_adapter_set_state(
             platform->adapter,
@@ -226,7 +288,7 @@ static UmiStatus publish_event_envelope(
         (void)umi_debug_inspection_session_set_state(
             umi_debug_advanced_platform_inspection(platform->advanced),
             UMI_DEBUG_INSPECTION_RUNNING);
-    } else if (strcmp(event.event, "terminated") == 0 ||
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(event.event, "terminated") == 0 ||
                strcmp(event.event, "exited") == 0) {
         platform->paused = 0;
         (void)umi_debug_runtime_adapter_set_state(
@@ -238,6 +300,10 @@ static UmiStatus publish_event_envelope(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the initialize adapter operation used by this module and its client
+ * applications.
+ */
 static UmiStatus initialize_adapter(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugAdapterProfile *profile,
@@ -255,6 +321,7 @@ static UmiStatus initialize_adapter(
         platform->adapter,
         profile->debugger_kind,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -262,11 +329,13 @@ static UmiStatus initialize_adapter(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_initialize(
         response.json,
         &platform->capabilities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->capability_bits =
@@ -278,6 +347,7 @@ static UmiStatus initialize_adapter(
 }
 
 
+/* Provide the register contract operation used by this module and its client applications. */
 static UmiStatus register_contract(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugAdapterProfile *profile,
@@ -293,6 +363,7 @@ static UmiStatus register_contract(
         sizeof(descriptor_id),
         "dap.%s",
         session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(descriptor_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -306,11 +377,13 @@ static UmiStatus register_contract(
         timeout_ms,
         &platform->contract_owner,
         &platform->descriptor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_advanced_platform_register_adapter(
         platform->advanced,
         &platform->descriptor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_debug_runtime_contract_adapter_destroy(
             platform->contract_owner);
@@ -322,6 +395,10 @@ static UmiStatus register_contract(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the wait launch and initialized operation used by this module and its client
+ * applications.
+ */
 static UmiStatus wait_launch_and_initialized(
     UmiDebugRuntimePlatform *platform,
     uint64_t launch_sequence,
@@ -332,6 +409,10 @@ static UmiStatus wait_launch_and_initialized(
     uint32_t attempts = 0U;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (attempts < 256U &&
            (!launch_response_received ||
             (platform->capabilities.supports_configuration_done &&
@@ -343,17 +424,22 @@ static UmiStatus wait_launch_and_initialized(
             timeout_ms,
             &envelope);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_NOT_FOUND) {
             attempts += 1U;
             continue;
         }
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_EVENT) {
             status = publish_event_envelope(platform, &envelope);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (platform->initialized &&
                 platform->capabilities.supports_configuration_done &&
                 !configuration_sent) {
@@ -363,6 +449,7 @@ static UmiStatus wait_launch_and_initialized(
                 status = umi_debug_runtime_request_configuration_done(
                     platform->adapter,
                     &configuration_sequence);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
 
                 status = umi_debug_runtime_adapter_wait_response(
@@ -370,12 +457,14 @@ static UmiStatus wait_launch_and_initialized(
                     configuration_sequence,
                     timeout_ms,
                     &configuration_response);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
 
                 configuration_sent = 1;
             }
-        } else if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &&
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &&
                    envelope.request_sequence == launch_sequence) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (!envelope.success) return UMI_STATUS_UNAVAILABLE;
             launch_response_received = 1;
 
@@ -391,6 +480,7 @@ static UmiStatus wait_launch_and_initialized(
         attempts += 1U;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!launch_response_received) return UMI_STATUS_TIMEOUT;
 
     /*
@@ -401,6 +491,10 @@ static UmiStatus wait_launch_and_initialized(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime platform start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_start(
     UmiDebugRuntimePlatform *platform,
     const char *profile_id,
@@ -419,29 +513,39 @@ UmiStatus umi_debug_runtime_platform_start(
     uint64_t launch_sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || profile_id == NULL ||
         session_id == NULL || session_id[0] == '\0' ||
         configuration_id == NULL || configuration_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (platform->active) return UMI_STATUS_BUSY;
 
     status = profile_find(platform, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((attach && !profile.supports_attach) ||
         (!attach && !profile.supports_launch)) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
 
     status = umi_debug_runtime_profile_health_probe(&profile, &health);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!health.available) return UMI_STATUS_UNAVAILABLE;
 
     status = umi_language_runtime_arguments_parse(
         profile.arguments,
         &arguments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_start_process(
@@ -451,9 +555,11 @@ UmiStatus umi_debug_runtime_platform_start(
         arguments.count,
         working_directory,
         &platform->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = initialize_adapter(platform, &profile, timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = register_contract(
@@ -461,12 +567,14 @@ UmiStatus umi_debug_runtime_platform_start(
         &profile,
         session_id,
         timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = umi_debug_runtime_service_bridge_init(
         &platform->bridge,
         platform->service,
         session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = umi_debug_advanced_platform_open_session(
@@ -474,6 +582,7 @@ UmiStatus umi_debug_runtime_platform_start(
         session_id,
         platform->descriptor.id,
         platform->capability_bits);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     (void)snprintf(
@@ -501,8 +610,13 @@ UmiStatus umi_debug_runtime_platform_start(
         UMI_DEBUG_INSPECTION_READY,
         attach,
         platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (launch_arguments == NULL) {
         status = build_default_launch_arguments(
             platform,
@@ -510,6 +624,7 @@ UmiStatus umi_debug_runtime_platform_start(
             attach,
             generated_arguments,
             sizeof(generated_arguments));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
         launch_arguments = generated_arguments;
     }
@@ -523,12 +638,14 @@ UmiStatus umi_debug_runtime_platform_start(
             platform->adapter,
             launch_arguments,
             &launch_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = wait_launch_and_initialized(
         platform,
         launch_sequence,
         timeout_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     platform->active = 1;
@@ -548,12 +665,14 @@ UmiStatus umi_debug_runtime_platform_start(
         UMI_DEBUG_INSPECTION_RUNNING,
         attach,
         platform->capabilities.supports_restart);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     platform->revision += 1U;
     return UMI_STATUS_OK;
 
 failure:
+    /* Apply this branch only when its contract condition is satisfied. */
     if (platform->descriptor.id[0] != '\0') {
         (void)umi_debug_advanced_platform_close_session(platform->advanced);
         (void)umi_debug_advanced_platform_unregister_adapter(
@@ -561,12 +680,16 @@ failure:
             platform->descriptor.id);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform->contract_owner != NULL) {
         umi_debug_runtime_contract_adapter_destroy(
             platform->contract_owner);
         platform->contract_owner = NULL;
         platform->adapter = NULL;
-    } else if (platform->adapter != NULL) {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (platform->adapter != NULL) {
         umi_debug_runtime_adapter_destroy(platform->adapter);
         platform->adapter = NULL;
     }
@@ -575,6 +698,10 @@ failure:
     return status;
 }
 
+/*
+ * Provide the debug runtime platform stop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_stop(
     UmiDebugRuntimePlatform *platform,
     int terminate_debuggee,
@@ -582,7 +709,15 @@ UmiStatus umi_debug_runtime_platform_stop(
 {
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!platform->active || platform->adapter == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -598,6 +733,7 @@ UmiStatus umi_debug_runtime_platform_stop(
             0,
             &sequence);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_debug_runtime_adapter_wait_response(
                 platform->adapter,
@@ -612,6 +748,7 @@ UmiStatus umi_debug_runtime_platform_stop(
         timeout_ms);
     (void)umi_debug_advanced_platform_close_session(platform->advanced);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (platform->descriptor.id[0] != '\0') {
         (void)umi_debug_advanced_platform_unregister_adapter(
             platform->advanced,
@@ -627,10 +764,14 @@ UmiStatus umi_debug_runtime_platform_stop(
         platform->attached,
         platform->capabilities.supports_restart);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform->contract_owner != NULL) {
         umi_debug_runtime_contract_adapter_destroy(
             platform->contract_owner);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         umi_debug_runtime_adapter_destroy(platform->adapter);
     }
 
@@ -651,6 +792,10 @@ UmiStatus umi_debug_runtime_platform_stop(
 }
 
 
+/*
+ * Provide the debug runtime platform pump event operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_pump_event(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms,
@@ -659,12 +804,20 @@ UmiStatus umi_debug_runtime_platform_pump_event(
     UmiDebugRuntimeEnvelope envelope;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || out_handled == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_handled = 0;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!platform->active || platform->adapter == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -673,6 +826,7 @@ UmiStatus umi_debug_runtime_platform_pump_event(
         platform->adapter,
         &envelope);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         status = umi_debug_runtime_adapter_receive(
             platform->adapter,
@@ -680,8 +834,10 @@ UmiStatus umi_debug_runtime_platform_pump_event(
             &envelope);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (envelope.kind != UMI_DEBUG_RUNTIME_MESSAGE_EVENT) {
         /*
          * Platform operations are synchronous and ordinarily consume responses
@@ -692,6 +848,7 @@ UmiStatus umi_debug_runtime_platform_pump_event(
     }
 
     status = publish_event_envelope(platform, &envelope);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *out_handled = 1;
     }
@@ -699,6 +856,10 @@ UmiStatus umi_debug_runtime_platform_pump_event(
     return status;
 }
 
+/*
+ * Provide the debug runtime platform sync breakpoints operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_sync_breakpoints(
     UmiDebugRuntimePlatform *platform,
     const char *source_uri,
@@ -714,6 +875,10 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || source_uri == NULL ||
         source_uri[0] == '\0' || platform->adapter == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -721,17 +886,20 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
 
     registry = umi_debug_service_breakpoint(platform->service);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_debug_breakpoint_registry_count(registry);
          ++index) {
         UmiDebugBreakpointSnapshot item;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_breakpoint_registry_at(
                 registry, index, &item) != UMI_STATUS_OK ||
             strcmp(item.uri, source_uri) != 0) {
             continue;
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (requested_count >= UMI_DEBUG_RUNTIME_MAX_BREAKPOINTS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -746,6 +914,7 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
         requested_count,
         0,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -753,11 +922,13 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_breakpoints(
         response.json,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     /*
@@ -769,9 +940,11 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
          ++index) {
         requested[index].verified = result.items[index].verified;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (result.items[index].line != 0U) {
             requested[index].line = result.items[index].line;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (result.items[index].column != 0U) {
             requested[index].column = result.items[index].column;
         }
@@ -781,6 +954,7 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
         status = umi_debug_breakpoint_registry_upsert(
             registry,
             &requested[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -788,6 +962,10 @@ UmiStatus umi_debug_runtime_platform_sync_breakpoints(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime platform refresh threads operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_threads(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
@@ -797,6 +975,10 @@ UmiStatus umi_debug_runtime_platform_refresh_threads(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -804,6 +986,7 @@ UmiStatus umi_debug_runtime_platform_refresh_threads(
     status = umi_debug_runtime_request_threads(
         platform->adapter,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -811,13 +994,16 @@ UmiStatus umi_debug_runtime_platform_refresh_threads(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_threads(
         response.json,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (platform->active_thread_id == 0U && result.count > 0U) {
         platform->active_thread_id = result.items[0].id;
     }
@@ -828,10 +1014,15 @@ UmiStatus umi_debug_runtime_platform_refresh_threads(
         platform->active_thread_id,
         platform->paused);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform refresh stack operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_stack(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -842,6 +1033,10 @@ UmiStatus umi_debug_runtime_platform_refresh_stack(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         thread_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -853,6 +1048,7 @@ UmiStatus umi_debug_runtime_platform_refresh_stack(
         0U,
         UMI_DEBUG_RUNTIME_MAX_ITEMS,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -860,14 +1056,17 @@ UmiStatus umi_debug_runtime_platform_refresh_stack(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_stack_trace(
         response.json,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->active_thread_id = thread_id;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (result.count > 0U) {
         platform->active_frame_id = result.items[0].id;
     }
@@ -877,10 +1076,15 @@ UmiStatus umi_debug_runtime_platform_refresh_stack(
         thread_id,
         &result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform refresh scopes operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_scopes(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
@@ -891,6 +1095,10 @@ UmiStatus umi_debug_runtime_platform_refresh_scopes(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         frame_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -900,6 +1108,7 @@ UmiStatus umi_debug_runtime_platform_refresh_scopes(
         platform->adapter,
         frame_id,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -907,9 +1116,11 @@ UmiStatus umi_debug_runtime_platform_refresh_scopes(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_scopes(response.json, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->active_frame_id = frame_id;
@@ -918,10 +1129,15 @@ UmiStatus umi_debug_runtime_platform_refresh_scopes(
         frame_id,
         &result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform refresh variables operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_variables(
     UmiDebugRuntimePlatform *platform,
     const char *scope_id,
@@ -933,6 +1149,10 @@ UmiStatus umi_debug_runtime_platform_refresh_variables(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         scope_id == NULL || scope_id[0] == '\0' ||
         variables_reference == 0U) {
@@ -943,6 +1163,7 @@ UmiStatus umi_debug_runtime_platform_refresh_variables(
         platform->adapter,
         variables_reference,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -950,11 +1171,13 @@ UmiStatus umi_debug_runtime_platform_refresh_variables(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_variables(
         response.json,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_publish_variables(
@@ -962,10 +1185,15 @@ UmiStatus umi_debug_runtime_platform_refresh_variables(
         scope_id,
         &result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform evaluate watch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_evaluate_watch(
     UmiDebugRuntimePlatform *platform,
     const char *watch_id,
@@ -978,6 +1206,10 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         watch_id == NULL || expression == NULL ||
         expression[0] == '\0') {
@@ -990,6 +1222,7 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
         frame_id,
         "watch",
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -997,11 +1230,13 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_evaluate(
         response.json,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_publish_watch(
@@ -1010,11 +1245,13 @@ UmiStatus umi_debug_runtime_platform_evaluate_watch(
         expression,
         &result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
 
+/* Provide the thread control operation used by this module and its client applications. */
 static UmiStatus thread_control(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -1029,12 +1266,17 @@ static UmiStatus thread_control(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         thread_id == 0U || request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = request(platform->adapter, thread_id, &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1042,10 +1284,12 @@ static UmiStatus thread_control(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->active_thread_id = thread_id;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state_after_response == UMI_DEBUG_RUNTIME_ADAPTER_RUNNING) {
         platform->paused = 0;
         (void)umi_debug_runtime_adapter_set_state(
@@ -1060,6 +1304,10 @@ static UmiStatus thread_control(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime platform continue operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_continue(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -1073,6 +1321,10 @@ UmiStatus umi_debug_runtime_platform_continue(
         UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
 }
 
+/*
+ * Provide the debug runtime platform pause operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_pause(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -1086,6 +1338,10 @@ UmiStatus umi_debug_runtime_platform_pause(
         UMI_DEBUG_RUNTIME_ADAPTER_PAUSED);
 }
 
+/*
+ * Provide the debug runtime platform step over operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_over(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -1099,6 +1355,10 @@ UmiStatus umi_debug_runtime_platform_step_over(
         UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
 }
 
+/*
+ * Provide the debug runtime platform step into operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_into(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -1112,6 +1372,10 @@ UmiStatus umi_debug_runtime_platform_step_into(
         UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
 }
 
+/*
+ * Provide the debug runtime platform step out operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_out(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
@@ -1125,6 +1389,10 @@ UmiStatus umi_debug_runtime_platform_step_out(
         UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
 }
 
+/*
+ * Provide the debug runtime platform refresh modules operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_modules(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
@@ -1134,10 +1402,15 @@ UmiStatus umi_debug_runtime_platform_refresh_modules(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_modules_request) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1147,6 +1420,7 @@ UmiStatus umi_debug_runtime_platform_refresh_modules(
         0U,
         UMI_DEBUG_RUNTIME_MAX_ITEMS,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1154,19 +1428,26 @@ UmiStatus umi_debug_runtime_platform_refresh_modules(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_modules(response.json, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_publish_modules(
         &platform->bridge,
         &result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform read memory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_read_memory(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -1179,11 +1460,16 @@ UmiStatus umi_debug_runtime_platform_read_memory(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         memory_reference == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_read_memory_request) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1194,6 +1480,7 @@ UmiStatus umi_debug_runtime_platform_read_memory(
         offset,
         count,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1201,11 +1488,13 @@ UmiStatus umi_debug_runtime_platform_read_memory(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_memory(
         response.json,
         out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = project_memory_view(
@@ -1215,10 +1504,15 @@ UmiStatus umi_debug_runtime_platform_read_memory(
         count,
         out_result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform disassemble operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_disassemble(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -1232,11 +1526,16 @@ UmiStatus umi_debug_runtime_platform_disassemble(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         memory_reference == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_disassemble_request) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1249,6 +1548,7 @@ UmiStatus umi_debug_runtime_platform_disassemble(
         instruction_count,
         1,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1256,25 +1556,36 @@ UmiStatus umi_debug_runtime_platform_disassemble(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_disassembly(
         response.json,
         out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = project_disassembly_view(platform, out_result);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_snapshot(
     UmiDebugRuntimePlatform *platform,
     UmiDebugRuntimePlatformSnapshot *out_snapshot)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -1284,17 +1595,24 @@ UmiStatus umi_debug_runtime_platform_snapshot(
     status = umi_debug_service_snapshot(
         platform->service,
         &out_snapshot->service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_advanced_platform_snapshot(
         platform->advanced,
         &out_snapshot->advanced);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform->adapter != NULL) {
         status = umi_debug_runtime_adapter_snapshot(
             platform->adapter,
             &out_snapshot->adapter);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -1325,18 +1643,30 @@ UmiStatus umi_debug_runtime_platform_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime platform service operation used by this module and its client
+ * applications.
+ */
 UmiDebugService *umi_debug_runtime_platform_service(
     UmiDebugRuntimePlatform *platform)
 {
     return platform != NULL ? platform->service : NULL;
 }
 
+/*
+ * Provide the debug runtime platform advanced operation used by this module and its client
+ * applications.
+ */
 UmiDebugAdvancedPlatform *umi_debug_runtime_platform_advanced(
     UmiDebugRuntimePlatform *platform)
 {
     return platform != NULL ? platform->advanced : NULL;
 }
 
+/*
+ * Provide the debug runtime platform adapter operation used by this module and its client
+ * applications.
+ */
 UmiDebugRuntimeAdapter *umi_debug_runtime_platform_adapter(
     UmiDebugRuntimePlatform *platform)
 {
@@ -1344,39 +1674,58 @@ UmiDebugRuntimeAdapter *umi_debug_runtime_platform_adapter(
 }
 
 
+/* Provide the contains folded operation used by this module and its client applications. */
 static int contains_folded(const char *text, const char *needle)
 {
     const char *start;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || needle == NULL || needle[0] == '\0') return 0;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (start = text; *start != '\0'; ++start) {
         const char *left = start;
         const char *right = needle;
 
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*left != '\0' && *right != '\0') {
             char a = *left;
             char b = *right;
 
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (a >= 'A' && a <= 'Z') a = (char)(a - 'A' + 'a');
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (b >= 'A' && b <= 'Z') b = (char)(b - 'A' + 'a');
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (a != b) break;
             ++left;
             ++right;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*right == '\0') return 1;
     }
 
     return 0;
 }
 
+/* Provide the parse address operation used by this module and its client applications. */
 static uint64_t parse_address(const char *text)
 {
     char *end = NULL;
     unsigned long long value;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || text[0] == '\0') return 0U;
 
     value = strtoull(text, &end, 0);
@@ -1385,6 +1734,10 @@ static uint64_t parse_address(const char *text)
         : 0U;
 }
 
+/*
+ * Provide the project memory view operation used by this module and its client
+ * applications.
+ */
 static UmiStatus project_memory_view(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -1398,16 +1751,28 @@ static UmiStatus project_memory_view(
     uint64_t base_address;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || memory_reference == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     view = umi_debug_inspection_session_memory(
         umi_debug_advanced_platform_inspection(platform->advanced));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL) return UMI_STATUS_INVALID_STATE;
 
     base_address = parse_address(result->address);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cursor < result->byte_count || (result->byte_count == 0U && block_index == 0U)) {
         UmiDebugMemoryBlock block;
         const size_t remaining =
@@ -1427,6 +1792,7 @@ static UmiStatus project_memory_view(
             sizeof(block.id),
             "memory.%zu",
             block_index);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(block.id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -1449,6 +1815,7 @@ static UmiStatus project_memory_view(
             requested_count > cursor
                 ? (size_t)requested_count - cursor
                 : chunk;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (block.requested_length > UMI_DEBUG_MEMORY_BLOCK_BYTE_CAPACITY) {
             block.requested_length = UMI_DEBUG_MEMORY_BLOCK_BYTE_CAPACITY;
         }
@@ -1463,6 +1830,7 @@ static UmiStatus project_memory_view(
         block.stale = 0;
         block.complete = 1;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (chunk > 0U) {
             (void)memcpy(
                 block.bytes,
@@ -1471,12 +1839,15 @@ static UmiStatus project_memory_view(
         }
 
         status = umi_debug_memory_view_upsert(view, &block);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (block_index == 0U) {
             (void)umi_debug_memory_view_select(view, block.id);
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (chunk == 0U) break;
         cursor += chunk;
         block_index += 1U;
@@ -1485,6 +1856,7 @@ static UmiStatus project_memory_view(
     return UMI_STATUS_OK;
 }
 
+/* Provide the split instruction operation used by this module and its client applications. */
 static void split_instruction(
     const char *text,
     char *mnemonic,
@@ -1495,26 +1867,60 @@ static void split_instruction(
     const char *space;
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (mnemonic != NULL && mnemonic_capacity > 0U) mnemonic[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operands != NULL && operands_capacity > 0U) operands[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return;
 
     space = text;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*space != '\0' && *space != ' ' && *space != '\t') ++space;
 
     length = (size_t)(space - text);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (mnemonic != NULL && mnemonic_capacity > 0U) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= mnemonic_capacity) length = mnemonic_capacity - 1U;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U) (void)memcpy(mnemonic, text, length);
         mnemonic[length] = '\0';
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*space == ' ' || *space == '\t') ++space;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operands != NULL && operands_capacity > 0U) {
         (void)snprintf(operands, operands_capacity, "%s", space);
     }
 }
 
+/*
+ * Provide the project disassembly view operation used by this module and its client
+ * applications.
+ */
 static UmiStatus project_disassembly_view(
     UmiDebugRuntimePlatform *platform,
     const UmiDebugRuntimeDisassembly *result)
@@ -1523,17 +1929,27 @@ static UmiStatus project_disassembly_view(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     view = umi_debug_inspection_session_disassembly(
         umi_debug_advanced_platform_inspection(platform->advanced));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_debug_disassembly_view_clear(view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugInstruction instruction;
         const uint64_t address = parse_address(result->items[index].address);
@@ -1548,6 +1964,7 @@ static UmiStatus project_disassembly_view(
             sizeof(instruction.id),
             "instruction.%zu",
             index);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(instruction.id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -1597,8 +2014,10 @@ static UmiStatus project_disassembly_view(
         instruction.valid = 1;
 
         status = umi_debug_disassembly_view_upsert(view, &instruction);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index == 0U) {
             (void)umi_debug_disassembly_view_set_current(
                 view, instruction.id);
@@ -1610,6 +2029,10 @@ static UmiStatus project_disassembly_view(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime platform refresh registers operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_refresh_registers(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
@@ -1623,28 +2046,41 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
     size_t group_order = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL || frame_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_debug_runtime_request_scopes(
         platform->adapter, frame_id, &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
         platform->adapter, sequence, timeout_ms, &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_scopes(response.json, &scopes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     bank = umi_debug_inspection_session_registers(
         umi_debug_advanced_platform_inspection(platform->advanced));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bank == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_debug_register_bank_clear(bank);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (scope_index = 0U; scope_index < scopes.count; ++scope_index) {
         UmiDebugRuntimeVariableList variables;
         UmiDebugRegisterGroup group;
@@ -1652,10 +2088,12 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
         uint64_t variable_sequence = 0U;
         size_t variable_index;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!contains_folded(scopes.items[scope_index].name, "register")) {
             continue;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (scopes.items[scope_index].variables_reference == 0U) {
             continue;
         }
@@ -1664,6 +2102,7 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
             platform->adapter,
             scopes.items[scope_index].variables_reference,
             &variable_sequence);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_debug_runtime_adapter_wait_response(
@@ -1671,11 +2110,13 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
             variable_sequence,
             timeout_ms,
             &variable_response);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_debug_runtime_decode_variables(
             variable_response.json,
             &variables);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         (void)memset(&group, 0, sizeof(group));
@@ -1706,8 +2147,10 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
         group.available = 1;
 
         status = umi_debug_register_bank_upsert_group(bank, &group);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (variable_index = 0U;
              variable_index < variables.count;
              ++variable_index) {
@@ -1754,6 +2197,7 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
 
             status = umi_debug_register_bank_upsert_register(
                 bank, &register_value);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
     }
@@ -1763,12 +2207,21 @@ UmiStatus umi_debug_runtime_platform_refresh_registers(
 }
 
 
+/*
+ * Provide the debug runtime platform step back operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_step_back(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_step_back) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1781,12 +2234,21 @@ UmiStatus umi_debug_runtime_platform_step_back(
         UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
 }
 
+/*
+ * Provide the debug runtime platform reverse continue operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_platform_reverse_continue(
     UmiDebugRuntimePlatform *platform,
     uint64_t thread_id,
     uint32_t timeout_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_step_back) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1799,6 +2261,10 @@ UmiStatus umi_debug_runtime_platform_reverse_continue(
         UMI_DEBUG_RUNTIME_ADAPTER_RUNNING);
 }
 
+/*
+ * Provide the debug runtime platform restart frame operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_restart_frame(
     UmiDebugRuntimePlatform *platform,
     uint64_t frame_id,
@@ -1808,10 +2274,15 @@ UmiStatus umi_debug_runtime_platform_restart_frame(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL || frame_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_restart_frame) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1820,6 +2291,7 @@ UmiStatus umi_debug_runtime_platform_restart_frame(
         platform->adapter,
         frame_id,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1828,6 +2300,7 @@ UmiStatus umi_debug_runtime_platform_restart_frame(
         timeout_ms,
         &response);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         platform->active_frame_id = frame_id;
         platform->revision += 1U;
@@ -1836,6 +2309,10 @@ UmiStatus umi_debug_runtime_platform_restart_frame(
     return status;
 }
 
+/*
+ * Provide the debug runtime platform set variable operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_set_variable(
     UmiDebugRuntimePlatform *platform,
     uint64_t variables_reference,
@@ -1848,11 +2325,16 @@ UmiStatus umi_debug_runtime_platform_set_variable(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         name == NULL || value == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_set_variable) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1863,6 +2345,7 @@ UmiStatus umi_debug_runtime_platform_set_variable(
         name,
         value,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1870,13 +2353,19 @@ UmiStatus umi_debug_runtime_platform_set_variable(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_evaluate(response.json, out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform set expression operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_set_expression(
     UmiDebugRuntimePlatform *platform,
     const char *expression,
@@ -1889,11 +2378,16 @@ UmiStatus umi_debug_runtime_platform_set_expression(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         expression == NULL || value == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_set_expression) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1904,6 +2398,7 @@ UmiStatus umi_debug_runtime_platform_set_expression(
         value,
         frame_id,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1911,13 +2406,19 @@ UmiStatus umi_debug_runtime_platform_set_expression(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_decode_evaluate(response.json, out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the debug runtime platform write memory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_platform_write_memory(
     UmiDebugRuntimePlatform *platform,
     const char *memory_reference,
@@ -1930,11 +2431,16 @@ UmiStatus umi_debug_runtime_platform_write_memory(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         memory_reference == NULL || base64_data == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_write_memory_request) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -1946,6 +2452,7 @@ UmiStatus umi_debug_runtime_platform_write_memory(
         base64_data,
         allow_partial,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -1954,6 +2461,7 @@ UmiStatus umi_debug_runtime_platform_write_memory(
         timeout_ms,
         &response);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         /*
          * Existing memory blocks are intentionally marked stale rather than
@@ -1964,6 +2472,10 @@ UmiStatus umi_debug_runtime_platform_write_memory(
             umi_debug_advanced_platform_inspection(platform->advanced));
         UmiDebugMemoryViewSnapshot snapshot;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (view != NULL &&
             umi_debug_memory_view_snapshot(view, &snapshot) == UMI_STATUS_OK &&
             snapshot.has_selection) {
@@ -1980,6 +2492,10 @@ UmiStatus umi_debug_runtime_platform_write_memory(
 }
 
 
+/*
+ * Provide the debug runtime platform restart operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_platform_restart(
     UmiDebugRuntimePlatform *platform,
     uint32_t timeout_ms)
@@ -1988,11 +2504,16 @@ UmiStatus umi_debug_runtime_platform_restart(
     uint64_t sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || platform->adapter == NULL ||
         !platform->active) {
         return UMI_STATUS_INVALID_STATE;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!platform->capabilities.supports_restart) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -2001,6 +2522,7 @@ UmiStatus umi_debug_runtime_platform_restart(
         platform->adapter,
         NULL,
         &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_wait_response(
@@ -2008,6 +2530,7 @@ UmiStatus umi_debug_runtime_platform_restart(
         sequence,
         timeout_ms,
         &response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->paused = 0;
@@ -2029,6 +2552,7 @@ UmiStatus umi_debug_runtime_platform_restart(
         platform->attached,
         platform->capabilities.supports_restart);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) platform->revision += 1U;
     return status;
 }

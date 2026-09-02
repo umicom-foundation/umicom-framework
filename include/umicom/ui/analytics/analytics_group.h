@@ -27,8 +27,18 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics group data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsGroup { char key[UMI_ANALYTICS_TEXT_CAPACITY]; size_t count; double sum; } UmiAnalyticsGroup;
+/**
+ * Initialise analytics group from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_analytics_group_init(UmiAnalyticsGroup *g,const char *key);
+/**
+ * Add analytics group only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_analytics_group_add(UmiAnalyticsGroup *g,double value);
 
 #ifdef __cplusplus

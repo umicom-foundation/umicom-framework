@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_PROVIDER_PRIORITY_API_VERSION 1U
+/**
+ * Represent the language intelligence provider priority input data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceProviderPriorityInput {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +40,20 @@ typedef struct UmiLanguageIntelligenceProviderPriorityInput {
     uint32_t penalty;
     int enabled;
 } UmiLanguageIntelligenceProviderPriorityInput;
+/**
+ * Initialise language intelligence provider priority input from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_provider_priority_input_init(UmiLanguageIntelligenceProviderPriorityInput *input);
+/**
+ * Provide the language intelligence provider priority score operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_language_intelligence_provider_priority_score(const UmiLanguageIntelligenceProviderPriorityInput *input);
+/**
+ * Provide the language intelligence provider priority prefer operation used by this module
+ * and its client applications.
+ */
 int umi_language_intelligence_provider_priority_prefer(
     const UmiLanguageIntelligenceProviderPriorityInput *left,
     const UmiLanguageIntelligenceProviderPriorityInput *right);

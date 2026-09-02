@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting period data shared with callers of this public contract.
+ */
 typedef struct UmiReportingPeriod {
     char period_id[UMI_REG_ID_CAPACITY];
     int32_t start_day;

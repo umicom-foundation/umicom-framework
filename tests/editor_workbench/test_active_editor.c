@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/active_editor.h"
-int main(void){ UmiEditorWbActiveEditor s={{0},{0},0U}; if(umi_editor_wb_active_editor_set(&s,"item","group")!=UMI_STATUS_OK)return 1; umi_editor_wb_active_editor_clear(&s); if(s.item_id[0]!='\0')return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiEditorWbActiveEditor s={{0},{0},0U}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_active_editor_set(&s,"item","group")!=UMI_STATUS_OK)return 1; umi_editor_wb_active_editor_clear(&s); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(s.item_id[0]!='\0')return 2; return 0; }

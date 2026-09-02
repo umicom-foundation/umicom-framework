@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/index_scheduling.h"
 
+/*
+ * Provide the developer capability index scheduling operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_index_scheduling(void)
 {

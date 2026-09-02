@@ -23,17 +23,33 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise ai response from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_response_init(UmiAiResponse *response)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (response != NULL) {
         (void)memset(response, 0, sizeof(*response));
         response->finish_reason = UMI_AI_FINISH_NONE;
     }
 }
 
+/*
+ * Provide the ai response set text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_response_set_text(UmiAiResponse *response, const char *text)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (response == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

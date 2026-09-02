@@ -21,10 +21,18 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide location to productivity operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_location_to_productivity(
     const UmiIdeLocation *location,
     UmiDeveloperProductivityLocation *out_location);
 
+/**
+ * Provide the ide productivity record visit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_productivity_record_visit(
     UmiDeveloperNavigationService *navigation,
     const UmiIdeLocation *location);

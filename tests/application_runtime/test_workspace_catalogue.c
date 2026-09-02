@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test workspace catalogue and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_workspace_catalogue(void){ UmiApplicationWorkspaceEntry e; assert(umi_application_workspace_catalogue_count()>0U); assert(umi_application_workspace_catalogue_at(0U,&e)==UMI_STATUS_OK); assert(e.layout!=NULL); return 0; }

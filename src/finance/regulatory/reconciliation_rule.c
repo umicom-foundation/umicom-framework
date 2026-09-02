@@ -20,16 +20,27 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg reconciliation rule from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_reg_reconciliation_rule_init(UmiReconciliationRule *record, const char *rule_id, const char *left_source, const char *right_source, double tolerance)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(umi_reg_number_valid(tolerance) && tolerance >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->rule_id, sizeof record->rule_id, rule_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->left_source, sizeof record->left_source, left_source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->right_source, sizeof record->right_source, right_source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->tolerance = tolerance;
     return UMI_STATUS_OK;

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operations/fetch.h"
 
+/*
+ * Provide the developer source control operation fetch operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_fetch(void)
 {
     static const UmiDeveloperSourceControlOperationDefinition definition = {

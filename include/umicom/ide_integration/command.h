@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide command descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiIdeCommandDescriptor {
     const char *command_id;
     const char *label;
@@ -38,8 +41,17 @@ typedef struct UmiIdeCommandDescriptor {
     int mutates_state;
 } UmiIdeCommandDescriptor;
 
+/**
+ * Return the number of records represented by ide command without changing their state.
+ */
 size_t umi_ide_command_count(void);
+/**
+ * Find ide command while leaving the underlying catalogue or model owned by this module.
+ */
 const UmiIdeCommandDescriptor *umi_ide_command_at(size_t index);
+/**
+ * Find ide command while leaving the underlying catalogue or model owned by this module.
+ */
 const UmiIdeCommandDescriptor *umi_ide_command_find(const char *command_id);
 
 #ifdef __cplusplus

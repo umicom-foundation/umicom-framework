@@ -26,7 +26,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the order type requires limit operation used by this module and its client
+ * applications.
+ */
 int umi_order_type_requires_limit(UmiOrderType type);
+/**
+ * Provide the order type requires stop operation used by this module and its client
+ * applications.
+ */
 int umi_order_type_requires_stop(UmiOrderType type);
 #ifdef __cplusplus
 }

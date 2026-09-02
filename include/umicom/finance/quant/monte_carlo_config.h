@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant monte carlo config data shared with callers of this public contract.
+ */
 typedef struct UmiQuantMonteCarloConfig {
     uint32_t path_count;
     uint32_t time_steps;

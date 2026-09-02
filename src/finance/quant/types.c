@@ -25,8 +25,13 @@
 UmiStatus umi_quant_copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U || length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;

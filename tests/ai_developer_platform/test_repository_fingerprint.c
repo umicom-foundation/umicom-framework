@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/repository_fingerprint.h"
-int main(void) { uint64_t a=umi_ai_dev_repository_fingerprint_text("abc"),b=umi_ai_dev_repository_fingerprint_text("abd"); if(a==0U||a==b)return 1; if(!umi_ai_dev_repository_fingerprint_same("same","same"))return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { uint64_t a=umi_ai_dev_repository_fingerprint_text("abc"),b=umi_ai_dev_repository_fingerprint_text("abd"); /* Apply this branch only when its contract condition is satisfied. */ if(a==0U||a==b)return 1; /* Apply this branch only when its contract condition is satisfied. */ if(!umi_ai_dev_repository_fingerprint_same("same","same"))return 2; return 0; }

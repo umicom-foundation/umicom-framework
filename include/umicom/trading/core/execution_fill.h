@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading execution fill data shared with callers of this public contract.
+ */
 typedef struct UmiTradingExecutionFill { UmiFinancialId execution_id; UmiFinancialId client_order_id; UmiTradingQuantityLots quantity_lots; UmiTradingPriceTicks price_ticks; int64_t event_time_ms; } UmiTradingExecutionFill;
 /* Initialise and validate represent one integer-normalised venue fill for deterministic aggregation. */
 UmiStatus umi_trading_execution_fill_init(UmiTradingExecutionFill *value,const UmiFinancialId * execution_id, const UmiFinancialId * client_order_id, UmiTradingQuantityLots quantity_lots, UmiTradingPriceTicks price_ticks, int64_t event_time_ms);

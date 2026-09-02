@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital asset transaction data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalAssetTransaction {
     UmiDigitalAssetId id;
     UmiDigitalAssetId network_id;

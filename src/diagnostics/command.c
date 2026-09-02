@@ -113,23 +113,41 @@ static const UmiDiagnosticCommandDescriptor COMMANDS[] = {
 
 #undef COMMAND
 
+/*
+ * Return the number of records represented by diagnostic command without changing their
+ * state.
+ */
 size_t umi_diagnostic_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find diagnostic command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_at(size_t position)
 {
     return position < umi_diagnostic_command_count() ? &COMMANDS[position]
                                                      : NULL;
 }
 
+/*
+ * Find diagnostic command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_find(
     const char *command_id)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < umi_diagnostic_command_count(); ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(COMMANDS[position].id, command_id) == 0) {
             return &COMMANDS[position];
         }
@@ -137,11 +155,17 @@ const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_find(
     return NULL;
 }
 
+/*
+ * Provide the diagnostic command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_for_kind(
     UmiDiagnosticCommandKind kind)
 {
     size_t position;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < umi_diagnostic_command_count(); ++position) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (COMMANDS[position].kind == kind) return &COMMANDS[position];
     }
     return NULL;

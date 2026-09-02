@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential tier1 ratio data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialTier1Ratio { double numerator; double denominator; double ratio; } UmiPrudentialTier1Ratio;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_tier1_ratio_calculate(UmiPrudentialTier1Ratio *result, double numerator, double denominator);

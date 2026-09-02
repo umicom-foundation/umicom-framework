@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the designer register commands operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_register_commands(UmiCommandRegistry *commands,UmiDesignerHistory *history);
 #ifdef __cplusplus
 }

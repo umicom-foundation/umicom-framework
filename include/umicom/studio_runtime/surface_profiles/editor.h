@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio surface profile editor operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_editor(void);
 #ifdef __cplusplus
 }

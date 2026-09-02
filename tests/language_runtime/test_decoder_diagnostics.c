@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/language_runtime/decoders/diagnostics.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiLanguageRuntimeDiagnosticList x; assert(umi_language_runtime_decode_diagnostics("{\"jsonrpc\":\"2.0\",\"method\":\"textDocument/publishDiagnostics\",\"params\":{\"uri\":\"file:///a.c\",\"diagnostics\":[{\"range\":{\"start\":{\"line\":2,\"character\":1},\"end\":{\"line\":2,\"character\":2}},\"message\":\"bad\"}]}}",&x)==UMI_STATUS_OK); assert(x.count==1U);return 0;}

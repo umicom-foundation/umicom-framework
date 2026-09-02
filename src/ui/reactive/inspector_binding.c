@@ -17,6 +17,10 @@
 
 /* Initialise the inspector binding contract to deterministic zero/default state. */
 void umi_ui_reactive_inspector_binding_init(UmiUiReactiveInspectorBinding *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item != NULL) memset(item, 0, sizeof *item);
 }
 

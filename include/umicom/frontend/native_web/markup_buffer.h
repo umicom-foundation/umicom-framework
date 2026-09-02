@@ -27,6 +27,9 @@ extern "C" {
 
 #include "umicom/frontend/native_web/types.h"
 
+/**
+ * Represent the native web markup buffer data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebMarkupBuffer {
     char data[UMI_NATIVE_WEB_MARKUP_CAPACITY];
     size_t length;

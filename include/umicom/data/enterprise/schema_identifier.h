@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema identifier data shared with callers of this public contract.
+ */
 typedef struct UmiDataSchemaIdentifier {
     char catalog[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char schema[UMI_DATA_ENTERPRISE_ID_CAPACITY];

@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/design_token.h"
+/**
+ * Represent the design token set data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTokenSet { char id[UMI_DESIGN_ID_CAPACITY]; UmiDesignToken tokens[UMI_DESIGN_MAX_TOKENS]; size_t count; uint64_t revision; } UmiDesignTokenSet;
 /* Initialise a named design-token set. */
 UmiStatus umi_design_token_set_init(UmiDesignTokenSet *set, const char *id);

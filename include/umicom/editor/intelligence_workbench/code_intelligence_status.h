@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel code intelligence status data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelCodeIntelligenceStatus { char session_id[UMI_EDITOR_INTEL_ID_CAPACITY]; UmiEditorIntelPhase phase; uint32_t item_count; bool changed; uint64_t revision; } UmiEditorIntelCodeIntelligenceStatus;
+/**
+ * Provide the editor intel code intelligence status begin operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_code_intelligence_status_begin(UmiEditorIntelCodeIntelligenceStatus *session,const char *session_id);
+/**
+ * Provide the editor intel code intelligence status set ready operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_intel_code_intelligence_status_set_ready(UmiEditorIntelCodeIntelligenceStatus *session,uint32_t item_count);
+/**
+ * Provide the editor intel code intelligence status cancel operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_code_intelligence_status_cancel(UmiEditorIntelCodeIntelligenceStatus *session);
+/**
+ * Check that editor intel code intelligence status satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_code_intelligence_status_valid(const UmiEditorIntelCodeIntelligenceStatus *session);
 
 #ifdef __cplusplus

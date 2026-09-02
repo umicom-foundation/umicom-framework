@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution metrics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionMetrics {
     size_t total;
     size_t pending;

@@ -16,6 +16,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/diagnostics/profiler.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProfiler *p = NULL; UmiProfileScope s; UmiProfileSample sample;
     assert(umi_profiler_create(&p) == UMI_STATUS_OK);

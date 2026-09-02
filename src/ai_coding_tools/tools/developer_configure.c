@@ -15,6 +15,10 @@
 #include "umicom/ai_coding_tools/tools/developer_configure.h"
 #include "../process_tool_support.h"
 
+/*
+ * Provide the ai coding tool developer configure descriptor operation used by this module
+ * and its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_developer_configure_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -31,6 +35,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_developer_configure_descript
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool developer configure invoke operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_coding_tool_developer_configure_invoke(
     const char *arguments_json,
     char *output,

@@ -30,6 +30,10 @@ typedef int (*UmiIdeCapabilityLookup)(
     void *user_data,
     const char *capability_id);
 
+/**
+ * Represent the ide self host check report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIdeSelfHostCheckReport {
     char missing_surfaces[UMI_IDE_SELF_HOST_MISSING_CAPACITY]
                          [UMI_IDE_INTEGRATION_ID_CAPACITY];
@@ -44,6 +48,10 @@ typedef struct UmiIdeSelfHostCheckReport {
     int ready;
 } UmiIdeSelfHostCheckReport;
 
+/**
+ * Provide the ide self host check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_self_host_check(
     const UmiIdeSelfHostManifest *manifest,
     const UmiIdeSurfaceRegistry *surfaces,

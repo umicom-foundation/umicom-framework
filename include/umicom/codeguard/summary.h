@@ -25,6 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the code guard summary data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardSummary {
     size_t total;
     size_t critical;
@@ -37,7 +40,15 @@ typedef struct UmiCodeGuardSummary {
     size_t architecture;
     size_t duplicates;
 } UmiCodeGuardSummary;
+/**
+ * Provide the codeguard summary build operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardSummary umi_codeguard_summary_build(const UmiCodeGuardResult *result);
+/**
+ * Provide the codeguard summary failed operation used by this module and its client
+ * applications.
+ */
 int umi_codeguard_summary_failed(const UmiCodeGuardSummary *summary, UmiCodeGuardSeverity threshold);
 #ifdef __cplusplus
 }

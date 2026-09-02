@@ -26,8 +26,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the replay clock data shared with callers of this public contract.
+ */
 typedef struct UmiReplayClock { int64_t now_ms; double speed; } UmiReplayClock;
+/**
+ * Initialise replay clock from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_replay_clock_init(UmiReplayClock *clock, int64_t start_ms, double speed);
+/**
+ * Provide the replay clock advance operation used by this module and its client
+ * applications.
+ */
 void umi_replay_clock_advance(UmiReplayClock *clock, int64_t event_time_ms);
 #ifdef __cplusplus
 }

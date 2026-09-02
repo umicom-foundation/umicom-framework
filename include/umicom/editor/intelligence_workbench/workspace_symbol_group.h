@@ -24,11 +24,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel workspace symbol group data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelWorkspaceSymbolGroup { UmiEditorIntelEntry items[UMI_EDITOR_INTEL_MAX_ITEMS]; size_t count; uint64_t revision; } UmiEditorIntelWorkspaceSymbolGroup;
+/**
+ * Initialise editor intel workspace symbol group from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_workspace_symbol_group_init(UmiEditorIntelWorkspaceSymbolGroup *model);
+/**
+ * Add editor intel workspace symbol group only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_editor_intel_workspace_symbol_group_add(UmiEditorIntelWorkspaceSymbolGroup *model,const UmiEditorIntelEntry *entry);
+/**
+ * Find editor intel workspace symbol group while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_workspace_symbol_group_find(const UmiEditorIntelWorkspaceSymbolGroup *model,const char *id);
+/**
+ * Release or reset state held by editor intel workspace symbol group so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_intel_workspace_symbol_group_clear(UmiEditorIntelWorkspaceSymbolGroup *model);
+/**
+ * Check that editor intel workspace symbol group satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_workspace_symbol_group_valid(const UmiEditorIntelWorkspaceSymbolGroup *model);
 
 #ifdef __cplusplus

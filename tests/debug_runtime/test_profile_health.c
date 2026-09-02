@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/debug_runtime/profile_health.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugAdapterProfile profile;

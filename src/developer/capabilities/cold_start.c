@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/cold_start.h"
 
+/*
+ * Provide the developer capability cold start operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cold_start(void)
 {

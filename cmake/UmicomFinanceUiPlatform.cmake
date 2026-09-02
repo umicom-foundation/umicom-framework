@@ -15,11 +15,13 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET Umicom::finance OR NOT TARGET Umicom::ui)
     message(FATAL_ERROR
         "UmicomFinanceUiPlatform requires existing Umicom::finance and Umicom::ui targets")
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_finance_ui)
     add_library(umicom_finance_ui STATIC
         "${CMAKE_CURRENT_LIST_DIR}/../src/finance_ui/finance_views.c")
@@ -33,6 +35,7 @@ if(NOT TARGET umicom_finance_ui)
     umicom_apply_sanitizers(umicom_finance_ui)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-finance-ui-test)
     add_executable(umicom-finance-ui-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/finance_ui/test_finance_views.c")

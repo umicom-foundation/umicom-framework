@@ -21,6 +21,7 @@
 #include "umicom/platform/process.h"
 #include "umicom/testing/discovery.h"
 
+/* Provide the ctest discover operation used by this module and its client applications. */
 UmiStatus umi_ctest_discover(const char *build_directory,
                              UmiTestSuite *suite,
                              size_t *out_discovered)
@@ -29,6 +30,10 @@ UmiStatus umi_ctest_discover(const char *build_directory,
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
     int exit_code = 0;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (build_directory == NULL || suite == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -41,6 +46,7 @@ UmiStatus umi_ctest_discover(const char *build_directory,
                                  output,
                                  sizeof(output),
                                  &exit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || exit_code != 0) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_INTERNAL_ERROR;
     }
@@ -50,12 +56,20 @@ UmiStatus umi_ctest_discover(const char *build_directory,
                                           out_discovered);
 }
 
+/*
+ * Perform ctest through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_ctest_run(const char *build_directory,
                         const char *test_name,
                         UmiTestResult *out_result)
 {
     UmiTestCase test_case;
     char arguments[UMI_TEST_COMMAND_CAPACITY];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (build_directory == NULL || test_name == NULL ||
         out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -67,6 +81,7 @@ UmiStatus umi_ctest_run(const char *build_directory,
                    "--test-dir \"%s\" -R \"^%s$\" --output-on-failure",
                    build_directory,
                    test_name);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_test_case_set_command(&test_case,
                                   "ctest",
                                   arguments,

@@ -18,12 +18,16 @@ include_guard(GLOBAL)
 
 set(UMICOM_TRADING_WORKSTATION_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Define the trading workstation attach build helper so parent and application projects
+# apply one consistent rule.
 function(umicom_trading_workstation_attach)
+    # Configure the optional target only when its feature has created it.
     if(TARGET umicom_trading_ui)
         get_target_property(
             _umicom_trading_interaction_attached
             umicom_trading_ui
             UMICOM_TRADING_INTERACTION_ATTACHED)
+        # Apply this branch only when its contract condition is satisfied.
         if(NOT _umicom_trading_interaction_attached)
             target_sources(umicom_trading_ui PRIVATE
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/src/trading_ui/actions.c"
@@ -36,11 +40,13 @@ function(umicom_trading_workstation_attach)
         endif()
     endif()
 
+    # Configure the optional target only when its feature has created it.
     if(TARGET umicom_ui_gtk4 AND TARGET Umicom::trading_ui)
         get_target_property(
             _umicom_trading_gtk4_attached
             umicom_ui_gtk4
             UMICOM_TRADING_WORKSTATION_GTK4_ATTACHED)
+        # Apply this branch only when its contract condition is satisfied.
         if(NOT _umicom_trading_gtk4_attached)
             target_sources(umicom_ui_gtk4 PRIVATE
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/trading_panels_gtk4.c"
@@ -53,6 +59,7 @@ function(umicom_trading_workstation_attach)
         endif()
     endif()
 
+    # Register verification targets only when the developer has enabled testing.
     if(BUILD_TESTING AND TARGET Umicom::trading_ui AND
        NOT TARGET umicom-trading-ui-interaction-tests)
         add_executable(umicom-trading-ui-interaction-tests
@@ -79,9 +86,11 @@ function(umicom_trading_workstation_attach)
         )
         target_link_libraries(umicom-trading-ui-interaction-tests PRIVATE
             Umicom::trading_ui)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings(umicom-trading-ui-interaction-tests)
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers(umicom-trading-ui-interaction-tests)
         endif()
@@ -90,6 +99,7 @@ function(umicom_trading_workstation_attach)
             COMMAND umicom-trading-ui-interaction-tests)
         set_tests_properties(framework.trading_ui.interaction PROPERTIES
             LABELS "framework;trading;ui;interaction;simulation;trader")
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-trading-ui-interaction-tests)
         endif()
@@ -97,6 +107,7 @@ function(umicom_trading_workstation_attach)
 endfunction()
 
 umicom_trading_workstation_attach()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND cmake_language)
     cmake_language(DEFER CALL umicom_trading_workstation_attach)
 endif()

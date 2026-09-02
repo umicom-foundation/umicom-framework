@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide workflow policy data shared with callers of this public contract.
+ */
 typedef struct UmiIdeWorkflowPolicy {
     int require_workspace;
     int require_document;
@@ -35,6 +38,10 @@ typedef struct UmiIdeWorkflowPolicy {
     uint64_t revision;
 } UmiIdeWorkflowPolicy;
 
+/**
+ * Initialise ide workflow policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ide_workflow_policy_init(UmiIdeWorkflowPolicy *policy);
 
 #ifdef __cplusplus

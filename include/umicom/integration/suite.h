@@ -25,12 +25,19 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/types.h"
 
+/**
+ * Represent the integration suite member data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationSuiteMember {
     char application_id[UMI_INTEGRATION_ID_CAPACITY];
     UmiIntegrationDependencyKind kind;
     unsigned preferred_frontend;
 } UmiIntegrationSuiteMember;
 
+/**
+ * Represent the integration suite definition data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIntegrationSuiteDefinition {
     char id[UMI_INTEGRATION_ID_CAPACITY];
     char name[UMI_INTEGRATION_NAME_CAPACITY];
@@ -38,10 +45,18 @@ typedef struct UmiIntegrationSuiteDefinition {
     size_t member_count;
 } UmiIntegrationSuiteDefinition;
 
+/**
+ * Initialise integration suite from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_integration_suite_init(
     UmiIntegrationSuiteDefinition *suite,
     const char *id,
     const char *name);
+/**
+ * Provide the integration suite add member operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_integration_suite_add_member(
     UmiIntegrationSuiteDefinition *suite,
     const char *application_id,

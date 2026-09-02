@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance appearance snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceAppearanceSnapshot {
     char snapshot_id[UMI_APPEARANCE_ID_CAPACITY];
     char profile_id[UMI_APPEARANCE_ID_CAPACITY];

@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make conflict and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutConflict make_conflict(
     const char *conflict_id,
     const char *layout_id,
@@ -42,6 +46,10 @@ static UmiWorkbenchLayoutConflict make_conflict(
     return conflict;
 }
 
+/*
+ * Exercise test conflict codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_conflict_codec(void)
 {
     UmiWorkbenchLayoutConflict source = make_conflict(
@@ -65,6 +73,7 @@ static int test_conflict_codec(void)
     return 0;
 }
 
+/* Return the number of records represented by test open without changing their state. */
 static int test_open_count(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -94,6 +103,10 @@ static int test_open_count(void)
     return 0;
 }
 
+/*
+ * Exercise test resolution evidence and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_resolution_evidence(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -124,6 +137,10 @@ static int test_resolution_evidence(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid resolution and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_invalid_resolution(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -145,6 +162,10 @@ static int test_invalid_resolution(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_conflict_codec() == 0, "conflict codec");

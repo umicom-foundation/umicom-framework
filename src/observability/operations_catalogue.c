@@ -28,6 +28,18 @@ static const UmiOperationsViewDescriptor VIEWS[] = {
     { UMI_OPERATIONS_VIEW_EVENTS,"events","Events","Operational lifecycle and recovery events" },
     { UMI_OPERATIONS_VIEW_AUDIT,"audit","Audit","Consequential action and policy evidence" }
 };
+/*
+ * Return the number of records represented by operations catalogue without changing their
+ * state.
+ */
 size_t umi_operations_catalogue_count(void) { return sizeof(VIEWS) / sizeof(VIEWS[0]); }
+/*
+ * Find operations catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiOperationsViewDescriptor *umi_operations_catalogue_at(size_t index) { return index < umi_operations_catalogue_count() ? &VIEWS[index] : NULL; }
-const UmiOperationsViewDescriptor *umi_operations_catalogue_find(const char *id) { size_t index; if (id == NULL) return NULL; for (index = 0U; index < umi_operations_catalogue_count(); ++index) if (strcmp(VIEWS[index].id,id) == 0) return &VIEWS[index]; return NULL; }
+/*
+ * Find operations catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
+const UmiOperationsViewDescriptor *umi_operations_catalogue_find(const char *id) { size_t index; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (id == NULL) return NULL; /* Visit each bounded item once so every record receives the same rule. */ for (index = 0U; index < umi_operations_catalogue_count(); ++index) /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strcmp(VIEWS[index].id,id) == 0) return &VIEWS[index]; return NULL; }

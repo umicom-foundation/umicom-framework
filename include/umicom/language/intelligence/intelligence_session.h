@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_INTELLIGENCE_SESSION_API_VERSION 1U
+/**
+ * Represent the language intelligence intelligence session data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceIntelligenceSession {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,10 +40,30 @@ typedef struct UmiLanguageIntelligenceIntelligenceSession {
     UmiLanguageIntelligenceState state;
     uint64_t revision;
 } UmiLanguageIntelligenceIntelligenceSession;
+/**
+ * Initialise language intelligence intelligence session from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_intelligence_session_init(UmiLanguageIntelligenceIntelligenceSession *session, const char *id);
+/**
+ * Provide the language intelligence intelligence session begin request operation used by
+ * this module and its client applications.
+ */
 void umi_language_intelligence_intelligence_session_begin_request(UmiLanguageIntelligenceIntelligenceSession *session);
+/**
+ * Provide the language intelligence intelligence session complete request operation used
+ * by this module and its client applications.
+ */
 void umi_language_intelligence_intelligence_session_complete_request(UmiLanguageIntelligenceIntelligenceSession *session, UmiStatus status);
+/**
+ * Provide the language intelligence intelligence session active requests operation used by
+ * this module and its client applications.
+ */
 size_t umi_language_intelligence_intelligence_session_active_requests(const UmiLanguageIntelligenceIntelligenceSession *session);
+/**
+ * Provide the language intelligence intelligence session refresh state operation used by
+ * this module and its client applications.
+ */
 void umi_language_intelligence_intelligence_session_refresh_state(UmiLanguageIntelligenceIntelligenceSession *session);
 #ifdef __cplusplus
 }

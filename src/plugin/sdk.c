@@ -24,6 +24,10 @@ struct UmiPluginSdkServiceRegistry {
     size_t count;
 };
 
+/*
+ * Check that plugin sdk descriptor satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_plugin_sdk_descriptor_validate(
     const UmiPluginSdkDescriptor *descriptor,
     uint32_t host_sdk_abi,
@@ -31,26 +35,34 @@ UmiStatus umi_plugin_sdk_descriptor_validate(
     char *out_reason,
     size_t reason_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL || out_reason == NULL || reason_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->struct_size < sizeof(*descriptor)) {
         (void)snprintf(out_reason, reason_capacity,
                        "SDK descriptor structure is too small");
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->sdk_abi_version != host_sdk_abi) {
         (void)snprintf(out_reason, reason_capacity,
                        "SDK ABI %u does not match host ABI %u",
                        descriptor->sdk_abi_version, host_sdk_abi);
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->minimum_framework_abi > framework_abi) {
         (void)snprintf(out_reason, reason_capacity,
                        "extension requires Framework ABI %u",
                        descriptor->minimum_framework_abi);
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (descriptor->plugin_id[0] == '\0' || descriptor->entry_symbol[0] == '\0') {
         (void)snprintf(out_reason, reason_capacity,
                        "extension identity and entry symbol are required");
@@ -60,33 +72,56 @@ UmiStatus umi_plugin_sdk_descriptor_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise plugin sdk service registry from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_plugin_sdk_service_registry_create(
     UmiPluginSdkServiceRegistry **out_registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = (UmiPluginSdkServiceRegistry *)calloc(1U, sizeof(**out_registry));
     return *out_registry != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }
 
+/*
+ * Release or reset state held by plugin sdk service registry so the same storage can be
+ * reused safely.
+ */
 void umi_plugin_sdk_service_registry_destroy(UmiPluginSdkServiceRegistry *registry)
 {
     free(registry);
 }
 
+/*
+ * Add plugin sdk service registry only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_plugin_sdk_service_registry_add(
     UmiPluginSdkServiceRegistry *registry,
     const UmiPluginSdkService *service)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || service == NULL || service->service_id[0] == '\0' ||
         service->version == 0U || service->service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->items[index].service_id, service->service_id) == 0) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_PLUGIN_SDK_SERVICE_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -94,21 +129,35 @@ UmiStatus umi_plugin_sdk_service_registry_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the plugin sdk service registry resolve operation used by this module and its
+ * client applications.
+ */
 const void *umi_plugin_sdk_service_registry_resolve(
     const UmiPluginSdkServiceRegistry *registry,
     const char *service_id,
     uint32_t minimum_version)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || service_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         const UmiPluginSdkService *service = &registry->items[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(service->service_id, service_id) == 0 &&
             service->version >= minimum_version) return service->service;
     }
     return NULL;
 }
 
+/*
+ * Return the number of records represented by plugin sdk service registry without changing
+ * their state.
+ */
 size_t umi_plugin_sdk_service_registry_count(
     const UmiPluginSdkServiceRegistry *registry)
 {

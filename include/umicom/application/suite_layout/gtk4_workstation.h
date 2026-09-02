@@ -73,6 +73,10 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     UmiGtk4WorkstationCommandBarSnapshot command_bar;
 } UmiApplicationSuiteGtk4WorkstationSnapshot;
 
+/**
+ * Represent the application suite gtk4 workstation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationSuiteGtk4Workstation
     UmiApplicationSuiteGtk4Workstation;
 
@@ -331,6 +335,14 @@ UmiStatus umi_application_suite_gtk4_workstation_apply_panel_settings(
  *         destroy it separately from the workstation.
  */
 GtkWidget *umi_application_suite_gtk4_workstation_widget(
+    UmiApplicationSuiteGtk4Workstation *workstation);
+/**
+ * Rebuilds visible panels from the current layout and panel factory state.
+ *
+ * Product hosts call this after a controller changes its toolkit-neutral view
+ * state. The layout itself is not changed and no business command is repeated.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_refresh(
     UmiApplicationSuiteGtk4Workstation *workstation);
 /**
  * Copies observable layout, window and editing state.

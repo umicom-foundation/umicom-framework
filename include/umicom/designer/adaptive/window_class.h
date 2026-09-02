@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive window class data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveWindowClass {
     char class_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     int32_t minimum_width;

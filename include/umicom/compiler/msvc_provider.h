@@ -15,5 +15,9 @@
 #ifndef UMICOM_COMPILER_MSVC_PROVIDER_H
 #define UMICOM_COMPILER_MSVC_PROVIDER_H
 #include "umicom/compiler/provider.h"
+/**
+ * Provide the compiler msvc provider operation used by this module and its client
+ * applications.
+ */
 UmiCompilerProvider umi_compiler_msvc_provider(const char *executable,const char *target);
 #endif

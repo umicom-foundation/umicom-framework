@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/curve_reference.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCurveReference x; CHECK(umi_curve_reference_init(&x,"ID","Name","CODE")==UMI_STATUS_OK); CHECK(umi_curve_reference_is_valid(&x));

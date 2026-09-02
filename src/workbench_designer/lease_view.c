@@ -18,13 +18,25 @@
 #include "internal.h"
 
 
+/*
+ * Initialise workbench designer lease view from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_lease_view_init(UmiWorkbenchDesignerLeaseView *view)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL) return;
     (void)memset(view, 0, sizeof(*view));
     view->state = UMI_WORKBENCH_DESIGNER_LEASE_NONE;
 }
 
+/*
+ * Provide the workbench designer lease view update operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_lease_view_update(
     UmiWorkbenchDesignerLeaseView *view,
     const char *layout_id,
@@ -35,6 +47,10 @@ UmiStatus umi_workbench_designer_lease_view_update(
     uint64_t expires_at_ms,
     bool local_holder)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL || layout_id == NULL || holder_user_id == NULL ||
         holder_client_id == NULL || fencing_token == 0U ||
         expires_at_ms <= acquired_at_ms) return UMI_STATUS_INVALID_ARGUMENT;
@@ -51,11 +67,20 @@ UmiStatus umi_workbench_designer_lease_view_update(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer lease view expire operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_lease_view_expire(
     UmiWorkbenchDesignerLeaseView *view,
     uint64_t now_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL) return;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (view->expires_at_ms != 0U && now_ms >= view->expires_at_ms &&
         view->state != UMI_WORKBENCH_DESIGNER_LEASE_EXPIRED) {
         view->state = UMI_WORKBENCH_DESIGNER_LEASE_EXPIRED;
@@ -63,6 +88,10 @@ void umi_workbench_designer_lease_view_expire(
     }
 }
 
+/*
+ * Provide the workbench designer lease view editable operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_lease_view_editable(
     const UmiWorkbenchDesignerLeaseView *view)
 {

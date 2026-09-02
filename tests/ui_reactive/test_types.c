@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { return umi_ui_reactive_identifier_valid("workspace.editor.selection") ? 0 : 1; }

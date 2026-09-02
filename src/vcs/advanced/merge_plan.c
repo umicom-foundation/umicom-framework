@@ -21,8 +21,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced merge plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_merge_plan_init(UmiVcsAdvancedMergePlan *plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) {
         return;
     }
@@ -34,11 +42,19 @@ void umi_vcs_advanced_merge_plan_init(UmiVcsAdvancedMergePlan *plan)
     plan->safety = UMI_VCS_SAFETY_REVIEW;
 }
 
+/*
+ * Copy vcs advanced merge plan into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_merge_plan_set(UmiVcsAdvancedMergePlan *plan,
                                            const char *source,
                                            const char *target)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL ||
         !umi_vcs_advanced_text_present(source) ||
         !umi_vcs_advanced_text_present(target) ||
@@ -48,6 +64,7 @@ UmiStatus umi_vcs_advanced_merge_plan_set(UmiVcsAdvancedMergePlan *plan,
 
     status = umi_vcs_advanced_copy_text(
         plan->source, sizeof(plan->source), source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -55,6 +72,10 @@ UmiStatus umi_vcs_advanced_merge_plan_set(UmiVcsAdvancedMergePlan *plan,
         plan->target, sizeof(plan->target), target);
 }
 
+/*
+ * Provide the vcs advanced merge plan ready operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_merge_plan_ready(const UmiVcsAdvancedMergePlan *plan,
                                        int worktree_clean,
                                        int conflicts)

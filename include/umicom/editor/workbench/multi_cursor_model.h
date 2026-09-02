@@ -24,9 +24,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb multi cursor model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbMultiCursorModel { UmiEditorWbPosition cursors[UMI_EDITOR_WB_MAX_SEGMENTS]; size_t count; } UmiEditorWbMultiCursorModel;
+/**
+ * Initialise editor wb multi cursor model from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_multi_cursor_model_init(UmiEditorWbMultiCursorModel *model);
+/**
+ * Add editor wb multi cursor model only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_editor_wb_multi_cursor_model_add(UmiEditorWbMultiCursorModel *model,UmiEditorWbPosition position);
+/**
+ * Remove editor wb multi cursor model while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_wb_multi_cursor_model_remove(UmiEditorWbMultiCursorModel *model,UmiEditorWbPosition position);
 
 #ifdef __cplusplus

@@ -34,6 +34,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital asset service data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalAssetService {
     UmiDigitalNetworkCatalogue networks;
     UmiDigitalAssetCatalogue assets;

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance application brand binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceApplicationBrandBinding {
     char application_id[UMI_APPEARANCE_ID_CAPACITY];
     char brand_id[UMI_APPEARANCE_ID_CAPACITY];

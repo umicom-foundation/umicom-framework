@@ -20,6 +20,10 @@
 #include "umicom/debug_runtime/workbench_bridge.h"
 #include "umicom/test_runtime/check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugRuntimePlatform *runtime = NULL;

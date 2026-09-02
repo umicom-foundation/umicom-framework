@@ -18,27 +18,45 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(const UmiApplicationShellLayout *layout,
                          const char *contribution_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || contribution_id == NULL) return (size_t)-1;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->placement_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(layout->placements[index].contribution_id,
                    contribution_id) == 0) {
             return index;
@@ -48,11 +66,19 @@ static size_t find_index(const UmiApplicationShellLayout *layout,
     return (size_t)-1;
 }
 
+/*
+ * Initialise application shell layout from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_application_shell_layout_init(
     UmiApplicationShellLayout *layout,
     const char *layout_id,
     const char *title)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL) return;
 
     (void)memset(layout, 0, sizeof(*layout));
@@ -61,6 +87,10 @@ void umi_application_shell_layout_init(
     layout->revision = 1U;
 }
 
+/*
+ * Provide the application shell layout place operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_shell_layout_place(
     UmiApplicationShellLayout *layout,
     const char *contribution_id,
@@ -72,6 +102,10 @@ UmiStatus umi_application_shell_layout_place(
     UmiApplicationShellPlacement *placement;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || contribution_id == NULL ||
         contribution_id[0] == '\0' ||
         region < UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR ||
@@ -80,7 +114,9 @@ UmiStatus umi_application_shell_layout_place(
     }
 
     index = find_index(layout, contribution_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == (size_t)-1) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (layout->placement_count >=
             UMI_APPLICATION_SHELL_LAYOUT_MAX_ITEMS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -104,6 +140,10 @@ UmiStatus umi_application_shell_layout_place(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application shell layout move operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_shell_layout_move(
     UmiApplicationShellLayout *layout,
     const UmiApplicationShellDropTransaction *transaction)
@@ -111,6 +151,10 @@ UmiStatus umi_application_shell_layout_move(
     UmiApplicationShellPlacement placement;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || transaction == NULL ||
         !transaction->accepted) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -120,6 +164,7 @@ UmiStatus umi_application_shell_layout_move(
         layout,
         transaction->source_contribution_id,
         &placement);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_application_shell_layout_place(
@@ -131,6 +176,10 @@ UmiStatus umi_application_shell_layout_move(
         placement.visible);
 }
 
+/*
+ * Find application shell layout while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_application_shell_layout_find(
     const UmiApplicationShellLayout *layout,
     const char *contribution_id,
@@ -138,12 +187,17 @@ UmiStatus umi_application_shell_layout_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || contribution_id == NULL ||
         out_placement == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = find_index(layout, contribution_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == (size_t)-1) return UMI_STATUS_NOT_FOUND;
 
     *out_placement = layout->placements[index];

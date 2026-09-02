@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the workbench context host publish selection operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_host_publish_selection(
     UmiWorkbenchContextHost * host,
     const char * group_id,

@@ -17,18 +17,28 @@
 
 #include <string.h>
 
+/* Provide the present text operation used by this module and its client applications. */
 static int present_text(const char *text)
 {
     return text != NULL && text[0] != '\0';
 }
 
+/* Check that module kind satisfies its contract before another service relies on it. */
 static int module_kind_valid(UmiModuleKind kind)
 {
     return kind >= UMI_MODULE_CORE && kind <= UMI_MODULE_AGENT;
 }
 
+/*
+ * Provide the runtime contract snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_runtime_contract_snapshot(UmiRuntimeContractSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -51,26 +61,44 @@ UmiStatus umi_runtime_contract_snapshot(UmiRuntimeContractSnapshot *out_snapshot
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the runtime contract version at least operation used by this module and its
+ * client applications.
+ */
 int umi_runtime_contract_version_at_least(const UmiVersion *actual,
                                           const UmiVersion *minimum)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (actual == NULL || minimum == NULL) {
         return 0;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (actual->major != minimum->major) {
         return actual->major > minimum->major;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (actual->minor != minimum->minor) {
         return actual->minor > minimum->minor;
     }
     return actual->patch >= minimum->patch;
 }
 
+/*
+ * Provide the runtime contract abi matches operation used by this module and its client
+ * applications.
+ */
 int umi_runtime_contract_abi_matches(uint32_t abi_version)
 {
     return abi_version == UMICOM_FRAMEWORK_ABI_VERSION;
 }
 
+/*
+ * Check that runtime module contract satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_runtime_module_contract_validate(
     const UmiModuleDescriptor *descriptor,
     UmiModuleContractReport *out_report)
@@ -78,6 +106,10 @@ UmiStatus umi_runtime_module_contract_validate(
     int start_present;
     int stop_present;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

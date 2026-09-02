@@ -22,8 +22,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the privacy filter data shared with callers of this public contract.
+ */
 typedef struct UmiPrivacyFilter { UmiRedactor *redactor; } UmiPrivacyFilter;
+/**
+ * Initialise privacy filter from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_privacy_filter_init(UmiPrivacyFilter *filter, UmiRedactor *redactor);
+/**
+ * Provide the privacy filter value operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_privacy_filter_value(const UmiPrivacyFilter *filter,
                                    const char *field_name,
                                    const char *value,

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant service data shared with callers of this public contract.
+ */
 typedef struct UmiQuantService { uint32_t curve_count; uint32_t surface_count; uint32_t model_count; uint32_t scenario_count; int market_data_ready; int calibration_ready; } UmiQuantService;
 /* Initialise an empty quantitative service state. */
 void umi_quant_service_init(UmiQuantService *service);

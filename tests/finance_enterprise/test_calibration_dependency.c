@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/calibration_dependency.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseCalibrationDependency d; CHECK(umi_enterprise_calibration_dependency_init(&d,"discount","forward")==UMI_STATUS_OK); CHECK(umi_enterprise_calibration_dependency_init(&d,"x","x")==UMI_STATUS_INVALID_ARGUMENT); return 0; }

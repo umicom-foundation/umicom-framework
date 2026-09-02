@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data migration checkpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataMigrationCheckpoint {
     char checkpoint_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char migration_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];

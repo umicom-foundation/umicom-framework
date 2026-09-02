@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/profiles/js_debug.h"
 
+/*
+ * Provide the debug runtime profile js debug operation used by this module and its client
+ * applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_js_debug(void)
 {
     static const UmiDebugAdapterProfile profile = {

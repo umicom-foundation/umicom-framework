@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/latency_metrics.h"
 
+/*
+ * Provide the developer capability latency metrics operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_latency_metrics(void)
 {

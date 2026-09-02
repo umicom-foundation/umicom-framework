@@ -25,6 +25,10 @@
 #include "umicom/studio_runtime/runtime_commands.h"
 #include "umicom/studio_runtime/surface_catalogue.h"
 
+/*
+ * Provide the studio runtime contract operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeContract *umi_studio_runtime_contract(void)
 {
     static const UmiStudioRuntimeContract contract = {
@@ -44,11 +48,19 @@ const UmiStudioRuntimeContract *umi_studio_runtime_contract(void)
     return &contract;
 }
 
+/*
+ * Check that studio runtime contract satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_studio_runtime_contract_validate(
     const UmiStudioRuntimeContract *contract)
 {
     const UmiDeveloperWorkbenchPerspectiveDefinition *perspective;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (contract == NULL ||
         contract->application_id == NULL ||
         contract->application_id[0] == '\0' ||
@@ -70,17 +82,23 @@ UmiStatus umi_studio_runtime_contract_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_application_shell_persona_find(
             contract->shell_persona_id) == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_studio_layout_catalogue_find(
             contract->default_layout_id) == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     perspective = umi_ide_integrated_development_perspective();
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (perspective == NULL ||
         strcmp(perspective->perspective_id, contract->perspective_id) != 0) {
         return UMI_STATUS_NOT_FOUND;

@@ -91,6 +91,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
     }
 };
 
+/*
+ * Provide the application shell profile build dashboard operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_build_dashboard(void)
 {
     static const UmiApplicationShellProfileDefinition profile = {

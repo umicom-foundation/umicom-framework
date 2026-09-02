@@ -20,4 +20,5 @@
 
 #include "umicom/platform/cross_target/hardware_bus.h"
 
-UmiStatus umi_ct_hardware_bus_validate(const UmiCtHardwareBus*b){if(b==NULL||!umi_ct_id_valid(b->bus_id)||b->type<UMI_CT_BUS_PLATFORM||b->type>UMI_CT_BUS_SPI||(b->address_bits!=32U&&b->address_bits!=64U))return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that ct hardware bus satisfies its contract before another service relies on it. */
+UmiStatus umi_ct_hardware_bus_validate(const UmiCtHardwareBus*b){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(b==NULL||!umi_ct_id_valid(b->bus_id)||b->type<UMI_CT_BUS_PLATFORM||b->type>UMI_CT_BUS_SPI||(b->address_bits!=32U&&b->address_bits!=64U))return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

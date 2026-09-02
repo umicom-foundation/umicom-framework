@@ -20,18 +20,23 @@ UmiStatus umi_adaptive_device_family_classify(int32_t logical_width,
                                                int keyboard,
                                                UmiAdaptiveDeviceFamily *out_family)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (logical_width <= 0 || out_family == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (logical_width < 600) {
         *out_family = UMI_ADAPTIVE_DEVICE_HANDSET;
-    } else if (logical_width < 1024 && touch != 0) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (logical_width < 1024 && touch != 0) {
         *out_family = UMI_ADAPTIVE_DEVICE_TABLET;
-    } else if (logical_width < 1600 && keyboard != 0) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (logical_width < 1600 && keyboard != 0) {
         *out_family = UMI_ADAPTIVE_DEVICE_LAPTOP;
-    } else if (logical_width >= 2560) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (logical_width >= 2560) {
         *out_family = UMI_ADAPTIVE_DEVICE_LARGE_DISPLAY;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         *out_family = UMI_ADAPTIVE_DEVICE_DESKTOP;
     }
     return UMI_STATUS_OK;

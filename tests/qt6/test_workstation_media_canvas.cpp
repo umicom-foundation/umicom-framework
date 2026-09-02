@@ -3,6 +3,22 @@
  * File: tests/qt6/test_workstation_media_canvas.cpp
  *
  * PURPOSE:
+ *   Verify the test workstation media canvas behaviour and report a clear
+ *   failure when its contract changes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/qt6/test_workstation_media_canvas.cpp
+ *
+ * PURPOSE:
  *   Verify the public Qt6 adapter descriptor and stable surface contract for qt6.ws.media_canvas.
  *
  * Created by: Sammy Hegab
@@ -15,6 +31,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main() {
     const UmiQt6SurfaceDescriptor *descriptor = umi_qt6_ws_media_canvas_descriptor();
     CHECK(descriptor != nullptr);

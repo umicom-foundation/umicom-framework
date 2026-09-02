@@ -23,6 +23,10 @@
 /* Initialise snapshot evidence without taking ownership of domain books. */
 void umi_commodity_commodity_snapshot_init(UmiCommoditySnapshot *value, int64_t captured_time_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value != NULL) {
         memset(value, 0, sizeof *value);
         value->captured_time_ms = captured_time_ms;

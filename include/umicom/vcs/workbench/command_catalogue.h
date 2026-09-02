@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs workbench command data shared with callers of this public contract.
+ */
 typedef struct UmiVcsWorkbenchCommand {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +39,20 @@ typedef struct UmiVcsWorkbenchCommand {
     int requires_selection;
 } UmiVcsWorkbenchCommand;
 
+/**
+ * Return the number of records represented by vcs workbench command without changing their
+ * state.
+ */
 size_t umi_vcs_workbench_command_count(void);
+/**
+ * Find vcs workbench command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiVcsWorkbenchCommand *umi_vcs_workbench_command_at(size_t index);
+/**
+ * Find vcs workbench command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiVcsWorkbenchCommand *umi_vcs_workbench_command_find(
     const char *command_id);
 

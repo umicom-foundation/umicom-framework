@@ -31,10 +31,28 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/portability_contract.h"
+/**
+ * Represent the ct portability entry data shared with callers of this public contract.
+ */
 typedef struct UmiCtPortabilityEntry { UmiCtOperatingSystem os; UmiCtPortabilityCapability capability; UmiCtSupportLevel support; } UmiCtPortabilityEntry;
+/**
+ * Represent the ct portability matrix data shared with callers of this public contract.
+ */
 typedef struct UmiCtPortabilityMatrix { UmiCtPortabilityEntry items[UMI_CT_MAX_ITEMS]; size_t count; } UmiCtPortabilityMatrix;
+/**
+ * Initialise ct portability matrix from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ct_portability_matrix_init(UmiCtPortabilityMatrix *matrix);
+/**
+ * Copy ct portability matrix into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_ct_portability_matrix_set(UmiCtPortabilityMatrix *matrix,UmiCtOperatingSystem os,UmiCtPortabilityCapability capability,UmiCtSupportLevel support);
+/**
+ * Provide the ct portability matrix get operation used by this module and its client
+ * applications.
+ */
 UmiCtSupportLevel umi_ct_portability_matrix_get(const UmiCtPortabilityMatrix *matrix,UmiCtOperatingSystem os,UmiCtPortabilityCapability capability);
 
 #ifdef __cplusplus

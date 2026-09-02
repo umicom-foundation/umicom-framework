@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-ARCH-GLOBAL-001", "", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_ARCHITECTURE, 58U, UMI_CODEGUARD_MATCH_CODE, "extern int ", "Extern state can create hidden coupling across modules.", "Expose state through a narrow service/capability contract instead of shared globals."}
 };
 
+/*
+ * Provide the codeguard rules global state operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_global_state(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

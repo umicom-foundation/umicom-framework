@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics data point data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsDataPoint { double x; double y; int valid; } UmiAnalyticsDataPoint;
+/**
+ * Initialise analytics data point from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_analytics_data_point_init(UmiAnalyticsDataPoint *point, double x, double y);
+/**
+ * Check that analytics data point satisfies its contract before another service relies on
+ * it.
+ */
 int umi_analytics_data_point_is_valid(const UmiAnalyticsDataPoint *point);
 
 #ifdef __cplusplus

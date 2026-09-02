@@ -15,6 +15,10 @@
 
 #include <gtk/gtk.h>
 #include "umicom/context_channel/context_channel.h"
+/*
+ * Provide the gtk4 context channel toolbar new operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_gtk4_context_channel_toolbar_new(const char *title,const char *detail)
 {
     GtkWidget *box=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6);

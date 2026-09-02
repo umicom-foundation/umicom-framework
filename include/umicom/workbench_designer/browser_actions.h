@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer browser action kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchDesignerBrowserActionKind {
     UMI_WORKBENCH_DESIGNER_BROWSER_OPEN = 1,
     UMI_WORKBENCH_DESIGNER_BROWSER_CREATE = 2,
@@ -37,6 +41,10 @@ typedef enum UmiWorkbenchDesignerBrowserActionKind {
     UMI_WORKBENCH_DESIGNER_BROWSER_SHARE = 10
 } UmiWorkbenchDesignerBrowserActionKind;
 
+/**
+ * Represent the workbench designer browser action plan data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerBrowserActionPlan {
     UmiWorkbenchDesignerBrowserActionKind kind;
     char action_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -51,7 +59,15 @@ typedef struct UmiWorkbenchDesignerBrowserActionPlan {
     bool permitted;
 } UmiWorkbenchDesignerBrowserActionPlan;
 
+/**
+ * Initialise workbench designer browser action from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_browser_action_init(UmiWorkbenchDesignerBrowserActionPlan *plan, UmiWorkbenchDesignerBrowserActionKind kind, const char *action_id);
+/**
+ * Provide the workbench designer browser action prepare operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_browser_action_prepare(const UmiWorkbenchDesignerBrowser *browser, UmiWorkbenchDesignerBrowserActionPlan *plan);
 
 #ifdef __cplusplus

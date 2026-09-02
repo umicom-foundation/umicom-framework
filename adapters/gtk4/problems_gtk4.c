@@ -17,10 +17,12 @@
 
 #include <stdio.h>
 
+/* Provide the integer property operation used by this module and its client applications. */
 static int64_t integer_property(const UmiUiViewPresentation *presentation,
                                 const char *key)
 {
     UmiUiPropertySnapshot property;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_view_presentation_find_property(
             presentation, key, &property) == UMI_STATUS_OK &&
         property.value.kind == UMI_UI_VALUE_INTEGER) {
@@ -29,6 +31,10 @@ static int64_t integer_property(const UmiUiViewPresentation *presentation,
     return 0;
 }
 
+/*
+ * Provide the gtk4 problems widget operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_problems_widget(
     const UmiUiViewPresentation *presentation)
 {
@@ -39,6 +45,10 @@ GtkWidget *umi_gtk4_problems_widget(
     char summary_text[192];
     int64_t count;
     int64_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (presentation == NULL) return NULL;
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_widget_set_margin_top(root, 6);
@@ -71,6 +81,7 @@ GtkWidget *umi_gtk4_problems_widget(
     umi_gtk4_context_interaction_tag_problem_list(list);
 
     count = integer_property(presentation, "problem.count");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index < count; ++index) {
         char key[64];
         UmiUiPropertySnapshot row;
@@ -81,6 +92,7 @@ GtkWidget *umi_gtk4_problems_widget(
             sizeof(key),
             "problem.row.%lld",
             (long long)index);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_view_presentation_find_property(
                 presentation, key, &row) != UMI_STATUS_OK ||
             row.value.kind != UMI_UI_VALUE_STRING) {

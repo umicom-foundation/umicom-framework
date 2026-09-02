@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting entity data shared with callers of this public contract.
+ */
 typedef struct UmiReportingEntity {
     char entity_id[UMI_REG_ID_CAPACITY];
     char legal_name[UMI_REG_NAME_CAPACITY];

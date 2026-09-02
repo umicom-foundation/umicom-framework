@@ -28,6 +28,10 @@
 
 #include "umicom/editor/intelligence_command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
@@ -35,6 +39,7 @@ int main(void)
     const UmiEditorIntelligenceCommandDescriptor *command;
 
     assert(umi_editor_intelligence_command_count() == 12U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_editor_intelligence_command_count(); ++index) {
         command = umi_editor_intelligence_command_at(index);
         assert(command != NULL);
@@ -46,6 +51,7 @@ int main(void)
         assert(umi_editor_intelligence_command_find(command->id) == command);
         assert(umi_editor_intelligence_command_for_kind(command->kind) ==
                command);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = index + 1U;
              comparison < umi_editor_intelligence_command_count();
              ++comparison) {

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema index data shared with callers of this public contract.
+ */
 typedef struct UmiDataSchemaIndex {
     char index_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char table_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];

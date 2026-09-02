@@ -18,6 +18,10 @@
 #include "internal.h"
 
 
+/*
+ * Provide the workbench designer snapshot capture operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_snapshot_capture(
     const UmiWorkbenchDesignerController *controller,
     UmiWorkbenchDesignerSnapshot *out_snapshot)
@@ -27,6 +31,10 @@ UmiStatus umi_workbench_designer_snapshot_capture(
     const UmiWorkbenchDesignerSelection *selection;
     const UmiWorkbenchDesignerDiagnostics *diagnostics;
     const UmiWorkbenchDesignerStatusModel *status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || out_snapshot == NULL || controller->service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -40,6 +48,10 @@ UmiStatus umi_workbench_designer_snapshot_capture(
         umi_workbench_designer_service_revision(controller->service);
     out_snapshot->controller_revision = controller->revision;
     active = umi_workbench_designer_service_active(controller->service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (active == NULL) return UMI_STATUS_OK;
     (void)umi_workbench_designer_copy_text(
         out_snapshot->active_session_id,

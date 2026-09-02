@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/diagnostic_parser.h"
 
+/*
+ * Check that developer diagnostic parser satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_diagnostic_parser_validate(
     const UmiDeveloperDiagnosticParser *parser)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (parser == NULL ||
         parser->structure_size != sizeof(*parser) ||
         parser->api_version != UMI_DEVELOPER_PRODUCTIVITY_API_VERSION ||

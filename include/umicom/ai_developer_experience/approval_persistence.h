@@ -26,11 +26,19 @@ extern "C" {
 #define UMI_AI_DEVELOPER_PERSISTED_APPROVALS 5U
 #define UMI_AI_DEVELOPER_APPROVAL_ARGUMENT_CHUNKS 8U
 
+/**
+ * Write ai developer approvals in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ai_developer_approvals_save(
     UmiSessionStore *store,
     const char *key_prefix,
     const UmiAiDeveloperApprovalQueue *queue);
 
+/**
+ * Provide the ai developer approvals restore operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_approvals_restore(
     const UmiSessionStore *store,
     const char *key_prefix,

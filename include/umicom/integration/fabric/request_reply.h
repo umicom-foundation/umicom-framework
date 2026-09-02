@@ -26,8 +26,19 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric request reply data shared with callers of this public contract.
+ */
 typedef struct UmiFabricRequestReply { char request_id[UMI_FABRIC_ID_CAPACITY]; char correlation_id[UMI_FABRIC_ID_CAPACITY]; bool completed; int32_t response_code; uint64_t completed_ms; } UmiFabricRequestReply;
+/**
+ * Provide the fabric request reply begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_request_reply_begin(UmiFabricRequestReply *state,const UmiFabricMessageHeader *request);
+/**
+ * Provide the fabric request reply complete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_request_reply_complete(UmiFabricRequestReply *state,const UmiFabricMessageHeader *reply,int32_t response_code,uint64_t now_ms);
 
 #ifdef __cplusplus

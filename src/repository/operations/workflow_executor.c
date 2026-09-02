@@ -24,6 +24,10 @@
 #include "umicom/repository/repository.h"
 #include "umicom/repository/workflow_validation.h"
 
+/*
+ * Provide the repository workflow append output operation used by this module and its
+ * client applications.
+ */
 static UmiStatus umi_repository_workflow_append_output(
     UmiRepositoryWorkflowReport *report,
     const char *text)
@@ -32,12 +36,18 @@ static UmiStatus umi_repository_workflow_append_output(
     size_t available;
     size_t text_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || text == NULL || text[0] == '\0') {
         return UMI_STATUS_OK;
     }
     current_length = strlen(report->output);
     text_length = strlen(text);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (current_length > 0U && report->output[current_length - 1U] != '\n') {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (current_length + 1U >= sizeof(report->output)) {
             report->output_truncated = 1;
             return UMI_STATUS_OK;
@@ -46,6 +56,7 @@ static UmiStatus umi_repository_workflow_append_output(
         report->output[current_length] = '\0';
     }
     available = sizeof(report->output) - current_length - 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (text_length > available) {
         (void)memcpy(report->output + current_length, text, available);
         report->output[current_length + available] = '\0';
@@ -56,6 +67,10 @@ static UmiStatus umi_repository_workflow_append_output(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the repository workflow run git operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_run_git(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -69,6 +84,10 @@ static UmiStatus umi_repository_workflow_run_git(
     UmiProcessResult process_result;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (git == NULL || git->state != UMI_TOOL_VALIDATED ||
         working_directory == NULL || arguments == NULL ||
         argument_count == 0U || report == NULL) {
@@ -97,13 +116,19 @@ static UmiStatus umi_repository_workflow_run_git(
     report->output_truncated =
         report->output_truncated || process_result.output_truncated;
     (void)umi_repository_workflow_append_output(report, process_result.output);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!accept_nonzero && process_result.exit_code != 0) {
         return UMI_STATUS_IO_ERROR;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the repository workflow check index lock operation used by this module and its
+ * client applications.
+ */
 static UmiStatus umi_repository_workflow_check_index_lock(
     const UmiRepositoryWorkflowRequest *request,
     UmiRepositoryWorkflowReport *report)
@@ -112,6 +137,7 @@ static UmiStatus umi_repository_workflow_check_index_lock(
     char lock_path[UMI_REPOSITORY_PATH_CAPACITY];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_repository_workflow_action_writes_index(request->action)) {
         return UMI_STATUS_OK;
     }
@@ -119,13 +145,17 @@ static UmiStatus umi_repository_workflow_check_index_lock(
                          sizeof(git_directory),
                          request->repository_root,
                          ".git");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!umi_fs_is_directory(git_directory)) return UMI_STATUS_OK;
     status = umi_fs_join(lock_path,
                          sizeof(lock_path),
                          git_directory,
                          "index.lock");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!umi_fs_is_file(lock_path)) return UMI_STATUS_OK;
 
     (void)snprintf(
@@ -138,6 +168,10 @@ static UmiStatus umi_repository_workflow_check_index_lock(
     return UMI_STATUS_BUSY;
 }
 
+/*
+ * Provide the repository workflow status operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_status(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -149,6 +183,10 @@ static UmiStatus umi_repository_workflow_status(
         git, environment, repository_root, arguments, 3U, 0, report);
 }
 
+/*
+ * Provide the repository workflow stage operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_stage(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -158,12 +196,17 @@ static UmiStatus umi_repository_workflow_stage(
     const char *arguments[] = {"add", "-A"};
     UmiStatus status = umi_repository_workflow_run_git(
         git, environment, repository_root, arguments, 2U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     report->staged = 1;
     return umi_repository_workflow_status(
         git, environment, repository_root, report);
 }
 
+/*
+ * Provide the repository workflow commit operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_commit(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -179,24 +222,33 @@ static UmiStatus umi_repository_workflow_commit(
     status = umi_repository_workflow_run_git(
         git, environment, repository_root,
         quiet_arguments, 3U, 1, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report->last_exit_code == 0) {
         report->no_changes = 1;
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
 
     status = umi_repository_workflow_run_git(
         git, environment, repository_root,
         check_arguments, 3U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_repository_workflow_run_git(
         git, environment, repository_root,
         commit_arguments, 3U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) report->commit_created = 1;
     return status;
 }
 
+/*
+ * Provide the repository workflow push operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_push(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -208,12 +260,14 @@ static UmiStatus umi_repository_workflow_push(
     UmiStatus status;
 
     arguments[count++] = "push";
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (request->set_upstream) arguments[count++] = "--set-upstream";
     arguments[count++] = request->remote_name;
     arguments[count++] = request->branch;
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         arguments, count, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) report->pushed = 1;
     return status;
 }
@@ -245,8 +299,11 @@ static UmiStatus umi_repository_workflow_update(
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         worktree_arguments, 2U, 1, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report->last_exit_code != 0) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
         (void)umi_repository_workflow_append_output(
             report,
@@ -258,8 +315,11 @@ static UmiStatus umi_repository_workflow_update(
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         index_arguments, 3U, 1, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report->last_exit_code != 0) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (report->last_exit_code != 1) return UMI_STATUS_IO_ERROR;
         (void)umi_repository_workflow_append_output(
             report,
@@ -271,27 +331,36 @@ static UmiStatus umi_repository_workflow_update(
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         fetch_arguments, 4U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     report->fetched = 1;
 
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         merge_arguments, 3U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     report->updated = 1;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!request->recursive) return UMI_STATUS_OK;
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         sync_arguments, 3U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         submodule_arguments, 4U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) report->submodules_updated = 1;
     return status;
 }
 
+/*
+ * Provide the repository workflow clone operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_clone(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -303,16 +372,24 @@ static UmiStatus umi_repository_workflow_clone(
     size_t count = 0U;
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_fs_is_directory(request->repository_root)) {
         status = umi_fs_make_directories(request->repository_root);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     arguments[count++] = "clone";
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (request->recursive) arguments[count++] = "--recurse-submodules";
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->branch != NULL && request->branch[0] != '\0') {
         arguments[count++] = "--branch";
         arguments[count++] = request->branch;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->clone_depth > 0U) {
         (void)snprintf(depth, sizeof(depth), "%u", request->clone_depth);
         arguments[count++] = "--depth";
@@ -324,10 +401,15 @@ static UmiStatus umi_repository_workflow_clone(
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         arguments, count, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) report->cloned = 1;
     return status;
 }
 
+/*
+ * Provide the repository workflow initialise operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_repository_workflow_initialise(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -340,25 +422,37 @@ static UmiStatus umi_repository_workflow_initialise(
     };
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_fs_is_directory(request->repository_root)) {
         status = umi_fs_make_directories(request->repository_root);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         init_arguments, 3U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     report->initialised = 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->remote_url == NULL || request->remote_url[0] == '\0') {
         return UMI_STATUS_OK;
     }
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         remote_arguments, 4U, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) report->remote_added = 1;
     return status;
 }
 
+/*
+ * Provide the repository workflow add submodule operation used by this module and its
+ * client applications.
+ */
 static UmiStatus umi_repository_workflow_add_submodule(
     const UmiToolInfo *git,
     UmiEnvironmentPlan *environment,
@@ -371,6 +465,10 @@ static UmiStatus umi_repository_workflow_add_submodule(
 
     arguments[count++] = "submodule";
     arguments[count++] = "add";
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->branch != NULL && request->branch[0] != '\0') {
         arguments[count++] = "-b";
         arguments[count++] = request->branch;
@@ -381,10 +479,15 @@ static UmiStatus umi_repository_workflow_add_submodule(
     status = umi_repository_workflow_run_git(
         git, environment, request->repository_root,
         arguments, count, 0, report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) report->submodule_added = 1;
     return status;
 }
 
+/*
+ * Provide the repository workflow format plan operation used by this module and its client
+ * applications.
+ */
 static void umi_repository_workflow_format_plan(
     const UmiRepositoryWorkflowRequest *request,
     UmiRepositoryWorkflowReport *report)
@@ -480,6 +583,10 @@ static void umi_repository_workflow_format_plan(
     report->planned = 1;
 }
 
+/*
+ * Provide the repository workflow execute sized operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_repository_workflow_execute_sized(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -496,6 +603,7 @@ UmiStatus umi_repository_workflow_execute_sized(
     if (out_report == NULL || caller_report_size != sizeof(*out_report)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_repository_workflow_report_initialize(
             out_report,
             caller_report_size,
@@ -505,23 +613,34 @@ UmiStatus umi_repository_workflow_execute_sized(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_repository_workflow_validate(request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         out_report->status = status;
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->dry_run) {
         umi_repository_workflow_format_plan(request, out_report);
         return UMI_STATUS_OK;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) {
         out_report->status = UMI_STATUS_INVALID_ARGUMENT;
         return out_report->status;
     }
     git = umi_toolchain_profile_tool(profile, UMI_TOOL_GIT);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (git == NULL || git->state != UMI_TOOL_VALIDATED) {
         out_report->status = UMI_STATUS_NOT_FOUND;
         return out_report->status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->action != UMI_REPOSITORY_WORKFLOW_CLONE &&
         request->action != UMI_REPOSITORY_WORKFLOW_INITIALISE &&
         !umi_fs_is_directory(request->repository_root)) {
@@ -529,11 +648,13 @@ UmiStatus umi_repository_workflow_execute_sized(
         return out_report->status;
     }
     status = umi_repository_workflow_check_index_lock(request, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         out_report->status = status;
         return status;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (request->action) {
         case UMI_REPOSITORY_WORKFLOW_CLONE:
             status = umi_repository_workflow_clone(
@@ -563,11 +684,13 @@ UmiStatus umi_repository_workflow_execute_sized(
         case UMI_REPOSITORY_WORKFLOW_PUBLISH:
             status = umi_repository_workflow_stage(
                 git, environment, request->repository_root, out_report);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 status = umi_repository_workflow_commit(
                     git, environment, request->repository_root,
                     request->commit_message, out_report);
             }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 status = umi_repository_workflow_push(
                     git, environment, request, out_report);

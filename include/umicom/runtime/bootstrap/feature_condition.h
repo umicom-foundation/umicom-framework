@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap feature condition match operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_feature_condition_match(const UmiBootstrapIdList *features,
                                            const char *feature_id);
 

@@ -18,6 +18,10 @@
 
 #include "umicom/finance/digital_asset/transaction_status.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     CHECK(umi_digital_asset_transaction_status_can_transition(UMI_DIGITAL_TX_CREATED, UMI_DIGITAL_TX_SIGNING));

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant curve node data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCurveNode {
     int32_t tenor_days;
     double value;

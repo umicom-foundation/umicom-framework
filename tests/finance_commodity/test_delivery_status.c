@@ -18,6 +18,10 @@
 
 #include "umicom/finance/commodity/delivery_status.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     CHECK(umi_commodity_delivery_status_can_transition(UMI_COMMODITY_DELIVERY_PLANNED, UMI_COMMODITY_DELIVERY_NOMINATED));

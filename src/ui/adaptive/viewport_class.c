@@ -18,6 +18,10 @@
 UmiStatus umi_adaptive_viewport_class_resolve(UmiAdaptiveViewport viewport,
                                               UmiDesignSizeClass *out_class)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport.width <= 0 || viewport.height <= 0 || out_class == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

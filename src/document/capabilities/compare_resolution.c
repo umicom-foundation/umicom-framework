@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/compare_resolution.h"
 
+/*
+ * Provide the document capability compare resolution operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_compare_resolution(void)
 {

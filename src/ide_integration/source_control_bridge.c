@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the ide source control target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_source_control_target(
     const char *path,
     uint32_t line,
@@ -24,6 +28,10 @@ UmiStatus umi_ide_source_control_target(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || path[0] == '\0' || out_target == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -52,6 +60,10 @@ UmiStatus umi_ide_source_control_target(
     return status;
 }
 
+/*
+ * Provide the ide source control summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_source_control_summary(
     const UmiDeveloperSourceControl *source_control,
     char *out_text,
@@ -61,6 +73,10 @@ UmiStatus umi_ide_source_control_summary(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_control == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -68,6 +84,7 @@ UmiStatus umi_ide_source_control_summary(
     status = umi_developer_source_control_snapshot(
         source_control,
         &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(

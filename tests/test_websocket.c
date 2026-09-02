@@ -20,4 +20,8 @@
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){const uint8_t text[]={'h','i'};uint8_t frame[32],payload[32];size_t fl=0U,pl=0U;UmiWebSocketOpcode op;assert(umi_websocket_encode(UMI_WS_TEXT,text,2U,frame,sizeof(frame),&fl)==UMI_STATUS_OK);assert(umi_websocket_decode(frame,fl,&op,payload,sizeof(payload),&pl)==UMI_STATUS_OK);assert(op==UMI_WS_TEXT&&pl==2U&&memcmp(payload,text,2U)==0);return 0;}

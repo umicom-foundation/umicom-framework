@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TEST_FIXTURES "umicom.developer.testing.test_fixtures"
 
+/**
+ * Provide the developer capability test fixtures operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_test_fixtures(void);
 

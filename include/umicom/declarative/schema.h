@@ -25,7 +25,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the decl schema data shared with callers of this public contract.
+ */
 typedef struct UmiDeclSchema { UmiDeclVersion version; UmiDeclComponentRegistry *components; int allow_unknown_properties; } UmiDeclSchema;
+/**
+ * Initialise decl schema from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_decl_schema_init(UmiDeclSchema *schema,UmiDeclComponentRegistry *components);
 #ifdef __cplusplus
 }

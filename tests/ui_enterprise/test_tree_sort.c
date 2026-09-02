@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/tree_sort.h"
 #include <stdio.h>
-int main(void){UmiUiEntTreeNode a,b;umi_ui_ent_tree_node_init(&a);umi_ui_ent_tree_node_init(&b);umi_ui_ent_copy_text(a.node_id,sizeof a.node_id,"a");umi_ui_ent_copy_text(b.node_id,sizeof b.node_id,"b");umi_ui_ent_copy_text(a.label,sizeof a.label,"Alpha");umi_ui_ent_copy_text(b.label,sizeof b.label,"Beta");if(umi_ui_ent_tree_sort_compare(&a,&b,UMI_UI_ENT_SORT_ASCENDING,1)>=0)return 1;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntTreeNode a,b;umi_ui_ent_tree_node_init(&a);umi_ui_ent_tree_node_init(&b);umi_ui_ent_copy_text(a.node_id,sizeof a.node_id,"a");umi_ui_ent_copy_text(b.node_id,sizeof b.node_id,"b");umi_ui_ent_copy_text(a.label,sizeof a.label,"Alpha");umi_ui_ent_copy_text(b.label,sizeof b.label,"Beta");/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_ui_ent_tree_sort_compare(&a,&b,UMI_UI_ENT_SORT_ASCENDING,1)>=0)return 1;puts("ok");return 0;}

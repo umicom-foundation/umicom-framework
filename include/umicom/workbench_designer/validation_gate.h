@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer validation gate data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerValidationGate {
     bool can_preview;
     bool can_save;
@@ -38,8 +42,16 @@ typedef struct UmiWorkbenchDesignerValidationGate {
     uint64_t revision;
 } UmiWorkbenchDesignerValidationGate;
 
+/**
+ * Initialise workbench designer validation gate from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_validation_gate_init(
     UmiWorkbenchDesignerValidationGate *gate);
+/**
+ * Provide the workbench designer validation gate evaluate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_designer_validation_gate_evaluate(
     UmiWorkbenchDesignerValidationGate *gate,
     const UmiWorkbenchLayoutDocument *document,

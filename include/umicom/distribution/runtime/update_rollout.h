@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the dr update rollout bucket operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_dr_update_rollout_bucket(const char *installation_id); bool umi_dr_update_rollout_selected(const char *installation_id,uint32_t percentage);
 
 #ifdef __cplusplus

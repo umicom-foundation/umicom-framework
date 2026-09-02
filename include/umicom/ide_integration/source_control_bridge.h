@@ -21,11 +21,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide source control target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_source_control_target(
     const char *path,
     uint32_t line,
     UmiIdeNavigationTarget *out_target);
 
+/**
+ * Provide the ide source control summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_source_control_summary(
     const UmiDeveloperSourceControl *source_control,
     char *out_text,

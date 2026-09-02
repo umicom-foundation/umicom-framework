@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider export record data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderExportRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderExportRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderExportRecord;
 
+/**
+ * Initialise workbench selection provider export record from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_export_record_init(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider export record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_validate(
     const UmiWorkbenchSelectionProviderExportRecord *record);
+/**
+ * Provide the workbench selection provider export record set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_set_provider(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider export record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_set_source(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider export record set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_set_subject(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider export record set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_set_related(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider export record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_set_group(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider export record set description operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_export_record_set_description(
     UmiWorkbenchSelectionProviderExportRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider export record hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_export_record_hash(
     const UmiWorkbenchSelectionProviderExportRecord *record);
+/**
+ * Provide the workbench selection provider export record touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_export_record_touch(
     UmiWorkbenchSelectionProviderExportRecord *record,
     uint64_t sequence,

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/diagnostic_export.h"
 
+/*
+ * Provide the developer capability diagnostic export operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_diagnostic_export(void)
 {

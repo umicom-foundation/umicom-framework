@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "scanner_internal.h"
 
+/*
+ * Provide the ai coding scan workspace operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_scan_workspace(
     const char *root,
     const UmiAiCodingIgnorePolicy *ignore_policy,
@@ -22,6 +26,10 @@ UmiStatus umi_ai_coding_scan_workspace(
     void *user_data,
     size_t *out_file_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || root[0] == '\0' ||
         ignore_policy == NULL ||
         visitor == NULL ||

@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/auction_match.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingAuctionBook b;
@@ -23,6 +27,7 @@ int main(void) {
     umi_trading_auction_order_init(&y,"s",UMI_SIDE_SELL,8,99,2);
     umi_trading_auction_book_add(&b,&x);
     umi_trading_auction_book_add(&b,&y);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_auction_match_compute(&b,&m)!=UMI_STATUS_OK)return 1;
     return m.executable_lots==8?0:2;
 }

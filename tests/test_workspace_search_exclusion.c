@@ -29,6 +29,10 @@
 
 #include "umicom/editor/workspace_search_exclusion.h"
 
+/*
+ * Exercise facts for and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorWorkspaceSearchResourceFacts facts_for(const char *path,
                                                         int generated)
 {
@@ -46,6 +50,10 @@ static UmiEditorWorkspaceSearchResourceFacts facts_for(const char *path,
     return facts;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorWorkspaceSearchExclusionSet *set = NULL;

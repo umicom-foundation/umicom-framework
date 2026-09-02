@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_STRUCTURED_LOGGING "umicom.developer.diagnostics.structured_logging"
 
+/**
+ * Provide the developer capability structured logging operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_structured_logging(void);
 

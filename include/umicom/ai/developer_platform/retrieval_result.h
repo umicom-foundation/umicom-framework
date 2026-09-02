@@ -29,11 +29,34 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev retrieval result data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevRetrievalResult { char ids[UMI_AI_DEV_MEDIUM_CAPACITY][UMI_AI_DEV_ID_CAPACITY]; size_t count; uint64_t revision; } UmiAiDevRetrievalResult;
+/**
+ * Initialise ai dev retrieval result from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_retrieval_result_init(UmiAiDevRetrievalResult *collection);
+/**
+ * Add ai dev retrieval result only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_dev_retrieval_result_add(UmiAiDevRetrievalResult *collection, const char *id);
+/**
+ * Remove ai dev retrieval result while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ai_dev_retrieval_result_remove(UmiAiDevRetrievalResult *collection, const char *id);
+/**
+ * Provide the ai dev retrieval result contains operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_retrieval_result_contains(const UmiAiDevRetrievalResult *collection, const char *id);
+/**
+ * Return the number of records represented by ai dev retrieval result without changing
+ * their state.
+ */
 size_t umi_ai_dev_retrieval_result_count(const UmiAiDevRetrievalResult *collection);
 
 #ifdef __cplusplus

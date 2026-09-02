@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise toolchain profile from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_toolchain_profile_initialize(
     UmiToolchainProfile *profile,
     size_t caller_structure_size)
@@ -37,6 +41,7 @@ UmiStatus umi_toolchain_profile_initialize(
     profile->selected_c_compiler = UMI_TOOL_COUNT;
     profile->selected_cpp_compiler = UMI_TOOL_COUNT;
     (void)snprintf(profile->generator, sizeof(profile->generator), "%s", "Ninja");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_TOOL_COUNT; ++index) {
         profile->tools[index].kind = (UmiToolKind)index;
         profile->tools[index].state = UMI_TOOL_MISSING;
@@ -44,6 +49,10 @@ UmiStatus umi_toolchain_profile_initialize(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the toolchain profile storage compatible operation used by this module and its
+ * client applications.
+ */
 bool umi_toolchain_profile_storage_compatible(
     const UmiToolchainProfile *profile)
 {
@@ -54,6 +63,10 @@ bool umi_toolchain_profile_storage_compatible(
            profile->tool_count <= UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY;
 }
 
+/*
+ * Provide the toolchain profile tool operation used by this module and its client
+ * applications.
+ */
 const UmiToolInfo *umi_toolchain_profile_tool(
     const UmiToolchainProfile *profile,
     UmiToolKind kind)
@@ -64,6 +77,10 @@ const UmiToolInfo *umi_toolchain_profile_tool(
         : NULL;
 }
 
+/*
+ * Provide the toolchain profile tool mutable operation used by this module and its client
+ * applications.
+ */
 UmiToolInfo *umi_toolchain_profile_tool_mutable(
     UmiToolchainProfile *profile,
     UmiToolKind kind)
@@ -74,8 +91,13 @@ UmiToolInfo *umi_toolchain_profile_tool_mutable(
         : NULL;
 }
 
+/*
+ * Provide the toolchain family text operation used by this module and its client
+ * applications.
+ */
 const char *umi_toolchain_family_text(UmiToolchainFamily family)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (family) {
         case UMI_TOOLCHAIN_MSYS2_UCRT64: return "MSYS2 UCRT64";
         case UMI_TOOLCHAIN_MSYS2_CLANG64: return "MSYS2 CLANG64";
@@ -87,6 +109,10 @@ const char *umi_toolchain_family_text(UmiToolchainFamily family)
     }
 }
 
+/*
+ * Provide the toolchain profile c compiler operation used by this module and its client
+ * applications.
+ */
 const UmiToolInfo *umi_toolchain_profile_c_compiler(
     const UmiToolchainProfile *profile)
 {
@@ -96,6 +122,10 @@ const UmiToolInfo *umi_toolchain_profile_c_compiler(
         : NULL;
 }
 
+/*
+ * Provide the toolchain profile cpp compiler operation used by this module and its client
+ * applications.
+ */
 const UmiToolInfo *umi_toolchain_profile_cpp_compiler(
     const UmiToolchainProfile *profile)
 {

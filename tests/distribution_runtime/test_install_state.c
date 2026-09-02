@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrInstallState value; umi_dr_install_state_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"inst")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); value.channel=UMI_DR_CHANNEL_STABLE; value.scope=UMI_DR_SCOPE_USER; CHECK(umi_dr_install_state_valid(&value)); CHECK(umi_dr_install_state_fingerprint(&value) != 0U);
     return 0;

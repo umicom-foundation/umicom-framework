@@ -28,6 +28,10 @@
 
 #include "umicom/editor/workspace_search_preview.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     static const char source[] = "alpha 12\nALPHA 34\n";

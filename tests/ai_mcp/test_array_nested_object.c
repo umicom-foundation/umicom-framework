@@ -16,5 +16,13 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai/mcp/json_array.h"
+/*
+ * Exercise visit nested and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus visit_nested(const char*object,void*user){(void)user;assert(strstr(object,"nested")!=NULL);return UMI_STATUS_OK;}
+/*
+ * Exercise test ai mcp array nested object and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_ai_mcp_array_nested_object(void){size_t count=0;assert(umi_ai_mcp_json_array_visit_objects("{\"tools\":[{\"nested\":{\"x\":1}}]}","tools",visit_nested,NULL,&count)==UMI_STATUS_OK);assert(count==1U);return 0;}

@@ -18,12 +18,21 @@
 #include <stdatomic.h>
 
 #if defined(UMICOM_DEVELOPER_SPIN_X86_64_ASM)
+/*
+ * Provide the developer spin hint asm operation used by this module and its client
+ * applications.
+ */
 void umi_developer_spin_hint_asm(void);
 #endif
 
+/*
+ * Provide the developer spin hint operation used by this module and its client
+ * applications.
+ */
 void umi_developer_spin_hint(unsigned iterations)
 {
     unsigned index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < iterations; ++index) {
 #if defined(UMICOM_DEVELOPER_SPIN_X86_64_ASM)
         umi_developer_spin_hint_asm();

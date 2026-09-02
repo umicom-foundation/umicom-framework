@@ -31,6 +31,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the release candidate data shared with callers of this public contract.
+ */
 typedef struct UmiReleaseCandidate {
     UmiDeliveryManifest manifest;
     UmiBuildEvidence build;
@@ -38,7 +41,15 @@ typedef struct UmiReleaseCandidate {
     UmiVerificationReport verification;
 } UmiReleaseCandidate;
 
+/**
+ * Initialise release candidate from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_release_candidate_init(UmiReleaseCandidate *candidate);
+/**
+ * Provide the release candidate ready operation used by this module and its client
+ * applications.
+ */
 int umi_release_candidate_ready(const UmiReleaseCandidate *candidate);
 
 #ifdef __cplusplus

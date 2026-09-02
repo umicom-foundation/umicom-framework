@@ -16,6 +16,10 @@
 
 #include <string.h>
 
+/*
+ * Initialise repository workflow report from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_repository_workflow_report_initialize(
     UmiRepositoryWorkflowReport *report,
     size_t caller_structure_size,

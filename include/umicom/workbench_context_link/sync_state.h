@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link sync state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextLinkSyncState {
     uint32_t structure_size;
     char sync_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkSyncState {
     uint64_t revision;
 } UmiWorkbenchContextLinkSyncState;
 
+/**
+ * Initialise workbench context link sync state from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_sync_state_init(UmiWorkbenchContextLinkSyncState *record,
                                            const char *identity);
+/**
+ * Check that workbench context link sync state satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_sync_state_validate(
     const UmiWorkbenchContextLinkSyncState *record);
+/**
+ * Copy workbench context link sync state into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_sync_state_copy(
     UmiWorkbenchContextLinkSyncState *destination,
     const UmiWorkbenchContextLinkSyncState *source);
+/**
+ * Provide the workbench context link sync state hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_link_sync_state_hash(
     const UmiWorkbenchContextLinkSyncState *record);
+/**
+ * Provide the workbench context link sync state set primary operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_link_sync_state_set_primary(
     UmiWorkbenchContextLinkSyncState *record,
     const char *value);
+/**
+ * Provide the workbench context link sync state set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_sync_state_set_secondary(
     UmiWorkbenchContextLinkSyncState *record,
     const char *value);
+/**
+ * Provide the workbench context link sync state touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_link_sync_state_touch(
     UmiWorkbenchContextLinkSyncState *record,
     uint64_t sequence,

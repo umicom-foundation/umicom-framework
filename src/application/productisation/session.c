@@ -30,6 +30,10 @@ static UmiStatus copy_text(char *destination,
                            const char *source)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     written = snprintf(destination, capacity, "%s", source);
@@ -50,15 +54,18 @@ static int session_valid(const UmiProductApplicationSession *session)
 static UmiStatus command_validate(
     const UmiProductApplicationSessionCommand *command)
 {
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL || command->structure_size < sizeof(*command) ||
         command->kind < UMI_PRODUCT_SESSION_SELECT_LAYOUT ||
         command->kind > UMI_PRODUCT_SESSION_SYNCHRONISE_WORKBENCH)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((command->kind == UMI_PRODUCT_SESSION_SELECT_LAYOUT ||
          command->kind == UMI_PRODUCT_SESSION_ACTIVATE_PANEL ||
          command->kind == UMI_PRODUCT_SESSION_DEACTIVATE_PANEL) &&
         !has_text(command->target_id))
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command->kind == UMI_PRODUCT_SESSION_SET_CONTEXT &&
         (!has_text(command->target_id) || command->value == NULL))
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -74,6 +81,7 @@ UmiStatus umi_product_application_session_init(
     /* Validate all input before clearing the caller's destination object. */
     if (out_session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_product_application_adoption_validate(adoption);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_session, 0, sizeof(*out_session));
@@ -81,9 +89,11 @@ UmiStatus umi_product_application_session_init(
     out_session->adoption = adoption;
     status = umi_product_application_adoption_snapshot(
         adoption, &out_session->adoption_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_application_thin_client_init(
         adoption->application_id, &out_session->client);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_session->last_status = UMI_STATUS_OK;
     out_session->revision = 1U;
@@ -97,6 +107,10 @@ UmiStatus umi_product_application_session_bind_workbench(
     UmiUiWorkbench *workbench)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!session_valid(session) || workbench == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_application_thin_client_bind_workbench(
@@ -112,8 +126,10 @@ UmiStatus umi_product_application_session_execute(
     const UmiProductApplicationSessionCommand *command)
 {
     UmiStatus status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session_valid(session)) return UMI_STATUS_INVALID_STATE;
     status = command_validate(command);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     /* Each command maps to one public thin-client operation, keeping product
@@ -154,7 +170,9 @@ UmiStatus umi_product_application_session_execute(
 
     /* Record both successful and failed validated commands for status panels. */
     session->command_count += 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) session->successful_command_count += 1U;
+    /* Use this fallback path when the earlier condition does not apply. */
     else session->failed_command_count += 1U;
     session->last_status = status;
     session->revision += 1U;
@@ -167,6 +185,10 @@ UmiStatus umi_product_application_session_snapshot(
     UmiProductApplicationSessionSnapshot *out_snapshot)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!session_valid(session) || out_snapshot == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
@@ -174,17 +196,21 @@ UmiStatus umi_product_application_session_snapshot(
     status = copy_text(out_snapshot->module_id,
                        sizeof(out_snapshot->module_id),
                        session->adoption_snapshot.module_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(out_snapshot->application_id,
                        sizeof(out_snapshot->application_id),
                        session->adoption_snapshot.application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(out_snapshot->display_name,
                        sizeof(out_snapshot->display_name),
                        session->adoption_snapshot.display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_application_session_snapshot_capture(
         &session->client.workspace.session, &out_snapshot->workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_snapshot->feature_count = session->adoption_snapshot.feature_count;
@@ -213,6 +239,7 @@ UmiStatus umi_product_application_session_health(
     void *user_data,
     UmiApplicationRuntimeHealth *out_health)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session_valid(session)) return UMI_STATUS_INVALID_STATE;
     return umi_application_thin_client_health(
         &session->client, probe, user_data, out_health);
@@ -223,6 +250,7 @@ UmiStatus umi_product_application_session_reset(
     UmiProductApplicationSession *session)
 {
     const UmiProductApplicationAdoption *adoption;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session_valid(session)) return UMI_STATUS_INVALID_STATE;
     adoption = session->adoption;
     return umi_product_application_session_init(adoption, session);

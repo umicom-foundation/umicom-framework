@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher assessment rubric data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTeacherAssessmentRubric {
     uint32_t correctness_weight;
     uint32_t quality_weight;
@@ -37,9 +41,25 @@ typedef struct UmiTeacherAssessmentRubric {
     uint32_t minimum_score;
 } UmiTeacherAssessmentRubric;
 
+/**
+ * Initialise teacher assessment rubric from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_teacher_assessment_rubric_init(UmiTeacherAssessmentRubric *rubric);
+/**
+ * Provide the teacher assessment rubric configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_teacher_assessment_rubric_configure(UmiTeacherAssessmentRubric *rubric, uint32_t correctness_weight, uint32_t quality_weight, uint32_t efficiency_weight, uint32_t minimum_score);
+/**
+ * Provide the teacher assessment rubric compute operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_teacher_assessment_rubric_compute(const UmiTeacherAssessmentRubric *rubric, uint32_t correctness, uint32_t quality, uint32_t efficiency);
+/**
+ * Provide the teacher assessment rubric passes operation used by this module and its
+ * client applications.
+ */
 int umi_teacher_assessment_rubric_passes(const UmiTeacherAssessmentRubric *rubric, uint32_t score);
 
 #ifdef __cplusplus

@@ -17,6 +17,10 @@
 
 #include <assert.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   const UmiApplicationComponentRecipe *recipe =
       umi_application_component_recipe_catalogue_find("org.umicom.workspace.studio.learning");

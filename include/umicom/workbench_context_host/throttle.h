@@ -19,14 +19,26 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host throttle data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextHostThrottle {
     uint64_t minimum_interval_ms;
     uint64_t last_accepted_ms;
     uint64_t accepted_count;
     uint64_t throttled_count;
 } UmiWorkbenchContextHostThrottle;
+/**
+ * Initialise workbench context host throttle from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_host_throttle_init(
     UmiWorkbenchContextHostThrottle *throttle,uint64_t minimum_interval_ms);
+/**
+ * Provide the workbench context host throttle accept operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_context_host_throttle_accept(
     UmiWorkbenchContextHostThrottle *throttle,uint64_t now_ms);
 #ifdef __cplusplus

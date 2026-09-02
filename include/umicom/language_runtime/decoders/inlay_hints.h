@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode inlay hints operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_inlay_hints(const char*json,UmiLanguageRuntimeInlayHintList*out);
 #ifdef __cplusplus
 }

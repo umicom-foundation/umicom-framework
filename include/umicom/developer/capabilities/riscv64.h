@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_RISCV64 "umicom.developer.portability.riscv64"
 
+/**
+ * Provide the developer capability riscv64 operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_riscv64(void);
 

@@ -22,9 +22,25 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ws media layout video editor operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_media_layout_video_editor(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws media layout ai creator operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_media_layout_ai_creator(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws media layout music studio operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_media_layout_music_studio(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws media layout video studio operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_media_layout_video_studio(UmiWsLayoutTemplate *layout);
 
 #ifdef __cplusplus

@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCapabilityRegistry *registry = NULL;
@@ -33,25 +37,36 @@ int main(void)
         .flags = UMI_CAPABILITY_SINGLETON
     };
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_capability_registry_create(&registry) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_capability_registry_register(registry, &descriptor) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_capability_registry_count(registry) != 1U)
         return EXIT_FAILURE;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_capability_registry_find(registry, descriptor.capability_id) == NULL)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_capability_registry_require(registry, required, &missing) !=
         UMI_STATUS_OK || missing != NULL)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_capability_registry_register(registry, &descriptor) !=
         UMI_STATUS_ALREADY_EXISTS)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_capability_registry_unregister(registry,
                                            descriptor.capability_id,
                                            descriptor.provider_module_id) !=
         UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_capability_registry_require(registry, required, &missing) !=
         UMI_STATUS_NOT_FOUND || missing == NULL ||
         strcmp(missing, required[0]) != 0)

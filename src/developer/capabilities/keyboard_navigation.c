@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/keyboard_navigation.h"
 
+/*
+ * Provide the developer capability keyboard navigation operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_keyboard_navigation(void)
 {

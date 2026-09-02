@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named file kind values accepted by this public contract.
+ */
 typedef enum UmiFileKind {
     UMI_FILE_KIND_UNKNOWN = 0,
     UMI_FILE_KIND_REGULAR = 1,
@@ -34,6 +37,9 @@ typedef enum UmiFileKind {
     UMI_FILE_KIND_OTHER = 4
 } UmiFileKind;
 
+/**
+ * Represent the file info data shared with callers of this public contract.
+ */
 typedef struct UmiFileInfo {
     char path[UMI_PATH_CAPACITY];
     char name[UMI_PATH_CAPACITY];
@@ -44,6 +50,9 @@ typedef struct UmiFileInfo {
     int hidden;
 } UmiFileInfo;
 
+/**
+ * Represent the directory walk options data shared with callers of this public contract.
+ */
 typedef struct UmiDirectoryWalkOptions {
     size_t max_depth;
     int recursive;
@@ -56,12 +65,25 @@ typedef struct UmiDirectoryWalkOptions {
 typedef UmiStatus (*UmiDirectoryVisitor)(const UmiFileInfo *info,
                                          void *user_data);
 
+/**
+ * Provide the directory walk options default operation used by this module and its client
+ * applications.
+ */
 UmiDirectoryWalkOptions umi_directory_walk_options_default(void);
+/**
+ * Provide the directory stat operation used by this module and its client applications.
+ */
 UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info);
+/**
+ * Provide the directory walk operation used by this module and its client applications.
+ */
 UmiStatus umi_directory_walk(const char *root,
                              const UmiDirectoryWalkOptions *options,
                              UmiDirectoryVisitor visitor,
                              void *user_data);
+/**
+ * Return the number of records represented by directory without changing their state.
+ */
 UmiStatus umi_directory_count(const char *root,
                               const UmiDirectoryWalkOptions *options,
                               size_t *out_count);

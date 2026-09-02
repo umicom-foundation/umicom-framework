@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_coding_tools/checkpoint.h"
+/**
+ * Initialise ai developer checkpoints view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_checkpoints_view_create(
     const char *view_id,
     const UmiAiCodingCheckpointStore *checkpoints,

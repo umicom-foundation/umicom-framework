@@ -119,11 +119,19 @@ static const UmiTestPlatformProductValidationProfile PROFILES[] = {
 
 #undef UMI_TEST_PRODUCT_PROFILE
 
+/*
+ * Return the number of records represented by test platform build artifact catalogue
+ * without changing their state.
+ */
 size_t umi_test_platform_build_artifact_catalogue_count(void)
 {
     return sizeof(ARTIFACTS) / sizeof(ARTIFACTS[0]);
 }
 
+/*
+ * Find test platform build artifact catalogue while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiTestPlatformBuildArtifact *
 umi_test_platform_build_artifact_catalogue_at(size_t index)
 {
@@ -131,37 +139,65 @@ umi_test_platform_build_artifact_catalogue_at(size_t index)
         ? &ARTIFACTS[index] : NULL;
 }
 
+/*
+ * Provide the test platform build artifact catalogue find target operation used by this
+ * module and its client applications.
+ */
 const UmiTestPlatformBuildArtifact *
 umi_test_platform_build_artifact_catalogue_find_target(const char *target_name)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (target_name == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_build_artifact_catalogue_count();
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(ARTIFACTS[index].target_name, target_name) == 0)
             return &ARTIFACTS[index];
     }
     return NULL;
 }
 
+/*
+ * Provide the test platform build artifact catalogue find test operation used by this
+ * module and its client applications.
+ */
 const UmiTestPlatformBuildArtifact *
 umi_test_platform_build_artifact_catalogue_find_test(const char *test_name)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (test_name == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_build_artifact_catalogue_count();
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(ARTIFACTS[index].test_name, test_name) == 0)
             return &ARTIFACTS[index];
     }
     return NULL;
 }
 
+/*
+ * Return the number of records represented by test platform product validation profile
+ * without changing their state.
+ */
 size_t umi_test_platform_product_validation_profile_count(void)
 {
     return sizeof(PROFILES) / sizeof(PROFILES[0]);
 }
 
+/*
+ * Find test platform product validation profile while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiTestPlatformProductValidationProfile *
 umi_test_platform_product_validation_profile_at(size_t index)
 {
@@ -169,13 +205,23 @@ umi_test_platform_product_validation_profile_at(size_t index)
         ? &PROFILES[index] : NULL;
 }
 
+/*
+ * Find test platform product validation profile while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiTestPlatformProductValidationProfile *
 umi_test_platform_product_validation_profile_find(const char *product_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (product_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_product_validation_profile_count();
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(PROFILES[index].product_id, product_id) == 0)
             return &PROFILES[index];
     }

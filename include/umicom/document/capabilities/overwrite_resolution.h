@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_OVERWRITE_RESOLUTION "umicom.document.conflict.overwrite_resolution"
 
+/**
+ * Provide the document capability overwrite resolution operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_overwrite_resolution(void);
 

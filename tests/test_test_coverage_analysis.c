@@ -26,6 +26,10 @@
 #include <string.h>
 #include "umicom/test_platform/coverage_analysis.h"
 
+/*
+ * Exercise coverage and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformCoverageSnapshot coverage(const char *id, const char *uri,
     uint64_t total, uint64_t covered, uint64_t revision)
 {
@@ -44,6 +48,10 @@ static UmiTestPlatformCoverageSnapshot coverage(const char *id, const char *uri,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformCoverageRegistry *registry = NULL;

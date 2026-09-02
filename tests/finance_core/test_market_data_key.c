@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/market_data_key.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMarketDataKey x; CHECK(umi_market_data_key_init(&x,"ID","Name","CODE",1U)==UMI_STATUS_OK); CHECK(umi_market_data_key_is_valid(&x));

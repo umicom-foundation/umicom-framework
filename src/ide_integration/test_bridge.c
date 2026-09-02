@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the ide test item target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_test_item_target(
     UmiTestPlatformService *tests,
     const char *item_id,
@@ -25,6 +29,10 @@ UmiStatus umi_ide_test_item_target(
     UmiTestPlatformItemSnapshot item;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tests == NULL || item_id == NULL ||
         item_id[0] == '\0' || out_target == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -34,6 +42,7 @@ UmiStatus umi_ide_test_item_target(
         umi_test_platform_service_item(tests),
         item_id,
         &item);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_target, 0, sizeof(*out_target));
@@ -53,13 +62,14 @@ UmiStatus umi_ide_test_item_target(
 
     umi_ide_location_init(&out_target->location);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item.source_uri[0] != '\0') {
         status = umi_ide_location_set_uri(
             &out_target->location,
             item.source_uri,
             item.source_line,
             0U);
-    } else if (item.uri[0] != '\0') {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (item.uri[0] != '\0') {
         status = umi_ide_location_set_uri(
             &out_target->location,
             item.uri,
@@ -70,6 +80,10 @@ UmiStatus umi_ide_test_item_target(
     return status;
 }
 
+/*
+ * Provide the ide test result summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_test_result_summary(
     UmiTestPlatformService *tests,
     const char *result_id,
@@ -80,6 +94,10 @@ UmiStatus umi_ide_test_result_summary(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tests == NULL || result_id == NULL ||
         out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -89,6 +107,7 @@ UmiStatus umi_ide_test_result_summary(
         umi_test_platform_service_result(tests),
         result_id,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(

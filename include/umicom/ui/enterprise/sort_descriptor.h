@@ -21,13 +21,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui ent sort descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiUiEntSortDescriptor {
     char column_id[UMI_UI_ENT_ID_CAPACITY];
     UmiUiEntSortDirection direction;
     int32_t priority;
     int case_sensitive;
 } UmiUiEntSortDescriptor;
+/**
+ * Initialise ui ent sort descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ui_ent_sort_descriptor_init(UmiUiEntSortDescriptor *value);
+/**
+ * Check that ui ent sort descriptor satisfies its contract before another service relies
+ * on it.
+ */
 int umi_ui_ent_sort_descriptor_validate(const UmiUiEntSortDescriptor *value);
 #ifdef __cplusplus
 }

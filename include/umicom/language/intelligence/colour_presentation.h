@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_LANGUAGE_INTELLIGENCE_COLOUR_PRESENTATION_API_VERSION 1U
 
+/**
+ * Represent the language intelligence colour presentation data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceColourPresentation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -41,18 +45,42 @@ typedef struct UmiLanguageIntelligenceColourPresentation {
     int enabled;
 } UmiLanguageIntelligenceColourPresentation;
 
+/**
+ * Initialise language intelligence colour presentation from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_colour_presentation_init(
     UmiLanguageIntelligenceColourPresentation *value,
     const char *id);
+/**
+ * Check that language intelligence colour presentation satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_language_intelligence_colour_presentation_validate(
     const UmiLanguageIntelligenceColourPresentation *value);
+/**
+ * Provide the language intelligence colour presentation set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_colour_presentation_set_subject(
     UmiLanguageIntelligenceColourPresentation *value,
     const char *subject_id);
+/**
+ * Provide the language intelligence colour presentation set detail operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_colour_presentation_set_detail(
     UmiLanguageIntelligenceColourPresentation *value,
     const char *detail);
+/**
+ * Provide the language intelligence colour presentation touch operation used by this
+ * module and its client applications.
+ */
 void umi_language_intelligence_colour_presentation_touch(UmiLanguageIntelligenceColourPresentation *value);
+/**
+ * Provide the language intelligence colour presentation same identity operation used by
+ * this module and its client applications.
+ */
 int umi_language_intelligence_colour_presentation_same_identity(
     const UmiLanguageIntelligenceColourPresentation *left,
     const UmiLanguageIntelligenceColourPresentation *right);

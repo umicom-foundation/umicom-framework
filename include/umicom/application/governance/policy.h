@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the component promotion assessment data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiComponentPromotionAssessment {
   UmiComponentApiStatus current_status;
   UmiComponentApiStatus target_status;
@@ -33,13 +37,29 @@ typedef struct UmiComponentPromotionAssessment {
   int promotion_ready;
 } UmiComponentPromotionAssessment;
 
+/**
+ * Provide the component governance default operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_component_governance_default(const UmiApplicationComponentDefinition *definition,
                                            UmiComponentGovernanceRecord *out_record);
+/**
+ * Provide the component governance apply override operation used by this module and its
+ * client applications.
+ */
 UmiStatus
 umi_component_governance_apply_override(UmiComponentGovernanceRecord *record,
                                         const UmiComponentGovernanceOverride *override_record);
+/**
+ * Provide the component status transition allowed operation used by this module and its
+ * client applications.
+ */
 int umi_component_status_transition_allowed(UmiComponentApiStatus current_status,
                                             UmiComponentApiStatus target_status);
+/**
+ * Provide the component promotion assess operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_component_promotion_assess(const UmiComponentGovernanceRecord *record,
                                          UmiComponentApiStatus target_status,
                                          UmiComponentPromotionAssessment *out_assessment);

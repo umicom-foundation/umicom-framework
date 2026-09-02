@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "umicom/helix/orchestrator.h"
+/*
+ * Exercise execute and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus execute(void *context, const UmiHelixAction *action,
                          char *out, size_t capacity)
 {
@@ -21,11 +25,16 @@ static UmiStatus execute(void *context, const UmiHelixAction *action,
     (*count)++;
     written = snprintf(out, capacity, "%s %s", action->action_id,
                        *count == 1 ? "failed" : "passed");
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     return *count == 1 ? UMI_STATUS_IO_ERROR : UMI_STATUS_OK;
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiHelixOrchestrator runtime;

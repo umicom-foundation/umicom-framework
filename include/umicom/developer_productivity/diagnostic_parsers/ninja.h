@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer diagnostic parser ninja operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperDiagnosticParser *umi_developer_diagnostic_parser_ninja(void);
 
 #ifdef __cplusplus

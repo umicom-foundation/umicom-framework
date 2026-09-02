@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/context_channel/source_location.h"
 #include "umicom/context_channel/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char destination[32];

@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer preview matrix data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerPreviewMatrix {
     UmiDesignerPreviewCase cases[UMI_DESIGNER_ADAPTIVE_MAX_PREVIEWS];
     size_t count;

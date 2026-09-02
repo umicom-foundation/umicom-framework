@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/view_test_explorer.h"
 
+/*
+ * Provide the studio command alias view test explorer operation used by this module and
+ * its client applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_view_test_explorer(void)
 {

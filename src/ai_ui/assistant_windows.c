@@ -84,10 +84,18 @@ static const UmiUiWindowDescriptor ASSISTANT_WINDOWS[] = {
     }
 };
 
+/*
+ * Add ai ui assistant windows only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_ui_assistant_windows_register(
     UmiUiWindowCatalogue *catalogue)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     /* Registration stops on the first error so callers receive exact evidence. */
@@ -96,6 +104,7 @@ UmiStatus umi_ai_ui_assistant_windows_register(
          ++index) {
         UmiStatus status = umi_ui_window_catalogue_register(
             catalogue, &ASSISTANT_WINDOWS[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK && status != UMI_STATUS_ALREADY_EXISTS) {
             return status;
         }

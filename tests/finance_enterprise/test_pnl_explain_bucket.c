@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/pnl_explain_bucket.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterprisePnlExplainBucket b;CHECK(umi_enterprise_pnl_explain_bucket_init(&b,"delta",3.0)==UMI_STATUS_OK);CHECK(b.pnl==3.0);return 0;}

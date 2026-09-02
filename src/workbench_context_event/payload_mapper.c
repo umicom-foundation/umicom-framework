@@ -20,6 +20,7 @@
 
 #include <string.h>
 
+/* Provide the metadata operation used by this module and its client applications. */
 static const char *metadata(
     const UmiWorkbenchContextEvent *event,
     const char *name,
@@ -30,6 +31,7 @@ static const char *metadata(
     return item != NULL ? item->value : fallback;
 }
 
+/* Provide the apply identity operation used by this module and its client applications. */
 static UmiStatus apply_identity(
     UmiContextPayload *payload,
     const UmiWorkbenchContextEvent *event)
@@ -39,17 +41,21 @@ static UmiStatus apply_identity(
         payload->identity.source_application_id,
         sizeof(payload->identity.source_application_id),
         event->application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_context_copy_text(
         payload->identity.source_panel_id,
         sizeof(payload->identity.source_panel_id),
         event->panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (event->workspace_id[0] != '\0') {
         status = umi_context_copy_text(
             payload->audit.workspace_id,
             sizeof(payload->audit.workspace_id),
             event->workspace_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     payload->identity.sequence = event->sequence;
@@ -58,22 +64,32 @@ static UmiStatus apply_identity(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the add event metadata operation used by this module and its client
+ * applications.
+ */
 static UmiStatus add_event_metadata(
     UmiContextPayload *payload,
     const UmiWorkbenchContextEvent *event)
 {
     size_t index;
     UmiStatus status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < event->metadata_count; ++index) {
         status = umi_workbench_context_host_payload_add_text(
             payload,
             event->metadata[index].name,
             event->metadata[index].value);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the map source location operation used by this module and its client
+ * applications.
+ */
 static UmiStatus map_source_location(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -87,6 +103,7 @@ static UmiStatus map_source_location(
         event->path[0] != '\0' ? event->path : "unknown",
         event->line,
         event->column);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_source_location_context_set_symbol(
         &payload->domain.source_location,
@@ -97,6 +114,7 @@ static UmiStatus map_source_location(
     return UMI_STATUS_OK;
 }
 
+/* Provide the map project operation used by this module and its client applications. */
 static UmiStatus map_project(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -108,18 +126,22 @@ static UmiStatus map_project(
         event->event_id,
         "org.umicom.context.project");
     status = apply_identity(payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_context_set_project_id(
         &payload->domain.project,
         event->subject_id[0] != '\0' ? event->subject_id : event->event_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_context_set_repository_id(
         &payload->domain.project,
         metadata(event, "repository-id", ""));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_context_set_root_path(
         &payload->domain.project,
         event->path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_project_context_set_target_id(
         &payload->domain.project,
@@ -133,6 +155,7 @@ static UmiStatus map_project(
     return UMI_STATUS_OK;
 }
 
+/* Provide the map instrument operation used by this module and its client applications. */
 static UmiStatus map_instrument(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -147,6 +170,7 @@ static UmiStatus map_instrument(
         metadata(event, "venue", ""));
 }
 
+/* Provide the map selection operation used by this module and its client applications. */
 static UmiStatus map_selection(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -163,6 +187,7 @@ static UmiStatus map_selection(
             : (event->subject_id[0] != '\0' ? event->subject_id : event->event_id));
 }
 
+/* Provide the map account operation used by this module and its client applications. */
 static UmiStatus map_account(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -174,9 +199,11 @@ static UmiStatus map_account(
         event->event_id,
         "org.umicom.context.account");
     status = apply_identity(payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_account_context_set_account_id(
         &payload->domain.account, event->subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_account_context_set_organisation_id(
         &payload->domain.account, metadata(event, "organisation-id", ""));
@@ -191,6 +218,7 @@ static UmiStatus map_account(
     return UMI_STATUS_OK;
 }
 
+/* Provide the map trade operation used by this module and its client applications. */
 static UmiStatus map_trade(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -202,9 +230,11 @@ static UmiStatus map_trade(
         event->event_id,
         "org.umicom.context.trade");
     status = apply_identity(payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_trade_context_set_trade_id(
         &payload->domain.trade, event->subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_trade_context_set_source_system(
         &payload->domain.trade, metadata(event, "source-system", ""));
@@ -219,6 +249,7 @@ static UmiStatus map_trade(
     return UMI_STATUS_OK;
 }
 
+/* Provide the map workspace operation used by this module and its client applications. */
 static UmiStatus map_workspace(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -230,10 +261,12 @@ static UmiStatus map_workspace(
         event->event_id,
         "org.umicom.context.workspace");
     status = apply_identity(payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workspace_context_set_workspace_id(
         &payload->domain.workspace,
         event->workspace_id[0] != '\0' ? event->workspace_id : event->subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_workspace_context_set_profile_id(
         &payload->domain.workspace, metadata(event, "profile-id", ""));
@@ -248,6 +281,7 @@ static UmiStatus map_workspace(
     return UMI_STATUS_OK;
 }
 
+/* Provide the map media operation used by this module and its client applications. */
 static UmiStatus map_media(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *payload)
@@ -259,9 +293,11 @@ static UmiStatus map_media(
         event->event_id,
         "org.umicom.context.media");
     status = apply_identity(payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_media_context_set_asset_id(
         &payload->domain.media, event->subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_media_context_set_timeline_id(
         &payload->domain.media, metadata(event, "timeline-id", ""));
@@ -276,15 +312,25 @@ static UmiStatus map_media(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context event map payload operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_map_payload(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *out_payload)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL || out_payload == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_event_validate(event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (event->context_kind) {
     case UMI_CONTEXT_KIND_SOURCE_LOCATION:
         status = map_source_location(event, out_payload);
@@ -315,11 +361,14 @@ UmiStatus umi_workbench_context_event_map_payload(
         status = UMI_STATUS_INVALID_ARGUMENT;
         break;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = apply_identity(out_payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_event_metadata(out_payload, event);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_context_payload_refresh_hash(out_payload);
     return umi_context_payload_validate(out_payload);

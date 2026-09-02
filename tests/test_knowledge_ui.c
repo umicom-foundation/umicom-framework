@@ -14,6 +14,10 @@
 #include "umicom/knowledge_ui/views.h"
 #include "umicom/ui/command_view.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiKnowledgeServiceConfig config = umi_knowledge_service_config_default();

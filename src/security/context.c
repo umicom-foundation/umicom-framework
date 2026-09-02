@@ -24,8 +24,16 @@ struct UmiSecurityContext {
     UmiRedactor *redactor; UmiWorkspaceTrustStore *workspace_trust;
     UmiSecurityEventLog *events; UmiPolicyEngine *policy; UmiAuthorisationService *authorisation;
 };
+/*
+ * Provide the context destroy partial operation used by this module and its client
+ * applications.
+ */
 static void context_destroy_partial(UmiSecurityContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return;
     umi_authorisation_service_destroy(context->authorisation);
     umi_policy_engine_destroy(context->policy);
@@ -39,11 +47,19 @@ static void context_destroy_partial(UmiSecurityContext *context)
     umi_identity_registry_destroy(context->identities);
     free(context);
 }
+/*
+ * Initialise security context from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_security_context_create(UmiSecurityContext **out_context)
 {
     UmiSecurityContext *context; UmiSecretProvider environment; UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    *out_context = NULL; context = (UmiSecurityContext *)calloc(1U, sizeof(*context)); if (context == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *out_context = NULL; context = (UmiSecurityContext *)calloc(1U, sizeof(*context)); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (context == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 #define CREATE(call) do { status = (call); if (status != UMI_STATUS_OK) { context_destroy_partial(context); return status; } } while (0)
     CREATE(umi_identity_registry_create(&context->identities));
     CREATE(umi_role_registry_create(&context->roles));
@@ -60,6 +76,10 @@ UmiStatus umi_security_context_create(UmiSecurityContext **out_context)
 #undef CREATE
     *out_context = context; return UMI_STATUS_OK;
 }
+/*
+ * Release or reset state held by security context so the same storage can be reused
+ * safely.
+ */
 void umi_security_context_destroy(UmiSecurityContext *context) { context_destroy_partial(context); }
 #define GETTER(name, type, field) type *name(UmiSecurityContext *context) { return context != NULL ? context->field : NULL; }
 GETTER(umi_security_context_identities, UmiIdentityRegistry, identities)

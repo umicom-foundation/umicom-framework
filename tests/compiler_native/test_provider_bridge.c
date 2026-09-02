@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/provider_bridge.h"
-int main(void){UmiNativeProviderAvailability a={true,true,true};UmiNativeProviderPlan p;if(umi_nc_provider_bridge_plan(&a,true,true,&p)!=UMI_STATUS_OK)return 1;if(p.selected!=UMI_NC_PROVIDER_UMICC||p.count!=3U)return 2;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeProviderAvailability a={true,true,true};UmiNativeProviderPlan p;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_nc_provider_bridge_plan(&a,true,true,&p)!=UMI_STATUS_OK)return 1;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(p.selected!=UMI_NC_PROVIDER_UMICC||p.count!=3U)return 2;return 0;}

@@ -33,14 +33,29 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_SNAPSHOT_NAME "snapshot"
+/**
+ * Represent the context snapshot state data shared with callers of this public contract.
+ */
 typedef struct UmiContextSnapshotState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextSnapshotState;
+/**
+ * Initialise context snapshot state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_context_snapshot_state_init(UmiContextSnapshotState *state);
+/**
+ * Provide the context snapshot state record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_snapshot_state_record(UmiContextSnapshotState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context snapshot operation without changing
+ * their state.
+ */
 uint64_t umi_context_snapshot_operation_count(const UmiContextSnapshotState *state);
 #ifdef __cplusplus
 }

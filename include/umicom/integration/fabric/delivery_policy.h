@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric delivery policy data shared with callers of this public contract.
+ */
 typedef struct UmiFabricDeliveryPolicy {
     char policy_id[UMI_FABRIC_ID_CAPACITY];
     UmiFabricDeliveryMode mode;
@@ -33,7 +36,15 @@ typedef struct UmiFabricDeliveryPolicy {
     bool durable;
 } UmiFabricDeliveryPolicy;
 
+/**
+ * Initialise fabric delivery policy from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_delivery_policy_init(UmiFabricDeliveryPolicy *item, const char *policy_id, UmiFabricDeliveryMode mode, uint32_t max_attempts, uint64_t acknowledgement_timeout_ms, bool durable);
+/**
+ * Check that fabric delivery policy satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_fabric_delivery_policy_validate(const UmiFabricDeliveryPolicy *item);
 
 #ifdef __cplusplus

@@ -24,9 +24,14 @@
 UmiStatus umi_digital_asset_confirmation_policy_init(UmiDigitalConfirmationPolicy *value, const char *network_id, uint32_t required_confirmations, uint32_t final_confirmations)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || final_confirmations < required_confirmations) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_digital_asset_copy_text(value->network_id.value, sizeof value->network_id.value, network_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->required_confirmations = required_confirmations;
     value->final_confirmations = final_confirmations;

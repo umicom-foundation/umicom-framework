@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data field mapping data shared with callers of this public contract.
+ */
 typedef struct UmiDataFieldMapping {
     char mapping_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char entity_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];

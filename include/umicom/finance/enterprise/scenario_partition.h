@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise scenario partition data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseScenarioPartition { size_t partition_index; size_t first_scenario; size_t scenario_count; size_t total_scenarios; } UmiEnterpriseScenarioPartition;
 /* Initialise a scenario partition that remains inside the scenario grid. */
 UmiStatus umi_enterprise_scenario_partition_init(UmiEnterpriseScenarioPartition *partition,size_t partition_index,size_t first_scenario,size_t scenario_count,size_t total_scenarios);

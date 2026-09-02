@@ -20,11 +20,19 @@
 extern "C" {
 #endif
 
+/**
+ * Write ai developer preferences in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ai_developer_preferences_save(
     UmiSessionStore *store,
     const char *key_prefix,
     const UmiAiDeveloperPreferences *preferences);
 
+/**
+ * Provide the ai developer preferences restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_preferences_restore(
     const UmiSessionStore *store,
     const char *key_prefix,

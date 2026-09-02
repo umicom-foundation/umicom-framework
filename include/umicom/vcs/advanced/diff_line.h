@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced diff line data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedDiffLine {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,8 +38,20 @@ typedef struct UmiVcsAdvancedDiffLine {
     uint64_t fingerprint;
 } UmiVcsAdvancedDiffLine;
 
+/**
+ * Initialise vcs advanced diff line from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_diff_line_init(UmiVcsAdvancedDiffLine *value);
+/**
+ * Check that vcs advanced diff line satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_diff_line_validate(const UmiVcsAdvancedDiffLine *value);
+/**
+ * Copy vcs advanced diff line into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_vcs_advanced_diff_line_set(UmiVcsAdvancedDiffLine *value,
                                            UmiVcsDiffKind kind,
                                            size_t old_line,

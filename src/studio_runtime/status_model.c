@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the append operation used by this module and its client applications. */
 static UmiStatus append(
     UmiStudioRuntimeStatusModel *model,
     UmiStudioRuntimeStatusKind kind,
@@ -31,6 +32,7 @@ static UmiStatus append(
     size_t text_length;
     size_t command_length;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->item_count >= UMI_STUDIO_RUNTIME_STATUS_ITEM_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -39,6 +41,7 @@ static UmiStatus append(
     text_length = strlen(text);
     command_length = strlen(command_id);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (id_length >= UMI_STUDIO_RUNTIME_ID_CAPACITY ||
         text_length >= UMI_STUDIO_RUNTIME_TEXT_CAPACITY ||
         command_length >= UMI_STUDIO_RUNTIME_ID_CAPACITY) {
@@ -58,13 +61,25 @@ static UmiStatus append(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise studio status model from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_studio_status_model_init(UmiStudioRuntimeStatusModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return;
     (void)memset(model, 0, sizeof(*model));
     model->revision = 1U;
 }
 
+/*
+ * Provide the studio status model build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_status_model_build(
     UmiStudioRuntimeStatusModel *model,
     const UmiIdeIntegrationPlatformSnapshot *snapshot,
@@ -74,6 +89,10 @@ UmiStatus umi_studio_status_model_build(
     uint32_t problem_badge = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || snapshot == NULL || selection == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -89,6 +108,7 @@ UmiStatus umi_studio_status_model_build(
         0U,
         0);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append(
             model,
@@ -107,6 +127,7 @@ UmiStatus umi_studio_status_model_build(
             0);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot->context.has_problems) {
         const size_t severe =
             snapshot->context.problems.errors +
@@ -115,6 +136,7 @@ UmiStatus umi_studio_status_model_build(
             severe > UINT32_MAX ? UINT32_MAX : (uint32_t)severe;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(
             text,
@@ -138,6 +160,7 @@ UmiStatus umi_studio_status_model_build(
             problem_badge > 0U);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(
             text,
@@ -162,6 +185,7 @@ UmiStatus umi_studio_status_model_build(
                 snapshot->context.tests.operation_running);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append(
             model,
@@ -175,6 +199,7 @@ UmiStatus umi_studio_status_model_build(
             !snapshot->workflow.ready);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(
             text,
@@ -197,6 +222,7 @@ UmiStatus umi_studio_status_model_build(
             snapshot->context.has_debug && snapshot->context.debug.active);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append(
             model,
@@ -217,6 +243,7 @@ UmiStatus umi_studio_status_model_build(
                 snapshot->context.ai.pending_approval_count > 0U);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append(
             model,
@@ -230,6 +257,7 @@ UmiStatus umi_studio_status_model_build(
             0);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append(
             model,
@@ -244,6 +272,7 @@ UmiStatus umi_studio_status_model_build(
             0);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(
             text,
@@ -262,19 +291,30 @@ UmiStatus umi_studio_status_model_build(
             0);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) model->revision += 1U;
     return status;
 }
 
+/*
+ * Find studio status model while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiStudioRuntimeStatusItem *umi_studio_status_model_find(
     const UmiStudioRuntimeStatusModel *model,
     UmiStudioRuntimeStatusKind kind)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->item_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (model->items[index].kind == kind) return &model->items[index];
     }
 

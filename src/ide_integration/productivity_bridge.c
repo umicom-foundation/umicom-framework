@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+/* Provide the copy uri operation used by this module and its client applications. */
 static UmiStatus copy_uri(
     const UmiIdeLocation *location,
     char *out_uri,
@@ -29,18 +30,27 @@ static UmiStatus copy_uri(
         : location->path;
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(out_uri, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide location to productivity operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_location_to_productivity(
     const UmiIdeLocation *location,
     UmiDeveloperProductivityLocation *out_location)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (location == NULL || out_location == NULL ||
         !umi_ide_location_has_target(location)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -52,6 +62,7 @@ UmiStatus umi_ide_location_to_productivity(
         location,
         out_location->uri,
         sizeof(out_location->uri));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_location->line = (size_t)location->line;
@@ -61,6 +72,10 @@ UmiStatus umi_ide_location_to_productivity(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide productivity record visit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_productivity_record_visit(
     UmiDeveloperNavigationService *navigation,
     const UmiIdeLocation *location)
@@ -68,6 +83,10 @@ UmiStatus umi_ide_productivity_record_visit(
     UmiDeveloperProductivityLocation projected;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (navigation == NULL || location == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -75,6 +94,7 @@ UmiStatus umi_ide_productivity_record_visit(
     status = umi_ide_location_to_productivity(
         location,
         &projected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_navigation_service_visit(

@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench debug launch request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchDebugLaunchRequest {
     UmiDebugWorkbenchEntry value;
     bool selected;
@@ -33,10 +37,30 @@ typedef struct UmiDebugWorkbenchDebugLaunchRequest {
     uint64_t revision;
 } UmiDebugWorkbenchDebugLaunchRequest;
 
+/**
+ * Initialise debug workbench debug launch request from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_workbench_debug_launch_request_init(UmiDebugWorkbenchDebugLaunchRequest *model, const char *id, const char *label, const char *detail, const char *path, UmiDebugWorkbenchRange range);
+/**
+ * Provide the debug workbench debug launch request set state operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_launch_request_set_state(UmiDebugWorkbenchDebugLaunchRequest *model, uint32_t state, uint64_t value);
+/**
+ * Find debug workbench debug launch request set while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_debug_workbench_debug_launch_request_set_selected(UmiDebugWorkbenchDebugLaunchRequest *model, bool selected);
+/**
+ * Provide the debug workbench debug launch request set enabled operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_launch_request_set_enabled(UmiDebugWorkbenchDebugLaunchRequest *model, bool enabled);
+/**
+ * Check that debug workbench debug launch request satisfies its contract before another
+ * service relies on it.
+ */
 int umi_debug_workbench_debug_launch_request_valid(const UmiDebugWorkbenchDebugLaunchRequest *model);
 
 #ifdef __cplusplus

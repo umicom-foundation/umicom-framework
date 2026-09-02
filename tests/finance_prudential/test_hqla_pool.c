@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/hqla_pool.h"
 
-int main(void) { UmiPrudentialHqlaPool p={0}; UmiPrudentialLiquidityAsset a; UmiCurrency c={"GBP"}; if(umi_pru_liquidity_asset_init(&a,"A",UMI_PRU_HQLA_LEVEL1,100.0,0.1,c)!=UMI_STATUS_OK)return 1; if(umi_pru_hqla_pool_add(&p,&a)!=UMI_STATUS_OK)return 2; return umi_pru_hqla_pool_eligible_total(&p)==90.0?0:3; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialHqlaPool p={0}; UmiPrudentialLiquidityAsset a; UmiCurrency c={"GBP"}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_liquidity_asset_init(&a,"A",UMI_PRU_HQLA_LEVEL1,100.0,0.1,c)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_hqla_pool_add(&p,&a)!=UMI_STATUS_OK)return 2; return umi_pru_hqla_pool_eligible_total(&p)==90.0?0:3; }

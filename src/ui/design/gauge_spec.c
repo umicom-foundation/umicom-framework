@@ -20,9 +20,18 @@
 #include "umicom/ui/design/gauge_spec.h"
 
 #include <string.h>
+/* Check that design gauge spec satisfies its contract before another service relies on it. */
 int umi_design_gauge_spec_valid(const UmiDesignGaugeSpec *spec) { return spec!=NULL && (umi_design_number_valid(spec->minimum) && umi_design_number_valid(spec->maximum) && umi_design_number_valid(spec->value) && spec->maximum>spec->minimum && spec->value>=spec->minimum && spec->value<=spec->maximum && spec->warning_threshold>=spec->minimum && spec->warning_threshold<=spec->maximum && spec->danger_threshold>=spec->warning_threshold && spec->danger_threshold<=spec->maximum) ? 1 : 0; }
+/*
+ * Initialise design gauge spec from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_design_gauge_spec_init(UmiDesignGaugeSpec *spec, double minimum, double maximum, double value, double warning_threshold, double danger_threshold)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(spec,0,sizeof *spec);
     spec->minimum=minimum;spec->maximum=maximum;spec->value=value;spec->warning_threshold=warning_threshold;spec->danger_threshold=danger_threshold;

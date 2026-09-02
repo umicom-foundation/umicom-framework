@@ -23,10 +23,32 @@
 #include "umicom/frontend/network_log.h"
 #include "umicom/frontend/preview_session.h"
 #include "umicom/frontend/quality_audit.h"
+/**
+ * Represent the frontend studio data shared with callers of this public contract.
+ */
 typedef struct UmiFrontendStudio { UmiFrontendDeviceRegistry devices; UmiFrontendDocumentStore documents; UmiFrontendDevServer server; UmiFrontendPreviewSession preview; UmiFrontendDomInspector dom; UmiFrontendNetworkLog network; UmiFrontendConsoleLog console; UmiFrontendBuildProfiles builds; UmiFrontendHotReload reload; UmiFrontendQualityBudget budget; uint64_t revision; } UmiFrontendStudio;
+/**
+ * Represent the frontend studio snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiFrontendStudioSnapshot { size_t device_count; size_t document_count; size_t dom_node_count; size_t network_entry_count; size_t console_entry_count; size_t build_profile_count; size_t pending_changes; uint64_t revision; int server_running; char preview_url[UMI_FRONTEND_DEV_URL_CAPACITY]; char active_device[UMI_FRONTEND_DEV_ID_CAPACITY]; } UmiFrontendStudioSnapshot;
+/**
+ * Initialise frontend studio from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_frontend_studio_init(UmiFrontendStudio *studio,const UmiFrontendDevServerConfig *config);
+/**
+ * Provide the frontend studio snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_frontend_studio_snapshot(const UmiFrontendStudio *studio,UmiFrontendStudioSnapshot *out_snapshot);
+/**
+ * Provide the frontend studio open document operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_frontend_studio_open_document(UmiFrontendStudio *studio,const UmiFrontendDocument *document);
+/**
+ * Provide the frontend studio publish changes operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_frontend_studio_publish_changes(UmiFrontendStudio *studio,uint64_t *out_generation);
 #endif

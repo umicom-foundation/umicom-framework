@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test operation and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 int test_operation(void){ UmiApplicationOperationLog l; umi_application_operation_log_init(&l); assert(umi_application_operation_log_record(&l,UMI_APPLICATION_OPERATION_SESSION_START,"org.umicom.trader",UMI_STATUS_OK)==UMI_STATUS_OK); assert(umi_application_operation_log_last(&l)!=NULL); return 0; }

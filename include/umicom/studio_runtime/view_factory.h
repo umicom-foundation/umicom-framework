@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise studio view factory from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_studio_view_factory_create(
     UmiStudioRuntimePlatform *platform,
     const char *view_id,

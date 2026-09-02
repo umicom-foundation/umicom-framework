@@ -18,16 +18,31 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the banking customer segment data shared with callers of this public contract.
+ */
 typedef struct UmiBankingCustomerSegment {
     UmiFinancialId id;
     UmiFinancialId customer_id;
     UmiBankingSegment segment;
 } UmiBankingCustomerSegment;
+/**
+ * Initialise banking customer segment from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_banking_customer_segment_init(UmiBankingCustomerSegment *value,
     const char *id,
     const char *customer_id,
     UmiBankingSegment segment);
+/**
+ * Check that banking customer segment satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_banking_customer_segment_valid(const UmiBankingCustomerSegment *value);
+/**
+ * Provide the banking customer segment institutional operation used by this module and its
+ * client applications.
+ */
 bool umi_banking_customer_segment_institutional(const UmiBankingCustomerSegment *value);
 #ifdef __cplusplus
 }

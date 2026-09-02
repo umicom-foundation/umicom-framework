@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrCacheLayout value; umi_dr_cache_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"cache")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.namespace_id,sizeof(value.namespace_id),"studio")==UMI_STATUS_OK); value.max_bytes=1024U; CHECK(umi_dr_cache_layout_valid(&value)); CHECK(umi_dr_cache_layout_fingerprint(&value) != 0U);
     return 0;

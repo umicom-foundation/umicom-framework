@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "headless_internal.h"
 
+/*
+ * Provide the headless render dialogs operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_headless_render_dialogs(UmiUiHeadlessAdapter *adapter,
                                       UmiUiWorkbench *workbench)
 {

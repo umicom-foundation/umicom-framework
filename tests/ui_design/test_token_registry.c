@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/token_registry.h"
 
-int main(void){UmiDesignTokenRegistry r={0};UmiDesignTokenSet s,o;if(umi_design_token_set_init(&s,"dark")!=UMI_STATUS_OK)return 1;if(umi_design_token_registry_set(&r,UMI_DESIGN_THEME_DARK,&s)!=UMI_STATUS_OK)return 2;if(umi_design_token_registry_get(&r,UMI_DESIGN_THEME_DARK,&o)!=UMI_STATUS_OK)return 3;return o.id[0]=='d'?0:4;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignTokenRegistry r={0};UmiDesignTokenSet s,o;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_set_init(&s,"dark")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_registry_set(&r,UMI_DESIGN_THEME_DARK,&s)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_registry_get(&r,UMI_DESIGN_THEME_DARK,&o)!=UMI_STATUS_OK)return 3;return o.id[0]=='d'?0:4;}

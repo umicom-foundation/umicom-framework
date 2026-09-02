@@ -23,6 +23,10 @@
 /* Keep confirmation-based finality deterministic and policy driven. */
 UmiStatus umi_digital_asset_settlement_finality_evaluate(const UmiDigitalConfirmationPolicy *policy, uint32_t confirmations, UmiDigitalSettlementFinality *out_finality)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL || out_finality == NULL || !umi_digital_asset_confirmation_policy_valid(policy)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_finality, 0, sizeof *out_finality);
     out_finality->confirmations = confirmations;

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_WRITE_PERMISSION_POLICY "umicom.document.security.write_permission_policy"
 
+/**
+ * Provide the document capability write permission policy operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_write_permission_policy(void);
 

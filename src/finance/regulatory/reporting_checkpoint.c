@@ -20,14 +20,24 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg reporting checkpoint from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_reg_reporting_checkpoint_init(UmiReportingCheckpoint *record, const char *checkpoint_id, const char *job_id, uint32_t completed_steps, uint64_t state_hash)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(state_hash != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->checkpoint_id, sizeof record->checkpoint_id, checkpoint_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->job_id, sizeof record->job_id, job_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->completed_steps = completed_steps;
     record->state_hash = state_hash;

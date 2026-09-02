@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio layout preset debugging operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeLayoutPresetDefinition *
 umi_studio_layout_preset_debugging(void);
 #ifdef __cplusplus

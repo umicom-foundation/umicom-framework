@@ -19,44 +19,68 @@
 
 #include "gtk4_internal.h"
 
+/*
+ * Provide the on activity clicked operation used by this module and its client
+ * applications.
+ */
 static void on_activity_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     const char *activity_id;
     UmiUiWorkbench *workbench;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) return;
 
     activity_id = (const char *)g_object_get_data(G_OBJECT(button),
                                                   "umicom-activity-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (activity_id == NULL) return;
     workbench = umi_ui_application_shell_workbench(adapter->shell);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_workbench_activate_activity(workbench, activity_id) == UMI_STATUS_OK) {
         (void)umi_gtk4_refresh_workbench(adapter);
     }
 }
 
+/*
+ * Provide the gtk4 refresh activity bar operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,
                                        UmiUiWorkbench *workbench)
 {
     UmiUiActivityModel *model;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     umi_gtk4_clear_box(adapter->activity_box);
     model = umi_ui_workbench_activities(workbench);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_activity_model_count(model); ++index) {
         UmiUiActivitySnapshot activity;
         GtkWidget *button;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_activity_model_at(model, index, &activity) != UMI_STATUS_OK ||
             !activity.visible) {
             continue;
         }
 
         button = gtk_button_new();
+        /* Apply this branch only when its contract condition is satisfied. */
         if (activity.icon_name[0] != '\0') {
             gtk_button_set_icon_name(GTK_BUTTON(button), activity.icon_name);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             gtk_button_set_label(GTK_BUTTON(button), activity.label);
         }
         gtk_widget_set_tooltip_text(button, activity.label);
@@ -64,6 +88,7 @@ UmiStatus umi_gtk4_refresh_activity_bar(UmiGtk4Adapter *adapter,
         gtk_widget_add_css_class(button, "flat");
         gtk_widget_add_css_class(button, "umicom-activity-button");
         gtk_widget_set_size_request(button, 40, 40);
+        /* Apply this operation only while the related capability or state is available. */
         if (activity.active) {
             gtk_widget_add_css_class(button, "active");
         }

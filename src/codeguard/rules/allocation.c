@@ -25,8 +25,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-ALLOC-002", "CWE-401", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_MEMORY, 72U, UMI_CODEGUARD_MATCH_CODE, "calloc(", "Allocated memory must have one clear owner and cleanup path.", "Check for NULL and pair the allocation with deterministic cleanup."}
 };
 
+/*
+ * Provide the codeguard rules allocation operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_allocation(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

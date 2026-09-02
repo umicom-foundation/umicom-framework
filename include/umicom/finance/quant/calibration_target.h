@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant calibration target data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCalibrationTarget {
     double market_value;
     double weight;

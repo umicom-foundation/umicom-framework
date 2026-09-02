@@ -28,6 +28,10 @@
 
 #include "umicom/debug/thread_inspector.h"
 
+/*
+ * Exercise make thread and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugThreadSnapshot make_thread(
     const char *id,
     const char *session_id,
@@ -49,6 +53,10 @@ static UmiDebugThreadSnapshot make_thread(
     return item;
 }
 
+/*
+ * Exercise make frame and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugStackFrameSnapshot make_frame(
     const char *id,
     const char *thread_id,
@@ -66,6 +74,10 @@ static UmiDebugStackFrameSnapshot make_frame(
     return item;
 }
 
+/*
+ * Exercise make scope and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugScopeSnapshot make_scope(
     const char *id,
     const char *frame_id,
@@ -82,6 +94,10 @@ static UmiDebugScopeSnapshot make_scope(
     return item;
 }
 
+/*
+ * Exercise make variable and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiDebugVariableSnapshot make_variable(
     const char *id,
     const char *scope_id,
@@ -98,6 +114,10 @@ static UmiDebugVariableSnapshot make_variable(
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugThreadRegistry *threads = NULL;

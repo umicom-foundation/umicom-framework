@@ -39,6 +39,9 @@ extern "C" {
 #define UMI_EDITOR_COMPLETION_PREFIX_CAPACITY 512U
 #define UMI_EDITOR_COMPLETION_LINE_CONTEXT_CAPACITY 2048U
 
+/**
+ * List the named editor completion trigger kind values accepted by this public contract.
+ */
 typedef enum UmiEditorCompletionTriggerKind {
     UMI_EDITOR_COMPLETION_TRIGGER_INVOKED = 1,
     UMI_EDITOR_COMPLETION_TRIGGER_CHARACTER = 2,
@@ -48,6 +51,10 @@ typedef enum UmiEditorCompletionTriggerKind {
 
 typedef int (*UmiEditorCompletionCancellationProbe)(void *user_data);
 
+/**
+ * Represent the editor completion request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorCompletionRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -74,6 +81,10 @@ typedef struct UmiEditorCompletionRequest {
     void *cancellation_user_data;
 } UmiEditorCompletionRequest;
 
+/**
+ * Represent the editor completion provider descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionProviderDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -95,6 +106,10 @@ typedef struct UmiEditorCompletionProviderDescriptor {
     int enabled;
 } UmiEditorCompletionProviderDescriptor;
 
+/**
+ * Represent the editor completion provider response data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionProviderResponse {
     uint32_t struct_size;
     uint32_t api_version;
@@ -121,6 +136,10 @@ typedef UmiStatus (*UmiEditorCompletionCancelFunction)(
     uint64_t request_id,
     void *provider_user_data);
 
+/**
+ * Represent the editor completion provider callbacks data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionProviderCallbacks {
     uint32_t struct_size;
     uint32_t api_version;
@@ -129,6 +148,10 @@ typedef struct UmiEditorCompletionProviderCallbacks {
     UmiEditorCompletionCancelFunction cancel;
 } UmiEditorCompletionProviderCallbacks;
 
+/**
+ * Represent the editor completion provider registry snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorCompletionProviderRegistrySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -141,46 +164,102 @@ typedef struct UmiEditorCompletionProviderRegistrySnapshot {
     uint64_t revision;
 } UmiEditorCompletionProviderRegistrySnapshot;
 
+/**
+ * Represent the editor completion provider registry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionProviderRegistry
     UmiEditorCompletionProviderRegistry;
 
+/**
+ * Provide the editor completion request default operation used by this module and its
+ * client applications.
+ */
 UmiEditorCompletionRequest umi_editor_completion_request_default(
     const char *document_id,
     const char *language_id,
     uint64_t request_id);
+/**
+ * Check that editor completion request satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_editor_completion_request_validate(
     const UmiEditorCompletionRequest *request);
+/**
+ * Provide the editor completion request is cancelled operation used by this module and its
+ * client applications.
+ */
 int umi_editor_completion_request_is_cancelled(
     const UmiEditorCompletionRequest *request);
 
+/**
+ * Initialise editor completion provider registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_completion_provider_registry_create(
     UmiEditorCompletionProviderRegistry **out_registry);
+/**
+ * Release or reset state held by editor completion provider registry so the same storage
+ * can be reused safely.
+ */
 void umi_editor_completion_provider_registry_destroy(
     UmiEditorCompletionProviderRegistry *registry);
+/**
+ * Release or reset state held by editor completion provider registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_completion_provider_registry_clear(
     UmiEditorCompletionProviderRegistry *registry);
+/**
+ * Add editor completion provider registry only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_editor_completion_provider_registry_register(
     UmiEditorCompletionProviderRegistry *registry,
     const UmiEditorCompletionProviderDescriptor *descriptor,
     const UmiEditorCompletionProviderCallbacks *callbacks,
     void *provider_user_data);
+/**
+ * Remove editor completion provider registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_editor_completion_provider_registry_unregister(
     UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id);
+/**
+ * Find editor completion provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_completion_provider_registry_find(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
     UmiEditorCompletionProviderDescriptor *out_descriptor);
+/**
+ * Find editor completion provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_completion_provider_registry_at(
     const UmiEditorCompletionProviderRegistry *registry,
     size_t position,
     UmiEditorCompletionProviderDescriptor *out_descriptor);
+/**
+ * Provide the editor completion provider registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_snapshot(
     const UmiEditorCompletionProviderRegistry *registry,
     UmiEditorCompletionProviderRegistrySnapshot *out_snapshot);
+/**
+ * Provide the editor completion provider supports request operation used by this module
+ * and its client applications.
+ */
 int umi_editor_completion_provider_supports_request(
     const UmiEditorCompletionProviderDescriptor *descriptor,
     const UmiEditorCompletionRequest *request);
+/**
+ * Provide the editor completion provider registry invoke operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_invoke(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
@@ -188,17 +267,33 @@ UmiStatus umi_editor_completion_provider_registry_invoke(
     UmiEditorCompletionCandidateSink sink,
     void *sink_user_data,
     UmiEditorCompletionProviderResponse *out_response);
+/**
+ * Provide the editor completion provider registry resolve operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_resolve(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
     const UmiEditorCompletionRequest *request,
     UmiEditorCompletionCandidate *in_out_candidate);
+/**
+ * Provide the editor completion provider registry cancel operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_cancel(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
     uint64_t request_id);
+/**
+ * Return the number of records represented by editor completion provider registry without
+ * changing their state.
+ */
 size_t umi_editor_completion_provider_registry_count(
     const UmiEditorCompletionProviderRegistry *registry);
+/**
+ * Provide the editor completion provider registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_completion_provider_registry_revision(
     const UmiEditorCompletionProviderRegistry *registry);
 

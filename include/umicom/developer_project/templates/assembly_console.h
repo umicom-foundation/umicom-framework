@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project template assembly console operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_assembly_console(void);
 
 #ifdef __cplusplus

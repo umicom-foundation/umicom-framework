@@ -25,6 +25,10 @@ extern "C" {
 #include "umicom/application/production/diagnostic_entry.h"
 #include "umicom/application/production/runtime.h"
 
+/**
+ * Represent the application production diagnostic report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionDiagnosticReport {
     UmiApplicationProductionDiagnosticEntry
         entries[UMI_APPLICATION_PRODUCTION_MAX_DIAGNOSTICS];
@@ -33,6 +37,10 @@ typedef struct UmiApplicationProductionDiagnosticReport {
     size_t error_count;
 } UmiApplicationProductionDiagnosticReport;
 
+/**
+ * Provide the application production diagnostic report build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_diagnostic_report_build(
     const UmiApplicationProductionRuntime *runtime,
     UmiApplicationProductionDiagnosticReport *out_report);

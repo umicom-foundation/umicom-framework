@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev inline session data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevInlineSession {
     UmiAiDevState state;
     uint32_t successes;
@@ -37,10 +40,30 @@ typedef struct UmiAiDevInlineSession {
     uint64_t revision;
 } UmiAiDevInlineSession;
 
+/**
+ * Initialise ai dev inline session from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_inline_session_init(UmiAiDevInlineSession *value);
+/**
+ * Provide the ai dev inline session record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_inline_session_record(UmiAiDevInlineSession *value, int success);
+/**
+ * Provide the ai dev inline session set pending operation used by this module and its
+ * client applications.
+ */
 void umi_ai_dev_inline_session_set_pending(UmiAiDevInlineSession *value, uint32_t pending);
+/**
+ * Provide the ai dev inline session health score operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_dev_inline_session_health_score(const UmiAiDevInlineSession *value);
+/**
+ * Provide the ai dev inline session ready operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_inline_session_ready(const UmiAiDevInlineSession *value);
 
 #ifdef __cplusplus

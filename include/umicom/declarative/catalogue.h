@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the decl catalogue register defaults operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_decl_catalogue_register_defaults(UmiDeclComponentRegistry *registry);
 #ifdef __cplusplus
 }

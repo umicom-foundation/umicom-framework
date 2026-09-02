@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the application feature gate evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_feature_gate_evaluate(
     const UmiApplicationExperienceDefinition *experience,
     const char *feature_id,
@@ -26,11 +30,19 @@ UmiStatus umi_application_feature_gate_evaluate(
     UmiApplicationFeatureGateResult *out_result)
 {
     const UmiExperienceFeatureDefinition *feature;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || feature_id == NULL || out_result == NULL ||
         minimum_state < UMI_EXPERIENCE_FEATURE_PLANNED ||
         minimum_state > UMI_EXPERIENCE_FEATURE_VERIFIED)
         return UMI_STATUS_INVALID_ARGUMENT;
     feature = umi_application_experience_feature_find(experience, feature_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (feature == NULL) return UMI_STATUS_NOT_FOUND;
     memset(out_result, 0, sizeof(*out_result));
     out_result->structure_size = sizeof(*out_result);

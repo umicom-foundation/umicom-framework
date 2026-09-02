@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio runtime execute command operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_execute_command(
     UmiStudioRuntimeBindings *bindings,
     const char *command_id,
@@ -30,6 +34,10 @@ UmiStatus umi_studio_runtime_execute_command(
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the studio runtime execute contribution operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_execute_contribution(
     UmiStudioRuntimeBindings *bindings,
     const char *contribution_id,

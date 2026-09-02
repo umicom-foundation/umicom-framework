@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_BUILD_DASHBOARD "umicom.developer.experience.build_dashboard"
 
+/**
+ * Provide the developer capability build dashboard operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_build_dashboard(void);
 

@@ -20,16 +20,27 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg data lineage edge from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_reg_data_lineage_edge_init(UmiDataLineageEdge *record, const char *from_node, const char *to_node, const char *transform, uint64_t logic_hash)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(logic_hash != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->from_node, sizeof record->from_node, from_node);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->to_node, sizeof record->to_node, to_node);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->transform, sizeof record->transform, transform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->logic_hash = logic_hash;
     return UMI_STATUS_OK;

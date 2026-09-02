@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise developer workbench command search provider from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_developer_workbench_command_search_provider_init(
     UmiDeveloperWorkbenchSearchProvider *provider,
     UmiCommandRegistry *commands);

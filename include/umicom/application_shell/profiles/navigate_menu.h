@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application shell profile navigate menu operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_navigate_menu(void);
 
 #ifdef __cplusplus

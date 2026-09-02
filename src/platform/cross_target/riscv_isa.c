@@ -22,24 +22,36 @@
 
 #include <ctype.h>
 #include <string.h>
+/*
+ * Read ct riscv isa into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_ct_riscv_isa_parse(const char *s, UmiCtRiscvIsa *out) {
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (s == NULL || out == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     memset(out, 0, sizeof(*out));
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(s, "rv32", 4U) == 0) {
         out->xlen = 32U;
-    } else if (strncmp(s, "rv64", 4U) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strncmp(s, "rv64", 4U) == 0) {
         out->xlen = 64U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_PARSE_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ct_copy(out->canonical, sizeof(out->canonical), s) != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 4U; s[i] != '\0' && s[i] != '_'; ++i) {
         char c = (char)tolower((unsigned char)s[i]);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (c == 'g') {
             out->integer_base = true;
             out->multiply = true;
@@ -48,31 +60,44 @@ UmiStatus umi_ct_riscv_isa_parse(const char *s, UmiCtRiscvIsa *out) {
             (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_DOUBLE);
             out->zicsr = true;
             out->zifencei = true;
-        } else if (c == 'i') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'i') {
             out->integer_base = true;
-        } else if (c == 'm') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'm') {
             out->multiply = true;
-        } else if (c == 'a') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'a') {
             (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_ATOMICS);
-        } else if (c == 'f') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'f') {
             (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_FLOAT);
-        } else if (c == 'd') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'd') {
             (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_DOUBLE);
-        } else if (c == 'c') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'c') {
             (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_COMPRESSED);
-        } else if (c == 'v') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (c == 'v') {
             (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_VECTOR);
         }
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strstr(s, "zicsr") != NULL) {
         out->zicsr = true;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strstr(s, "zifencei") != NULL) {
         out->zifencei = true;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strstr(s, "zba") != NULL || strstr(s, "zbb") != NULL) {
         (void)umi_ct_cpu_feature_set_add(&out->features, UMI_CT_CPU_BITMANIP);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!out->integer_base) {
         return UMI_STATUS_INVALID_STATE;
     }

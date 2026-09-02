@@ -20,6 +20,10 @@
 
 #include "umicom/desktop/monitor_topology.h"
 
+/*
+ * Exercise monitor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDesktopMonitor monitor(const char *id, int32_t x, bool primary)
 {
     UmiDesktopMonitor value = {0};
@@ -34,6 +38,10 @@ static UmiDesktopMonitor monitor(const char *id, int32_t x, bool primary)
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesktopMonitorTopology topology;

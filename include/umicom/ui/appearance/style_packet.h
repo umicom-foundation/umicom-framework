@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance style packet data shared with callers of this public contract.
+ */
 typedef struct UmiAppearanceStylePacket {
     char packet_id[UMI_APPEARANCE_ID_CAPACITY];
     char theme_pack_id[UMI_APPEARANCE_ID_CAPACITY];

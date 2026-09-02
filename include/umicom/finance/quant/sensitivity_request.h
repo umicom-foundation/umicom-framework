@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant sensitivity request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantSensitivityRequest {
     double base_value;
     double bump_size;

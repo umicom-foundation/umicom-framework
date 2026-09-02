@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named developer diagnostic pattern values accepted by this public contract.
+ */
 typedef enum UmiDeveloperDiagnosticPattern {
     UMI_DEVELOPER_DIAGNOSTIC_COLON_LOCATION = 1,
     UMI_DEVELOPER_DIAGNOSTIC_PAREN_LOCATION = 2,
@@ -30,6 +33,10 @@ typedef enum UmiDeveloperDiagnosticPattern {
     UMI_DEVELOPER_DIAGNOSTIC_TYPESCRIPT = 6
 } UmiDeveloperDiagnosticPattern;
 
+/**
+ * Provide the developer diagnostic parse pattern operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_diagnostic_parse_pattern(
     UmiDeveloperDiagnosticPattern pattern,
     const char *source_id,
@@ -38,6 +45,10 @@ UmiStatus umi_developer_diagnostic_parse_pattern(
     UmiDeveloperProblem *out_problem,
     int *out_matched);
 
+/**
+ * Provide the developer diagnostic severity from text operation used by this module and
+ * its client applications.
+ */
 UmiDeveloperProductivitySeverity
 umi_developer_diagnostic_severity_from_text(const char *text);
 

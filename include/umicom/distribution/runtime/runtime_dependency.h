@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr runtime dependency data shared with callers of this public contract.
+ */
 typedef struct UmiDrRuntimeDependency { char id[UMI_DR_ID_CAPACITY]; char soname[UMI_DR_PATH_CAPACITY]; UmiDrVersion minimum_version; bool system_provided; bool bundled; } UmiDrRuntimeDependency;
+/**
+ * Initialise dr runtime dependency from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_dr_runtime_dependency_init(UmiDrRuntimeDependency *value);
+/**
+ * Check that dr runtime dependency satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_dr_runtime_dependency_valid(const UmiDrRuntimeDependency *value);
+/**
+ * Provide the dr runtime dependency fingerprint operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_dr_runtime_dependency_fingerprint(const UmiDrRuntimeDependency *value);
 
 #ifdef __cplusplus

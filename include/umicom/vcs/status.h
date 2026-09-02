@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the vcs status code state operation used by this module and its client
+ * applications.
+ */
 UmiVcsChangeState umi_vcs_status_code_state(char code);
+/**
+ * Provide the vcs status parse porcelain operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_status_parse_porcelain(const char *output,
                                          UmiVcsChangeList *out_changes,
                                          size_t *out_parsed);

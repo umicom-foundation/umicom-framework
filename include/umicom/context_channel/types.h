@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_CONTEXT_MAX_LISTENERS 64U
 #define UMI_CONTEXT_MAX_DELIVERIES 256U
 
+/**
+ * List the named context kind values accepted by this public contract.
+ */
 typedef enum UmiContextKind {
     UMI_CONTEXT_KIND_GENERIC = 1,
     UMI_CONTEXT_KIND_SOURCE_LOCATION = 2,
@@ -49,6 +52,9 @@ typedef enum UmiContextKind {
     UMI_CONTEXT_KIND_SELECTION = 9
 } UmiContextKind;
 
+/**
+ * List the named context value kind values accepted by this public contract.
+ */
 typedef enum UmiContextValueKind {
     UMI_CONTEXT_VALUE_NONE = 0,
     UMI_CONTEXT_VALUE_TEXT = 1,
@@ -58,6 +64,9 @@ typedef enum UmiContextValueKind {
     UMI_CONTEXT_VALUE_BOOLEAN = 5
 } UmiContextValueKind;
 
+/**
+ * List the named context channel colour values accepted by this public contract.
+ */
 typedef enum UmiContextChannelColour {
     UMI_CONTEXT_COLOUR_NONE = 0,
     UMI_CONTEXT_COLOUR_RED = 1,
@@ -70,12 +79,18 @@ typedef enum UmiContextChannelColour {
     UMI_CONTEXT_COLOUR_MAGENTA = 8
 } UmiContextChannelColour;
 
+/**
+ * List the named context subscription role values accepted by this public contract.
+ */
 typedef enum UmiContextSubscriptionRole {
     UMI_CONTEXT_ROLE_OBSERVER = 1,
     UMI_CONTEXT_ROLE_PUBLISHER = 2,
     UMI_CONTEXT_ROLE_BIDIRECTIONAL = 3
 } UmiContextSubscriptionRole;
 
+/**
+ * List the named context delivery state values accepted by this public contract.
+ */
 typedef enum UmiContextDeliveryState {
     UMI_CONTEXT_DELIVERY_CREATED = 1,
     UMI_CONTEXT_DELIVERY_ROUTED = 2,
@@ -85,12 +100,18 @@ typedef enum UmiContextDeliveryState {
     UMI_CONTEXT_DELIVERY_EXPIRED = 6
 } UmiContextDeliveryState;
 
+/**
+ * List the named context policy decision values accepted by this public contract.
+ */
 typedef enum UmiContextPolicyDecision {
     UMI_CONTEXT_POLICY_ALLOW = 1,
     UMI_CONTEXT_POLICY_DENY = 2,
     UMI_CONTEXT_POLICY_REDACT = 3
 } UmiContextPolicyDecision;
 
+/**
+ * List the named context controller state values accepted by this public contract.
+ */
 typedef enum UmiContextControllerState {
     UMI_CONTEXT_CONTROLLER_CREATED = 1,
     UMI_CONTEXT_CONTROLLER_INITIALISED = 2,
@@ -100,6 +121,9 @@ typedef enum UmiContextControllerState {
     UMI_CONTEXT_CONTROLLER_FAILED = 6
 } UmiContextControllerState;
 
+/**
+ * Represent the context identity data shared with callers of this public contract.
+ */
 typedef struct UmiContextIdentity {
     char context_id[UMI_CONTEXT_TEXT_CAPACITY];
     char schema_id[UMI_CONTEXT_TEXT_CAPACITY];
@@ -111,6 +135,9 @@ typedef struct UmiContextIdentity {
     uint64_t created_at_ms;
 } UmiContextIdentity;
 
+/**
+ * Represent the context audit data shared with callers of this public contract.
+ */
 typedef struct UmiContextAudit {
     char actor_id[UMI_CONTEXT_TEXT_CAPACITY];
     char workspace_id[UMI_CONTEXT_TEXT_CAPACITY];
@@ -119,13 +146,41 @@ typedef struct UmiContextAudit {
     uint64_t revision;
 } UmiContextAudit;
 
+/**
+ * Provide the context kind text operation used by this module and its client applications.
+ */
 const char *umi_context_kind_text(UmiContextKind kind);
+/**
+ * Provide the context colour text operation used by this module and its client
+ * applications.
+ */
 const char *umi_context_colour_text(UmiContextChannelColour colour);
+/**
+ * Provide the context delivery state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_context_delivery_state_text(UmiContextDeliveryState state);
+/**
+ * Provide the context controller state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_context_controller_state_text(UmiContextControllerState state);
+/**
+ * Provide the context bounded length operation used by this module and its client
+ * applications.
+ */
 size_t umi_context_bounded_length(const char *text, size_t capacity);
+/**
+ * Check that context text satisfies its contract before another service relies on it.
+ */
 bool umi_context_text_is_valid(const char *text, size_t capacity);
+/**
+ * Provide the context copy text operation used by this module and its client applications.
+ */
 UmiStatus umi_context_copy_text(char *destination, size_t capacity, const char *source);
+/**
+ * Provide the context hash text operation used by this module and its client applications.
+ */
 uint64_t umi_context_hash_text(uint64_t hash, const char *text, size_t capacity);
 
 #ifdef __cplusplus

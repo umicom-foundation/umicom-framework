@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiQuote q={0};q.instrument=test_instrument();q.bid=25000.0;q.ask=25002.0;q.bid_size=4.0;q.ask_size=2.0;q.event_time_ms=1000;
     assert(umi_quote_valid(&q));assert(umi_quote_mid(&q)==25001.0);assert(umi_quote_spread(&q)==2.0);

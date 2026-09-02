@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/symlink_policy.h"
 
+/*
+ * Provide the document capability symlink policy operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_symlink_policy(void)
 {

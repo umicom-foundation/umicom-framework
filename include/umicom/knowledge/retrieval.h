@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the knowledge query data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeQuery {
     char text[UMI_KNOWLEDGE_TEXT_CAPACITY];
     UmiKnowledgeFilter filter;
@@ -28,8 +31,16 @@ typedef struct UmiKnowledgeQuery {
     double minimum_score;
 } UmiKnowledgeQuery;
 
+/**
+ * Initialise knowledge query from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_knowledge_query_init(UmiKnowledgeQuery *query,
                                    const char *text);
+/**
+ * Provide the knowledge retrieve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_retrieve(
     const UmiKnowledgeCatalogue *catalogue,
     const UmiKnowledgeVectorIndex *index,

@@ -15,6 +15,10 @@
 #include "test_support.h"
 #include <assert.h>
 
+/*
+ * Exercise test controller unknown action and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_controller_unknown_action(void)
 {
     UmiTradingUiTestFixture fixture;

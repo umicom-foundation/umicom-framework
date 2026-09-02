@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test parser invalid confidence and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_parser_invalid_confidence(void){UmiAiHelixParsedResponse p;const char *t="disposition=complete\naction=none\ntarget=-\nsummary=done\nconfidence=high\nrationale=x";TEST_CHECK(umi_ai_helix_response_parse(t,1,&p)==UMI_STATUS_PARSE_ERROR);return 0;}

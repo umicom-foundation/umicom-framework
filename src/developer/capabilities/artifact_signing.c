@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/artifact_signing.h"
 
+/*
+ * Provide the developer capability artifact signing operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_artifact_signing(void)
 {

@@ -17,6 +17,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding prompt refactor operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_prompt_refactor(void);
 #ifdef __cplusplus
 }

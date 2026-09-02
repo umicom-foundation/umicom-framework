@@ -24,36 +24,61 @@ struct UmiAiCodingTaskQueue {
     uint64_t sequence;
 };
 
+/*
+ * Initialise ai coding task queue from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ai_coding_task_queue_create(UmiAiCodingTaskQueue **out_queue)
 {
     UmiAiCodingTaskQueue *queue;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_queue = NULL;
 
     queue = (UmiAiCodingTaskQueue *)calloc(1U, sizeof(*queue));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     *out_queue = queue;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ai coding task queue so the same storage can be reused
+ * safely.
+ */
 void umi_ai_coding_task_queue_destroy(UmiAiCodingTaskQueue *queue)
 {
     free(queue);
 }
 
+/*
+ * Provide the ai coding task queue push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_task_queue_push(
     UmiAiCodingTaskQueue *queue,
     const UmiAiCodingQueuedTask *task)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL || task == NULL ||
         task->task_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (queue->count >= UMI_AI_CODING_TASK_QUEUE_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -65,14 +90,23 @@ UmiStatus umi_ai_coding_task_queue_push(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding task queue pop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_task_queue_pop(
     UmiAiCodingTaskQueue *queue,
     UmiAiCodingQueuedTask *out_task)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL || out_task == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (queue->count == 0U) return UMI_STATUS_NOT_FOUND;
 
     *out_task = queue->items[queue->head];
@@ -82,27 +116,48 @@ UmiStatus umi_ai_coding_task_queue_pop(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding task queue peek operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_task_queue_peek(
     const UmiAiCodingTaskQueue *queue,
     UmiAiCodingQueuedTask *out_task)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL || out_task == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (queue->count == 0U) return UMI_STATUS_NOT_FOUND;
 
     *out_task = queue->items[queue->head];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by ai coding task queue without changing their
+ * state.
+ */
 size_t umi_ai_coding_task_queue_count(const UmiAiCodingTaskQueue *queue)
 {
     return queue != NULL ? queue->count : 0U;
 }
 
+/*
+ * Release or reset state held by ai coding task queue so the same storage can be reused
+ * safely.
+ */
 void umi_ai_coding_task_queue_clear(UmiAiCodingTaskQueue *queue)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL) return;
 
     (void)memset(queue->items, 0, sizeof(queue->items));

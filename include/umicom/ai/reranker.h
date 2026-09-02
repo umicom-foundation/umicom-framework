@@ -29,6 +29,9 @@ typedef double (*UmiAiRerankScoreFn)(
     double base_score,
     void *user_data);
 
+/**
+ * Represent the ai reranker data shared with callers of this public contract.
+ */
 typedef struct UmiAiReranker {
     UmiAiRerankScoreFn score;
     void *user_data;

@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Perform workbench context host profile through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_context_host_profile_apply(
     const UmiWorkbenchContextHostProfile *profile,
     UmiWorkbenchContextLinkService *link_service,

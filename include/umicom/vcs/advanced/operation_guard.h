@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced operation guard data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedOperationGuard {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +40,20 @@ typedef struct UmiVcsAdvancedOperationGuard {
     UmiVcsSafetyLevel safety;
 } UmiVcsAdvancedOperationGuard;
 
+/**
+ * Initialise vcs advanced operation guard from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_operation_guard_init(UmiVcsAdvancedOperationGuard *value);
+/**
+ * Check that vcs advanced operation guard satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_operation_guard_validate(const UmiVcsAdvancedOperationGuard *value);
+/**
+ * Provide the vcs advanced operation guard allows operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_operation_guard_allows(const UmiVcsAdvancedOperationGuard *guard,
                                                int worktree_clean,
                                                int conflicts,

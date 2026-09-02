@@ -19,6 +19,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise emit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void emit(UmiDiagnosticStore *store,
                  UmiDiagnosticSeverity severity,
                  const char *source,
@@ -33,6 +37,10 @@ static void emit(UmiDiagnosticStore *store,
     umi_diagnostic_store_sink(&diagnostic, store);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticStoreConfig config = umi_diagnostic_store_config_default();

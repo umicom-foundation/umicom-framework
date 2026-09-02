@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai helix role profile data shared with callers of this public contract.
+ */
 typedef struct UmiAiHelixRoleProfile {
     UmiHelixAgentRole role;
     const char *name;
@@ -30,8 +33,16 @@ typedef struct UmiAiHelixRoleProfile {
     uint32_t action_mask;
 } UmiAiHelixRoleProfile;
 
+/**
+ * Find ai helix role profile while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiHelixRoleProfile *umi_ai_helix_role_profile_find(
     UmiHelixAgentRole role);
+/**
+ * Provide the ai helix role allows action operation used by this module and its client
+ * applications.
+ */
 int umi_ai_helix_role_allows_action(UmiHelixAgentRole role,
                                     UmiHelixActionKind kind);
 

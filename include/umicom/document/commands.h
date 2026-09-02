@@ -36,6 +36,9 @@ extern "C" {
 
 #define UMI_DOCUMENT_COMMAND_COUNT 10U
 
+/**
+ * Add document commands only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
                                           UmiDocumentCoordinator *coordinator);
 

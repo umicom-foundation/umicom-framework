@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/repository/status_summary.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiRepositoryStatusSummary s; umi_repository_status_summary_init(&s); assert(umi_repository_status_summary_refresh(&s)==UMI_STATUS_OK); assert(s.state==UMI_REPOSITORY_MAINTENANCE_CLEAN); return 0; }

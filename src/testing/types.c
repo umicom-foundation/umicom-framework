@@ -15,8 +15,10 @@
 
 #include "umicom/testing/types.h"
 
+/* Provide the test kind text operation used by this module and its client applications. */
 const char *umi_test_kind_text(UmiTestKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_TEST_KIND_UNIT: return "unit";
         case UMI_TEST_KIND_CONTRACT: return "contract";
@@ -27,8 +29,10 @@ const char *umi_test_kind_text(UmiTestKind kind)
     }
 }
 
+/* Provide the test state text operation used by this module and its client applications. */
 const char *umi_test_state_text(UmiTestState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_TEST_STATE_NOT_RUN: return "not-run";
         case UMI_TEST_STATE_RUNNING: return "running";

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/requests/exit.h"
+/*
+ * Provide the language runtime request exit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_request_exit(UmiLanguageRuntimeServer*s){return s?umi_language_runtime_server_send_notification(s,"exit",NULL):UMI_STATUS_INVALID_ARGUMENT;}

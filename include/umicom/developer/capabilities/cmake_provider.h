@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CMAKE_PROVIDER "umicom.developer.integration.cmake_provider"
 
+/**
+ * Provide the developer capability cmake provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cmake_provider(void);
 

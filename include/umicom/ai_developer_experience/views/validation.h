@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_coding_runtime/types.h"
+/**
+ * Initialise ai developer validation view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_validation_view_create(
     const char *view_id,
     const UmiAiCodingValidationReport *report,

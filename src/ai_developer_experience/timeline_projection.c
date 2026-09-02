@@ -17,26 +17,41 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *out, size_t capacity, const char *text)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || capacity == 0U || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(out, text, length);
     out[length] = '\0';
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer timeline from agent event operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_timeline_from_agent_event(
     const UmiAiCodingEvent *event,
     UmiAiDeveloperTimelineEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL || out_event == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -70,11 +85,19 @@ UmiStatus umi_ai_developer_timeline_from_agent_event(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer timeline from tool result operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_timeline_from_tool_result(
     const char *task_id,
     const UmiAiCodingToolResult *result,
     UmiAiDeveloperTimelineEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (task_id == NULL || result == NULL || out_event == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -107,12 +130,20 @@ UmiStatus umi_ai_developer_timeline_from_tool_result(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer timeline from validation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_timeline_from_validation(
     const char *task_id,
     const UmiAiCodingValidationResult *result,
     uint64_t sequence,
     UmiAiDeveloperTimelineEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (task_id == NULL || result == NULL || out_event == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -144,10 +175,18 @@ UmiStatus umi_ai_developer_timeline_from_validation(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer timeline from approval operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_timeline_from_approval(
     const UmiAiDeveloperApprovalRequest *approval,
     UmiAiDeveloperTimelineEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (approval == NULL || out_event == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

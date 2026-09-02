@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix mutation data shared with callers of this public contract.
+ */
 typedef struct UmiHelixMutation {
     char mutation_id[UMI_HELIX_ID_CAPACITY];
     char path[UMI_HELIX_TEXT_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixMutation {
     int destructive;
 } UmiHelixMutation;
 
+/**
+ * Initialise helix mutation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_mutation_init(UmiHelixMutation *value);
 
 #ifdef __cplusplus

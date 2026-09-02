@@ -17,6 +17,10 @@
 
 #include "umicom/developer_project/model_registry.h"
 
+/*
+ * Exercise make model and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void make_model(UmiDeveloperProjectModel *model,
                        const char *id,
                        const char *name)
@@ -27,6 +31,10 @@ static void make_model(UmiDeveloperProjectModel *model,
     model->build_system = UMI_DEVELOPER_PROJECT_BUILD_CMAKE;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperProjectModelRegistry *registry = NULL;

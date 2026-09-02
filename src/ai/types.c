@@ -19,8 +19,10 @@
 
 #include "umicom/ai/types.h"
 
+/* Provide the ai role text operation used by this module and its client applications. */
 const char *umi_ai_role_text(UmiAiRole role)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
         case UMI_AI_ROLE_SYSTEM: return "system";
         case UMI_AI_ROLE_USER: return "user";
@@ -30,8 +32,13 @@ const char *umi_ai_role_text(UmiAiRole role)
     }
 }
 
+/*
+ * Provide the ai finish reason text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_finish_reason_text(UmiAiFinishReason reason)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (reason) {
         case UMI_AI_FINISH_NONE: return "none";
         case UMI_AI_FINISH_STOP: return "stop";
@@ -42,8 +49,13 @@ const char *umi_ai_finish_reason_text(UmiAiFinishReason reason)
     }
 }
 
+/*
+ * Provide the ai provider kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_provider_kind_text(UmiAiProviderKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_PROVIDER_LOCAL: return "local";
         case UMI_AI_PROVIDER_REMOTE: return "remote";

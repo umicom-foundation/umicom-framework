@@ -21,4 +21,8 @@
 #include <math.h>
 #include <string.h>
 
-UmiStatus umi_quant_swap_pricer_value(double notional,double annuity,double fixed_rate,double par_rate,double *out_pv){if(out_pv==NULL||notional<0.0||annuity<0.0)return UMI_STATUS_INVALID_ARGUMENT;*out_pv=notional*annuity*(par_rate-fixed_rate);return UMI_STATUS_OK;}
+/*
+ * Provide the quant swap pricer value operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_quant_swap_pricer_value(double notional,double annuity,double fixed_rate,double par_rate,double *out_pv){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(out_pv==NULL||notional<0.0||annuity<0.0)return UMI_STATUS_INVALID_ARGUMENT;*out_pv=notional*annuity*(par_rate-fixed_rate);return UMI_STATUS_OK;}

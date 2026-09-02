@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/design_token.h"
+/**
+ * Represent the design style value data shared with callers of this public contract.
+ */
 typedef struct UmiDesignStyleValue { char property_id[UMI_DESIGN_ID_CAPACITY]; UmiDesignToken value; } UmiDesignStyleValue;
 /* Initialise one typed style property from a valid design token value. */
 UmiStatus umi_design_style_value_init(UmiDesignStyleValue *style_value, const char *property_id, const UmiDesignToken *value);

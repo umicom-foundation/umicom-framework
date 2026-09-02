@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential management action plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialManagementActionPlan { UmiPrudentialManagementAction actions[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialManagementActionPlan;
 /* Add one stress-response management action to the bounded plan. */
 UmiStatus umi_pru_management_action_plan_add(UmiPrudentialManagementActionPlan *plan, const UmiPrudentialManagementAction *action);

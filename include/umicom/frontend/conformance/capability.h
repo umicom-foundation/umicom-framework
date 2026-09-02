@@ -24,8 +24,18 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc capability data shared with callers of this public contract.
+ */
 typedef struct UmiFcCapability { UmiFcCapabilityKind kind; char id[UMI_FC_ID_CAPACITY]; char label[UMI_FC_TEXT_CAPACITY]; bool essential; } UmiFcCapability;
+/**
+ * Provide the fc capability bit operation used by this module and its client applications.
+ */
 uint64_t umi_fc_capability_bit(UmiFcCapabilityKind kind);
+/**
+ * Provide the fc capability make operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fc_capability_make(UmiFcCapabilityKind kind, const char *id, const char *label, bool essential, UmiFcCapability *out_capability);
 
 #ifdef __cplusplus

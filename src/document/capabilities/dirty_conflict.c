@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/dirty_conflict.h"
 
+/*
+ * Provide the document capability dirty conflict operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_dirty_conflict(void)
 {

@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai dev context dedup bytes operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ai_dev_context_dedup_bytes(const void *data,size_t size);
+/**
+ * Provide the ai dev context dedup text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ai_dev_context_dedup_text(const char *text);
+/**
+ * Provide the ai dev context dedup same operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_context_dedup_same(const char *left,const char *right);
 
 #ifdef __cplusplus

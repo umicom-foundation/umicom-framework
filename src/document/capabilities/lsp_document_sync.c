@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/lsp_document_sync.h"
 
+/*
+ * Provide the document capability lsp document sync operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_lsp_document_sync(void)
 {

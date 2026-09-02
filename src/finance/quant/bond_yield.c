@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_bond_yield_init(UmiQuantBondYield *record, double price, double face_value, double annual_coupon, double years_to_maturity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(price > 0.0 && face_value > 0.0 && years_to_maturity > 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->price = price;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_bond_yield_init(UmiQuantBondYield *record, double price, dou
 /* Estimate yield using coupon plus pull-to-par over average capital. */
 double umi_quant_bond_yield_approximate_yield(const UmiQuantBondYield *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return (record->annual_coupon + (record->face_value - record->price) / record->years_to_maturity) / ((record->face_value + record->price) * 0.5);
 }

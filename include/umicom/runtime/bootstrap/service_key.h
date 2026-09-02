@@ -22,11 +22,23 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap service key from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_bootstrap_service_key_init(UmiBootstrapServiceKey *key,
                                          const char *service_id,
                                          const char *qualifier);
+/**
+ * Provide the bootstrap service key equal operation used by this module and its client
+ * applications.
+ */
 bool umi_bootstrap_service_key_equal(const UmiBootstrapServiceKey *left,
                                      const UmiBootstrapServiceKey *right);
+/**
+ * Provide the bootstrap service key hash operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_bootstrap_service_key_hash(const UmiBootstrapServiceKey *key);
 
 #ifdef __cplusplus

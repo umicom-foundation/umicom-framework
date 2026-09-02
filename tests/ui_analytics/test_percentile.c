@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/percentile.h"
 
-int main(void){double v[]={0,10,20,30},p;if(umi_analytics_percentile(v,4,50,&p)!=0)return 1;return p==15.0?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){double v[]={0,10,20,30},p;/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_percentile(v,4,50,&p)!=0)return 1;return p==15.0?0:2;}

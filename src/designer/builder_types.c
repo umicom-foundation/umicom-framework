@@ -11,8 +11,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/builder_types.h"
 
+/*
+ * Provide the designer binding mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_binding_mode_text(UmiDesignerBindingMode mode)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (mode) {
         case UMI_DESIGNER_BIND_ONE_WAY: return "one-way";
         case UMI_DESIGNER_BIND_TWO_WAY: return "two-way";
@@ -21,8 +26,13 @@ const char *umi_designer_binding_mode_text(UmiDesignerBindingMode mode)
     }
 }
 
+/*
+ * Provide the designer interaction kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_interaction_kind_text(UmiDesignerInteractionKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DESIGNER_INTERACTION_SIGNAL: return "signal";
         case UMI_DESIGNER_INTERACTION_ACTION: return "action";
@@ -32,8 +42,13 @@ const char *umi_designer_interaction_kind_text(UmiDesignerInteractionKind kind)
     }
 }
 
+/*
+ * Provide the designer drop position text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_drop_position_text(UmiDesignerDropPosition position)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (position) {
         case UMI_DESIGNER_DROP_INTO: return "into";
         case UMI_DESIGNER_DROP_BEFORE: return "before";
@@ -42,9 +57,14 @@ const char *umi_designer_drop_position_text(UmiDesignerDropPosition position)
     }
 }
 
+/*
+ * Provide the designer transaction state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_transaction_state_text(
     UmiDesignerTransactionState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_DESIGNER_TRANSACTION_DRAFT: return "draft";
         case UMI_DESIGNER_TRANSACTION_APPLIED: return "applied";
@@ -54,8 +74,13 @@ const char *umi_designer_transaction_state_text(
     }
 }
 
+/*
+ * Provide the designer preview health text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_preview_health_text(UmiDesignerPreviewHealth health)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (health) {
         case UMI_DESIGNER_PREVIEW_IDLE: return "idle";
         case UMI_DESIGNER_PREVIEW_CURRENT: return "current";

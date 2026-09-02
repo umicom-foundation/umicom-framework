@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/design_system.h"
 
-int main(void){UmiDesignSystem s;if(umi_design_system_init(&s,"umicom",UMI_DESIGN_THEME_DARK,UMI_DESIGN_DENSITY_STANDARD)!=UMI_STATUS_OK)return 1;if(!umi_design_system_ready(&s))return 2;umi_design_system_touch(&s);return s.revision==1U?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignSystem s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_system_init(&s,"umicom",UMI_DESIGN_THEME_DARK,UMI_DESIGN_DENSITY_STANDARD)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_design_system_ready(&s))return 2;umi_design_system_touch(&s);return s.revision==1U?0:3;}

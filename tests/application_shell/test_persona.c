@@ -17,6 +17,10 @@
 
 #include "umicom/application_shell/persona.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationShellRegistry *registry = NULL;
@@ -26,6 +30,7 @@ int main(void)
 
     assert(umi_application_shell_persona_count() >= 3U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_shell_persona_count(); ++index) {
         assert(umi_application_shell_persona_validate(
             umi_application_shell_persona_at(index)) == UMI_STATUS_OK);

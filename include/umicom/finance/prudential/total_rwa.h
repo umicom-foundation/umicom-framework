@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential total rwa data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialTotalRwa { double credit_rwa; double market_rwa; double operational_rwa; double total_rwa; } UmiPrudentialTotalRwa;
 /* Aggregate non-negative credit, market and operational RWA components. */
 UmiStatus umi_pru_total_rwa_calculate(UmiPrudentialTotalRwa *result, double credit_rwa, double market_rwa, double operational_rwa);

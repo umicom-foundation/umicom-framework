@@ -28,12 +28,18 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai local runtime config data shared with callers of this public contract.
+ */
 typedef struct UmiAiLocalRuntimeConfig {
     char executable[UMI_AI_TEXT_CAPACITY];
     char model_path[UMI_AI_TEXT_CAPACITY];
     uint16_t port;
 } UmiAiLocalRuntimeConfig;
 
+/**
+ * Check that ai local runtime satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ai_local_runtime_validate(const UmiAiLocalRuntimeConfig *config);
 
 #ifdef __cplusplus

@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test default policy and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_default_policy(void)
 {
     UmiWorkbenchLayoutSyncPolicy policy =
@@ -32,6 +36,10 @@ static int test_default_policy(void)
     return 0;
 }
 
+/*
+ * Exercise test operation budget and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_operation_budget(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -73,6 +81,7 @@ static int test_operation_budget(void)
                    sizeof(plan.local_replica_id), "local");
     test_copy_text(plan.remote_replica_id,
                    sizeof(plan.remote_replica_id), "remote");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 4U; ++index) {
         (void)memset(&item, 0, sizeof(item));
         item.structure_size = sizeof(item);
@@ -96,6 +105,10 @@ static int test_operation_budget(void)
     return 0;
 }
 
+/*
+ * Exercise test conflict stop policy and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_conflict_stop_policy(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -160,6 +173,10 @@ static int test_conflict_stop_policy(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_default_policy() == 0, "default policy");

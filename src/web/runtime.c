@@ -19,4 +19,8 @@
 
 #include "umicom/web/runtime.h"
 #include "umicom/web/parser.h"
-UmiStatus umi_web_runtime_process(UmiWebService *service,const char *request_text,size_t request_length,char *out_response,size_t capacity,size_t *out_length){UmiWebRequest request;UmiWebResponse response;UmiStatus s;if(service==NULL||request_text==NULL||out_response==NULL)return UMI_STATUS_INVALID_ARGUMENT;s=umi_web_parse_request(request_text,request_length,&request);if(s!=UMI_STATUS_OK)return s;s=umi_web_service_handle(service,&request,&response);if(s!=UMI_STATUS_OK)return s;return umi_web_response_format(&response,out_response,capacity,out_length);}
+/*
+ * Provide the web runtime process operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_web_runtime_process(UmiWebService *service,const char *request_text,size_t request_length,char *out_response,size_t capacity,size_t *out_length){UmiWebRequest request;UmiWebResponse response;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(service==NULL||request_text==NULL||out_response==NULL)return UMI_STATUS_INVALID_ARGUMENT;s=umi_web_parse_request(request_text,request_length,&request);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;s=umi_web_service_handle(service,&request,&response);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;return umi_web_response_format(&response,out_response,capacity,out_length);}

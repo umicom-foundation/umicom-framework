@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test healthy snapshot and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_healthy_snapshot(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -39,6 +43,10 @@ static int test_healthy_snapshot(void)
     return 0;
 }
 
+/*
+ * Exercise test degraded pressure and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_degraded_pressure(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -65,6 +73,10 @@ static int test_degraded_pressure(void)
     return 0;
 }
 
+/*
+ * Exercise test unhealthy conflicts and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_unhealthy_conflicts(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -91,6 +103,10 @@ static int test_unhealthy_conflicts(void)
     return 0;
 }
 
+/*
+ * Exercise test production backend policy and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_production_backend_policy(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -112,6 +128,10 @@ static int test_production_backend_policy(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid health arguments and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_invalid_health_arguments(void)
 {
     UmiWorkbenchLayoutDataMetrics metrics;
@@ -127,6 +147,10 @@ static int test_invalid_health_arguments(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_healthy_snapshot() == 0, "healthy snapshot");

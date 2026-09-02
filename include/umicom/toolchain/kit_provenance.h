@@ -23,6 +23,10 @@ extern "C" {
 #define UMI_TOOLCHAIN_KIT_PROVENANCE_API_VERSION 1U
 #define UMI_TOOLCHAIN_KIT_PROVENANCE_FINGERPRINT_CAPACITY 32U
 
+/**
+ * Represent the toolchain kit provenance snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainKitProvenanceSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -42,11 +46,19 @@ typedef struct UmiToolchainKitProvenanceSnapshot {
     uint64_t revision;
 } UmiToolchainKitProvenanceSnapshot;
 
+/**
+ * Provide the toolchain kit provenance capture operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_kit_provenance_capture(
     const UmiToolchainKitSnapshot *kit,
     const UmiToolchainProfile *profile,
     const UmiSdkSnapshot *sdk,
     UmiToolchainKitProvenanceSnapshot *out_provenance);
+/**
+ * Provide the toolchain kit provenance fingerprint operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_kit_provenance_fingerprint(
     UmiToolchainKitProvenanceSnapshot *provenance);
 

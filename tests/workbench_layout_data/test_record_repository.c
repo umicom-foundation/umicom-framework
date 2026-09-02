@@ -23,6 +23,10 @@ typedef struct FixtureRecord {
     bool enabled;
 } FixtureRecord;
 
+/*
+ * Write fixture in its stable representation and report capacity or input failures to the
+ * caller.
+ */
 static UmiStatus fixture_encode(
     const void *record_value,
     char *buffer,
@@ -31,6 +35,10 @@ static UmiStatus fixture_encode(
 {
     const FixtureRecord *record = (const FixtureRecord *)record_value;
     UmiWorkbenchLayoutDataFieldSet fields;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_layout_data_field_set_init(&fields);
     TEST_STATUS_OK(umi_workbench_layout_data_field_set_put(
@@ -45,31 +53,40 @@ static UmiStatus fixture_encode(
         &fields, buffer, capacity, out_required);
 }
 
+/* Read fixture into validated module state and return a status when input cannot be used. */
 static UmiStatus fixture_decode(const char *value, void *out_record_value)
 {
     FixtureRecord *record = (FixtureRecord *)out_record_value;
     UmiWorkbenchLayoutDataFieldSet fields;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(record, 0, sizeof(*record));
     record->structure_size = sizeof(*record);
     status = umi_workbench_layout_data_value_decode(value, &fields);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_copy_text(
             record->record_id, sizeof(record->record_id),
             umi_workbench_layout_data_field_set_get(&fields, "record_id"),
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_copy_text(
             record->aggregate_id, sizeof(record->aggregate_id),
             umi_workbench_layout_data_field_set_get(&fields, "aggregate_id"),
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_u64(
             &fields, "sequence", &record->sequence);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_bool(
             &fields, "enabled", &record->enabled);
@@ -77,6 +94,10 @@ static UmiStatus fixture_decode(const char *value, void *out_record_value)
     return status;
 }
 
+/*
+ * Exercise enabled predicate and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiStatus enabled_predicate(
     const void *record_value,
     void *context,
@@ -84,6 +105,10 @@ static UmiStatus enabled_predicate(
 {
     const FixtureRecord *record = (const FixtureRecord *)record_value;
     const bool expected = *(const bool *)context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || context == NULL || out_matches == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -91,6 +116,10 @@ static UmiStatus enabled_predicate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fixture record and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static FixtureRecord fixture_record(
     const char *record_id,
     const char *aggregate_id,
@@ -108,6 +137,10 @@ static FixtureRecord fixture_record(
     return record;
 }
 
+/*
+ * Exercise test repository lifecycle and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_repository_lifecycle(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -136,6 +169,10 @@ static int test_repository_lifecycle(void)
     return 0;
 }
 
+/*
+ * Exercise test repository listing and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_repository_listing(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -155,6 +192,7 @@ static int test_repository_listing(void)
     records[2] = fixture_record("cursor-2", "peer-a", 0U, true);
     records[3] = fixture_record("cursor-3", "peer-b", 0U, true);
     records[4] = fixture_record("cursor-4", "peer-a", 0U, true);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 5U; ++index) {
         TEST_STATUS_OK(umi_workbench_layout_data_record_repository_save(
             &repository, records[index].aggregate_id,
@@ -171,6 +209,7 @@ static int test_repository_listing(void)
     TEST_REQUIRE(page.total_available == 3U,
                  "all matching records counted");
     TEST_REQUIRE(page.truncated, "truncation reported");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < page.count; ++index) {
         TEST_REQUIRE(page_records[index].enabled,
                      "predicate applied to page");
@@ -182,6 +221,10 @@ static int test_repository_listing(void)
     return 0;
 }
 
+/*
+ * Exercise test repository arguments and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_repository_arguments(void)
 {
     UmiWorkbenchLayoutDataRecordRepository repository;
@@ -206,6 +249,10 @@ static int test_repository_arguments(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_repository_lifecycle() == 0,

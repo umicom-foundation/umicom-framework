@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/audit.h"
 #include "umicom/delivery/channel_registry.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDeliveryAuditEvent event;
     UmiChannelRegistry registry;

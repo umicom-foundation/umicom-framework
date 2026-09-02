@@ -53,6 +53,10 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
     }
 };
 
+/*
+ * Provide the developer project template cpython extension operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_cpython_extension(void)
 {
     static const UmiDeveloperProjectTemplate project_template = {

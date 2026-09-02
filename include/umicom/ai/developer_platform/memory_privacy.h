@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev memory privacy data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevMemoryPrivacy {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +41,25 @@ typedef struct UmiAiDevMemoryPrivacy {
     int enabled;
 } UmiAiDevMemoryPrivacy;
 
+/**
+ * Initialise ai dev memory privacy from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_memory_privacy_init(UmiAiDevMemoryPrivacy *policy);
+/**
+ * Provide the ai dev memory privacy configure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_memory_privacy_configure(UmiAiDevMemoryPrivacy *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev memory privacy allows operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_memory_privacy_allows(const UmiAiDevMemoryPrivacy *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev memory privacy approval required operation used by this module and
+ * its client applications.
+ */
 int umi_ai_dev_memory_privacy_approval_required(const UmiAiDevMemoryPrivacy *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

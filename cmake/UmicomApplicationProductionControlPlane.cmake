@@ -18,6 +18,7 @@ include_guard(GLOBAL)
 
 set(UMICOM_APPLICATION_PRODUCTION_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application)
     message(FATAL_ERROR
         "Application Production Control Plane requires umicom_application")
@@ -59,21 +60,25 @@ set(UMICOM_APPLICATION_PRODUCTION_MODULES
     audit
 )
 
+# Visit each bounded item once so every record receives the same rule.
 foreach(UMICOM_APPLICATION_PRODUCTION_MODULE
         IN LISTS UMICOM_APPLICATION_PRODUCTION_MODULES)
     target_sources(umicom_application PRIVATE
         "${UMICOM_APPLICATION_PRODUCTION_ROOT}/src/application/production/${UMICOM_APPLICATION_PRODUCTION_MODULE}.c")
 endforeach()
 
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_BUILD_NATIVE_TOOL AND
    NOT TARGET umicom-application-production-audit)
     add_executable(umicom-application-production-audit
         "${UMICOM_APPLICATION_PRODUCTION_ROOT}/tools/application_production_audit_main.c")
     target_link_libraries(umicom-application-production-audit PRIVATE
         Umicom::application)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-application-production-audit)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-application-production-audit)
     endif()
@@ -81,7 +86,9 @@ if(UMICOM_BUILD_NATIVE_TOOL AND
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Visit each bounded item once so every record receives the same rule.
     foreach(UMICOM_APPLICATION_PRODUCTION_MODULE
             IN LISTS UMICOM_APPLICATION_PRODUCTION_MODULES)
         string(REPLACE "_" "-"
@@ -91,6 +98,7 @@ if(BUILD_TESTING)
             "umicom-application-production-${UMICOM_APPLICATION_PRODUCTION_TARGET_SUFFIX}-test")
         set(UMICOM_APPLICATION_PRODUCTION_TEST_NAME
             "framework.application_production.${UMICOM_APPLICATION_PRODUCTION_MODULE}")
+        # Load the dependency only when the parent build has not already provided its target.
         if(NOT TARGET "${UMICOM_APPLICATION_PRODUCTION_TEST_TARGET}")
             add_executable("${UMICOM_APPLICATION_PRODUCTION_TEST_TARGET}"
                 "${UMICOM_APPLICATION_PRODUCTION_ROOT}/tests/application_production/test_${UMICOM_APPLICATION_PRODUCTION_MODULE}.c")
@@ -100,10 +108,12 @@ if(BUILD_TESTING)
             target_link_libraries(
                 "${UMICOM_APPLICATION_PRODUCTION_TEST_TARGET}" PRIVATE
                 Umicom::application)
+            # Use the shared build helper when it is available from the parent composition.
             if(COMMAND umicom_apply_warnings)
                 umicom_apply_warnings(
                     "${UMICOM_APPLICATION_PRODUCTION_TEST_TARGET}")
             endif()
+            # Use the shared build helper when it is available from the parent composition.
             if(COMMAND umicom_apply_sanitizers)
                 umicom_apply_sanitizers(
                     "${UMICOM_APPLICATION_PRODUCTION_TEST_TARGET}")
@@ -115,6 +125,7 @@ if(BUILD_TESTING)
                 "${UMICOM_APPLICATION_PRODUCTION_TEST_NAME}" PROPERTIES
                 LABELS
                 "framework;application;production;layouts;acceptance")
+            # Use the shared build helper when it is available from the parent composition.
             if(COMMAND umicom_register_validation_target)
                 umicom_register_validation_target(
                     "${UMICOM_APPLICATION_PRODUCTION_TEST_TARGET}")

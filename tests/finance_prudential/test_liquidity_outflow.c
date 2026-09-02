@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/liquidity_outflow.h"
 
-int main(void) { UmiPrudentialLiquidityOutflow r; if(umi_pru_liquidity_outflow_calculate(&r,"ITEM",100.0,0.6)!=UMI_STATUS_OK)return 1; return r.stressed_amount==60.0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialLiquidityOutflow r; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_liquidity_outflow_calculate(&r,"ITEM",100.0,0.6)!=UMI_STATUS_OK)return 1; return r.stressed_amount==60.0?0:2; }

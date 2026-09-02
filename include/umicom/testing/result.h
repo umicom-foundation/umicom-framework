@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test result data shared with callers of this public contract.
+ */
 typedef struct UmiTestResult {
     char test_id[UMI_TEST_ID_CAPACITY];
     char name[UMI_TEST_NAME_CAPACITY];
@@ -36,13 +39,25 @@ typedef struct UmiTestResult {
     char output[UMI_TEST_OUTPUT_CAPACITY];
 } UmiTestResult;
 
+/**
+ * Initialise test result from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_test_result_init(UmiTestResult *result,
                           const char *test_id,
                           const char *name);
+/**
+ * Provide the test result finish operation used by this module and its client
+ * applications.
+ */
 void umi_test_result_finish(UmiTestResult *result,
                             UmiStatus status,
                             int exit_code,
                             uint64_t duration_ms);
+/**
+ * Provide the test result summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_result_summary(const UmiTestResult *result,
                                   char *out_text,
                                   size_t capacity);

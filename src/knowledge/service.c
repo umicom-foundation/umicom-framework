@@ -28,6 +28,10 @@ struct UmiKnowledgeService {
     size_t last_result_count;
 };
 
+/*
+ * Provide the knowledge service config default operation used by this module and its
+ * client applications.
+ */
 UmiKnowledgeServiceConfig umi_knowledge_service_config_default(void)
 {
     UmiKnowledgeServiceConfig config;
@@ -43,6 +47,10 @@ UmiKnowledgeServiceConfig umi_knowledge_service_config_default(void)
     return config;
 }
 
+/*
+ * Initialise knowledge service from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_knowledge_service_create(
     const UmiKnowledgeServiceConfig *config,
     UmiKnowledgeService **out_service)
@@ -50,6 +58,10 @@ UmiStatus umi_knowledge_service_create(
     UmiKnowledgeService *service;
     UmiKnowledgeEmbeddingProvider provider;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || out_service == NULL ||
         config->source_capacity == 0U || config->vector_capacity == 0U ||
         config->default_provider_id[0] == '\0' ||
@@ -57,25 +69,33 @@ UmiStatus umi_knowledge_service_create(
             UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
     *out_service = NULL;
     service = (UmiKnowledgeService *)calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     service->config = *config;
     umi_knowledge_embedding_registry_init(&service->providers);
     status = umi_knowledge_catalogue_create(config->source_capacity,
                                             &service->catalogue);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_knowledge_vector_index_create(
             config->vector_capacity, config->embedding_dimension,
             config->metric, &service->index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         strcmp(config->default_provider_id, "umicom.local.hash") == 0) {
         status = umi_knowledge_hash_embedding_provider(
             "umicom.local.hash", config->embedding_dimension, &provider);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_knowledge_embedding_registry_add(
                 &service->providers, &provider);
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_knowledge_service_destroy(service);
         return status;
@@ -85,32 +105,58 @@ UmiStatus umi_knowledge_service_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by knowledge service so the same storage can be reused
+ * safely.
+ */
 void umi_knowledge_service_destroy(UmiKnowledgeService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     umi_knowledge_vector_index_destroy(service->index);
     umi_knowledge_catalogue_destroy(service->catalogue);
     free(service);
 }
 
+/*
+ * Provide the knowledge service register provider operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_knowledge_service_register_provider(
     UmiKnowledgeService *service,
     const UmiKnowledgeEmbeddingProvider *provider)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_knowledge_embedding_registry_add(&service->providers, provider);
 }
 
+/*
+ * Provide the knowledge service add collection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_knowledge_service_add_collection(
     UmiKnowledgeService *service,
     const UmiKnowledgeCollection *collection)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || collection == NULL ||
         collection->collection_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < service->collection_count; ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(service->collections[position].collection_id,
                    collection->collection_id) == 0) {
             service->collections[position] = *collection;
@@ -118,6 +164,7 @@ UmiStatus umi_knowledge_service_add_collection(
             return UMI_STATUS_OK;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (service->collection_count >= UMI_KNOWLEDGE_COLLECTION_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -126,24 +173,39 @@ UmiStatus umi_knowledge_service_add_collection(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find knowledge service collection while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_knowledge_service_collection_at(
     const UmiKnowledgeService *service,
     size_t position,
     UmiKnowledgeCollection *out_collection)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_collection == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= service->collection_count) return UMI_STATUS_NOT_FOUND;
     *out_collection = service->collections[position];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the collection enabled operation used by this module and its client
+ * applications.
+ */
 static int collection_enabled(const UmiKnowledgeService *service,
                               const char *collection_id)
 {
     size_t position;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < service->collection_count; ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(service->collections[position].collection_id,
                    collection_id) == 0) {
             return service->collections[position].enabled;
@@ -152,6 +214,10 @@ static int collection_enabled(const UmiKnowledgeService *service,
     return 0;
 }
 
+/*
+ * Provide the knowledge service ingest text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_service_ingest_text(
     UmiKnowledgeService *service,
     const UmiKnowledgeSource *source,
@@ -160,18 +226,29 @@ UmiStatus umi_knowledge_service_ingest_text(
 {
     const UmiKnowledgeEmbeddingProvider *provider;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || source == NULL || text == NULL ||
         out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!collection_enabled(service, source->collection_id)) {
         return UMI_STATUS_NOT_FOUND;
     }
     provider = umi_knowledge_embedding_registry_find(
         &service->providers, service->config.default_provider_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL) return UMI_STATUS_UNAVAILABLE;
     status = umi_knowledge_ingest_text(
         service->catalogue, service->index, provider,
         &service->config.chunk_policy, source, text, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (out_report->decision != UMI_KNOWLEDGE_REFRESH_UNCHANGED) {
             ++service->revision;
         }
@@ -182,6 +259,10 @@ UmiStatus umi_knowledge_service_ingest_text(
     return status;
 }
 
+/*
+ * Provide the knowledge service query operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_service_query(
     UmiKnowledgeService *service,
     const UmiKnowledgeQuery *query,
@@ -191,13 +272,22 @@ UmiStatus umi_knowledge_service_query(
 {
     const UmiKnowledgeEmbeddingProvider *provider;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || query == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     provider = umi_knowledge_embedding_registry_find(
         &service->providers, service->config.default_provider_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL) return UMI_STATUS_UNAVAILABLE;
     status = umi_knowledge_retrieve(
         service->catalogue, service->index, provider, query, matches,
         capacity, out_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(service->last_query, sizeof(service->last_query),
                        "%s", query->text);
@@ -206,10 +296,18 @@ UmiStatus umi_knowledge_service_query(
     return status;
 }
 
+/*
+ * Provide the knowledge service snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_service_snapshot(
     const UmiKnowledgeService *service,
     UmiKnowledgeServiceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -233,12 +331,20 @@ UmiStatus umi_knowledge_service_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the knowledge service catalogue operation used by this module and its client
+ * applications.
+ */
 UmiKnowledgeCatalogue *umi_knowledge_service_catalogue(
     UmiKnowledgeService *service)
 {
     return service != NULL ? service->catalogue : NULL;
 }
 
+/*
+ * Provide the knowledge service vector index operation used by this module and its client
+ * applications.
+ */
 UmiKnowledgeVectorIndex *umi_knowledge_service_vector_index(
     UmiKnowledgeService *service)
 {

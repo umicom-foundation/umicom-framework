@@ -157,54 +157,95 @@ static const BuiltinLanguageProfile builtin_profiles[] = {
      "taplo lint", "", "", "", ""}
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/*
+ * Provide the ascii equal nocase operation used by this module and its client
+ * applications.
+ */
 static int ascii_equal_nocase(const char *left, const char *right, size_t length)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < length; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (tolower((unsigned char)left[index]) !=
             tolower((unsigned char)right[index])) return 0;
     }
     return 1;
 }
 
+/* Provide the path basename operation used by this module and its client applications. */
 static const char *path_basename(const char *path)
 {
     const char *base = path;
     const char *cursor;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (cursor = path; *cursor != '\0'; ++cursor) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '/' || *cursor == '\\') base = cursor + 1;
     }
     return base;
 }
 
+/* Provide the list match length operation used by this module and its client applications. */
 static size_t list_match_length(const char *list, const char *value, int suffix)
 {
     const char *cursor = list;
     size_t value_length = strlen(value);
     size_t best = 0U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cursor != NULL && *cursor != '\0') {
         const char *end;
         size_t token_length;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*cursor == ';' || *cursor == ',' || isspace((unsigned char)*cursor)) ++cursor;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '\0') break;
         end = cursor;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*end != '\0' && *end != ';' && *end != ',') ++end;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (end > cursor && isspace((unsigned char)end[-1])) --end;
         token_length = (size_t)(end - cursor);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (token_length > 0U && value_length >= token_length) {
             const char *candidate = suffix ? value + value_length - token_length : value;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if ((!suffix && value_length == token_length) || suffix) {
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (ascii_equal_nocase(candidate, cursor, token_length) &&
                     token_length > best) best = token_length;
             }
@@ -214,18 +255,29 @@ static size_t list_match_length(const char *list, const char *value, int suffix)
     return best;
 }
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(const UmiLanguageProfileRegistry *registry,
                          const char *profile_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->items[index].id, profile_id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/*
+ * Initialise language profile from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_language_profile_init(UmiLanguageProfileSnapshot *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) return;
     memset(profile, 0, sizeof(*profile));
     profile->struct_size = (uint32_t)sizeof(*profile);
@@ -234,34 +286,60 @@ void umi_language_profile_init(UmiLanguageProfileSnapshot *profile)
     profile->revision = 1U;
 }
 
+/*
+ * Initialise language profile registry from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_language_profile_registry_create(
     UmiLanguageProfileRegistry **out_registry)
 {
     UmiLanguageProfileRegistry *registry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiLanguageProfileRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->revision = 1U;
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by language profile registry so the same storage can be
+ * reused safely.
+ */
 void umi_language_profile_registry_destroy(UmiLanguageProfileRegistry *registry)
 {
     free(registry);
 }
 
+/*
+ * Provide the language profile registry upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_profile_registry_upsert(
     UmiLanguageProfileRegistry *registry,
     const UmiLanguageProfileSnapshot *profile)
 {
     size_t index;
     UmiLanguageProfileSnapshot copy;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || profile == NULL || profile->id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, profile->id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->count >= UMI_LANGUAGE_PROFILE_CAPACITY)
             return UMI_STATUS_CAPACITY_EXCEEDED;
         index = registry->count++;
@@ -270,20 +348,31 @@ UmiStatus umi_language_profile_registry_upsert(
     copy.struct_size = (uint32_t)sizeof(copy);
     copy.api_version = UMI_LANGUAGE_PROFILE_API_VERSION;
     copy.revision = registry->items[index].revision + 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy.revision == 1U) copy.revision = 1U;
     registry->items[index] = copy;
     registry->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove language profile registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_language_profile_registry_remove(
     UmiLanguageProfileRegistry *registry, const char *profile_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || profile_id == NULL || profile_id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, profile_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < registry->count) {
         memmove(&registry->items[index], &registry->items[index + 1U],
                 (registry->count - index - 1U) * sizeof(registry->items[0]));
@@ -294,19 +383,32 @@ UmiStatus umi_language_profile_registry_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find language profile registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_language_profile_registry_find(
     const UmiLanguageProfileRegistry *registry, const char *profile_id,
     UmiLanguageProfileSnapshot *out_profile)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || profile_id == NULL || out_profile == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, profile_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_profile = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the language profile registry find for path operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_profile_registry_find_for_path(
     const UmiLanguageProfileRegistry *registry, const char *path,
     UmiLanguageProfileSnapshot *out_profile)
@@ -315,67 +417,108 @@ UmiStatus umi_language_profile_registry_find_for_path(
     size_t best_index = SIZE_MAX;
     size_t best_length = 0U;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || path == NULL || path[0] == '\0' || out_profile == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     base = path_basename(path);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         size_t length;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->items[index].enabled == 0) continue;
         length = list_match_length(registry->items[index].file_names, base, 0);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U) length += UMI_LANGUAGE_PROFILE_LIST_CAPACITY;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length == 0U)
             length = list_match_length(registry->items[index].file_extensions, base, 1);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > best_length) {
             best_length = length;
             best_index = index;
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (best_index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_profile = registry->items[best_index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find language profile registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_language_profile_registry_at(
     const UmiLanguageProfileRegistry *registry, size_t index,
     UmiLanguageProfileSnapshot *out_profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
     *out_profile = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by language profile registry without changing
+ * their state.
+ */
 size_t umi_language_profile_registry_count(const UmiLanguageProfileRegistry *registry)
 {
     return registry != NULL ? registry->count : 0U;
 }
 
+/*
+ * Provide the language profile registry snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_profile_registry_snapshot(
     const UmiLanguageProfileRegistry *registry,
     UmiLanguageProfileRegistrySnapshot *out_snapshot)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
     out_snapshot->api_version = UMI_LANGUAGE_PROFILE_API_VERSION;
     out_snapshot->profile_count = registry->count;
     out_snapshot->revision = registry->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         const UmiLanguageProfileSnapshot *profile = &registry->items[index];
+        /* Apply this operation only while the related capability or state is available. */
         if (profile->enabled != 0) out_snapshot->enabled_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (profile->execution_kind == UMI_LANGUAGE_EXECUTION_NATIVE_COMPILED)
             out_snapshot->native_compiled_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (profile->execution_kind == UMI_LANGUAGE_EXECUTION_TRANSPILED_TO_C)
             out_snapshot->transpiled_to_c_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((profile->capabilities & UMI_LANGUAGE_CAPABILITY_LANGUAGE_SERVER) != 0U)
             out_snapshot->language_server_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((profile->capabilities & UMI_LANGUAGE_CAPABILITY_DEBUG_ADAPTER) != 0U)
             out_snapshot->debug_adapter_count += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the language profile supports operation used by this module and its client
+ * applications.
+ */
 int umi_language_profile_supports(const UmiLanguageProfileSnapshot *profile,
                                   UmiLanguageCapabilityFlags required_capabilities)
 {
@@ -383,10 +526,19 @@ int umi_language_profile_supports(const UmiLanguageProfileSnapshot *profile,
         (profile->capabilities & required_capabilities) == required_capabilities;
 }
 
+/*
+ * Provide the language profile register builtins operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_profile_register_builtins(UmiLanguageProfileRegistry *registry)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_language_profile_builtin_count(); ++index) {
         const BuiltinLanguageProfile *builtin = &builtin_profiles[index];
         UmiLanguageProfileSnapshot profile;
@@ -410,18 +562,28 @@ UmiStatus umi_language_profile_register_builtins(UmiLanguageProfileRegistry *reg
         copy_text(profile.runtime, sizeof(profile.runtime), builtin->runtime);
         copy_text(profile.transpiler, sizeof(profile.transpiler), builtin->transpiler);
         status = umi_language_profile_registry_upsert(registry, &profile);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by language profile builtin without changing
+ * their state.
+ */
 size_t umi_language_profile_builtin_count(void)
 {
     return sizeof(builtin_profiles) / sizeof(builtin_profiles[0]);
 }
 
+/*
+ * Provide the language execution kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_language_execution_kind_text(UmiLanguageExecutionKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_LANGUAGE_EXECUTION_NATIVE_COMPILED: return "native-compiled";
     case UMI_LANGUAGE_EXECUTION_TRANSPILED_TO_C: return "transpiled-to-c";

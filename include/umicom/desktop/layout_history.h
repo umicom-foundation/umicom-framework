@@ -25,6 +25,9 @@ extern "C" {
 
 #define UMI_DESKTOP_LAYOUT_HISTORY_MAX 16U
 
+/**
+ * List the named desktop layout history state values accepted by this public contract.
+ */
 typedef enum UmiDesktopLayoutHistoryState {
     UMI_DESKTOP_LAYOUT_HISTORY_OPEN = 1,
     UMI_DESKTOP_LAYOUT_HISTORY_COMMITTED = 2,
@@ -32,6 +35,10 @@ typedef enum UmiDesktopLayoutHistoryState {
     UMI_DESKTOP_LAYOUT_HISTORY_UNDONE = 4
 } UmiDesktopLayoutHistoryState;
 
+/**
+ * Represent the desktop layout history entry snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesktopLayoutHistoryEntrySnapshot {
     uint32_t structure_size;
     uint64_t sequence;
@@ -44,6 +51,10 @@ typedef struct UmiDesktopLayoutHistoryEntrySnapshot {
     uint64_t revision;
 } UmiDesktopLayoutHistoryEntrySnapshot;
 
+/**
+ * Represent the desktop layout history snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopLayoutHistorySnapshot {
     uint32_t structure_size;
     size_t entry_count;
@@ -56,30 +67,69 @@ typedef struct UmiDesktopLayoutHistorySnapshot {
     uint64_t revision;
 } UmiDesktopLayoutHistorySnapshot;
 
+/**
+ * Represent the desktop layout history data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopLayoutHistory UmiDesktopLayoutHistory;
 
+/**
+ * Initialise desktop layout history from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_layout_history_create(
     UmiDesktopRuntime *runtime,
     UmiDesktopLayoutHistory **out_history);
+/**
+ * Release or reset state held by desktop layout history so the same storage can be reused
+ * safely.
+ */
 void umi_desktop_layout_history_destroy(UmiDesktopLayoutHistory *history);
+/**
+ * Provide the desktop layout history begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_layout_history_begin(
     UmiDesktopLayoutHistory *history,
     const char *transaction_id,
     const char *operation_id,
     const char *source_application_id,
     const char *label);
+/**
+ * Provide the desktop layout history commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_layout_history_commit(
     UmiDesktopLayoutHistory *history,
     const char *transaction_id);
+/**
+ * Provide the desktop layout history rollback operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_layout_history_rollback(
     UmiDesktopLayoutHistory *history,
     const char *transaction_id);
+/**
+ * Provide the desktop layout history undo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_layout_history_undo(UmiDesktopLayoutHistory *history);
+/**
+ * Provide the desktop layout history redo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_layout_history_redo(UmiDesktopLayoutHistory *history);
+/**
+ * Find desktop layout history entry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_desktop_layout_history_entry_at(
     const UmiDesktopLayoutHistory *history,
     size_t index,
     UmiDesktopLayoutHistoryEntrySnapshot *out_entry);
+/**
+ * Provide the desktop layout history snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_layout_history_snapshot(
     const UmiDesktopLayoutHistory *history,
     UmiDesktopLayoutHistorySnapshot *out_snapshot);

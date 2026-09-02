@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/step_in.h"
 
+/*
+ * Provide the debug runtime request step in operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_step_in(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,

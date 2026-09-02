@@ -26,6 +26,10 @@ extern "C" {
 
 #define UMI_STUDIO_LAYOUT_SESSION_MAX_PLACEMENTS 64U
 
+/**
+ * Write studio layout session in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_studio_layout_session_save(
     UmiSessionStore *store,
     const char *prefix,
@@ -33,6 +37,10 @@ UmiStatus umi_studio_layout_session_save(
     const UmiApplicationShellState *state,
     const UmiApplicationShellLayout *layout);
 
+/**
+ * Provide the studio layout session restore operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_layout_session_restore(
     const UmiSessionStore *store,
     const char *prefix,

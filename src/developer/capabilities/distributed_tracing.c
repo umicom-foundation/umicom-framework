@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/distributed_tracing.h"
 
+/*
+ * Provide the developer capability distributed tracing operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_distributed_tracing(void)
 {

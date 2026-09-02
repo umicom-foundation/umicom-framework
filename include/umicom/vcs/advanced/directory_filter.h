@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced directory filter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedDirectoryFilter {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +40,20 @@ typedef struct UmiVcsAdvancedDirectoryFilter {
     int include_binary;
 } UmiVcsAdvancedDirectoryFilter;
 
+/**
+ * Initialise vcs advanced directory filter from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_directory_filter_init(UmiVcsAdvancedDirectoryFilter *value);
+/**
+ * Check that vcs advanced directory filter satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_directory_filter_validate(const UmiVcsAdvancedDirectoryFilter *value);
+/**
+ * Provide the vcs advanced directory filter accept operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_directory_filter_accept(const UmiVcsAdvancedDirectoryFilter *filter,
                                                 const char *relative_path,
                                                 uint64_t size_bytes,

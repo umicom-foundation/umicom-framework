@@ -66,8 +66,13 @@ struct UmiUiWorkbench {
     UmiMutex *mutex;
 };
 
+/* Provide the destroy all operation used by this module and its client applications. */
 static void destroy_all(UmiUiWorkbench *workbench)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return;
 
     /* Destroy the Batch 23 services before the older aggregate members. */
@@ -100,6 +105,10 @@ static void destroy_all(UmiUiWorkbench *workbench)
     free(workbench);
 }
 
+/*
+ * Initialise ui workbench from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ui_workbench_create(const char *id,
                                   UmiCommandRegistry *commands,
                                   UmiUiWorkbench **out_workbench)
@@ -107,12 +116,20 @@ UmiStatus umi_ui_workbench_create(const char *id,
     UmiUiWorkbench *workbench;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_workbench == NULL || commands == NULL || !umi_ui_id_is_valid(id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_workbench = NULL;
 
     workbench = (UmiUiWorkbench *)calloc(1U, sizeof(*workbench));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     (void)umi_ui_copy_text(workbench->id, sizeof(workbench->id), id);
@@ -121,33 +138,57 @@ UmiStatus umi_ui_workbench_create(const char *id,
     umi_ui_workbench_state_init(&workbench->state);
 
     status = umi_mutex_create(&workbench->mutex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_pane_model_create(&workbench->panes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_document_view_model_create(&workbench->documents);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_editor_model_create(&workbench->editors);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_perspective_model_create(&workbench->perspectives);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_workspace_profile_model_create(&workbench->workspace_profiles);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_appearance_model_create(&workbench->appearance);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_layout_create(&workbench->layout);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_action_model_create(&workbench->actions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_menu_model_create(&workbench->menus);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_toolbar_model_create(&workbench->toolbars);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_status_model_create(&workbench->status);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_selection_create(&workbench->selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_notification_centre_create(&workbench->notifications);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_dialog_service_create(&workbench->dialogs);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_contribution_model_create(&workbench->contributions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_binding_registry_create(&workbench->bindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_event_queue_create(&workbench->events);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_view_factory_registry_create(&workbench->factories);
 
     /* Batch 23 reusable workbench services. */
     if (status == UMI_STATUS_OK) status = umi_ui_activity_model_create(&workbench->activities);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_view_container_model_create(&workbench->view_containers);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_context_store_create(&workbench->context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_keybinding_registry_create(&workbench->keybindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_breadcrumb_model_create(&workbench->breadcrumbs);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_explorer_model_create(&workbench->explorer);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         destroy_all(workbench);
         return status;
@@ -157,22 +198,34 @@ UmiStatus umi_ui_workbench_create(const char *id,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by ui workbench so the same storage can be reused safely. */
 void umi_ui_workbench_destroy(UmiUiWorkbench *workbench)
 {
     destroy_all(workbench);
 }
 
+/*
+ * Provide the ui workbench activate perspective operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workbench_activate_perspective(UmiUiWorkbench *workbench,
                                                 const char *id)
 {
     UmiUiPerspectiveSnapshot item;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_perspective_model_find(workbench->perspectives, id, &item) != UMI_STATUS_OK) {
         return UMI_STATUS_NOT_FOUND;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_perspective_model_count(workbench->perspectives); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_perspective_model_at(workbench->perspectives, index, &item) == UMI_STATUS_OK) {
             item.active = strcmp(item.perspective_id, id) == 0;
             (void)umi_ui_perspective_model_upsert(workbench->perspectives, &item);
@@ -190,13 +243,22 @@ UmiStatus umi_ui_workbench_activate_perspective(UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench activate document operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
                                              const char *id)
 {
     UmiUiDocumentViewSnapshot item;
     char target_group[UMI_UI_ID_CAPACITY];
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_document_view_model_find(workbench->documents, id, &item) != UMI_STATUS_OK) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -206,11 +268,14 @@ UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
             ? item.group_id
             : UMI_UI_PRIMARY_EDITOR_GROUP_ID);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_document_view_model_count(workbench->documents); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_document_view_model_at(workbench->documents, index, &item) == UMI_STATUS_OK) {
             const char *item_group = item.group_id[0] != '\0'
                 ? item.group_id
                 : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(item_group, target_group) == 0) {
                 item.active = strcmp(item.view_id, id) == 0;
                 (void)umi_ui_document_view_model_upsert(
@@ -233,20 +298,31 @@ UmiStatus umi_ui_workbench_activate_document(UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench activate activity operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_activate_activity(UmiUiWorkbench *workbench,
                                              const char *activity_id)
 {
     UmiUiActivitySnapshot activity;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || activity_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_ui_activity_model_find(workbench->activities,
                                         activity_id, &activity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_activity_model_set_active(workbench->activities, activity_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_view_container_model_set_active(workbench->view_containers,
                                                     activity.container_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     /*
@@ -255,24 +331,29 @@ UmiStatus umi_ui_workbench_activate_activity(UmiUiWorkbench *workbench,
      */
     {
         UmiUiViewContainerSnapshot container;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_view_container_model_find(workbench->view_containers,
                                              activity.container_id,
                                              &container) == UMI_STATUS_OK &&
             container.placement == UMI_UI_PLACEMENT_LEFT) {
             size_t pane_index;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (pane_index = 0U;
                  pane_index < umi_ui_pane_model_count(workbench->panes);
                  ++pane_index) {
                 UmiUiPaneSnapshot pane;
                 size_t view_index;
                 int belongs = 0;
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (umi_ui_pane_model_at(workbench->panes,
                                          pane_index,
                                          &pane) != UMI_STATUS_OK ||
                     pane.placement != UMI_UI_PLACEMENT_LEFT) {
                     continue;
                 }
+                /* Visit each bounded item once so every record receives the same rule. */
                 for (view_index = 0U; view_index < container.view_count; ++view_index) {
+                    /* Use the stable identifier comparison to choose the matching record or policy. */
                     if (strcmp(container.view_ids[view_index], pane.pane_id) == 0 ||
                         strcmp(container.view_ids[view_index], pane.view_type) == 0) {
                         belongs = 1;
@@ -302,6 +383,10 @@ UmiStatus umi_ui_workbench_activate_activity(UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench activate workspace profile operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_workbench_activate_workspace_profile(
     UmiUiWorkbench *workbench,
     const char *profile_id)
@@ -309,15 +394,21 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
     UmiUiWorkspaceProfileSnapshot profile;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || profile_id == NULL || profile_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ui_workspace_profile_model_find(workbench->workspace_profiles,
                                                  profile_id,
                                                  &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_workspace_profile_model_set_active(
         workbench->workspace_profiles, profile_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     /* Reapply every saved tool-window position before the frontend refreshes.
@@ -325,12 +416,15 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
      * when an optional extension is not installed. */
     {
         size_t pane_index;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (profile.pane_count > 0U) {
             size_t existing_index;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (existing_index = 0U;
                  existing_index < umi_ui_pane_model_count(workbench->panes);
                  ++existing_index) {
                 UmiUiPaneSnapshot existing;
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (umi_ui_pane_model_at(workbench->panes,
                                          existing_index,
                                          &existing) == UMI_STATUS_OK &&
@@ -342,10 +436,12 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
                 }
             }
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (pane_index = 0U; pane_index < profile.pane_count; ++pane_index) {
             UmiUiPaneSnapshot pane;
             const UmiUiWorkspacePanePlacement *saved =
                 &profile.panes[pane_index];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_ui_pane_model_find(workbench->panes,
                                        saved->pane_id,
                                        &pane) == UMI_STATUS_OK) {
@@ -382,6 +478,10 @@ UmiStatus umi_ui_workbench_activate_workspace_profile(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the capture profile state operation used by this module and its client
+ * applications.
+ */
 static UmiStatus capture_profile_state(
     UmiUiWorkbench *workbench,
     UmiUiWorkspaceProfileSnapshot *profile)
@@ -391,6 +491,7 @@ static UmiStatus capture_profile_state(
     UmiStatus status;
 
     status = umi_ui_workbench_state_snapshot(workbench, &state);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     profile->sidebar_visible = state.sidebar_visible;
     profile->auxiliary_sidebar_visible = state.auxiliary_sidebar_visible;
@@ -402,16 +503,20 @@ static UmiStatus capture_profile_state(
     profile->editor_split_ratio = state.editor_split_ratio;
     profile->pane_count = 0U;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_pane_model_count(workbench->panes);
          ++index) {
         UmiUiPaneSnapshot pane;
         UmiUiWorkspacePanePlacement *saved;
         status = umi_ui_pane_model_at(workbench->panes, index, &pane);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this operation only while the related capability or state is available. */
         if (!pane.visible || pane.placement == UMI_UI_PLACEMENT_FLOATING ||
             pane.placement == UMI_UI_PLACEMENT_CENTRE) {
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (profile->pane_count >= UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -427,6 +532,10 @@ static UmiStatus capture_profile_state(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the make custom profile id operation used by this module and its client
+ * applications.
+ */
 static UmiStatus make_custom_profile_id(
     UmiUiWorkspaceProfileModel *model,
     const char *label,
@@ -438,38 +547,52 @@ static UmiStatus make_custom_profile_id(
     size_t write_index = strlen(base);
     unsigned suffix;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || label == NULL || label[0] == '\0' ||
         out_id == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (read_index = 0U; label[read_index] != '\0' &&
          write_index + 1U < sizeof(base); ++read_index) {
         unsigned char value = (unsigned char)label[read_index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (isalnum(value)) {
             base[write_index++] = (char)tolower(value);
-        } else if (write_index > strlen("custom-") &&
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (write_index > strlen("custom-") &&
                    base[write_index - 1U] != '-') {
             base[write_index++] = '-';
         }
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (write_index > strlen("custom-") &&
            base[write_index - 1U] == '-') {
         --write_index;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (write_index == strlen("custom-")) {
         (void)snprintf(base, sizeof(base), "%s", "custom-layout");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         base[write_index] = '\0';
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (suffix = 1U; suffix < 10000U; ++suffix) {
         UmiUiWorkspaceProfileSnapshot existing;
         int written = suffix == 1U
             ? snprintf(out_id, capacity, "%s", base)
             : snprintf(out_id, capacity, "%s-%u", base, suffix);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_workspace_profile_model_find(model,
                                                 out_id,
                                                 &existing) ==
@@ -480,6 +603,10 @@ static UmiStatus make_custom_profile_id(
     return UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/*
+ * Provide the ui workbench save workspace profile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workbench_save_workspace_profile(
     UmiUiWorkbench *workbench,
     const char *label,
@@ -489,6 +616,10 @@ UmiStatus umi_ui_workbench_save_workspace_profile(
 {
     UmiUiWorkspaceProfileSnapshot profile = {0};
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || label == NULL || description == NULL ||
         out_profile_id == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -497,7 +628,9 @@ UmiStatus umi_ui_workbench_save_workspace_profile(
                                     label,
                                     profile.profile_id,
                                     sizeof(profile.profile_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_ui_copy_text(profile.label, sizeof(profile.label), label) ||
         !umi_ui_copy_text(profile.description, sizeof(profile.description),
                           description) ||
@@ -511,12 +644,15 @@ UmiStatus umi_ui_workbench_save_workspace_profile(
     profile.built_in = 0;
     profile.locked = 0;
     status = capture_profile_state(workbench, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_workspace_profile_model_upsert(
         workbench->workspace_profiles, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_workbench_activate_workspace_profile(
         workbench, profile.profile_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)umi_ui_workspace_profile_model_remove(
             workbench->workspace_profiles, profile.profile_id);
@@ -527,6 +663,10 @@ UmiStatus umi_ui_workbench_save_workspace_profile(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/*
+ * Provide the ui workbench update workspace profile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workbench_update_workspace_profile(
     UmiUiWorkbench *workbench,
     const char *profile_id,
@@ -535,37 +675,57 @@ UmiStatus umi_ui_workbench_update_workspace_profile(
 {
     UmiUiWorkspaceProfileSnapshot profile;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || profile_id == NULL || label == NULL ||
         description == NULL || label[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ui_workspace_profile_model_find(
         workbench->workspace_profiles, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile.built_in || profile.locked) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_ui_copy_text(profile.label, sizeof(profile.label), label) ||
         !umi_ui_copy_text(profile.description, sizeof(profile.description),
                           description)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     status = capture_profile_state(workbench, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_ui_workspace_profile_model_upsert(
         workbench->workspace_profiles, &profile);
 }
 
+/*
+ * Provide the ui workbench set workspace profile locked operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_workbench_set_workspace_profile_locked(
     UmiUiWorkbench *workbench,
     const char *profile_id,
     int locked)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_ui_workspace_profile_model_set_locked(
         workbench->workspace_profiles, profile_id, locked);
 }
 
+/*
+ * Provide the ui workbench remove workspace profile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workbench_remove_workspace_profile(
     UmiUiWorkbench *workbench,
     const char *profile_id)
@@ -573,21 +733,30 @@ UmiStatus umi_ui_workbench_remove_workspace_profile(
     UmiUiWorkspaceProfileSnapshot profile;
     UmiStatus status;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || profile_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ui_workspace_profile_model_find(
         workbench->workspace_profiles, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile.built_in || profile.locked) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (profile.active) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U;
              index < umi_ui_workspace_profile_model_count(
                  workbench->workspace_profiles);
              ++index) {
             UmiUiWorkspaceProfileSnapshot fallback;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_ui_workspace_profile_model_at(
                     workbench->workspace_profiles,
                     index,
@@ -599,12 +768,17 @@ UmiStatus umi_ui_workbench_remove_workspace_profile(
                 break;
             }
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return umi_ui_workspace_profile_model_remove(
         workbench->workspace_profiles, profile_id);
 }
 
+/*
+ * Provide the ui workbench dock pane operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_dock_pane(
     UmiUiWorkbench *workbench,
     const char *pane_id,
@@ -613,6 +787,10 @@ UmiStatus umi_ui_workbench_dock_pane(
 {
     UmiUiPaneSnapshot pane;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || pane_id == NULL ||
         (placement != UMI_UI_PLACEMENT_LEFT &&
          placement != UMI_UI_PLACEMENT_RIGHT &&
@@ -620,20 +798,24 @@ UmiStatus umi_ui_workbench_dock_pane(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ui_pane_model_find(workbench->panes, pane_id, &pane);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!pane.movable) return UMI_STATUS_PERMISSION_DENIED;
     pane.placement = placement;
     pane.order = order;
     pane.visible = 1;
     status = umi_ui_pane_model_upsert(workbench->panes, &pane);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_mutex_lock(workbench->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (placement == UMI_UI_PLACEMENT_LEFT) {
         workbench->state.sidebar_visible = 1;
-    } else if (placement == UMI_UI_PLACEMENT_RIGHT) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (placement == UMI_UI_PLACEMENT_RIGHT) {
         workbench->state.auxiliary_sidebar_visible = 1;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         workbench->state.bottom_panel_visible = 1;
     }
     workbench->state.revision = umi_ui_next_revision(
@@ -643,6 +825,10 @@ UmiStatus umi_ui_workbench_dock_pane(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench workspace profile modified operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_workbench_workspace_profile_modified(
     UmiUiWorkbench *workbench,
     const char *profile_id,
@@ -652,15 +838,22 @@ UmiStatus umi_ui_workbench_workspace_profile_modified(
     UmiUiWorkbenchState state;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || profile_id == NULL || out_modified == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_modified = 0;
     status = umi_ui_workspace_profile_model_find(
         workbench->workspace_profiles, profile_id, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_workbench_state_snapshot(workbench, &state);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this operation only while the related capability or state is available. */
     if (profile.sidebar_visible != state.sidebar_visible ||
         profile.auxiliary_sidebar_visible !=
             state.auxiliary_sidebar_visible ||
@@ -671,14 +864,17 @@ UmiStatus umi_ui_workbench_workspace_profile_modified(
         *out_modified = 1;
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile.editor_split_mode != state.editor_split_mode ||
         profile.editor_split_ratio != state.editor_split_ratio) {
         *out_modified = 1;
         return UMI_STATUS_OK;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < profile.pane_count; ++index) {
         UmiUiPaneSnapshot pane;
         const UmiUiWorkspacePanePlacement *saved = &profile.panes[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_pane_model_find(workbench->panes,
                                    saved->pane_id,
                                    &pane) != UMI_STATUS_OK ||
@@ -689,14 +885,17 @@ UmiStatus umi_ui_workbench_workspace_profile_modified(
             break;
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*out_modified == 0) {
         size_t pane_index;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (pane_index = 0U;
              pane_index < umi_ui_pane_model_count(workbench->panes);
              ++pane_index) {
             UmiUiPaneSnapshot pane;
             size_t saved_index;
             int found = 0;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_ui_pane_model_at(workbench->panes,
                                      pane_index,
                                      &pane) != UMI_STATUS_OK ||
@@ -705,14 +904,17 @@ UmiStatus umi_ui_workbench_workspace_profile_modified(
                 pane.placement == UMI_UI_PLACEMENT_FLOATING) {
                 continue;
             }
+            /* Visit each bounded item once so every record receives the same rule. */
             for (saved_index = 0U; saved_index < profile.pane_count;
                  ++saved_index) {
+                /* Use the stable identifier comparison to choose the matching record or policy. */
                 if (strcmp(profile.panes[saved_index].pane_id,
                            pane.pane_id) == 0) {
                     found = 1;
                     break;
                 }
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!found) {
                 *out_modified = 1;
                 break;
@@ -722,6 +924,10 @@ UmiStatus umi_ui_workbench_workspace_profile_modified(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench execute action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
                                           const char *action_id,
                                           const char *argument,
@@ -729,10 +935,16 @@ UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
                                           size_t capacity)
 {
     UmiUiActionSnapshot action;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || action_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_action_model_find(workbench->actions, action_id, &action) != UMI_STATUS_OK) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!action.enabled || !action.visible) return UMI_STATUS_PERMISSION_DENIED;
     return umi_command_registry_execute(workbench->commands,
                                         action.command_id,
@@ -743,11 +955,19 @@ UmiStatus umi_ui_workbench_execute_action(UmiUiWorkbench *workbench,
                                         capacity);
 }
 
+/*
+ * Provide the ui workbench resolve keybinding operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_resolve_keybinding(
     UmiUiWorkbench *workbench,
     const char *chord,
     UmiUiKeybindingResolution *out_resolution)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_ui_keybinding_registry_resolve(workbench->keybindings,
                                               workbench->context,
@@ -755,11 +975,19 @@ UmiStatus umi_ui_workbench_resolve_keybinding(
                                               out_resolution);
 }
 
+/*
+ * Provide the ui workbench quick access operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_quick_access(
     UmiUiWorkbench *workbench,
     const char *query,
     UmiUiQuickAccessResults *out_results)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_ui_quick_access_search_actions(workbench->commands,
                                               workbench->actions,
@@ -767,12 +995,21 @@ UmiStatus umi_ui_workbench_quick_access(
                                               out_results);
 }
 
+/*
+ * Provide the ui workbench set breadcrumb path operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workbench_set_breadcrumb_path(UmiUiWorkbench *workbench,
                                                const char *path)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_ui_breadcrumb_set_path(workbench->breadcrumbs, path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_mutex_lock(workbench->mutex);
         workbench->revision = umi_ui_next_revision(workbench->revision);
@@ -781,9 +1018,17 @@ UmiStatus umi_ui_workbench_set_breadcrumb_path(UmiUiWorkbench *workbench,
     return status;
 }
 
+/*
+ * Provide the ui workbench snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_snapshot(const UmiUiWorkbench *workbench,
                                     UmiUiWorkbenchSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(workbench->mutex);
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
@@ -826,9 +1071,17 @@ UmiStatus umi_ui_workbench_snapshot(const UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench state snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_state_snapshot(const UmiUiWorkbench *workbench,
                                           UmiUiWorkbenchState *out_state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || out_state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(workbench->mutex);
     *out_state = workbench->state;
@@ -836,12 +1089,20 @@ UmiStatus umi_ui_workbench_state_snapshot(const UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform ui workbench state through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
                                        const UmiUiWorkbenchState *state)
 {
     UmiStatus status = UMI_STATUS_OK;
     int32_t split_ratio;
     const char *active_editor_group;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     split_ratio = state->editor_split_ratio == 0
         ? UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT
@@ -849,6 +1110,7 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
     active_editor_group = state->active_editor_group[0] != '\0'
         ? state->active_editor_group
         : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state->editor_split_mode < UMI_UI_EDITOR_SPLIT_SINGLE ||
         state->editor_split_mode > UMI_UI_EDITOR_SPLIT_ROWS ||
         split_ratio < UMI_UI_EDITOR_SPLIT_RATIO_MIN ||
@@ -857,24 +1119,32 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (state->active_workspace_profile[0] != '\0') {
         status = umi_ui_workbench_activate_workspace_profile(
             workbench, state->active_workspace_profile);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (state->active_activity[0] != '\0') {
         status = umi_ui_workbench_activate_activity(workbench,
                                                    state->active_activity);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (state->active_perspective[0] != '\0') {
         status = umi_ui_workbench_activate_perspective(workbench,
                                                        state->active_perspective);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (state->active_document[0] != '\0') {
         status = umi_ui_workbench_activate_document(workbench,
                                                     state->active_document);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK && status != UMI_STATUS_NOT_FOUND) return status;
     }
 
@@ -890,6 +1160,7 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
     (void)umi_ui_copy_text(workbench->state.active_editor_group,
                            sizeof(workbench->state.active_editor_group),
                            active_editor_group);
+    /* Apply this operation only while the related capability or state is available. */
     if (state->active_workspace_profile[0] != '\0') {
         (void)umi_ui_copy_text(workbench->state.active_workspace_profile,
                                sizeof(workbench->state.active_workspace_profile),
@@ -901,6 +1172,10 @@ UmiStatus umi_ui_workbench_state_apply(UmiUiWorkbench *workbench,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workbench commands operation used by this module and its client
+ * applications.
+ */
 UmiCommandRegistry *umi_ui_workbench_commands(UmiUiWorkbench *workbench)
 {
     return workbench != NULL ? workbench->commands : NULL;

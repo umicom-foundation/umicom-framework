@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential sensitivity stress data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialSensitivityStress { double base_value; double sensitivity; double factor_shock; double stressed_value; } UmiPrudentialSensitivityStress;
 /* Apply a first-order sensitivity shock to a base prudential value. */
 UmiStatus umi_pru_sensitivity_stress_calculate(UmiPrudentialSensitivityStress *result, double base_value, double sensitivity, double factor_shock);

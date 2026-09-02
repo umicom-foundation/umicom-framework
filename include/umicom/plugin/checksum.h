@@ -23,9 +23,17 @@
 extern "C" {
 #endif
 #define UMI_PLUGIN_CHECKSUM_TEXT_CAPACITY 17U
+/**
+ * Provide the plugin checksum file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_plugin_checksum_file(const char *path,
                                    uint64_t *out_checksum,
                                    uint64_t *out_size);
+/**
+ * Provide the plugin checksum text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_plugin_checksum_text(uint64_t checksum,
                                    char *out_text,
                                    size_t capacity);

@@ -40,6 +40,9 @@ extern "C" {
 #define UMI_IDE_INTEGRATION_NAVIGATION_HISTORY_CAPACITY 128U
 #define UMI_IDE_INTEGRATION_INLINE_TEXT_CAPACITY 8192U
 
+/**
+ * List the named ide integration domain values accepted by this public contract.
+ */
 typedef enum UmiIdeIntegrationDomain {
     UMI_IDE_DOMAIN_EDITOR = 1,
     UMI_IDE_DOMAIN_PROBLEMS = 2,
@@ -52,6 +55,9 @@ typedef enum UmiIdeIntegrationDomain {
     UMI_IDE_DOMAIN_WORKSPACE = 9
 } UmiIdeIntegrationDomain;
 
+/**
+ * List the named ide navigation reason values accepted by this public contract.
+ */
 typedef enum UmiIdeNavigationReason {
     UMI_IDE_NAVIGATION_DIRECT = 0,
     UMI_IDE_NAVIGATION_PROBLEM = 1,
@@ -63,6 +69,9 @@ typedef enum UmiIdeNavigationReason {
     UMI_IDE_NAVIGATION_AI = 7
 } UmiIdeNavigationReason;
 
+/**
+ * List the named ide inline suggestion state values accepted by this public contract.
+ */
 typedef enum UmiIdeInlineSuggestionState {
     UMI_IDE_INLINE_IDLE = 0,
     UMI_IDE_INLINE_REQUESTED = 1,
@@ -73,6 +82,9 @@ typedef enum UmiIdeInlineSuggestionState {
     UMI_IDE_INLINE_FAILED = 6
 } UmiIdeInlineSuggestionState;
 
+/**
+ * List the named ide workflow gate state values accepted by this public contract.
+ */
 typedef enum UmiIdeWorkflowGateState {
     UMI_IDE_GATE_UNKNOWN = 0,
     UMI_IDE_GATE_PASS = 1,
@@ -80,6 +92,9 @@ typedef enum UmiIdeWorkflowGateState {
     UMI_IDE_GATE_BLOCK = 3
 } UmiIdeWorkflowGateState;
 
+/**
+ * Represent the ide location data shared with callers of this public contract.
+ */
 typedef struct UmiIdeLocation {
     char path[UMI_IDE_INTEGRATION_PATH_CAPACITY];
     char uri[UMI_IDE_INTEGRATION_URI_CAPACITY];
@@ -92,6 +107,9 @@ typedef struct UmiIdeLocation {
     int has_uri;
 } UmiIdeLocation;
 
+/**
+ * Represent the ide navigation target data shared with callers of this public contract.
+ */
 typedef struct UmiIdeNavigationTarget {
     UmiIdeIntegrationDomain domain;
     UmiIdeNavigationReason reason;
@@ -101,6 +119,9 @@ typedef struct UmiIdeNavigationTarget {
     uint64_t sequence;
 } UmiIdeNavigationTarget;
 
+/**
+ * Represent the ide editor selection data shared with callers of this public contract.
+ */
 typedef struct UmiIdeEditorSelection {
     char document_id[UMI_IDE_INTEGRATION_ID_CAPACITY];
     char path[UMI_IDE_INTEGRATION_PATH_CAPACITY];
@@ -114,6 +135,9 @@ typedef struct UmiIdeEditorSelection {
     int dirty;
 } UmiIdeEditorSelection;
 
+/**
+ * Represent the ide inline suggestion data shared with callers of this public contract.
+ */
 typedef struct UmiIdeInlineSuggestion {
     char suggestion_id[UMI_IDE_INTEGRATION_ID_CAPACITY];
     char document_id[UMI_IDE_INTEGRATION_ID_CAPACITY];
@@ -128,6 +152,9 @@ typedef struct UmiIdeInlineSuggestion {
     UmiStatus status;
 } UmiIdeInlineSuggestion;
 
+/**
+ * Represent the ide workflow gate data shared with callers of this public contract.
+ */
 typedef struct UmiIdeWorkflowGate {
     char gate_id[UMI_IDE_INTEGRATION_ID_CAPACITY];
     char label[256];
@@ -137,9 +164,24 @@ typedef struct UmiIdeWorkflowGate {
     uint64_t revision;
 } UmiIdeWorkflowGate;
 
+/**
+ * Provide the ide domain text operation used by this module and its client applications.
+ */
 const char *umi_ide_domain_text(UmiIdeIntegrationDomain domain);
+/**
+ * Provide the ide navigation reason text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ide_navigation_reason_text(UmiIdeNavigationReason reason);
+/**
+ * Provide the ide inline state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ide_inline_state_text(UmiIdeInlineSuggestionState state);
+/**
+ * Provide the ide gate state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ide_gate_state_text(UmiIdeWorkflowGateState state);
 
 #ifdef __cplusplus

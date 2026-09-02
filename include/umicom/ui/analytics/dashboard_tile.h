@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics dashboard tile data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsDashboardTile { char id[UMI_ANALYTICS_ID_CAPACITY]; char component_id[UMI_ANALYTICS_ID_CAPACITY]; uint16_t row; uint16_t column; uint16_t row_span; uint16_t column_span; } UmiAnalyticsDashboardTile;
+/**
+ * Initialise analytics dashboard tile from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_dashboard_tile_init(UmiAnalyticsDashboardTile *item);
+/**
+ * Check that analytics dashboard tile satisfies its contract before another service relies
+ * on it.
+ */
 int umi_analytics_dashboard_tile_valid(const UmiAnalyticsDashboardTile *item);
 
 #ifdef __cplusplus

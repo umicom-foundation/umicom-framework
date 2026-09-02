@@ -1,9 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security_governance_fixture.h
+ *
+ * PURPOSE:
+ *   Verify the security governance fixture behaviour and report a clear failure
+ *   when its contract changes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework Tests | Security governance fixture | Sammy Hegab | Umicom Foundation | MIT */
 #ifndef UMICOM_TEST_SECURITY_GOVERNANCE_FIXTURE_H
 #define UMICOM_TEST_SECURITY_GOVERNANCE_FIXTURE_H
 #include <stdio.h>
 #include <string.h>
 #include "umicom/security/security_admin.h"
+/**
+ * Exercise test security governance and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline void umi_test_security_governance(UmiSecurityGovernanceCentre *centre)
 {
     UmiSecurityIdentityProfile identity = {0};

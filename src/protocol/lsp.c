@@ -20,6 +20,7 @@
 
 #include "umicom/protocol/json.h"
 
+/* Provide the escape pair operation used by this module and its client applications. */
 static UmiStatus escape_pair(const char *first,
                              char *escaped_first,
                              size_t first_capacity,
@@ -30,6 +31,7 @@ static UmiStatus escape_pair(const char *first,
     UmiStatus status = umi_json_escape(first,
                                        escaped_first,
                                        first_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_json_escape(second,
                                  escaped_second,
@@ -38,10 +40,18 @@ static UmiStatus escape_pair(const char *first,
     return status;
 }
 
+/*
+ * Initialise lsp client from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_lsp_client_init(UmiLspClient *client,
                               UmiProtocolClient *protocol_client,
                               const char *root_uri)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || protocol_client == NULL || root_uri == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -54,15 +64,21 @@ UmiStatus umi_lsp_client_init(UmiLspClient *client,
     return UMI_STATUS_OK;
 }
 
+/* Initialise lsp from caller-provided values so later operations receive a known state. */
 UmiStatus umi_lsp_initialize(UmiLspClient *client,
                              int64_t process_id,
                              int64_t *out_request_id)
 {
     char root[UMI_PROTOCOL_URI_CAPACITY * 2U];
     char params[UMI_PROTOCOL_MESSAGE_CAPACITY];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || client->client == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_json_escape(client->root_uri, root, sizeof(root)) !=
         UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -80,21 +96,28 @@ UmiStatus umi_lsp_initialize(UmiLspClient *client,
                                        out_request_id);
 }
 
+/* Provide the lsp initialized operation used by this module and its client applications. */
 UmiStatus umi_lsp_initialized(UmiLspClient *client)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || client->client == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_protocol_client_notify(client->client,
                                         "initialized",
                                         "{}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         client->initialized = 1;
     }
     return status;
 }
 
+/* Provide the lsp did open operation used by this module and its client applications. */
 UmiStatus umi_lsp_did_open(UmiLspClient *client,
                            const char *uri,
                            const char *language_id,
@@ -106,6 +129,10 @@ UmiStatus umi_lsp_did_open(UmiLspClient *client,
     char escaped_text[UMI_PROTOCOL_MESSAGE_CAPACITY / 2U];
     char params[UMI_PROTOCOL_MESSAGE_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || uri == NULL || language_id == NULL ||
         text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -116,11 +143,13 @@ UmiStatus umi_lsp_did_open(UmiLspClient *client,
                          language_id,
                          escaped_language,
                          sizeof(escaped_language));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_json_escape(text,
                                  escaped_text,
                                  sizeof(escaped_text));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -137,6 +166,7 @@ UmiStatus umi_lsp_did_open(UmiLspClient *client,
                                       params);
 }
 
+/* Provide the lsp did change operation used by this module and its client applications. */
 UmiStatus umi_lsp_did_change(UmiLspClient *client,
                              const char *uri,
                              int version,
@@ -146,15 +176,21 @@ UmiStatus umi_lsp_did_change(UmiLspClient *client,
     char escaped_text[UMI_PROTOCOL_MESSAGE_CAPACITY / 2U];
     char params[UMI_PROTOCOL_MESSAGE_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || uri == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_json_escape(uri, escaped_uri, sizeof(escaped_uri));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_json_escape(text,
                                  escaped_text,
                                  sizeof(escaped_text));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -170,6 +206,7 @@ UmiStatus umi_lsp_did_change(UmiLspClient *client,
                                       params);
 }
 
+/* Provide the lsp completion operation used by this module and its client applications. */
 UmiStatus umi_lsp_completion(UmiLspClient *client,
                              const char *uri,
                              UmiLspPosition position,
@@ -177,9 +214,14 @@ UmiStatus umi_lsp_completion(UmiLspClient *client,
 {
     char escaped_uri[UMI_PROTOCOL_URI_CAPACITY * 2U];
     char params[4096];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || uri == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_json_escape(uri, escaped_uri, sizeof(escaped_uri)) !=
         UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -187,6 +229,7 @@ UmiStatus umi_lsp_completion(UmiLspClient *client,
     {
         size_t uri_length = strlen(escaped_uri);
         int written;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (uri_length + 96U > sizeof(params) || uri_length > 4000U) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -198,6 +241,7 @@ UmiStatus umi_lsp_completion(UmiLspClient *client,
                            escaped_uri,
                            position.line,
                            position.character);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(params)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -208,9 +252,14 @@ UmiStatus umi_lsp_completion(UmiLspClient *client,
                                        out_request_id);
 }
 
+/* Provide the lsp shutdown operation used by this module and its client applications. */
 UmiStatus umi_lsp_shutdown(UmiLspClient *client,
                            int64_t *out_request_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

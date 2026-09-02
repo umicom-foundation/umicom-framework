@@ -27,6 +27,10 @@ extern "C" {
 #include "umicom/application/production/manifest_drift.h"
 #include "umicom/application/production/readiness_report.h"
 
+/**
+ * Represent the application production acceptance report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionAcceptanceReport {
     UmiApplicationProductionState state;
     size_t requirement_count;
@@ -36,6 +40,10 @@ typedef struct UmiApplicationProductionAcceptanceReport {
     int accepted;
 } UmiApplicationProductionAcceptanceReport;
 
+/**
+ * Provide the application production acceptance report evaluate operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_acceptance_report_evaluate(
     const UmiApplicationProductionAcceptanceRule *rule,
     const UmiApplicationProductionBinding *binding,

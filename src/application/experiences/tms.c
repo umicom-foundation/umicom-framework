@@ -103,7 +103,7 @@ static const UmiExperienceFeatureDefinition FEATURES[] = {
       "Event-driven accounting and reconciliation", UMI_EXPERIENCE_FEATURE_IMPLEMENTED, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.accounting" },
     { sizeof(UmiExperienceFeatureDefinition), "tms.ui", "GTK/Web workbench",
-      "Front/Middle/Back Office product clients", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P1,
+      "Front/Middle/Back Office product clients", UMI_EXPERIENCE_FEATURE_FOUNDATION, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_APPLICATION, "umicom.ui" },
     { sizeof(UmiExperienceFeatureDefinition), "tms.operations", "Engine operations",
       "Server/engine/scheduler operational evidence", UMI_EXPERIENCE_FEATURE_FOUNDATION, UMI_EXPERIENCE_PRIORITY_P2,
@@ -124,6 +124,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience tms operation used by this module and its client
+ * applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_tms(void)
 {
     return &DEFINITION;

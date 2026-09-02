@@ -24,12 +24,20 @@ extern "C" {
 
 #include "umicom/application/production/application_binding.h"
 
+/**
+ * Represent the application production evidence requirement data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionEvidenceRequirement {
     char evidence_id[UMI_APPLICATION_PRODUCTION_ID_CAPACITY];
     UmiApplicationProductionEvidenceKind kind;
     int required;
 } UmiApplicationProductionEvidenceRequirement;
 
+/**
+ * Represent the application production evidence requirements data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionEvidenceRequirements {
     UmiApplicationProductionEvidenceRequirement
         entries[UMI_APPLICATION_PRODUCTION_MAX_EVIDENCE];
@@ -37,9 +45,17 @@ typedef struct UmiApplicationProductionEvidenceRequirements {
     size_t required_count;
 } UmiApplicationProductionEvidenceRequirements;
 
+/**
+ * Provide the application production evidence requirements build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_evidence_requirements_build(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionEvidenceRequirements *out_requirements);
+/**
+ * Find application production evidence requirements while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 const UmiApplicationProductionEvidenceRequirement *
 umi_application_production_evidence_requirements_find(
     const UmiApplicationProductionEvidenceRequirements *requirements,

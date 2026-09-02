@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain tool probe request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainToolProbeRequest {
     UmiToolKind kind;
     const char *explicit_root;
@@ -32,6 +36,10 @@ typedef struct UmiToolchainToolProbeRequest {
     void *diagnostic_user_data;
 } UmiToolchainToolProbeRequest;
 
+/**
+ * Provide the toolchain tool probe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_tool_probe(const UmiToolchainToolProbeRequest *request,
                                    UmiToolInfo *out_tool,
                                    UmiToolchainProbeReport *out_report);

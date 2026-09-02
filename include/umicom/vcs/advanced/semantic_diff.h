@@ -22,12 +22,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced semantic diff data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedSemanticDiff {
     uint32_t struct_size; uint32_t api_version;
     uint64_t left_fingerprint,right_fingerprint;
     size_t left_token_count,right_token_count,common_token_count;
     uint32_t similarity_percent; int equivalent;
 } UmiVcsAdvancedSemanticDiff;
+/**
+ * Provide the vcs advanced semantic diff compare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_semantic_diff_compare(const char *left,const char *right,UmiVcsAdvancedSemanticDiff *out_result);
 #ifdef __cplusplus
 }

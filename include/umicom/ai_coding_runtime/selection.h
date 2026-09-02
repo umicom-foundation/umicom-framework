@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding extract selection operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_extract_selection(
     const char *text,
     uint32_t start_line,

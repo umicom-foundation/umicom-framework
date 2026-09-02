@@ -17,15 +17,21 @@
 
 #include <string.h>
 
+/* Provide the text is present operation used by this module and its client applications. */
 static int text_is_present(const char *text)
 {
     return text != NULL && text[0] != '\0';
 }
 
+/* Provide the text has prefix operation used by this module and its client applications. */
 static int text_has_prefix(const char *text, const char *prefix)
 {
     size_t prefix_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || prefix == NULL) {
         return 0;
     }
@@ -33,6 +39,10 @@ static int text_has_prefix(const char *text, const char *prefix)
     return strncmp(text, prefix, prefix_length) == 0;
 }
 
+/*
+ * Provide the runtime inventory snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_runtime_inventory_snapshot(
     const UmiCommandRegistry *commands,
     const UmiServiceRegistry *services,
@@ -41,6 +51,10 @@ UmiStatus umi_runtime_inventory_snapshot(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -49,69 +63,105 @@ UmiStatus umi_runtime_inventory_snapshot(
     out_snapshot->structure_size = (uint32_t)sizeof(*out_snapshot);
     out_snapshot->api_version = UMI_RUNTIME_INVENTORY_API_VERSION;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (commands != NULL) {
         out_snapshot->command_count = umi_command_registry_count(commands);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < out_snapshot->command_count; ++index) {
             UmiCommandSnapshot command;
             UmiStatus status = umi_command_registry_at(commands, index, &command);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((command.flags & UMI_COMMAND_MUTATES_STATE) != 0U) {
                 ++out_snapshot->mutating_command_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((command.flags & UMI_COMMAND_BACKGROUND) != 0U) {
                 ++out_snapshot->background_command_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((command.flags & UMI_COMMAND_AUDITED) != 0U) {
                 ++out_snapshot->audited_command_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((command.flags & UMI_COMMAND_REQUIRES_TRUST) != 0U) {
                 ++out_snapshot->trusted_command_count;
             }
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (services != NULL) {
         out_snapshot->service_count = umi_service_registry_count(services);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < out_snapshot->service_count; ++index) {
             const UmiServiceDescriptor *service = umi_service_registry_at(services, index);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (service == NULL) {
                 return UMI_STATUS_INTERNAL_ERROR;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((service->flags & UMI_SERVICE_SINGLETON) != 0U) {
                 ++out_snapshot->singleton_service_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((service->flags & UMI_SERVICE_OWNED) != 0U) {
                 ++out_snapshot->owned_service_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((service->flags & UMI_SERVICE_THREAD_SAFE) != 0U) {
                 ++out_snapshot->thread_safe_service_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((service->flags & UMI_SERVICE_REPLACEABLE) != 0U) {
                 ++out_snapshot->replaceable_service_count;
             }
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (capabilities != NULL) {
         out_snapshot->capability_count =
             umi_capability_registry_count(capabilities);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < out_snapshot->capability_count; ++index) {
             const UmiCapabilityDescriptor *capability =
                 umi_capability_registry_at(capabilities, index);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (capability == NULL) {
                 return UMI_STATUS_INTERNAL_ERROR;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((capability->flags & UMI_CAPABILITY_SINGLETON) != 0U) {
                 ++out_snapshot->singleton_capability_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((capability->flags & UMI_CAPABILITY_EXTERNAL) != 0U) {
                 ++out_snapshot->external_capability_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((capability->flags & UMI_CAPABILITY_RELOAD_SAFE) != 0U) {
                 ++out_snapshot->reload_safe_capability_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((capability->flags & UMI_CAPABILITY_OPTIONAL) != 0U) {
                 ++out_snapshot->optional_capability_count;
             }
@@ -121,6 +171,10 @@ UmiStatus umi_runtime_inventory_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the runtime inventory has command operation used by this module and its client
+ * applications.
+ */
 int umi_runtime_inventory_has_command(const UmiCommandRegistry *registry,
                                       const char *command_id)
 {
@@ -129,6 +183,10 @@ int umi_runtime_inventory_has_command(const UmiCommandRegistry *registry,
         : 0;
 }
 
+/*
+ * Provide the runtime inventory has service operation used by this module and its client
+ * applications.
+ */
 int umi_runtime_inventory_has_service(const UmiServiceRegistry *registry,
                                       const char *service_id)
 {
@@ -136,6 +194,10 @@ int umi_runtime_inventory_has_service(const UmiServiceRegistry *registry,
            umi_service_registry_find(registry, service_id) != NULL;
 }
 
+/*
+ * Provide the runtime inventory has capability operation used by this module and its
+ * client applications.
+ */
 int umi_runtime_inventory_has_capability(
     const UmiCapabilityRegistry *registry,
     const char *capability_id)
@@ -144,6 +206,10 @@ int umi_runtime_inventory_has_capability(
            umi_capability_registry_find(registry, capability_id) != NULL;
 }
 
+/*
+ * Provide the runtime inventory count command prefix operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_runtime_inventory_count_command_prefix(
     const UmiCommandRegistry *registry,
     const char *prefix,
@@ -152,16 +218,23 @@ UmiStatus umi_runtime_inventory_count_command_prefix(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || prefix == NULL || out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_command_registry_count(registry); ++index) {
         UmiCommandSnapshot command;
         UmiStatus status = umi_command_registry_at(registry, index, &command);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (text_has_prefix(command.command_id, prefix)) {
             ++count;
         }
@@ -170,6 +243,10 @@ UmiStatus umi_runtime_inventory_count_command_prefix(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the runtime inventory count service prefix operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_runtime_inventory_count_service_prefix(
     const UmiServiceRegistry *registry,
     const char *prefix,
@@ -178,15 +255,25 @@ UmiStatus umi_runtime_inventory_count_service_prefix(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || prefix == NULL || out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_service_registry_count(registry); ++index) {
         const UmiServiceDescriptor *service = umi_service_registry_at(registry, index);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (service == NULL) {
             return UMI_STATUS_INTERNAL_ERROR;
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (text_has_prefix(service->service_id, prefix)) {
             ++count;
         }
@@ -195,6 +282,10 @@ UmiStatus umi_runtime_inventory_count_service_prefix(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the runtime inventory count capability prefix operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_runtime_inventory_count_capability_prefix(
     const UmiCapabilityRegistry *registry,
     const char *prefix,
@@ -203,16 +294,26 @@ UmiStatus umi_runtime_inventory_count_capability_prefix(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || prefix == NULL || out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_capability_registry_count(registry); ++index) {
         const UmiCapabilityDescriptor *capability =
             umi_capability_registry_at(registry, index);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (capability == NULL) {
             return UMI_STATUS_INTERNAL_ERROR;
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (text_has_prefix(capability->capability_id, prefix)) {
             ++count;
         }

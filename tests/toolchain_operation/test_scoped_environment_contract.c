@@ -15,4 +15,8 @@
 #include <assert.h>
 #include "umicom/toolchain/scoped_environment.h"
 #include "umicom/toolchain/operation_catalogue.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiToolchainProfile p; UmiToolchainOperationProfile op; UmiEnvironmentPlan env; umi_toolchain_profile_init(&p); assert(umi_toolchain_operation_catalogue_profile(UMI_TOOLCHAIN_OPERATION_RUN,&op)==UMI_STATUS_OK); assert(umi_toolchain_scoped_environment(&p,&op,&env)==UMI_STATUS_OK); return 0; }

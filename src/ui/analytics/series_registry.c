@@ -15,6 +15,18 @@
 #include "umicom/ui/analytics/series_registry.h"
 
 #include <string.h>
-void umi_analytics_series_registry_init(UmiAnalyticsSeriesRegistry *registry){if(registry!=NULL)memset(registry,0,sizeof *registry);}
-UmiStatus umi_analytics_series_registry_add(UmiAnalyticsSeriesRegistry *registry,UmiAnalyticsSeries *series){size_t i;if(registry==NULL||series==NULL||series->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;for(i=0;i<registry->count;i++)if(strcmp(registry->items[i]->id,series->id)==0)return UMI_STATUS_ALREADY_EXISTS;if(registry->count>=UMI_ANALYTICS_MAX_SERIES)return UMI_STATUS_CAPACITY_EXCEEDED;registry->items[registry->count++]=series;registry->revision++;return UMI_STATUS_OK;}
-UmiAnalyticsSeries *umi_analytics_series_registry_find(const UmiAnalyticsSeriesRegistry *registry,const char *id){size_t i;if(registry==NULL||id==NULL)return NULL;for(i=0;i<registry->count;i++)if(strcmp(registry->items[i]->id,id)==0)return registry->items[i];return NULL;}
+/*
+ * Initialise analytics series registry from caller-provided values so later operations
+ * receive a known state.
+ */
+void umi_analytics_series_registry_init(UmiAnalyticsSeriesRegistry *registry){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry!=NULL)memset(registry,0,sizeof *registry);}
+/*
+ * Add analytics series registry only after its inputs and available capacity have been
+ * checked.
+ */
+UmiStatus umi_analytics_series_registry_add(UmiAnalyticsSeriesRegistry *registry,UmiAnalyticsSeries *series){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry==NULL||series==NULL||series->id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0;i<registry->count;i++)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(registry->items[i]->id,series->id)==0)return UMI_STATUS_ALREADY_EXISTS;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry->count>=UMI_ANALYTICS_MAX_SERIES)return UMI_STATUS_CAPACITY_EXCEEDED;registry->items[registry->count++]=series;registry->revision++;return UMI_STATUS_OK;}
+/*
+ * Find analytics series registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
+UmiAnalyticsSeries *umi_analytics_series_registry_find(const UmiAnalyticsSeriesRegistry *registry,const char *id){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(registry==NULL||id==NULL)return NULL;/* Visit each bounded item once so every record receives the same rule. */ for(i=0;i<registry->count;i++)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(registry->items[i]->id,id)==0)return registry->items[i];return NULL;}

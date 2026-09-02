@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/sdk_runtime/sdk_catalogue.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSdkRuntimeSdkCatalogue value; UmiSdkRuntimeSdkCatalogue same; uint64_t revision;

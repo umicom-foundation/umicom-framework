@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection build file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_build_file(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -34,6 +38,10 @@ UmiStatus umi_workbench_selection_build_file(
     uint32_t selection_length,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_project(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -46,6 +54,10 @@ UmiStatus umi_workbench_selection_build_project(
     const char *language_id,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build diagnostic operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_diagnostic(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -61,6 +73,10 @@ UmiStatus umi_workbench_selection_build_diagnostic(
     const char *message,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build source control change operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_build_source_control_change(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -75,6 +91,10 @@ UmiStatus umi_workbench_selection_build_source_control_change(
     const char *change_kind,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build test operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_build_test(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -89,6 +109,10 @@ UmiStatus umi_workbench_selection_build_test(
     uint64_t duration_ms,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build ai message operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_ai_message(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -102,6 +126,10 @@ UmiStatus umi_workbench_selection_build_ai_message(
     const char *evidence_id,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build instrument operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_instrument(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -115,6 +143,10 @@ UmiStatus umi_workbench_selection_build_instrument(
     const char *contract_id,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build account operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_account(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -128,6 +160,10 @@ UmiStatus umi_workbench_selection_build_account(
     const char *environment,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench selection build trade operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_build_trade(
     UmiWorkbenchSelection *selection,
     const char *selection_id,

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP inlayHint. Sammy Hegab, Umicom Foundation, MIT. */
 #include "lsp_request_internal.h"
+/* Provide the lsp inlay hints operation used by this module and its client applications. */
 UmiStatus umi_lsp_inlay_hints(UmiLspClient *c,const char *u,UmiLspRange r,int64_t *id){return umi_lsp_request_range(c,"textDocument/inlayHint",u,r,NULL,id);}

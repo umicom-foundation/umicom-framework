@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/rollback_decision.h"
-int main(void){ if(umi_helix_rollback_decision_evaluate(false,false,false,0.01,0.05)!=UMI_HELIX_DECISION_ALLOW){ return 1; } if(umi_helix_rollback_decision_evaluate(false,true,false,0.0,0.05)!=UMI_HELIX_DECISION_ROLLBACK){ return 2; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ /* Apply this branch only when its contract condition is satisfied. */ if(umi_helix_rollback_decision_evaluate(false,false,false,0.01,0.05)!=UMI_HELIX_DECISION_ALLOW){ return 1; } /* Apply this branch only when its contract condition is satisfied. */ if(umi_helix_rollback_decision_evaluate(false,true,false,0.0,0.05)!=UMI_HELIX_DECISION_ROLLBACK){ return 2; } return 0; }

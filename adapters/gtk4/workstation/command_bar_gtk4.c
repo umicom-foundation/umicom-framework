@@ -45,6 +45,10 @@ static bool model_is_safe(const UmiWsCommandBarModel *model)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || model->count > UMI_WS_MAX_PALETTE_ITEMS ||
         memchr(model->query.text, '\0', sizeof(model->query.text)) == NULL ||
         model->query.scope < UMI_WS_COMMAND_SCOPE_ALL ||
@@ -53,8 +57,10 @@ static bool model_is_safe(const UmiWsCommandBarModel *model)
         model->presentation > UMI_WS_COMMAND_BAR_PRESENTATION_BUTTON) {
         return false;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         const UmiWsCommandBarItem *item = &model->items[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_ws_id_valid(item->item_id) ||
             !umi_ws_id_valid(item->command_id) ||
             memchr(item->title, '\0', sizeof(item->title)) == NULL ||
@@ -79,6 +85,10 @@ static UmiStatus copy_model_with_query(
     char prefix;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || !model_is_safe(source) || query == NULL ||
         memchr(query->text, '\0', sizeof(query->text)) == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -87,6 +97,7 @@ static UmiStatus copy_model_with_query(
     written = prefix == '\0'
         ? snprintf(input, sizeof(input), "%s", query->text)
         : snprintf(input, sizeof(input), "%c%s", prefix, query->text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(input)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -98,6 +109,10 @@ static UmiStatus copy_model_with_query(
  * helper releases each successful allocation on an uncommon partial failure. */
 static void release_unparented_widget(GtkWidget *widget)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (widget == NULL) return;
     g_object_ref_sink(widget);
     g_object_unref(widget);
@@ -106,6 +121,7 @@ static void release_unparented_widget(GtkWidget *widget)
 /* Return a short label that explains how the current prefix narrows results. */
 static const char *scope_text(UmiWsCommandScope scope)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (scope) {
     case UMI_WS_COMMAND_SCOPE_COMMAND: return "Commands";
     case UMI_WS_COMMAND_SCOPE_SYMBOL: return "Symbols";
@@ -124,8 +140,16 @@ static void clear_result_list(GtkWidget *list)
 {
     GtkWidget *child;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL) return;
     child = gtk_widget_get_first_child(list);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_list_box_remove(GTK_LIST_BOX(list), child);
@@ -141,8 +165,14 @@ static const UmiWsCommandBarItem *find_item(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL || item_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < command_bar->model.count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(command_bar->model.items[index].item_id, item_id) == 0) {
             return &command_bar->model.items[index];
         }
@@ -159,12 +189,24 @@ static void on_result_clicked(GtkButton *button, gpointer user_data)
     const char *item_id;
     const UmiWsCommandBarItem *item;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL || button == NULL) return;
     item_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-command-bar-item-id");
     item = find_item(command_bar, item_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL || !item->enabled) return;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar->activated_handler != NULL) {
         command_bar->activated_handler(
             item, command_bar->activated_user_data);
@@ -180,6 +222,10 @@ static void rebuild_result_widgets(
     size_t limit;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL || command_bar->result_list == NULL) return;
     clear_result_list(command_bar->result_list);
     gtk_label_set_text(
@@ -187,9 +233,11 @@ static void rebuild_result_widgets(
         scope_text(command_bar->model.query.scope));
 
     limit = command_bar->model.result_count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (limit > command_bar->maximum_visible_results) {
         limit = command_bar->maximum_visible_results;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < limit; ++index) {
         const UmiWsCommandBarItem *item =
             umi_ws_command_bar_model_result_at(&command_bar->model, index);
@@ -198,11 +246,19 @@ static void rebuild_result_widgets(
         GtkWidget *title;
         GtkWidget *description;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (item == NULL) continue;
         button = gtk_button_new();
         content = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
         title = gtk_label_new(item->title);
         description = gtk_label_new(item->description);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (button == NULL || content == NULL || title == NULL ||
             description == NULL) {
             continue;
@@ -242,6 +298,10 @@ static void on_search_changed(GtkSearchEntry *entry, gpointer user_data)
         (UmiGtk4WorkstationCommandBar *)user_data;
     const char *text;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL || command_bar->changing_text) return;
     text = gtk_editable_get_text(GTK_EDITABLE(entry));
     (void)umi_ws_command_bar_model_set_query(
@@ -252,7 +312,7 @@ static void on_search_changed(GtkSearchEntry *entry, gpointer user_data)
      * cleared. The result button can still open the complete catalogue. */
     if (text[0] != '\0') {
         gtk_popover_popup(GTK_POPOVER(command_bar->popover));
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_popover_popdown(GTK_POPOVER(command_bar->popover));
     }
 }
@@ -266,8 +326,16 @@ static void on_search_activate(GtkSearchEntry *entry, gpointer user_data)
     const UmiWsCommandBarItem *item;
     (void)entry;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return;
     item = umi_ws_command_bar_model_selected(&command_bar->model);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL || !item->enabled ||
         command_bar->activated_handler == NULL) {
         return;
@@ -282,6 +350,10 @@ static void apply_presentation(UmiGtk4WorkstationCommandBar *command_bar)
 {
     UmiWsCommandBarPresentation presentation;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return;
     presentation = command_bar->model.presentation;
     gtk_widget_set_visible(
@@ -290,6 +362,7 @@ static void apply_presentation(UmiGtk4WorkstationCommandBar *command_bar)
     gtk_widget_set_visible(
         command_bar->entry,
         presentation != UMI_WS_COMMAND_BAR_PRESENTATION_BUTTON);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (presentation == UMI_WS_COMMAND_BAR_PRESENTATION_EXPANDED) {
         gtk_search_entry_set_placeholder_text(
             GTK_SEARCH_ENTRY(command_bar->entry), command_bar->placeholder);
@@ -297,7 +370,7 @@ static void apply_presentation(UmiGtk4WorkstationCommandBar *command_bar)
         gtk_menu_button_set_icon_name(
             GTK_MENU_BUTTON(command_bar->result_button),
             "pan-down-symbolic");
-    } else if (presentation == UMI_WS_COMMAND_BAR_PRESENTATION_COMPACT) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (presentation == UMI_WS_COMMAND_BAR_PRESENTATION_COMPACT) {
         gtk_search_entry_set_placeholder_text(
             GTK_SEARCH_ENTRY(command_bar->entry),
             command_bar->compact_placeholder);
@@ -305,13 +378,17 @@ static void apply_presentation(UmiGtk4WorkstationCommandBar *command_bar)
         gtk_menu_button_set_icon_name(
             GTK_MENU_BUTTON(command_bar->result_button),
             "system-search-symbolic");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_menu_button_set_label(
             GTK_MENU_BUTTON(command_bar->result_button), "Commands");
     }
     ++command_bar->revision;
 }
 
+/*
+ * Provide the gtk4 ws command bar config default operation used by this module and its
+ * client applications.
+ */
 UmiGtk4WorkstationCommandBarConfig
 umi_gtk4_ws_command_bar_config_default(void)
 {
@@ -323,6 +400,10 @@ umi_gtk4_ws_command_bar_config_default(void)
     return config;
 }
 
+/*
+ * Provide the gtk4 ws command bar create managed operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_create_managed(
     const UmiGtk4WorkstationCommandBarConfig *config,
     const UmiWsCommandBarModel *model,
@@ -333,6 +414,10 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
     GtkWidget *help;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || model == NULL || out_command_bar == NULL ||
         config->initial_available_width < 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -340,10 +425,15 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
     *out_command_bar = NULL;
     command_bar = (UmiGtk4WorkstationCommandBar *)calloc(
         1U, sizeof(*command_bar));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = copy_model_with_query(
         &command_bar->model, model, &model->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(command_bar);
         return status;
@@ -358,6 +448,7 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
         config->placeholder != NULL
             ? config->placeholder
             : "Search commands, windows and settings");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ws_copy_text(
             command_bar->compact_placeholder,
@@ -366,6 +457,7 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
                 ? config->compact_placeholder
                 : "Search");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(command_bar);
         return status;
@@ -380,6 +472,10 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
     popover_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     help = gtk_label_new(
         "Use > for commands, + for windows, / for settings or ? for the assistant.");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar->root == NULL || command_bar->scope_label == NULL ||
         command_bar->entry == NULL || command_bar->result_button == NULL ||
         command_bar->popover == NULL || command_bar->result_list == NULL ||
@@ -439,20 +535,40 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by gtk4 ws command bar so the same storage can be reused
+ * safely.
+ */
 void umi_gtk4_ws_command_bar_destroy(
     UmiGtk4WorkstationCommandBar *command_bar)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar->root != NULL) g_object_unref(command_bar->root);
     free(command_bar);
 }
 
+/*
+ * Provide the gtk4 ws command bar widget operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_ws_command_bar_widget(
     UmiGtk4WorkstationCommandBar *command_bar)
 {
     return command_bar != NULL ? command_bar->root : NULL;
 }
 
+/*
+ * Provide the gtk4 ws command bar set model operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_set_model(
     UmiGtk4WorkstationCommandBar *command_bar,
     const UmiWsCommandBarModel *model)
@@ -460,27 +576,41 @@ UmiStatus umi_gtk4_ws_command_bar_set_model(
     UmiWsCommandBarQuery current_query;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL || model == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     current_query = command_bar->model.query;
     status = copy_model_with_query(
         &command_bar->model, model, &current_query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     rebuild_result_widgets(command_bar);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the gtk4 ws command bar set query text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_set_query_text(
     UmiGtk4WorkstationCommandBar *command_bar,
     const char *text)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ws_command_bar_model_set_query(&command_bar->model, text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     command_bar->changing_text = 1;
     gtk_editable_set_text(GTK_EDITABLE(command_bar->entry), text);
@@ -489,36 +619,61 @@ UmiStatus umi_gtk4_ws_command_bar_set_query_text(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the gtk4 ws command bar set available width operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_set_available_width(
     UmiGtk4WorkstationCommandBar *command_bar,
     int32_t available_width)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_ws_command_bar_model_set_available_width(
         &command_bar->model, available_width);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) apply_presentation(command_bar);
     return status;
 }
 
+/*
+ * Provide the gtk4 ws command bar set activated handler operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_set_activated_handler(
     UmiGtk4WorkstationCommandBar *command_bar,
     UmiGtk4WorkstationCommandBarActivatedHandler handler,
     void *user_data)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     command_bar->activated_handler = handler;
     command_bar->activated_user_data = user_data;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the gtk4 ws command bar snapshot operation used by this module and its client
+ * applications.
+ */
 UmiGtk4WorkstationCommandBarSnapshot umi_gtk4_ws_command_bar_snapshot(
     const UmiGtk4WorkstationCommandBar *command_bar)
 {
     UmiGtk4WorkstationCommandBarSnapshot snapshot = {0};
     const UmiWsCommandBarItem *selected;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_bar == NULL) return snapshot;
     snapshot.scope = command_bar->model.query.scope;
     snapshot.presentation = command_bar->model.presentation;
@@ -530,6 +685,10 @@ UmiGtk4WorkstationCommandBarSnapshot umi_gtk4_ws_command_bar_snapshot(
         sizeof(snapshot.query),
         command_bar->model.query.text);
     selected = umi_ws_command_bar_model_selected(&command_bar->model);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selected != NULL) {
         (void)umi_ws_copy_text(
             snapshot.selected_item_id,
@@ -539,9 +698,17 @@ UmiGtk4WorkstationCommandBarSnapshot umi_gtk4_ws_command_bar_snapshot(
     return snapshot;
 }
 
+/*
+ * Initialise gtk4 ws command bar from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_command_bar_create(const char *placeholder)
 {
     GtkWidget *entry = gtk_search_entry_new();
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entry == NULL) return NULL;
     gtk_widget_add_css_class(entry, "umicom-command-bar");
     gtk_search_entry_set_placeholder_text(
@@ -553,11 +720,19 @@ GtkWidget *umi_gtk4_ws_command_bar_create(const char *placeholder)
     return entry;
 }
 
+/*
+ * Provide the gtk4 ws command bar query operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_query(
     GtkWidget *entry,
     UmiWsCommandBarQuery *out_query)
 {
     const char *text;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entry == NULL || !GTK_IS_EDITABLE(entry) || out_query == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev agent dependency data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevAgentDependency {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +41,25 @@ typedef struct UmiAiDevAgentDependency {
     int enabled;
 } UmiAiDevAgentDependency;
 
+/**
+ * Initialise ai dev agent dependency from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_agent_dependency_init(UmiAiDevAgentDependency *policy);
+/**
+ * Provide the ai dev agent dependency configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_agent_dependency_configure(UmiAiDevAgentDependency *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev agent dependency allows operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_agent_dependency_allows(const UmiAiDevAgentDependency *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev agent dependency approval required operation used by this module and
+ * its client applications.
+ */
 int umi_ai_dev_agent_dependency_approval_required(const UmiAiDevAgentDependency *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

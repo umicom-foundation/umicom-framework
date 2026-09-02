@@ -18,17 +18,33 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the treasury market risk snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTreasuryMarketRiskSnapshot {
     char id[UMI_TREASURY_ID_CAPACITY];
     UmiTreasuryRiskClass risk_class;
     int64_t primary_minor;
     int64_t secondary_minor;
 } UmiTreasuryMarketRiskSnapshot;
+/**
+ * Initialise treasury market risk snapshot from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_treasury_market_risk_snapshot_init(UmiTreasuryMarketRiskSnapshot *value,
     const char *id,
     int64_t primary_minor,
     int64_t secondary_minor);
+/**
+ * Check that treasury market risk snapshot satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_treasury_market_risk_snapshot_valid(const UmiTreasuryMarketRiskSnapshot *value);
+/**
+ * Provide the treasury market risk snapshot combined absolute minor operation used by this
+ * module and its client applications.
+ */
 int64_t umi_treasury_market_risk_snapshot_combined_absolute_minor(const UmiTreasuryMarketRiskSnapshot *value);
 #ifdef __cplusplus
 }

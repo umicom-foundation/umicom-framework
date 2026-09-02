@@ -45,23 +45,37 @@ typedef struct UmiProjectImportScan {
     size_t header_count;
 } UmiProjectImportScan;
 
+/* Provide the import copy text operation used by this module and its client applications. */
 static void import_copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the ascii lower operation used by this module and its client applications. */
 static int ascii_lower(int value)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= 'A' && value <= 'Z') return value - 'A' + 'a';
     return value;
 }
 
+/* Provide the extension equals operation used by this module and its client applications. */
 static int extension_equals(const char *name, const char *extension)
 {
     const char *dot;
@@ -69,33 +83,54 @@ static int extension_equals(const char *name, const char *extension)
     size_t left_length;
     size_t right_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (name == NULL || extension == NULL) return 0;
     dot = strrchr(name, '.');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dot == NULL) return 0;
     left_length = strlen(dot);
     right_length = strlen(extension);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left_length != right_length) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < left_length; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (ascii_lower((unsigned char)dot[index]) !=
             ascii_lower((unsigned char)extension[index])) return 0;
     }
     return 1;
 }
 
+/*
+ * Provide the import scan visitor operation used by this module and its client
+ * applications.
+ */
 static UmiStatus import_scan_visitor(const UmiFileInfo *info, void *user_data)
 {
     UmiProjectImportScan *scan = (UmiProjectImportScan *)user_data;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (info == NULL || scan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (info->kind != UMI_FILE_KIND_REGULAR) return UMI_STATUS_OK;
 
     scan->discovered_file_count += 1U;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (extension_equals(info->name, ".c")) {
         scan->c_source_count += 1U;
-    } else if (extension_equals(info->name, ".cc") ||
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (extension_equals(info->name, ".cc") ||
                extension_equals(info->name, ".cpp") ||
                extension_equals(info->name, ".cxx")) {
         scan->cpp_source_count += 1U;
-    } else if (extension_equals(info->name, ".h") ||
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (extension_equals(info->name, ".h") ||
                extension_equals(info->name, ".hh") ||
                extension_equals(info->name, ".hpp") ||
                extension_equals(info->name, ".hxx")) {
@@ -104,6 +139,10 @@ static UmiStatus import_scan_visitor(const UmiFileInfo *info, void *user_data)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the resolve import root operation used by this module and its client
+ * applications.
+ */
 static UmiStatus resolve_import_root(
     const char *root_directory,
     char *out_root,
@@ -112,32 +151,48 @@ static UmiStatus resolve_import_root(
     char current_directory[UMI_PATH_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root_directory == NULL || root_directory[0] == '\0' ||
         out_root == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_path_is_absolute(root_directory)) {
         status = umi_path_normalise(root_directory, out_root, capacity);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_fs_current_directory(current_directory,
                                           sizeof(current_directory));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = umi_path_absolute(root_directory, current_directory,
                                    out_root, capacity);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_fs_is_directory(out_root) ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the resolve import build directory operation used by this module and its client
+ * applications.
+ */
 static UmiStatus resolve_import_build_directory(
     const UmiProjectWorkspaceImportRequest *request,
     const char *root_directory,
     char *out_build,
     size_t capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->build_directory == NULL ||
         request->build_directory[0] == '\0') {
         return umi_path_join(root_directory, "build", out_build, capacity);
     }
+    /* Create this optional product surface only when its build option is enabled. */
     if (umi_path_is_absolute(request->build_directory)) {
         return umi_path_normalise(request->build_directory,
                                   out_build, capacity);
@@ -146,6 +201,7 @@ static UmiStatus resolve_import_build_directory(
                              out_build, capacity);
 }
 
+/* Provide the make project id operation used by this module and its client applications. */
 static UmiStatus make_project_id(
     const char *requested_id,
     const char *root_directory,
@@ -158,41 +214,60 @@ static UmiStatus make_project_id(
     size_t destination_index = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_id == NULL || capacity < 2U) return UMI_STATUS_INVALID_ARGUMENT;
     source = requested_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || source[0] == '\0') {
         status = umi_path_basename(root_directory, basename, sizeof(basename));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         source = basename;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (source_index = 0U; source[source_index] != '\0'; ++source_index) {
         unsigned char ch = (unsigned char)source[source_index];
         char value;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if ((ch >= (unsigned char)'a' && ch <= (unsigned char)'z') ||
             (ch >= (unsigned char)'A' && ch <= (unsigned char)'Z') ||
             (ch >= (unsigned char)'0' && ch <= (unsigned char)'9') ||
             ch == (unsigned char)'_' || ch == (unsigned char)'-' ||
             ch == (unsigned char)'.') {
             value = (char)ch;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             value = '-';
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (destination_index + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value == '-' && destination_index > 0U &&
             out_id[destination_index - 1U] == '-') continue;
         out_id[destination_index++] = value;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (destination_index > 0U && out_id[destination_index - 1U] == '-')
         destination_index -= 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (destination_index == 0U) {
         import_copy_text(out_id, capacity, "project");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_id[destination_index] = '\0';
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the make record id operation used by this module and its client applications. */
 static UmiStatus make_record_id(
     const char *project_id,
     const char *suffix,
@@ -200,19 +275,37 @@ static UmiStatus make_record_id(
     size_t capacity)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_id == NULL || suffix == NULL || out_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     written = snprintf(out_id, capacity, "%s.%s", project_id, suffix);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the safe command component operation used by this module and its client
+ * applications.
+ */
 static int safe_command_component(const char *text)
 {
     const unsigned char *cursor = (const unsigned char *)text;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 1;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == (unsigned char)'"' || *cursor == (unsigned char)'\n' ||
             *cursor == (unsigned char)'\r' || *cursor == (unsigned char)'|' ||
             *cursor == (unsigned char)'&' || *cursor == (unsigned char)';' ||
@@ -224,6 +317,10 @@ static int safe_command_component(const char *text)
     return 1;
 }
 
+/*
+ * Provide the import configuration name operation used by this module and its client
+ * applications.
+ */
 static const char *import_configuration_name(
     const UmiProjectWorkspaceImportRequest *request)
 {
@@ -232,6 +329,7 @@ static const char *import_configuration_name(
                ? request->configuration_name : "Debug";
 }
 
+/* Provide the import generator operation used by this module and its client applications. */
 static const char *import_generator(
     const UmiProjectWorkspaceImportRequest *request)
 {
@@ -239,6 +337,10 @@ static const char *import_generator(
                ? request->generator : "Ninja";
 }
 
+/*
+ * Provide the import toolchain id operation used by this module and its client
+ * applications.
+ */
 static const char *import_toolchain_id(
     const UmiProjectWorkspaceImportRequest *request)
 {
@@ -246,6 +348,10 @@ static const char *import_toolchain_id(
                ? request->toolchain_id : "default";
 }
 
+/*
+ * Provide the upsert import task operation used by this module and its client
+ * applications.
+ */
 static UmiStatus upsert_import_task(
     UmiProjectWorkspace *workspace,
     const char *id,
@@ -274,6 +380,7 @@ static UmiStatus upsert_import_task(
         umi_project_workspace_task(workspace), &task);
 }
 
+/* Provide the upsert build node operation used by this module and its client applications. */
 static UmiStatus upsert_build_node(
     UmiProjectWorkspace *workspace,
     const char *id,
@@ -300,6 +407,10 @@ static UmiStatus upsert_build_node(
         umi_project_workspace_build_node(workspace), &node);
 }
 
+/*
+ * Provide the project workspace import directory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_import_directory(
     UmiProjectWorkspace *workspace,
     const UmiProjectWorkspaceImportRequest *request,
@@ -331,6 +442,10 @@ UmiStatus umi_project_workspace_import_directory(
     UmiStatus status;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || request == NULL || out_snapshot == NULL ||
         request->root_directory == NULL || request->root_directory[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -344,10 +459,12 @@ UmiStatus umi_project_workspace_import_directory(
     status = resolve_import_root(request->root_directory,
                                  snapshot.root_directory,
                                  sizeof(snapshot.root_directory));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = resolve_import_build_directory(request, snapshot.root_directory,
                                              snapshot.build_directory,
                                              sizeof(snapshot.build_directory));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     /*
@@ -361,17 +478,25 @@ UmiStatus umi_project_workspace_import_directory(
 
     status = make_project_id(request->project_id, snapshot.root_directory,
                              snapshot.project_id, sizeof(snapshot.project_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->display_name != NULL && request->display_name[0] != '\0') {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strlen(request->display_name) >= sizeof(snapshot.display_name))
             return UMI_STATUS_CAPACITY_EXCEEDED;
         import_copy_text(snapshot.display_name, sizeof(snapshot.display_name),
                          request->display_name);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         char name[UMI_PATH_CAPACITY];
         status = umi_path_basename(snapshot.root_directory, name, sizeof(name));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strlen(name) >= sizeof(snapshot.display_name))
             return UMI_STATUS_CAPACITY_EXCEEDED;
         import_copy_text(snapshot.display_name, sizeof(snapshot.display_name), name);
@@ -379,10 +504,12 @@ UmiStatus umi_project_workspace_import_directory(
 
     status = umi_path_join(snapshot.root_directory, "CMakeLists.txt",
                            cmake_path, sizeof(cmake_path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.has_cmake = umi_fs_is_file(cmake_path);
     status = umi_path_join(snapshot.root_directory, ".git",
                            git_path, sizeof(git_path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.has_git = umi_fs_is_directory(git_path);
 
@@ -395,6 +522,7 @@ UmiStatus umi_project_workspace_import_directory(
     walk_options.follow_symbolic_links = 0;
     status = umi_directory_walk(snapshot.root_directory, &walk_options,
                                 import_scan_visitor, &scan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.discovered_file_count = scan.discovered_file_count;
     snapshot.c_source_count = scan.c_source_count;
@@ -404,12 +532,14 @@ UmiStatus umi_project_workspace_import_directory(
     configuration_name = import_configuration_name(request);
     generator = import_generator(request);
     toolchain_id = import_toolchain_id(request);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(configuration_name) >= sizeof(configuration.build_type) ||
         strlen(toolchain_id) >= sizeof(configuration.toolchain_id))
         return UMI_STATUS_CAPACITY_EXCEEDED;
     parallel_jobs = request->parallel_jobs != 0U
                         ? request->parallel_jobs
                         : UMI_PROJECT_WORKSPACE_IMPORT_DEFAULT_PARALLEL_JOBS;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!safe_command_component(snapshot.root_directory) ||
         !safe_command_component(snapshot.build_directory) ||
         !safe_command_component(configuration_name) ||
@@ -424,12 +554,14 @@ UmiStatus umi_project_workspace_import_directory(
                      snapshot.root_directory);
     import_copy_text(descriptor.kind, sizeof(descriptor.kind),
                      snapshot.has_cmake ? "cmake" : "native");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (scan.c_source_count > 0U && scan.cpp_source_count > 0U)
         import_copy_text(descriptor.primary_language,
                          sizeof(descriptor.primary_language), "C/C++");
-    else if (scan.cpp_source_count > 0U)
+    else /* Apply this branch only when its contract condition is satisfied. */ if (scan.cpp_source_count > 0U)
         import_copy_text(descriptor.primary_language,
                          sizeof(descriptor.primary_language), "C++");
+    /* Use this fallback path when the earlier condition does not apply. */
     else
         import_copy_text(descriptor.primary_language,
                          sizeof(descriptor.primary_language), "C");
@@ -438,12 +570,14 @@ UmiStatus umi_project_workspace_import_directory(
     descriptor.enabled = 1;
     status = umi_project_descriptor_registry_upsert(
         umi_project_workspace_descriptor(workspace), &descriptor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.created_or_updated_record_count += 1U;
 
     status = make_record_id(snapshot.project_id, "configuration",
                             snapshot.configuration_id,
                             sizeof(snapshot.configuration_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     memset(&configuration, 0, sizeof(configuration));
     configuration.struct_size = (uint32_t)sizeof(configuration);
@@ -471,11 +605,13 @@ UmiStatus umi_project_workspace_import_directory(
     configuration.active = 1;
     status = umi_project_configuration_registry_upsert(
         umi_project_workspace_configuration(workspace), &configuration);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.created_or_updated_record_count += 1U;
 
     status = make_record_id(snapshot.project_id, "target",
                             snapshot.target_id, sizeof(snapshot.target_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     memset(&target, 0, sizeof(target));
     target.struct_size = (uint32_t)sizeof(target);
@@ -491,12 +627,14 @@ UmiStatus umi_project_workspace_import_directory(
     target.default_target = 1;
     status = umi_project_target_registry_upsert(
         umi_project_workspace_target(workspace), &target);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.created_or_updated_record_count += 1U;
 
     status = make_record_id(snapshot.project_id, "environment",
                             snapshot.environment_id,
                             sizeof(snapshot.environment_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     memset(&environment, 0, sizeof(environment));
     environment.struct_size = (uint32_t)sizeof(environment);
@@ -511,11 +649,13 @@ UmiStatus umi_project_workspace_import_directory(
     environment.inherit_parent = 1;
     status = umi_project_environment_registry_upsert(
         umi_project_workspace_environment(workspace), &environment);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.created_or_updated_record_count += 1U;
 
     status = make_record_id(snapshot.project_id, "sources",
                             source_set_id, sizeof(source_set_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     memset(&file_set, 0, sizeof(file_set));
     file_set.struct_size = (uint32_t)sizeof(file_set);
@@ -533,99 +673,125 @@ UmiStatus umi_project_workspace_import_directory(
     file_set.generated = 0;
     status = umi_project_file_set_registry_upsert(
         umi_project_workspace_file_set(workspace), &file_set);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     snapshot.created_or_updated_record_count += 1U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.has_cmake) {
         status = make_record_id(snapshot.project_id, "task.configure",
                                 snapshot.configure_task_id,
                                 sizeof(snapshot.configure_task_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = make_record_id(snapshot.project_id, "task.build",
                                 snapshot.build_task_id,
                                 sizeof(snapshot.build_task_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = make_record_id(snapshot.project_id, "task.test",
                                 snapshot.test_task_id,
                                 sizeof(snapshot.test_task_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         written = snprintf(configure_command, sizeof(configure_command),
                            "cmake -S \"%s\" -B \"%s\" -G \"%s\" -DCMAKE_BUILD_TYPE=%s",
                            snapshot.root_directory, snapshot.build_directory,
                            generator, configuration_name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(configure_command))
             return UMI_STATUS_CAPACITY_EXCEEDED;
         written = snprintf(build_command, sizeof(build_command),
                            "cmake --build \"%s\" --parallel %u",
                            snapshot.build_directory, (unsigned int)parallel_jobs);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(build_command))
             return UMI_STATUS_CAPACITY_EXCEEDED;
         written = snprintf(test_command, sizeof(test_command),
                            "ctest --test-dir \"%s\" --output-on-failure -C %s",
                            snapshot.build_directory, configuration_name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(test_command))
             return UMI_STATUS_CAPACITY_EXCEEDED;
 
         status = upsert_import_task(workspace, snapshot.configure_task_id,
                                     snapshot.project_id, "Configure", configure_command,
                                     snapshot.root_directory, "configure", 0);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         snapshot.created_or_updated_record_count += 1U;
         status = upsert_import_task(workspace, snapshot.build_task_id,
                                     snapshot.project_id, "Build", build_command,
                                     snapshot.root_directory, "build", 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         snapshot.created_or_updated_record_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (request->create_test_task != 0) {
             status = upsert_import_task(workspace, snapshot.test_task_id,
                                         snapshot.project_id, "Test", test_command,
                                         snapshot.root_directory, "test", 0);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             snapshot.created_test_task = 1;
             snapshot.created_or_updated_record_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             snapshot.test_task_id[0] = '\0';
         }
 
         status = make_record_id(snapshot.project_id, "node.configure",
                                 configure_node_id, sizeof(configure_node_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = make_record_id(snapshot.project_id, "node.build",
                                 build_node_id, sizeof(build_node_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = make_record_id(snapshot.project_id, "node.test",
                                 test_node_id, sizeof(test_node_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = upsert_build_node(workspace, configure_node_id, snapshot.project_id,
                                    snapshot.target_id, "Configure", "configure", "", 10);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         snapshot.created_or_updated_record_count += 1U;
         status = upsert_build_node(workspace, build_node_id, snapshot.project_id,
                                    snapshot.target_id, "Build", "build",
                                    configure_node_id, 20);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         snapshot.created_or_updated_record_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (snapshot.created_test_task) {
             status = upsert_build_node(workspace, test_node_id, snapshot.project_id,
                                        snapshot.target_id, "Test", "test",
                                        build_node_id, 30);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             snapshot.created_or_updated_record_count += 1U;
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->launch_program != NULL && request->launch_program[0] != '\0') {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strlen(request->launch_program) >= sizeof(launch.program) ||
             (request->launch_arguments != NULL &&
              strlen(request->launch_arguments) >= sizeof(launch.arguments)))
             return UMI_STATUS_CAPACITY_EXCEEDED;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!safe_command_component(request->launch_program) ||
             !safe_command_component(request->launch_arguments))
             return UMI_STATUS_INVALID_ARGUMENT;
         status = make_record_id(snapshot.project_id, "run",
                                 snapshot.launch_profile_id,
                                 sizeof(snapshot.launch_profile_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         memset(&launch, 0, sizeof(launch));
         launch.struct_size = (uint32_t)sizeof(launch);
@@ -644,16 +810,19 @@ UmiStatus umi_project_workspace_import_directory(
         launch.default_profile = 1;
         status = umi_project_launch_profile_registry_upsert(
             umi_project_workspace_launch_profile(workspace), &launch);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         snapshot.has_launch_profile = 1;
         snapshot.created_or_updated_record_count += 1U;
 
         status = make_record_id(snapshot.project_id, "node.run",
                                 run_node_id, sizeof(run_node_id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = upsert_build_node(workspace, run_node_id, snapshot.project_id,
                                    snapshot.target_id, "Run", "run",
                                    snapshot.has_cmake ? build_node_id : "", 40);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         snapshot.created_or_updated_record_count += 1U;
     }
@@ -665,16 +834,20 @@ UmiStatus umi_project_workspace_import_directory(
     selection_request.configuration_id = snapshot.configuration_id;
     selection_request.target_id = snapshot.target_id;
     selection_request.environment_id = snapshot.environment_id;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (snapshot.build_task_id[0] != '\0')
         selection_request.task_id = snapshot.build_task_id;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.has_launch_profile)
         selection_request.launch_profile_id = snapshot.launch_profile_id;
 
     status = umi_project_workspace_resolve_selection(
         workspace, &selection_request, &snapshot.selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_workspace_validate_project(
         workspace, snapshot.project_id, &snapshot.validation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
 #undef snapshot
@@ -698,10 +871,16 @@ static void scoped_add_issue(
     const char *message)
 {
     UmiProjectWorkspaceValidationIssue *issue;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL) return;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (severity == UMI_PROJECT_WORKSPACE_ISSUE_ERROR) report->error_count += 1U;
-    else if (severity == UMI_PROJECT_WORKSPACE_ISSUE_WARNING)
+    else /* Apply this branch only when its contract condition is satisfied. */ if (severity == UMI_PROJECT_WORKSPACE_ISSUE_WARNING)
         report->warning_count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (report->issue_count >= UMI_PROJECT_WORKSPACE_VALIDATION_ISSUE_CAPACITY)
         return;
     issue = &report->issues[report->issue_count++];
@@ -715,11 +894,19 @@ static void scoped_add_issue(
     import_copy_text(issue->message, sizeof(issue->message), message);
 }
 
+/*
+ * Provide the scoped project id matches operation used by this module and its client
+ * applications.
+ */
 static int scoped_project_id_matches(const char *left, const char *right)
 {
     return left != NULL && right != NULL && strcmp(left, right) == 0;
 }
 
+/*
+ * Provide the project workspace validate project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_validate_project(
     const UmiProjectWorkspace *workspace,
     const char *project_id,
@@ -745,6 +932,10 @@ UmiStatus umi_project_workspace_validate_project(
     size_t targets = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || project_id == NULL || project_id[0] == '\0' ||
         out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
@@ -752,12 +943,14 @@ UmiStatus umi_project_workspace_validate_project(
     out_report->struct_size = (uint32_t)sizeof(*out_report);
     out_report->api_version = UMI_PROJECT_WORKSPACE_VALIDATION_API_VERSION;
     status = umi_project_workspace_snapshot(workspace, &workspace_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_report->workspace_revision = workspace_snapshot.revision;
 
     status = umi_project_descriptor_registry_find(
         umi_project_workspace_descriptor((UmiProjectWorkspace *)workspace),
         project_id, &descriptor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                          "project.not-found", project_id, project_id,
@@ -765,97 +958,119 @@ UmiStatus umi_project_workspace_validate_project(
         out_report->valid = 0;
         return UMI_STATUS_OK;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (descriptor.enabled == 0) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_WARNING,
                          "project.disabled", project_id, project_id,
                          "Project is present but is currently disabled.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_configuration_registry_count(
              umi_project_workspace_configuration((UmiProjectWorkspace *)workspace));
          ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_configuration_registry_at(
                 umi_project_workspace_configuration((UmiProjectWorkspace *)workspace),
                 index, &configuration) != UMI_STATUS_OK ||
             !scoped_project_id_matches(configuration.project_id, project_id)) continue;
         configurations += 1U;
+        /* Apply this operation only while the related capability or state is available. */
         if (configuration.active != 0) active_configurations += 1U;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (active_configurations > 1U) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                          "configuration.multiple-active", project_id, "",
                          "Project contains more than one active configuration.");
-    } else if (configurations == 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (configurations == 0U) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_WARNING,
                          "configuration.none", project_id, "",
                          "Project does not define a build configuration.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_target_registry_count(
              umi_project_workspace_target((UmiProjectWorkspace *)workspace)); ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_target_registry_at(
                 umi_project_workspace_target((UmiProjectWorkspace *)workspace),
                 index, &target) != UMI_STATUS_OK ||
             !scoped_project_id_matches(target.project_id, project_id)) continue;
         targets += 1U;
+        /* Configure the optional target only when its feature has created it. */
         if (target.enabled != 0 && target.default_target != 0) default_targets += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (default_targets > 1U) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                          "target.multiple-defaults", project_id, "",
                          "Project contains more than one enabled default target.");
-    } else if (targets == 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (targets == 0U) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_WARNING,
                          "target.none", project_id, "",
                          "Project does not define a target.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_task_registry_count(
              umi_project_workspace_task((UmiProjectWorkspace *)workspace)); ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_task_registry_at(
                 umi_project_workspace_task((UmiProjectWorkspace *)workspace),
                 index, &task) != UMI_STATUS_OK ||
             !scoped_project_id_matches(task.project_id, project_id)) continue;
+        /* Apply this operation only while the related capability or state is available. */
         if (task.enabled != 0 && task.command[0] == '\0') {
             scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                              "task.empty-command", project_id, task.id,
                              "Enabled task does not contain a command.");
         }
+        /* Apply this operation only while the related capability or state is available. */
         if (task.enabled != 0 && task.default_task != 0) default_tasks += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (default_tasks > 1U) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                          "task.multiple-defaults", project_id, "",
                          "Project contains more than one enabled default task.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_launch_profile_registry_count(
              umi_project_workspace_launch_profile((UmiProjectWorkspace *)workspace));
          ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_launch_profile_registry_at(
                 umi_project_workspace_launch_profile((UmiProjectWorkspace *)workspace),
                 index, &launch) != UMI_STATUS_OK ||
             !scoped_project_id_matches(launch.project_id, project_id)) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (launch.program[0] == '\0') {
             scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                              "launch.empty-program", project_id, launch.id,
                              "Launch profile does not contain a program.");
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (launch.default_profile != 0) default_launch_profiles += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (default_launch_profiles > 1U) {
         scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                          "launch.multiple-defaults", project_id, "",
                          "Project contains more than one default launch profile.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_dependency_registry_count(
              umi_project_workspace_dependency((UmiProjectWorkspace *)workspace));
          ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_dependency_registry_at(
                 umi_project_workspace_dependency((UmiProjectWorkspace *)workspace),
                 index, &dependency) != UMI_STATUS_OK ||
             !scoped_project_id_matches(dependency.project_id, project_id)) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (dependency.optional == 0 && dependency.resolved == 0) {
             out_report->unresolved_required_dependency_count += 1U;
             scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
@@ -864,9 +1079,11 @@ UmiStatus umi_project_workspace_validate_project(
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_reference_registry_count(
              umi_project_workspace_reference((UmiProjectWorkspace *)workspace));
          ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_reference_registry_at(
                 umi_project_workspace_reference((UmiProjectWorkspace *)workspace),
                 index, &reference) != UMI_STATUS_OK ||
@@ -876,28 +1093,33 @@ UmiStatus umi_project_workspace_validate_project(
                            umi_project_workspace_descriptor((UmiProjectWorkspace *)workspace),
                            reference.target_project_id, &referenced_project)
                      : UMI_STATUS_NOT_FOUND;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK && reference.required != 0) {
             scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,
                              "reference.unresolved", project_id, reference.id,
                              "Required project reference cannot be resolved.");
-        } else if (status != UMI_STATUS_OK) {
+        } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) {
             scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_WARNING,
                              "reference.unavailable", project_id, reference.id,
                              "Optional project reference is unavailable.");
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_project_build_node_registry_count(
              umi_project_workspace_build_node((UmiProjectWorkspace *)workspace));
          ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_build_node_registry_at(
                 umi_project_workspace_build_node((UmiProjectWorkspace *)workspace),
                 index, &node) != UMI_STATUS_OK ||
             !scoped_project_id_matches(node.project_id, project_id)) continue;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (node.target_id[0] == '\0') continue;
         status = umi_project_target_registry_find(
             umi_project_workspace_target((UmiProjectWorkspace *)workspace),
             node.target_id, &referenced_target);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             !scoped_project_id_matches(referenced_target.project_id, project_id)) {
             scoped_add_issue(out_report, UMI_PROJECT_WORKSPACE_ISSUE_ERROR,

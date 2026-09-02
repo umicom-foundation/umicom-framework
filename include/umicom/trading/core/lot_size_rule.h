@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading lot size rule data shared with callers of this public contract.
+ */
 typedef struct UmiTradingLotSizeRule { UmiTradingQuantityLots minimum_lots; UmiTradingQuantityLots step_lots; UmiTradingQuantityLots maximum_lots; } UmiTradingLotSizeRule;
 /* Initialise and validate represent minimum and step quantities for a venue listing. */
 UmiStatus umi_trading_lot_size_rule_init(UmiTradingLotSizeRule *value,UmiTradingQuantityLots minimum_lots, UmiTradingQuantityLots step_lots, UmiTradingQuantityLots maximum_lots);

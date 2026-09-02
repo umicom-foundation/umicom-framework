@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential exposure bucket data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialExposureBucket { char bucket_id[UMI_PRU_ID_CAPACITY]; double amount; UmiCurrency currency; } UmiPrudentialExposureBucket;
 /* Initialise one non-negative prudential amount bucket. */
 UmiStatus umi_pru_exposure_bucket_init(UmiPrudentialExposureBucket *bucket, const char *bucket_id, double amount, UmiCurrency currency);

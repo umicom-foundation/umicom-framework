@@ -13,11 +13,16 @@
 #include <string.h>
 #include "umicom/web/workbench/command_catalogue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     size_t external_count = 0U;
     assert(umi_web_workbench_command_count() == 46U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_web_workbench_command_count(); ++index) {
         const UmiWebWorkbenchCommandDescriptor *command =
             umi_web_workbench_command_at(index);
@@ -25,10 +30,12 @@ int main(void)
         assert(command != NULL);
         assert(command->structure_size == sizeof(*command));
         assert(command->api_version == UMI_WEB_WORKBENCH_API_VERSION);
+        /* Use the shared build helper when it is available from the parent composition. */
         if (command->mutates_external_state) {
             external_count++;
             assert(command->requires_workspace_trust);
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U; other < umi_web_workbench_command_count(); ++other) {
             assert(strcmp(command->command_id,
                 umi_web_workbench_command_at(other)->command_id) != 0);

@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the position data shared with callers of this public contract.
+ */
 typedef struct UmiPosition { UmiPositionKey key; UmiQuantity quantity; UmiFinancialDate as_of_date; } UmiPosition;
 /* Initialize position. */ UmiStatus umi_position_init(UmiPosition *p,const UmiPositionKey *k,UmiQuantity q,UmiFinancialDate d);
 /* Add quantity. */ UmiStatus umi_position_add(UmiPosition *p,UmiQuantity delta);

@@ -22,10 +22,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced patch summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedPatchSummary {
     uint32_t struct_size; uint32_t api_version; size_t file_count,hunk_count,added_lines,deleted_lines;
     int has_binary; int malformed;
 } UmiVcsAdvancedPatchSummary;
+/**
+ * Provide the vcs advanced patch parse summary operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_patch_parse_summary(const char *patch,UmiVcsAdvancedPatchSummary *out_summary);
 #ifdef __cplusplus
 }

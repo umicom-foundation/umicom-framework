@@ -27,15 +27,28 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the release note entry data shared with callers of this public contract.
+ */
 typedef struct UmiReleaseNoteEntry {
     char category[UMI_DELIVERY_ID_CAPACITY];
     char text[UMI_DELIVERY_TEXT_CAPACITY];
 } UmiReleaseNoteEntry;
+/**
+ * Represent the release notes data shared with callers of this public contract.
+ */
 typedef struct UmiReleaseNotes {
     UmiReleaseNoteEntry entries[UMI_DELIVERY_MAX_METADATA];
     size_t count;
 } UmiReleaseNotes;
+/**
+ * Initialise release notes from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_release_notes_init(UmiReleaseNotes *notes);
+/**
+ * Add release notes only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_release_notes_add(UmiReleaseNotes *notes,
                                 const char *category,
                                 const char *text);

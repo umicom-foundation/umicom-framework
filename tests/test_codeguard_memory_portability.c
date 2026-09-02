@@ -17,6 +17,10 @@
 #include <assert.h>
 #include "umicom/codeguard/memory_audit.h"
 #include "umicom/codeguard/portability_audit.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCodeGuardEvidenceStore evidence = {0};

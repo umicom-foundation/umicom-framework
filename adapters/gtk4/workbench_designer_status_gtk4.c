@@ -17,6 +17,10 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the workbench designer gtk4 build status operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_status(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -31,10 +35,18 @@ GtkWidget *umi_workbench_designer_gtk4_build_status(
     return status;
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh status operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_status(
     UmiWorkbenchDesignerGtk4 *designer)
 {
     char text[512];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->status_label == NULL) return;
     g_snprintf(
         text, sizeof(text),

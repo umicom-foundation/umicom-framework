@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/submission_history.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiSubmissionHistory h; umi_reg_submission_history_init(&h); CHECK(umi_reg_submission_history_append(&h,UMI_REG_STATE_DRAFT,10)==UMI_STATUS_OK); CHECK(umi_reg_submission_history_append(&h,UMI_REG_STATE_VALIDATED,9)==UMI_STATUS_INVALID_STATE); return 0; }

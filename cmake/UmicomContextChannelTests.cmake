@@ -13,18 +13,24 @@
 #   MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
+# Apply this branch only when its contract condition is satisfied.
 if(NOT BUILD_TESTING OR NOT TARGET umicom_context_channel)
     return()
 endif()
+# Define the add context channel test build helper so parent and application projects
+# apply one consistent rule.
 function(umicom_add_context_channel_test target test_name source)
+    # Configure the optional target only when its feature has created it.
     if(TARGET "${target}")
         return()
     endif()
     add_executable("${target}" "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/${source}")
     target_link_libraries("${target}" PRIVATE Umicom::context_channel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings("${target}")
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers("${target}")
     endif()
@@ -331,313 +337,391 @@ umicom_add_context_channel_test(
     framework.context_channel.scenario_matrix_10
     tests/context_channel/test_scenario_matrix_10.c
 )
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-01-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_01_definition.c")
     target_link_libraries(umicom-cross-application-panel-01-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-01-test)
     endif()
     add_test(NAME framework.cross_application_panel.01.definition COMMAND umicom-cross-application-panel-01-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-02-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_02_instance.c")
     target_link_libraries(umicom-cross-application-panel-02-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-02-test)
     endif()
     add_test(NAME framework.cross_application_panel.02.instance COMMAND umicom-cross-application-panel-02-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-03-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_03_contribution.c")
     target_link_libraries(umicom-cross-application-panel-03-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-03-test)
     endif()
     add_test(NAME framework.cross_application_panel.03.contribution COMMAND umicom-cross-application-panel-03-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-04-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_04_capability.c")
     target_link_libraries(umicom-cross-application-panel-04-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-04-test)
     endif()
     add_test(NAME framework.cross_application_panel.04.capability COMMAND umicom-cross-application-panel-04-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-05-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_05_permission.c")
     target_link_libraries(umicom-cross-application-panel-05-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-05-test)
     endif()
     add_test(NAME framework.cross_application_panel.05.permission COMMAND umicom-cross-application-panel-05-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-06-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_06_diagnostic.c")
     target_link_libraries(umicom-cross-application-panel-06-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-06-test)
     endif()
     add_test(NAME framework.cross_application_panel.06.diagnostic COMMAND umicom-cross-application-panel-06-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-07-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_07_event.c")
     target_link_libraries(umicom-cross-application-panel-07-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-07-test)
     endif()
     add_test(NAME framework.cross_application_panel.07.event COMMAND umicom-cross-application-panel-07-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-08-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_08_command.c")
     target_link_libraries(umicom-cross-application-panel-08-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-08-test)
     endif()
     add_test(NAME framework.cross_application_panel.08.command COMMAND umicom-cross-application-panel-08-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-09-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_09_bookmark.c")
     target_link_libraries(umicom-cross-application-panel-09-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-09-test)
     endif()
     add_test(NAME framework.cross_application_panel.09.bookmark COMMAND umicom-cross-application-panel-09-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-10-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_10_view.c")
     target_link_libraries(umicom-cross-application-panel-10-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-10-test)
     endif()
     add_test(NAME framework.cross_application_panel.10.view COMMAND umicom-cross-application-panel-10-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-11-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_11_workspace_binding.c")
     target_link_libraries(umicom-cross-application-panel-11-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-11-test)
     endif()
     add_test(NAME framework.cross_application_panel.11.workspace_binding COMMAND umicom-cross-application-panel-11-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-12-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_12_context_binding.c")
     target_link_libraries(umicom-cross-application-panel-12-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-12-test)
     endif()
     add_test(NAME framework.cross_application_panel.12.context_binding COMMAND umicom-cross-application-panel-12-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-13-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_13_layout_binding.c")
     target_link_libraries(umicom-cross-application-panel-13-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-13-test)
     endif()
     add_test(NAME framework.cross_application_panel.13.layout_binding COMMAND umicom-cross-application-panel-13-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-14-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_14_focus_state.c")
     target_link_libraries(umicom-cross-application-panel-14-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-14-test)
     endif()
     add_test(NAME framework.cross_application_panel.14.focus_state COMMAND umicom-cross-application-panel-14-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-15-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_15_activation.c")
     target_link_libraries(umicom-cross-application-panel-15-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-15-test)
     endif()
     add_test(NAME framework.cross_application_panel.15.activation COMMAND umicom-cross-application-panel-15-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-16-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_16_metric.c")
     target_link_libraries(umicom-cross-application-panel-16-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-16-test)
     endif()
     add_test(NAME framework.cross_application_panel.16.metric COMMAND umicom-cross-application-panel-16-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-17-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_17_session.c")
     target_link_libraries(umicom-cross-application-panel-17-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-17-test)
     endif()
     add_test(NAME framework.cross_application_panel.17.session COMMAND umicom-cross-application-panel-17-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-18-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_18_host_slot.c")
     target_link_libraries(umicom-cross-application-panel-18-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-18-test)
     endif()
     add_test(NAME framework.cross_application_panel.18.host_slot COMMAND umicom-cross-application-panel-18-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-19-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_19_factory_record.c")
     target_link_libraries(umicom-cross-application-panel-19-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-19-test)
     endif()
     add_test(NAME framework.cross_application_panel.19.factory_record COMMAND umicom-cross-application-panel-19-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-20-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_20_collection_entry.c")
     target_link_libraries(umicom-cross-application-panel-20-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-20-test)
     endif()
     add_test(NAME framework.cross_application_panel.20.collection_entry COMMAND umicom-cross-application-panel-20-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-21-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_21_registry.c")
     target_link_libraries(umicom-cross-application-panel-21-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-21-test)
     endif()
     add_test(NAME framework.cross_application_panel.21.registry COMMAND umicom-cross-application-panel-21-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-22-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_22_host.c")
     target_link_libraries(umicom-cross-application-panel-22-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-22-test)
     endif()
     add_test(NAME framework.cross_application_panel.22.host COMMAND umicom-cross-application-panel-22-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-23-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_23_lifecycle.c")
     target_link_libraries(umicom-cross-application-panel-23-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-23-test)
     endif()
     add_test(NAME framework.cross_application_panel.23.lifecycle COMMAND umicom-cross-application-panel-23-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-24-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_24_command_router.c")
     target_link_libraries(umicom-cross-application-panel-24-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-24-test)
     endif()
     add_test(NAME framework.cross_application_panel.24.command_router COMMAND umicom-cross-application-panel-24-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-25-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_25_context_bridge.c")
     target_link_libraries(umicom-cross-application-panel-25-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-25-test)
     endif()
     add_test(NAME framework.cross_application_panel.25.context_bridge COMMAND umicom-cross-application-panel-25-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-26-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_26_layout_bridge.c")
     target_link_libraries(umicom-cross-application-panel-26-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-26-test)
     endif()
     add_test(NAME framework.cross_application_panel.26.layout_bridge COMMAND umicom-cross-application-panel-26-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-27-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_27_workspace.c")
     target_link_libraries(umicom-cross-application-panel-27-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-27-test)
     endif()
     add_test(NAME framework.cross_application_panel.27.workspace COMMAND umicom-cross-application-panel-27-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-28-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_28_collection.c")
     target_link_libraries(umicom-cross-application-panel-28-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-28-test)
     endif()
     add_test(NAME framework.cross_application_panel.28.collection COMMAND umicom-cross-application-panel-28-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-29-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_29_query.c")
     target_link_libraries(umicom-cross-application-panel-29-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-29-test)
     endif()
     add_test(NAME framework.cross_application_panel.29.query COMMAND umicom-cross-application-panel-29-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-30-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_30_snapshot.c")
     target_link_libraries(umicom-cross-application-panel-30-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-30-test)
     endif()
     add_test(NAME framework.cross_application_panel.30.snapshot COMMAND umicom-cross-application-panel-30-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-31-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_31_factory.c")
     target_link_libraries(umicom-cross-application-panel-31-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-31-test)
     endif()
     add_test(NAME framework.cross_application_panel.31.factory COMMAND umicom-cross-application-panel-31-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-32-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_32_diagnostics.c")
     target_link_libraries(umicom-cross-application-panel-32-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-32-test)
     endif()
     add_test(NAME framework.cross_application_panel.32.diagnostics COMMAND umicom-cross-application-panel-32-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-33-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_33_metrics.c")
     target_link_libraries(umicom-cross-application-panel-33-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-33-test)
     endif()
     add_test(NAME framework.cross_application_panel.33.metrics COMMAND umicom-cross-application-panel-33-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-34-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_34_persistence.c")
     target_link_libraries(umicom-cross-application-panel-34-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-34-test)
     endif()
     add_test(NAME framework.cross_application_panel.34.persistence COMMAND umicom-cross-application-panel-34-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-35-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_35_activation_service.c")
     target_link_libraries(umicom-cross-application-panel-35-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-35-test)
     endif()
     add_test(NAME framework.cross_application_panel.35.activation_service COMMAND umicom-cross-application-panel-35-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-36-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_36_focus_service.c")
     target_link_libraries(umicom-cross-application-panel-36-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-36-test)
     endif()
     add_test(NAME framework.cross_application_panel.36.focus_service COMMAND umicom-cross-application-panel-36-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-37-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_37_permission_service.c")
     target_link_libraries(umicom-cross-application-panel-37-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-37-test)
     endif()
     add_test(NAME framework.cross_application_panel.37.permission_service COMMAND umicom-cross-application-panel-37-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-38-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_38_capability_service.c")
     target_link_libraries(umicom-cross-application-panel-38-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-38-test)
     endif()
     add_test(NAME framework.cross_application_panel.38.capability_service COMMAND umicom-cross-application-panel-38-test)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_cross_application_panel)
     add_executable(umicom-cross-application-panel-39-test "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/tests/cross_application_panel/test_39_types.c")
     target_link_libraries(umicom-cross-application-panel-39-test PRIVATE Umicom::cross_application_panel)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-cross-application-panel-39-test)
     endif()

@@ -16,6 +16,10 @@
 
 #include "umicom/developer_project/templates/cpp_console.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiDeveloperProjectTemplate *project_template =

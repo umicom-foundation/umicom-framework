@@ -29,10 +29,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev semantic query score data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevSemanticQueryScore { uint32_t relevance; uint32_t authority; uint32_t freshness; uint32_t penalty; } UmiAiDevSemanticQueryScore;
+/**
+ * Initialise ai dev semantic query from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_semantic_query_init(UmiAiDevSemanticQueryScore *score);
+/**
+ * Provide the ai dev semantic query compute operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ai_dev_semantic_query_compute(const UmiAiDevSemanticQueryScore *score);
+/**
+ * Provide the ai dev semantic query prefer operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_semantic_query_prefer(const UmiAiDevSemanticQueryScore *left, const UmiAiDevSemanticQueryScore *right);
+/**
+ * Provide the ai dev semantic query weighted operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ai_dev_semantic_query_weighted(uint32_t primary, uint32_t secondary, uint32_t primary_weight);
 
 #ifdef __cplusplus

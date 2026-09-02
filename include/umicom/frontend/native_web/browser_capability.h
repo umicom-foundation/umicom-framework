@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/types.h"
+/**
+ * Represent the native web browser capability data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebBrowserCapability { uint32_t protocol_version; uint64_t flags; size_t max_patch_bytes; size_t max_event_bytes; } UmiNativeWebBrowserCapability;
 /* Initialise conservative browser capabilities. */
 void umi_native_web_browser_capability_init(UmiNativeWebBrowserCapability *capability);

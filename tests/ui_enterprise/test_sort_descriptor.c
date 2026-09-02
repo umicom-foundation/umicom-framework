@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/sort_descriptor.h"
 #include <stdio.h>
-int main(void){UmiUiEntSortDescriptor v;if(umi_ui_ent_sort_descriptor_init(&v)!=UMI_STATUS_OK)return 1;if(umi_ui_ent_copy_text(v.column_id,sizeof v.column_id,"id")!=UMI_STATUS_OK)return 2;if(!umi_ui_ent_sort_descriptor_validate(&v))return 9;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntSortDescriptor v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_sort_descriptor_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.column_id,sizeof v.column_id,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_sort_descriptor_validate(&v))return 9;puts("ok");return 0;}

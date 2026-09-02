@@ -20,10 +20,18 @@
 
 #include "internal.h"
 
+/*
+ * Initialise decision from caller-provided values so later operations receive a known
+ * state.
+ */
 static void decision_init(
     UmiWorkbenchLayoutAccessDecision *decision,
     UmiWorkbenchLayoutAccessAction action)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (decision == NULL) {
         return;
     }
@@ -32,10 +40,15 @@ static void decision_init(
     decision->action = action;
 }
 
+/* Provide the decision reason operation used by this module and its client applications. */
 static void decision_reason(
     UmiWorkbenchLayoutAccessDecision *decision,
     const char *reason)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (decision != NULL) {
         (void)umi_workbench_layout_copy_text(
             decision->reason,
@@ -45,6 +58,10 @@ static void decision_reason(
     }
 }
 
+/*
+ * Provide the workbench layout access policy default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutAccessPolicy
 umi_workbench_layout_access_policy_default(void)
 {
@@ -61,6 +78,10 @@ umi_workbench_layout_access_policy_default(void)
     return policy;
 }
 
+/*
+ * Provide the workbench layout access decide operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_access_decide(
     const UmiWorkbenchLayoutAccessPolicy *policy,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -74,6 +95,10 @@ UmiStatus umi_workbench_layout_access_decide(
     bool locked;
     bool mutating;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (principal == NULL || document == NULL ||
         out_decision == NULL ||
         principal->structure_size < sizeof(*principal) ||
@@ -109,6 +134,7 @@ UmiStatus umi_workbench_layout_access_decide(
     out_decision->ownership_matched = owner;
     out_decision->workspace_matched = same_workspace;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.require_same_workspace &&
         !same_workspace &&
         !principal->administrator) {
@@ -118,6 +144,7 @@ UmiStatus umi_workbench_layout_access_decide(
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (mutating &&
         effective.require_trusted_workspace_for_edit &&
         !principal->trusted_workspace &&
@@ -129,6 +156,7 @@ UmiStatus umi_workbench_layout_access_decide(
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (locked && mutating &&
         !(principal->administrator &&
           effective.administrators_override_lock) &&
@@ -140,6 +168,7 @@ UmiStatus umi_workbench_layout_access_decide(
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (principal->administrator) {
         out_decision->allowed = true;
         decision_reason(
@@ -148,6 +177,7 @@ UmiStatus umi_workbench_layout_access_decide(
         return UMI_STATUS_OK;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
     case UMI_WORKBENCH_LAYOUT_ACCESS_VIEW:
         out_decision->allowed = true;
@@ -201,6 +231,10 @@ UmiStatus umi_workbench_layout_access_decide(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout access allowed operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_access_allowed(
     const UmiWorkbenchLayoutAccessPolicy *policy,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -217,9 +251,14 @@ bool umi_workbench_layout_access_allowed(
            decision.allowed;
 }
 
+/*
+ * Provide the workbench layout access action text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_access_action_text(
     UmiWorkbenchLayoutAccessAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
     case UMI_WORKBENCH_LAYOUT_ACCESS_VIEW: return "view";
     case UMI_WORKBENCH_LAYOUT_ACCESS_CREATE: return "create";
@@ -234,9 +273,14 @@ const char *umi_workbench_layout_access_action_text(
     }
 }
 
+/*
+ * Provide the workbench layout role text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_role_text(
     UmiWorkbenchLayoutRole role)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
     case UMI_WORKBENCH_LAYOUT_ROLE_VIEWER: return "viewer";
     case UMI_WORKBENCH_LAYOUT_ROLE_EDITOR: return "editor";

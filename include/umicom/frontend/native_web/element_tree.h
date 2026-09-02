@@ -27,6 +27,9 @@ extern "C" {
 
 #include "umicom/frontend/native_web/semantic_element.h"
 
+/**
+ * Represent the native web element tree data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebElementTree { UmiNativeWebSemanticElement elements[UMI_NATIVE_WEB_MAX_ELEMENTS]; size_t count; uint64_t revision; } UmiNativeWebElementTree;
 /* Initialise an empty server-side semantic element tree. */
 void umi_native_web_element_tree_init(UmiNativeWebElementTree *tree);

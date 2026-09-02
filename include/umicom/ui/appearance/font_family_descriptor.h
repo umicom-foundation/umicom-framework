@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance font family descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceFontFamilyDescriptor {
     char family_id[UMI_APPEARANCE_ID_CAPACITY];
     char family_name[UMI_APPEARANCE_TEXT_CAPACITY];

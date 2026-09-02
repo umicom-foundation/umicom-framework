@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/cross_application_panel/diagnostics.h"
 #include "umicom/cross_application_panel/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiPanelIdentity identity={0};

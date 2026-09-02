@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_TEST_PLATFORM_PROVIDER_PATH_CAPACITY 1024U
 #define UMI_TEST_PLATFORM_PROVIDER_ARGUMENT_CAPACITY 1024U
 
+/**
+ * List the named test platform provider kind values accepted by this public contract.
+ */
 typedef enum UmiTestPlatformProviderKind {
     UMI_TEST_PLATFORM_PROVIDER_UNKNOWN = 0,
     UMI_TEST_PLATFORM_PROVIDER_CTEST = 1,
@@ -48,6 +51,10 @@ typedef enum UmiTestPlatformProviderKind {
     UMI_TEST_PLATFORM_PROVIDER_EXTERNAL = 6
 } UmiTestPlatformProviderKind;
 
+/**
+ * List the named test platform provider capability values accepted by this public
+ * contract.
+ */
 typedef enum UmiTestPlatformProviderCapability {
     UMI_TEST_PLATFORM_PROVIDER_CAPABILITY_NONE = 0U,
     UMI_TEST_PLATFORM_PROVIDER_CAPABILITY_DISCOVERY = 1U << 0,
@@ -63,6 +70,10 @@ typedef enum UmiTestPlatformProviderCapability {
     UMI_TEST_PLATFORM_PROVIDER_CAPABILITY_RETRY = 1U << 10
 } UmiTestPlatformProviderCapability;
 
+/**
+ * Represent the test platform provider descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformProviderDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -82,6 +93,10 @@ typedef struct UmiTestPlatformProviderDescriptor {
     uint64_t revision;
 } UmiTestPlatformProviderDescriptor;
 
+/**
+ * Represent the test platform provider query data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformProviderQuery {
     uint32_t struct_size;
     uint32_t api_version;
@@ -94,6 +109,10 @@ typedef struct UmiTestPlatformProviderQuery {
     int include_unavailable;
 } UmiTestPlatformProviderQuery;
 
+/**
+ * Represent the test platform provider selection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformProviderSelection {
     uint32_t struct_size;
     uint32_t api_version;
@@ -104,36 +123,84 @@ typedef struct UmiTestPlatformProviderSelection {
     int found;
 } UmiTestPlatformProviderSelection;
 
+/**
+ * Represent the test platform provider registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformProviderRegistry UmiTestPlatformProviderRegistry;
 
+/**
+ * Initialise test platform provider registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_test_platform_provider_registry_create(
     UmiTestPlatformProviderRegistry **out_registry);
+/**
+ * Release or reset state held by test platform provider registry so the same storage can
+ * be reused safely.
+ */
 void umi_test_platform_provider_registry_destroy(
     UmiTestPlatformProviderRegistry *registry);
+/**
+ * Provide the test platform provider registry upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_provider_registry_upsert(
     UmiTestPlatformProviderRegistry *registry,
     const UmiTestPlatformProviderDescriptor *descriptor);
+/**
+ * Remove test platform provider registry while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_test_platform_provider_registry_remove(
     UmiTestPlatformProviderRegistry *registry,
     const char *provider_id);
+/**
+ * Find test platform provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_test_platform_provider_registry_find(
     const UmiTestPlatformProviderRegistry *registry,
     const char *provider_id,
     UmiTestPlatformProviderDescriptor *out_descriptor);
+/**
+ * Find test platform provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_test_platform_provider_registry_at(
     const UmiTestPlatformProviderRegistry *registry,
     size_t position,
     UmiTestPlatformProviderDescriptor *out_descriptor);
+/**
+ * Provide the test platform provider registry select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_provider_registry_select(
     const UmiTestPlatformProviderRegistry *registry,
     const UmiTestPlatformProviderQuery *query,
     UmiTestPlatformProviderSelection *out_selection);
+/**
+ * Initialise test platform provider query from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_platform_provider_query_init(
     UmiTestPlatformProviderQuery *query);
+/**
+ * Return the number of records represented by test platform provider registry without
+ * changing their state.
+ */
 size_t umi_test_platform_provider_registry_count(
     const UmiTestPlatformProviderRegistry *registry);
+/**
+ * Provide the test platform provider registry revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_test_platform_provider_registry_revision(
     const UmiTestPlatformProviderRegistry *registry);
+/**
+ * Provide the test platform provider kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_test_platform_provider_kind_text(
     UmiTestPlatformProviderKind kind);
 

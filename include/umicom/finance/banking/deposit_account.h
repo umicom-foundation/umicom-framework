@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the banking deposit account data shared with callers of this public contract.
+ */
 typedef struct UmiBankingDepositAccount {
     UmiFinancialId id;
     UmiFinancialId customer_id;
@@ -27,6 +30,10 @@ typedef struct UmiBankingDepositAccount {
     int64_t available_minor;
     UmiBankingAccountStatus status;
 } UmiBankingDepositAccount;
+/**
+ * Initialise banking deposit account from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_banking_deposit_account_init(UmiBankingDepositAccount *value,
     const char *id,
     const char *customer_id,
@@ -35,7 +42,15 @@ UmiStatus umi_banking_deposit_account_init(UmiBankingDepositAccount *value,
     int64_t ledger_minor,
     int64_t available_minor,
     UmiBankingAccountStatus status);
+/**
+ * Check that banking deposit account satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_banking_deposit_account_valid(const UmiBankingDepositAccount *value);
+/**
+ * Provide the banking deposit account reserved minor operation used by this module and its
+ * client applications.
+ */
 int64_t umi_banking_deposit_account_reserved_minor(const UmiBankingDepositAccount *value);
 #ifdef __cplusplus
 }

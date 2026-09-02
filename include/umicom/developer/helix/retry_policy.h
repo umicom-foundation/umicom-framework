@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix retry policy data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRetryPolicy {
     uint32_t structure_size; uint32_t api_version; char id[UMI_HELIX_ID_CAPACITY]; char subject_id[UMI_HELIX_ID_CAPACITY];
     UmiHelixState state; UmiHelixSeverity severity; uint64_t sequence; uint32_t flags; uint64_t limit; uint64_t used;

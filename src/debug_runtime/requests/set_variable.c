@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request set variable operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_set_variable(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t variables_reference,
@@ -27,6 +31,10 @@ UmiStatus umi_debug_runtime_request_set_variable(
     char arguments[4096];
     UmiLanguageRuntimeJsonWriter writer;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || variables_reference == 0U ||
         name == NULL || name[0] == '\0' || value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -42,6 +50,7 @@ UmiStatus umi_debug_runtime_request_set_variable(
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"value\":");
     (void)umi_language_runtime_json_writer_string(&writer, value);
     (void)umi_language_runtime_json_writer_raw(&writer, "}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.status != UMI_STATUS_OK) return writer.status;
 
     return umi_debug_runtime_request_raw(

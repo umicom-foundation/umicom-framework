@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime request code action operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_request_code_action(UmiLanguageRuntimeServer*s,const char*d,const char*u,const UmiLanguageRuntimeRange*r,uint64_t*out);
 #ifdef __cplusplus
 }

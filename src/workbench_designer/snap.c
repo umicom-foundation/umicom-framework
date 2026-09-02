@@ -19,6 +19,10 @@
 #include <math.h>
 
 
+/*
+ * Provide the workbench designer snap settings default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchDesignerSnapSettings umi_workbench_designer_snap_settings_default(void)
 {
     UmiWorkbenchDesignerSnapSettings settings;
@@ -29,15 +33,24 @@ UmiWorkbenchDesignerSnapSettings umi_workbench_designer_snap_settings_default(vo
     return settings;
 }
 
+/*
+ * Initialise workbench designer snap result from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_snap_result_init(
     UmiWorkbenchDesignerSnapResult *result,
     UmiWorkbenchDesignerRect bounds)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) return;
     (void)memset(result, 0, sizeof(*result));
     result->bounds = bounds;
 }
 
+/* Provide the snap add guide operation used by this module and its client applications. */
 static void snap_add_guide(
     UmiWorkbenchDesignerSnapResult *result,
     bool vertical,
@@ -45,11 +58,16 @@ static void snap_add_guide(
     const char *source_node_id)
 {
     UmiWorkbenchDesignerSnapGuide *guide;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (result->guide_count >= UMI_WORKBENCH_DESIGNER_MAX_GUIDES) return;
     guide = &result->guides[result->guide_count++];
     guide->vertical = vertical;
     guide->coordinate = coordinate;
     guide->source_node_id[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_node_id != NULL) {
         (void)umi_workbench_designer_copy_text(
             guide->source_node_id,
@@ -58,6 +76,7 @@ static void snap_add_guide(
     }
 }
 
+/* Provide the snap axis operation used by this module and its client applications. */
 static bool snap_axis(
     double candidate_values[3],
     const double target_values[3],
@@ -70,14 +89,19 @@ static bool snap_axis(
     size_t target_index;
     bool found = false;
     double best = tolerance + 1.0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (candidate_index = 0U; candidate_index < 3U; ++candidate_index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (candidate_index == 1U && !allow_centres) continue;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (target_index = 0U; target_index < 3U; ++target_index) {
             double delta;
             double distance;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (target_index == 1U && !allow_centres) continue;
             delta = target_values[target_index] - candidate_values[candidate_index];
             distance = fabs(delta);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (distance <= tolerance && distance < best) {
                 best = distance;
                 *out_delta = delta;
@@ -89,6 +113,10 @@ static bool snap_axis(
     return found;
 }
 
+/*
+ * Provide the workbench designer snap rect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_snap_rect(
     const UmiWorkbenchDesignerSnapSettings *settings,
     const UmiWorkbenchDesignerGrid *grid,
@@ -107,28 +135,43 @@ UmiStatus umi_workbench_designer_snap_rect(
     double coordinate_y = 0.0;
     const char *source_x = NULL;
     const char *source_y = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (settings == NULL || candidate == NULL || out_result == NULL ||
         !umi_workbench_designer_rect_is_valid(candidate) ||
         !isfinite(settings->tolerance) || settings->tolerance < 0.0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     umi_workbench_designer_snap_result_init(out_result, *candidate);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (settings->snap_to_grid && grid != NULL && grid->enabled) {
         UmiWorkbenchDesignerPoint point = {candidate->x, candidate->y};
         UmiWorkbenchDesignerPoint snapped =
             umi_workbench_designer_grid_snap_point(grid, point);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (fabs(snapped.x - candidate->x) <= settings->tolerance) {
             delta_x = snapped.x - candidate->x;
             best_x = fabs(delta_x);
             coordinate_x = snapped.x;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (fabs(snapped.y - candidate->y) <= settings->tolerance) {
             delta_y = snapped.y - candidate->y;
             best_y = fabs(delta_y);
             coordinate_y = snapped.y;
         }
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (settings->snap_to_edges && other_bounds != NULL) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < other_count; ++index) {
             double candidate_x[3] = {
                 candidate->x,
@@ -148,6 +191,7 @@ UmiStatus umi_workbench_designer_snap_rect(
                 other_bounds[index].y + other_bounds[index].height};
             double candidate_delta;
             double candidate_coordinate;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (snap_axis(candidate_x, target_x, settings->snap_to_centres,
                           settings->tolerance, &candidate_delta,
                           &candidate_coordinate) &&
@@ -157,6 +201,7 @@ UmiStatus umi_workbench_designer_snap_rect(
                 coordinate_x = candidate_coordinate;
                 source_x = other_ids != NULL ? other_ids[index] : NULL;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (snap_axis(candidate_y, target_y, settings->snap_to_centres,
                           settings->tolerance, &candidate_delta,
                           &candidate_coordinate) &&
@@ -168,11 +213,13 @@ UmiStatus umi_workbench_designer_snap_rect(
             }
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (best_x <= settings->tolerance) {
         out_result->bounds.x += delta_x;
         out_result->snapped_x = true;
         snap_add_guide(out_result, true, coordinate_x, source_x);
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (best_y <= settings->tolerance) {
         out_result->bounds.y += delta_y;
         out_result->snapped_y = true;

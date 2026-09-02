@@ -13,9 +13,15 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/credit_risk_snapshot.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiTreasuryCreditRiskSnapshot v;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_credit_risk_snapshot_init(&v, "snap", 100, 50) != UMI_STATUS_OK) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if(umi_treasury_credit_risk_snapshot_combined_absolute_minor(&v)!=150)return 2;
     return 0;
 }

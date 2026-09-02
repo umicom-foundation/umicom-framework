@@ -26,6 +26,9 @@ extern "C" {
 #define UMI_DEVELOPER_ACCEPTANCE_MAX_REQUIREMENTS 64U
 #define UMI_DEVELOPER_ACCEPTANCE_TEXT_CAPACITY 256U
 
+/**
+ * List the named developer acceptance state values accepted by this public contract.
+ */
 typedef enum UmiDeveloperAcceptanceState {
     UMI_DEVELOPER_ACCEPTANCE_UNKNOWN = 0,
     UMI_DEVELOPER_ACCEPTANCE_PASS = 1,
@@ -33,6 +36,10 @@ typedef enum UmiDeveloperAcceptanceState {
     UMI_DEVELOPER_ACCEPTANCE_BLOCKED = 3
 } UmiDeveloperAcceptanceState;
 
+/**
+ * Represent the developer acceptance evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperAcceptanceEvidence {
     char capability_id[128];
     char check_id[128];
@@ -40,6 +47,10 @@ typedef struct UmiDeveloperAcceptanceEvidence {
     char detail[UMI_DEVELOPER_ACCEPTANCE_TEXT_CAPACITY];
 } UmiDeveloperAcceptanceEvidence;
 
+/**
+ * Represent the developer acceptance gate data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperAcceptanceGate {
     char gate_id[128];
     char title[UMI_DEVELOPER_ACCEPTANCE_TEXT_CAPACITY];
@@ -47,6 +58,10 @@ typedef struct UmiDeveloperAcceptanceGate {
     size_t requirement_count;
 } UmiDeveloperAcceptanceGate;
 
+/**
+ * Represent the developer acceptance gate result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperAcceptanceGateResult {
     char gate_id[128];
     size_t passed_count;

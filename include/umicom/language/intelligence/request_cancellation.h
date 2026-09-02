@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_REQUEST_CANCELLATION_API_VERSION 1U
+/**
+ * Represent the language intelligence request cancellation data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceRequestCancellation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -34,12 +38,28 @@ typedef struct UmiLanguageIntelligenceRequestCancellation {
     uint64_t generation;
     uint64_t revision;
 } UmiLanguageIntelligenceRequestCancellation;
+/**
+ * Initialise language intelligence request cancellation from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_request_cancellation_init(UmiLanguageIntelligenceRequestCancellation *value, const char *id);
+/**
+ * Provide the language intelligence request cancellation transition operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_request_cancellation_transition(
     UmiLanguageIntelligenceRequestCancellation *value,
     UmiLanguageIntelligenceState next_state,
     int explicit_release);
+/**
+ * Provide the language intelligence request cancellation record failure operation used by
+ * this module and its client applications.
+ */
 void umi_language_intelligence_request_cancellation_record_failure(UmiLanguageIntelligenceRequestCancellation *value);
+/**
+ * Provide the language intelligence request cancellation is usable operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_request_cancellation_is_usable(const UmiLanguageIntelligenceRequestCancellation *value);
 #ifdef __cplusplus
 }

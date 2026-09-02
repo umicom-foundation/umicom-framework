@@ -20,6 +20,10 @@
 
 #include "umicom/ui/components/component.h"
 
+/**
+ * Initialise gtk4 native widget from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_native_widget_create(
     const char *gtk_type_name,
     const UmiUiComponentSpec *common_spec,

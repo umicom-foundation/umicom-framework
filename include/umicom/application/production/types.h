@@ -41,6 +41,9 @@ extern "C" {
 #define UMI_APPLICATION_PRODUCTION_MAX_LAUNCH_STEPS 16U
 #define UMI_APPLICATION_PRODUCTION_MAX_DIAGNOSTICS 128U
 
+/**
+ * List the named application production state values accepted by this public contract.
+ */
 typedef enum UmiApplicationProductionState {
     UMI_APPLICATION_PRODUCTION_UNKNOWN = 0,
     UMI_APPLICATION_PRODUCTION_READY = 1,
@@ -48,6 +51,10 @@ typedef enum UmiApplicationProductionState {
     UMI_APPLICATION_PRODUCTION_BLOCKED = 3
 } UmiApplicationProductionState;
 
+/**
+ * List the named application production evidence kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationProductionEvidenceKind {
     UMI_APPLICATION_PRODUCTION_EVIDENCE_MANIFEST = 1,
     UMI_APPLICATION_PRODUCTION_EVIDENCE_LAYOUT = 2,
@@ -56,6 +63,10 @@ typedef enum UmiApplicationProductionEvidenceKind {
     UMI_APPLICATION_PRODUCTION_EVIDENCE_ACCEPTANCE = 5
 } UmiApplicationProductionEvidenceKind;
 
+/**
+ * List the named application production evidence state values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationProductionEvidenceState {
     UMI_APPLICATION_PRODUCTION_EVIDENCE_MISSING = 0,
     UMI_APPLICATION_PRODUCTION_EVIDENCE_PENDING = 1,
@@ -63,6 +74,9 @@ typedef enum UmiApplicationProductionEvidenceState {
     UMI_APPLICATION_PRODUCTION_EVIDENCE_REJECTED = 3
 } UmiApplicationProductionEvidenceState;
 
+/**
+ * List the named application production gate values accepted by this public contract.
+ */
 typedef enum UmiApplicationProductionGate {
     UMI_APPLICATION_PRODUCTION_GATE_CONTRACT = 1,
     UMI_APPLICATION_PRODUCTION_GATE_MANIFEST = 2,
@@ -71,6 +85,10 @@ typedef enum UmiApplicationProductionGate {
     UMI_APPLICATION_PRODUCTION_GATE_ACCEPTANCE = 5
 } UmiApplicationProductionGate;
 
+/**
+ * List the named application production launch stage values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationProductionLaunchStage {
     UMI_APPLICATION_PRODUCTION_STAGE_RESOLVE = 1,
     UMI_APPLICATION_PRODUCTION_STAGE_VALIDATE = 2,
@@ -83,6 +101,10 @@ typedef enum UmiApplicationProductionLaunchStage {
     UMI_APPLICATION_PRODUCTION_STAGE_START = 9
 } UmiApplicationProductionLaunchStage;
 
+/**
+ * List the named application production diagnostic severity values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationProductionDiagnosticSeverity {
     UMI_APPLICATION_PRODUCTION_DIAGNOSTIC_INFO = 0,
     UMI_APPLICATION_PRODUCTION_DIAGNOSTIC_WARNING = 1,

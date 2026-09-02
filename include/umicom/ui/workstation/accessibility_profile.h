@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws accessibility profile data shared with callers of this public contract.
+ */
 typedef struct UmiWsAccessibilityProfile {
     bool keyboard_docking;
     bool require_non_colour_group_label;
@@ -31,7 +34,15 @@ typedef struct UmiWsAccessibilityProfile {
     int32_t minimum_hit_target;
 } UmiWsAccessibilityProfile;
 
+/**
+ * Provide the ws accessibility profile default operation used by this module and its
+ * client applications.
+ */
 UmiWsAccessibilityProfile umi_ws_accessibility_profile_default(UmiWsDensity density);
+/**
+ * Provide the ws accessibility profile hit target ok operation used by this module and its
+ * client applications.
+ */
 bool umi_ws_accessibility_profile_hit_target_ok(const UmiWsAccessibilityProfile *profile, int32_t width, int32_t height);
 
 #ifdef __cplusplus

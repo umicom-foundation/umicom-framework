@@ -29,11 +29,33 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev context pack data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevContextPack { char ids[UMI_AI_DEV_MEDIUM_CAPACITY][UMI_AI_DEV_ID_CAPACITY]; size_t count; uint64_t revision; } UmiAiDevContextPack;
+/**
+ * Initialise ai dev context pack from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ai_dev_context_pack_init(UmiAiDevContextPack *collection);
+/**
+ * Add ai dev context pack only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ai_dev_context_pack_add(UmiAiDevContextPack *collection, const char *id);
+/**
+ * Remove ai dev context pack while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ai_dev_context_pack_remove(UmiAiDevContextPack *collection, const char *id);
+/**
+ * Provide the ai dev context pack contains operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_context_pack_contains(const UmiAiDevContextPack *collection, const char *id);
+/**
+ * Return the number of records represented by ai dev context pack without changing their
+ * state.
+ */
 size_t umi_ai_dev_context_pack_count(const UmiAiDevContextPack *collection);
 
 #ifdef __cplusplus

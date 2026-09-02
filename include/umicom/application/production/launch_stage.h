@@ -24,10 +24,22 @@ extern "C" {
 
 #include "umicom/application/production/types.h"
 
+/**
+ * Provide the application production launch stage text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_production_launch_stage_text(
     UmiApplicationProductionLaunchStage stage);
+/**
+ * Provide the application production state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_production_state_text(
     UmiApplicationProductionState state);
+/**
+ * Provide the application production gate text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_production_gate_text(
     UmiApplicationProductionGate gate);
 

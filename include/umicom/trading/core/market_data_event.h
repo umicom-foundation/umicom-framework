@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading market data event data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingMarketDataEvent { UmiFinancialId instrument_id; UmiFinancialId venue_id; uint64_t sequence; int64_t event_time_ms; } UmiTradingMarketDataEvent;
 /* Initialise and validate normalise venue market-data sequence, instrument identity and event time. */
 UmiStatus umi_trading_market_data_event_init(UmiTradingMarketDataEvent *value,const UmiFinancialId * instrument_id, const UmiFinancialId * venue_id, uint64_t sequence, int64_t event_time_ms);

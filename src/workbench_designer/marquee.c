@@ -19,6 +19,7 @@
 #include <math.h>
 
 
+/* Provide the marquee bounds operation used by this module and its client applications. */
 static UmiWorkbenchDesignerRect marquee_bounds(
     UmiWorkbenchDesignerPoint origin,
     UmiWorkbenchDesignerPoint current)
@@ -31,19 +32,35 @@ static UmiWorkbenchDesignerRect marquee_bounds(
     return bounds;
 }
 
+/*
+ * Initialise workbench designer marquee from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_marquee_init(UmiWorkbenchDesignerMarquee *marquee)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (marquee == NULL) return;
     (void)memset(marquee, 0, sizeof(*marquee));
     marquee->mode = UMI_WORKBENCH_DESIGNER_MARQUEE_INTERSECT;
 }
 
+/*
+ * Provide the workbench designer marquee begin operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_marquee_begin(
     UmiWorkbenchDesignerMarquee *marquee,
     UmiWorkbenchDesignerPoint origin,
     UmiWorkbenchDesignerMarqueeMode mode,
     bool extend_selection)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (marquee == NULL ||
         (mode != UMI_WORKBENCH_DESIGNER_MARQUEE_CONTAIN &&
          mode != UMI_WORKBENCH_DESIGNER_MARQUEE_INTERSECT)) {
@@ -60,10 +77,18 @@ UmiStatus umi_workbench_designer_marquee_begin(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer marquee update operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_marquee_update(
     UmiWorkbenchDesignerMarquee *marquee,
     UmiWorkbenchDesignerPoint current)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (marquee == NULL || !marquee->active) return UMI_STATUS_INVALID_STATE;
     marquee->current = current;
     marquee->bounds = marquee_bounds(marquee->origin, current);
@@ -71,6 +96,10 @@ UmiStatus umi_workbench_designer_marquee_update(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the marquee contains rect operation used by this module and its client
+ * applications.
+ */
 static bool marquee_contains_rect(
     UmiWorkbenchDesignerRect outer,
     UmiWorkbenchDesignerRect inner)
@@ -80,6 +109,10 @@ static bool marquee_contains_rect(
         inner.y + inner.height <= outer.y + outer.height;
 }
 
+/*
+ * Perform workbench designer marquee through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_designer_marquee_apply(
     const UmiWorkbenchDesignerMarquee *marquee,
     const UmiWorkbenchDesignerCanvas *canvas,
@@ -87,20 +120,29 @@ UmiStatus umi_workbench_designer_marquee_apply(
 {
     size_t index;
     size_t selected_count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (marquee == NULL || canvas == NULL || selection == NULL ||
         !marquee->active) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!marquee->extend_selection) {
         umi_workbench_designer_selection_clear(selection);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < canvas->count; ++index) {
         const UmiWorkbenchDesignerCanvasItem *item = &canvas->items[index];
         bool match;
+        /* Apply this operation only while the related capability or state is available. */
         if (!item->visible || item->container) continue;
         match = marquee->mode == UMI_WORKBENCH_DESIGNER_MARQUEE_CONTAIN
             ? marquee_contains_rect(marquee->bounds, item->screen_bounds)
             : umi_workbench_designer_rect_intersects(
                 &marquee->bounds, &item->screen_bounds);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!match) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_workbench_designer_selection_add(
                 selection, item->node_id, selected_count == 0U) ==
             UMI_STATUS_OK) {
@@ -110,8 +152,16 @@ UmiStatus umi_workbench_designer_marquee_apply(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer marquee cancel operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_marquee_cancel(UmiWorkbenchDesignerMarquee *marquee)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (marquee == NULL) return;
     marquee->active = false;
     marquee->revision += 1U;

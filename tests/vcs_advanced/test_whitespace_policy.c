@@ -17,7 +17,12 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/whitespace_policy.h"
-int main(void){if(!umi_vcs_advanced_whitespace_equal("a   b","a b",UMI_VCS_WHITESPACE_IGNORE_AMOUNT))return 1;
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){/* Use the stable identifier comparison to choose the matching record or policy. */ if(!umi_vcs_advanced_whitespace_equal("a   b","a b",UMI_VCS_WHITESPACE_IGNORE_AMOUNT))return 1;
+/* Use the stable identifier comparison to choose the matching record or policy. */
 if(umi_vcs_advanced_whitespace_equal("a b","ab",UMI_VCS_WHITESPACE_IGNORE_AMOUNT))return 2;
     return 0;
 }

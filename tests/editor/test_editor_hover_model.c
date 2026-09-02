@@ -28,6 +28,10 @@
 
 #include "umicom/editor/hover_model.h"
 
+/*
+ * Exercise section and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorHoverSection section(const char *id,
                                      int32_t priority,
                                      int visible)
@@ -53,6 +57,10 @@ static UmiEditorHoverSection section(const char *id,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorHoverModel *model = NULL;

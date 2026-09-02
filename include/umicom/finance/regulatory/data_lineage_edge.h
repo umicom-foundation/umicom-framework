@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data lineage edge data shared with callers of this public contract.
+ */
 typedef struct UmiDataLineageEdge {
     char from_node[UMI_REG_ID_CAPACITY];
     char to_node[UMI_REG_ID_CAPACITY];

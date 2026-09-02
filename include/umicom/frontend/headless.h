@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise frontend headless from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_frontend_headless_create(char *capture,size_t capacity,UmiFrontendRenderer *out_renderer);
 #ifdef __cplusplus
 }

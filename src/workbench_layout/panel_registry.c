@@ -20,9 +20,17 @@
 
 #include "internal.h"
 
+/*
+ * Initialise workbench panel registry from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_panel_registry_init(
     UmiWorkbenchPanelRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) {
         return;
     }
@@ -31,9 +39,17 @@ void umi_workbench_panel_registry_init(
     registry->revision = 1U;
 }
 
+/*
+ * Check that workbench panel definition satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_panel_definition_validate(
     const UmiWorkbenchPanelDefinition *definition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL ||
         definition->structure_size < sizeof(*definition) ||
         !umi_workbench_layout_text_present(definition->panel_id) ||
@@ -44,28 +60,33 @@ UmiStatus umi_workbench_panel_definition_validate(
         !umi_workbench_layout_text_present(definition->category)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (definition->default_region <
             UMI_WORKBENCH_LAYOUT_DOCK_CANVAS ||
         definition->default_region >
             UMI_WORKBENCH_LAYOUT_DOCK_FLOATING) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (definition->minimum_size.width < 0 ||
         definition->minimum_size.height < 0 ||
         definition->preferred_size.width < 0 ||
         definition->preferred_size.height < 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (definition->preferred_size.width > 0 &&
         definition->minimum_size.width >
             definition->preferred_size.width) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (definition->preferred_size.height > 0 &&
         definition->minimum_size.height >
             definition->preferred_size.height) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((definition->flags &
          (uint32_t)UMI_WORKBENCH_PANEL_SINGLETON) != 0U &&
         (definition->flags &
@@ -75,22 +96,33 @@ UmiStatus umi_workbench_panel_definition_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Add workbench panel registry only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_workbench_panel_registry_add(
     UmiWorkbenchPanelRegistry *registry,
     const UmiWorkbenchPanelDefinition *definition)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || definition == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_workbench_panel_definition_validate(definition);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_WORKBENCH_LAYOUT_MAX_PANELS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_panel_registry_find(
             registry, definition->panel_id) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
@@ -104,23 +136,34 @@ UmiStatus umi_workbench_panel_registry_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove workbench panel registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_workbench_panel_registry_remove(
     UmiWorkbenchPanelRegistry *registry,
     const char *panel_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(panel_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->panels[index].panel_id,
                 panel_id) != 0) {
             continue;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (; index + 1U < registry->count; ++index) {
             registry->panels[index] =
                 registry->panels[index + 1U];
@@ -136,6 +179,10 @@ UmiStatus umi_workbench_panel_registry_remove(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Find workbench panel registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchPanelDefinition *
 umi_workbench_panel_registry_find(
     const UmiWorkbenchPanelRegistry *registry,
@@ -143,11 +190,17 @@ umi_workbench_panel_registry_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(panel_id)) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->panels[index].panel_id,
                 panel_id) == 0) {
@@ -157,17 +210,29 @@ umi_workbench_panel_registry_find(
     return NULL;
 }
 
+/*
+ * Find workbench panel registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchPanelDefinition *
 umi_workbench_panel_registry_at(
     const UmiWorkbenchPanelRegistry *registry,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || index >= registry->count) {
         return NULL;
     }
     return &registry->panels[index];
 }
 
+/*
+ * Provide the workbench panel registry count owner operation used by this module and its
+ * client applications.
+ */
 size_t umi_workbench_panel_registry_count_owner(
     const UmiWorkbenchPanelRegistry *registry,
     const char *owner_application_id)
@@ -175,11 +240,17 @@ size_t umi_workbench_panel_registry_count_owner(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(owner_application_id)) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->panels[index].owner_application_id,
                 owner_application_id) == 0) {
@@ -189,6 +260,10 @@ size_t umi_workbench_panel_registry_count_owner(
     return count;
 }
 
+/*
+ * Provide the workbench panel registry count category operation used by this module and
+ * its client applications.
+ */
 size_t umi_workbench_panel_registry_count_category(
     const UmiWorkbenchPanelRegistry *registry,
     const char *category)
@@ -196,11 +271,17 @@ size_t umi_workbench_panel_registry_count_category(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(category)) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->panels[index].category,
                 category) == 0) {
@@ -210,6 +291,10 @@ size_t umi_workbench_panel_registry_count_category(
     return count;
 }
 
+/*
+ * Provide the workbench panel definition has flag operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_panel_definition_has_flag(
     const UmiWorkbenchPanelDefinition *definition,
     UmiWorkbenchPanelFlags flag)

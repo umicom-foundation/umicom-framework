@@ -19,6 +19,10 @@
 #include <string.h>
 #include "umicom/ui/layout_library.h"
 #include "umicom/ui/theme_profile.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiLayoutLibrary *library = NULL;

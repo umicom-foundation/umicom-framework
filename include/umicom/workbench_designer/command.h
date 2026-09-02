@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer command data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerCommand {
     uint32_t structure_size;
     UmiWorkbenchDesignerCommandKind kind;
@@ -45,6 +49,10 @@ typedef struct UmiWorkbenchDesignerCommand {
     uint64_t timestamp_ms;
 } UmiWorkbenchDesignerCommand;
 
+/**
+ * Represent the workbench designer command result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerCommandResult {
     UmiStatus status;
     bool document_changed;
@@ -55,8 +63,20 @@ typedef struct UmiWorkbenchDesignerCommandResult {
     char message[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
 } UmiWorkbenchDesignerCommandResult;
 
+/**
+ * Initialise workbench designer command from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_command_init(UmiWorkbenchDesignerCommand *command, UmiWorkbenchDesignerCommandKind kind, const char *command_id);
+/**
+ * Check that workbench designer command satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_designer_command_validate(const UmiWorkbenchDesignerCommand *command);
+/**
+ * Perform workbench designer command through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_designer_command_execute(UmiWorkbenchLayoutDocument *document, const UmiWorkbenchDesignerCommand *command, UmiWorkbenchDesignerCommandResult *out_result);
 
 #ifdef __cplusplus

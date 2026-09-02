@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application feature gate result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationFeatureGateResult {
     uint32_t structure_size;
     const UmiExperienceFeatureDefinition *feature;
@@ -31,6 +35,10 @@ typedef struct UmiApplicationFeatureGateResult {
     int allowed;
 } UmiApplicationFeatureGateResult;
 
+/**
+ * Provide the application feature gate evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_feature_gate_evaluate(
     const UmiApplicationExperienceDefinition *experience,
     const char *feature_id,

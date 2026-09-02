@@ -18,14 +18,21 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy message operation used by this module and its client applications. */
 static void copy_message(char *destination, size_t capacity, const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
     (void)snprintf(destination, capacity, "%s", text != NULL ? text : "");
 }
 
+/* Provide the status message operation used by this module and its client applications. */
 static const char *status_message(UmiStatus status)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (status) {
     case UMI_STATUS_OK: return "Trading workspace updated.";
     case UMI_STATUS_PERMISSION_DENIED: return "Trading action denied by policy.";
@@ -36,20 +43,34 @@ static const char *status_message(UmiStatus status)
     }
 }
 
+/* Provide the finish action operation used by this module and its client applications. */
 static UmiStatus finish_action(UmiTradingUiController *controller,
                                UmiStatus status,
                                const UmiRiskDecision *decision,
                                const char *message,
                                int notify)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return status;
     controller->state.last_status = status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (decision != NULL) controller->state.last_risk = *decision;
     copy_message(controller->state.last_message,
                  sizeof(controller->state.last_message),
                  message != NULL ? message : status_message(status));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         controller->state.revision += 1U;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (notify && controller->changed_handler != NULL)
             controller->changed_handler(controller->state.revision,
                                         controller->changed_user_data);
@@ -57,12 +78,17 @@ static UmiStatus finish_action(UmiTradingUiController *controller,
     return status;
 }
 
+/* Provide the valid environment operation used by this module and its client applications. */
 static int valid_environment(UmiTradingEnvironment environment)
 {
     return environment >= UMI_TRADING_SIMULATION &&
            environment <= UMI_TRADING_LIVE;
 }
 
+/*
+ * Provide the trading ui controller config default operation used by this module and its
+ * client applications.
+ */
 UmiTradingUiControllerConfig umi_trading_ui_controller_config_default(void)
 {
     UmiTradingUiControllerConfig config;
@@ -70,12 +96,20 @@ UmiTradingUiControllerConfig umi_trading_ui_controller_config_default(void)
     return config;
 }
 
+/*
+ * Initialise trading ui controller from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_controller_init(
     UmiTradingUiController *controller,
     UmiTradingWorkspace *workspace,
     const UmiTradingUiControllerConfig *config)
 {
     UmiTradingUiControllerConfig effective;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     effective = config != NULL
@@ -93,33 +127,58 @@ UmiStatus umi_trading_ui_controller_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the trading ui controller set changed handler operation used by this module and
+ * its client applications.
+ */
 void umi_trading_ui_controller_set_changed_handler(
     UmiTradingUiController *controller,
     UmiTradingUiChangedHandler handler,
     void *user_data)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return;
     controller->changed_handler = handler;
     controller->changed_user_data = user_data;
 }
 
+/*
+ * Provide the trading ui controller refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_ui_controller_refresh(UmiTradingUiController *controller)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_refresh(controller->workspace);
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller set environment operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_environment(
     UmiTradingUiController *controller,
     UmiTradingEnvironment environment)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL ||
         !valid_environment(environment))
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (environment == UMI_TRADING_LIVE &&
         !controller->config.allow_live_environment) {
         return finish_action(controller, UMI_STATUS_PERMISSION_DENIED, NULL,
@@ -134,11 +193,19 @@ UmiStatus umi_trading_ui_controller_set_environment(
         1);
 }
 
+/*
+ * Provide the trading ui controller set instrument filter operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_instrument_filter(
     UmiTradingUiController *controller,
     const char *filter_text)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL || filter_text == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_set_instrument_filter(
@@ -146,11 +213,19 @@ UmiStatus umi_trading_ui_controller_set_instrument_filter(
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller select instrument operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_trading_ui_controller_select_instrument(
     UmiTradingUiController *controller,
     const char *instrument_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL ||
         instrument_id == NULL || instrument_id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -159,22 +234,38 @@ UmiStatus umi_trading_ui_controller_select_instrument(
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller set order filter operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_order_filter(
     UmiTradingUiController *controller,
     UmiTradingWorkspaceOrderFilter filter)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_set_order_filter(controller->workspace, filter);
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller select order operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_select_order(
     UmiTradingUiController *controller,
     const char *client_order_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL ||
         client_order_id == NULL || client_order_id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -183,34 +274,58 @@ UmiStatus umi_trading_ui_controller_select_order(
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller set draft side operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_draft_side(
     UmiTradingUiController *controller,
     UmiSide side)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_set_draft_side(controller->workspace, side);
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller set draft type operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_draft_type(
     UmiTradingUiController *controller,
     UmiOrderType type,
     UmiTimeInForce tif)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_set_draft_type(controller->workspace, type, tif);
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller set draft quantity operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_draft_quantity(
     UmiTradingUiController *controller,
     double quantity)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_set_draft_quantity(
@@ -218,12 +333,20 @@ UmiStatus umi_trading_ui_controller_set_draft_quantity(
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller set draft prices operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_set_draft_prices(
     UmiTradingUiController *controller,
     double limit_price,
     double stop_price)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_set_draft_prices(
@@ -231,15 +354,27 @@ UmiStatus umi_trading_ui_controller_set_draft_prices(
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller preview order operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_preview_order(
     UmiTradingUiController *controller,
     UmiRiskDecision *out_decision)
 {
     UmiRiskDecision decision = {0};
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_preview_order(controller->workspace, &decision);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_decision != NULL) *out_decision = decision;
     return finish_action(controller, status, &decision,
         status == UMI_STATUS_OK
@@ -249,6 +384,10 @@ UmiStatus umi_trading_ui_controller_preview_order(
         1);
 }
 
+/*
+ * Provide the trading ui controller submit order operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_ui_controller_submit_order(
     UmiTradingUiController *controller,
     int64_t now_ms,
@@ -257,37 +396,63 @@ UmiStatus umi_trading_ui_controller_submit_order(
     UmiTradingWorkspaceSnapshot snapshot;
     UmiRiskDecision decision = {0};
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL || now_ms < 0)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_snapshot(controller->workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
         return finish_action(controller, status, NULL, NULL, 0);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!snapshot.has_draft_risk || !snapshot.can_submit_order) {
         return finish_action(controller, UMI_STATUS_INVALID_STATE, NULL,
             "Preview and pass risk controls before submitting the order.", 0);
     }
     status = umi_trading_workspace_submit_order(
         controller->workspace, now_ms, &decision);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_decision != NULL) *out_decision = decision;
     return finish_action(controller, status, &decision,
         status == UMI_STATUS_OK ? "Order submitted through the guarded workspace." : NULL,
         1);
 }
 
+/*
+ * Provide the trading ui controller cancel selected order operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_trading_ui_controller_cancel_selected_order(
     UmiTradingUiController *controller)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_workspace_cancel_selected_order(controller->workspace);
     return finish_action(controller, status, NULL, NULL, 1);
 }
 
+/*
+ * Provide the trading ui controller engage kill switch operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_trading_ui_controller_engage_kill_switch(
     UmiTradingUiController *controller,
     const char *reason)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     umi_trading_workspace_engage_kill_switch(
@@ -298,9 +463,17 @@ UmiStatus umi_trading_ui_controller_engage_kill_switch(
         "Trading kill switch engaged.", 1);
 }
 
+/*
+ * Provide the trading ui controller reset kill switch operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_trading_ui_controller_reset_kill_switch(
     UmiTradingUiController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->workspace == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     umi_trading_workspace_reset_kill_switch(controller->workspace);
@@ -308,6 +481,10 @@ UmiStatus umi_trading_ui_controller_reset_kill_switch(
         "Trading kill switch reset through the canonical workspace.", 1);
 }
 
+/*
+ * Perform trading ui controller through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_trading_ui_controller_dispatch(
     UmiTradingUiController *controller,
     const char *action_id,
@@ -315,10 +492,19 @@ UmiStatus umi_trading_ui_controller_dispatch(
     UmiRiskDecision *out_decision)
 {
     UmiTradingUiActionKind kind = umi_trading_ui_action_kind(action_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || action_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_trading_ui_action_requires_payload(kind) && payload == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_TRADING_UI_ACTION_KIND_REFRESH:
         return umi_trading_ui_controller_refresh(controller);
@@ -367,6 +553,10 @@ UmiStatus umi_trading_ui_controller_dispatch(
     }
 }
 
+/*
+ * Provide the trading ui controller snapshot operation used by this module and its client
+ * applications.
+ */
 UmiTradingUiControllerSnapshot umi_trading_ui_controller_snapshot(
     const UmiTradingUiController *controller)
 {

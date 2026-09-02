@@ -37,6 +37,10 @@ extern "C" {
 #define UMI_DEVELOPER_CONTEXT_API_VERSION 1U
 #define UMI_DEVELOPER_CONTEXT_CODEC_PREFIX "UDC1"
 
+/**
+ * Represent the developer context snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperContextSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,10 +55,16 @@ typedef struct UmiDeveloperContextSnapshot {
     uint64_t revision;
 } UmiDeveloperContextSnapshot;
 
+/**
+ * Represent the developer context data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperContext UmiDeveloperContext;
 
 #define UMI_DEVELOPER_CONTEXT_PATCH_API_VERSION 1U
 
+/**
+ * List the named developer context patch field values accepted by this public contract.
+ */
 typedef enum UmiDeveloperContextPatchField {
     UMI_DEVELOPER_CONTEXT_PATCH_PROJECT = 1U << 0,
     UMI_DEVELOPER_CONTEXT_PATCH_CONFIGURATION = 1U << 1,
@@ -67,6 +77,9 @@ typedef enum UmiDeveloperContextPatchField {
     UMI_DEVELOPER_CONTEXT_PATCH_ALL = 0xFFU
 } UmiDeveloperContextPatchField;
 
+/**
+ * Represent the developer context patch data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperContextPatch {
     uint32_t struct_size;
     uint32_t api_version;
@@ -82,28 +95,56 @@ typedef struct UmiDeveloperContextPatch {
 } UmiDeveloperContextPatch;
 
 
+/**
+ * Initialise developer context from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_developer_context_create(UmiDeveloperContext **out_context);
+/**
+ * Release or reset state held by developer context so the same storage can be reused
+ * safely.
+ */
 void umi_developer_context_destroy(UmiDeveloperContext *context);
 
+/**
+ * Copy developer context into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_developer_context_set(
     UmiDeveloperContext *context,
     const UmiDeveloperContextSnapshot *snapshot);
 
+/**
+ * Provide the developer context snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_context_snapshot(
     const UmiDeveloperContext *context,
     UmiDeveloperContextSnapshot *out_snapshot);
 
+/**
+ * Provide the developer context patch operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_context_patch(
     UmiDeveloperContext *context,
     const UmiDeveloperContextPatch *patch,
     UmiDeveloperContextSnapshot *out_snapshot);
 
+/**
+ * Write developer context in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_developer_context_encode(
     const UmiDeveloperContext *context,
     char *out_text,
     size_t capacity,
     size_t *out_length);
 
+/**
+ * Read developer context into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_developer_context_decode(
     const char *text,
     UmiDeveloperContextSnapshot *out_snapshot);

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant finite difference data shared with callers of this public contract.
+ */
 typedef struct UmiQuantFiniteDifference {
     double down_value;
     double base_value;

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test state text and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 void test_state_text(void)
 {
     assert(strcmp(umi_product_execution_state_text(UMI_PRODUCT_EXECUTION_READY), "ready") == 0);

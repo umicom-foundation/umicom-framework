@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive resolved shell data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveResolvedShell {
     UmiAdaptiveNavigationPattern navigation;
     UmiDesignDensity density;

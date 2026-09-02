@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced partial stage plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedPartialStagePlan {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,14 +37,34 @@ typedef struct UmiVcsAdvancedPartialStagePlan {
     int check_only;
     uint64_t fingerprint;
 } UmiVcsAdvancedPartialStagePlan;
+/**
+ * Initialise vcs advanced partial stage plan from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_partial_stage_plan_init(UmiVcsAdvancedPartialStagePlan *plan);
+/**
+ * Provide the vcs advanced partial stage plan set root operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_advanced_partial_stage_plan_set_root(UmiVcsAdvancedPartialStagePlan *plan,
                                                         const char *root);
+/**
+ * Add vcs advanced partial stage plan only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_vcs_advanced_partial_stage_plan_add(UmiVcsAdvancedPartialStagePlan *plan,
                                                    const UmiVcsAdvancedStagingHunk *hunk);
+/**
+ * Provide the vcs advanced partial stage plan select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_partial_stage_plan_select(UmiVcsAdvancedPartialStagePlan *plan,
                                                       size_t index,
                                                       int selected);
+/**
+ * Provide the vcs advanced partial stage plan ready operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_partial_stage_plan_ready(const UmiVcsAdvancedPartialStagePlan *plan);
 #ifdef __cplusplus
 }

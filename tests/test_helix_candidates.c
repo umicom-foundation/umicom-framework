@@ -12,6 +12,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/helix/candidate_set.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiHelixCandidateSet set;

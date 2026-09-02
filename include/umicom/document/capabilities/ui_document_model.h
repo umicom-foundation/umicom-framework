@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_UI_DOCUMENT_MODEL "umicom.document.integration.ui_document_model"
 
+/**
+ * Provide the document capability ui document model operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_ui_document_model(void);
 

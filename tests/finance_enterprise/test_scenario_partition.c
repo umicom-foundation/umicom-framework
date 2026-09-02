@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/scenario_partition.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseScenarioPartition p;CHECK(umi_enterprise_scenario_partition_init(&p,1U,10U,5U,20U)==UMI_STATUS_OK);CHECK(p.scenario_count==5U);return 0;}

@@ -28,12 +28,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai remote provider config data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiRemoteProviderConfig {
     char provider_id[UMI_AI_ID_CAPACITY];
     char endpoint[UMI_AI_TEXT_CAPACITY];
     char secret_reference[UMI_AI_ID_CAPACITY];
 } UmiAiRemoteProviderConfig;
 
+/**
+ * Check that ai remote provider satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ai_remote_provider_validate(const UmiAiRemoteProviderConfig *config);
 
 #ifdef __cplusplus

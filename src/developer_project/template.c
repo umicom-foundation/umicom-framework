@@ -16,12 +16,20 @@
 
 #include <string.h>
 
+/*
+ * Check that developer project template satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_project_template_validate(
     const UmiDeveloperProjectTemplate *project_template)
 {
     size_t index;
     size_t other;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_template == NULL ||
         project_template->structure_size != sizeof(*project_template) ||
         project_template->api_version != UMI_DEVELOPER_PROJECT_API_VERSION ||
@@ -47,10 +55,15 @@ UmiStatus umi_developer_project_template_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < project_template->file_count; ++index) {
         const UmiDeveloperProjectTemplateFile *file =
             &project_template->files[index];
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (file->relative_path == NULL ||
             file->relative_path[0] == '\0' ||
             file->content_template == NULL ||
@@ -59,13 +72,19 @@ UmiStatus umi_developer_project_template_validate(
             return UMI_STATUS_INVALID_ARGUMENT;
         }
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (strstr(file->relative_path, "..") != NULL) {
             return UMI_STATUS_PERMISSION_DENIED;
         }
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U;
              other < project_template->file_count;
              ++other) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(file->relative_path,
                        project_template->files[other].relative_path) == 0) {
                 return UMI_STATUS_ALREADY_EXISTS;

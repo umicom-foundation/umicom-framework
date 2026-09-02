@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/gauge_zone.h"
 
-int main(void){UmiAnalyticsGaugeZone item;if(umi_analytics_gauge_zone_init(&item)!=UMI_STATUS_OK)return 1;return (umi_analytics_gauge_zone_valid(&item))?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsGaugeZone item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_gauge_zone_init(&item)!=UMI_STATUS_OK)return 1;return (umi_analytics_gauge_zone_valid(&item))?0:2;}

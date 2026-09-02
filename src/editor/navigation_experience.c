@@ -32,13 +32,19 @@ struct UmiEditorNavigationExperience {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the destroy partial operation used by this module and its client applications. */
 static void destroy_partial(UmiEditorNavigationExperience *experience)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return;
     umi_editor_symbol_navigation_session_destroy(experience->symbols);
     umi_editor_hierarchy_navigation_session_destroy(experience->type_hierarchy);
@@ -57,43 +63,62 @@ static void destroy_partial(UmiEditorNavigationExperience *experience)
     free(experience);
 }
 
+/*
+ * Initialise editor navigation experience from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_navigation_experience_create(
     UmiEditorNavigationExperience **out_experience)
 {
     UmiEditorNavigationExperience *experience;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_experience = NULL;
     experience = (UmiEditorNavigationExperience *)calloc(1U,
                                                           sizeof(*experience));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_editor_navigation_provider_registry_create(
         &experience->providers);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_navigation_query_session_create(
             experience->providers, &experience->resolution);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_peek_navigation_session_create(
             experience->providers, &experience->peek);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_reference_navigation_session_create(
             experience->providers, &experience->references);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_hierarchy_navigation_session_create(
             experience->providers, &experience->call_hierarchy);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_hierarchy_navigation_session_create(
             experience->providers, &experience->type_hierarchy);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_symbol_navigation_session_create(
             experience->providers, &experience->symbols);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         destroy_partial(experience);
         return status;
@@ -103,46 +128,76 @@ UmiStatus umi_editor_navigation_experience_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor navigation experience so the same storage can be
+ * reused safely.
+ */
 void umi_editor_navigation_experience_destroy(
     UmiEditorNavigationExperience *experience)
 {
     destroy_partial(experience);
 }
 
+/*
+ * Provide the editor navigation experience providers operation used by this module and its
+ * client applications.
+ */
 UmiEditorNavigationProviderRegistry *umi_editor_navigation_experience_providers(
     UmiEditorNavigationExperience *experience)
 {
     return experience != NULL ? experience->providers : NULL;
 }
 
+/*
+ * Provide the editor navigation experience register provider operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_register_provider(
     UmiEditorNavigationExperience *experience,
     const UmiEditorNavigationProviderRegistration *registration)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_navigation_provider_registry_upsert(
         experience->providers, registration);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->revision = next_revision(experience->revision);
     }
     return status;
 }
 
+/*
+ * Provide the editor navigation experience unregister provider operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_unregister_provider(
     UmiEditorNavigationExperience *experience,
     const char *provider_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_navigation_provider_registry_remove(
         experience->providers, provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->revision = next_revision(experience->revision);
     }
     return status;
 }
 
+/*
+ * Provide the editor navigation experience resolve operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_navigation_experience_resolve(
     UmiEditorNavigationExperience *experience,
     const UmiEditorNavigationRequest *request,
@@ -152,6 +207,10 @@ UmiStatus umi_editor_navigation_experience_resolve(
     size_t count;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || request == NULL || out_resolution == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -166,11 +225,13 @@ UmiStatus umi_editor_navigation_experience_resolve(
     status = umi_editor_navigation_query_session_execute(
         experience->resolution, request, &options);
     experience->active_surface = UMI_EDITOR_NAVIGATION_SURFACE_RESOLUTION;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CANCELLED) {
         out_resolution->state = UMI_EDITOR_NAVIGATION_RESOLUTION_CANCELLED;
         experience->revision = next_revision(experience->revision);
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         out_resolution->state = status == UMI_STATUS_NOT_FOUND
             ? UMI_EDITOR_NAVIGATION_RESOLUTION_NOT_FOUND
@@ -180,6 +241,7 @@ UmiStatus umi_editor_navigation_experience_resolve(
     }
     count = umi_editor_navigation_query_session_count(experience->resolution);
     out_resolution->result_count = count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count == 0U) {
         out_resolution->state = UMI_EDITOR_NAVIGATION_RESOLUTION_NOT_FOUND;
         experience->revision = next_revision(experience->revision);
@@ -187,32 +249,45 @@ UmiStatus umi_editor_navigation_experience_resolve(
     }
     status = umi_editor_navigation_query_session_selected(
         experience->resolution, &out_resolution->target);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_resolution->has_target = 1;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count == 1U) {
         out_resolution->state = UMI_EDITOR_NAVIGATION_RESOLUTION_DIRECT;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_resolution->state = UMI_EDITOR_NAVIGATION_RESOLUTION_MULTIPLE;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (request->query_kind == UMI_EDITOR_NAVIGATION_QUERY_REFERENCE) {
             status = umi_editor_navigation_experience_open_references(
                 experience, request);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = umi_editor_navigation_experience_open_peek(experience,
                                                                 request);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) out_resolution->opened_surface = 1;
     }
     experience->revision = next_revision(experience->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor navigation experience open peek operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_navigation_experience_open_peek(
     UmiEditorNavigationExperience *experience,
     const UmiEditorNavigationRequest *request)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_peek_navigation_session_open(experience->peek, request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->active_surface = UMI_EDITOR_NAVIGATION_SURFACE_PEEK;
         experience->revision = next_revision(experience->revision);
@@ -220,14 +295,23 @@ UmiStatus umi_editor_navigation_experience_open_peek(
     return status;
 }
 
+/*
+ * Provide the editor navigation experience open references operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_open_references(
     UmiEditorNavigationExperience *experience,
     const UmiEditorNavigationRequest *request)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_reference_navigation_session_open(
         experience->references, request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->active_surface = UMI_EDITOR_NAVIGATION_SURFACE_REFERENCES;
         experience->revision = next_revision(experience->revision);
@@ -235,6 +319,10 @@ UmiStatus umi_editor_navigation_experience_open_references(
     return status;
 }
 
+/*
+ * Provide the editor navigation experience open hierarchy operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_open_hierarchy(
     UmiEditorNavigationExperience *experience,
     const UmiEditorNavigationHierarchyRequest *request)
@@ -243,20 +331,26 @@ UmiStatus umi_editor_navigation_experience_open_hierarchy(
     UmiEditorNavigationExperienceSurface surface;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || request == NULL ||
         request->kind < UMI_EDITOR_NAVIGATION_HIERARCHY_CALL_INCOMING ||
         request->kind > UMI_EDITOR_NAVIGATION_HIERARCHY_TYPE_SUBTYPES) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->kind == UMI_EDITOR_NAVIGATION_HIERARCHY_CALL_INCOMING ||
         request->kind == UMI_EDITOR_NAVIGATION_HIERARCHY_CALL_OUTGOING) {
         session = experience->call_hierarchy;
         surface = UMI_EDITOR_NAVIGATION_SURFACE_CALL_HIERARCHY;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         session = experience->type_hierarchy;
         surface = UMI_EDITOR_NAVIGATION_SURFACE_TYPE_HIERARCHY;
     }
     status = umi_editor_hierarchy_navigation_session_open(session, request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->active_surface = surface;
         experience->revision = next_revision(experience->revision);
@@ -264,15 +358,24 @@ UmiStatus umi_editor_navigation_experience_open_hierarchy(
     return status;
 }
 
+/*
+ * Provide the editor navigation experience open symbols operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_open_symbols(
     UmiEditorNavigationExperience *experience,
     UmiEditorSymbolNavigationScope scope,
     const UmiEditorNavigationRequest *request)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_symbol_navigation_session_open(experience->symbols,
                                                        scope, request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->active_surface =
             scope == UMI_EDITOR_SYMBOL_NAVIGATION_DOCUMENT
@@ -283,11 +386,20 @@ UmiStatus umi_editor_navigation_experience_open_symbols(
     return status;
 }
 
+/*
+ * Provide the editor navigation experience refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_navigation_experience_refresh(
     UmiEditorNavigationExperience *experience)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (experience->active_surface) {
         case UMI_EDITOR_NAVIGATION_SURFACE_PEEK:
             status = umi_editor_peek_navigation_session_refresh(
@@ -318,17 +430,27 @@ UmiStatus umi_editor_navigation_experience_refresh(
         default:
             return UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->revision = next_revision(experience->revision);
     }
     return status;
 }
 
+/*
+ * Provide the editor navigation experience cancel operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_navigation_experience_cancel(
     UmiEditorNavigationExperience *experience)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (experience->active_surface) {
         case UMI_EDITOR_NAVIGATION_SURFACE_RESOLUTION:
             status = umi_editor_navigation_query_session_cancel(
@@ -359,18 +481,28 @@ UmiStatus umi_editor_navigation_experience_cancel(
         default:
             return UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->revision = next_revision(experience->revision);
     }
     return status;
 }
 
+/*
+ * Provide the editor navigation experience close active operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_close_active(
     UmiEditorNavigationExperience *experience,
     int force)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (experience->active_surface) {
         case UMI_EDITOR_NAVIGATION_SURFACE_RESOLUTION:
             status = umi_editor_navigation_query_session_clear(
@@ -401,6 +533,7 @@ UmiStatus umi_editor_navigation_experience_close_active(
         default:
             return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         experience->active_surface = UMI_EDITOR_NAVIGATION_SURFACE_NONE;
         experience->revision = next_revision(experience->revision);
@@ -408,18 +541,28 @@ UmiStatus umi_editor_navigation_experience_close_active(
     return status;
 }
 
+/*
+ * Provide the editor navigation experience selected target operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_navigation_experience_selected_target(
     const UmiEditorNavigationExperience *experience,
     UmiEditorSourceLocation *out_location)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_location == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (experience->active_surface) {
         case UMI_EDITOR_NAVIGATION_SURFACE_RESOLUTION: {
             UmiEditorNavigationResult result;
             UmiStatus status = umi_editor_navigation_query_session_selected(
                 experience->resolution, &result);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) *out_location = result.location;
             return status;
         }
@@ -427,6 +570,7 @@ UmiStatus umi_editor_navigation_experience_selected_target(
             UmiEditorNavigationResult result;
             UmiStatus status = umi_editor_peek_navigation_session_active_result(
                 experience->peek, &result);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) *out_location = result.location;
             return status;
         }
@@ -434,6 +578,7 @@ UmiStatus umi_editor_navigation_experience_selected_target(
             UmiEditorReferenceNavigationEntry entry;
             UmiStatus status = umi_editor_reference_navigation_session_selected(
                 experience->references, &entry);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) *out_location = entry.result.location;
             return status;
         }
@@ -448,6 +593,7 @@ UmiStatus umi_editor_navigation_experience_selected_target(
             UmiStatus status =
                 umi_editor_hierarchy_navigation_session_selected(session,
                                                                  &entry);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) *out_location = entry.node.location;
             return status;
         }
@@ -456,6 +602,7 @@ UmiStatus umi_editor_navigation_experience_selected_target(
             UmiEditorSymbolNavigationEntry entry;
             UmiStatus status = umi_editor_symbol_navigation_session_selected(
                 experience->symbols, &entry);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 *out_location = entry.symbol.selection_location.uri[0] != '\0'
                     ? entry.symbol.selection_location
@@ -469,6 +616,10 @@ UmiStatus umi_editor_navigation_experience_selected_target(
     }
 }
 
+/*
+ * Provide the editor navigation experience active surface operation used by this module
+ * and its client applications.
+ */
 UmiEditorNavigationExperienceSurface umi_editor_navigation_experience_active_surface(
     const UmiEditorNavigationExperience *experience)
 {
@@ -476,18 +627,30 @@ UmiEditorNavigationExperienceSurface umi_editor_navigation_experience_active_sur
                               : UMI_EDITOR_NAVIGATION_SURFACE_NONE;
 }
 
+/*
+ * Provide the editor navigation experience resolution session operation used by this
+ * module and its client applications.
+ */
 UmiEditorNavigationQuerySession *umi_editor_navigation_experience_resolution_session(
     UmiEditorNavigationExperience *experience)
 {
     return experience != NULL ? experience->resolution : NULL;
 }
 
+/*
+ * Provide the editor navigation experience peek session operation used by this module and
+ * its client applications.
+ */
 UmiEditorPeekNavigationSession *umi_editor_navigation_experience_peek_session(
     UmiEditorNavigationExperience *experience)
 {
     return experience != NULL ? experience->peek : NULL;
 }
 
+/*
+ * Provide the editor navigation experience reference session operation used by this module
+ * and its client applications.
+ */
 UmiEditorReferenceNavigationSession *
 umi_editor_navigation_experience_reference_session(
     UmiEditorNavigationExperience *experience)
@@ -495,6 +658,10 @@ umi_editor_navigation_experience_reference_session(
     return experience != NULL ? experience->references : NULL;
 }
 
+/*
+ * Provide the editor navigation experience call hierarchy session operation used by this
+ * module and its client applications.
+ */
 UmiEditorHierarchyNavigationSession *
 umi_editor_navigation_experience_call_hierarchy_session(
     UmiEditorNavigationExperience *experience)
@@ -502,6 +669,10 @@ umi_editor_navigation_experience_call_hierarchy_session(
     return experience != NULL ? experience->call_hierarchy : NULL;
 }
 
+/*
+ * Provide the editor navigation experience type hierarchy session operation used by this
+ * module and its client applications.
+ */
 UmiEditorHierarchyNavigationSession *
 umi_editor_navigation_experience_type_hierarchy_session(
     UmiEditorNavigationExperience *experience)
@@ -509,6 +680,10 @@ umi_editor_navigation_experience_type_hierarchy_session(
     return experience != NULL ? experience->type_hierarchy : NULL;
 }
 
+/*
+ * Provide the editor navigation experience symbol session operation used by this module
+ * and its client applications.
+ */
 UmiEditorSymbolNavigationSession *
 umi_editor_navigation_experience_symbol_session(
     UmiEditorNavigationExperience *experience)
@@ -516,9 +691,14 @@ umi_editor_navigation_experience_symbol_session(
     return experience != NULL ? experience->symbols : NULL;
 }
 
+/*
+ * Provide the failed reports query operation used by this module and its client
+ * applications.
+ */
 static size_t failed_reports_query(const UmiEditorNavigationQuerySession *session)
 {
     UmiEditorNavigationQuerySessionSnapshot snapshot;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_navigation_query_session_snapshot(session, &snapshot) !=
         UMI_STATUS_OK) {
         return 0U;
@@ -526,18 +706,25 @@ static size_t failed_reports_query(const UmiEditorNavigationQuerySession *sessio
     return snapshot.failed_provider_count;
 }
 
+/*
+ * Provide the failed reports hierarchy operation used by this module and its client
+ * applications.
+ */
 static size_t failed_reports_hierarchy(
     const UmiEditorHierarchyNavigationSession *session)
 {
     UmiEditorHierarchyNavigationSnapshot snapshot;
     size_t index;
     size_t failed = 0U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_hierarchy_navigation_session_snapshot(session, &snapshot) !=
         UMI_STATUS_OK) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.provider_count; ++index) {
         UmiEditorNavigationProviderReport report;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_editor_hierarchy_navigation_session_provider_report_at(
                 session, index, &report) == UMI_STATUS_OK &&
             report.status != UMI_STATUS_OK &&
@@ -548,18 +735,25 @@ static size_t failed_reports_hierarchy(
     return failed;
 }
 
+/*
+ * Provide the failed reports symbols operation used by this module and its client
+ * applications.
+ */
 static size_t failed_reports_symbols(
     const UmiEditorSymbolNavigationSession *session)
 {
     UmiEditorSymbolNavigationSnapshot snapshot;
     size_t index;
     size_t failed = 0U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_symbol_navigation_session_snapshot(session, &snapshot) !=
         UMI_STATUS_OK) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.provider_count; ++index) {
         UmiEditorNavigationProviderReport report;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_editor_symbol_navigation_session_provider_report_at(
                 session, index, &report) == UMI_STATUS_OK &&
             report.status != UMI_STATUS_OK &&
@@ -570,10 +764,18 @@ static size_t failed_reports_symbols(
     return failed;
 }
 
+/*
+ * Provide the editor navigation experience snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_navigation_experience_snapshot(
     const UmiEditorNavigationExperience *experience,
     UmiEditorNavigationExperienceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -586,6 +788,7 @@ UmiStatus umi_editor_navigation_experience_snapshot(
     out_snapshot->provider_registry_revision =
         umi_editor_navigation_provider_registry_revision(experience->providers);
     out_snapshot->revision = experience->revision;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (experience->active_surface) {
         case UMI_EDITOR_NAVIGATION_SURFACE_RESOLUTION: {
             UmiEditorNavigationQuerySessionSnapshot snapshot;
@@ -671,6 +874,10 @@ UmiStatus umi_editor_navigation_experience_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor navigation experience revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_navigation_experience_revision(
     const UmiEditorNavigationExperience *experience)
 {

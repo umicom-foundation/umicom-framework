@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer acceptance report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperAcceptanceReport {
     size_t gate_count;
     size_t passed_gate_count;

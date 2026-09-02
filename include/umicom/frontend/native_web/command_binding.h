@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/types.h"
+/**
+ * Represent the native web command binding data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebCommandBinding { char element_id[UMI_NATIVE_WEB_ID_CAPACITY]; char command_id[UMI_NATIVE_WEB_ID_CAPACITY]; bool enabled; } UmiNativeWebCommandBinding;
 /* Initialise validated command binding state. */
 UmiStatus umi_native_web_command_binding_init(UmiNativeWebCommandBinding *binding, const char *element_id, const char *command_id, bool enabled);

@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/regulatory_limit_result.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiRegulatoryLimitResult r; CHECK(umi_reg_regulatory_limit_result_evaluate(&r,"LCR",0.95,1.0,1)==UMI_STATUS_OK); CHECK(r.breached==1); return 0; }

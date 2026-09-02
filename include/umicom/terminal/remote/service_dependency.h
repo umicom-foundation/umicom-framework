@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote service dependency ready operation used by this module and
+ * its client applications.
+ */
 bool umi_terminal_remote_service_dependency_ready(size_t required_count,size_t ready_count,bool optional_failures);
 #ifdef __cplusplus
 }

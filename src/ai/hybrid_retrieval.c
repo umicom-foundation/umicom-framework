@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+/* Provide the find result operation used by this module and its client applications. */
 static size_t find_result(
     UmiAiRetrievalResult *results,
     size_t count,
@@ -24,7 +25,9 @@ static size_t find_result(
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 results[index].chunk.chunk_id,
                 chunk_id) == 0) {
@@ -35,6 +38,7 @@ static size_t find_result(
     return SIZE_MAX;
 }
 
+/* Add insert or only after its inputs and available capacity have been checked. */
 static void insert_or_add(
     UmiAiRetrievalResult *results,
     size_t *count,
@@ -47,11 +51,13 @@ static void insert_or_add(
         *count,
         chunk->chunk_id);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index != SIZE_MAX) {
         results[index].score += score;
         return;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*count >= capacity) {
         return;
     }
@@ -61,6 +67,10 @@ static void insert_or_add(
     *count += 1U;
 }
 
+/*
+ * Provide the ai hybrid retrieval settings default operation used by this module and its
+ * client applications.
+ */
 UmiAiHybridRetrievalSettings
 umi_ai_hybrid_retrieval_settings_default(void)
 {
@@ -74,6 +84,10 @@ umi_ai_hybrid_retrieval_settings_default(void)
     return settings;
 }
 
+/*
+ * Provide the ai hybrid retrieval rank operation used by this module and its client
+ * applications.
+ */
 size_t umi_ai_hybrid_retrieval_rank(
     const char *query,
     const UmiAiChunk *chunks,
@@ -100,6 +114,10 @@ size_t umi_ai_hybrid_retrieval_rank(
     size_t output_count;
     double lexical_maximum = 0.0;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (query == NULL ||
         chunks == NULL ||
         results == NULL ||
@@ -112,6 +130,7 @@ size_t umi_ai_hybrid_retrieval_rank(
         : umi_ai_hybrid_retrieval_settings_default();
 
     limit = effective.candidate_limit;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (limit == 0U ||
         limit > UMI_AI_MAX_RETRIEVAL_RESULTS) {
         limit = UMI_AI_MAX_RETRIEVAL_RESULTS;
@@ -124,12 +143,15 @@ size_t umi_ai_hybrid_retrieval_rank(
         lexical,
         limit);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < lexical_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (lexical[index].score > lexical_maximum) {
             lexical_maximum = lexical[index].score;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < lexical_count; ++index) {
         double normalized = lexical_maximum > 0.0
             ? lexical[index].score / lexical_maximum
@@ -143,6 +165,10 @@ size_t umi_ai_hybrid_retrieval_rank(
             normalized * effective.lexical_weight);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (vector_store != NULL &&
         query_embedding != NULL) {
         vector_count = umi_ai_vector_store_search(
@@ -152,10 +178,12 @@ size_t umi_ai_hybrid_retrieval_rank(
             vector_scores,
             limit);
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < vector_count; ++index) {
             size_t vector_index = vector_indices[index];
             double normalized;
 
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (vector_index >= vector_store->count) {
                 continue;
             }
@@ -177,6 +205,7 @@ size_t umi_ai_hybrid_retrieval_rank(
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_reranker_apply(
             reranker,
             query,
@@ -189,6 +218,7 @@ size_t umi_ai_hybrid_retrieval_rank(
         ? candidate_count
         : capacity;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < output_count; ++index) {
         results[index] = candidates[index];
     }

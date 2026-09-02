@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/diagnostic_parsing.h"
 
+/*
+ * Provide the developer capability diagnostic parsing operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_diagnostic_parsing(void)
 {

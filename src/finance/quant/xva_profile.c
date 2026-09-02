@@ -21,5 +21,13 @@
 #include <math.h>
 #include <string.h>
 
-UmiStatus umi_quant_xva_profile_init(UmiQuantXvaProfile *profile,double cva,double dva,double fva,double mva){if(profile==NULL)return UMI_STATUS_INVALID_ARGUMENT;profile->cva=cva;profile->dva=dva;profile->fva=fva;profile->mva=mva;return UMI_STATUS_OK;}
-double umi_quant_xva_profile_net(const UmiQuantXvaProfile *profile){if(profile==NULL)return 0.0;return -profile->cva+profile->dva-profile->fva-profile->mva;}
+/*
+ * Initialise quant xva profile from caller-provided values so later operations receive a
+ * known state.
+ */
+UmiStatus umi_quant_xva_profile_init(UmiQuantXvaProfile *profile,double cva,double dva,double fva,double mva){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(profile==NULL)return UMI_STATUS_INVALID_ARGUMENT;profile->cva=cva;profile->dva=dva;profile->fva=fva;profile->mva=mva;return UMI_STATUS_OK;}
+/*
+ * Provide the quant xva profile net operation used by this module and its client
+ * applications.
+ */
+double umi_quant_xva_profile_net(const UmiQuantXvaProfile *profile){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(profile==NULL)return 0.0;return -profile->cva+profile->dva-profile->fva-profile->mva;}

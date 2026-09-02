@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential reverse stress test data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialReverseStressTest { double headroom; double exposure; double loss_per_unit_shock; double required_shock; } UmiPrudentialReverseStressTest;
 /* Estimate the non-negative linear shock that would consume current prudential headroom. */
 UmiStatus umi_pru_reverse_stress_test_calculate(UmiPrudentialReverseStressTest *result, double headroom, double exposure, double loss_per_unit_shock);

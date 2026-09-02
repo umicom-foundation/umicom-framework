@@ -21,6 +21,9 @@
 #include "umicom/platform/threading.h"
 #include "umicom/platform/watcher.h"
 
+/**
+ * Represent the watcher entry data shared with callers of this public contract.
+ */
 typedef struct UmiWatcherEntry {
     char path[UMI_PATH_CAPACITY];
     uint64_t size;
@@ -41,7 +44,14 @@ struct UmiWatcher {
     uint64_t next_sequence;
 };
 
+/**
+ * Provide the watcher polling scan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_watcher_polling_scan(UmiWatcher *watcher);
+/**
+ * Provide the watcher emit operation used by this module and its client applications.
+ */
 UmiStatus umi_watcher_emit(UmiWatcher *watcher,
                            UmiWatchEventKind kind,
                            const char *path,

@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/health.h"
-int umi_trading_health_ready(int market,int broker,int risk,UmiTradingEnvironment env){if(!market||!risk)return 0;if(env==UMI_TRADING_SIMULATION)return 1;return broker!=0;}
+/*
+ * Provide the trading health ready operation used by this module and its client
+ * applications.
+ */
+int umi_trading_health_ready(int market,int broker,int risk,UmiTradingEnvironment env){/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!market||!risk)return 0;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(env==UMI_TRADING_SIMULATION)return 1;return broker!=0;}

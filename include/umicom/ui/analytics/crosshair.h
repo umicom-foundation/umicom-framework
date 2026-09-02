@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics crosshair data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsCrosshair { double x; double y; int visible; int locked; } UmiAnalyticsCrosshair;
+/**
+ * Initialise analytics crosshair from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_analytics_crosshair_init(UmiAnalyticsCrosshair *item);
+/**
+ * Check that analytics crosshair satisfies its contract before another service relies on
+ * it.
+ */
 int umi_analytics_crosshair_valid(const UmiAnalyticsCrosshair *item);
 
 #ifdef __cplusplus

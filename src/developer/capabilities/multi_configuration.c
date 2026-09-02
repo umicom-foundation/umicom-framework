@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/multi_configuration.h"
 
+/*
+ * Provide the developer capability multi configuration operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_multi_configuration(void)
 {

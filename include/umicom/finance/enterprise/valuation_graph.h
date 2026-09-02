@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/finance/enterprise/valuation_task.h"
 #include "umicom/finance/enterprise/valuation_dependency.h"
+/**
+ * Represent the enterprise valuation graph data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationGraph { UmiEnterpriseValuationTask tasks[64U]; size_t task_count; UmiEnterpriseValuationDependency dependencies[128U]; size_t dependency_count; } UmiEnterpriseValuationGraph;
 /* Initialise an empty valuation graph. */
 void umi_enterprise_valuation_graph_init(UmiEnterpriseValuationGraph *graph);

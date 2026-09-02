@@ -16,10 +16,22 @@
 #include <string.h>
 /* Initialise and validate describe a candidate broker/venue route with cost and latency scores.. */
 UmiStatus umi_trading_broker_route_init(UmiTradingBrokerRoute *value,const UmiFinancialId * route_id, const UmiFinancialId * venue_id, uint32_t cost_bps, uint32_t latency_score, bool enabled) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(route_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->route_id=*route_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(venue_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->venue_id=*venue_id;
     value->cost_bps=cost_bps;

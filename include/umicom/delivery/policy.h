@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the delivery policy data shared with callers of this public contract.
+ */
 typedef struct UmiDeliveryPolicy {
     int require_tests;
     int require_zero_warnings;
@@ -36,7 +39,15 @@ typedef struct UmiDeliveryPolicy {
     int require_clean_source;
 } UmiDeliveryPolicy;
 
+/**
+ * Provide the delivery policy default operation used by this module and its client
+ * applications.
+ */
 UmiDeliveryPolicy umi_delivery_policy_default(void);
+/**
+ * Provide the delivery policy check build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_delivery_policy_check_build(const UmiDeliveryPolicy *policy,
                                           const UmiBuildEvidence *evidence);
 

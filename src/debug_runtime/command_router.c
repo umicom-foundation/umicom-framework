@@ -18,9 +18,17 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise debug runtime command context from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_debug_runtime_command_context_init(
     UmiDebugRuntimeCommandContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return;
     (void)memset(context, 0, sizeof(*context));
     context->timeout_ms = 1000U;
@@ -28,6 +36,7 @@ void umi_debug_runtime_command_context_init(
     context->instruction_count = 64U;
 }
 
+/* Provide the snapshot operation used by this module and its client applications. */
 static UmiStatus snapshot(
     UmiDebugRuntimePlatform *platform,
     UmiDebugRuntimePlatformSnapshot *out_snapshot)
@@ -35,8 +44,13 @@ static UmiStatus snapshot(
     return umi_debug_runtime_platform_snapshot(platform, out_snapshot);
 }
 
+/*
+ * Provide the presentation owned operation used by this module and its client
+ * applications.
+ */
 static int presentation_owned(UmiDebugCommandKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEBUG_COMMAND_START_WITHOUT_DEBUGGING:
         case UMI_DEBUG_COMMAND_SELECT_CONFIGURATION:
@@ -73,6 +87,10 @@ static int presentation_owned(UmiDebugCommandKind kind)
     }
 }
 
+/*
+ * Provide the debug runtime command enabled operation used by this module and its client
+ * applications.
+ */
 int umi_debug_runtime_command_enabled(
     UmiDebugRuntimePlatform *platform,
     UmiDebugCommandKind kind,
@@ -81,13 +99,23 @@ int umi_debug_runtime_command_enabled(
     const UmiDebugCommandDescriptor *descriptor;
     UmiDebugRuntimePlatformSnapshot state;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || context == NULL) return 0;
 
     descriptor = umi_debug_command_for_kind(kind);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return 0;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (snapshot(platform, &state) != UMI_STATUS_OK) return 0;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_DEBUG_COMMAND_START) {
         return !state.active &&
             context->profile_id[0] != '\0' &&
@@ -95,11 +123,15 @@ int umi_debug_runtime_command_enabled(
             context->configuration_id[0] != '\0';
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (presentation_owned(kind)) return 0;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (descriptor->requires_active_session && !state.active) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->requires_paused_session && !state.paused) return 0;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEBUG_COMMAND_RESTART:
             return state.capabilities.supports_restart;
@@ -129,12 +161,17 @@ int umi_debug_runtime_command_enabled(
     }
 }
 
+/* Provide the format result operation used by this module and its client applications. */
 static UmiStatus format_result(
     UmiStatus status,
     const UmiDebugCommandDescriptor *descriptor,
     char *out_message,
     size_t message_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -146,6 +183,10 @@ static UmiStatus format_result(
     return status;
 }
 
+/*
+ * Perform debug runtime command through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_debug_runtime_command_execute(
     UmiDebugRuntimePlatform *platform,
     UmiDebugCommandKind kind,
@@ -157,10 +198,15 @@ UmiStatus umi_debug_runtime_command_execute(
         umi_debug_command_for_kind(kind);
     UmiStatus status = UMI_STATUS_NOT_IMPLEMENTED;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || context == NULL || descriptor == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_debug_runtime_command_enabled(platform, kind, context)) {
         return format_result(
             UMI_STATUS_INVALID_STATE,
@@ -169,6 +215,7 @@ UmiStatus umi_debug_runtime_command_execute(
             message_capacity);
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEBUG_COMMAND_START:
             status = umi_debug_runtime_platform_start(

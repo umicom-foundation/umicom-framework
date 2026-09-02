@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/component/types.h"
 
+/*
+ * Check that application component frontend satisfies its contract before another service
+ * relies on it.
+ */
 int umi_application_component_frontend_valid(
     UmiApplicationComponentFrontend frontend) {
   return frontend == UMI_APPLICATION_COMPONENT_FRONTEND_HEADLESS ||
@@ -23,8 +27,13 @@ int umi_application_component_frontend_valid(
          frontend == UMI_APPLICATION_COMPONENT_FRONTEND_WEB;
 }
 
+/*
+ * Provide the application component frontend text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_component_frontend_text(
     UmiApplicationComponentFrontend frontend) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (frontend) {
   case UMI_APPLICATION_COMPONENT_FRONTEND_HEADLESS:
     return "headless";
@@ -39,8 +48,13 @@ const char *umi_application_component_frontend_text(
   }
 }
 
+/*
+ * Provide the application component lifecycle text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_component_lifecycle_text(
     UmiApplicationComponentLifecycle lifecycle) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (lifecycle) {
   case UMI_APPLICATION_COMPONENT_REGISTERED:
     return "registered";
@@ -59,8 +73,13 @@ const char *umi_application_component_lifecycle_text(
   }
 }
 
+/*
+ * Provide the application component region text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_component_region_text(
     UmiApplicationComponentRegion region) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (region) {
   case UMI_APPLICATION_COMPONENT_REGION_PRIMARY:
     return "primary";

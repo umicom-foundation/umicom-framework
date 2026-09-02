@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive shell profile data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveShellProfile {
     char profile_id[UMI_ADAPTIVE_ID_CAPACITY];
     UmiAdaptiveDeviceFamily family;

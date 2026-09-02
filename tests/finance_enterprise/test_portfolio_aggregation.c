@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/portfolio_aggregation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterprisePortfolioSnapshot s; UmiEnterprisePortfolioPosition a,b; UmiEnterprisePortfolioAggregation x; CHECK(umi_enterprise_portfolio_snapshot_init(&s,"p",1)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_position_init(&a,"a",1.0,10.0)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_position_init(&b,"b",-1.0,4.0)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_snapshot_add(&s,&a)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_snapshot_add(&s,&b)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_aggregate(&s,&x)==UMI_STATUS_OK); CHECK(x.net_market_value==6.0&&x.gross_market_value==14.0); return 0; }

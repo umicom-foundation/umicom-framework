@@ -38,6 +38,10 @@ typedef struct ReconcileScan {
     size_t chunk_key_count;
 } ReconcileScan;
 
+/*
+ * Provide the workbench layout reconciliation policy default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutReconciliationPolicy
 umi_workbench_layout_reconciliation_policy_default(void)
 {
@@ -53,6 +57,10 @@ umi_workbench_layout_reconciliation_policy_default(void)
     return policy;
 }
 
+/*
+ * Provide the workbench layout reconciliation add issue operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_reconciliation_add_issue(
     UmiWorkbenchLayoutReconciliationReport *report,
     const char *key,
@@ -62,9 +70,14 @@ UmiStatus umi_workbench_layout_reconciliation_add_issue(
     uint64_t detected_at_ms)
 {
     UmiWorkbenchLayoutReconciliationIssue *issue;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || key == NULL || message == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (report->issue_count >=
         UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -83,15 +96,18 @@ UmiStatus umi_workbench_layout_reconciliation_add_issue(
     return UMI_STATUS_OK;
 }
 
+/* Provide the remember manifest operation used by this module and its client applications. */
 static UmiStatus remember_manifest(
     UmiWorkbenchLayoutDataChunkManifest *manifests,
     size_t *count,
     const char *value)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*count >=
         UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_chunk_manifest_decode(
             value, &manifests[*count]) != UMI_STATUS_OK) {
         return UMI_STATUS_PARSE_ERROR;
@@ -100,6 +116,7 @@ static UmiStatus remember_manifest(
     return UMI_STATUS_OK;
 }
 
+/* Provide the scan accept operation used by this module and its client applications. */
 static UmiStatus scan_accept(
     const char *key,
     const char *value,
@@ -108,11 +125,13 @@ static UmiStatus scan_accept(
     ReconcileScan *scan = (ReconcileScan *)context;
     UmiWorkbenchLayoutDataKeyParts parts;
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_data_key_is_owned(key)) {
         return UMI_STATUS_OK;
     }
     scan->report->record_count += 1U;
     status = umi_workbench_layout_data_key_parse(key, &parts);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)umi_workbench_layout_reconciliation_add_issue(
             scan->report, key, status, false,
@@ -123,6 +142,7 @@ static UmiStatus scan_accept(
                    UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES
             ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (parts.kind) {
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST:
         scan->report->manifest_count += 1U;
@@ -139,6 +159,7 @@ static UmiStatus scan_accept(
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK:
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK:
         scan->report->chunk_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (scan->chunk_key_count <
             UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES) {
             (void)umi_workbench_layout_data_copy_text(
@@ -146,7 +167,7 @@ static UmiStatus scan_accept(
                 sizeof(scan->chunk_keys[scan->chunk_key_count]),
                 key, false);
             scan->chunk_key_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = UMI_STATUS_CAPACITY_EXCEEDED;
         }
         break;
@@ -154,6 +175,7 @@ static UmiStatus scan_accept(
         status = UMI_STATUS_OK;
         break;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)umi_workbench_layout_reconciliation_add_issue(
             scan->report, key, status, false,
@@ -164,6 +186,7 @@ static UmiStatus scan_accept(
     return UMI_STATUS_OK;
 }
 
+/* Provide the find manifest operation used by this module and its client applications. */
 static const UmiWorkbenchLayoutDataChunkManifest *find_manifest(
     const ReconcileScan *scan,
     UmiWorkbenchLayoutDataRecordKind chunk_kind,
@@ -172,15 +195,18 @@ static const UmiWorkbenchLayoutDataChunkManifest *find_manifest(
     const UmiWorkbenchLayoutDataChunkManifest *manifests;
     size_t count;
     size_t index;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (chunk_kind ==
         UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK) {
         manifests = scan->layout_manifests;
         count = scan->layout_manifest_count;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         manifests = scan->session_manifests;
         count = scan->session_manifest_count;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(manifests[index].aggregate_id,
                    aggregate_id) == 0) {
             return &manifests[index];
@@ -189,16 +215,19 @@ static const UmiWorkbenchLayoutDataChunkManifest *find_manifest(
     return NULL;
 }
 
+/* Provide the verify payloads operation used by this module and its client applications. */
 static UmiStatus verify_payloads(ReconcileScan *scan)
 {
     UmiWorkbenchLayoutChunkStore store;
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (scan->policy.verify_layout_payloads) {
         (void)umi_workbench_layout_chunk_store_init(
             &store, scan->server,
             UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST,
             UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U;
              index < scan->layout_manifest_count;
              ++index) {
@@ -206,6 +235,7 @@ static UmiStatus verify_payloads(ReconcileScan *scan)
                 scan->layout_manifests[index].aggregate_id;
             status = umi_workbench_layout_chunk_store_verify(
                 &store, id, NULL);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 (void)umi_workbench_layout_reconciliation_add_issue(
                     scan->report, id, status, false,
@@ -215,11 +245,13 @@ static UmiStatus verify_payloads(ReconcileScan *scan)
             }
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (scan->policy.verify_session_payloads) {
         (void)umi_workbench_layout_chunk_store_init(
             &store, scan->server,
             UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST,
             UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U;
              index < scan->session_manifest_count;
              ++index) {
@@ -227,6 +259,7 @@ static UmiStatus verify_payloads(ReconcileScan *scan)
                 scan->session_manifests[index].aggregate_id;
             status = umi_workbench_layout_chunk_store_verify(
                 &store, id, NULL);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 (void)umi_workbench_layout_reconciliation_add_issue(
                     scan->report, id, status, false,
@@ -239,19 +272,27 @@ static UmiStatus verify_payloads(ReconcileScan *scan)
     return status;
 }
 
+/* Provide the detect orphans operation used by this module and its client applications. */
 static UmiStatus detect_orphans(ReconcileScan *scan)
 {
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!scan->policy.detect_orphan_chunks) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scan->chunk_key_count; ++index) {
         UmiWorkbenchLayoutDataKeyParts parts;
         const UmiWorkbenchLayoutDataChunkManifest *manifest;
         status = umi_workbench_layout_data_key_parse(
             scan->chunk_keys[index], &parts);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) continue;
         manifest = find_manifest(
             scan, parts.kind, parts.aggregate_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (manifest == NULL ||
             parts.chunk_index >= manifest->chunk_count) {
             scan->report->orphan_count += 1U;
@@ -260,12 +301,14 @@ static UmiStatus detect_orphans(ReconcileScan *scan)
                 UMI_STATUS_NOT_FOUND, true,
                 "The payload chunk has no matching manifest.",
                 scan->now_ms);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (scan->policy.repair_orphan_chunks) {
                 status = umi_data_server_delete(
                     scan->server, scan->chunk_keys[index]);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status == UMI_STATUS_OK) {
                     scan->report->repaired_count += 1U;
-                } else if (status != UMI_STATUS_NOT_FOUND) {
+                } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_NOT_FOUND) {
                     return status;
                 }
             }
@@ -274,6 +317,10 @@ static UmiStatus detect_orphans(ReconcileScan *scan)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout reconcile operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_reconcile(
     UmiDataServer *server,
     const UmiWorkbenchLayoutReconciliationPolicy *policy,
@@ -283,11 +330,16 @@ UmiStatus umi_workbench_layout_reconcile(
     ReconcileScan scan;
     UmiWorkbenchLayoutReconciliationPolicy effective;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     effective = policy != NULL
         ? *policy : umi_workbench_layout_reconciliation_policy_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -301,7 +353,9 @@ UmiStatus umi_workbench_layout_reconcile(
     scan.report = out_report;
     scan.now_ms = now_ms;
     status = umi_data_server_visit(server, scan_accept, &scan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = verify_payloads(&scan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = detect_orphans(&scan);
     out_report->completed_at_ms = now_ms;
     return status;

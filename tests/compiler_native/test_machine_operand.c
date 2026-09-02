@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/machine_operand.h"
-int main(void){UmiNativeMachineOperand r=umi_nc_machine_operand_register(5U),i=umi_nc_machine_operand_immediate(7);if(r.register_id!=5U||i.immediate!=7)return 1;UmiNativeMachineOperand s;if(umi_nc_machine_operand_symbol(&s,"puts")!=UMI_STATUS_OK||s.kind!=UMI_NC_MOP_SYMBOL)return 2;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeMachineOperand r=umi_nc_machine_operand_register(5U),i=umi_nc_machine_operand_immediate(7);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(r.register_id!=5U||i.immediate!=7)return 1;UmiNativeMachineOperand s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_machine_operand_symbol(&s,"puts")!=UMI_STATUS_OK||s.kind!=UMI_NC_MOP_SYMBOL)return 2;return 0;}

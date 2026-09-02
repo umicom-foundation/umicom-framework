@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_GO_TO_OFFSET_COMMAND "umicom.document.navigation.go_to_offset_command"
 
+/**
+ * Provide the document capability go to offset command operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_go_to_offset_command(void);
 

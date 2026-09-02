@@ -18,10 +18,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad selection bounds data shared with callers of this public contract.
+ */
 typedef struct UmiRadSelectionBounds {
     UmiRadRect bounds;
     size_t item_count;
 } UmiRadSelectionBounds;
+/**
+ * Provide the rad selection bounds compute operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_rad_selection_bounds_compute(const UmiRadRect *rects,size_t count,UmiRadSelectionBounds *out_bounds);
 #ifdef __cplusplus
 }

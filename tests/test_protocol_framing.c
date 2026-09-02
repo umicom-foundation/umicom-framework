@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/protocol/framing.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char buffer[512];

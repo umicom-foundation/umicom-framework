@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant interest rate swap data shared with callers of this public contract.
+ */
 typedef struct UmiQuantInterestRateSwap {
     double notional;
     double fixed_rate;

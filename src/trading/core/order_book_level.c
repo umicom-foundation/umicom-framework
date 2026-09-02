@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise and validate represent aggregated price-time liquidity at one book level.. */
 UmiStatus umi_trading_order_book_level_init(UmiTradingOrderBookLevel *value,UmiTradingPriceTicks price_ticks, UmiTradingQuantityLots quantity_lots, uint32_t order_count) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
     value->price_ticks=price_ticks;

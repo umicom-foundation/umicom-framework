@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode locations operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_locations(const char*json,UmiLanguageRuntimeLocationList*out);
 #ifdef __cplusplus
 }

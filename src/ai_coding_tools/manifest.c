@@ -59,16 +59,29 @@ static const UmiAiCodingToolManifestEntry ENTRIES[] = {
     { .tool_id = "workspace.search", .arguments_schema = "{\"query\":\"literal text\",\"limit\":50}", .result_summary = "Returns bounded path/line/text matches." }
 };
 
+/*
+ * Return the number of records represented by ai coding tool manifest without changing
+ * their state.
+ */
 size_t umi_ai_coding_tool_manifest_count(void)
 {
     return sizeof(ENTRIES) / sizeof(ENTRIES[0]);
 }
 
+/*
+ * Find ai coding tool manifest while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ai_coding_tool_manifest_at(
     size_t index,
     UmiAiCodingToolManifestEntry *out_entry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_entry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= umi_ai_coding_tool_manifest_count()) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -76,17 +89,27 @@ UmiStatus umi_ai_coding_tool_manifest_at(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find ai coding tool manifest while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ai_coding_tool_manifest_find(
     const char *tool_id,
     UmiAiCodingToolManifestEntry *out_entry)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool_id == NULL || out_entry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ai_coding_tool_manifest_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(ENTRIES[index].tool_id, tool_id) == 0) {
             *out_entry = ENTRIES[index];
             return UMI_STATUS_OK;

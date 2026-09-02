@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer property data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerProperty {
     char property_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char label[UMI_WORKBENCH_DESIGNER_LABEL_CAPACITY];
@@ -39,6 +43,10 @@ typedef struct UmiWorkbenchDesignerProperty {
     uint32_t order;
 } UmiWorkbenchDesignerProperty;
 
+/**
+ * Represent the workbench designer property model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerPropertyModel {
     char node_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     UmiWorkbenchDesignerProperty properties[UMI_WORKBENCH_DESIGNER_MAX_PROPERTIES];
@@ -47,12 +55,40 @@ typedef struct UmiWorkbenchDesignerPropertyModel {
     uint64_t revision;
 } UmiWorkbenchDesignerPropertyModel;
 
+/**
+ * Initialise workbench designer property model from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_property_model_init(UmiWorkbenchDesignerPropertyModel *model);
+/**
+ * Provide the workbench designer property model build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_property_model_build(UmiWorkbenchDesignerPropertyModel *model, const UmiWorkbenchLayoutDocument *document, const char *node_id);
+/**
+ * Find workbench designer property while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiWorkbenchDesignerProperty *umi_workbench_designer_property_find(const UmiWorkbenchDesignerPropertyModel *model, const char *property_id);
+/**
+ * Provide the workbench designer property set text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_property_set_text(UmiWorkbenchDesignerPropertyModel *model, const char *property_id, const char *value);
+/**
+ * Provide the workbench designer property set number operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_property_set_number(UmiWorkbenchDesignerPropertyModel *model, const char *property_id, double value);
+/**
+ * Provide the workbench designer property set boolean operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_property_set_boolean(UmiWorkbenchDesignerPropertyModel *model, const char *property_id, bool value);
+/**
+ * Provide the workbench designer property to operation operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_property_to_operation(const UmiWorkbenchDesignerPropertyModel *model, const char *property_id, const char *actor_id, const char *correlation_id, uint64_t expected_revision, UmiWorkbenchLayoutOperation *out_operation);
 
 #ifdef __cplusplus

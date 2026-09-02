@@ -21,12 +21,14 @@
 
 #include "umicom/ui/command_view.h"
 
+/* Provide the visible rows operation used by this module and its client applications. */
 static size_t visible_rows(size_t count)
 {
     return count < UMI_TEST_UI_VISIBLE_ROWS
         ? count : UMI_TEST_UI_VISIBLE_ROWS;
 }
 
+/* Provide the set string operation used by this module and its client applications. */
 static UmiStatus set_string(UmiUiViewModel *view, const char *key,
                             const char *text)
 {
@@ -37,6 +39,7 @@ static UmiStatus set_string(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set integer operation used by this module and its client applications. */
 static UmiStatus set_integer(UmiUiViewModel *view, const char *key,
                              int64_t number)
 {
@@ -46,6 +49,7 @@ static UmiStatus set_integer(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set boolean operation used by this module and its client applications. */
 static UmiStatus set_boolean(UmiUiViewModel *view, const char *key,
                              int enabled)
 {
@@ -55,6 +59,7 @@ static UmiStatus set_boolean(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set action operation used by this module and its client applications. */
 static UmiStatus set_action(UmiUiViewModel *view, size_t index,
                             const char *action_id, const char *label,
                             const char *tooltip, int enabled)
@@ -69,24 +74,36 @@ static UmiStatus set_action(UmiUiViewModel *view, size_t index,
     return umi_ui_command_view_set_action(view, index, &action);
 }
 
+/* Provide the create view operation used by this module and its client applications. */
 static UmiStatus create_view(const char *view_id, const char *view_kind,
                              const char *title, const char *summary,
                              UmiUiViewModel **out_view)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || view_kind == NULL || out_view == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_ui_view_model_create(view_id, "umicom.test-ui",
                                       UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(*out_view, "umicom.view-kind", view_kind);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "title", title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(*out_view, "summary", summary);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -94,22 +111,30 @@ static UmiStatus create_view(const char *view_id, const char *view_kind,
     return status;
 }
 
+/*
+ * Provide the set workspace properties operation used by this module and its client
+ * applications.
+ */
 static UmiStatus set_workspace_properties(
     UmiUiViewModel *view, const UmiTestWorkspaceSnapshot *snapshot)
 {
     UmiStatus status = set_integer(view, "test.revision",
                                    (int64_t)snapshot->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(view, "test.run-mode", snapshot->run_mode_label);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(view, "test.selected-item",
                             snapshot->selected_item_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(view, "test.selected-session",
                             snapshot->selected_session_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_boolean(view, "test.running",
                              snapshot->service.operation_running);
@@ -117,8 +142,10 @@ static UmiStatus set_workspace_properties(
     return status;
 }
 
+/* Provide the outcome marker operation used by this module and its client applications. */
 static const char *outcome_marker(int outcome)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch ((UmiTestPlatformOutcome)outcome) {
         case UMI_TEST_PLATFORM_OUTCOME_PASSED: return "✓";
         case UMI_TEST_PLATFORM_OUTCOME_FAILED: return "✗";
@@ -130,6 +157,10 @@ static const char *outcome_marker(int outcome)
     }
 }
 
+/*
+ * Initialise test ui explorer view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_explorer_view_create(
     const char *view_id, UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -142,34 +173,43 @@ UmiStatus umi_test_ui_explorer_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_test_workspace_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(*out_view, "test.filter-text", snapshot.filter.text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(*out_view, "test.filter-label",
                             snapshot.filter.label);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.visible-count",
                              (int64_t)snapshot.visible_item_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.passed-count",
                              (int64_t)snapshot.passed_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.failed-count",
                              (int64_t)snapshot.failed_count);
     }
     count = visible_rows(snapshot.visible_item_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.row-count", (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTestPlatformItemSnapshot item;
         UmiTestPlatformResultSnapshot result;
@@ -178,6 +218,7 @@ UmiStatus umi_test_ui_explorer_view_create(
 
         status = umi_test_workspace_visible_item_at(
             workspace, index, &item, &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "test.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s %s%s — %s%s%s",
@@ -189,36 +230,46 @@ UmiStatus umi_test_ui_explorer_view_create(
                        item.source_uri);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.test.discover", "Discover",
         "Discover tests from the active build directory",
         snapshot.can_discover);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.test.filter", "Filter…",
         "Filter by text, label or latest outcome", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 2U, "studio.action.test.select", "Select Test…",
         "Select a test by its stable identifier", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 3U, "studio.action.test.run-all", "Run All",
         "Run every visible test", snapshot.can_run_all);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 4U, "studio.action.test.run-selected", "Run Selected",
         "Run the selected test", snapshot.can_run_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 5U, "studio.action.test.debug-selected", "Debug Selected",
         "Run the selected test using the debug mode",
         snapshot.can_debug_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 6U, "studio.action.test.coverage", "Run with Coverage",
         "Run visible tests and collect coverage", snapshot.can_run_with_coverage);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 7U, "studio.action.test.rerun-failed", "Rerun Failed",
         "Run tests whose latest result failed", snapshot.can_rerun_failed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 8U, "studio.action.test.repeat-selected", "Repeat…",
         "Repeat the selected test to diagnose intermittent failures",
         snapshot.can_run_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 9U, "studio.action.test.stop", "Stop",
         "Request cooperative cancellation of the active test run",
@@ -226,6 +277,10 @@ UmiStatus umi_test_ui_explorer_view_create(
     return status;
 }
 
+/*
+ * Initialise test ui results view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_results_view_create(
     const char *view_id, UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -237,22 +292,27 @@ UmiStatus umi_test_ui_results_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_test_workspace_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
     count = visible_rows(snapshot.service.result_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.result-count",
                              (int64_t)snapshot.service.result_count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTestPlatformResultSnapshot result;
         char key[64];
         char text[1600];
 
         status = umi_test_workspace_result_at(workspace, index, &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "test.result.%zu", index);
         (void)snprintf(text, sizeof(text), "%s %s — %s (%.2f ms)",
@@ -260,15 +320,21 @@ UmiStatus umi_test_ui_results_view_create(
                        result.message, result.duration_ms);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.test.rerun-failed", "Rerun Failed",
         "Run tests whose latest result failed", snapshot.can_rerun_failed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.test.clear-results", "Clear Results",
         "Clear retained test-result records", snapshot.can_clear_results);
     return status;
 }
 
+/*
+ * Initialise test ui failures view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_failures_view_create(
     const char *view_id, UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -281,22 +347,27 @@ UmiStatus umi_test_ui_failures_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_test_workspace_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
     count = visible_rows(snapshot.failure_result_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.failure-count",
                              (int64_t)snapshot.failure_result_count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTestPlatformResultSnapshot result;
         char key[64];
         char text[3328];
 
         status = umi_test_workspace_failure_at(workspace, index, &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "test.failure.%zu", index);
         (void)snprintf(text, sizeof(text), "✗ %s — %s%s%s",
@@ -305,15 +376,21 @@ UmiStatus umi_test_ui_failures_view_create(
                        result.failure_details);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.test.rerun-failed", "Rerun Failed",
         "Run tests whose latest result failed", snapshot.can_rerun_failed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.test.clear-results", "Clear Results",
         "Clear retained failure evidence", snapshot.can_clear_results);
     return status;
 }
 
+/*
+ * Initialise test ui output view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_ui_output_view_create(
     const char *view_id, UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -325,34 +402,44 @@ UmiStatus umi_test_ui_output_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_test_workspace_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
     count = visible_rows(snapshot.service.output_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.output-count",
                              (int64_t)snapshot.service.output_count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTestPlatformOutputSnapshot output;
         char key[64];
         char text[2304];
 
         status = umi_test_workspace_output_at(workspace, index, &output);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "test.output.%zu", index);
         (void)snprintf(text, sizeof(text), "[%s] %s — %s", output.stream,
                        output.item_id, output.text);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.test.clear-output", "Clear Output",
         "Clear retained test output", snapshot.can_clear_output);
     return status;
 }
 
+/*
+ * Initialise test ui coverage view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_coverage_view_create(
     const char *view_id, UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -364,26 +451,32 @@ UmiStatus umi_test_ui_coverage_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_test_workspace_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.line-coverage-basis-points",
                              snapshot.line_coverage_basis_points);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.branch-coverage-basis-points",
                              snapshot.branch_coverage_basis_points);
     }
     count = visible_rows(snapshot.service.coverage_count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTestPlatformCoverageSnapshot coverage;
         char key[64];
         char text[1400];
 
         status = umi_test_workspace_coverage_at(workspace, index, &coverage);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "test.coverage.%zu", index);
         (void)snprintf(text, sizeof(text),
@@ -395,15 +488,21 @@ UmiStatus umi_test_ui_coverage_view_create(
                        (unsigned long long)coverage.branches_total);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.test.coverage", "Run with Coverage",
         "Run visible tests and collect coverage", snapshot.can_run_with_coverage);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.test.clear-coverage", "Clear Coverage",
         "Clear retained coverage summaries", snapshot.can_clear_coverage);
     return status;
 }
 
+/*
+ * Initialise test ui runs view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_ui_runs_view_create(
     const char *view_id, UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view)
@@ -416,22 +515,27 @@ UmiStatus umi_test_ui_runs_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_test_workspace_snapshot(workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
     count = visible_rows(snapshot.service.run_session_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_integer(*out_view, "test.run-count",
                              (int64_t)snapshot.service.run_session_count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiTestPlatformRunSessionSnapshot session;
         char key[64];
         char text[768];
 
         status = umi_test_workspace_session_at(workspace, index, &session);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "test.run.%zu", index);
         (void)snprintf(text, sizeof(text), "%s%s — %zu total; %zu passed; "
@@ -442,9 +546,11 @@ UmiStatus umi_test_ui_runs_view_create(
                        session.failed, session.skipped);
         status = set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.test.run-all", "Run All",
         "Start a new run for every visible test", snapshot.can_run_all);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 1U, "studio.action.test.stop", "Stop",
         "Request cooperative cancellation of the active test run",

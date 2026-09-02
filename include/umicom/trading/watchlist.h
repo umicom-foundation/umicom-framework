@@ -26,8 +26,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the watchlist data shared with callers of this public contract.
+ */
 typedef struct UmiWatchlist { UmiInstrument instruments[UMI_TRADING_MAX_WATCHLIST]; size_t count; } UmiWatchlist;
+/**
+ * Initialise watchlist from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_watchlist_init(UmiWatchlist *watchlist);
+/**
+ * Add watchlist only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_watchlist_add(UmiWatchlist *watchlist, const UmiInstrument *instrument);
 #ifdef __cplusplus
 }

@@ -22,6 +22,10 @@
 
 #include "umicom/editor/navigation_result.h"
 
+/*
+ * Exercise result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorNavigationResult result(const char *provider,
                                         const char *uri,
                                         uint64_t line,
@@ -42,6 +46,10 @@ static UmiEditorNavigationResult result(const char *provider,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationResultSet *results = NULL;

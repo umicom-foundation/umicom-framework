@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap starter dependency from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_starter_dependency_init(
     UmiBootstrapStarterDependency *dependency,
     const char *starter_id,

@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_WORKBENCH_SELECTION_MAX_HISTORY 1024U
 #define UMI_WORKBENCH_SELECTION_MAX_DIAGNOSTICS 128U
 
+/**
+ * List the named workbench selection kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchSelectionKind {
     UMI_WORKBENCH_SELECTION_GENERIC = 1,
     UMI_WORKBENCH_SELECTION_FILE = 2,
@@ -55,6 +58,9 @@ typedef enum UmiWorkbenchSelectionKind {
     UMI_WORKBENCH_SELECTION_MEDIA = 17
 } UmiWorkbenchSelectionKind;
 
+/**
+ * List the named workbench selection activation values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchSelectionActivation {
     UMI_WORKBENCH_SELECTION_ACTIVATION_SELECT = 1,
     UMI_WORKBENCH_SELECTION_ACTIVATION_OPEN = 2,
@@ -63,6 +69,9 @@ typedef enum UmiWorkbenchSelectionActivation {
     UMI_WORKBENCH_SELECTION_ACTIVATION_PREVIEW = 5
 } UmiWorkbenchSelectionActivation;
 
+/**
+ * List the named workbench selection value kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchSelectionValueKind {
     UMI_WORKBENCH_SELECTION_VALUE_NONE = 0,
     UMI_WORKBENCH_SELECTION_VALUE_TEXT = 1,
@@ -72,6 +81,9 @@ typedef enum UmiWorkbenchSelectionValueKind {
     UMI_WORKBENCH_SELECTION_VALUE_BOOLEAN = 5
 } UmiWorkbenchSelectionValueKind;
 
+/**
+ * List the named workbench selection state values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchSelectionState {
     UMI_WORKBENCH_SELECTION_STATE_CREATED = 1,
     UMI_WORKBENCH_SELECTION_STATE_RESOLVED = 2,
@@ -80,24 +92,52 @@ typedef enum UmiWorkbenchSelectionState {
     UMI_WORKBENCH_SELECTION_STATE_STALE = 5
 } UmiWorkbenchSelectionState;
 
+/**
+ * Provide the workbench selection bounded length operation used by this module and its
+ * client applications.
+ */
 size_t umi_workbench_selection_bounded_length(
     const char *text,
     size_t capacity);
+/**
+ * Check that workbench selection text satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_workbench_selection_text_is_valid(
     const char *text,
     size_t capacity);
+/**
+ * Provide the workbench selection copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_copy_text(
     char *destination,
     size_t capacity,
     const char *source);
+/**
+ * Provide the workbench selection hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_workbench_selection_hash_text(
     uint64_t hash,
     const char *text,
     size_t capacity);
+/**
+ * Provide the workbench selection kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_selection_kind_text(
     UmiWorkbenchSelectionKind kind);
+/**
+ * Provide the workbench selection activation text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_selection_activation_text(
     UmiWorkbenchSelectionActivation activation);
+/**
+ * Provide the workbench selection state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_selection_state_text(
     UmiWorkbenchSelectionState state);
 

@@ -23,15 +23,33 @@
 extern "C" {
 #endif
 #define UMI_AUTHORISATION_REASON_CAPACITY 256U
+/**
+ * Represent the authorisation decision data shared with callers of this public contract.
+ */
 typedef struct UmiAuthorisationDecision {
     int allowed;
     char reason[UMI_AUTHORISATION_REASON_CAPACITY];
 } UmiAuthorisationDecision;
+/**
+ * Represent the authorisation service data shared with callers of this public contract.
+ */
 typedef struct UmiAuthorisationService UmiAuthorisationService;
+/**
+ * Initialise authorisation service from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_authorisation_service_create(UmiPolicyEngine *policy,
                                            UmiRoleRegistry *roles,
                                            UmiAuthorisationService **out_service);
+/**
+ * Release or reset state held by authorisation service so the same storage can be reused
+ * safely.
+ */
 void umi_authorisation_service_destroy(UmiAuthorisationService *service);
+/**
+ * Provide the authorisation check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_authorisation_check(const UmiAuthorisationService *service,
                                   const char *principal,
                                   const char *role_id,

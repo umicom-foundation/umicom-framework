@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request step back operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_step_back(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,

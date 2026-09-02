@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project provider zig operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_zig(void);
 
 #ifdef __cplusplus

@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai developer command context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperCommandContext {
     char chat_session_id[UMI_AI_DEVELOPER_ID_CAPACITY];
     char provider_id[UMI_AI_ID_CAPACITY];
@@ -30,6 +34,10 @@ typedef struct UmiAiDeveloperCommandContext {
     size_t file_index;
 } UmiAiDeveloperCommandContext;
 
+/**
+ * Initialise ai developer command context from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_developer_command_context_init(
     UmiAiDeveloperCommandContext *context);
 

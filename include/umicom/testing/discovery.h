@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the test discovery parse ctest operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_discovery_parse_ctest(const char *output,
                                          const char *build_directory,
                                          UmiTestSuite *suite,

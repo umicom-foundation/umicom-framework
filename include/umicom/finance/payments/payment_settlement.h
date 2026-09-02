@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the payments payment settlement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPaymentsPaymentSettlement {
     UmiFinancialId id;
     UmiFinancialId payment_id;
@@ -25,13 +29,25 @@ typedef struct UmiPaymentsPaymentSettlement {
     int64_t amount_minor;
     bool settled;
 } UmiPaymentsPaymentSettlement;
+/**
+ * Initialise payments payment settlement from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_payments_payment_settlement_init(UmiPaymentsPaymentSettlement *value,
     const char *id,
     const char *payment_id,
     const char *settlement_reference,
     int64_t amount_minor,
     bool settled);
+/**
+ * Check that payments payment settlement satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_payments_payment_settlement_valid(const UmiPaymentsPaymentSettlement *value);
+/**
+ * Provide the payments payment settlement complete operation used by this module and its
+ * client applications.
+ */
 bool umi_payments_payment_settlement_complete(const UmiPaymentsPaymentSettlement *value);
 #ifdef __cplusplus
 }

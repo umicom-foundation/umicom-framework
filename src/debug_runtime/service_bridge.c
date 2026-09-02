@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy bounded operation used by this module and its client applications. */
 static void copy_bounded(
     char *destination,
     size_t capacity,
@@ -25,25 +26,44 @@ static void copy_bounded(
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(destination, source, length);
     }
     destination[length] = '\0';
 }
 
+/* Provide the hash text operation used by this module and its client applications. */
 static uint64_t hash_text(const char *text)
 {
     const unsigned char *cursor = (const unsigned char *)text;
     uint64_t hash = 1469598103934665603ULL;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0U;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         hash ^= (uint64_t)*cursor++;
         hash *= 1099511628211ULL;
@@ -52,6 +72,10 @@ static uint64_t hash_text(const char *text)
     return hash;
 }
 
+/*
+ * Initialise debug runtime service bridge from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_runtime_service_bridge_init(
     UmiDebugRuntimeServiceBridge *bridge,
     UmiDebugService *service,
@@ -59,6 +83,10 @@ UmiStatus umi_debug_runtime_service_bridge_init(
 {
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || service == NULL ||
         session_id == NULL || session_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -71,6 +99,7 @@ UmiStatus umi_debug_runtime_service_bridge_init(
         sizeof(bridge->session_id),
         "%s",
         session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(bridge->session_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -79,6 +108,10 @@ UmiStatus umi_debug_runtime_service_bridge_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime publish session operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_session(
     UmiDebugRuntimeServiceBridge *bridge,
     const char *configuration_id,
@@ -90,6 +123,10 @@ UmiStatus umi_debug_runtime_publish_session(
 {
     UmiDebugSessionSnapshot item;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || bridge->service == NULL ||
         configuration_id == NULL || adapter_id == NULL ||
         state_text == NULL) {
@@ -117,15 +154,24 @@ UmiStatus umi_debug_runtime_publish_session(
         &item);
 }
 
+/*
+ * Provide the remove session threads operation used by this module and its client
+ * applications.
+ */
 static void remove_session_threads(
     UmiDebugThreadRegistry *registry,
     const char *session_id)
 {
     size_t index = umi_debug_thread_registry_count(registry);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index > 0U) {
         UmiDebugThreadSnapshot item;
         index -= 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_thread_registry_at(
                 registry, index, &item) == UMI_STATUS_OK &&
             strcmp(item.session_id, session_id) == 0) {
@@ -134,6 +180,10 @@ static void remove_session_threads(
     }
 }
 
+/*
+ * Provide the debug runtime publish threads operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_threads(
     UmiDebugRuntimeServiceBridge *bridge,
     const UmiDebugRuntimeThreadList *result,
@@ -143,6 +193,10 @@ UmiStatus umi_debug_runtime_publish_threads(
     UmiDebugThreadRegistry *registry;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -150,6 +204,7 @@ UmiStatus umi_debug_runtime_publish_threads(
     registry = umi_debug_service_thread(bridge->service);
     remove_session_threads(registry, bridge->session_id);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugThreadSnapshot item;
         UmiStatus status;
@@ -174,6 +229,7 @@ UmiStatus umi_debug_runtime_publish_threads(
         item.revision = bridge->revision + 1U;
 
         status = umi_debug_thread_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -181,15 +237,24 @@ UmiStatus umi_debug_runtime_publish_threads(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the remove thread frames operation used by this module and its client
+ * applications.
+ */
 static void remove_thread_frames(
     UmiDebugStackFrameRegistry *registry,
     const char *thread_id)
 {
     size_t index = umi_debug_stack_frame_registry_count(registry);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index > 0U) {
         UmiDebugStackFrameSnapshot item;
         index -= 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_stack_frame_registry_at(
                 registry, index, &item) == UMI_STATUS_OK &&
             strcmp(item.thread_id, thread_id) == 0) {
@@ -198,6 +263,10 @@ static void remove_thread_frames(
     }
 }
 
+/*
+ * Provide the debug runtime publish stack operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_stack(
     UmiDebugRuntimeServiceBridge *bridge,
     uint64_t thread_id,
@@ -207,6 +276,10 @@ UmiStatus umi_debug_runtime_publish_stack(
     char framework_thread_id[128];
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || result == NULL || thread_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -221,6 +294,7 @@ UmiStatus umi_debug_runtime_publish_stack(
     registry = umi_debug_service_stack_frame(bridge->service);
     remove_thread_frames(registry, framework_thread_id);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugStackFrameSnapshot item;
         UmiStatus status;
@@ -247,6 +321,7 @@ UmiStatus umi_debug_runtime_publish_stack(
         item.revision = bridge->revision + 1U;
 
         status = umi_debug_stack_frame_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -254,15 +329,24 @@ UmiStatus umi_debug_runtime_publish_stack(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the remove frame scopes operation used by this module and its client
+ * applications.
+ */
 static void remove_frame_scopes(
     UmiDebugScopeRegistry *registry,
     const char *frame_id)
 {
     size_t index = umi_debug_scope_registry_count(registry);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index > 0U) {
         UmiDebugScopeSnapshot item;
         index -= 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_scope_registry_at(
                 registry, index, &item) == UMI_STATUS_OK &&
             strcmp(item.frame_id, frame_id) == 0) {
@@ -271,6 +355,10 @@ static void remove_frame_scopes(
     }
 }
 
+/*
+ * Provide the debug runtime publish scopes operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_scopes(
     UmiDebugRuntimeServiceBridge *bridge,
     uint64_t frame_id,
@@ -280,6 +368,10 @@ UmiStatus umi_debug_runtime_publish_scopes(
     char frame_text[128];
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || result == NULL || frame_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -291,6 +383,7 @@ UmiStatus umi_debug_runtime_publish_scopes(
     registry = umi_debug_service_scope(bridge->service);
     remove_frame_scopes(registry, frame_text);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugScopeSnapshot item;
         UmiStatus status;
@@ -317,6 +410,7 @@ UmiStatus umi_debug_runtime_publish_scopes(
         item.revision = bridge->revision + 1U;
 
         status = umi_debug_scope_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -325,15 +419,24 @@ UmiStatus umi_debug_runtime_publish_scopes(
 }
 
 
+/*
+ * Provide the remove scope variables operation used by this module and its client
+ * applications.
+ */
 static void remove_scope_variables(
     UmiDebugVariableRegistry *registry,
     const char *scope_id)
 {
     size_t index = umi_debug_variable_registry_count(registry);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index > 0U) {
         UmiDebugVariableSnapshot item;
         index -= 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_variable_registry_at(
                 registry, index, &item) == UMI_STATUS_OK &&
             strcmp(item.scope_id, scope_id) == 0) {
@@ -342,6 +445,10 @@ static void remove_scope_variables(
     }
 }
 
+/*
+ * Provide the debug runtime publish variables operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_variables(
     UmiDebugRuntimeServiceBridge *bridge,
     const char *scope_id,
@@ -350,6 +457,10 @@ UmiStatus umi_debug_runtime_publish_variables(
     UmiDebugVariableRegistry *registry;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || scope_id == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -357,6 +468,7 @@ UmiStatus umi_debug_runtime_publish_variables(
     registry = umi_debug_service_variable(bridge->service);
     remove_scope_variables(registry, scope_id);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugVariableSnapshot item;
         UmiStatus status;
@@ -390,6 +502,7 @@ UmiStatus umi_debug_runtime_publish_variables(
         item.revision = bridge->revision + 1U;
 
         status = umi_debug_variable_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -397,6 +510,10 @@ UmiStatus umi_debug_runtime_publish_variables(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime publish watch operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_watch(
     UmiDebugRuntimeServiceBridge *bridge,
     const char *watch_id,
@@ -405,6 +522,10 @@ UmiStatus umi_debug_runtime_publish_watch(
 {
     UmiDebugWatchSnapshot item;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || watch_id == NULL ||
         expression == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -435,15 +556,24 @@ UmiStatus umi_debug_runtime_publish_watch(
         &item);
 }
 
+/*
+ * Provide the remove session modules operation used by this module and its client
+ * applications.
+ */
 static void remove_session_modules(
     UmiDebugModuleRegistry *registry,
     const char *session_id)
 {
     size_t index = umi_debug_module_registry_count(registry);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index > 0U) {
         UmiDebugModuleSnapshot item;
         index -= 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_module_registry_at(
                 registry, index, &item) == UMI_STATUS_OK &&
             strcmp(item.session_id, session_id) == 0) {
@@ -452,6 +582,10 @@ static void remove_session_modules(
     }
 }
 
+/*
+ * Provide the debug runtime publish modules operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_modules(
     UmiDebugRuntimeServiceBridge *bridge,
     const UmiDebugRuntimeModuleList *result)
@@ -459,6 +593,10 @@ UmiStatus umi_debug_runtime_publish_modules(
     UmiDebugModuleRegistry *registry;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -466,6 +604,7 @@ UmiStatus umi_debug_runtime_publish_modules(
     registry = umi_debug_service_module(bridge->service);
     remove_session_modules(registry, bridge->session_id);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugModuleSnapshot item;
         UmiStatus status;
@@ -497,6 +636,7 @@ UmiStatus umi_debug_runtime_publish_modules(
         item.revision = bridge->revision + 1U;
 
         status = umi_debug_module_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -504,6 +644,10 @@ UmiStatus umi_debug_runtime_publish_modules(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime publish source operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_source(
     UmiDebugRuntimeServiceBridge *bridge,
     const char *source_id,
@@ -514,6 +658,10 @@ UmiStatus umi_debug_runtime_publish_source(
 {
     UmiDebugSourceSnapshot item;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || source_id == NULL ||
         uri == NULL || name == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -537,12 +685,20 @@ UmiStatus umi_debug_runtime_publish_source(
         &item);
 }
 
+/*
+ * Provide the debug runtime publish exception operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_exception(
     UmiDebugRuntimeServiceBridge *bridge,
     const UmiDebugRuntimeExceptionInfo *result)
 {
     UmiDebugExceptionSnapshot item;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -577,6 +733,10 @@ UmiStatus umi_debug_runtime_publish_exception(
         &item);
 }
 
+/*
+ * Provide the debug runtime publish breakpoints operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_publish_breakpoints(
     UmiDebugRuntimeServiceBridge *bridge,
     const char *source_uri,
@@ -585,12 +745,17 @@ UmiStatus umi_debug_runtime_publish_breakpoints(
     UmiDebugBreakpointRegistry *registry;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || source_uri == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     registry = umi_debug_service_breakpoint(bridge->service);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < result->count; ++index) {
         UmiDebugBreakpointSnapshot item;
         UmiStatus status;
@@ -618,6 +783,7 @@ UmiStatus umi_debug_runtime_publish_breakpoints(
         item.revision = bridge->revision + 1U;
 
         status = umi_debug_breakpoint_registry_upsert(registry, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -625,6 +791,10 @@ UmiStatus umi_debug_runtime_publish_breakpoints(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime publish event operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_publish_event(
     UmiDebugRuntimeServiceBridge *bridge,
     const UmiDebugRuntimeEvent *event)
@@ -632,6 +802,10 @@ UmiStatus umi_debug_runtime_publish_event(
     UmiDebugEventSnapshot item;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || event == NULL || event->event[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -665,8 +839,10 @@ UmiStatus umi_debug_runtime_publish_event(
     status = umi_debug_event_registry_upsert(
         umi_debug_service_event(bridge->service),
         &item);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(event->event, "output") == 0 && event->text[0] != '\0') {
         UmiDebugConsoleEntrySnapshot console;
 
@@ -693,6 +869,7 @@ UmiStatus umi_debug_runtime_publish_event(
         status = umi_debug_console_entry_registry_upsert(
             umi_debug_service_console_entry(bridge->service),
             &console);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

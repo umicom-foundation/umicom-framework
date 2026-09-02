@@ -20,8 +20,13 @@
  */
 
 #include "umicom/codeguard/severity.h"
+/*
+ * Provide the codeguard severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_codeguard_severity_text(UmiCodeGuardSeverity severity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
         case UMI_CODEGUARD_INFO: return "info";
         case UMI_CODEGUARD_LOW: return "low";

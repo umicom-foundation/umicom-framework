@@ -1,6 +1,23 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/terminal/asm/scan_x86_64.S
+ *
+ * PURPOSE:
+ *   Implement the scan x86 64 behaviour used by its public contract and client
+ *   applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Audited x86-64 scalar byte counter for terminal transcript scans. */
     .text
     .globl umi_terminal_scan_count_byte_x86_64
+/* Select the platform ABI registers, then expose one shared counting loop. */
 #ifdef _WIN32
 umi_terminal_scan_count_byte_x86_64:
     movq %rcx, %r9
@@ -18,6 +35,7 @@ umi_terminal_scan_count_byte_x86_64:
     testq %r10, %r10
     je .Lumi_terminal_scan_x86_done
 .Lumi_terminal_scan_x86_loop:
+    /* Count the current byte only when it matches the requested value. */
     cmpb %r11b, (%r9,%rcx,1)
     jne .Lumi_terminal_scan_x86_next
     incq %rax
@@ -26,6 +44,7 @@ umi_terminal_scan_count_byte_x86_64:
     cmpq %r10, %rcx
     jb .Lumi_terminal_scan_x86_loop
 .Lumi_terminal_scan_x86_done:
+    /* Return the accumulated count through the platform's integer result register. */
     ret
 #ifndef _WIN32
     .size umi_terminal_scan_count_byte_x86_64, .-umi_terminal_scan_count_byte_x86_64

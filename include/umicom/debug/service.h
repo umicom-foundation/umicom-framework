@@ -42,7 +42,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug service data shared with callers of this public contract.
+ */
 typedef struct UmiDebugService UmiDebugService;
+/**
+ * Represent the debug service snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiDebugServiceSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -65,23 +71,94 @@ typedef struct UmiDebugServiceSnapshot {
     size_t timeline_event_count;
 } UmiDebugServiceSnapshot;
 
+/**
+ * Initialise debug service from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_debug_service_create(UmiDebugService **out_owner);
+/**
+ * Release or reset state held by debug service so the same storage can be reused safely.
+ */
 void umi_debug_service_destroy(UmiDebugService *owner);
+/**
+ * Provide the debug service snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_service_snapshot(const UmiDebugService *owner, UmiDebugServiceSnapshot *out_snapshot);
+/**
+ * Provide the debug service launch configuration operation used by this module and its
+ * client applications.
+ */
 UmiDebugLaunchConfigurationRegistry *umi_debug_service_launch_configuration(UmiDebugService *owner);
+/**
+ * Provide the debug service breakpoint operation used by this module and its client
+ * applications.
+ */
 UmiDebugBreakpointRegistry *umi_debug_service_breakpoint(UmiDebugService *owner);
+/**
+ * Provide the debug service session operation used by this module and its client
+ * applications.
+ */
 UmiDebugSessionRegistry *umi_debug_service_session(UmiDebugService *owner);
+/**
+ * Provide the debug service thread operation used by this module and its client
+ * applications.
+ */
 UmiDebugThreadRegistry *umi_debug_service_thread(UmiDebugService *owner);
+/**
+ * Provide the debug service stack frame operation used by this module and its client
+ * applications.
+ */
 UmiDebugStackFrameRegistry *umi_debug_service_stack_frame(UmiDebugService *owner);
+/**
+ * Provide the debug service scope operation used by this module and its client
+ * applications.
+ */
 UmiDebugScopeRegistry *umi_debug_service_scope(UmiDebugService *owner);
+/**
+ * Provide the debug service variable operation used by this module and its client
+ * applications.
+ */
 UmiDebugVariableRegistry *umi_debug_service_variable(UmiDebugService *owner);
+/**
+ * Provide the debug service watch operation used by this module and its client
+ * applications.
+ */
 UmiDebugWatchRegistry *umi_debug_service_watch(UmiDebugService *owner);
+/**
+ * Provide the debug service console entry operation used by this module and its client
+ * applications.
+ */
 UmiDebugConsoleEntryRegistry *umi_debug_service_console_entry(UmiDebugService *owner);
+/**
+ * Provide the debug service module operation used by this module and its client
+ * applications.
+ */
 UmiDebugModuleRegistry *umi_debug_service_module(UmiDebugService *owner);
+/**
+ * Provide the debug service source operation used by this module and its client
+ * applications.
+ */
 UmiDebugSourceRegistry *umi_debug_service_source(UmiDebugService *owner);
+/**
+ * Provide the debug service exception operation used by this module and its client
+ * applications.
+ */
 UmiDebugExceptionRegistry *umi_debug_service_exception(UmiDebugService *owner);
+/**
+ * Provide the debug service event operation used by this module and its client
+ * applications.
+ */
 UmiDebugEventRegistry *umi_debug_service_event(UmiDebugService *owner);
+/**
+ * Provide the debug service adapter profiles operation used by this module and its client
+ * applications.
+ */
 UmiDebugAdapterProfileRegistry *umi_debug_service_adapter_profiles(UmiDebugService *owner);
+/**
+ * Provide the debug service timeline operation used by this module and its client
+ * applications.
+ */
 UmiDebugTimeline *umi_debug_service_timeline(UmiDebugService *owner);
 
 #ifdef __cplusplus

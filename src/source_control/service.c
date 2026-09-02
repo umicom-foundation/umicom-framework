@@ -39,30 +39,62 @@ struct UmiSourceControlService {
     uint64_t revision;
 };
 
+/*
+ * Initialise source control service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_source_control_service_create(UmiSourceControlService **out_owner)
 {
     UmiSourceControlService *owner; UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_owner == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_owner = NULL; owner = (UmiSourceControlService *)calloc(1U,sizeof(*owner));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     owner->revision = 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_repository_registry_create(&owner->repository);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_change_registry_create(&owner->change);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_change_set_registry_create(&owner->change_set);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_staging_registry_create(&owner->staging);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_commit_registry_create(&owner->commit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_branch_registry_create(&owner->branch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_tag_registry_create(&owner->tag);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_remote_registry_create(&owner->remote);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_diff_session_registry_create(&owner->diff_session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_operation_registry_create(&owner->operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_history_entry_registry_create(&owner->history_entry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) { umi_source_control_service_destroy(owner); return status; }
     *out_owner = owner; return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by source control service so the same storage can be reused
+ * safely.
+ */
 void umi_source_control_service_destroy(UmiSourceControlService *owner)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL) return;
     umi_vcs_workspace_coordinator_destroy(owner->workspace_coordinator);
     umi_vcs_workspace_destroy(owner->workspace);
@@ -80,8 +112,16 @@ void umi_source_control_service_destroy(UmiSourceControlService *owner)
     free(owner);
 }
 
+/*
+ * Provide the source control service snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_source_control_service_snapshot(const UmiSourceControlService *owner, UmiSourceControlServiceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_snapshot,0,sizeof(*out_snapshot));
     out_snapshot->struct_size=(uint32_t)sizeof(*out_snapshot); out_snapshot->api_version=3U;
@@ -101,9 +141,17 @@ UmiStatus umi_source_control_service_snapshot(const UmiSourceControlService *own
     out_snapshot->workspace_open = owner->workspace != NULL;
     out_snapshot->workspace_coordinator_open =
         owner->workspace_coordinator != NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner->workspace != NULL) {
         (void)umi_vcs_workspace_snapshot(owner->workspace, &out_snapshot->workspace);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner->workspace_coordinator != NULL) {
         (void)umi_vcs_workspace_coordinator_snapshot(
             owner->workspace_coordinator,
@@ -112,28 +160,82 @@ UmiStatus umi_source_control_service_snapshot(const UmiSourceControlService *own
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the source control service repository operation used by this module and its
+ * client applications.
+ */
 UmiSourceControlRepositoryRegistry *umi_source_control_service_repository(UmiSourceControlService *owner) { return owner != NULL ? owner->repository : NULL; }
+/*
+ * Provide the source control service change operation used by this module and its client
+ * applications.
+ */
 UmiSourceControlChangeRegistry *umi_source_control_service_change(UmiSourceControlService *owner) { return owner != NULL ? owner->change : NULL; }
+/*
+ * Copy source control service change into module-owned storage so callers keep ownership
+ * of their input values.
+ */
 UmiSourceControlChangeSetRegistry *umi_source_control_service_change_set(UmiSourceControlService *owner) { return owner != NULL ? owner->change_set : NULL; }
+/*
+ * Provide the source control service staging operation used by this module and its client
+ * applications.
+ */
 UmiSourceControlStagingRegistry *umi_source_control_service_staging(UmiSourceControlService *owner) { return owner != NULL ? owner->staging : NULL; }
+/*
+ * Provide the source control service commit operation used by this module and its client
+ * applications.
+ */
 UmiSourceControlCommitRegistry *umi_source_control_service_commit(UmiSourceControlService *owner) { return owner != NULL ? owner->commit : NULL; }
+/*
+ * Provide the source control service branch operation used by this module and its client
+ * applications.
+ */
 UmiSourceControlBranchRegistry *umi_source_control_service_branch(UmiSourceControlService *owner) { return owner != NULL ? owner->branch : NULL; }
+/*
+ * Provide the source control service tag operation used by this module and its client
+ * applications.
+ */
 UmiSourceControlTagRegistry *umi_source_control_service_tag(UmiSourceControlService *owner) { return owner != NULL ? owner->tag : NULL; }
+/*
+ * Provide the source control service remote operation used by this module and its client
+ * applications.
+ */
 UmiSourceControlRemoteRegistry *umi_source_control_service_remote(UmiSourceControlService *owner) { return owner != NULL ? owner->remote : NULL; }
+/*
+ * Provide the source control service diff session operation used by this module and its
+ * client applications.
+ */
 UmiSourceControlDiffSessionRegistry *umi_source_control_service_diff_session(UmiSourceControlService *owner) { return owner != NULL ? owner->diff_session : NULL; }
+/*
+ * Provide the source control service operation operation used by this module and its
+ * client applications.
+ */
 UmiSourceControlOperationRegistry *umi_source_control_service_operation(UmiSourceControlService *owner) { return owner != NULL ? owner->operation : NULL; }
+/*
+ * Provide the source control service history entry operation used by this module and its
+ * client applications.
+ */
 UmiSourceControlHistoryEntryRegistry *umi_source_control_service_history_entry(UmiSourceControlService *owner) { return owner != NULL ? owner->history_entry : NULL; }
 
+/*
+ * Provide the source control service open workspace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *owner, const char *root)
 {
     UmiVcsWorkspace *workspace = NULL;
     UmiVcsWorkspaceCoordinator *coordinator = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL || root == NULL || root[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_vcs_workspace_create_git(root, &workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     {
         UmiVcsWorkspaceSnapshot snapshot;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (umi_vcs_workspace_snapshot(workspace, &snapshot) == UMI_STATUS_OK &&
             snapshot.available) {
             /* Populate the Centre immediately; an unborn/partially configured
@@ -142,6 +244,7 @@ UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *own
         }
     }
     status = umi_vcs_workspace_coordinator_create(workspace, &coordinator);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_vcs_workspace_destroy(workspace);
         return status;
@@ -154,8 +257,16 @@ UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *own
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the source control service close workspace operation used by this module and its
+ * client applications.
+ */
 void umi_source_control_service_close_workspace(UmiSourceControlService *owner)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (owner == NULL || owner->workspace == NULL) return;
     umi_vcs_workspace_coordinator_destroy(owner->workspace_coordinator);
     umi_vcs_workspace_destroy(owner->workspace);
@@ -164,18 +275,34 @@ void umi_source_control_service_close_workspace(UmiSourceControlService *owner)
     owner->revision += 1U;
 }
 
+/*
+ * Provide the source control service workspace operation used by this module and its
+ * client applications.
+ */
 UmiVcsWorkspace *umi_source_control_service_workspace(UmiSourceControlService *owner)
 { return owner != NULL ? owner->workspace : NULL; }
 
+/*
+ * Provide the source control service workspace const operation used by this module and its
+ * client applications.
+ */
 const UmiVcsWorkspace *umi_source_control_service_workspace_const(const UmiSourceControlService *owner)
 { return owner != NULL ? owner->workspace : NULL; }
 
+/*
+ * Provide the source control service workspace coordinator operation used by this module
+ * and its client applications.
+ */
 UmiVcsWorkspaceCoordinator *umi_source_control_service_workspace_coordinator(
     UmiSourceControlService *owner)
 {
     return owner != NULL ? owner->workspace_coordinator : NULL;
 }
 
+/*
+ * Provide the source control service workspace coordinator const operation used by this
+ * module and its client applications.
+ */
 const UmiVcsWorkspaceCoordinator *
 umi_source_control_service_workspace_coordinator_const(
     const UmiSourceControlService *owner)

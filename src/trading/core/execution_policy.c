@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise and validate define venue-count, participation and urgency bounds for execution strategies.. */
 UmiStatus umi_trading_execution_policy_init(UmiTradingExecutionPolicy *value,uint32_t max_venues, uint32_t participation_bps, uint32_t urgency) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
     value->max_venues=max_venues;

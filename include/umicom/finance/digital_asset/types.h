@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_DIGITAL_ASSET_HASH_CAPACITY 96U
 #define UMI_DIGITAL_ASSET_MAX_ITEMS 64U
 
+/**
+ * List the named digital network family values accepted by this public contract.
+ */
 typedef enum UmiDigitalNetworkFamily {
     UMI_DIGITAL_NETWORK_UNKNOWN = 0,
     UMI_DIGITAL_NETWORK_UTXO = 1,
@@ -45,6 +48,9 @@ typedef enum UmiDigitalNetworkFamily {
     UMI_DIGITAL_NETWORK_OTHER = 4
 } UmiDigitalNetworkFamily;
 
+/**
+ * List the named digital transaction state values accepted by this public contract.
+ */
 typedef enum UmiDigitalTransactionState {
     UMI_DIGITAL_TX_CREATED = 0,
     UMI_DIGITAL_TX_SIGNING = 1,
@@ -55,10 +61,16 @@ typedef enum UmiDigitalTransactionState {
     UMI_DIGITAL_TX_CANCELLED = 6
 } UmiDigitalTransactionState;
 
+/**
+ * Represent the digital asset id data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalAssetId {
     char value[UMI_DIGITAL_ASSET_ID_CAPACITY];
 } UmiDigitalAssetId;
 
+/**
+ * Represent the digital amount data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalAmount {
     int64_t units;
     int32_t scale;

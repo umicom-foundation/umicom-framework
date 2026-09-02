@@ -20,5 +20,10 @@
 
 #include "umicom/platform/cross_target/target_probe.h"
 
-UmiStatus umi_ct_target_probe_validate(const UmiCtTargetProbe*p){if(p==NULL||p->target.architecture==UMI_CT_ARCH_UNKNOWN||p->cpu_count==0U||p->page_size==0U||p->confidence>100U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
-uint8_t umi_ct_target_probe_score(const UmiCtTargetProbe*p,const UmiCtTarget*e){unsigned s=0U;if(p==NULL||e==NULL)return 0U;if(p->target.architecture==e->architecture)s+=35U;if(p->target.operating_system==e->operating_system)s+=35U;if(p->target.environment==e->environment)s+=20U;if(p->target.pointer_bits==e->pointer_bits)s+=10U;return (uint8_t)((s*(unsigned)p->confidence)/100U);}
+/* Check that ct target probe satisfies its contract before another service relies on it. */
+UmiStatus umi_ct_target_probe_validate(const UmiCtTargetProbe*p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||p->target.architecture==UMI_CT_ARCH_UNKNOWN||p->cpu_count==0U||p->page_size==0U||p->confidence>100U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/*
+ * Provide the ct target probe score operation used by this module and its client
+ * applications.
+ */
+uint8_t umi_ct_target_probe_score(const UmiCtTargetProbe*p,const UmiCtTarget*e){unsigned s=0U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||e==NULL)return 0U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->target.architecture==e->architecture)s+=35U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->target.operating_system==e->operating_system)s+=35U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->target.environment==e->environment)s+=20U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->target.pointer_bits==e->pointer_bits)s+=10U;return (uint8_t)((s*(unsigned)p->confidence)/100U);}

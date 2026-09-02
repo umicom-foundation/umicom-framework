@@ -26,8 +26,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the order throttle data shared with callers of this public contract.
+ */
 typedef struct UmiOrderThrottle { uint32_t count; uint32_t max_count; int64_t window_start_ms; int64_t window_ms; } UmiOrderThrottle;
+/**
+ * Initialise order throttle from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_order_throttle_init(UmiOrderThrottle *throttle, uint32_t max_count, int64_t window_ms);
+/**
+ * Provide the order throttle accept operation used by this module and its client
+ * applications.
+ */
 int umi_order_throttle_accept(UmiOrderThrottle *throttle, int64_t now_ms);
 #ifdef __cplusplus
 }

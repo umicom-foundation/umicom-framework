@@ -26,6 +26,10 @@ typedef UmiStatus (*UmiDeveloperDiagnosticParseFunction)(
     UmiDeveloperProblem *out_problem,
     int *out_matched);
 
+/**
+ * Represent the developer diagnostic parser data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperDiagnosticParser {
     uint32_t structure_size;
     uint32_t api_version;
@@ -36,6 +40,10 @@ typedef struct UmiDeveloperDiagnosticParser {
     UmiDeveloperDiagnosticParseFunction parse;
 } UmiDeveloperDiagnosticParser;
 
+/**
+ * Check that developer diagnostic parser satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_diagnostic_parser_validate(
     const UmiDeveloperDiagnosticParser *parser);
 

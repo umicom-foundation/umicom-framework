@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading market integrity snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingMarketIntegritySnapshot { uint64_t surveillance_alerts; uint64_t rejected_orders; uint64_t volatility_interrupts; uint64_t matched_trades; UmiTradingCoreSeverity severity; } UmiTradingMarketIntegritySnapshot;
 /* Derive an aggregate severity from incident and activity counters. */
 void umi_trading_market_integrity_snapshot_update(UmiTradingMarketIntegritySnapshot *snapshot,uint64_t alerts,uint64_t rejects,uint64_t interrupts,uint64_t trades);

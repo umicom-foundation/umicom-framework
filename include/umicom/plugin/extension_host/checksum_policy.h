@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host checksum policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostChecksumPolicy { int require_digest; int require_match; uint32_t minimum_hex_length; } UmiPluginExtensionHostChecksumPolicy;
+/**
+ * Initialise plugin extension host checksum policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_checksum_policy_init(UmiPluginExtensionHostChecksumPolicy *policy);
+/**
+ * Provide the plugin extension host checksum policy evaluate operation used by this module
+ * and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_checksum_policy_evaluate(const UmiPluginExtensionHostChecksumPolicy *policy, const char *digest, int digest_matches);
 
 #ifdef __cplusplus

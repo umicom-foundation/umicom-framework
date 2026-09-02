@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant stress test data shared with callers of this public contract.
+ */
 typedef struct UmiQuantStressTest {
     double baseline_pv;
     double stressed_pv;

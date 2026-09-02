@@ -25,4 +25,8 @@
  *---------------------------------------------------------------------------*/
 #include <stddef.h>
 #include "umicom/debug/debug.h"
-int main(void){UmiDebugService *p=NULL; UmiDebugServiceSnapshot s; if(umi_debug_service_create(&p)!=UMI_STATUS_OK)return 1; if(umi_debug_service_snapshot(p,&s)!=UMI_STATUS_OK||s.item_count!=0U)return 2; umi_debug_service_destroy(p); return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDebugService *p=NULL; UmiDebugServiceSnapshot s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_debug_service_create(&p)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_debug_service_snapshot(p,&s)!=UMI_STATUS_OK||s.item_count!=0U)return 2; umi_debug_service_destroy(p); return 0;}

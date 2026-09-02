@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/risk_limit_evaluation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseRiskLimitEvaluation e;CHECK(umi_enterprise_risk_limit_evaluate(&e,"VAR",80.0,100.0,90.0)==UMI_STATUS_OK);CHECK(e.warning==1&&e.breach==0);return 0;}

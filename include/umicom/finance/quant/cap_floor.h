@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant cap floor data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCapFloor {
     double notional;
     double strike_rate;

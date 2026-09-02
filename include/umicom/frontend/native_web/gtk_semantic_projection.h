@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/renderer_descriptor.h"
+/**
+ * Represent the native web gtk projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebGtkProjection { char gtk_surface_id[UMI_NATIVE_WEB_ID_CAPACITY]; char semantic_contract[UMI_NATIVE_WEB_ID_CAPACITY]; char web_css_class[UMI_NATIVE_WEB_ID_CAPACITY]; bool native_widget_serialized; } UmiNativeWebGtkProjection;
 /* Map a GTK adapter semantic contract to a browser presentation class; GtkWidget pointers are intentionally never accepted. */
 UmiStatus umi_native_web_gtk_semantic_projection(const char *gtk_surface_id, const char *semantic_contract, UmiNativeWebGtkProjection *out_projection);

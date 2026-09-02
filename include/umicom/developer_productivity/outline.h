@@ -23,6 +23,9 @@ extern "C" {
 
 #define UMI_DEVELOPER_OUTLINE_CAPACITY 1024U
 
+/**
+ * Represent the developer outline model data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperOutlineModel {
     UmiDeveloperSymbol symbols[UMI_DEVELOPER_OUTLINE_CAPACITY];
     size_t count;
@@ -30,6 +33,10 @@ typedef struct UmiDeveloperOutlineModel {
     uint64_t revision;
 } UmiDeveloperOutlineModel;
 
+/**
+ * Provide the developer outline build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_outline_build(
     const UmiDeveloperSymbolIndex *index,
     const char *document_uri,

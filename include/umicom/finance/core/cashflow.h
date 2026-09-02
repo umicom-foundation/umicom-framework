@@ -20,6 +20,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the cashflow data shared with callers of this public contract.
+ */
 typedef struct UmiCashflow { UmiFinancialId cashflow_id; UmiTradeId trade_id; UmiMoney amount; UmiFinancialDirection direction; UmiFinancialDate payment_date; } UmiCashflow;
 /* Initialize cashflow. */ UmiStatus umi_cashflow_init(UmiCashflow *c,const char *id,const char *trade,UmiMoney amount,UmiFinancialDirection dir,UmiFinancialDate date);
 /* Validate cashflow. */ bool umi_cashflow_is_valid(const UmiCashflow *c);

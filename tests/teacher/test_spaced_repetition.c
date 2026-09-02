@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/spaced_repetition.h"
-int main(void) { UmiTeacherSpacedRepetition s; umi_teacher_spaced_repetition_init(&s); if(umi_teacher_spaced_repetition_record(&s,5U)!=UMI_STATUS_OK) return 1; if(umi_teacher_spaced_repetition_record(&s,5U)!=UMI_STATUS_OK) return 2; if(umi_teacher_spaced_repetition_next_interval(&s)!=6U) return 3; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTeacherSpacedRepetition s; umi_teacher_spaced_repetition_init(&s); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_teacher_spaced_repetition_record(&s,5U)!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_teacher_spaced_repetition_record(&s,5U)!=UMI_STATUS_OK) return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_teacher_spaced_repetition_next_interval(&s)!=6U) return 3; return 0; }

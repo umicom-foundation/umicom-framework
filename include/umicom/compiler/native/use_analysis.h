@@ -22,9 +22,21 @@
 extern "C" {
 #endif
 #define UMI_NC_MAX_ANALYZED_VALUES 4096U
+/**
+ * Represent the native use count data shared with callers of this public contract.
+ */
 typedef struct UmiNativeUseCount { uint32_t value_id; size_t uses; } UmiNativeUseCount;
+/**
+ * Represent the native use analysis data shared with callers of this public contract.
+ */
 typedef struct UmiNativeUseAnalysis { UmiNativeUseCount items[UMI_NC_MAX_ANALYZED_VALUES]; size_t count; } UmiNativeUseAnalysis;
+/**
+ * Provide the nc use analyze operation used by this module and its client applications.
+ */
 UmiStatus umi_nc_use_analyze(const UmiNativeIrFunction *function,UmiNativeUseAnalysis *out_analysis);
+/**
+ * Return the number of records represented by nc use without changing their state.
+ */
 size_t umi_nc_use_count(const UmiNativeUseAnalysis *analysis,uint32_t value_id);
 #ifdef __cplusplus
 }

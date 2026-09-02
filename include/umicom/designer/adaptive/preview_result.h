@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer preview result data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerPreviewResult {
     char case_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     UmiDesignerAdaptivePreviewStatus status;

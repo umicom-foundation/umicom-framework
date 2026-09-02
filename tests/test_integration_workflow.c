@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Workflow graph | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "integration_designer_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIntegrationWorkflow workflow = umi_test_workflow();

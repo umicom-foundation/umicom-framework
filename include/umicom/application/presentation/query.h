@@ -22,9 +22,17 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by application presentation plan region without
+ * changing their state.
+ */
 size_t umi_application_presentation_plan_region_count(
     const UmiApplicationPresentationPlan *plan,
     UmiApplicationComponentRegion region);
+/**
+ * Find application presentation plan region while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationPresentationPanelPlacement *
 umi_application_presentation_plan_region_at(
     const UmiApplicationPresentationPlan *plan,

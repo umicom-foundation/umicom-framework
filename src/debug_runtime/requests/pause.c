@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/pause.h"
 
+/*
+ * Provide the debug runtime request pause operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_pause(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,

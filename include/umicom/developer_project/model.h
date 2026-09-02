@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project model data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperProjectModel {
     uint32_t structure_size;
     uint32_t api_version;
@@ -45,16 +48,28 @@ typedef struct UmiDeveloperProjectModel {
     uint64_t revision;
 } UmiDeveloperProjectModel;
 
+/**
+ * Initialise developer project model from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_project_model_init(
     UmiDeveloperProjectModel *model,
     const char *project_id,
     const char *display_name);
 
+/**
+ * Check that developer project model satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_developer_project_model_validate(
     const UmiDeveloperProjectModel *model,
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the developer project model add language operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_model_add_language(
     UmiDeveloperProjectModel *model,
     const char *language_id);

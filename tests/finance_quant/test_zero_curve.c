@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/zero_curve.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiQuantZeroCurve curve; double rate = 0.0;

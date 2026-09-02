@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/product/product.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiProductRegistry *r=NULL;assert(umi_product_registry_create(&r)==UMI_STATUS_OK);assert(umi_product_registry_register(r,umi_reference_product_studio())==UMI_STATUS_OK);assert(umi_product_registry_count(r)==1U);umi_product_registry_destroy(r);return 0;}

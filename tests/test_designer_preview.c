@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Exercise test palette and inspector and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static void test_palette_and_inspector(void)
 {
     UmiDeclComponentRegistry *registry = NULL;
@@ -63,6 +67,10 @@ static void test_palette_and_inspector(void)
     umi_decl_component_registry_destroy(registry);
 }
 
+/*
+ * Exercise test surface math and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_surface_math(void)
 {
     UmiDesignerSurfaceOptions options;
@@ -98,6 +106,10 @@ static void test_surface_math(void)
     assert(distribute_rects[1].x == 50);
 }
 
+/*
+ * Exercise test preview profiles and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_preview_profiles(void)
 {
     UmiDesignerPreviewViewport viewport;
@@ -118,6 +130,10 @@ static void test_preview_profiles(void)
     assert(viewport.profile == UMI_DESIGNER_PREVIEW_CUSTOM);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeclComponentRegistry *registry = NULL;

@@ -27,6 +27,9 @@ extern "C" {
 
 #include "umicom/frontend/native_web/types.h"
 
+/**
+ * Represent the native web css buffer data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebCssBuffer { char data[UMI_NATIVE_WEB_CSS_CAPACITY]; size_t length; UmiStatus status; } UmiNativeWebCssBuffer;
 /* Initialise an empty bounded CSS buffer. */
 void umi_native_web_css_buffer_init(UmiNativeWebCssBuffer *buffer);

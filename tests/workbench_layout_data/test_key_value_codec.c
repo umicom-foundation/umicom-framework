@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test layout keys and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int test_layout_keys(void)
 {
     char key[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
@@ -55,6 +59,10 @@ static int test_layout_keys(void)
     return 0;
 }
 
+/*
+ * Exercise test sequenced keys and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_sequenced_keys(void)
 {
     char key[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
@@ -81,6 +89,10 @@ static int test_sequenced_keys(void)
     return 0;
 }
 
+/*
+ * Copy test field into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 static int test_field_set(void)
 {
     UmiWorkbenchLayoutDataFieldSet fields;
@@ -114,6 +126,10 @@ static int test_field_set(void)
     return 0;
 }
 
+/*
+ * Exercise test value round trip and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_value_round_trip(void)
 {
     UmiWorkbenchLayoutDataFieldSet source;
@@ -142,6 +158,10 @@ static int test_value_round_trip(void)
     return 0;
 }
 
+/*
+ * Exercise test escape capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_escape_capacity(void)
 {
     char escaped[64];
@@ -162,6 +182,10 @@ static int test_escape_capacity(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_layout_keys() == 0, "layout keys");

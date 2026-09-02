@@ -25,8 +25,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the codeguard sanitise code line operation used by this module and its client
+ * applications.
+ */
 void umi_codeguard_sanitise_code_line(const char *input, char *output, size_t capacity,
                                       int *in_block_comment);
+/**
+ * Provide the codeguard trim operation used by this module and its client applications.
+ */
 void umi_codeguard_trim(char *text);
 #ifdef __cplusplus
 }

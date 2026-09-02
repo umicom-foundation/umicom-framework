@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution checkpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionCheckpoint {
     uint64_t revision;
     size_t succeeded;
@@ -26,6 +30,10 @@ typedef struct UmiProductExecutionCheckpoint {
     size_t cancelled;
     char label[UMI_PRODUCT_EXECUTION_LABEL_CAPACITY];
 } UmiProductExecutionCheckpoint;
+/**
+ * Represent the product execution checkpoint ledger data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiProductExecutionCheckpointLedger {
     UmiProductExecutionCheckpoint checkpoints[UMI_PRODUCT_EXECUTION_MAX_CHECKPOINTS];
     size_t count;

@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_PROJECT_WORKSPACE_MEDIUM_CAPACITY 32U
 #define UMI_PROJECT_WORKSPACE_JSON_CAPACITY 8192U
 
+/**
+ * List the named project workspace state values accepted by this public contract.
+ */
     typedef enum UmiProjectWorkspaceState {
         UMI_PROJECT_WORKSPACE_UNKNOWN = 0,
         UMI_PROJECT_WORKSPACE_READY = 1,
@@ -38,6 +41,10 @@ extern "C" {
     }
     UmiProjectWorkspaceState;
 
+/**
+ * Represent the project workspace named state data shared with callers of this public
+ * contract.
+ */
     typedef struct UmiProjectWorkspaceNamedState {
         uint32_t structure_size;
         uint32_t api_version;

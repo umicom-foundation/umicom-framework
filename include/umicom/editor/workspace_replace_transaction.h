@@ -33,6 +33,10 @@ extern "C" {
 
 #define UMI_EDITOR_WORKSPACE_REPLACE_TRANSACTION_API_VERSION 1U
 
+/**
+ * List the named editor workspace replace transaction state values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorWorkspaceReplaceTransactionState {
     UMI_EDITOR_WORKSPACE_REPLACE_TRANSACTION_EMPTY = 1,
     UMI_EDITOR_WORKSPACE_REPLACE_TRANSACTION_PREFLIGHTED = 2,
@@ -42,6 +46,10 @@ typedef enum UmiEditorWorkspaceReplaceTransactionState {
     UMI_EDITOR_WORKSPACE_REPLACE_TRANSACTION_CONFLICT = 6
 } UmiEditorWorkspaceReplaceTransactionState;
 
+/**
+ * Represent the editor workspace replace transaction snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorWorkspaceReplaceTransactionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -57,27 +65,59 @@ typedef struct UmiEditorWorkspaceReplaceTransactionSnapshot {
     int applicable;
 } UmiEditorWorkspaceReplaceTransactionSnapshot;
 
+/**
+ * Represent the editor workspace replace transaction data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceReplaceTransaction
     UmiEditorWorkspaceReplaceTransaction;
 
+/**
+ * Initialise editor workspace replace transaction from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_create(
     UmiEditorWorkspaceReplaceTransaction **out_transaction);
+/**
+ * Release or reset state held by editor workspace replace transaction so the same storage
+ * can be reused safely.
+ */
 void umi_editor_workspace_replace_transaction_destroy(
     UmiEditorWorkspaceReplaceTransaction *transaction);
 
+/**
+ * Provide the editor workspace replace transaction prepare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_prepare(
     UmiEditorWorkspaceReplaceTransaction *transaction,
     const UmiEditorWorkspaceReplacePlan *plan,
     const UmiEditorEditTransactionDocument *documents,
     size_t document_count);
+/**
+ * Provide the editor workspace replace transaction commit operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_commit(
     UmiEditorWorkspaceReplaceTransaction *transaction);
+/**
+ * Provide the editor workspace replace transaction cancel operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_cancel(
     UmiEditorWorkspaceReplaceTransaction *transaction);
+/**
+ * Provide the editor workspace replace transaction snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_snapshot(
     const UmiEditorWorkspaceReplaceTransaction *transaction,
     UmiEditorWorkspaceReplaceTransactionSnapshot *out_snapshot);
 
+/**
+ * Provide the editor workspace replace transaction revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_workspace_replace_transaction_revision(
     const UmiEditorWorkspaceReplaceTransaction *transaction);
 

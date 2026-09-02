@@ -29,28 +29,39 @@ struct UmiDeveloperSourceControl {
     char last_message[UMI_DEVELOPER_PRODUCTIVITY_TEXT_CAPACITY];
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination,
                            size_t capacity,
                            const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the finish operation operation used by this module and its client applications. */
 static UmiStatus finish_operation(UmiDeveloperSourceControl *controller,
                                   UmiStatus status,
                                   const char *message,
                                   int refresh_after)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return status;
 
     controller->last_status = status;
@@ -59,18 +70,24 @@ static UmiStatus finish_operation(UmiDeveloperSourceControl *controller,
                    "%s",
                    message != NULL ? message : umi_status_text(status));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && refresh_after) {
         const UmiStatus refresh_status =
             umi_developer_source_control_refresh(controller);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (refresh_status != UMI_STATUS_OK) return refresh_status;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         controller->revision += 1U;
     }
 
     return status;
 }
 
+/*
+ * Initialise developer source control from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_developer_source_control_create(
     const char *root,
     const UmiVcsProvider *provider,
@@ -79,17 +96,26 @@ UmiStatus umi_developer_source_control_create(
     UmiDeveloperSourceControl *controller;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || root[0] == '\0' ||
         provider == NULL || out_controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_vcs_provider_validate(provider);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     *out_controller = NULL;
     controller = (UmiDeveloperSourceControl *)calloc(
         1U, sizeof(*controller));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     controller->provider = *provider;
@@ -97,10 +123,12 @@ UmiStatus umi_developer_source_control_create(
     controller->last_status = UMI_STATUS_OK;
 
     status = copy_text(controller->root, sizeof(controller->root), root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_change_list_create(&controller->changes);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_developer_source_control_destroy(controller);
         return status;
@@ -110,6 +138,10 @@ UmiStatus umi_developer_source_control_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer source control create git operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_create_git(
     const char *root,
     UmiDeveloperSourceControl **out_controller)
@@ -117,16 +149,25 @@ UmiStatus umi_developer_source_control_create_git(
     UmiVcsProvider provider;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(&provider, 0, sizeof(provider));
     status = umi_vcs_git_cli_provider(&provider);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_source_control_create(
         root, &provider, out_controller);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && provider.destroy != NULL) {
         provider.destroy(provider.instance);
     }
@@ -134,13 +175,25 @@ UmiStatus umi_developer_source_control_create_git(
     return status;
 }
 
+/*
+ * Release or reset state held by developer source control so the same storage can be
+ * reused safely.
+ */
 void umi_developer_source_control_destroy(
     UmiDeveloperSourceControl *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return;
 
     umi_vcs_change_list_destroy(controller->changes);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller->provider.destroy != NULL) {
         controller->provider.destroy(controller->provider.instance);
     }
@@ -148,11 +201,19 @@ void umi_developer_source_control_destroy(
     free(controller);
 }
 
+/*
+ * Provide the developer source control refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_refresh(
     UmiDeveloperSourceControl *controller)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->provider.status == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -178,10 +239,18 @@ UmiStatus umi_developer_source_control_refresh(
     return status;
 }
 
+/*
+ * Provide the developer source control stage operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_source_control_stage(
     UmiDeveloperSourceControl *controller,
     const char *path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || path == NULL ||
         controller->provider.stage == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -195,10 +264,18 @@ UmiStatus umi_developer_source_control_stage(
         1);
 }
 
+/*
+ * Provide the developer source control unstage operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_unstage(
     UmiDeveloperSourceControl *controller,
     const char *path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || path == NULL ||
         controller->provider.unstage == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -212,9 +289,17 @@ UmiStatus umi_developer_source_control_unstage(
         1);
 }
 
+/*
+ * Provide the developer source control stage all operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_stage_all(
     UmiDeveloperSourceControl *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL ||
         controller->provider.stage_all == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
@@ -228,10 +313,18 @@ UmiStatus umi_developer_source_control_stage_all(
         1);
 }
 
+/*
+ * Provide the developer source control discard operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_discard(
     UmiDeveloperSourceControl *controller,
     const char *path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || path == NULL ||
         controller->provider.discard == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
@@ -245,6 +338,10 @@ UmiStatus umi_developer_source_control_discard(
         1);
 }
 
+/*
+ * Provide the developer source control commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_source_control_commit(
     UmiDeveloperSourceControl *controller,
     const char *message,
@@ -253,6 +350,10 @@ UmiStatus umi_developer_source_control_commit(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || message == NULL ||
         message[0] == '\0' || out_commit_id == NULL ||
         capacity == 0U || controller->provider.commit == NULL) {
@@ -269,9 +370,17 @@ UmiStatus umi_developer_source_control_commit(
     return finish_operation(controller, status, "Commit completed.", 1);
 }
 
+/*
+ * Provide the developer source control fetch operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_source_control_fetch(
     UmiDeveloperSourceControl *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->provider.fetch == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -284,9 +393,17 @@ UmiStatus umi_developer_source_control_fetch(
         1);
 }
 
+/*
+ * Provide the developer source control pull operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_source_control_pull(
     UmiDeveloperSourceControl *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->provider.pull == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -299,9 +416,17 @@ UmiStatus umi_developer_source_control_pull(
         1);
 }
 
+/*
+ * Provide the developer source control push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_source_control_push(
     UmiDeveloperSourceControl *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->provider.push == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -314,11 +439,19 @@ UmiStatus umi_developer_source_control_push(
         1);
 }
 
+/*
+ * Initialise developer source control branch from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_source_control_branch_create(
     UmiDeveloperSourceControl *controller,
     const char *name,
     int checkout)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || name == NULL ||
         controller->provider.branch_create == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
@@ -335,10 +468,18 @@ UmiStatus umi_developer_source_control_branch_create(
         1);
 }
 
+/*
+ * Provide the developer source control branch checkout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_source_control_branch_checkout(
     UmiDeveloperSourceControl *controller,
     const char *name)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || name == NULL ||
         controller->provider.branch_checkout == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
@@ -354,11 +495,19 @@ UmiStatus umi_developer_source_control_branch_checkout(
         1);
 }
 
+/*
+ * Provide the developer source control branch delete operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_branch_delete(
     UmiDeveloperSourceControl *controller,
     const char *name,
     int force)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || name == NULL ||
         controller->provider.branch_delete == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
@@ -375,6 +524,10 @@ UmiStatus umi_developer_source_control_branch_delete(
         1);
 }
 
+/*
+ * Provide the developer source control diff operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_source_control_diff(
     UmiDeveloperSourceControl *controller,
     const char *path,
@@ -384,6 +537,10 @@ UmiStatus umi_developer_source_control_diff(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || path == NULL ||
         out_text == NULL || capacity == 0U ||
         controller->provider.diff == NULL) {
@@ -401,10 +558,18 @@ UmiStatus umi_developer_source_control_diff(
     return finish_operation(controller, status, "Diff loaded.", 0);
 }
 
+/*
+ * Provide the developer source control snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_source_control_snapshot(
     const UmiDeveloperSourceControl *controller,
     UmiDeveloperSourceControlSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -437,6 +602,10 @@ UmiStatus umi_developer_source_control_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer source control changes operation used by this module and its
+ * client applications.
+ */
 const UmiVcsChangeList *umi_developer_source_control_changes(
     const UmiDeveloperSourceControl *controller)
 {

@@ -29,8 +29,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise ui workbench state from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ui_workbench_state_init(UmiUiWorkbenchState *state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) return;
     (void)memset(state, 0, sizeof(*state));
     state->sidebar_visible = 1;
@@ -47,15 +55,24 @@ void umi_ui_workbench_state_init(UmiUiWorkbenchState *state)
     state->revision = 1U;
 }
 
+/*
+ * Write ui workbench state in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ui_workbench_state_encode(
     const UmiUiWorkbenchState *state,
     char *out_text,
     size_t capacity)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_ui_id_is_valid(state->active_editor_group) ||
         state->editor_split_mode < UMI_UI_EDITOR_SPLIT_SINGLE ||
         state->editor_split_mode > UMI_UI_EDITOR_SPLIT_ROWS ||
@@ -81,12 +98,14 @@ UmiStatus umi_ui_workbench_state_encode(
         (int)state->editor_split_mode,
         state->editor_split_ratio,
         state->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_INTERNAL_ERROR;
     return (size_t)written < capacity
         ? UMI_STATUS_OK
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the next field operation used by this module and its client applications. */
 static UmiStatus next_field(const char **cursor,
                             char *out,
                             size_t capacity,
@@ -96,29 +115,49 @@ static UmiStatus next_field(const char **cursor,
     const char *separator;
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || *cursor == NULL || out == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     begin = *cursor;
     separator = strchr(begin, '|');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (separator == NULL) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (!allow_end) return UMI_STATUS_PARSE_ERROR;
         separator = begin + strlen(begin);
     }
     length = (size_t)(separator - begin);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(out, begin, length);
     out[length] = '\0';
     *cursor = *separator == '|' ? separator + 1 : separator;
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse int32 field operation used by this module and its client applications. */
 static int parse_int32_field(const char *text, int32_t *out_value)
 {
     char *end = NULL;
     long value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_value == NULL || text[0] == '\0') return 0;
     value = strtol(text, &end, 10);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (end == NULL || *end != '\0' || value < INT32_MIN || value > INT32_MAX) {
         return 0;
     }
@@ -126,25 +165,43 @@ static int parse_int32_field(const char *text, int32_t *out_value)
     return 1;
 }
 
+/* Provide the parse int field operation used by this module and its client applications. */
 static int parse_int_field(const char *text, int *out_value)
 {
     int32_t value;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parse_int32_field(text, &value)) return 0;
     *out_value = value != 0;
     return 1;
 }
 
+/*
+ * Provide the parse uint64 field operation used by this module and its client
+ * applications.
+ */
 static int parse_uint64_field(const char *text, uint64_t *out_value)
 {
     char *end = NULL;
     unsigned long long value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_value == NULL || text[0] == '\0') return 0;
     value = strtoull(text, &end, 10);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (end == NULL || *end != '\0') return 0;
     *out_value = (uint64_t)value;
     return 1;
 }
 
+/*
+ * Read ui workbench state into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_ui_workbench_state_decode(
     const char *text,
     UmiUiWorkbenchState *out_state)
@@ -162,6 +219,10 @@ UmiStatus umi_ui_workbench_state_decode(
     char revision[32];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_ui_workbench_state_init(out_state);
     cursor = text;
@@ -177,9 +238,10 @@ UmiStatus umi_ui_workbench_state_decode(
     READ_FIELD(out_state->active_view_container, 0);
     READ_FIELD(out_state->active_perspective, 0);
     READ_FIELD(out_state->active_document, 0);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(version, "v2") == 0 || strcmp(version, "v3") == 0) {
         READ_FIELD(out_state->active_workspace_profile, 0);
-    } else if (strcmp(version, "v1") != 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(version, "v1") != 0) {
         return UMI_STATUS_PARSE_ERROR;
     }
     READ_FIELD(sidebar_visible, 0);
@@ -188,6 +250,7 @@ UmiStatus umi_ui_workbench_state_decode(
     READ_FIELD(sidebar_size, 0);
     READ_FIELD(auxiliary_size, 0);
     READ_FIELD(bottom_size, 0);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(version, "v3") == 0) {
         READ_FIELD(out_state->active_editor_group, 0);
         READ_FIELD(editor_split_mode, 0);
@@ -197,6 +260,7 @@ UmiStatus umi_ui_workbench_state_decode(
 
 #undef READ_FIELD
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (cursor[0] != '\0' ||
         !parse_int_field(sidebar_visible, &out_state->sidebar_visible) ||
         !parse_int_field(auxiliary_visible,
@@ -209,8 +273,10 @@ UmiStatus umi_ui_workbench_state_decode(
         !parse_uint64_field(revision, &out_state->revision)) {
         return UMI_STATUS_PARSE_ERROR;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(version, "v3") == 0) {
         int32_t split_mode;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_ui_id_is_valid(out_state->active_editor_group) ||
             !parse_int32_field(editor_split_mode, &split_mode) ||
             !parse_int32_field(editor_split_ratio,

@@ -14,8 +14,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/types.h"
 
+/*
+ * Provide the ai developer pane text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_pane_text(UmiAiDeveloperPaneKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_DEVELOPER_PANE_OVERVIEW: return "overview";
         case UMI_AI_DEVELOPER_PANE_CHAT: return "chat";
@@ -33,8 +38,13 @@ const char *umi_ai_developer_pane_text(UmiAiDeveloperPaneKind kind)
     }
 }
 
+/*
+ * Provide the ai developer approval kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_approval_kind_text(UmiAiDeveloperApprovalKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_DEVELOPER_APPROVAL_TOOL_CALL: return "tool-call";
         case UMI_AI_DEVELOPER_APPROVAL_PATCH: return "patch";
@@ -48,8 +58,13 @@ const char *umi_ai_developer_approval_kind_text(UmiAiDeveloperApprovalKind kind)
     }
 }
 
+/*
+ * Provide the ai developer approval state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_developer_approval_state_text(UmiAiDeveloperApprovalState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_DEVELOPER_APPROVAL_PENDING: return "pending";
         case UMI_AI_DEVELOPER_APPROVAL_APPROVED: return "approved";
@@ -60,8 +75,13 @@ const char *umi_ai_developer_approval_state_text(UmiAiDeveloperApprovalState sta
     }
 }
 
+/*
+ * Provide the ai developer task state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_task_state_text(UmiAiDeveloperTaskState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_DEVELOPER_TASK_QUEUED: return "queued";
         case UMI_AI_DEVELOPER_TASK_RUNNING: return "running";
@@ -74,8 +94,13 @@ const char *umi_ai_developer_task_state_text(UmiAiDeveloperTaskState state)
     }
 }
 
+/*
+ * Provide the ai developer diff line kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_developer_diff_line_kind_text(UmiAiDeveloperDiffLineKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_DEVELOPER_DIFF_CONTEXT: return "context";
         case UMI_AI_DEVELOPER_DIFF_ADD: return "add";

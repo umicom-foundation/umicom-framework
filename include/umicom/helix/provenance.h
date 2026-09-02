@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix provenance data shared with callers of this public contract.
+ */
 typedef struct UmiHelixProvenance {
     char source_revision[UMI_HELIX_ID_CAPACITY];
     char provider_id[UMI_HELIX_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixProvenance {
     char prompt_hash[UMI_HELIX_ID_CAPACITY];
 } UmiHelixProvenance;
 
+/**
+ * Initialise helix provenance from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_provenance_init(UmiHelixProvenance *value);
 
 #ifdef __cplusplus

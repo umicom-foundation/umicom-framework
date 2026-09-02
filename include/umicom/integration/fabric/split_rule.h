@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric split rule data shared with callers of this public contract.
+ */
 typedef struct UmiFabricSplitRule {
     char rule_id[UMI_FABRIC_ID_CAPACITY];
     char expression[UMI_FABRIC_TEXT_CAPACITY];
@@ -32,7 +35,14 @@ typedef struct UmiFabricSplitRule {
     bool discard_empty;
 } UmiFabricSplitRule;
 
+/**
+ * Initialise fabric split rule from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_fabric_split_rule_init(UmiFabricSplitRule *item, const char *rule_id, const char *expression, size_t maximum_parts, bool discard_empty);
+/**
+ * Check that fabric split rule satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_fabric_split_rule_validate(const UmiFabricSplitRule *item);
 
 #ifdef __cplusplus

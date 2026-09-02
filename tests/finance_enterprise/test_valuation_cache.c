@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_cache.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationCache c; UmiEnterpriseValuationCacheEntry e; umi_enterprise_valuation_cache_init(&c); CHECK(umi_enterprise_valuation_cache_key_init(&e.key,"p",1U,"m")==UMI_STATUS_OK); e.present_value=99.0;e.stored_ms=1; CHECK(umi_enterprise_valuation_cache_put(&c,&e)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_cache_find(&c,e.key.fingerprint)->present_value==99.0); return 0; }

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_MAKE_PROVIDER "umicom.developer.integration.make_provider"
 
+/**
+ * Provide the developer capability make provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_make_provider(void);
 

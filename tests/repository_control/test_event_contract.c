@@ -21,6 +21,10 @@
 #include <stdint.h>
 #include "umicom/repository/event.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryControlEvent *e = calloc(1U, sizeof(*e));

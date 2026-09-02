@@ -19,6 +19,10 @@
 #include "umicom/application/productisation/command_catalogue.h"
 #include "umicom/application/productisation/runtime.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProductisationRuntime *runtime = NULL;

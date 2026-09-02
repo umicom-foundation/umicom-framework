@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio activation profile source control operation used by this module and
+ * its client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_source_control(void);
 #ifdef __cplusplus

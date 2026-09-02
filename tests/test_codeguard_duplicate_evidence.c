@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Duplicate evidence v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/codeguard/duplicate_evidence.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCodeGuardDuplicateFile first = {"src/a.c",17U,27U,120U};

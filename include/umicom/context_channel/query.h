@@ -33,14 +33,29 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_QUERY_NAME "query"
+/**
+ * Represent the context query state data shared with callers of this public contract.
+ */
 typedef struct UmiContextQueryState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextQueryState;
+/**
+ * Initialise context query state from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_context_query_state_init(UmiContextQueryState *state);
+/**
+ * Provide the context query state record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_query_state_record(UmiContextQueryState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context query operation without changing
+ * their state.
+ */
 uint64_t umi_context_query_operation_count(const UmiContextQueryState *state);
 #ifdef __cplusplus
 }

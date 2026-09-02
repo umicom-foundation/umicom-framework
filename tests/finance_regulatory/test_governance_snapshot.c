@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/governance_snapshot.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiGovernanceSnapshot s;CHECK(umi_reg_governance_snapshot_init(&s,2U,5U,10U,0.99,0U)==UMI_STATUS_OK);CHECK(umi_reg_governance_snapshot_ready(&s,0.98)==1);return 0; }

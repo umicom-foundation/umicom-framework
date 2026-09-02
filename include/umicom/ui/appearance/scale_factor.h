@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance scale factor data shared with callers of this public contract.
+ */
 typedef struct UmiAppearanceScaleFactor {
     char scale_id[UMI_APPEARANCE_ID_CAPACITY];
     double os_factor;

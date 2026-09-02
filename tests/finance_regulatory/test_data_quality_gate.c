@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/data_quality_gate.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ CHECK(umi_reg_data_quality_gate_passes(0.99,0.98)==1); CHECK(umi_reg_data_quality_gate_passes(0.90,0.98)==0); return 0; }

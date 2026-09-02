@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_PROJECT_TEMPLATE_FILE_CAPACITY 24U
 
+/**
+ * Represent the developer project template file data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectTemplateFile {
     const char *relative_path;
     const char *content_template;
@@ -30,6 +34,10 @@ typedef struct UmiDeveloperProjectTemplateFile {
     int optional;
 } UmiDeveloperProjectTemplateFile;
 
+/**
+ * Represent the developer project template data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectTemplate {
     uint32_t structure_size;
     uint32_t api_version;
@@ -50,6 +58,10 @@ typedef struct UmiDeveloperProjectTemplate {
     int supports_package;
 } UmiDeveloperProjectTemplate;
 
+/**
+ * Check that developer project template satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_project_template_validate(
     const UmiDeveloperProjectTemplate *project_template);
 

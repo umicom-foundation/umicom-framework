@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtAtomicSemantics s={true,true,true,true,false,true,true};CHECK(umi_ct_atomic_width_lock_free(&s,64U));CHECK(!umi_ct_atomic_width_lock_free(&s,128U));CHECK(umi_ct_atomic_semantics_support(&s,64U,true)==UMI_CT_SUPPORT_NATIVE);return 0;}

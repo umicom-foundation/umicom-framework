@@ -86,9 +86,9 @@ UmiStatus umi_application_suite_layout_profile_project_resolved(
         if (status != UMI_STATUS_OK) return status;
         /* Side and bottom placements control the profile's visible regions. */
         if (placement == UMI_UI_PLACEMENT_LEFT) out_profile->sidebar_visible = 1;
-        else if (placement == UMI_UI_PLACEMENT_RIGHT)
+        else /* Apply this branch only when its contract condition is satisfied. */ if (placement == UMI_UI_PLACEMENT_RIGHT)
             out_profile->auxiliary_sidebar_visible = 1;
-        else if (placement == UMI_UI_PLACEMENT_BOTTOM)
+        else /* Apply this branch only when its contract condition is satisfied. */ if (placement == UMI_UI_PLACEMENT_BOTTOM)
             out_profile->bottom_panel_visible = 1;
         /* Centre editors and detached windows are rendered by their hosts,
          * not recorded as auxiliary workbench panes. */

@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics gauge zone data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsGaugeZone { double minimum; double maximum; UmiAnalyticsSeverity severity; } UmiAnalyticsGaugeZone;
+/**
+ * Initialise analytics gauge zone from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_analytics_gauge_zone_init(UmiAnalyticsGaugeZone *item);
+/**
+ * Check that analytics gauge zone satisfies its contract before another service relies on
+ * it.
+ */
 int umi_analytics_gauge_zone_valid(const UmiAnalyticsGaugeZone *item);
 
 #ifdef __cplusplus

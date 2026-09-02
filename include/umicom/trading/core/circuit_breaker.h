@@ -19,7 +19,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading circuit breaker data shared with callers of this public contract.
+ */
 typedef struct UmiTradingCircuitBreaker { uint32_t threshold_bps; uint32_t halt_seconds; bool halted; int64_t halt_until_ms; } UmiTradingCircuitBreaker;
+/**
+ * Initialise trading circuit breaker from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_circuit_breaker_init(UmiTradingCircuitBreaker *breaker,uint32_t threshold_bps,uint32_t halt_seconds);
 /* Evaluate a move in basis points and enter a timed halt when the threshold is reached. */
 bool umi_trading_circuit_breaker_evaluate(UmiTradingCircuitBreaker *breaker,uint32_t absolute_move_bps,int64_t now_ms);

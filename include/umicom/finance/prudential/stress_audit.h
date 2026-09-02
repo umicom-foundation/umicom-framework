@@ -25,7 +25,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress audit entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressAuditEntry { uint64_t sequence; uint64_t fingerprint; } UmiPrudentialStressAuditEntry;
+/**
+ * Represent the prudential stress audit data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialStressAudit { UmiPrudentialStressAuditEntry entries[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialStressAudit;
 /* Append an audit evidence fingerprint with strictly increasing sequence. */
 UmiStatus umi_pru_stress_audit_append(UmiPrudentialStressAudit *audit, uint64_t sequence, uint64_t fingerprint);

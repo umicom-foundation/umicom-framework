@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TEST_FILTERING "umicom.developer.testing.test_filtering"
 
+/**
+ * Provide the developer capability test filtering operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_test_filtering(void);
 

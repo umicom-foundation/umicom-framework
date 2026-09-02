@@ -20,5 +20,13 @@
 
 #include "umicom/platform/cross_target/timer_descriptor.h"
 
-UmiStatus umi_ct_timer_descriptor_validate(const UmiCtTimerDescriptor*d){if(d==NULL||!umi_ct_id_valid(d->timer_id)||d->frequency_hz==0U||(d->counter_bits!=32U&&d->counter_bits!=64U)||!d->monotonic)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
-uint64_t umi_ct_timer_ns_to_ticks(const UmiCtTimerDescriptor*d,uint64_t ns){if(d==NULL||d->frequency_hz==0U)return 0U;return (ns/UINT64_C(1000000000))*d->frequency_hz+(ns%UINT64_C(1000000000))*d->frequency_hz/UINT64_C(1000000000);}
+/*
+ * Check that ct timer descriptor satisfies its contract before another service relies on
+ * it.
+ */
+UmiStatus umi_ct_timer_descriptor_validate(const UmiCtTimerDescriptor*d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||!umi_ct_id_valid(d->timer_id)||d->frequency_hz==0U||(d->counter_bits!=32U&&d->counter_bits!=64U)||!d->monotonic)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/*
+ * Provide the ct timer ns to ticks operation used by this module and its client
+ * applications.
+ */
+uint64_t umi_ct_timer_ns_to_ticks(const UmiCtTimerDescriptor*d,uint64_t ns){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||d->frequency_hz==0U)return 0U;return (ns/UINT64_C(1000000000))*d->frequency_hz+(ns%UINT64_C(1000000000))*d->frequency_hz/UINT64_C(1000000000);}

@@ -25,6 +25,9 @@ extern "C" {
 #define UMI_TOOL_PATH_CAPACITY 2048U
 #define UMI_TOOL_VERSION_CAPACITY 256U
 
+/**
+ * List the named tool kind values accepted by this public contract.
+ */
 typedef enum UmiToolKind {
     UMI_TOOL_CLANG = 0,
     UMI_TOOL_CLANGXX,
@@ -57,6 +60,9 @@ typedef enum UmiToolKind {
     UMI_TOOL_COUNT
 } UmiToolKind;
 
+/**
+ * List the named tool state values accepted by this public contract.
+ */
 typedef enum UmiToolState {
     UMI_TOOL_MISSING = 0,
     UMI_TOOL_FOUND = 1,
@@ -64,6 +70,9 @@ typedef enum UmiToolState {
     UMI_TOOL_FAILED = 3
 } UmiToolState;
 
+/**
+ * Represent the tool info data shared with callers of this public contract.
+ */
 typedef struct UmiToolInfo {
     UmiToolKind kind;
     UmiToolState state;
@@ -72,8 +81,18 @@ typedef struct UmiToolInfo {
     char version[UMI_TOOL_VERSION_CAPACITY];
 } UmiToolInfo;
 
+/**
+ * Provide the tool kind name operation used by this module and its client applications.
+ */
 const char *umi_tool_kind_name(UmiToolKind kind);
+/**
+ * Provide the tool default executable operation used by this module and its client
+ * applications.
+ */
 const char *umi_tool_default_executable(UmiToolKind kind);
+/**
+ * Provide the tool state text operation used by this module and its client applications.
+ */
 const char *umi_tool_state_text(UmiToolState state);
 
 #ifdef __cplusplus

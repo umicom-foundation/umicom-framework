@@ -22,6 +22,10 @@
 
 #include "umicom/editor/navigation_history.h"
 
+/*
+ * Exercise location and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorSourceLocation location(const char *uri,
                                         uint64_t line,
                                         uint64_t column)
@@ -34,6 +38,10 @@ static UmiEditorSourceLocation location(const char *uri,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationHistory *history = NULL;

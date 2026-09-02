@@ -18,22 +18,32 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination,
                            size_t capacity,
                            const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the make target identifier operation used by this module and its client
+ * applications.
+ */
 static UmiStatus make_target_identifier(
     const char *source,
     char *destination,
@@ -41,14 +51,20 @@ static UmiStatus make_target_identifier(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || source[0] == '\0' ||
         destination == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; source[index] != '\0'; ++index) {
         const unsigned char value = (unsigned char)source[index];
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index + 1U >= capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -66,12 +82,20 @@ static UmiStatus make_target_identifier(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer project request from wizard operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_request_from_wizard(
     const UmiDeveloperWorkbenchProjectWizard *wizard,
     UmiDeveloperProjectGenerationRequest *out_request)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (wizard == NULL || out_request == NULL || !wizard->ready) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -82,6 +106,7 @@ UmiStatus umi_developer_project_request_from_wizard(
         out_request->template_id,
         sizeof(out_request->template_id),
         wizard->preset_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         /*
          * Application presets and project templates are different catalogues.
@@ -101,7 +126,7 @@ UmiStatus umi_developer_project_request_from_wizard(
                        sizeof(out_request->template_id),
                        "%s",
                        "developer.template.c23-console");
-    } else if (strcmp(wizard->preset_id,
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(wizard->preset_id,
                       "umicom.preset.desktop-client") == 0 ||
                strcmp(wizard->preset_id,
                       "umicom.preset.developer-workbench") == 0) {
@@ -109,19 +134,19 @@ UmiStatus umi_developer_project_request_from_wizard(
                        sizeof(out_request->template_id),
                        "%s",
                        "developer.template.thin-desktop-application");
-    } else if (strcmp(wizard->preset_id,
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(wizard->preset_id,
                       "umicom.preset.web-service") == 0) {
         (void)snprintf(out_request->template_id,
                        sizeof(out_request->template_id),
                        "%s",
                        "developer.template.web-service-c23");
-    } else if (strcmp(wizard->preset_id,
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(wizard->preset_id,
                       "umicom.preset.integration-worker") == 0) {
         (void)snprintf(out_request->template_id,
                        sizeof(out_request->template_id),
                        "%s",
                        "developer.template.integration-worker");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         (void)snprintf(out_request->template_id,
                        sizeof(out_request->template_id),
                        "%s",
@@ -132,24 +157,28 @@ UmiStatus umi_developer_project_request_from_wizard(
         out_request->application_name,
         sizeof(out_request->application_name),
         wizard->application_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = copy_text(
         out_request->application_id,
         sizeof(out_request->application_id),
         wizard->application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = copy_text(
         out_request->repository_name,
         sizeof(out_request->repository_name),
         wizard->repository_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_target_identifier(
         wizard->repository_name,
         out_request->target_name,
         sizeof(out_request->target_name));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return copy_text(
@@ -158,6 +187,10 @@ UmiStatus umi_developer_project_request_from_wizard(
         wizard->destination);
 }
 
+/*
+ * Provide the developer project generate from wizard operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_generate_from_wizard(
     UmiDeveloperProjectService *projects,
     const UmiDeveloperWorkbenchProjectWizard *wizard,
@@ -168,10 +201,15 @@ UmiStatus umi_developer_project_generate_from_wizard(
     UmiDeveloperProjectGenerationRequest request;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (projects == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_project_request_from_wizard(
         wizard, &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     request.dry_run = dry_run != 0;
@@ -183,17 +221,26 @@ UmiStatus umi_developer_project_generate_from_wizard(
         out_model);
 }
 
+/*
+ * Provide the developer project model to workbench configuration operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_project_model_to_workbench_configuration(
     const UmiDeveloperProjectModel *model,
     UmiDeveloperWorkbenchConfiguration *out_configuration)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_configuration == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_model_validate(model, NULL, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_developer_workbench_configuration_init(
@@ -230,6 +277,10 @@ UmiStatus umi_developer_project_model_to_workbench_configuration(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer project workbench adopt model operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_workbench_adopt_model(
     UmiDeveloperWorkbench *workbench,
     const UmiDeveloperProjectModel *model,
@@ -238,12 +289,17 @@ UmiStatus umi_developer_project_workbench_adopt_model(
     UmiDeveloperWorkbenchConfiguration configuration;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || model == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_model_to_workbench_configuration(
         model, &configuration);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_workbench_add_configuration(

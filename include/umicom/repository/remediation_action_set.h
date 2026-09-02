@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 #include "umicom/repository/remediation_action.h"
+/**
+ * Represent the repository remediation action set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryRemediationActionSet { UmiRepositoryRemediationAction items[UMI_REPOSITORY_REMEDIATION_ACTION_CAPACITY]; size_t count; } UmiRepositoryRemediationActionSet;
 /* Initialise an empty remediation action set. */
 void umi_repository_remediation_action_set_init(UmiRepositoryRemediationActionSet *set);

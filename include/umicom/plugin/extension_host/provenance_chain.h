@@ -29,11 +29,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host provenance chain entry data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiPluginExtensionHostProvenanceChainEntry { uint64_t evidence; uint64_t previous; uint64_t chain_hash; } UmiPluginExtensionHostProvenanceChainEntry;
+/**
+ * Represent the plugin extension host provenance chain data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostProvenanceChain { UmiPluginExtensionHostProvenanceChainEntry entries[UMI_PLUGIN_EXTENSION_HOST_SMALL_CAPACITY]; size_t count; } UmiPluginExtensionHostProvenanceChain;
+/**
+ * Initialise plugin extension host provenance chain from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_provenance_chain_init(UmiPluginExtensionHostProvenanceChain *chain);
+/**
+ * Add plugin extension host provenance chain only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_plugin_extension_host_provenance_chain_append(UmiPluginExtensionHostProvenanceChain *chain, uint64_t evidence);
+/**
+ * Provide the plugin extension host provenance chain verify operation used by this module
+ * and its client applications.
+ */
 int umi_plugin_extension_host_provenance_chain_verify(const UmiPluginExtensionHostProvenanceChain *chain);
+/**
+ * Provide the plugin extension host provenance chain head operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_plugin_extension_host_provenance_chain_head(const UmiPluginExtensionHostProvenanceChain *chain);
 
 #ifdef __cplusplus

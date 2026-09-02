@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai/mcp/json.h"
+/*
+ * Exercise test ai mcp json raw object and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_ai_mcp_json_raw_object(void){char value[128];assert(umi_ai_mcp_json_raw("{\"schema\":{\"type\":\"object\",\"nested\":{\"x\":1}}}","schema",value,sizeof(value))==UMI_STATUS_OK);assert(strstr(value,"nested")!=NULL);return 0;}

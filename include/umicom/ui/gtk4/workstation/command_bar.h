@@ -22,6 +22,10 @@
 
 G_BEGIN_DECLS
 
+/**
+ * Represent the gtk4 workstation command bar data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiGtk4WorkstationCommandBar UmiGtk4WorkstationCommandBar;
 
 /** Values used to create one managed native command bar. */
@@ -94,6 +98,10 @@ UmiGtk4WorkstationCommandBarSnapshot umi_gtk4_ws_command_bar_snapshot(
 /* These compatibility helpers retain the original lightweight entry API for
  * applications that need parsing but do not need a managed catalogue. */
 GtkWidget *umi_gtk4_ws_command_bar_create(const char *placeholder);
+/**
+ * Provide the gtk4 ws command bar query operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_ws_command_bar_query(
     GtkWidget *entry,
     UmiWsCommandBarQuery *out_query);

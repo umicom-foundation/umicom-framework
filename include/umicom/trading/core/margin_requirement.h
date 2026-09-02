@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/margin_profile.h"
+/**
+ * Represent the trading margin requirement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingMarginRequirement { int64_t initial_minor; int64_t maintenance_minor; } UmiTradingMarginRequirement;
 /* Calculate initial and maintenance requirements for positive notional minor units. */
 UmiStatus umi_trading_margin_requirement_compute(const UmiTradingMarginProfile *profile,int64_t notional_minor,bool concentrated,UmiTradingMarginRequirement *out_requirement);

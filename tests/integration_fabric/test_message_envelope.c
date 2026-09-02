@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricMessageHeader h; UmiFabricMessageEnvelope e; const char p[]="abc";
     CHECK(umi_fabric_message_header_init(&h,"m","c","t","text/plain",1U)==UMI_STATUS_OK);

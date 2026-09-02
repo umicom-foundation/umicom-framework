@@ -16,6 +16,10 @@
 #include "umicom/ai_coding_tools/tools/source_control_diff.h"
 #include "../tool_support.h"
 
+/*
+ * Provide the ai coding tool source control diff descriptor operation used by this module
+ * and its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_source_control_diff_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -32,6 +36,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_source_control_diff_descript
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool source control diff invoke operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_coding_tool_source_control_diff_invoke(
     const char *arguments_json,
     char *output,
@@ -47,19 +55,26 @@ UmiStatus umi_ai_coding_tool_source_control_diff_invoke(
     int staged = 0;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->source_control == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
 
     status = umi_ai_coding_tool_json_parse_object(arguments_json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_safe_path(
             &document, "path", path, sizeof(path));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_bool(
             &document, "staged", 0, &staged);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_source_control_diff(
@@ -68,10 +83,12 @@ UmiStatus umi_ai_coding_tool_source_control_diff_invoke(
         staged,
         diff,
         sizeof(diff));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"staged\":");

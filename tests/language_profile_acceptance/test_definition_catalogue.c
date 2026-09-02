@@ -17,6 +17,10 @@
 
 #include "umicom/language/builtins.h"
 
+/*
+ * Exercise test language profile acceptance definition catalogue and return a clear result
+ * when the behaviour no longer matches its contract.
+ */
 int test_language_profile_acceptance_definition_catalogue(void)
 {
     UmiLanguageDefinitionRegistry *registry = NULL;

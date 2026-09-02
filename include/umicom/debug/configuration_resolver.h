@@ -26,6 +26,10 @@ extern "C" {
 #define UMI_DEBUG_CONFIGURATION_RESOLVER_API_VERSION 1U
 #define UMI_DEBUG_CONFIGURATION_VALUE_CAPACITY 2048U
 
+/**
+ * Represent the debug configuration request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugConfigurationRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -38,6 +42,10 @@ typedef struct UmiDebugConfigurationRequest {
     char environment_override[UMI_DEBUG_CONFIGURATION_VALUE_CAPACITY];
 } UmiDebugConfigurationRequest;
 
+/**
+ * Represent the debug resolved configuration data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugResolvedConfiguration {
     uint32_t struct_size;
     uint32_t api_version;
@@ -53,22 +61,50 @@ typedef struct UmiDebugResolvedConfiguration {
     int uses_environment_override;
 } UmiDebugResolvedConfiguration;
 
+/**
+ * Represent the debug configuration resolver data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugConfigurationResolver UmiDebugConfigurationResolver;
 
+/**
+ * Initialise debug configuration resolver from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_configuration_resolver_create(
     UmiDebugConfigurationResolver **out_resolver);
+/**
+ * Release or reset state held by debug configuration resolver so the same storage can be
+ * reused safely.
+ */
 void umi_debug_configuration_resolver_destroy(
     UmiDebugConfigurationResolver *resolver);
+/**
+ * Provide the debug configuration resolver resolve operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_configuration_resolver_resolve(
     UmiDebugConfigurationResolver *resolver,
     const UmiDebugLaunchConfigurationRegistry *configurations,
     const UmiDebugAdapterProfileRegistry *adapters,
     const UmiDebugConfigurationRequest *request);
+/**
+ * Provide the debug configuration resolver result operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_configuration_resolver_result(
     const UmiDebugConfigurationResolver *resolver,
     UmiDebugResolvedConfiguration *out_result);
+/**
+ * Release or reset state held by debug configuration resolver so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_debug_configuration_resolver_clear(
     UmiDebugConfigurationResolver *resolver);
+/**
+ * Provide the debug configuration resolver revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_debug_configuration_resolver_revision(
     const UmiDebugConfigurationResolver *resolver);
 

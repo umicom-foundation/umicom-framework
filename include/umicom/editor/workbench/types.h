@@ -36,13 +36,34 @@ extern "C" {
 #define UMI_EDITOR_WB_MAX_SEGMENTS 64U
 #define UMI_EDITOR_WB_MAX_COMMANDS 96U
 
+/**
+ * List the named editor wb orientation values accepted by this public contract.
+ */
 typedef enum UmiEditorWbOrientation { UMI_EDITOR_WB_HORIZONTAL=1, UMI_EDITOR_WB_VERTICAL=2 } UmiEditorWbOrientation;
+/**
+ * List the named editor wb open mode values accepted by this public contract.
+ */
 typedef enum UmiEditorWbOpenMode { UMI_EDITOR_WB_OPEN_NORMAL=1, UMI_EDITOR_WB_OPEN_PREVIEW=2, UMI_EDITOR_WB_OPEN_PINNED=3 } UmiEditorWbOpenMode;
+/**
+ * List the named editor wb close decision values accepted by this public contract.
+ */
 typedef enum UmiEditorWbCloseDecision { UMI_EDITOR_WB_CLOSE_ALLOW=1, UMI_EDITOR_WB_CLOSE_CONFIRM=2, UMI_EDITOR_WB_CLOSE_DENY=3 } UmiEditorWbCloseDecision;
+/**
+ * List the named editor wb severity values accepted by this public contract.
+ */
 typedef enum UmiEditorWbSeverity { UMI_EDITOR_WB_INFO=1, UMI_EDITOR_WB_WARNING=2, UMI_EDITOR_WB_ERROR=3 } UmiEditorWbSeverity;
+/**
+ * List the named editor wb line number mode values accepted by this public contract.
+ */
 typedef enum UmiEditorWbLineNumberMode { UMI_EDITOR_WB_LINE_NUMBERS_HIDDEN=0, UMI_EDITOR_WB_LINE_NUMBERS_ABSOLUTE=1, UMI_EDITOR_WB_LINE_NUMBERS_RELATIVE=2 } UmiEditorWbLineNumberMode;
 
+/**
+ * Represent the editor wb position data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbPosition { uint32_t line; uint32_t column; } UmiEditorWbPosition;
+/**
+ * Represent the editor wb range data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbRange { UmiEditorWbPosition start; UmiEditorWbPosition end; } UmiEditorWbRange;
 
 /* Copy metadata into a bounded public ABI buffer and reject silent truncation. */

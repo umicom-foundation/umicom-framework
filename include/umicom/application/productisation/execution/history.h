@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution event data shared with callers of this public contract.
+ */
 typedef struct UmiProductExecutionEvent {
     uint64_t sequence;
     size_t item_index;
@@ -25,6 +28,10 @@ typedef struct UmiProductExecutionEvent {
     UmiStatus status;
     char detail[UMI_PRODUCT_EXECUTION_DETAIL_CAPACITY];
 } UmiProductExecutionEvent;
+/**
+ * Represent the product execution history data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionHistory {
     UmiProductExecutionEvent events[UMI_PRODUCT_EXECUTION_MAX_EVENTS];
     size_t count;

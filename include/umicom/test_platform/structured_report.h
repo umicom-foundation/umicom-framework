@@ -26,11 +26,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the test platform report result json operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_report_result_json(
     const UmiTestPlatformResultSnapshot *result,
     char *out_json,
     size_t capacity
 );
+/**
+ * Provide the test platform report session json operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_report_session_json(
     const UmiTestPlatformRunSessionSnapshot *session,
     char *out_json,

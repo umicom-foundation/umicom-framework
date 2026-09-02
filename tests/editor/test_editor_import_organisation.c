@@ -28,6 +28,10 @@
 
 #include "umicom/editor/import_organisation.h"
 
+/*
+ * Exercise import item and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorImportItem import_item(const char *id,
                                        const char *source,
                                        UmiEditorImportKind kind,
@@ -54,6 +58,10 @@ static UmiEditorImportItem import_item(const char *id,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorImportOrganisationPlan *plan = NULL;

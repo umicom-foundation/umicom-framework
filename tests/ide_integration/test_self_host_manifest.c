@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/ide_integration/self_host_manifest.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiIdeSelfHostManifest *manifest = umi_ide_self_host_manifest();

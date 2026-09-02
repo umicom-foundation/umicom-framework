@@ -17,21 +17,28 @@
 
 #include <stdlib.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryWorkflowRequest request;
 
     umi_repository_workflow_request_init(
         &request, UMI_REPOSITORY_WORKFLOW_PUBLISH, ".");
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_repository_workflow_validate(&request) !=
         UMI_STATUS_INVALID_ARGUMENT) {
         return EXIT_FAILURE;
     }
     request.commit_message = "feat(repository): add safe workflow";
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_repository_workflow_validate(&request) != UMI_STATUS_OK) {
         return EXIT_FAILURE;
     }
     request.remote_name = "--force";
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_repository_workflow_validate(&request) !=
         UMI_STATUS_INVALID_ARGUMENT) {
         return EXIT_FAILURE;

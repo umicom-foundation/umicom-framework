@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data migration edge data shared with callers of this public contract.
+ */
 typedef struct UmiDataMigrationEdge { char from_step[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char to_step[UMI_DATA_ENTERPRISE_ID_CAPACITY]; } UmiDataMigrationEdge;
+/**
+ * Represent the data migration graph data shared with callers of this public contract.
+ */
 typedef struct UmiDataMigrationGraph { UmiDataMigrationStep steps[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t step_count; UmiDataMigrationEdge edges[UMI_DATA_ENTERPRISE_MAX_EDGES]; size_t edge_count; } UmiDataMigrationGraph;
 /* Reset a migration dependency graph. */ void umi_data_migration_graph_init(UmiDataMigrationGraph *graph);
 /* Add a unique migration step. */ UmiStatus umi_data_migration_graph_add_step(UmiDataMigrationGraph *graph,const UmiDataMigrationStep *step);

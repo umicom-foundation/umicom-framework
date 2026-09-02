@@ -20,9 +20,11 @@
 
 #include "umicom/language_runtime/arguments.h"
 
+/* Provide the operation kind operation used by this module and its client applications. */
 static UmiDeveloperOperationKind operation_kind(
     UmiAiCodingValidationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_CODING_VALIDATION_CONFIGURE:
             return UMI_DEVELOPER_OPERATION_CONFIGURE;
@@ -40,6 +42,7 @@ static UmiDeveloperOperationKind operation_kind(
     }
 }
 
+/* Provide the execute step operation used by this module and its client applications. */
 static UmiStatus execute_step(
     const UmiAiCodingValidationStep *step,
     const UmiDeveloperExecutor *executor,
@@ -51,6 +54,10 @@ static UmiStatus execute_step(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (step == NULL || executor == NULL ||
         executor->execute == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -65,6 +72,7 @@ static UmiStatus execute_step(
         step->id,
         operation_kind(step->kind),
         step->label[0] != '\0' ? step->label : step->id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_operation_set_program(
@@ -73,17 +81,21 @@ static UmiStatus execute_step(
         step->working_directory[0] != '\0'
             ? step->working_directory
             : ".");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_language_runtime_arguments_parse(
         step->arguments,
         &arguments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < arguments.count; ++index) {
         status = umi_developer_operation_add_argument(
             &operation,
             arguments.values[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -120,6 +132,10 @@ static UmiStatus execute_step(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform ai coding validation through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_validation_run(
     const UmiAiCodingValidationPlan *plan,
     const UmiDeveloperExecutor *executor,
@@ -128,6 +144,10 @@ UmiStatus umi_ai_coding_validation_run(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || executor == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -136,12 +156,15 @@ UmiStatus umi_ai_coding_validation_run(
     out_report->passed = 1;
     out_report->revision = plan->revision;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->step_count; ++index) {
         const UmiAiCodingValidationStep *step = &plan->steps[index];
         UmiAiCodingValidationResult *result;
 
+        /* Apply this operation only while the related capability or state is available. */
         if (!step->enabled) continue;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (out_report->result_count >=
             UMI_AI_CODING_RUNTIME_VALIDATION_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -150,22 +173,26 @@ UmiStatus umi_ai_coding_validation_run(
         result = &out_report->results[out_report->result_count];
 
         status = execute_step(step, executor, result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         out_report->result_count += 1U;
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (result->passed) {
             out_report->passed_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             out_report->failed_count += 1U;
             out_report->passed = 0;
 
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (result->required) {
                 out_report->required_failed_count += 1U;
             }
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (out_report->required_failed_count > 0U) {
         out_report->passed = 0;
     }

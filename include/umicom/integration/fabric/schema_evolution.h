@@ -26,10 +26,29 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric schema evolution edge data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricSchemaEvolutionEdge { char from_id[UMI_FABRIC_ID_CAPACITY]; char to_id[UMI_FABRIC_ID_CAPACITY]; bool breaking; } UmiFabricSchemaEvolutionEdge;
+/**
+ * Represent the fabric schema evolution data shared with callers of this public contract.
+ */
 typedef struct UmiFabricSchemaEvolution { UmiFabricSchemaEvolutionEdge edges[UMI_FABRIC_MAX_EDGES]; size_t count; } UmiFabricSchemaEvolution;
+/**
+ * Initialise fabric schema evolution from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_fabric_schema_evolution_init(UmiFabricSchemaEvolution *graph);
+/**
+ * Add fabric schema evolution only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_fabric_schema_evolution_add(UmiFabricSchemaEvolution *graph,const char *from_id,const char *to_id,bool breaking);
+/**
+ * Provide the fabric schema evolution has cycle operation used by this module and its
+ * client applications.
+ */
 bool umi_fabric_schema_evolution_has_cycle(const UmiFabricSchemaEvolution *graph);
 
 #ifdef __cplusplus

@@ -16,8 +16,13 @@
 
 #include <string.h>
 
+/*
+ * Provide the data workbench phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_data_workbench_phase_text(UmiDataWorkbenchPhase phase)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (phase) {
         case UMI_DATA_WORKBENCH_IDLE: return "idle";
         case UMI_DATA_WORKBENCH_BROWSING: return "browsing";
@@ -34,8 +39,13 @@ const char *umi_data_workbench_phase_text(UmiDataWorkbenchPhase phase)
     }
 }
 
+/*
+ * Provide the data schema change kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_data_schema_change_kind_text(UmiDataSchemaChangeKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DATA_SCHEMA_UNCHANGED: return "unchanged";
         case UMI_DATA_SCHEMA_ADDED: return "added";
@@ -45,16 +55,25 @@ const char *umi_data_schema_change_kind_text(UmiDataSchemaChangeKind kind)
     }
 }
 
+/*
+ * Provide the data workbench copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_workbench_copy_text(
     char *destination,
     size_t capacity,
     const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         destination[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;

@@ -18,18 +18,33 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the accounting subledger data shared with callers of this public contract.
+ */
 typedef struct UmiAccountingSubledger {
     UmiFinancialId id;
     UmiFinancialId control_account_id;
     int64_t debit_minor;
     int64_t credit_minor;
 } UmiAccountingSubledger;
+/**
+ * Initialise accounting subledger from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_accounting_subledger_init(UmiAccountingSubledger *value,
     const char *id,
     const char *control_account_id,
     int64_t debit_minor,
     int64_t credit_minor);
+/**
+ * Check that accounting subledger satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_accounting_subledger_valid(const UmiAccountingSubledger *value);
+/**
+ * Provide the accounting subledger net minor operation used by this module and its client
+ * applications.
+ */
 int64_t umi_accounting_subledger_net_minor(const UmiAccountingSubledger *value);
 #ifdef __cplusplus
 }

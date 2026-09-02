@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project language css operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_css(void);
 
 #ifdef __cplusplus

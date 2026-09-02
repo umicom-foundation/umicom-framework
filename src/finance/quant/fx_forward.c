@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_fx_forward_init(UmiQuantFxForward *record, double spot, double forward_points, int32_t maturity_days)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(umi_quant_number_valid(spot) && spot > 0.0 && umi_quant_number_valid(forward_points) && maturity_days > 0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->spot = spot;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_fx_forward_init(UmiQuantFxForward *record, double spot, doub
 /* Return the outright forward rate represented by spot plus forward points. */
 double umi_quant_fx_forward_outright(const UmiQuantFxForward *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->spot + record->forward_points;
 }

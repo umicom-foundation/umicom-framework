@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise test simulation filter preservation and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 void test_simulation_filter_preservation(void)
 {
     UmiTradingUiTestFixture fixture;

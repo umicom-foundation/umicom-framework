@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/alert.h"
+/*
+ * Provide the trading alert crossed operation used by this module and its client
+ * applications.
+ */
 int umi_trading_alert_crossed(double previous,double current,double threshold){return (previous<threshold&&current>=threshold)||(previous>threshold&&current<=threshold);}

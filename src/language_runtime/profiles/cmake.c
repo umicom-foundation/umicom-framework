@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/profiles/cmake.h"
+/*
+ * Provide the language runtime profile cmake operation used by this module and its client
+ * applications.
+ */
 const UmiLanguageServerProfile *umi_language_runtime_profile_cmake(void){static const UmiLanguageServerProfile p={.id="language.server.cmake",.display_name="CMake Language Server",.executable="cmake-language-server",.arguments="",.language_ids="cmake",.capabilities=UMI_LANGUAGE_CAP_COMPLETION | UMI_LANGUAGE_CAP_HOVER | UMI_LANGUAGE_CAP_DEFINITION | UMI_LANGUAGE_CAP_SYMBOLS,.enabled=1,.autostart=1,.revision=1U};return &p;}

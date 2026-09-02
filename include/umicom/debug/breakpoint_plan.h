@@ -20,7 +20,14 @@
 extern "C" {
 #endif
 #define UMI_DEBUG_BREAKPOINT_PLAN_CAPACITY 256U
+/**
+ * Represent the debug breakpoint plan data shared with callers of this public contract.
+ */
 typedef struct UmiDebugBreakpointPlan{char source_path[1024];UmiDapSourceBreakpoint items[UMI_DEBUG_BREAKPOINT_PLAN_CAPACITY];char conditions[UMI_DEBUG_BREAKPOINT_PLAN_CAPACITY][512];char hit_conditions[UMI_DEBUG_BREAKPOINT_PLAN_CAPACITY][128];char log_messages[UMI_DEBUG_BREAKPOINT_PLAN_CAPACITY][512];size_t count;uint64_t revision;}UmiDebugBreakpointPlan;
+/**
+ * Provide the debug breakpoint plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_breakpoint_plan_build(const UmiDebugBreakpointRegistry *registry,const char *source_path,UmiDebugBreakpointPlan *out_plan);
 #ifdef __cplusplus
 }

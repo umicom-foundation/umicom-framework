@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the lifecycle event data shared with callers of this public contract.
+ */
 typedef struct UmiLifecycleEvent { UmiFinancialId event_id; UmiFinancialId parent_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; UmiFinancialDate effective_date; uint32_t state; bool active; } UmiLifecycleEvent;
 /* Initialize the typed financial record. */ UmiStatus umi_lifecycle_event_init(UmiLifecycleEvent *item,const char *id,const char *name,const char *parent_id,UmiFinancialDate effective_date,uint32_t state);
 /* Validate the typed financial record. */ bool umi_lifecycle_event_is_valid(const UmiLifecycleEvent *item);

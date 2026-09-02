@@ -20,6 +20,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/delivery/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     assert(strcmp(umi_delivery_stage_text(UMI_DELIVERY_STAGE_PACKAGE), "package") == 0);
     assert(strcmp(umi_package_format_text(UMI_PACKAGE_ZIP), "zip") == 0);

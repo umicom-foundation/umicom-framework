@@ -24,9 +24,14 @@ static UmiStatus copy_text(char *destination, size_t capacity,
                            const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U || length + 1U > capacity)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
@@ -74,27 +79,36 @@ UmiStatus umi_product_application_adoption_snapshot(
      * path writes a complete snapshot rather than returning borrowed state. */
     if (out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_product_application_adoption_validate(adoption);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     experience = umi_application_experience_catalogue_find(
         adoption->application_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL) return UMI_STATUS_NOT_FOUND;
 
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->structure_size = sizeof(*out_snapshot);
     status = copy_text(out_snapshot->module_id,
                        sizeof(out_snapshot->module_id), adoption->module_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(out_snapshot->application_id,
                        sizeof(out_snapshot->application_id),
                        adoption->application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(out_snapshot->display_name,
                        sizeof(out_snapshot->display_name),
                        adoption->display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(out_snapshot->executable_id,
                        sizeof(out_snapshot->executable_id),
                        adoption->executable_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_snapshot->frontend_flags = adoption->frontend_flags;
@@ -105,6 +119,7 @@ UmiStatus umi_product_application_adoption_snapshot(
     out_snapshot->layout_count = experience->layout_count;
     status = umi_product_application_adoption_layout_load(
         adoption, &layout_runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_snapshot->layout_runtime_ready = layout_runtime.loaded;
     out_snapshot->default_layout_window_count =
@@ -115,6 +130,7 @@ UmiStatus umi_product_application_adoption_snapshot(
          ++layout_index) {
         status = umi_application_suite_layout_runtime_select(
             &layout_runtime, experience->layouts[layout_index].layout_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         out_snapshot->projected_layout_count += 1U;
         out_snapshot->projected_window_count +=
@@ -128,9 +144,11 @@ UmiStatus umi_product_application_adoption_snapshot(
      * this keeps presentation logic out of the thin application repository. */
     for (panel_index = 0U; panel_index < experience->panel_count;
          ++panel_index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_application_component_capability_count(
                 experience->panels[panel_index].required_capability) > 0U)
             out_snapshot->covered_surface_count += 1U;
+        /* Use this fallback path when the earlier condition does not apply. */
         else
             out_snapshot->missing_surface_count += 1U;
     }
@@ -140,6 +158,7 @@ UmiStatus umi_product_application_adoption_snapshot(
         experience, adoption->composition_available,
         adoption->executable_available, adoption->tests_available,
         &out_snapshot->module_status);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_snapshot->runnable = umi_application_module_status_runnable(
         &out_snapshot->module_status);
@@ -159,8 +178,13 @@ UmiStatus umi_product_application_adoption_layout_load(
     UmiApplicationSuiteLayoutRuntime *out_runtime)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_product_application_adoption_validate(adoption);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_application_suite_layout_runtime_init(out_runtime);
     return umi_application_suite_layout_runtime_load(

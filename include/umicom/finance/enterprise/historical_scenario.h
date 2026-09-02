@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise historical scenario data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseHistoricalScenario { char scenario_id[UMI_ENTERPRISE_ID_CAPACITY]; UmiEnterpriseNamedMetric shocks[UMI_ENTERPRISE_MAX_FACTORS]; size_t count; } UmiEnterpriseHistoricalScenario;
 /* Initialise an empty historical scenario. */
 UmiStatus umi_enterprise_historical_scenario_init(UmiEnterpriseHistoricalScenario *scenario,const char *scenario_id);

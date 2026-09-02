@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ai coding repair decision values accepted by this public contract.
+ */
 typedef enum UmiAiCodingRepairDecision {
     UMI_AI_CODING_REPAIR_ACCEPT = 0,
     UMI_AI_CODING_REPAIR_RETRY = 1,
@@ -27,6 +30,9 @@ typedef enum UmiAiCodingRepairDecision {
     UMI_AI_CODING_REPAIR_FAIL = 3
 } UmiAiCodingRepairDecision;
 
+/**
+ * Represent the ai coding repair policy data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingRepairPolicy {
     uint32_t maximum_iterations;
     int rollback_before_retry;
@@ -34,8 +40,16 @@ typedef struct UmiAiCodingRepairPolicy {
     int retry_required_failures;
 } UmiAiCodingRepairPolicy;
 
+/**
+ * Initialise ai coding repair policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_repair_policy_init(UmiAiCodingRepairPolicy *policy);
 
+/**
+ * Provide the ai coding repair decide operation used by this module and its client
+ * applications.
+ */
 UmiAiCodingRepairDecision umi_ai_coding_repair_decide(
     const UmiAiCodingRepairPolicy *policy,
     const UmiAiCodingValidationReport *report,

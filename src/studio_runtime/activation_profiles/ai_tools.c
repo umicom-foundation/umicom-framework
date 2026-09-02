@@ -18,6 +18,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "ai.developer.open-tools", .surface = UMI_STUDIO_SURFACE_AI_TOOLS, .prefix_match = 0, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile ai tools operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_ai_tools(void)
 {

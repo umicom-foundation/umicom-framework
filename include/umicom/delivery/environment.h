@@ -27,11 +27,18 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the delivery environment data shared with callers of this public contract.
+ */
 typedef struct UmiDeliveryEnvironment {
     char operating_system[UMI_DELIVERY_ID_CAPACITY];
     char architecture[UMI_DELIVERY_ID_CAPACITY];
     char configuration[UMI_DELIVERY_ID_CAPACITY];
 } UmiDeliveryEnvironment;
+/**
+ * Initialise delivery environment from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_delivery_environment_init(UmiDeliveryEnvironment *environment,
                                         const char *operating_system,
                                         const char *architecture,

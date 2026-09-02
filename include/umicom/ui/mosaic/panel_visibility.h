@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic panel visibility data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicPanelVisibility {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char title[UMI_UI_MOSAIC_TEXT_CAPACITY];

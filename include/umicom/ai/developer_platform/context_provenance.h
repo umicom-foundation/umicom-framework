@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev context provenance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevContextProvenance {
     char id[UMI_AI_DEV_ID_CAPACITY];
     char label[UMI_AI_DEV_TEXT_CAPACITY];
@@ -38,9 +42,25 @@ typedef struct UmiAiDevContextProvenance {
     int enabled;
 } UmiAiDevContextProvenance;
 
+/**
+ * Initialise ai dev context provenance from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_context_provenance_init(UmiAiDevContextProvenance *value);
+/**
+ * Provide the ai dev context provenance configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_context_provenance_configure(UmiAiDevContextProvenance *value, const char *id, const char *label, uint32_t priority, uint64_t flags);
+/**
+ * Check that ai dev context provenance satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_ai_dev_context_provenance_validate(const UmiAiDevContextProvenance *value);
+/**
+ * Provide the ai dev context provenance evidence score operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_ai_dev_context_provenance_evidence_score(const UmiAiDevContextProvenance *value, uint32_t relevance);
 
 #ifdef __cplusplus

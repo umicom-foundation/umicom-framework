@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DOCUMENT_TEST_FIXTURE "umicom.document.integration.document_test_fixture"
 
+/**
+ * Provide the document capability document test fixture operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_test_fixture(void);
 

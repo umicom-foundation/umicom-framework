@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtFilesystemSemantics u=umi_ct_filesystem_semantics_default(UMI_CT_OS_UMICOM),b=umi_ct_filesystem_semantics_default(UMI_CT_OS_BARE_METAL);CHECK(umi_ct_filesystem_semantics_score(&u)==6U);CHECK(umi_ct_filesystem_semantics_score(&b)<6U);return 0;}

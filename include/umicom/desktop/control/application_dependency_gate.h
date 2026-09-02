@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_APPLICATION_DEPENDENCY_GATE_API_VERSION 1U
 
+/**
+ * Represent the desktop application dependency gate snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDesktopApplicationDependencyGateSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

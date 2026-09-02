@@ -18,9 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad delete plan data shared with callers of this public contract.
+ */
 typedef struct UmiRadDeletePlan { char ids[UMI_RAD_MAX_ITEMS][UMI_RAD_ID_CAPACITY]; size_t count; } UmiRadDeletePlan;
+/**
+ * Initialise rad delete plan from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_delete_plan_init(UmiRadDeletePlan *plan);
+/**
+ * Add rad delete plan only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_rad_delete_plan_add(UmiRadDeletePlan *plan,const char *component_id);
+/**
+ * Provide the rad delete plan contains operation used by this module and its client
+ * applications.
+ */
 int umi_rad_delete_plan_contains(const UmiRadDeletePlan *plan,const char *component_id);
 #ifdef __cplusplus
 }

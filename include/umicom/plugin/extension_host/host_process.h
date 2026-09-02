@@ -29,10 +29,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host host process data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPluginExtensionHostHostProcess { char plugin_id[UMI_PLUGIN_EXTENSION_HOST_ID_CAPACITY]; uint64_t process_id; uint64_t started_ms; uint64_t last_heartbeat_ms; uint32_t restart_count; uint32_t crash_count; UmiPluginExtensionHostLifecycle lifecycle; } UmiPluginExtensionHostHostProcess;
+/**
+ * Initialise plugin extension host host process from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_host_process_init(UmiPluginExtensionHostHostProcess *process);
+/**
+ * Provide the plugin extension host host process start operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_plugin_extension_host_host_process_start(UmiPluginExtensionHostHostProcess *process, const char *plugin_id, uint64_t process_id, uint64_t now_ms);
+/**
+ * Provide the plugin extension host host process heartbeat operation used by this module
+ * and its client applications.
+ */
 void umi_plugin_extension_host_host_process_heartbeat(UmiPluginExtensionHostHostProcess *process, uint64_t now_ms);
+/**
+ * Provide the plugin extension host host process crashed operation used by this module and
+ * its client applications.
+ */
 void umi_plugin_extension_host_host_process_crashed(UmiPluginExtensionHostHostProcess *process);
 
 #ifdef __cplusplus

@@ -18,6 +18,10 @@
 
 #include "umicom/application/experiences/experiences.h"
 
+/*
+ * Exercise test application experience acceptance database studio and return a clear
+ * result when the behaviour no longer matches its contract.
+ */
 int test_application_experience_acceptance_database_studio(void)
 {
     const UmiApplicationExperienceDefinition *definition =

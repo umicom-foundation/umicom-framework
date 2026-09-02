@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the generation data shared with callers of this public contract.
+ */
 typedef struct UmiGeneration {
     uint64_t number;
     char release_id[UMI_DELIVERY_ID_CAPACITY];
@@ -35,10 +38,18 @@ typedef struct UmiGeneration {
     int active;
 } UmiGeneration;
 
+/**
+ * Initialise generation from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_generation_init(UmiGeneration *generation,
                               uint64_t number,
                               const char *release_id,
                               const char *root);
+/**
+ * Provide the generation mark active operation used by this module and its client
+ * applications.
+ */
 void umi_generation_mark_active(UmiGeneration *generation, int active);
 
 #ifdef __cplusplus

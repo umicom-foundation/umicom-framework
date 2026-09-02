@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/stress_scenario.h"
+/**
+ * Represent the enterprise stress suite data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseStressSuite { char suite_id[UMI_ENTERPRISE_ID_CAPACITY]; UmiEnterpriseStressScenario scenarios[32U]; size_t count; } UmiEnterpriseStressSuite;
 /* Initialise an empty stress suite. */
 UmiStatus umi_enterprise_stress_suite_init(UmiEnterpriseStressSuite *suite,const char *suite_id);

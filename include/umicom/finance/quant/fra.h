@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant fra data shared with callers of this public contract.
+ */
 typedef struct UmiQuantFra {
     double notional;
     double fixed_rate;

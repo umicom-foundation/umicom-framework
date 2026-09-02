@@ -12,6 +12,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/test_platform/build_readiness/product_profile.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiTestPlatformProductValidationProfile profile;
     assert(umi_test_platform_product_validation_profile_init(&profile, "trader",

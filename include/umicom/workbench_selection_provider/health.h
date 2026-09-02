@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * List the named workbench selection provider health state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchSelectionProviderHealthState {
     UMI_WORKBENCH_SELECTION_PROVIDER_HEALTH_UNKNOWN = 0,
     UMI_WORKBENCH_SELECTION_PROVIDER_HEALTH_HEALTHY = 1,
@@ -27,6 +31,10 @@ typedef enum UmiWorkbenchSelectionProviderHealthState {
     UMI_WORKBENCH_SELECTION_PROVIDER_HEALTH_UNAVAILABLE = 3
 } UmiWorkbenchSelectionProviderHealthState;
 
+/**
+ * Represent the workbench selection provider health data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderHealth {
     UmiWorkbenchSelectionProviderHealthState state;
     size_t provider_count;
@@ -36,6 +44,10 @@ typedef struct UmiWorkbenchSelectionProviderHealth {
     char message[UMI_WORKBENCH_SELECTION_PROVIDER_TEXT_CAPACITY];
 } UmiWorkbenchSelectionProviderHealth;
 
+/**
+ * Provide the workbench selection provider health evaluate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_health_evaluate(
     const UmiWorkbenchSelectionProviderService *service,
     UmiWorkbenchSelectionProviderHealth *out_health);

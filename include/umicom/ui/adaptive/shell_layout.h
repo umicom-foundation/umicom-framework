@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive shell layout data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveShellLayout {
     char layout_id[UMI_ADAPTIVE_ID_CAPACITY];
     UmiAdaptiveShellRegion regions[UMI_ADAPTIVE_MAX_ITEMS];

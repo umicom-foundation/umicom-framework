@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced compare side data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedCompareSide {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +40,20 @@ typedef struct UmiVcsAdvancedCompareSide {
     int exists;
 } UmiVcsAdvancedCompareSide;
 
+/**
+ * Initialise vcs advanced compare side from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_compare_side_init(UmiVcsAdvancedCompareSide *value);
+/**
+ * Check that vcs advanced compare side satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_compare_side_validate(const UmiVcsAdvancedCompareSide *value);
+/**
+ * Copy vcs advanced compare side into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_compare_side_set(UmiVcsAdvancedCompareSide *value,
                                               const char *path,
                                               const char *revision,

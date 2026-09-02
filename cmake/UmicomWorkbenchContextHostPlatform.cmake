@@ -19,22 +19,27 @@ include(GNUInstallDirs)
 set(UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_workbench_context_host)
     return()
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_workbench_context_link)
     message(FATAL_ERROR
         "Workbench Context Host requires Umicom::workbench_context_link")
 endif()
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ui)
     message(FATAL_ERROR
         "Workbench Context Host requires the canonical Umicom::ui target")
 endif()
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_platform)
     message(FATAL_ERROR
         "Workbench Context Host requires the canonical Umicom::platform target")
 endif()
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application)
     message(FATAL_ERROR
         "Workbench Context Host requires the canonical Umicom::application target")
@@ -122,19 +127,23 @@ target_link_libraries(umicom_workbench_context_host PUBLIC
     Umicom::platform
 )
 
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_workbench_context_host)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_workbench_context_host)
 endif()
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE
         Umicom::workbench_context_host
     )
 endif()
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/adapters/gtk4/workbench_context_host_endpoint_list.c"
@@ -181,7 +190,10 @@ install(
         "${CMAKE_INSTALL_DATADIR}/umicom/resources/themes"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add workbench context host test build helper so parent and application
+    # projects apply one consistent rule.
     function(umicom_add_workbench_context_host_test target test_name source)
         add_executable("${target}"
             "${UMICOM_WORKBENCH_CONTEXT_HOST_FRAMEWORK_ROOT}/${source}"
@@ -193,9 +205,11 @@ if(BUILD_TESTING)
         target_link_libraries("${target}" PRIVATE
             Umicom::workbench_context_host
         )
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

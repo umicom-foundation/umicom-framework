@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer lock state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerLockState {
     bool locked;
     bool built_in;
@@ -33,7 +37,15 @@ typedef struct UmiWorkbenchDesignerLockState {
     uint64_t revision;
 } UmiWorkbenchDesignerLockState;
 
+/**
+ * Provide the workbench designer lock state build operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_lock_state_build(UmiWorkbenchDesignerLockState *state, const UmiWorkbenchLayoutDocument *document, bool administrator_override);
+/**
+ * Provide the workbench designer lock allows operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_designer_lock_allows(const UmiWorkbenchDesignerLockState *state, UmiWorkbenchDesignerCommandKind command_kind);
 
 #ifdef __cplusplus

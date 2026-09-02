@@ -25,4 +25,8 @@
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtDynamicLibrarySemantics s=umi_ct_dynamic_library_semantics_default(UMI_CT_OS_LINUX);char n[64];CHECK(umi_ct_dynamic_library_name(&s,"umicom",n,sizeof(n))==UMI_STATUS_OK);CHECK(strcmp(n,"libumicom.so")==0);return 0;}

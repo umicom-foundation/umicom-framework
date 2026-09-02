@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_MEMORY_MAPPING "umicom.document.performance.memory_mapping"
 
+/**
+ * Provide the document capability memory mapping operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_memory_mapping(void);
 

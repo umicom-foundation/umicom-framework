@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make revision and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutRevisionRecord make_revision(
     const char *revision_id,
     const char *layout_id,
@@ -41,6 +45,10 @@ static UmiWorkbenchLayoutRevisionRecord make_revision(
     return record;
 }
 
+/*
+ * Exercise same layout and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus same_layout(
     const void *record_value,
     void *context,
@@ -49,6 +57,10 @@ static UmiStatus same_layout(
     const UmiWorkbenchLayoutRevisionRecord *record =
         (const UmiWorkbenchLayoutRevisionRecord *)record_value;
     const char *layout_id = (const char *)context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || layout_id == NULL || out_matches == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -56,6 +68,10 @@ static UmiStatus same_layout(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise test revision codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_revision_codec(void)
 {
     UmiWorkbenchLayoutRevisionRecord source = make_revision(
@@ -79,6 +95,10 @@ static int test_revision_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test revision history and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_revision_history(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -95,6 +115,7 @@ static int test_revision_history(void)
     records[1] = make_revision("rev-a2", "layout.a", 2U, 1U, false);
     records[2] = make_revision("rev-b1", "layout.b", 1U, 0U, false);
     records[3] = make_revision("rev-a3", "layout.a", 3U, 2U, true);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 4U; ++index) {
         TEST_STATUS_OK(umi_workbench_layout_revision_store_save(
             &repository, &records[index]));
@@ -112,6 +133,10 @@ static int test_revision_history(void)
     return 0;
 }
 
+/*
+ * Exercise test revision load delete and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_revision_load_delete(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -137,6 +162,10 @@ static int test_revision_load_delete(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_revision_codec() == 0, "revision codec");

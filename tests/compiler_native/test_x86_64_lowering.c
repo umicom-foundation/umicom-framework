@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/x86_64_lowering.h"
 #include <string.h>
-int main(void){if(strcmp(umi_nc_x86_64_mnemonic(UMI_NC_MOPC_MUL),"imul")!=0)return 1;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){/* Use the stable identifier comparison to choose the matching record or policy. */ if(strcmp(umi_nc_x86_64_mnemonic(UMI_NC_MOPC_MUL),"imul")!=0)return 1;return 0;}

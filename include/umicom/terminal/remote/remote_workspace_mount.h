@@ -22,8 +22,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote remote workspace mount data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTerminalRemoteRemoteWorkspaceMount { char root[UMI_TERMINAL_REMOTE_PATH_CAPACITY]; bool read_only; } UmiTerminalRemoteRemoteWorkspaceMount;
+/**
+ * Initialise terminal remote remote workspace mount from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_remote_workspace_mount_init(UmiTerminalRemoteRemoteWorkspaceMount *value,const char *root,bool read_only);
+/**
+ * Write terminal remote remote workspace mount allows in its stable representation and
+ * report capacity or input failures to the caller.
+ */
 bool umi_terminal_remote_remote_workspace_mount_allows_write(const UmiTerminalRemoteRemoteWorkspaceMount *value);
 #ifdef __cplusplus
 }

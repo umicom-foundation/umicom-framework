@@ -32,6 +32,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity service data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityService {
     UmiCommodityCatalogue commodities;
     UmiCommodityContractBook contracts;

@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/repository/doctor.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiRepositoryDoctorReport r; assert(umi_repository_doctor_evaluate(NULL,NULL,&r)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

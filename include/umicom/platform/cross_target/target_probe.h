@@ -30,8 +30,18 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct target probe data shared with callers of this public contract.
+ */
 typedef struct UmiCtTargetProbe { UmiCtTarget target; uint32_t cpu_count; uint64_t memory_bytes; uint32_t page_size; uint64_t cpu_features; uint8_t confidence; } UmiCtTargetProbe;
+/**
+ * Check that ct target probe satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ct_target_probe_validate(const UmiCtTargetProbe *probe);
+/**
+ * Provide the ct target probe score operation used by this module and its client
+ * applications.
+ */
 uint8_t umi_ct_target_probe_score(const UmiCtTargetProbe *probe,const UmiCtTarget *expected);
 
 #ifdef __cplusplus

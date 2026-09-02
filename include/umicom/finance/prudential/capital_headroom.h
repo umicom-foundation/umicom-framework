@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital headroom data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalHeadroom { double available; double required; double headroom; int breached; } UmiPrudentialCapitalHeadroom;
 /* Calculate prudential headroom and identify a deficit without hiding negative values. */
 UmiStatus umi_pru_capital_headroom_calculate(UmiPrudentialCapitalHeadroom *result, double available, double required);

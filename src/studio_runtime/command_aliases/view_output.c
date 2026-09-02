@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/view_output.h"
 
+/*
+ * Provide the studio command alias view output operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_view_output(void)
 {

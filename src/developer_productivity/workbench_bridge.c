@@ -31,6 +31,10 @@ struct UmiDeveloperProductivityWorkbenchBridge {
     int has_problem_cursor;
 };
 
+/*
+ * Provide the source control available operation used by this module and its client
+ * applications.
+ */
 static int source_control_available(void *user_data, const char *argument)
 {
     UmiDeveloperProductivityWorkbenchBridge *bridge =
@@ -39,6 +43,10 @@ static int source_control_available(void *user_data, const char *argument)
     return bridge != NULL && bridge->source_control != NULL;
 }
 
+/*
+ * Provide the source control argument available operation used by this module and its
+ * client applications.
+ */
 static int source_control_argument_available(
     void *user_data,
     const char *argument)
@@ -47,6 +55,10 @@ static int source_control_argument_available(
         argument != NULL && argument[0] != '\0';
 }
 
+/*
+ * Provide the source control refresh operation used by this module and its client
+ * applications.
+ */
 static UmiStatus source_control_refresh(
     void *user_data,
     const char *argument,
@@ -61,12 +73,18 @@ static UmiStatus source_control_refresh(
     (void)argument;
 
     status = umi_developer_source_control_refresh(bridge->source_control);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_source_control_snapshot(
         bridge->source_control, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -82,6 +100,10 @@ static UmiStatus source_control_refresh(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the source control stage all operation used by this module and its client
+ * applications.
+ */
 static UmiStatus source_control_stage_all(
     void *user_data,
     const char *argument,
@@ -95,6 +117,10 @@ static UmiStatus source_control_stage_all(
     (void)argument;
     status = umi_developer_source_control_stage_all(bridge->source_control);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -108,6 +134,10 @@ static UmiStatus source_control_stage_all(
     return status;
 }
 
+/*
+ * Provide the source control commit operation used by this module and its client
+ * applications.
+ */
 static UmiStatus source_control_commit(
     void *user_data,
     const char *argument,
@@ -119,6 +149,10 @@ static UmiStatus source_control_commit(
     char commit_id[UMI_VCS_ID_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (argument == NULL || argument[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -129,6 +163,7 @@ static UmiStatus source_control_commit(
         commit_id,
         sizeof(commit_id));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
@@ -141,6 +176,10 @@ static UmiStatus source_control_commit(
     return status;
 }
 
+/*
+ * Provide the source control pull operation used by this module and its client
+ * applications.
+ */
 static UmiStatus source_control_pull(
     void *user_data,
     const char *argument,
@@ -154,6 +193,10 @@ static UmiStatus source_control_pull(
     (void)argument;
     status = umi_developer_source_control_pull(bridge->source_control);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s",
             status == UMI_STATUS_OK ? "Pull completed." : "Pull failed.");
@@ -161,6 +204,10 @@ static UmiStatus source_control_pull(
     return status;
 }
 
+/*
+ * Provide the source control push operation used by this module and its client
+ * applications.
+ */
 static UmiStatus source_control_push(
     void *user_data,
     const char *argument,
@@ -174,6 +221,10 @@ static UmiStatus source_control_push(
     (void)argument;
     status = umi_developer_source_control_push(bridge->source_control);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s",
             status == UMI_STATUS_OK ? "Push completed." : "Push failed.");
@@ -181,6 +232,10 @@ static UmiStatus source_control_push(
     return status;
 }
 
+/*
+ * Provide the source control diff operation used by this module and its client
+ * applications.
+ */
 static UmiStatus source_control_diff(
     void *user_data,
     const char *argument,
@@ -198,6 +253,7 @@ static UmiStatus source_control_diff(
         0,
         diff,
         sizeof(diff));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_developer_output_channel_append(
@@ -206,6 +262,10 @@ static UmiStatus source_control_diff(
         "Source Control",
         diff);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -217,6 +277,10 @@ static UmiStatus source_control_diff(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the terminal available operation used by this module and its client
+ * applications.
+ */
 static int terminal_available(void *user_data, const char *argument)
 {
     UmiDeveloperProductivityWorkbenchBridge *bridge =
@@ -225,6 +289,10 @@ static int terminal_available(void *user_data, const char *argument)
     return bridge != NULL && bridge->terminal != NULL;
 }
 
+/*
+ * Provide the terminal has active operation used by this module and its client
+ * applications.
+ */
 static int terminal_has_active(void *user_data, const char *argument)
 {
     UmiDeveloperProductivityWorkbenchBridge *bridge =
@@ -234,6 +302,7 @@ static int terminal_has_active(void *user_data, const char *argument)
         umi_developer_terminal_workspace_active(bridge->terminal) != NULL;
 }
 
+/* Provide the terminal new operation used by this module and its client applications. */
 static UmiStatus terminal_new(
     void *user_data,
     const char *argument,
@@ -260,6 +329,7 @@ static UmiStatus terminal_new(
         "Terminal",
         working_directory);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
@@ -272,6 +342,7 @@ static UmiStatus terminal_new(
     return status;
 }
 
+/* Provide the terminal kill operation used by this module and its client applications. */
 static UmiStatus terminal_kill(
     void *user_data,
     const char *argument,
@@ -287,13 +358,19 @@ static UmiStatus terminal_kill(
 
     status = umi_developer_terminal_workspace_snapshot(
         bridge->terminal, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (snapshot.active_session_id[0] == '\0') return UMI_STATUS_NOT_FOUND;
 
     status = umi_developer_terminal_workspace_close(
         bridge->terminal,
         snapshot.active_session_id);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -307,6 +384,10 @@ static UmiStatus terminal_kill(
     return status;
 }
 
+/*
+ * Provide the diagnostics available operation used by this module and its client
+ * applications.
+ */
 static int diagnostics_available(void *user_data, const char *argument)
 {
     UmiDeveloperProductivityWorkbenchBridge *bridge =
@@ -315,6 +396,7 @@ static int diagnostics_available(void *user_data, const char *argument)
     return bridge != NULL && bridge->diagnostics != NULL;
 }
 
+/* Provide the problem navigate operation used by this module and its client applications. */
 static UmiStatus problem_navigate(
     UmiDeveloperProductivityWorkbenchBridge *bridge,
     int forward,
@@ -329,6 +411,7 @@ static UmiStatus problem_navigate(
     store = umi_developer_diagnostic_pipeline_problems(
         bridge->diagnostics);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (forward) {
         const size_t after =
             bridge->has_problem_cursor
@@ -340,7 +423,7 @@ static UmiStatus problem_navigate(
             UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_WARNING,
             &index,
             &problem);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         const size_t before =
             bridge->has_problem_cursor
                 ? bridge->problem_cursor
@@ -353,17 +436,23 @@ static UmiStatus problem_navigate(
             &problem);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     bridge->problem_cursor = index;
     bridge->has_problem_cursor = 1;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (problem.location.uri[0] != '\0') {
         (void)umi_developer_navigation_service_visit(
             bridge->navigation,
             &problem.location);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -378,6 +467,7 @@ static UmiStatus problem_navigate(
     return UMI_STATUS_OK;
 }
 
+/* Provide the problem next operation used by this module and its client applications. */
 static UmiStatus problem_next(
     void *user_data,
     const char *argument,
@@ -392,6 +482,7 @@ static UmiStatus problem_next(
         message_capacity);
 }
 
+/* Provide the problem previous operation used by this module and its client applications. */
 static UmiStatus problem_previous(
     void *user_data,
     const char *argument,
@@ -406,6 +497,7 @@ static UmiStatus problem_previous(
         message_capacity);
 }
 
+/* Release or reset state held by output so the same storage can be reused safely. */
 static UmiStatus output_clear(
     void *user_data,
     const char *argument,
@@ -418,6 +510,10 @@ static UmiStatus output_clear(
     (void)argument;
     umi_developer_output_channels_clear_all(bridge->output);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s", "Output cleared.");
     }
@@ -425,6 +521,7 @@ static UmiStatus output_clear(
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by problems so the same storage can be reused safely. */
 static UmiStatus problems_clear(
     void *user_data,
     const char *argument,
@@ -439,12 +536,20 @@ static UmiStatus problems_clear(
         umi_developer_diagnostic_pipeline_problems(bridge->diagnostics));
     bridge->has_problem_cursor = 0;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s", "Problems cleared.");
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise developer productivity workbench bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_productivity_workbench_bridge_create(
     UmiDeveloperWorkbench *workbench,
     UmiDeveloperDiagnosticPipeline *diagnostics,
@@ -454,6 +559,10 @@ UmiStatus umi_developer_productivity_workbench_bridge_create(
 {
     UmiDeveloperProductivityWorkbenchBridge *bridge;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || diagnostics == NULL ||
         navigation == NULL || output == NULL || out_bridge == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -462,6 +571,10 @@ UmiStatus umi_developer_productivity_workbench_bridge_create(
     *out_bridge = NULL;
     bridge = (UmiDeveloperProductivityWorkbenchBridge *)calloc(
         1U, sizeof(*bridge));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     bridge->workbench = workbench;
@@ -473,30 +586,51 @@ UmiStatus umi_developer_productivity_workbench_bridge_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer productivity workbench bridge so the same
+ * storage can be reused safely.
+ */
 void umi_developer_productivity_workbench_bridge_destroy(
     UmiDeveloperProductivityWorkbenchBridge *bridge)
 {
     free(bridge);
 }
 
+/*
+ * Provide the developer productivity workbench bridge set source control operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_developer_productivity_workbench_bridge_set_source_control(
     UmiDeveloperProductivityWorkbenchBridge *bridge,
     UmiDeveloperSourceControl *source_control)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     bridge->source_control = source_control;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer productivity workbench bridge set terminal operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_productivity_workbench_bridge_set_terminal(
     UmiDeveloperProductivityWorkbenchBridge *bridge,
     UmiDeveloperTerminalWorkspace *terminal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     bridge->terminal = terminal;
     return UMI_STATUS_OK;
 }
 
+/* Provide the bind operation used by this module and its client applications. */
 static UmiStatus bind(
     UmiDeveloperProductivityWorkbenchBridge *bridge,
     const char *command_id,
@@ -511,51 +645,70 @@ static UmiStatus bind(
         bridge);
 }
 
+/*
+ * Provide the developer productivity workbench bridge bind operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_productivity_workbench_bridge_bind(
     UmiDeveloperProductivityWorkbenchBridge *bridge)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = bind(bridge, "source-control.refresh",
                   source_control_refresh, source_control_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = bind(bridge, "source-control.stage-all",
                   source_control_stage_all, source_control_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = bind(bridge, "source-control.commit",
                   source_control_commit, source_control_argument_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = bind(bridge, "source-control.pull",
                   source_control_pull, source_control_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = bind(bridge, "source-control.push",
                   source_control_push, source_control_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = bind(bridge, "source-control.diff",
                   source_control_diff, source_control_argument_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = bind(bridge, "terminal.new",
                   terminal_new, terminal_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = bind(bridge, "terminal.kill",
                   terminal_kill, terminal_has_active);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = bind(
         bridge, "navigate.problem.next", problem_next, diagnostics_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = bind(
         bridge, "navigate.problem.previous",
         problem_previous,
         diagnostics_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = bind(
         bridge, "output.clear", output_clear, diagnostics_available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return bind(

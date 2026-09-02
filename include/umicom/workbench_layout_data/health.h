@@ -27,6 +27,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout health policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutHealthPolicy {
     uint32_t structure_size;
     size_t maximum_pending_outbox;
@@ -36,9 +40,17 @@ typedef struct UmiWorkbenchLayoutHealthPolicy {
     bool require_sqlite_for_production;
 } UmiWorkbenchLayoutHealthPolicy;
 
+/**
+ * Provide the workbench layout health policy default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutHealthPolicy
 umi_workbench_layout_health_policy_default(void);
 
+/**
+ * Provide the workbench layout health evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_health_evaluate(
     const UmiDataServer *server,
     const UmiWorkbenchLayoutDataMetrics *metrics,
@@ -52,9 +64,17 @@ UmiStatus umi_workbench_layout_health_evaluate(
     const UmiWorkbenchLayoutHealthPolicy *policy,
     UmiWorkbenchLayoutDataHealthSnapshot *out_snapshot);
 
+/**
+ * Provide the workbench layout health ready operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_health_ready(
     const UmiWorkbenchLayoutDataHealthSnapshot *snapshot);
 
+/**
+ * Provide the workbench layout health live operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_health_live(
     const UmiWorkbenchLayoutDataHealthSnapshot *snapshot);
 

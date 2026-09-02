@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting value data shared with callers of this public contract.
+ */
 typedef struct UmiReportingValue {
     char field_id[UMI_REG_ID_CAPACITY];
     char source_id[UMI_REG_ID_CAPACITY];

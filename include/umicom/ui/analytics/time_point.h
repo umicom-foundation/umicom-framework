@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics time point data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsTimePoint { int64_t timestamp_ns; double value; } UmiAnalyticsTimePoint;
+/**
+ * Initialise analytics time point from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_analytics_time_point_init(UmiAnalyticsTimePoint *point, int64_t timestamp_ns, double value);
+/**
+ * Provide the analytics time point compare operation used by this module and its client
+ * applications.
+ */
 int umi_analytics_time_point_compare(const UmiAnalyticsTimePoint *left, const UmiAnalyticsTimePoint *right);
 
 #ifdef __cplusplus

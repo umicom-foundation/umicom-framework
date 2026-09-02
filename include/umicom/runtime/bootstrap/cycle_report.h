@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap graph cycle report operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_graph_cycle_report(
     const UmiBootstrapServiceGraph *graph,
     UmiBootstrapIdList *out_cycle);

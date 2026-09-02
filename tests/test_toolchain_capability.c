@@ -19,6 +19,10 @@
 
 #include "umicom/toolchain/toolchain.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiToolchainProfile profile;
@@ -27,6 +31,7 @@ int main(void)
 
     /* A stale caller size must be rejected without touching its allocation. */
     (void)memset(&profile, 0xA5, sizeof(profile));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_toolchain_profile_initialize(&profile, sizeof(profile) - 1U) !=
             UMI_STATUS_INVALID_ARGUMENT ||
         (unsigned char)profile.profile_id[0] != 0xA5U) {
@@ -35,6 +40,7 @@ int main(void)
 
     /* The source-compatible initializer records the current ABI identity. */
     umi_toolchain_profile_init(&profile);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_toolchain_profile_storage_compatible(&profile)) {
         return EXIT_FAILURE;
     }
@@ -57,8 +63,10 @@ int main(void)
     tool = umi_toolchain_profile_tool_mutable(&profile, UMI_TOOL_PKG_CONFIG);
     tool->state = UMI_TOOL_VALIDATED;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_toolchain_capability_snapshot(&profile, &capability) !=
         UMI_STATUS_OK) return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (capability.compiler_vendor != UMI_COMPILER_VENDOR_GCC ||
         capability.compiler_version_major != 16U ||
         strcmp(capability.target_triple, "x86_64-w64-mingw32") != 0 ||

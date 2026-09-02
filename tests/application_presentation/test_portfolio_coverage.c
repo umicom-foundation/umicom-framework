@@ -19,11 +19,16 @@
 
 #include "umicom/application/portfolio.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t application_index;
 
     assert(umi_application_portfolio_count() == 26U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (application_index = 0U;
          application_index < umi_application_portfolio_count();
          ++application_index) {
@@ -33,6 +38,7 @@ int main(void)
         assert(application != NULL);
         assert(umi_application_presentation_window_catalogue_application_count(
                    application->application_id) == 3U);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (window_index = 0U; window_index < 3U; ++window_index) {
             const UmiApplicationPresentationWindowSpec *window =
                 umi_application_presentation_window_catalogue_application_at(

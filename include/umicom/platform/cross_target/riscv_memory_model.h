@@ -30,8 +30,18 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ct riscv mmu values accepted by this public contract.
+ */
 typedef enum UmiCtRiscvMmu { UMI_CT_RISCV_MMU_NONE=0, UMI_CT_RISCV_MMU_SV32=1, UMI_CT_RISCV_MMU_SV39=2, UMI_CT_RISCV_MMU_SV48=3, UMI_CT_RISCV_MMU_SV57=4 } UmiCtRiscvMmu;
+/**
+ * Represent the ct riscv memory model data shared with callers of this public contract.
+ */
 typedef struct UmiCtRiscvMemoryModel { UmiCtRiscvMmu mmu; uint32_t physical_address_bits; uint32_t virtual_address_bits; uint32_t page_size; bool executable_pages; } UmiCtRiscvMemoryModel;
+/**
+ * Check that ct riscv memory model satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ct_riscv_memory_model_validate(const UmiCtRiscvMemoryModel *model,uint32_t xlen);
 
 #ifdef __cplusplus

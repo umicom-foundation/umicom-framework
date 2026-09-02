@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/debug.h"
 
+/*
+ * Provide the ide surface profile debug operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_debug(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

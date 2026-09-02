@@ -33,6 +33,9 @@ extern "C" {
 #define UMI_DESIGNER_MAX_PROJECT_DOCUMENTS 32U
 #define UMI_DESIGNER_MAX_PALETTE_RESULTS 64U
 
+/**
+ * List the named designer operation kind values accepted by this public contract.
+ */
 typedef enum UmiDesignerOperationKind {
     UMI_DESIGNER_OP_ADD_COMPONENT = 1,
     UMI_DESIGNER_OP_REMOVE_COMPONENT = 2,
@@ -40,6 +43,9 @@ typedef enum UmiDesignerOperationKind {
     UMI_DESIGNER_OP_MOVE_COMPONENT = 4
 } UmiDesignerOperationKind;
 
+/**
+ * List the named designer alignment values accepted by this public contract.
+ */
 typedef enum UmiDesignerAlignment {
     UMI_DESIGNER_ALIGN_LEFT = 0,
     UMI_DESIGNER_ALIGN_HORIZONTAL_CENTRE,
@@ -49,11 +55,17 @@ typedef enum UmiDesignerAlignment {
     UMI_DESIGNER_ALIGN_BOTTOM
 } UmiDesignerAlignment;
 
+/**
+ * List the named designer distribution values accepted by this public contract.
+ */
 typedef enum UmiDesignerDistribution {
     UMI_DESIGNER_DISTRIBUTE_HORIZONTAL = 0,
     UMI_DESIGNER_DISTRIBUTE_VERTICAL
 } UmiDesignerDistribution;
 
+/**
+ * List the named designer preview profile values accepted by this public contract.
+ */
 typedef enum UmiDesignerPreviewProfile {
     UMI_DESIGNER_PREVIEW_DESKTOP = 0,
     UMI_DESIGNER_PREVIEW_LAPTOP,
@@ -64,6 +76,9 @@ typedef enum UmiDesignerPreviewProfile {
     UMI_DESIGNER_PREVIEW_CUSTOM
 } UmiDesignerPreviewProfile;
 
+/**
+ * Represent the designer rect data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerRect {
     int32_t x;
     int32_t y;
@@ -71,9 +86,25 @@ typedef struct UmiDesignerRect {
     int32_t height;
 } UmiDesignerRect;
 
+/**
+ * Provide the designer operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_operation_kind_text(UmiDesignerOperationKind kind);
+/**
+ * Provide the designer alignment text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_alignment_text(UmiDesignerAlignment alignment);
+/**
+ * Provide the designer distribution text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_distribution_text(UmiDesignerDistribution distribution);
+/**
+ * Provide the designer preview profile text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_preview_profile_text(UmiDesignerPreviewProfile profile);
 
 #ifdef __cplusplus

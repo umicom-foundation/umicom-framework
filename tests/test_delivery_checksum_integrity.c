@@ -21,6 +21,10 @@
 #include <string.h>
 #include "umicom/delivery/checksum.h"
 #include "umicom/delivery/integrity.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     char a[UMI_DELIVERY_DIGEST_CAPACITY];
     char b[UMI_DELIVERY_DIGEST_CAPACITY];

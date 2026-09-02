@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "test_support.h"
+/*
+ * Initialise test ai mcp server from caller-provided values so later operations receive a
+ * known state.
+ */
 int test_ai_mcp_server_init(void){UmiAiMcpServerDescriptor s;assert(umi_test_mcp_server(&s)==UMI_STATUS_OK);assert(strcmp(s.server_id,"test")==0);assert(s.enabled);return 0;}

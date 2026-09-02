@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote remote handshake compatible operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_remote_handshake_compatible(uint32_t local_revision,uint32_t remote_revision,uint64_t local_capabilities,uint64_t required_capabilities);
 #ifdef __cplusplus
 }

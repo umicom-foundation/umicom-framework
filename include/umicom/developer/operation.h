@@ -34,6 +34,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_OPERATION_API_VERSION 1U
 
+/**
+ * Represent the developer operation snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperOperationSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -59,17 +63,29 @@ typedef struct UmiDeveloperOperationSnapshot {
     uint64_t revision;
 } UmiDeveloperOperationSnapshot;
 
+/**
+ * Initialise developer operation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_developer_operation_init(
     UmiDeveloperOperationSnapshot *operation,
     const char *id,
     UmiDeveloperOperationKind kind,
     const char *title);
 
+/**
+ * Provide the developer operation set program operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_operation_set_program(
     UmiDeveloperOperationSnapshot *operation,
     const char *program,
     const char *working_directory);
 
+/**
+ * Provide the developer operation add argument operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_operation_add_argument(
     UmiDeveloperOperationSnapshot *operation,
     const char *argument);

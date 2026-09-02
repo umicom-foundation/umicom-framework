@@ -34,17 +34,21 @@ struct UmiPluginLibrary {
     const UmiModuleDescriptor *descriptor;
 };
 
+/* Read plugin into validated module state and return a status when input cannot be used. */
 UmiStatus umi_plugin_load(const char *path, UmiPluginLibrary **out_plugin)
 {
     UmiPluginLibrary *plugin;
     UmiModuleQueryFn query = NULL;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (path == 0 || out_plugin == 0) return UMI_STATUS_INVALID_ARGUMENT;
     plugin = (UmiPluginLibrary *)calloc(1U, sizeof(*plugin));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (plugin == 0) return UMI_STATUS_OUT_OF_MEMORY;
 #ifdef _WIN32
     {
         FARPROC symbol;
         plugin->handle = LoadLibraryA(path);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (plugin->handle == 0) { free(plugin); return UMI_STATUS_IO_ERROR; }
         symbol = GetProcAddress(plugin->handle, "umicom_module_query");
 
@@ -61,6 +65,7 @@ UmiStatus umi_plugin_load(const char *path, UmiPluginLibrary **out_plugin)
     {
         void *symbol;
         plugin->handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (plugin->handle == 0) { free(plugin); return UMI_STATUS_IO_ERROR; }
         symbol = dlsym(plugin->handle, "umicom_module_query");
         _Static_assert(sizeof(query) == sizeof(symbol),
@@ -68,11 +73,13 @@ UmiStatus umi_plugin_load(const char *path, UmiPluginLibrary **out_plugin)
         (void)memcpy(&query, &symbol, sizeof(query));
     }
 #endif
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query == 0) {
         umi_plugin_unload(plugin);
         return UMI_STATUS_NOT_FOUND;
     }
     plugin->descriptor = query(UMICOM_FRAMEWORK_ABI_VERSION);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (plugin->descriptor == 0 ||
         plugin->descriptor->abi_version != UMICOM_FRAMEWORK_ABI_VERSION ||
         plugin->descriptor->structure_size < sizeof(UmiModuleDescriptor)) {
@@ -83,17 +90,22 @@ UmiStatus umi_plugin_load(const char *path, UmiPluginLibrary **out_plugin)
     return UMI_STATUS_OK;
 }
 
+/* Provide the plugin unload operation used by this module and its client applications. */
 void umi_plugin_unload(UmiPluginLibrary *plugin)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (plugin == 0) return;
 #ifdef _WIN32
+    /* Apply this branch only when its contract condition is satisfied. */
     if (plugin->handle != 0) FreeLibrary(plugin->handle);
 #else
+    /* Apply this branch only when its contract condition is satisfied. */
     if (plugin->handle != 0) dlclose(plugin->handle);
 #endif
     free(plugin);
 }
 
+/* Provide the plugin descriptor operation used by this module and its client applications. */
 const UmiModuleDescriptor *umi_plugin_descriptor(const UmiPluginLibrary *plugin)
 {
     return plugin != 0 ? plugin->descriptor : 0;

@@ -21,4 +21,4 @@
 #include "umicom/repository/repository_operation_result.h"
 #include <string.h>
 /* Initialise result storage to a deterministic successful empty value. */
-void umi_repository_operation_result_init(UmiRepositoryOperationResult *result){if(!result)return;(void)memset(result,0,sizeof(*result));result->status=UMI_STATUS_OK;}
+void umi_repository_operation_result_init(UmiRepositoryOperationResult *result){/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!result)return;(void)memset(result,0,sizeof(*result));result->status=UMI_STATUS_OK;}

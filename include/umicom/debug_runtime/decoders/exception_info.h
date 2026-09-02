@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime decode exception info operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_decode_exception_info(
     const char *json,
     UmiDebugRuntimeExceptionInfo *out_result);

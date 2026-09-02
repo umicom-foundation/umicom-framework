@@ -16,8 +16,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai coding runtime config from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_runtime_config_init(UmiAiCodingRuntimeConfig *config)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL) return;
 
     (void)memset(config, 0, sizeof(*config));
@@ -35,9 +43,17 @@ void umi_ai_coding_runtime_config_init(UmiAiCodingRuntimeConfig *config)
     config->allow_sensitive_context = 0;
 }
 
+/*
+ * Check that ai coding runtime config satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ai_coding_runtime_config_validate(
     const UmiAiCodingRuntimeConfig *config)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL ||
         config->provider_id[0] == '\0' ||
         config->model_id[0] == '\0' ||

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_PANEL "umicom.developer.experience.terminal_panel"
 
+/**
+ * Provide the developer capability terminal panel operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_panel(void);
 

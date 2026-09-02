@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the distribution policy data shared with callers of this public contract.
+ */
 typedef struct UmiDistributionPolicy {
     UmiReleaseChannel channel;
     int automatic_updates;
@@ -39,6 +42,9 @@ typedef struct UmiDistributionPolicy {
     int require_provenance;
 } UmiDistributionPolicy;
 
+/**
+ * Represent the distribution decision data shared with callers of this public contract.
+ */
 typedef struct UmiDistributionDecision {
     int eligible;
     int installation_required;
@@ -50,7 +56,15 @@ typedef struct UmiDistributionDecision {
     char reason[256];
 } UmiDistributionDecision;
 
+/**
+ * Provide the distribution policy default operation used by this module and its client
+ * applications.
+ */
 UmiDistributionPolicy umi_distribution_policy_default(void);
+/**
+ * Provide the distribution policy evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_distribution_policy_evaluate(
     const UmiDistributionPolicy *policy,
     int installed,

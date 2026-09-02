@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application shell profile problems operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_problems(void);
 
 #ifdef __cplusplus

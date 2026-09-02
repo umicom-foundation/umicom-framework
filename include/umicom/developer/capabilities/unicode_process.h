@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_UNICODE_PROCESS "umicom.developer.portability.unicode_process"
 
+/**
+ * Provide the developer capability unicode process operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_unicode_process(void);
 

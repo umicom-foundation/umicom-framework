@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer responsive preview data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerResponsivePreview {
     char preview_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     UmiAdaptiveViewport viewport;

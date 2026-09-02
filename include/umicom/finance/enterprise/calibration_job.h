@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise calibration job data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationJob { char job_id[UMI_ENTERPRISE_ID_CAPACITY]; char object_id[UMI_ENTERPRISE_ID_CAPACITY]; UmiEnterpriseWorkState state; size_t target_count; size_t completed_targets; } UmiEnterpriseCalibrationJob;
 /* Initialise one pending calibration job. */
 UmiStatus umi_enterprise_calibration_job_init(UmiEnterpriseCalibrationJob *job,const char *job_id,const char *object_id,size_t target_count);

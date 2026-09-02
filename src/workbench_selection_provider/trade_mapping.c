@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench selection provider trade mapping from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_trade_mapping_init(
     UmiWorkbenchSelectionProviderTradeMapping *record,
     const char *record_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     memset(record, 0, sizeof(*record));
     record->structure_size = (uint32_t)sizeof(*record);
@@ -29,6 +37,10 @@ void umi_workbench_selection_provider_trade_mapping_init(
     record->selection_kind = UMI_WORKBENCH_SELECTION_GENERIC;
     record->context_kind = UMI_CONTEXT_KIND_SELECTION;
     record->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record_id != NULL) {
         (void)umi_workbench_selection_provider_copy_text(
             record->record_id,
@@ -37,9 +49,17 @@ void umi_workbench_selection_provider_trade_mapping_init(
     }
 }
 
+/*
+ * Check that workbench selection provider trade mapping satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_trade_mapping_validate(
     const UmiWorkbenchSelectionProviderTradeMapping *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL ||
         record->structure_size != sizeof(*record) ||
         record->record_id[0] == '\0' ||
@@ -88,10 +108,18 @@ UMI_PROVIDER_SETTER(
 
 #undef UMI_PROVIDER_SETTER
 
+/*
+ * Provide the workbench selection provider trade mapping hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_trade_mapping_hash(
     const UmiWorkbenchSelectionProviderTradeMapping *record)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0U;
     hash = umi_workbench_selection_provider_hash_text(
         hash, record->record_id, sizeof(record->record_id));
@@ -120,11 +148,19 @@ uint64_t umi_workbench_selection_provider_trade_mapping_hash(
     return hash;
 }
 
+/*
+ * Provide the workbench selection provider trade mapping touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_trade_mapping_touch(
     UmiWorkbenchSelectionProviderTradeMapping *record,
     uint64_t sequence,
     uint64_t timestamp_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;

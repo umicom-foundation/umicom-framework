@@ -15,9 +15,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/production/launch_stage.h"
 
+/*
+ * Provide the application production launch stage text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_production_launch_stage_text(
     UmiApplicationProductionLaunchStage stage)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (stage) {
     case UMI_APPLICATION_PRODUCTION_STAGE_RESOLVE: return "resolve";
     case UMI_APPLICATION_PRODUCTION_STAGE_VALIDATE: return "validate";
@@ -34,9 +39,14 @@ const char *umi_application_production_launch_stage_text(
     }
 }
 
+/*
+ * Provide the application production state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_production_state_text(
     UmiApplicationProductionState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_APPLICATION_PRODUCTION_READY: return "ready";
     case UMI_APPLICATION_PRODUCTION_DEGRADED: return "degraded";
@@ -45,9 +55,14 @@ const char *umi_application_production_state_text(
     }
 }
 
+/*
+ * Provide the application production gate text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_production_gate_text(
     UmiApplicationProductionGate gate)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (gate) {
     case UMI_APPLICATION_PRODUCTION_GATE_CONTRACT: return "contract";
     case UMI_APPLICATION_PRODUCTION_GATE_MANIFEST: return "manifest";

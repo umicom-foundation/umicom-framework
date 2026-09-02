@@ -22,17 +22,37 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced operation journal entry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiVcsAdvancedOperationJournalEntry {
     UmiVcsAdvancedOperationKind kind; UmiVcsAdvancedState state; char reference[UMI_VCS_ADVANCED_TEXT_CAPACITY];
     uint64_t timestamp_seconds; UmiStatus status;
 } UmiVcsAdvancedOperationJournalEntry;
+/**
+ * Represent the vcs advanced operation journal data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedOperationJournal {
     uint32_t struct_size; uint32_t api_version;
     UmiVcsAdvancedOperationJournalEntry entries[UMI_VCS_ADVANCED_LIST_CAPACITY]; size_t count; uint64_t revision;
 } UmiVcsAdvancedOperationJournal;
+/**
+ * Initialise vcs advanced operation journal from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_operation_journal_init(UmiVcsAdvancedOperationJournal *journal);
+/**
+ * Add vcs advanced operation journal only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_vcs_advanced_operation_journal_append(UmiVcsAdvancedOperationJournal *journal,UmiVcsAdvancedOperationKind kind,
                                                      UmiVcsAdvancedState state,const char *reference,uint64_t timestamp,UmiStatus status);
+/**
+ * Provide the vcs advanced operation journal latest operation used by this module and its
+ * client applications.
+ */
 const UmiVcsAdvancedOperationJournalEntry *umi_vcs_advanced_operation_journal_latest(const UmiVcsAdvancedOperationJournal *journal);
 #ifdef __cplusplus
 }

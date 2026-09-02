@@ -25,11 +25,17 @@
 UmiStatus umi_commodity_quantity_conversion_init(UmiCommodityQuantityConversion *value, const char *from_code, const char *to_code, int64_t numerator, int64_t denominator)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || numerator <= 0 || denominator <= 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_commodity_copy_text(value->from_code, sizeof value->from_code, from_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_commodity_copy_text(value->to_code, sizeof value->to_code, to_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->numerator = numerator;
     value->denominator = denominator;
@@ -40,9 +46,15 @@ UmiStatus umi_commodity_quantity_conversion_init(UmiCommodityQuantityConversion 
 UmiStatus umi_commodity_quantity_conversion_apply(const UmiCommodityQuantityConversion *value, int64_t input_units, int64_t *out_units)
 {
     int64_t product;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || out_units == NULL || value->numerator <= 0 || value->denominator <= 0 || input_units < 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (input_units != 0 && value->numerator > INT64_MAX / input_units) return UMI_STATUS_CAPACITY_EXCEEDED;
     product = input_units * value->numerator;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((product % value->denominator) != 0) return UMI_STATUS_INVALID_STATE;
     *out_units = product / value->denominator;
     return UMI_STATUS_OK;

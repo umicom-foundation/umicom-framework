@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix change set data shared with callers of this public contract.
+ */
 typedef struct UmiHelixChangeSet { UmiHelixFileChange items[UMI_HELIX_MAX_ITEMS]; size_t count; size_t destructive_count; uint64_t fingerprint; } UmiHelixChangeSet;
 /* Initialise an empty change set. */
 void umi_helix_change_set_init(UmiHelixChangeSet *set);

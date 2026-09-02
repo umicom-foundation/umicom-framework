@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/types.h"
 
+/**
+ * Represent the application production control command data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionControlCommand {
     const char *command_id;
     const char *title;
@@ -32,9 +36,21 @@ typedef struct UmiApplicationProductionControlCommand {
     int mutates_state;
 } UmiApplicationProductionControlCommand;
 
+/**
+ * Return the number of records represented by application production control command
+ * without changing their state.
+ */
 size_t umi_application_production_control_command_count(void);
+/**
+ * Find application production control command while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionControlCommand *
 umi_application_production_control_command_at(size_t index);
+/**
+ * Find application production control command while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionControlCommand *
 umi_application_production_control_command_find(const char *command_id);
 

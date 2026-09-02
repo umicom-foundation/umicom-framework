@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test record kind text and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_record_kind_text(void)
 {
     TEST_REQUIRE(strcmp(umi_workbench_layout_data_record_kind_text(
@@ -65,6 +69,10 @@ static int test_record_kind_text(void)
     return 0;
 }
 
+/*
+ * Exercise test state text and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int test_state_text(void)
 {
     TEST_REQUIRE(strcmp(umi_workbench_layout_data_change_kind_text(
@@ -100,6 +108,10 @@ static int test_state_text(void)
     return 0;
 }
 
+/*
+ * Exercise test hashing and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int test_hashing(void)
 {
     const char payload[] = "layout-state";
@@ -116,6 +128,10 @@ static int test_hashing(void)
     return 0;
 }
 
+/*
+ * Exercise test text helpers and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_text_helpers(void)
 {
     char destination[16];
@@ -144,6 +160,10 @@ static int test_text_helpers(void)
     return 0;
 }
 
+/*
+ * Exercise test expiry and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int test_expiry(void)
 {
     TEST_REQUIRE(!umi_workbench_layout_data_time_expired(0U, 500U),
@@ -157,6 +177,10 @@ static int test_expiry(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_record_kind_text() == 0, "record kinds");

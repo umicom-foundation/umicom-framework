@@ -23,14 +23,23 @@
 
 #include <stdio.h>
 
+/*
+ * Provide the activate matching workbench profile operation used by this module and its
+ * client applications.
+ */
 static void activate_matching_workbench_profile(
     UmiGtk4Adapter *adapter,
     const char *layout_id)
 {
     UmiUiWorkbench *workbench;
     UmiUiWorkspaceProfileSnapshot profile;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) return;
     workbench = umi_ui_application_shell_workbench(adapter->shell);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_workspace_profile_model_find(
             umi_ui_workbench_workspace_profiles(workbench),
             layout_id, &profile) == UMI_STATUS_OK) {
@@ -39,14 +48,27 @@ static void activate_matching_workbench_profile(
     }
 }
 
+/*
+ * Provide the on layout tab clicked operation used by this module and its client
+ * applications.
+ */
 static void on_layout_tab_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     const char *layout_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->desktop_shell == NULL) return;
     layout_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-desktop-layout-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout_id == NULL) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_shell_model_activate_layout(
             adapter->desktop_shell, layout_id) == UMI_STATUS_OK) {
         activate_matching_workbench_profile(adapter, layout_id);
@@ -54,18 +76,32 @@ static void on_layout_tab_clicked(GtkButton *button, gpointer user_data)
     }
 }
 
+/*
+ * Provide the on application button clicked operation used by this module and its client
+ * applications.
+ */
 static void on_application_button_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Adapter *adapter = (UmiGtk4Adapter *)user_data;
     UmiDesktopTaskbarItem item;
     const char *application_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->desktop_shell == NULL) return;
     application_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-desktop-application-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id == NULL) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_shell_model_activate_application(
             adapter->desktop_shell, application_id) != UMI_STATUS_OK)
         return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_shell_model_find_application(
             adapter->desktop_shell, application_id, &item) == UMI_STATUS_OK &&
         item.default_layout_id[0] != '\0' &&
@@ -77,6 +113,10 @@ static void on_application_button_clicked(GtkButton *button, gpointer user_data)
     (void)umi_gtk4_refresh_workbench(adapter);
 }
 
+/*
+ * Provide the application taskbar button operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *application_taskbar_button(
     UmiGtk4Adapter *adapter,
     const UmiDesktopTaskbarItem *item)
@@ -98,9 +138,13 @@ static GtkWidget *application_taskbar_button(
     gtk_image_set_pixel_size(GTK_IMAGE(icon), 20);
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-desktop-application-button");
+    /* Apply this operation only while the related capability or state is available. */
     if (item->active) gtk_widget_add_css_class(button, "active");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item->running) gtk_widget_add_css_class(button, "running");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item->pinned) gtk_widget_add_css_class(button, "pinned");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item->attention)
         gtk_widget_add_css_class(button, "requires-attention");
     gtk_widget_add_css_class(state, "umicom-desktop-application-state");
@@ -119,6 +163,7 @@ static GtkWidget *application_taskbar_button(
     return button;
 }
 
+/* Provide the layout tab button operation used by this module and its client applications. */
 static GtkWidget *layout_tab_button(
     UmiGtk4Adapter *adapter,
     const UmiDesktopShellTab *tab)
@@ -134,7 +179,9 @@ static GtkWidget *layout_tab_button(
                    tab->dirty ? " · Unsaved changes" : "");
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-desktop-layout-tab");
+    /* Apply this operation only while the related capability or state is available. */
     if (tab->active) gtk_widget_add_css_class(button, "active");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (tab->dirty) gtk_widget_add_css_class(button, "dirty");
     gtk_widget_add_css_class(state, "umicom-desktop-layout-state");
     gtk_box_append(GTK_BOX(box), label);
@@ -149,6 +196,10 @@ static GtkWidget *layout_tab_button(
     return button;
 }
 
+/*
+ * Provide the gtk4 refresh desktop shell operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_desktop_shell(UmiGtk4Adapter *adapter)
 {
     UmiDesktopShellSnapshot snapshot;
@@ -156,15 +207,24 @@ UmiStatus umi_gtk4_refresh_desktop_shell(UmiGtk4Adapter *adapter)
     char monitor_text[128U];
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->desktop_layout_bar == NULL ||
         adapter->desktop_layout_tabs_box == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter->desktop_shell == NULL) {
         gtk_widget_set_visible(adapter->desktop_layout_bar, FALSE);
         return UMI_STATUS_OK;
     }
     status = umi_desktop_shell_model_snapshot(
         adapter->desktop_shell, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_gtk4_clear_box(adapter->desktop_layout_tabs_box);
 
@@ -175,19 +235,23 @@ UmiStatus umi_gtk4_refresh_desktop_shell(UmiGtk4Adapter *adapter)
         UmiDesktopTaskbarItem item;
         status = umi_desktop_shell_model_application_at(
             adapter->desktop_shell, index, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         gtk_box_append(GTK_BOX(adapter->desktop_layout_tabs_box),
                        application_taskbar_button(adapter, &item));
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.application_count > 0U && snapshot.tab_count > 0U) {
         GtkWidget *separator = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
         gtk_widget_add_css_class(separator, "umicom-desktop-strip-separator");
         gtk_box_append(GTK_BOX(adapter->desktop_layout_tabs_box), separator);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.tab_count; ++index) {
         UmiDesktopShellTab tab;
         status = umi_desktop_shell_model_tab_at(
             adapter->desktop_shell, index, &tab);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         gtk_box_append(GTK_BOX(adapter->desktop_layout_tabs_box),
                        layout_tab_button(adapter, &tab));
@@ -201,6 +265,10 @@ UmiStatus umi_gtk4_refresh_desktop_shell(UmiGtk4Adapter *adapter)
                    snapshot.monitor_count == 1U ? "" : "s");
     gtk_label_set_text(GTK_LABEL(adapter->desktop_monitor_label), monitor_text);
     popover = umi_gtk4_desktop_designer_popover(adapter);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (popover == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     gtk_menu_button_set_popover(
         GTK_MENU_BUTTON(adapter->desktop_designer_button), popover);

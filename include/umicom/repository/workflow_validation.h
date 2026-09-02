@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Check that repository workflow satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_repository_workflow_validate(
     const UmiRepositoryWorkflowRequest *request);
 

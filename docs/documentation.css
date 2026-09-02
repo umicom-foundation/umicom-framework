@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Shared colour tokens keep generated pages consistent with Umicom identity. */
 :root {
     --page-background-color: #f4f7fa;
     --page-foreground-color: #243446;
@@ -27,26 +28,31 @@
     --fragment-foreground: #e8eef3;
 }
 
+/* Comfortable line spacing keeps long contract explanations readable. */
 body {
     line-height: 1.55;
 }
 
+/* The title area separates global documentation navigation from page content. */
 #titlearea {
     background: linear-gradient(105deg, #263b4f, #172838);
     color: var(--header-foreground-color);
     padding: 0.7rem 1rem;
 }
 
+/* A bounded content width prevents source guidance from becoming hard to scan. */
 .contents {
     max-width: 1180px;
     margin: 0 auto;
 }
 
+/* Source fragments use a distinct surface while retaining readable corners. */
 div.fragment {
     border-radius: 6px;
     padding: 0.4rem;
 }
 
+/* Public member cards visually group one contract and its detailed guidance. */
 .memitem {
     border-radius: 6px;
     box-shadow: 0 1px 3px rgb(25 42 57 / 18%);

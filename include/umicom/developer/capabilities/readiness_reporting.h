@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_READINESS_REPORTING "umicom.developer.diagnostics.readiness_reporting"
 
+/**
+ * Provide the developer capability readiness reporting operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_readiness_reporting(void);
 

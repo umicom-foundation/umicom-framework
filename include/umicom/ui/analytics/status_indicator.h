@@ -27,8 +27,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics status indicator data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsStatusIndicator { char label[UMI_ANALYTICS_TEXT_CAPACITY]; UmiAnalyticsSeverity severity; int active; } UmiAnalyticsStatusIndicator;
+/**
+ * Initialise analytics status indicator from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_status_indicator_init(UmiAnalyticsStatusIndicator *item);
+/**
+ * Check that analytics status indicator satisfies its contract before another service
+ * relies on it.
+ */
 int umi_analytics_status_indicator_valid(const UmiAnalyticsStatusIndicator *item);
 
 #ifdef __cplusplus

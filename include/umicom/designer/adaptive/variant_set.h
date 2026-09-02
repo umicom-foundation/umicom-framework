@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive variant set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveVariantSet {
     UmiDesignerAdaptiveVariant variants[UMI_DESIGNER_ADAPTIVE_MAX_VARIANTS];
     size_t count;

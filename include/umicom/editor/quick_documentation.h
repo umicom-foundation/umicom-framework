@@ -34,6 +34,10 @@ extern "C" {
 #define UMI_EDITOR_DOCUMENTATION_CONTENT_CAPACITY 8192U
 #define UMI_EDITOR_DOCUMENTATION_URI_CAPACITY 1024U
 
+/**
+ * List the named editor quick documentation section kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorQuickDocumentationSectionKind {
     UMI_EDITOR_DOCUMENTATION_SUMMARY = 1,
     UMI_EDITOR_DOCUMENTATION_SIGNATURE = 2,
@@ -44,12 +48,20 @@ typedef enum UmiEditorQuickDocumentationSectionKind {
     UMI_EDITOR_DOCUMENTATION_LINK = 7
 } UmiEditorQuickDocumentationSectionKind;
 
+/**
+ * List the named editor quick documentation content kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorQuickDocumentationContentKind {
     UMI_EDITOR_DOCUMENTATION_PLAIN_TEXT = 1,
     UMI_EDITOR_DOCUMENTATION_MARKDOWN = 2,
     UMI_EDITOR_DOCUMENTATION_SOURCE_CODE = 3
 } UmiEditorQuickDocumentationContentKind;
 
+/**
+ * Represent the editor quick documentation section data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorQuickDocumentationSection {
     uint32_t struct_size;
     uint32_t api_version;
@@ -68,6 +80,10 @@ typedef struct UmiEditorQuickDocumentationSection {
     int visible;
 } UmiEditorQuickDocumentationSection;
 
+/**
+ * Represent the editor quick documentation snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorQuickDocumentationSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -80,47 +96,111 @@ typedef struct UmiEditorQuickDocumentationSnapshot {
     int pinned;
 } UmiEditorQuickDocumentationSnapshot;
 
+/**
+ * Represent the editor quick documentation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorQuickDocumentation UmiEditorQuickDocumentation;
 
+/**
+ * Initialise editor quick documentation from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_quick_documentation_create(
     UmiEditorQuickDocumentation **out_documentation);
+/**
+ * Release or reset state held by editor quick documentation so the same storage can be
+ * reused safely.
+ */
 void umi_editor_quick_documentation_destroy(
     UmiEditorQuickDocumentation *documentation);
+/**
+ * Release or reset state held by editor quick documentation so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_quick_documentation_clear(
     UmiEditorQuickDocumentation *documentation);
+/**
+ * Provide the editor quick documentation upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_quick_documentation_upsert(
     UmiEditorQuickDocumentation *documentation,
     const UmiEditorQuickDocumentationSection *section);
+/**
+ * Remove editor quick documentation while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_quick_documentation_remove(
     UmiEditorQuickDocumentation *documentation,
     const char *section_id);
+/**
+ * Provide the editor quick documentation remove symbol operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_quick_documentation_remove_symbol(
     UmiEditorQuickDocumentation *documentation,
     const char *symbol_id);
+/**
+ * Provide the editor quick documentation sort operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_quick_documentation_sort(
     UmiEditorQuickDocumentation *documentation);
+/**
+ * Provide the editor quick documentation select symbol operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_quick_documentation_select_symbol(
     UmiEditorQuickDocumentation *documentation,
     const char *symbol_id);
+/**
+ * Provide the editor quick documentation set pinned operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_quick_documentation_set_pinned(
     UmiEditorQuickDocumentation *documentation,
     int pinned);
+/**
+ * Find editor quick documentation while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_editor_quick_documentation_at(
     const UmiEditorQuickDocumentation *documentation,
     size_t index,
     UmiEditorQuickDocumentationSection *out_section);
+/**
+ * Find editor quick documentation selected while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_quick_documentation_selected_at(
     const UmiEditorQuickDocumentation *documentation,
     size_t selected_index,
     UmiEditorQuickDocumentationSection *out_section);
+/**
+ * Provide the editor quick documentation snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_quick_documentation_snapshot(
     const UmiEditorQuickDocumentation *documentation,
     UmiEditorQuickDocumentationSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor quick documentation without changing
+ * their state.
+ */
 size_t umi_editor_quick_documentation_count(
     const UmiEditorQuickDocumentation *documentation);
+/**
+ * Return the number of records represented by editor quick documentation symbol without
+ * changing their state.
+ */
 size_t umi_editor_quick_documentation_symbol_count(
     const UmiEditorQuickDocumentation *documentation,
     const char *symbol_id);
+/**
+ * Provide the editor quick documentation revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_quick_documentation_revision(
     const UmiEditorQuickDocumentation *documentation);
 

@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics viewport data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsViewport { double x_min,x_max,y_min,y_max; } UmiAnalyticsViewport;
+/**
+ * Initialise analytics viewport from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_analytics_viewport_init(UmiAnalyticsViewport *v,double x_min,double x_max,double y_min,double y_max);
+/**
+ * Provide the analytics viewport zoom operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_viewport_zoom(UmiAnalyticsViewport *v,double factor,double x_center,double y_center);
 
 #ifdef __cplusplus

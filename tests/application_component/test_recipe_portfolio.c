@@ -18,9 +18,14 @@
 
 #include <assert.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   size_t application_index;
   assert(umi_application_portfolio_count() == 26U);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (application_index = 0U; application_index < umi_application_portfolio_count();
        ++application_index) {
     const UmiApplicationDefinition *application = umi_application_portfolio_at(application_index);
@@ -28,6 +33,7 @@ int main(void) {
     assert(application != NULL);
     assert(umi_application_component_recipe_catalogue_application_count(
                application->application_id) == 3U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (recipe_index = 0U; recipe_index < 3U; ++recipe_index) {
       const UmiApplicationComponentRecipe *recipe =
           umi_application_component_recipe_catalogue_application_at(application->application_id,
@@ -37,6 +43,7 @@ int main(void) {
       size_t visible_primary_count = 0U;
       assert(recipe != NULL);
       assert(umi_application_component_recipe_project(recipe, &layout) == UMI_STATUS_OK);
+      /* Visit each bounded item once so every record receives the same rule. */
       for (slot_index = 0U; slot_index < layout.slot_count; ++slot_index) {
         visible_primary_count +=
             layout.slots[slot_index].visible &&

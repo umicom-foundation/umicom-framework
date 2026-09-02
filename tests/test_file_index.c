@@ -21,6 +21,10 @@
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/threading.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char temporary[UMI_PATH_CAPACITY];

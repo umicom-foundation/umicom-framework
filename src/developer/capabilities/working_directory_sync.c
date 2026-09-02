@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/working_directory_sync.h"
 
+/*
+ * Provide the developer capability working directory sync operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_working_directory_sync(void)
 {

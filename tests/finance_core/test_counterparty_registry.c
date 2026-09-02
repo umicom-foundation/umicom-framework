@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/counterparty_registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCounterpartyRegistry r; UmiCounterparty x; umi_counterparty_registry_init(&r); CHECK(umi_counterparty_init(&x,"CP","Counterparty","LE","BROKER")==UMI_STATUS_OK); CHECK(umi_counterparty_registry_add(&r,&x)==UMI_STATUS_OK);

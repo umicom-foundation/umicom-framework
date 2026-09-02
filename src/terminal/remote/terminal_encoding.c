@@ -18,4 +18,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_encoding.h"
 #include <string.h>
+/*
+ * Provide the terminal remote terminal encoding supported operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_terminal_encoding_supported(const char *name) { return name && (strcmp(name,"UTF-8")==0||strcmp(name,"utf-8")==0||strcmp(name,"CP65001")==0||strcmp(name,"ASCII")==0); }

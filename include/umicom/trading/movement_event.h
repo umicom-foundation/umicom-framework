@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the movement event measure operation used by this module and its client
+ * applications.
+ */
 UmiMovementEvent umi_movement_event_measure(double start_price, double end_price, int64_t start_ms, int64_t end_ms, double minimum_points, int64_t maximum_duration_ms);
 #ifdef __cplusplus
 }

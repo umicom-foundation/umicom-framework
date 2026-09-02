@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev context redaction data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevContextRedaction {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +41,25 @@ typedef struct UmiAiDevContextRedaction {
     int enabled;
 } UmiAiDevContextRedaction;
 
+/**
+ * Initialise ai dev context redaction from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_context_redaction_init(UmiAiDevContextRedaction *policy);
+/**
+ * Provide the ai dev context redaction configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_context_redaction_configure(UmiAiDevContextRedaction *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev context redaction allows operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_context_redaction_allows(const UmiAiDevContextRedaction *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev context redaction approval required operation used by this module and
+ * its client applications.
+ */
 int umi_ai_dev_context_redaction_approval_required(const UmiAiDevContextRedaction *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

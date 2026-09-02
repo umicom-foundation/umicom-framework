@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap lifecycle hook from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_lifecycle_hook_init(UmiBootstrapLifecycleHook *hook,
                                             const char *hook_id,
                                             const char *service_id,

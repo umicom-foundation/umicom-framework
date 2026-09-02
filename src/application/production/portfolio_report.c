@@ -17,25 +17,37 @@
 
 #include <string.h>
 
+/*
+ * Provide the application production portfolio report build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_portfolio_report_build(
     const UmiApplicationProductionPortfolio *portfolio,
     UmiApplicationProductionPortfolioReport *out_report)
 {
     size_t index;
     unsigned readiness_total = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (portfolio == NULL || out_report == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_report, 0, sizeof(*out_report));
     out_report->application_count = portfolio->count;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < portfolio->count; ++index) {
         const UmiApplicationProductionRuntime *runtime =
             &portfolio->entries[index].runtime;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (!runtime->initialised) return UMI_STATUS_INVALID_STATE;
+        /* Apply this operation only while the related capability or state is available. */
         if (runtime->acceptance.state == UMI_APPLICATION_PRODUCTION_READY)
             out_report->ready_count += 1U;
-        else if (runtime->acceptance.state ==
+        else /* Apply this branch only when its contract condition is satisfied. */ if (runtime->acceptance.state ==
                  UMI_APPLICATION_PRODUCTION_DEGRADED)
             out_report->degraded_count += 1U;
+        /* Use this fallback path when the earlier condition does not apply. */
         else
             out_report->blocked_count += 1U;
         out_report->panel_count += runtime->panels.count;

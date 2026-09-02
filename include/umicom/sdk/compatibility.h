@@ -25,7 +25,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk requirement data shared with callers of this public contract.
+ */
 typedef struct UmiSdkRequirement { UmiVersion minimum_version; uint32_t required_abi; } UmiSdkRequirement;
+/**
+ * Provide the sdk compatible operation used by this module and its client applications.
+ */
 int umi_sdk_compatible(const UmiSdkRequirement *requirement,const UmiSdkManifest *manifest);
 #ifdef __cplusplus
 }

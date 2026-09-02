@@ -17,6 +17,10 @@
 
 #include "umicom/developer_project/builtin_languages.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperProjectLanguageRegistry *registry = NULL;

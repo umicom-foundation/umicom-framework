@@ -25,6 +25,10 @@
 
 static uint64_t generator_state = UINT64_C(0x9e3779b97f4a7c15);
 
+/*
+ * Exercise next random and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static uint32_t next_random(void)
 {
     generator_state ^= generator_state << 7U;
@@ -33,6 +37,10 @@ static uint32_t next_random(void)
     return (uint32_t)generator_state;
 }
 
+/*
+ * Exercise compile status expected and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int compile_status_expected(UmiStatus status)
 {
     return status == UMI_STATUS_OK ||
@@ -40,6 +48,10 @@ static int compile_status_expected(UmiStatus status)
            status == UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     static const char pattern_alphabet[] =
@@ -56,6 +68,7 @@ int main(void)
     assert(umi_editor_workspace_search_pattern_create(&pattern) ==
            UMI_STATUS_OK);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (iteration = 0U; iteration < FUZZ_ITERATION_COUNT; ++iteration) {
         size_t expression_length = 1U +
             (size_t)(next_random() % (FUZZ_PATTERN_CAPACITY - 2U));
@@ -64,12 +77,14 @@ int main(void)
         size_t position;
         UmiStatus status;
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (position = 0U; position < expression_length; ++position) {
             expression[position] = pattern_alphabet[
                 next_random() % (sizeof(pattern_alphabet) - 1U)];
         }
         expression[expression_length] = '\0';
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (position = 0U; position < text_length; ++position) {
             text[position] = text_alphabet[
                 next_random() % (sizeof(text_alphabet) - 1U)];
@@ -88,6 +103,7 @@ int main(void)
         status = umi_editor_workspace_search_pattern_compile(
             pattern, &request, &diagnostic);
         assert(compile_status_expected(status));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             size_t start = text_length == 0U
                 ? 0U
@@ -98,6 +114,7 @@ int main(void)
             assert(status == UMI_STATUS_OK ||
                    status == UMI_STATUS_NOT_FOUND ||
                    status == UMI_STATUS_TIMEOUT);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 assert(match.start_byte_offset <= match.end_byte_offset);
                 assert(match.end_byte_offset <= text_length);

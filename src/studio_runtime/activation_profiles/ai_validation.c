@@ -18,6 +18,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "ai.developer.open-validation", .surface = UMI_STUDIO_SURFACE_AI_VALIDATION, .prefix_match = 0, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile ai validation operation used by this module and
+ * its client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_ai_validation(void)
 {

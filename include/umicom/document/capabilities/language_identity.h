@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_LANGUAGE_IDENTITY "umicom.document.identity.language_identity"
 
+/**
+ * Provide the document capability language identity operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_language_identity(void);
 

@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/asset_bundle.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebAssetBundle b; UmiNativeWebAsset a={0}; umi_native_web_asset_bundle_init(&b); strcpy(a.path,"/umi.js"); strcpy(a.content_type,"text/javascript"); CHECK(umi_native_web_asset_bundle_add(&b,&a)==UMI_STATUS_OK); CHECK(umi_native_web_asset_bundle_add(&b,&a)==UMI_STATUS_ALREADY_EXISTS);

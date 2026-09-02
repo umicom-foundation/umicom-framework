@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/polling_patch_protocol.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebPatchBatch b; UmiNativeWebMarkupBuffer out; umi_native_web_patch_batch_init(&b,1U); CHECK(umi_native_web_polling_patch_protocol_encode(&b,&out)==UMI_STATUS_OK); CHECK(out.length>0U);

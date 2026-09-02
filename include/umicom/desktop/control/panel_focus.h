@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_PANEL_FOCUS_API_VERSION 1U
 
+/**
+ * Represent the desktop panel focus snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopPanelFocusSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

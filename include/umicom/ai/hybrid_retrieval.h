@@ -25,12 +25,20 @@ extern "C" {
 
 #define UMI_AI_HYBRID_MAX_CANDIDATES (UMI_AI_MAX_RETRIEVAL_RESULTS * 2U)
 
+/**
+ * Represent the ai hybrid retrieval settings data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiHybridRetrievalSettings {
     double lexical_weight;
     double vector_weight;
     size_t candidate_limit;
 } UmiAiHybridRetrievalSettings;
 
+/**
+ * Provide the ai hybrid retrieval settings default operation used by this module and its
+ * client applications.
+ */
 UmiAiHybridRetrievalSettings
 umi_ai_hybrid_retrieval_settings_default(void);
 

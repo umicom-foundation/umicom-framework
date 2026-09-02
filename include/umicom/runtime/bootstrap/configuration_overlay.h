@@ -22,10 +22,22 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap property set from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_bootstrap_property_set_init(UmiBootstrapPropertySet *set);
+/**
+ * Find bootstrap property set while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiBootstrapConfigurationProperty *umi_bootstrap_property_set_find(
     const UmiBootstrapPropertySet *set,
     const char *key);
+/**
+ * Perform bootstrap configuration overlay through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_bootstrap_configuration_overlay_apply(
     UmiBootstrapPropertySet *set,
     const UmiBootstrapConfigurationProperty *property);

@@ -40,6 +40,9 @@ extern "C" {
 #define UMI_DELIVERY_MAX_OPERATIONS 128U
 #define UMI_DELIVERY_MAX_METADATA 64U
 
+/**
+ * List the named delivery stage values accepted by this public contract.
+ */
 typedef enum UmiDeliveryStage {
     UMI_DELIVERY_STAGE_SOURCE = 1,
     UMI_DELIVERY_STAGE_BUILD = 2,
@@ -53,6 +56,9 @@ typedef enum UmiDeliveryStage {
     UMI_DELIVERY_STAGE_COMPLETE = 10
 } UmiDeliveryStage;
 
+/**
+ * List the named artifact kind values accepted by this public contract.
+ */
 typedef enum UmiArtifactKind {
     UMI_ARTIFACT_EXECUTABLE = 1,
     UMI_ARTIFACT_LIBRARY = 2,
@@ -65,6 +71,9 @@ typedef enum UmiArtifactKind {
     UMI_ARTIFACT_PROVENANCE = 9
 } UmiArtifactKind;
 
+/**
+ * List the named package format values accepted by this public contract.
+ */
 typedef enum UmiPackageFormat {
     UMI_PACKAGE_DIRECTORY = 1,
     UMI_PACKAGE_ZIP = 2,
@@ -74,6 +83,9 @@ typedef enum UmiPackageFormat {
     UMI_PACKAGE_FLATPAK = 6
 } UmiPackageFormat;
 
+/**
+ * List the named release channel values accepted by this public contract.
+ */
 typedef enum UmiReleaseChannel {
     UMI_RELEASE_DEVELOPMENT = 1,
     UMI_RELEASE_NIGHTLY = 2,
@@ -81,6 +93,9 @@ typedef enum UmiReleaseChannel {
     UMI_RELEASE_STABLE = 4
 } UmiReleaseChannel;
 
+/**
+ * List the named evidence status values accepted by this public contract.
+ */
 typedef enum UmiEvidenceStatus {
     UMI_EVIDENCE_UNKNOWN = 0,
     UMI_EVIDENCE_PASS = 1,
@@ -88,6 +103,9 @@ typedef enum UmiEvidenceStatus {
     UMI_EVIDENCE_SKIP = 3
 } UmiEvidenceStatus;
 
+/**
+ * List the named update decision values accepted by this public contract.
+ */
 typedef enum UmiUpdateDecision {
     UMI_UPDATE_NONE = 0,
     UMI_UPDATE_AVAILABLE = 1,
@@ -95,11 +113,35 @@ typedef enum UmiUpdateDecision {
     UMI_UPDATE_BLOCKED = 3
 } UmiUpdateDecision;
 
+/**
+ * Provide the delivery stage text operation used by this module and its client
+ * applications.
+ */
 const char *umi_delivery_stage_text(UmiDeliveryStage stage);
+/**
+ * Provide the artifact kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_artifact_kind_text(UmiArtifactKind kind);
+/**
+ * Provide the package format text operation used by this module and its client
+ * applications.
+ */
 const char *umi_package_format_text(UmiPackageFormat format);
+/**
+ * Provide the release channel text operation used by this module and its client
+ * applications.
+ */
 const char *umi_release_channel_text(UmiReleaseChannel channel);
+/**
+ * Provide the evidence status text operation used by this module and its client
+ * applications.
+ */
 const char *umi_evidence_status_text(UmiEvidenceStatus status);
+/**
+ * Provide the update decision text operation used by this module and its client
+ * applications.
+ */
 const char *umi_update_decision_text(UmiUpdateDecision decision);
 
 #ifdef __cplusplus

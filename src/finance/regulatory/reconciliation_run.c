@@ -20,5 +20,13 @@
 
 #include <math.h>
 #include <string.h>
-UmiStatus umi_reg_reconciliation_run_init(UmiReconciliationRun *run,const char *run_id){ UmiStatus s; if(run==NULL)return UMI_STATUS_INVALID_ARGUMENT; memset(run,0,sizeof *run); s=umi_reg_copy_text(run->run_id,sizeof run->run_id,run_id); return s; }
-UmiStatus umi_reg_reconciliation_run_record(UmiReconciliationRun *run,double left,double right,double tolerance){ double d; if(run==NULL||!umi_reg_number_valid(left)||!umi_reg_number_valid(right)||!umi_reg_number_valid(tolerance)||tolerance<0.0)return UMI_STATUS_INVALID_ARGUMENT; d=fabs(left-right);run->absolute_difference+=d;if(d<=tolerance)++run->matched;else ++run->broken;return UMI_STATUS_OK; }
+/*
+ * Initialise reg reconciliation run from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_reg_reconciliation_run_init(UmiReconciliationRun *run,const char *run_id){ UmiStatus s; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(run==NULL)return UMI_STATUS_INVALID_ARGUMENT; memset(run,0,sizeof *run); s=umi_reg_copy_text(run->run_id,sizeof run->run_id,run_id); return s; }
+/*
+ * Provide the reg reconciliation run record operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_reg_reconciliation_run_record(UmiReconciliationRun *run,double left,double right,double tolerance){ double d; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(run==NULL||!umi_reg_number_valid(left)||!umi_reg_number_valid(right)||!umi_reg_number_valid(tolerance)||tolerance<0.0)return UMI_STATUS_INVALID_ARGUMENT; d=fabs(left-right);run->absolute_difference+=d;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d<=tolerance)++run->matched;/* Use this fallback path when the earlier condition does not apply. */ else ++run->broken;return UMI_STATUS_OK; }

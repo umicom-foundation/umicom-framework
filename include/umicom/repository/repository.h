@@ -31,11 +31,17 @@ extern "C" {
 #define UMI_REPOSITORY_TEXT_CAPACITY 256U
 #define UMI_REPOSITORY_PATH_CAPACITY 2048U
 
+/**
+ * List the named repository visibility values accepted by this public contract.
+ */
 typedef enum UmiRepositoryVisibility {
     UMI_REPOSITORY_PRIVATE = 0,
     UMI_REPOSITORY_PUBLIC = 1
 } UmiRepositoryVisibility;
 
+/**
+ * Represent the repository request data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryRequest {
     const char *repository_root;
     const char *remote_owner;
@@ -49,6 +55,9 @@ typedef struct UmiRepositoryRequest {
     int dry_run;
 } UmiRepositoryRequest;
 
+/**
+ * Represent the repository report data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryReport {
     char repository_root[UMI_REPOSITORY_PATH_CAPACITY];
     char remote_name[UMI_REPOSITORY_TEXT_CAPACITY];
@@ -61,18 +70,30 @@ typedef struct UmiRepositoryReport {
     char last_output[UMI_PROCESS_OUTPUT_CAPACITY];
 } UmiRepositoryReport;
 
+/**
+ * Provide the repository initialise operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_initialise(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
     const UmiRepositoryRequest *request,
     UmiRepositoryReport *out_report
 );
+/**
+ * Provide the repository create remote operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_create_remote(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
     const UmiRepositoryRequest *request,
     UmiRepositoryReport *out_report
 );
+/**
+ * Provide the repository add submodule operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_add_submodule(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -82,6 +103,9 @@ UmiStatus umi_repository_add_submodule(
     const char *branch,
     int dry_run
 );
+/**
+ * Provide the repository status operation used by this module and its client applications.
+ */
 UmiStatus umi_repository_status(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,

@@ -16,8 +16,16 @@
 #include <string.h>
 /* Initialise and validate capture sequence-ordered evidence for an order lifecycle transition.. */
 UmiStatus umi_trading_order_event_init(UmiTradingOrderEvent *value,const UmiFinancialId * client_order_id, uint64_t sequence, int64_t event_time_ms, UmiTradingCoreOrderState state) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(client_order_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->client_order_id=*client_order_id;
     value->sequence=sequence;

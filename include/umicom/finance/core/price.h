@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial price data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialPrice { double value; uint8_t scale; } UmiFinancialPrice;
 /* Initialize price. */ UmiStatus umi_price_init(UmiFinancialPrice *p,double value,uint8_t scale);
 /* Validate price. */ bool umi_price_is_valid(const UmiFinancialPrice *p);

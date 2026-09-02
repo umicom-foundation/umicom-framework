@@ -19,4 +19,5 @@
 #include "umicom/sdk/compatibility.h"
 #include <stddef.h>
 #include "umicom/abi/version.h"
-int umi_sdk_compatible(const UmiSdkRequirement *r,const UmiSdkManifest *m){if(r==NULL||umi_sdk_manifest_validate(m)!=UMI_STATUS_OK)return 0;return m->framework_abi>=r->required_abi&&umi_abi_version_is_compatible(r->minimum_version,m->framework_version);}
+/* Provide the sdk compatible operation used by this module and its client applications. */
+int umi_sdk_compatible(const UmiSdkRequirement *r,const UmiSdkManifest *m){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||umi_sdk_manifest_validate(m)!=UMI_STATUS_OK)return 0;return m->framework_abi>=r->required_abi&&umi_abi_version_is_compatible(r->minimum_version,m->framework_version);}

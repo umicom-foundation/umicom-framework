@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_REPLACE_COMMAND "umicom.document.navigation.replace_command"
 
+/**
+ * Provide the document capability replace command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_replace_command(void);
 

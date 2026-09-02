@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PARALLEL_TESTING "umicom.developer.testing.parallel_testing"
 
+/**
+ * Provide the developer capability parallel testing operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_parallel_testing(void);
 

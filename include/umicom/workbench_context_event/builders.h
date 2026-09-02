@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench context event build project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_build_project(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -27,6 +31,10 @@ UmiStatus umi_workbench_context_event_build_project(
     const char *root_path,const char *repository_id,const char *language_id,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build editor location operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_build_editor_location(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -34,6 +42,10 @@ UmiStatus umi_workbench_context_event_build_editor_location(
     const char *symbol,uint32_t line,uint32_t column,uint32_t selection_length,
     uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build diagnostic operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_event_build_diagnostic(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -41,6 +53,10 @@ UmiStatus umi_workbench_context_event_build_diagnostic(
     uint32_t line,uint32_t column,const char *severity,
     const char *diagnostic_code,const char *message,uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build source control operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_build_source_control(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -48,6 +64,10 @@ UmiStatus umi_workbench_context_event_build_source_control(
     const char *root_path,const char *repository_id,const char *branch,
     const char *path,const char *change_kind,uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build test operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_build_test(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -55,6 +75,10 @@ UmiStatus umi_workbench_context_event_build_test(
     const char *suite_id,const char *outcome,const char *source_uri,
     uint64_t source_line,uint64_t duration_ms,uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build ai operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_build_ai(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -62,6 +86,10 @@ UmiStatus umi_workbench_context_event_build_ai(
     const char *conversation_id,const char *provider_id,const char *model_id,
     const char *evidence_id,uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build instrument operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_event_build_instrument(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -69,6 +97,10 @@ UmiStatus umi_workbench_context_event_build_instrument(
     const char *venue,const char *currency,const char *asset_class,
     const char *contract_id,uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build account operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_build_account(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,
@@ -76,6 +108,10 @@ UmiStatus umi_workbench_context_event_build_account(
     const char *book_id,const char *currency,const char *account_type,
     const char *environment,uint64_t timestamp_ms);
 
+/**
+ * Provide the workbench context event build trade operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_build_trade(
     UmiWorkbenchContextEvent *event,
     const char *event_id,const char *source_id,const char *application_id,

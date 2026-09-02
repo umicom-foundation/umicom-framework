@@ -15,15 +15,20 @@
 
 #include "umicom/workbench_context_host/snapshot.h"
 #include <string.h>
+/*
+ * Provide the workbench context host snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_snapshot(
     const UmiWorkbenchContextHost *host,UmiWorkbenchContextHostSnapshot *out_snapshot)
 {
-    size_t i;if(!host||!out_snapshot)return UMI_STATUS_INVALID_ARGUMENT;
+    size_t i;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!host||!out_snapshot)return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_snapshot,0,sizeof(*out_snapshot));out_snapshot->structure_size=(uint32_t)sizeof(*out_snapshot);
     (void)umi_workbench_context_host_copy_text(out_snapshot->host_id,sizeof(out_snapshot->host_id),host->host_id);
     (void)umi_workbench_context_host_copy_text(out_snapshot->application_id,sizeof(out_snapshot->application_id),host->application_id);
     (void)umi_workbench_context_host_copy_text(out_snapshot->active_group_id,sizeof(out_snapshot->active_group_id),host->active_group_id);
     out_snapshot->endpoint_count=host->endpoints.count;out_snapshot->inbox_count=host->inboxes.count;
+    /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<host->inboxes.count;++i)out_snapshot->queued_delivery_count+=host->inboxes.items[i].count;
     out_snapshot->group_count=host->link_service?host->link_service->groups.count:0U;
     out_snapshot->metrics=host->metrics;out_snapshot->suspended=host->suspended;

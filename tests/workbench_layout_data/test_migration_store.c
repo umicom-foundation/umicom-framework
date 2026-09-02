@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make migration record and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiWorkbenchLayoutMigrationRecord make_migration_record(
     const char *migration_id,
     uint32_t from_version,
@@ -42,6 +46,10 @@ static UmiWorkbenchLayoutMigrationRecord make_migration_record(
     return record;
 }
 
+/*
+ * Exercise test migration record codec and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_migration_record_codec(void)
 {
     UmiWorkbenchLayoutMigrationRecord source = make_migration_record(
@@ -66,6 +74,10 @@ static int test_migration_record_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test migration repository and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_migration_repository(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -106,6 +118,10 @@ static int test_migration_repository(void)
     return 0;
 }
 
+/*
+ * Exercise test failed migration evidence and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_failed_migration_evidence(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -130,6 +146,10 @@ static int test_failed_migration_evidence(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_migration_record_codec() == 0,

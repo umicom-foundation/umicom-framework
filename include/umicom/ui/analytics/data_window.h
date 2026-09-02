@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics data window data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsDataWindow { size_t first; size_t count; } UmiAnalyticsDataWindow;
+/**
+ * Provide the analytics data window resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_data_window_resolve(size_t total,size_t first,size_t requested,UmiAnalyticsDataWindow *out_window);
 
 #ifdef __cplusplus

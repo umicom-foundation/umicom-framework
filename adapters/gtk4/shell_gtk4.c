@@ -24,6 +24,10 @@
 #define UMI_GTK4_ACTIVITY_RAIL_WIDTH 48
 #define UMI_GTK4_MIN_TOOL_SIZE 160
 
+/*
+ * Provide the configure tool notebook operation used by this module and its client
+ * applications.
+ */
 static void configure_tool_notebook(GtkWidget *notebook,
                                     GtkPositionType tab_position)
 {
@@ -36,6 +40,10 @@ static void configure_tool_notebook(GtkWidget *notebook,
     gtk_widget_set_vexpand(notebook, TRUE);
 }
 
+/*
+ * Provide the configure editor notebook operation used by this module and its client
+ * applications.
+ */
 static void configure_editor_notebook(GtkWidget *notebook,
                                       const char *css_class)
 {
@@ -53,10 +61,18 @@ static void configure_editor_notebook(GtkWidget *notebook,
     gtk_widget_set_vexpand(notebook, TRUE);
 }
 
+/*
+ * Provide the brand icon for workbench operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *brand_icon_for_workbench(UmiUiWorkbench *workbench)
 {
     UmiUiContextSnapshot value;
     GtkWidget *picture;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench != NULL &&
         umi_ui_context_get(umi_ui_workbench_context(workbench),
                            "studio.brand.icon-path", &value) ==
@@ -79,6 +95,10 @@ static GtkWidget *brand_icon_for_workbench(UmiUiWorkbench *workbench)
     return picture;
 }
 
+/*
+ * Provide the on splitter position changed operation used by this module and its client
+ * applications.
+ */
 static void on_splitter_position_changed(GObject *object,
                                          GParamSpec *property,
                                          gpointer user_data)
@@ -92,45 +112,56 @@ static void on_splitter_position_changed(GObject *object,
     int changed = 0;
 
     (void)property;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL ||
         adapter->applying_layout_state) {
         return;
     }
 
     workbench = umi_ui_application_shell_workbench(adapter->shell);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_workbench_state_snapshot(workbench, &state) != UMI_STATUS_OK) {
         return;
     }
 
     position = gtk_paned_get_position(GTK_PANED(splitter));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (splitter == adapter->middle_paned) {
         int sidebar_size = position - UMI_GTK4_ACTIVITY_RAIL_WIDTH;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (sidebar_size >= UMI_GTK4_MIN_TOOL_SIZE &&
             sidebar_size != state.sidebar_size) {
             state.sidebar_size = sidebar_size;
             changed = 1;
         }
-    } else if (splitter == adapter->centre_paned) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (splitter == adapter->centre_paned) {
         available = gtk_widget_get_width(splitter);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (available - position >= UMI_GTK4_MIN_TOOL_SIZE &&
             available - position != state.auxiliary_sidebar_size) {
             state.auxiliary_sidebar_size = available - position;
             changed = 1;
         }
-    } else if (splitter == adapter->content_paned) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (splitter == adapter->content_paned) {
         available = gtk_widget_get_height(splitter);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (available - position >= UMI_GTK4_MIN_TOOL_SIZE &&
             available - position != state.bottom_panel_size) {
             state.bottom_panel_size = available - position;
             changed = 1;
         }
-    } else if (splitter == adapter->editor_paned &&
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (splitter == adapter->editor_paned &&
                state.editor_split_mode != UMI_UI_EDITOR_SPLIT_SINGLE) {
         available = state.editor_split_mode == UMI_UI_EDITOR_SPLIT_COLUMNS
             ? gtk_widget_get_width(splitter)
             : gtk_widget_get_height(splitter);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (available > 0) {
             int ratio = (int)(((int64_t)position * 10000) / available);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (ratio >= UMI_UI_EDITOR_SPLIT_RATIO_MIN &&
                 ratio <= UMI_UI_EDITOR_SPLIT_RATIO_MAX &&
                 ratio != state.editor_split_ratio) {
@@ -140,6 +171,7 @@ static void on_splitter_position_changed(GObject *object,
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (changed) {
         /* Only chrome geometry changed; avoid replaying navigation commands
          * while the user drags a splitter. */
@@ -151,11 +183,20 @@ static void on_splitter_position_changed(GObject *object,
     }
 }
 
+/* Provide the gtk4 clear box operation used by this module and its client applications. */
 void umi_gtk4_clear_box(GtkWidget *box)
 {
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (box == NULL || !GTK_IS_BOX(box)) return;
     child = gtk_widget_get_first_child(box);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_box_remove(GTK_BOX(box), child);
@@ -163,6 +204,7 @@ void umi_gtk4_clear_box(GtkWidget *box)
     }
 }
 
+/* Provide the gtk4 build shell operation used by this module and its client applications. */
 UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
 {
     GtkWidget *left_cluster;
@@ -178,6 +220,10 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
     GtkWidget *layout_scroller;
     UmiUiWorkbench *workbench;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->application == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench context link build source location operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_link_build_source_location(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -31,6 +35,10 @@ UmiStatus umi_workbench_context_link_build_source_location(
     const char *file_path,
     uint32_t line,
     uint32_t column);
+/**
+ * Provide the workbench context link build instrument operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_link_build_instrument(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -39,6 +47,10 @@ UmiStatus umi_workbench_context_link_build_instrument(
     const char *instrument_id,
     const char *symbol,
     const char *venue);
+/**
+ * Provide the workbench context link build project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_build_project(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -47,6 +59,10 @@ UmiStatus umi_workbench_context_link_build_project(
     const char *project_id,
     const char *root_path,
     const char *language_id);
+/**
+ * Provide the workbench context link build selection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_build_selection(
     UmiContextPayload *out_payload,
     const char *context_id,

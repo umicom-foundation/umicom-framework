@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query builder data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryBuilder {
     uint32_t struct_size;
     uint32_t api_version;
@@ -42,25 +45,53 @@ typedef struct UmiDataQueryBuilder {
     uint64_t revision;
 } UmiDataQueryBuilder;
 
+/**
+ * Initialise data query builder from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_data_query_builder_init(
     UmiDataQueryBuilder *builder,
     const char *builder_id,
     const char *root_table);
+/**
+ * Provide the data query builder add projection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_data_query_builder_add_projection(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryProjection *projection);
+/**
+ * Provide the data query builder add predicate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_data_query_builder_add_predicate(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryExpression *predicate);
+/**
+ * Provide the data query builder add join operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_query_builder_add_join(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryJoin *join);
+/**
+ * Provide the data query builder add order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_query_builder_add_order(
     UmiDataQueryBuilder *builder,
     const UmiDataQueryOrder *order);
+/**
+ * Provide the data query builder set limit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_query_builder_set_limit(
     UmiDataQueryBuilder *builder,
     uint64_t row_limit);
+/**
+ * Provide the data query builder sql preview operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_query_builder_sql_preview(
     const UmiDataQueryBuilder *builder,
     char *sql,

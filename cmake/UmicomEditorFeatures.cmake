@@ -1,4 +1,20 @@
 #-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomEditorFeatures.cmake
+#
+# PURPOSE:
+#   Configure the umicom editor features build rules without duplicating product
+#   logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
 # Umicom Framework editor source inventory.
 # Generated feature implementations and Framework-owned editor platforms are
 # assembled here before the canonical umicom_editor target is created.
@@ -192,6 +208,7 @@ target_sources(umicom_diagnostics PRIVATE
 # authoritative and avoids adding another build script or replacing any target.
 # -----------------------------------------------------------------------------
 function(umicom_register_advanced_debugging_sources)
+    # Load the dependency only when the parent build has not already provided its target.
     if(NOT TARGET umicom_debug)
         message(FATAL_ERROR
             "Advanced debugging sources require the umicom_debug target")

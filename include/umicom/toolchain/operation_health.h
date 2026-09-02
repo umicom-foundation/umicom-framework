@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain operation health data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainOperationHealth {
     size_t required_tools;
     size_t found_tools;
@@ -32,6 +36,10 @@ typedef struct UmiToolchainOperationHealth {
     int healthy;
 } UmiToolchainOperationHealth;
 
+/**
+ * Provide the toolchain operation health from context operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_toolchain_operation_health_from_context(
     const UmiToolchainOperationContext *context,
     UmiToolchainOperationHealth *out_health);

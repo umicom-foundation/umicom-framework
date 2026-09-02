@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcRendererRegistry r; UmiFcRendererProfile p,q; umi_fc_renderer_registry_init(&r); CHECK(umi_fc_renderer_profile_make("web",UMI_FC_FRONTEND_NATIVE_WEB,3U,1U,&p)==UMI_STATUS_OK); CHECK(umi_fc_renderer_registry_upsert(&r,&p)==UMI_STATUS_OK); CHECK(umi_fc_renderer_registry_find(&r,"web",&q)==UMI_STATUS_OK); CHECK(q.kind==UMI_FC_FRONTEND_NATIVE_WEB);
     return 0;

@@ -19,11 +19,19 @@
 
 #include "umicom/delivery/retention.h"
 
+/*
+ * Provide the retention policy default operation used by this module and its client
+ * applications.
+ */
 UmiRetentionPolicy umi_retention_policy_default(void)
 {
     UmiRetentionPolicy policy = {3U, 5U, 30U};
     return policy;
 }
+/*
+ * Provide the retention should keep generation operation used by this module and its
+ * client applications.
+ */
 int umi_retention_should_keep_generation(const UmiRetentionPolicy *policy,
                                          size_t newest_index)
 {

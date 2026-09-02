@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Provide the workbench selection provider snapshot build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_build(
     const UmiWorkbenchSelectionProviderService *service,
     UmiWorkbenchSelectionProviderSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

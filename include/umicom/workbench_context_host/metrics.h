@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host metrics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextHostMetrics {
     uint64_t endpoint_registration_count;
     uint64_t endpoint_removal_count;
@@ -34,6 +38,10 @@ typedef struct UmiWorkbenchContextHostMetrics {
     uint64_t error_count;
     uint64_t revision;
 } UmiWorkbenchContextHostMetrics;
+/**
+ * Initialise workbench context host metrics from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_host_metrics_init(UmiWorkbenchContextHostMetrics *metrics);
 #ifdef __cplusplus
 }

@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive input profile data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveInputProfile {
     int pointer;
     int touch;

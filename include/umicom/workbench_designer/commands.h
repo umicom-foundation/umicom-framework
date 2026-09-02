@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer controller command kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchDesignerControllerCommandKind {
     UMI_WORKBENCH_DESIGNER_CONTROLLER_START = 1,
     UMI_WORKBENCH_DESIGNER_CONTROLLER_QUIESCE = 2,
@@ -38,6 +42,10 @@ typedef enum UmiWorkbenchDesignerControllerCommandKind {
     UMI_WORKBENCH_DESIGNER_CONTROLLER_AUTOSAVE = 11
 } UmiWorkbenchDesignerControllerCommandKind;
 
+/**
+ * Represent the workbench designer controller command data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerControllerCommand {
     UmiWorkbenchDesignerControllerCommandKind kind;
     char command_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -53,6 +61,10 @@ typedef struct UmiWorkbenchDesignerControllerCommand {
     uint64_t timestamp_ms;
 } UmiWorkbenchDesignerControllerCommand;
 
+/**
+ * Represent the workbench designer controller result data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerControllerResult {
     UmiStatus status;
     bool changed;
@@ -61,7 +73,15 @@ typedef struct UmiWorkbenchDesignerControllerResult {
     uint64_t service_revision;
 } UmiWorkbenchDesignerControllerResult;
 
+/**
+ * Initialise workbench designer controller command from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_controller_command_init(UmiWorkbenchDesignerControllerCommand *command, UmiWorkbenchDesignerControllerCommandKind kind, const char *command_id);
+/**
+ * Check that workbench designer controller command satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_designer_controller_command_validate(const UmiWorkbenchDesignerControllerCommand *command);
 
 #ifdef __cplusplus

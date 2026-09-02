@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/clang_toolchain.h"
 
+/*
+ * Provide the developer capability clang toolchain operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_clang_toolchain(void)
 {

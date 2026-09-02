@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the governance snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiGovernanceSnapshot { size_t domains; size_t lineage_nodes; size_t controls; double quality_score; size_t open_exceptions; } UmiGovernanceSnapshot;
 /* Initialise a finite aggregate governance snapshot. */
 UmiStatus umi_reg_governance_snapshot_init(UmiGovernanceSnapshot *snapshot,size_t domains,size_t lineage_nodes,size_t controls,double quality_score,size_t open_exceptions);

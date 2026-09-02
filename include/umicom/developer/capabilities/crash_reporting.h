@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CRASH_REPORTING "umicom.developer.diagnostics.crash_reporting"
 
+/**
+ * Provide the developer capability crash reporting operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_crash_reporting(void);
 

@@ -73,6 +73,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
     }
 };
 
+/*
+ * Provide the application shell profile settings operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_settings(void)
 {
     static const UmiApplicationShellProfileDefinition profile = {

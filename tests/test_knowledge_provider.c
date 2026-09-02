@@ -12,6 +12,10 @@
 #include <assert.h>
 #include "umicom/knowledge/embedding_provider.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiKnowledgeEmbeddingRegistry registry;
@@ -30,6 +34,7 @@ int main(void)
     assert(provider.embed_text(provider.instance, "native rag", &second)
            == UMI_STATUS_OK);
     assert(first.dimension == 64U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < first.dimension; ++index) {
         assert(first.values[index] == second.values[index]);
     }

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_WATCH_DEBOUNCE "umicom.developer.performance.watch_debounce"
 
+/**
+ * Provide the developer capability watch debounce operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_watch_debounce(void);
 

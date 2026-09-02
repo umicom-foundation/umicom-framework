@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/capability_probe.h"
 
+/**
+ * Represent the application production capability readiness data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionCapabilityReadiness {
     UmiApplicationProductionState state;
     size_t required_count;
@@ -33,9 +37,17 @@ typedef struct UmiApplicationProductionCapabilityReadiness {
     unsigned percent;
 } UmiApplicationProductionCapabilityReadiness;
 
+/**
+ * Provide the application production capability readiness evaluate operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_capability_readiness_evaluate(
     const UmiApplicationProductionCapabilityProbeResults *results,
     UmiApplicationProductionCapabilityReadiness *out_readiness);
+/**
+ * Provide the application production capability readiness launchable operation used by
+ * this module and its client applications.
+ */
 int umi_application_production_capability_readiness_launchable(
     const UmiApplicationProductionCapabilityReadiness *readiness);
 

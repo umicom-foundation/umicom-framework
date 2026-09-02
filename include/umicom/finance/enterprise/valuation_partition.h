@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation partition data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationPartition { size_t partition_index; size_t first_task; size_t task_count; size_t total_tasks; } UmiEnterpriseValuationPartition;
 /* Initialise a partition that remains within the total task population. */
 UmiStatus umi_enterprise_valuation_partition_init(UmiEnterpriseValuationPartition *partition,size_t partition_index,size_t first_task,size_t task_count,size_t total_tasks);

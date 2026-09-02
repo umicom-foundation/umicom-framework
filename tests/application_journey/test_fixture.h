@@ -18,6 +18,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/application/journey/journey_platform.h"
+/**
+ * Exercise verify journey and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void verify_journey(const char *journey_id, const char *application_id,
                            const char *layout_id)
 {
@@ -40,6 +44,10 @@ static void verify_journey(const char *journey_id, const char *application_id,
     umi_application_journey_evidence_registry_init(&evidence);
     assert(umi_application_journey_runtime_begin(
                &runtime, journey, &evidence) == UMI_STATUS_OK);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (umi_application_journey_runtime_current(&runtime) != NULL) {
         assert(umi_application_journey_runtime_record(
                    &runtime, UMI_APPLICATION_JOURNEY_PASSED,

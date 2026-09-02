@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the banking banking service data shared with callers of this public contract.
+ */
 typedef struct UmiBankingBankingService {
     UmiFinancialId id;
     bool running;
@@ -26,6 +29,10 @@ typedef struct UmiBankingBankingService {
     size_t open_loans;
     size_t control_exceptions;
 } UmiBankingBankingService;
+/**
+ * Initialise banking banking service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_banking_banking_service_init(UmiBankingBankingService *value,
     const char *id,
     bool running,
@@ -33,7 +40,15 @@ UmiStatus umi_banking_banking_service_init(UmiBankingBankingService *value,
     size_t open_accounts,
     size_t open_loans,
     size_t control_exceptions);
+/**
+ * Check that banking banking service satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_banking_banking_service_valid(const UmiBankingBankingService *value);
+/**
+ * Provide the banking banking service ready operation used by this module and its client
+ * applications.
+ */
 bool umi_banking_banking_service_ready(const UmiBankingBankingService *value);
 #ifdef __cplusplus
 }

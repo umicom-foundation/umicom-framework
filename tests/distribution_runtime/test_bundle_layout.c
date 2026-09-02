@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrBundleLayout value; umi_dr_bundle_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"standard")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.bin_dir,sizeof(value.bin_dir),"bin")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.lib_dir,sizeof(value.lib_dir),"lib")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.share_dir,sizeof(value.share_dir),"share")==UMI_STATUS_OK); CHECK(umi_dr_bundle_layout_valid(&value)); CHECK(umi_dr_bundle_layout_fingerprint(&value) != 0U);
     return 0;

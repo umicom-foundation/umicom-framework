@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/msbuild_provider.h"
 
+/*
+ * Provide the developer capability msbuild provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_msbuild_provider(void)
 {

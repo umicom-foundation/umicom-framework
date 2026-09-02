@@ -24,9 +24,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb symbol breadcrumb data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbSymbolBreadcrumb { char items[UMI_EDITOR_WB_MAX_SEGMENTS][UMI_EDITOR_WB_TEXT_CAPACITY]; uint32_t depth[UMI_EDITOR_WB_MAX_SEGMENTS]; size_t count; size_t active_index; } UmiEditorWbSymbolBreadcrumb;
+/**
+ * Initialise editor wb symbol breadcrumb from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_symbol_breadcrumb_init(UmiEditorWbSymbolBreadcrumb *state);
+/**
+ * Add editor wb symbol breadcrumb only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_editor_wb_symbol_breadcrumb_append(UmiEditorWbSymbolBreadcrumb *state,const char *text,uint32_t depth);
+/**
+ * Provide the editor wb symbol breadcrumb activate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_wb_symbol_breadcrumb_activate(UmiEditorWbSymbolBreadcrumb *state,size_t index);
 
 #ifdef __cplusplus

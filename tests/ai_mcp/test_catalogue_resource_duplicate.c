@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai/mcp/resource_catalogue.h"
+/*
+ * Exercise test ai mcp catalogue resource duplicate and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_ai_mcp_catalogue_resource_duplicate(void){UmiAiMcpResourceCatalogue c;UmiAiMcpResourceDescriptor d={0};umi_ai_mcp_resource_catalogue_init(&c);strcpy(d.uri,"file:///a");assert(umi_ai_mcp_resource_catalogue_add(&c,&d)==UMI_STATUS_OK);assert(umi_ai_mcp_resource_catalogue_add(&c,&d)==UMI_STATUS_ALREADY_EXISTS);return 0;}

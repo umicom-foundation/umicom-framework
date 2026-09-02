@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/instrument_listing.h"
+/**
+ * Represent the trading listing catalogue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingListingCatalogue { UmiTradingInstrumentListing items[UMI_TRADING_CORE_MAX_ITEMS]; size_t count; } UmiTradingListingCatalogue;
 /* Initialise an empty listing catalogue. */
 void umi_trading_listing_catalogue_init(UmiTradingListingCatalogue *catalogue);

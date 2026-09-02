@@ -16,12 +16,18 @@
 
 #include "umicom/platform/filesystem.h"
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
     (void)snprintf(destination, capacity, "%s", source != NULL ? source : "");
 }
 
+/* Provide the add sdk operation used by this module and its client applications. */
 static UmiStatus add_sdk(UmiSdkCatalogueSnapshot *catalogue,
                          const char *id,
                          const char *name,
@@ -31,8 +37,13 @@ static UmiStatus add_sdk(UmiSdkCatalogueSnapshot *catalogue,
                          const char *library_leaf)
 {
     UmiSdkSnapshot *sdk;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || id == NULL || name == NULL || root == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (catalogue->count >= UMI_TOOLCHAIN_SDK_CAPACITY)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     sdk = &catalogue->items[catalogue->count++];
@@ -43,9 +54,17 @@ static UmiStatus add_sdk(UmiSdkCatalogueSnapshot *catalogue,
     copy_text(sdk->name, sizeof(sdk->name), name);
     copy_text(sdk->root, sizeof(sdk->root), root);
     sdk->kind = kind;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (include_leaf != NULL)
         (void)umi_fs_join(sdk->include_directory,
                           sizeof(sdk->include_directory), root, include_leaf);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (library_leaf != NULL)
         (void)umi_fs_join(sdk->library_directory,
                           sizeof(sdk->library_directory), root, library_leaf);
@@ -55,12 +74,20 @@ static UmiStatus add_sdk(UmiSdkCatalogueSnapshot *catalogue,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the toolchain sdk discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_sdk_discover(
     const UmiToolchainProfile *profile,
     UmiSdkCatalogueSnapshot *out_catalogue)
 {
     const char *root;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || out_catalogue == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_catalogue, 0, sizeof(*out_catalogue));
@@ -68,6 +95,7 @@ UmiStatus umi_toolchain_sdk_discover(
     out_catalogue->api_version = UMI_TOOLCHAIN_SDK_API_VERSION;
     root = profile->prefix_directory[0] != '\0'
         ? profile->prefix_directory : profile->root;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (root[0] == '\0') {
 #ifdef _WIN32
         root = "C:\\Program Files";
@@ -75,6 +103,7 @@ UmiStatus umi_toolchain_sdk_discover(
         root = "/usr";
 #endif
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (profile->family) {
         case UMI_TOOLCHAIN_MSYS2_UCRT64:
             status = add_sdk(out_catalogue, "msys2-ucrt64", "MSYS2 UCRT64",
@@ -105,8 +134,10 @@ UmiStatus umi_toolchain_sdk_discover(
     return status;
 }
 
+/* Provide the sdk kind text operation used by this module and its client applications. */
 const char *umi_sdk_kind_text(UmiSdkKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_SDK_MSYS2_UCRT64: return "MSYS2 UCRT64";
         case UMI_SDK_MSYS2_MINGW64: return "MSYS2 MINGW64";

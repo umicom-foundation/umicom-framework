@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant zero curve data shared with callers of this public contract.
+ */
 typedef struct UmiQuantZeroCurve {
     UmiQuantCurvePoint nodes[UMI_QUANT_MAX_CURVE_NODES];
     size_t count;

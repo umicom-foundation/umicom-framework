@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant credit curve data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCreditCurve { UmiQuantCurvePoint hazards[UMI_QUANT_MAX_CURVE_NODES]; size_t count; } UmiQuantCreditCurve;
 /* Initialise an empty credit curve. */
 void umi_quant_credit_curve_init(UmiQuantCreditCurve *curve);

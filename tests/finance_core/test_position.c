@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/position.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiPositionKey k; UmiPosition p; CHECK(umi_position_key_init(&k,"B","P","X")==UMI_STATUS_OK); CHECK(umi_position_init(&p,&k,(UmiQuantity){1.0},(UmiFinancialDate){2026,8U,25U})==UMI_STATUS_OK); CHECK(umi_position_add(&p,(UmiQuantity){2.0})==UMI_STATUS_OK);

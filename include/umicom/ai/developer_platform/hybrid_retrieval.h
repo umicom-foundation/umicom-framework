@@ -29,10 +29,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev hybrid retrieval score data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevHybridRetrievalScore { uint32_t relevance; uint32_t authority; uint32_t freshness; uint32_t penalty; } UmiAiDevHybridRetrievalScore;
+/**
+ * Initialise ai dev hybrid retrieval from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_hybrid_retrieval_init(UmiAiDevHybridRetrievalScore *score);
+/**
+ * Provide the ai dev hybrid retrieval compute operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ai_dev_hybrid_retrieval_compute(const UmiAiDevHybridRetrievalScore *score);
+/**
+ * Provide the ai dev hybrid retrieval prefer operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_hybrid_retrieval_prefer(const UmiAiDevHybridRetrievalScore *left, const UmiAiDevHybridRetrievalScore *right);
+/**
+ * Provide the ai dev hybrid retrieval weighted operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_dev_hybrid_retrieval_weighted(uint32_t primary, uint32_t secondary, uint32_t primary_weight);
 
 #ifdef __cplusplus

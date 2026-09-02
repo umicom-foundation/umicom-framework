@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtBootService k={"kernel",UMI_CT_BOOT_EARLY,true,1000U},n={"net",UMI_CT_BOOT_SERVICES,true,2000U};CHECK(umi_ct_boot_service_validate(&k)==UMI_STATUS_OK);CHECK(umi_ct_boot_dependency_phase_valid(&n,&k));CHECK(!umi_ct_boot_dependency_phase_valid(&k,&n));return 0;}

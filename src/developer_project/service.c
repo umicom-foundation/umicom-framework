@@ -26,49 +26,69 @@ struct UmiDeveloperProjectService {
     uint64_t revision;
 };
 
+/*
+ * Initialise developer project service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_developer_project_service_create(
     UmiDeveloperProjectService **out_service)
 {
     UmiDeveloperProjectService *service;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_service = NULL;
 
     service = (UmiDeveloperProjectService *)calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     service->revision = 1U;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_language_registry_create(
             &service->languages);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_template_registry_create(
             &service->templates);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_model_registry_create(
             &service->models);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_provider_registry_create(
             &service->providers);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_builtin_languages_register(
             service->languages);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_builtin_templates_register(
             service->templates);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_project_builtin_providers_register(
             service->providers);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_developer_project_service_destroy(service);
         return status;
@@ -78,9 +98,17 @@ UmiStatus umi_developer_project_service_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer project service so the same storage can be
+ * reused safely.
+ */
 void umi_developer_project_service_destroy(
     UmiDeveloperProjectService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
 
     umi_developer_project_provider_registry_destroy(service->providers);
@@ -90,6 +118,10 @@ void umi_developer_project_service_destroy(
     free(service);
 }
 
+/*
+ * Provide the developer project service plan generation operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_service_plan_generation(
     UmiDeveloperProjectService *service,
     const UmiDeveloperProjectGenerationRequest *request,
@@ -99,20 +131,30 @@ UmiStatus umi_developer_project_service_plan_generation(
     UmiDeveloperProjectVariableSet variables;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || request == NULL || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_generation_request_validate(
         request, NULL, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     project_template = umi_developer_project_template_registry_find(
         service->templates, request->template_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_template == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_developer_project_generation_request_variables(
         request, &variables);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_project_generation_plan_build(
@@ -122,6 +164,10 @@ UmiStatus umi_developer_project_service_plan_generation(
         out_plan);
 }
 
+/*
+ * Provide the developer project service generate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_service_generate(
     UmiDeveloperProjectService *service,
     const UmiDeveloperProjectGenerationRequest *request,
@@ -135,16 +181,25 @@ UmiStatus umi_developer_project_service_generate(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_service_plan_generation(
         service, request, &plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     project_template = umi_developer_project_template_registry_find(
         service->templates, request->template_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_template == NULL) return UMI_STATUS_NOT_FOUND;
 
     (void)memset(&generator_request, 0, sizeof(generator_request));
@@ -155,6 +210,7 @@ UmiStatus umi_developer_project_service_generate(
 
     status = umi_developer_project_generator_apply(
         &generator_request, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_developer_project_model_init(
@@ -190,7 +246,7 @@ UmiStatus umi_developer_project_service_generate(
             sizeof(model.entry_point),
             "bin/%s.sh",
             request->target_name);
-    } else if (project_template->build_system ==
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (project_template->build_system ==
                    UMI_DEVELOPER_PROJECT_BUILD_SCRIPT &&
                strcmp(project_template->primary_language_id,
                       "developer.language.cpython") == 0) {
@@ -201,15 +257,18 @@ UmiStatus umi_developer_project_service_generate(
             request->target_name);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < project_template->secondary_language_count;
          ++index) {
         status = umi_developer_project_model_add_language(
             &model,
             project_template->secondary_language_ids[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (project_template->build_system ==
         UMI_DEVELOPER_PROJECT_BUILD_CMAKE) {
         (void)snprintf(
@@ -228,6 +287,7 @@ UmiStatus umi_developer_project_service_generate(
             "%s",
             "install/windows-ucrt64-debug");
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (project_template->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE) {
             (void)snprintf(
                 model.executable,
@@ -237,17 +297,27 @@ UmiStatus umi_developer_project_service_generate(
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!request->dry_run) {
         status = umi_developer_project_model_registry_upsert(
             service->models, &model);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         service->revision += 1U;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_model != NULL) *out_model = model;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer project service import indexed operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_service_import_indexed(
     UmiDeveloperProjectService *service,
     const UmiFileIndex *file_index,
@@ -260,12 +330,17 @@ UmiStatus umi_developer_project_service_import_indexed(
     UmiDeveloperProjectModel model;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || file_index == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_detect(
         file_index, service->languages, &report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_project_detection_to_model(
@@ -274,17 +349,27 @@ UmiStatus umi_developer_project_service_import_indexed(
         display_name,
         root,
         &model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_project_model_registry_upsert(
         service->models, &model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     service->revision += 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_model != NULL) *out_model = model;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer project service plan build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_service_plan_build(
     UmiDeveloperProjectService *service,
     const char *project_id,
@@ -295,12 +380,17 @@ UmiStatus umi_developer_project_service_plan_build(
     UmiDeveloperProjectModel model;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || project_id == NULL || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_model_registry_find(
         service->models, project_id, &model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     {
@@ -308,6 +398,10 @@ UmiStatus umi_developer_project_service_plan_build(
             umi_developer_project_provider_registry_select(
                 service->providers, &model);
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (provider == NULL || provider->plan_build == NULL) {
             return UMI_STATUS_NOT_IMPLEMENTED;
         }
@@ -320,6 +414,10 @@ UmiStatus umi_developer_project_service_plan_build(
     }
 }
 
+/*
+ * Perform developer project service plan through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_developer_project_service_plan_run(
     UmiDeveloperProjectService *service,
     const char *project_id,
@@ -329,16 +427,25 @@ UmiStatus umi_developer_project_service_plan_run(
     const UmiDeveloperProjectLanguageProvider *provider;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || project_id == NULL || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_model_registry_find(
         service->models, project_id, &model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     provider = umi_developer_project_provider_registry_select(
         service->providers, &model);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL || provider->plan_run == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -346,12 +453,20 @@ UmiStatus umi_developer_project_service_plan_run(
     return provider->plan_run(&model, out_plan);
 }
 
+/*
+ * Provide the developer project service snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_service_snapshot(
     UmiDeveloperProjectService *service,
     UmiDeveloperProjectServiceSnapshot *out_snapshot)
 {
     UmiDeveloperProjectModel active;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -364,6 +479,7 @@ UmiStatus umi_developer_project_service_snapshot(
     out_snapshot->project_count =
         umi_developer_project_model_registry_count(service->models);
 
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_developer_project_model_registry_active(
             service->models, &active) == UMI_STATUS_OK) {
         (void)snprintf(
@@ -377,6 +493,10 @@ UmiStatus umi_developer_project_service_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer project service languages operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperProjectLanguageRegistry *
 umi_developer_project_service_languages(
     UmiDeveloperProjectService *service)
@@ -384,6 +504,10 @@ umi_developer_project_service_languages(
     return service != NULL ? service->languages : NULL;
 }
 
+/*
+ * Provide the developer project service templates operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperProjectTemplateRegistry *
 umi_developer_project_service_templates(
     UmiDeveloperProjectService *service)
@@ -391,6 +515,10 @@ umi_developer_project_service_templates(
     return service != NULL ? service->templates : NULL;
 }
 
+/*
+ * Provide the developer project service models operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperProjectModelRegistry *
 umi_developer_project_service_models(
     UmiDeveloperProjectService *service)
@@ -398,6 +526,10 @@ umi_developer_project_service_models(
     return service != NULL ? service->models : NULL;
 }
 
+/*
+ * Provide the developer project service providers operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperProjectProviderRegistry *
 umi_developer_project_service_providers(
     UmiDeveloperProjectService *service)

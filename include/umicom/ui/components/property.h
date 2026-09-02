@@ -24,6 +24,13 @@
 #include "umicom/base/status.h"
 #define UMI_UI_COMPONENT_PROPERTY_KEY_CAPACITY 96U
 #define UMI_UI_COMPONENT_PROPERTY_VALUE_CAPACITY 256U
+/**
+ * Represent the ui component property data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentProperty { char key[UMI_UI_COMPONENT_PROPERTY_KEY_CAPACITY]; char value[UMI_UI_COMPONENT_PROPERTY_VALUE_CAPACITY]; } UmiUiComponentProperty;
+/**
+ * Copy ui component property into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_ui_component_property_set(UmiUiComponentProperty *property,const char *key,const char *value);
 #endif

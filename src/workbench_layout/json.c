@@ -48,14 +48,26 @@ typedef struct UmiJsonParser {
     char message[UMI_WORKBENCH_LAYOUT_ERROR_CAPACITY];
 } UmiJsonParser;
 
+/*
+ * Initialise json result from caller-provided values so later operations receive a known
+ * state.
+ */
 static void json_result_init(UmiWorkbenchLayoutJsonResult *result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) return;
     (void)memset(result, 0, sizeof(*result));
     result->structure_size = sizeof(*result);
     result->status = UMI_STATUS_OK;
 }
 
+/*
+ * Provide the json result finish operation used by this module and its client
+ * applications.
+ */
 static UmiStatus json_result_finish(
     UmiWorkbenchLayoutJsonResult *result,
     UmiStatus status,
@@ -64,6 +76,10 @@ static UmiStatus json_result_finish(
     size_t error_offset,
     const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result != NULL) {
         result->status = status;
         result->bytes_written = written;
@@ -78,6 +94,10 @@ static UmiStatus json_result_finish(
     return status;
 }
 
+/*
+ * Provide the writer write bytes operation used by this module and its client
+ * applications.
+ */
 static void writer_write_bytes(
     UmiJsonWriter *writer,
     const char *text,
@@ -86,8 +106,16 @@ static void writer_write_bytes(
     size_t available;
     size_t copy_count;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer == NULL || text == NULL) return;
     writer->required += length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer->buffer == NULL || writer->capacity == 0U) {
         writer->overflow = true;
         return;
@@ -95,24 +123,36 @@ static void writer_write_bytes(
     available = writer->written < writer->capacity
         ? writer->capacity - writer->written
         : 0U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (available == 0U) {
         writer->overflow = true;
         return;
     }
     copy_count = length < available - 1U ? length : available - 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy_count > 0U) {
         (void)memcpy(writer->buffer + writer->written, text, copy_count);
         writer->written += copy_count;
     }
     writer->buffer[writer->written] = '\0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (copy_count != length) writer->overflow = true;
 }
 
+/*
+ * Write writer in its stable representation and report capacity or input failures to the
+ * caller.
+ */
 static void writer_write(UmiJsonWriter *writer, const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text != NULL) writer_write_bytes(writer, text, strlen(text));
 }
 
+/* Provide the writer format operation used by this module and its client applications. */
 static void writer_format(UmiJsonWriter *writer, const char *format, ...)
 {
     char temporary[256U];
@@ -122,10 +162,12 @@ static void writer_format(UmiJsonWriter *writer, const char *format, ...)
     va_start(arguments, format);
     written = vsnprintf(temporary, sizeof(temporary), format, arguments);
     va_end(arguments);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0) {
         writer->overflow = true;
         return;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((size_t)written < sizeof(temporary)) {
         writer_write_bytes(writer, temporary, (size_t)written);
         return;
@@ -133,6 +175,10 @@ static void writer_format(UmiJsonWriter *writer, const char *format, ...)
     {
         const size_t required = (size_t)written + 1U;
         char *dynamic = (char *)malloc(required);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (dynamic == NULL) {
             writer->overflow = true;
             return;
@@ -140,67 +186,101 @@ static void writer_format(UmiJsonWriter *writer, const char *format, ...)
         va_start(arguments, format);
         written = vsnprintf(dynamic, required, format, arguments);
         va_end(arguments);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written >= 0) {
             writer_write_bytes(writer, dynamic, (size_t)written);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             writer->overflow = true;
         }
         free(dynamic);
     }
 }
 
+/* Provide the writer indent operation used by this module and its client applications. */
 static void writer_indent(UmiJsonWriter *writer)
 {
     uint32_t index;
     uint32_t count;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer == NULL || !writer->pretty) return;
     count = writer->depth * writer->indent_width;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) writer_write(writer, " ");
 }
 
+/* Provide the writer newline operation used by this module and its client applications. */
 static void writer_newline(UmiJsonWriter *writer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer != NULL && writer->pretty) writer_write(writer, "\n");
 }
 
+/* Provide the writer space operation used by this module and its client applications. */
 static void writer_space(UmiJsonWriter *writer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer != NULL && writer->pretty) writer_write(writer, " ");
 }
 
+/*
+ * Provide the writer begin object operation used by this module and its client
+ * applications.
+ */
 static void writer_begin_object(UmiJsonWriter *writer)
 {
     writer_write(writer, "{");
     writer->depth += 1U;
 }
 
+/* Provide the writer end object operation used by this module and its client applications. */
 static void writer_end_object(UmiJsonWriter *writer)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (writer->depth > 0U) writer->depth -= 1U;
     writer_newline(writer);
     writer_indent(writer);
     writer_write(writer, "}");
 }
 
+/*
+ * Provide the writer begin array operation used by this module and its client
+ * applications.
+ */
 static void writer_begin_array(UmiJsonWriter *writer)
 {
     writer_write(writer, "[");
     writer->depth += 1U;
 }
 
+/* Provide the writer end array operation used by this module and its client applications. */
 static void writer_end_array(UmiJsonWriter *writer)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (writer->depth > 0U) writer->depth -= 1U;
     writer_newline(writer);
     writer_indent(writer);
     writer_write(writer, "]");
 }
 
+/*
+ * Provide the writer member prefix operation used by this module and its client
+ * applications.
+ */
 static void writer_member_prefix(
     UmiJsonWriter *writer,
     bool *first,
     const char *key)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!*first) writer_write(writer, ",");
     writer_newline(writer);
     writer_indent(writer);
@@ -209,14 +289,20 @@ static void writer_member_prefix(
     *first = false;
 }
 
+/*
+ * Provide the writer array item prefix operation used by this module and its client
+ * applications.
+ */
 static void writer_array_item_prefix(UmiJsonWriter *writer, bool *first)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!*first) writer_write(writer, ",");
     writer_newline(writer);
     writer_indent(writer);
     *first = false;
 }
 
+/* Provide the writer string operation used by this module and its client applications. */
 static void writer_string(UmiJsonWriter *writer, const char *text)
 {
     const unsigned char *bytes =
@@ -224,8 +310,10 @@ static void writer_string(UmiJsonWriter *writer, const char *text)
     size_t index;
 
     writer_write(writer, "\"");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; bytes[index] != '\0'; ++index) {
         const unsigned char character = bytes[index];
+        /* Select the behaviour associated with the requested command or state value. */
         switch (character) {
         case '\"': writer_write(writer, "\\\""); break;
         case '\\': writer_write(writer, "\\\\"); break;
@@ -235,9 +323,10 @@ static void writer_string(UmiJsonWriter *writer, const char *text)
         case '\r': writer_write(writer, "\\r"); break;
         case '\t': writer_write(writer, "\\t"); break;
         default:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (character < 0x20U) {
                 writer_format(writer, "\\u%04x", (unsigned int)character);
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 const char output = (char)character;
                 writer_write_bytes(writer, &output, 1U);
             }
@@ -247,16 +336,19 @@ static void writer_string(UmiJsonWriter *writer, const char *text)
     writer_write(writer, "\"");
 }
 
+/* Provide the writer size index operation used by this module and its client applications. */
 static void writer_size_index(UmiJsonWriter *writer, size_t value)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         writer_write(writer, "-1");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         writer_format(writer, "%zu", value);
     }
 }
 
 
+/* Provide the writer rect operation used by this module and its client applications. */
 static void writer_rect(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutRect *rect)
@@ -274,6 +366,7 @@ static void writer_rect(
     writer_end_object(writer);
 }
 
+/* Return the number of records represented by writer without changing their state. */
 static void writer_size(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutSize *size)
@@ -287,6 +380,7 @@ static void writer_size(
     writer_end_object(writer);
 }
 
+/* Provide the writer node operation used by this module and its client applications. */
 static void writer_node(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutNode *node)
@@ -334,6 +428,7 @@ static void writer_node(
     writer_size_index(writer, node->parent_index);
     writer_member_prefix(writer, &first, "children");
     writer_begin_array(writer);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < node->child_count; ++index) {
         writer_array_item_prefix(writer, &first_child);
         writer_size_index(writer, node->child_indices[index]);
@@ -352,6 +447,7 @@ static void writer_node(
     writer_end_object(writer);
 }
 
+/* Provide the writer identity operation used by this module and its client applications. */
 static void writer_identity(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutIdentity *identity)
@@ -369,6 +465,7 @@ static void writer_identity(
     writer_end_object(writer);
 }
 
+/* Provide the writer version operation used by this module and its client applications. */
 static void writer_version(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutVersion *version)
@@ -386,6 +483,7 @@ static void writer_version(
     writer_end_object(writer);
 }
 
+/* Provide the writer audit operation used by this module and its client applications. */
 static void writer_audit(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutAudit *audit)
@@ -405,6 +503,7 @@ static void writer_audit(
     writer_end_object(writer);
 }
 
+/* Provide the writer document operation used by this module and its client applications. */
 static void writer_document(
     UmiJsonWriter *writer,
     const UmiWorkbenchLayoutDocument *document,
@@ -430,6 +529,7 @@ static void writer_document(
         writer_identity(writer, &document->identity);
         writer_member_prefix(writer, &layout_first, "version");
         writer_version(writer, &document->version);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (options->include_audit) {
             writer_member_prefix(writer, &layout_first, "audit");
             writer_audit(writer, &document->audit);
@@ -442,6 +542,7 @@ static void writer_document(
         writer_string(writer, document->description);
         writer_member_prefix(writer, &layout_first, "tags");
         writer_begin_array(writer);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < document->tag_count; ++index) {
             writer_array_item_prefix(writer, &first_tag);
             writer_string(writer, document->tags[index].value);
@@ -451,14 +552,17 @@ static void writer_document(
         writer_size_index(writer, document->root_index);
         writer_member_prefix(writer, &layout_first, "flags");
         writer_format(writer, "%" PRIu32, document->flags);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (options->include_content_hash) {
             writer_member_prefix(writer, &layout_first, "content_hash");
             writer_format(writer, "\"%" PRIu64 "\"", document->content_hash);
         }
         writer_member_prefix(writer, &layout_first, "nodes");
         writer_begin_array(writer);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < document->node_count; ++index) {
             UmiWorkbenchLayoutNode node = document->nodes[index];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!options->include_runtime_geometry) {
                 (void)memset(&node.bounds, 0, sizeof(node.bounds));
                 node.monitor_id[0] = '\0';
@@ -474,6 +578,10 @@ static void writer_document(
     writer_newline(writer);
 }
 
+/*
+ * Provide the workbench layout json options default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutJsonOptions
 umi_workbench_layout_json_options_default(void)
 {
@@ -488,6 +596,10 @@ umi_workbench_layout_json_options_default(void)
     return options;
 }
 
+/*
+ * Write workbench layout json in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_json_encode(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutJsonOptions *options,
@@ -500,6 +612,10 @@ UmiStatus umi_workbench_layout_json_encode(
     UmiStatus status;
 
     json_result_init(out_result);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || (buffer == NULL && capacity != 0U)) {
         return json_result_finish(
             out_result,
@@ -510,6 +626,7 @@ UmiStatus umi_workbench_layout_json_encode(
             "A layout document and a valid output buffer are required.");
     }
     status = umi_workbench_layout_document_validate_structure(document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return json_result_finish(
             out_result,
@@ -522,6 +639,7 @@ UmiStatus umi_workbench_layout_json_encode(
     effective = options != NULL
         ? *options
         : umi_workbench_layout_json_options_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective) ||
         effective.indent_width > 16U) {
         return json_result_finish(
@@ -538,9 +656,14 @@ UmiStatus umi_workbench_layout_json_encode(
     writer.capacity = capacity;
     writer.pretty = effective.pretty;
     writer.indent_width = effective.indent_width;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer != NULL && capacity > 0U) buffer[0] = '\0';
     writer_document(&writer, document, &effective);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (writer.overflow) {
         return json_result_finish(
             out_result,
@@ -559,8 +682,13 @@ UmiStatus umi_workbench_layout_json_encode(
         "The layout was encoded successfully.");
 }
 
+/* Provide the parser fail operation used by this module and its client applications. */
 static UmiStatus parser_fail(UmiJsonParser *parser, const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (parser != NULL) {
         parser->error_offset = parser->offset;
         (void)umi_workbench_layout_copy_text(
@@ -572,11 +700,17 @@ static UmiStatus parser_fail(UmiJsonParser *parser, const char *message)
     return UMI_STATUS_PARSE_ERROR;
 }
 
+/* Provide the parser skip space operation used by this module and its client applications. */
 static void parser_skip_space(UmiJsonParser *parser)
 {
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (parser->offset < parser->length) {
         const unsigned char character =
             (unsigned char)parser->text[parser->offset];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character != ' ' && character != '\t' &&
             character != '\n' && character != '\r') {
             break;
@@ -585,9 +719,11 @@ static void parser_skip_space(UmiJsonParser *parser)
     }
 }
 
+/* Provide the parser consume operation used by this module and its client applications. */
 static bool parser_consume(UmiJsonParser *parser, char character)
 {
     parser_skip_space(parser);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->offset < parser->length &&
         parser->text[parser->offset] == character) {
         parser->offset += 1U;
@@ -596,12 +732,17 @@ static bool parser_consume(UmiJsonParser *parser, char character)
     return false;
 }
 
+/*
+ * Provide the parser match literal operation used by this module and its client
+ * applications.
+ */
 static bool parser_match_literal(
     UmiJsonParser *parser,
     const char *literal)
 {
     const size_t length = strlen(literal);
     parser_skip_space(parser);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->offset + length > parser->length ||
         memcmp(parser->text + parser->offset, literal, length) != 0) {
         return false;
@@ -610,14 +751,22 @@ static bool parser_match_literal(
     return true;
 }
 
+/* Provide the hexadecimal value operation used by this module and its client applications. */
 static int hexadecimal_value(char character)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= '0' && character <= '9') return character - '0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= 'a' && character <= 'f') return character - 'a' + 10;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= 'A' && character <= 'F') return character - 'A' + 10;
     return -1;
 }
 
+/*
+ * Provide the append utf8 codepoint operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_utf8_codepoint(
     uint32_t codepoint,
     char *buffer,
@@ -627,30 +776,39 @@ static UmiStatus append_utf8_codepoint(
     unsigned char encoded[4U];
     size_t count;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (codepoint <= 0x7FU) {
         encoded[0] = (unsigned char)codepoint;
         count = 1U;
-    } else if (codepoint <= 0x7FFU) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (codepoint <= 0x7FFU) {
         encoded[0] = (unsigned char)(0xC0U | (codepoint >> 6U));
         encoded[1] = (unsigned char)(0x80U | (codepoint & 0x3FU));
         count = 2U;
-    } else if (codepoint <= 0xFFFFU) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (codepoint <= 0xFFFFU) {
         encoded[0] = (unsigned char)(0xE0U | (codepoint >> 12U));
         encoded[1] = (unsigned char)(0x80U | ((codepoint >> 6U) & 0x3FU));
         encoded[2] = (unsigned char)(0x80U | (codepoint & 0x3FU));
         count = 3U;
-    } else if (codepoint <= 0x10FFFFU) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (codepoint <= 0x10FFFFU) {
         encoded[0] = (unsigned char)(0xF0U | (codepoint >> 18U));
         encoded[1] = (unsigned char)(0x80U | ((codepoint >> 12U) & 0x3FU));
         encoded[2] = (unsigned char)(0x80U | ((codepoint >> 6U) & 0x3FU));
         encoded[3] = (unsigned char)(0x80U | (codepoint & 0x3FU));
         count = 4U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_PARSE_ERROR;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer != NULL && *length + count >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer != NULL) {
         (void)memcpy(buffer + *length, encoded, count);
     }
@@ -658,6 +816,7 @@ static UmiStatus append_utf8_codepoint(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser string operation used by this module and its client applications. */
 static UmiStatus parser_string(
     UmiJsonParser *parser,
     char *buffer,
@@ -666,14 +825,25 @@ static UmiStatus parser_string(
     size_t output_length = 0U;
 
     parser_skip_space(parser);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '\"')) {
         return parser_fail(parser, "Expected a JSON string.");
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (parser->offset < parser->length) {
         unsigned char character =
             (unsigned char)parser->text[parser->offset++];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character == '\"') {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (buffer != NULL) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (capacity == 0U || output_length >= capacity) {
                     return UMI_STATUS_CAPACITY_EXCEEDED;
                 }
@@ -681,11 +851,14 @@ static UmiStatus parser_string(
             }
             return UMI_STATUS_OK;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character == '\\') {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (parser->offset >= parser->length) {
                 return parser_fail(parser, "Incomplete JSON escape sequence.");
             }
             character = (unsigned char)parser->text[parser->offset++];
+            /* Select the behaviour associated with the requested command or state value. */
             switch (character) {
             case '\"': character = '\"'; break;
             case '\\': character = '\\'; break;
@@ -698,8 +871,10 @@ static UmiStatus parser_string(
             case 'u': {
                 uint32_t codepoint = 0U;
                 size_t digit;
+                /* Visit each bounded item once so every record receives the same rule. */
                 for (digit = 0U; digit < 4U; ++digit) {
                     int value;
+                    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                     if (parser->offset >= parser->length) {
                         return parser_fail(
                             parser,
@@ -707,6 +882,7 @@ static UmiStatus parser_string(
                     }
                     value = hexadecimal_value(
                         parser->text[parser->offset++]);
+                    /* Apply this branch only when its contract condition is satisfied. */
                     if (value < 0) {
                         return parser_fail(
                             parser,
@@ -717,6 +893,7 @@ static UmiStatus parser_string(
                 {
                     UmiStatus status = append_utf8_codepoint(
                         codepoint, buffer, capacity, &output_length);
+                    /* Preserve the original failure result so the caller can respond to the correct cause. */
                     if (status != UMI_STATUS_OK) return status;
                 }
                 continue;
@@ -724,18 +901,30 @@ static UmiStatus parser_string(
             default:
                 return parser_fail(parser, "Unsupported JSON escape sequence.");
             }
-        } else if (character < 0x20U) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (character < 0x20U) {
             return parser_fail(parser, "Control character inside JSON string.");
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (buffer != NULL && output_length + 1U >= capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (buffer != NULL) buffer[output_length] = (char)character;
         output_length += 1U;
     }
     return parser_fail(parser, "Unterminated JSON string.");
 }
 
+/*
+ * Provide the parser number token operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parser_number_token(
     UmiJsonParser *parser,
     char *buffer,
@@ -746,22 +935,29 @@ static UmiStatus parser_number_token(
 
     parser_skip_space(parser);
     start = parser->offset;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->offset < parser->length &&
         (parser->text[parser->offset] == '-' ||
          parser->text[parser->offset] == '+')) {
         parser->offset += 1U;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (parser->offset < parser->length) {
         const char character = parser->text[parser->offset];
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if ((character >= '0' && character <= '9') ||
             character == '.' || character == 'e' || character == 'E' ||
             character == '+' || character == '-') {
             parser->offset += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             break;
         }
     }
     length = parser->offset - start;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U || length >= capacity) {
         return parser_fail(parser, "Expected a JSON number.");
     }
@@ -770,6 +966,7 @@ static UmiStatus parser_number_token(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser u64 operation used by this module and its client applications. */
 static UmiStatus parser_u64(UmiJsonParser *parser, uint64_t *out_value)
 {
     char token[UMI_JSON_NUMBER_CAPACITY];
@@ -777,18 +974,25 @@ static UmiStatus parser_u64(UmiJsonParser *parser, uint64_t *out_value)
     unsigned long long value;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     parser_skip_space(parser);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->offset < parser->length &&
         parser->text[parser->offset] == '\"') {
         status = parser_string(parser, token, sizeof(token));
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = parser_number_token(parser, token, sizeof(token));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     errno = 0;
     end = NULL;
     value = strtoull(token, &end, 10);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (errno != 0 || end == token || *end != '\0') {
         return parser_fail(parser, "Invalid unsigned integer value.");
     }
@@ -796,6 +1000,7 @@ static UmiStatus parser_u64(UmiJsonParser *parser, uint64_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser i64 operation used by this module and its client applications. */
 static UmiStatus parser_i64(UmiJsonParser *parser, int64_t *out_value)
 {
     char token[UMI_JSON_NUMBER_CAPACITY];
@@ -803,12 +1008,18 @@ static UmiStatus parser_i64(UmiJsonParser *parser, int64_t *out_value)
     long long value;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = parser_number_token(parser, token, sizeof(token));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     errno = 0;
     end = NULL;
     value = strtoll(token, &end, 10);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (errno != 0 || end == token || *end != '\0') {
         return parser_fail(parser, "Invalid signed integer value.");
     }
@@ -816,6 +1027,7 @@ static UmiStatus parser_i64(UmiJsonParser *parser, int64_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser double operation used by this module and its client applications. */
 static UmiStatus parser_double(UmiJsonParser *parser, double *out_value)
 {
     char token[UMI_JSON_NUMBER_CAPACITY];
@@ -823,12 +1035,18 @@ static UmiStatus parser_double(UmiJsonParser *parser, double *out_value)
     double value;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = parser_number_token(parser, token, sizeof(token));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     errno = 0;
     end = NULL;
     value = strtod(token, &end);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (errno != 0 || end == token || *end != '\0') {
         return parser_fail(parser, "Invalid floating-point value.");
     }
@@ -836,58 +1054,81 @@ static UmiStatus parser_double(UmiJsonParser *parser, double *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser skip value operation used by this module and its client applications. */
 static UmiStatus parser_skip_value(UmiJsonParser *parser);
 
+/*
+ * Provide the parser skip object operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parser_skip_object(UmiJsonParser *parser)
 {
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a JSON object.");
     }
     parser_skip_space(parser);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' after an object key.");
         }
         status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' between object members.");
         }
     }
 }
 
+/* Provide the parser skip array operation used by this module and its client applications. */
 static UmiStatus parser_skip_array(UmiJsonParser *parser)
 {
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '[')) {
         return parser_fail(parser, "Expected a JSON array.");
     }
     parser_skip_space(parser);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' between array items.");
         }
     }
 }
 
+/* Provide the parser skip value operation used by this module and its client applications. */
 static UmiStatus parser_skip_value(UmiJsonParser *parser)
 {
     char token[UMI_JSON_NUMBER_CAPACITY];
     parser_skip_space(parser);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->offset >= parser->length) {
         return parser_fail(parser, "Unexpected end of JSON input.");
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (parser->text[parser->offset]) {
     case '{': return parser_skip_object(parser);
     case '[': return parser_skip_array(parser);
@@ -909,12 +1150,18 @@ static UmiStatus parser_skip_value(UmiJsonParser *parser)
     }
 }
 
+/*
+ * Provide the node kind from text operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchLayoutNodeKind node_kind_from_text(const char *text)
 {
     UmiWorkbenchLayoutNodeKind kind;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (kind = UMI_WORKBENCH_LAYOUT_NODE_EMPTY;
          kind <= UMI_WORKBENCH_LAYOUT_NODE_FLOATING_WINDOW;
          kind = (UmiWorkbenchLayoutNodeKind)((int)kind + 1)) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(text, umi_workbench_layout_node_kind_text(kind)) == 0) {
             return kind;
         }
@@ -922,12 +1169,18 @@ static UmiWorkbenchLayoutNodeKind node_kind_from_text(const char *text)
     return (UmiWorkbenchLayoutNodeKind)0;
 }
 
+/*
+ * Provide the orientation from text operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchLayoutOrientation orientation_from_text(const char *text)
 {
     UmiWorkbenchLayoutOrientation value;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (value = UMI_WORKBENCH_LAYOUT_ORIENTATION_NONE;
          value <= UMI_WORKBENCH_LAYOUT_ORIENTATION_VERTICAL;
          value = (UmiWorkbenchLayoutOrientation)((int)value + 1)) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(text, umi_workbench_layout_orientation_text(value)) == 0) {
             return value;
         }
@@ -935,12 +1188,18 @@ static UmiWorkbenchLayoutOrientation orientation_from_text(const char *text)
     return (UmiWorkbenchLayoutOrientation)-1;
 }
 
+/*
+ * Provide the dock region from text operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchLayoutDockRegion dock_region_from_text(const char *text)
 {
     UmiWorkbenchLayoutDockRegion value;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (value = UMI_WORKBENCH_LAYOUT_DOCK_CANVAS;
          value <= UMI_WORKBENCH_LAYOUT_DOCK_FLOATING;
          value = (UmiWorkbenchLayoutDockRegion)((int)value + 1)) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(text, umi_workbench_layout_dock_region_text(value)) == 0) {
             return value;
         }
@@ -948,12 +1207,18 @@ static UmiWorkbenchLayoutDockRegion dock_region_from_text(const char *text)
     return (UmiWorkbenchLayoutDockRegion)0;
 }
 
+/*
+ * Provide the visibility from text operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchLayoutVisibility visibility_from_text(const char *text)
 {
     UmiWorkbenchLayoutVisibility value;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (value = UMI_WORKBENCH_LAYOUT_VISIBILITY_VISIBLE;
          value <= UMI_WORKBENCH_LAYOUT_VISIBILITY_AUTO;
          value = (UmiWorkbenchLayoutVisibility)((int)value + 1)) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(text, umi_workbench_layout_visibility_text(value)) == 0) {
             return value;
         }
@@ -961,15 +1226,19 @@ static UmiWorkbenchLayoutVisibility visibility_from_text(const char *text)
     return (UmiWorkbenchLayoutVisibility)0;
 }
 
+/* Provide the parser size index operation used by this module and its client applications. */
 static UmiStatus parser_size_index(UmiJsonParser *parser, size_t *out_value)
 {
     int64_t value;
     UmiStatus status = parser_i64(parser, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value == -1) {
         *out_value = UMI_WORKBENCH_LAYOUT_INDEX_NONE;
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value < 0 || (uint64_t)value > (uint64_t)SIZE_MAX) {
         return parser_fail(parser, "Layout index is outside the supported range.");
     }
@@ -977,11 +1246,14 @@ static UmiStatus parser_size_index(UmiJsonParser *parser, size_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser i32 operation used by this module and its client applications. */
 static UmiStatus parser_i32(UmiJsonParser *parser, int32_t *out_value)
 {
     int64_t value;
     UmiStatus status = parser_i64(parser, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value < INT32_MIN || value > INT32_MAX) {
         return parser_fail(parser, "Integer is outside the 32-bit range.");
     }
@@ -989,11 +1261,14 @@ static UmiStatus parser_i32(UmiJsonParser *parser, int32_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser u32 operation used by this module and its client applications. */
 static UmiStatus parser_u32(UmiJsonParser *parser, uint32_t *out_value)
 {
     uint64_t value;
     UmiStatus status = parser_u64(parser, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value > UINT32_MAX) {
         return parser_fail(parser, "Integer is outside the 32-bit range.");
     }
@@ -1001,6 +1276,7 @@ static UmiStatus parser_u32(UmiJsonParser *parser, uint32_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser rect operation used by this module and its client applications. */
 static UmiStatus parser_rect(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutRect *rect)
@@ -1008,31 +1284,41 @@ static UmiStatus parser_rect(
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a rectangle object.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in rectangle object.");
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (strcmp(key, "x") == 0) status = parser_i32(parser, &rect->x);
-        else if (strcmp(key, "y") == 0) status = parser_i32(parser, &rect->y);
-        else if (strcmp(key, "width") == 0) {
+        else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (strcmp(key, "y") == 0) status = parser_i32(parser, &rect->y);
+        else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "width") == 0) {
             status = parser_i32(parser, &rect->width);
-        } else if (strcmp(key, "height") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "height") == 0) {
             status = parser_i32(parser, &rect->height);
-        } else status = parser_skip_value(parser);
+        } /* Use this fallback path when the earlier condition does not apply. */ else status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in rectangle object.");
         }
     }
 }
 
+/* Return the number of records represented by parser without changing their state. */
 static UmiStatus parser_size(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutSize *size)
@@ -1040,155 +1326,199 @@ static UmiStatus parser_size(
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a size object.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in size object.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "width") == 0) {
             status = parser_i32(parser, &size->width);
-        } else if (strcmp(key, "height") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "height") == 0) {
             status = parser_i32(parser, &size->height);
-        } else status = parser_skip_value(parser);
+        } /* Use this fallback path when the earlier condition does not apply. */ else status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in size object.");
         }
     }
 }
 
+/* Provide the parser identity operation used by this module and its client applications. */
 static UmiStatus parser_identity(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutIdentity *identity)
 {
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected an identity object.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in identity object.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "layout_id") == 0) {
             status = parser_string(
                 parser, identity->layout_id, sizeof(identity->layout_id));
-        } else if (strcmp(key, "owner_user_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "owner_user_id") == 0) {
             status = parser_string(
                 parser,
                 identity->owner_user_id,
                 sizeof(identity->owner_user_id));
-        } else if (strcmp(key, "owner_application_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "owner_application_id") == 0) {
             status = parser_string(
                 parser,
                 identity->owner_application_id,
                 sizeof(identity->owner_application_id));
-        } else if (strcmp(key, "workspace_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "workspace_id") == 0) {
             status = parser_string(
                 parser,
                 identity->workspace_id,
                 sizeof(identity->workspace_id));
-        } else status = parser_skip_value(parser);
+        } /* Use this fallback path when the earlier condition does not apply. */ else status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in identity object.");
         }
     }
 }
 
+/* Provide the parser version operation used by this module and its client applications. */
 static UmiStatus parser_version(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutVersion *version)
 {
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a version object.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in version object.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "schema_version") == 0) {
             status = parser_u32(parser, &version->schema_version);
-        } else if (strcmp(key, "revision") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "revision") == 0) {
             status = parser_u64(parser, &version->revision);
-        } else if (strcmp(key, "generation") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "generation") == 0) {
             status = parser_u64(parser, &version->generation);
-        } else if (strcmp(key, "base_revision") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "base_revision") == 0) {
             status = parser_u64(parser, &version->base_revision);
-        } else status = parser_skip_value(parser);
+        } /* Use this fallback path when the earlier condition does not apply. */ else status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in version object.");
         }
     }
 }
 
+/* Provide the parser audit operation used by this module and its client applications. */
 static UmiStatus parser_audit(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutAudit *audit)
 {
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected an audit object.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in audit object.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "created_by") == 0) {
             status = parser_string(
                 parser, audit->created_by, sizeof(audit->created_by));
-        } else if (strcmp(key, "modified_by") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "modified_by") == 0) {
             status = parser_string(
                 parser, audit->modified_by, sizeof(audit->modified_by));
-        } else if (strcmp(key, "created_at_ms") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "created_at_ms") == 0) {
             status = parser_u64(parser, &audit->created_at_ms);
-        } else if (strcmp(key, "modified_at_ms") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "modified_at_ms") == 0) {
             status = parser_u64(parser, &audit->modified_at_ms);
-        } else if (strcmp(key, "correlation_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "correlation_id") == 0) {
             status = parser_string(
                 parser,
                 audit->correlation_id,
                 sizeof(audit->correlation_id));
-        } else status = parser_skip_value(parser);
+        } /* Use this fallback path when the earlier condition does not apply. */ else status = parser_skip_value(parser);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in audit object.");
         }
     }
 }
 
+/* Provide the parser tags operation used by this module and its client applications. */
 static UmiStatus parser_tags(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutDocument *document)
 {
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '[')) {
         return parser_fail(parser, "Expected a tag array.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (document->tag_count >= UMI_WORKBENCH_LAYOUT_MAX_TAGS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -1196,39 +1526,54 @@ static UmiStatus parser_tags(
             parser,
             document->tags[document->tag_count].value,
             sizeof(document->tags[document->tag_count].value));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         document->tag_count += 1U;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' between layout tags.");
         }
     }
 }
 
+/*
+ * Provide the parser child indices operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parser_child_indices(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutNode *node)
 {
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '[')) {
         return parser_fail(parser, "Expected a child-index array.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (node->child_count >= UMI_WORKBENCH_LAYOUT_MAX_CHILDREN) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         status = parser_size_index(
             parser, &node->child_indices[node->child_count]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         node->child_count += 1U;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' between child indices.");
         }
     }
 }
 
+/* Provide the parser node operation used by this module and its client applications. */
 static UmiStatus parser_node(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutNode *node)
@@ -1239,100 +1584,117 @@ static UmiStatus parser_node(
 
     umi_workbench_layout_node_init(
         node, "", UMI_WORKBENCH_LAYOUT_NODE_EMPTY);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a semantic layout node object.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_consume(parser, '}')) {
         return parser_fail(parser, "A semantic layout node cannot be empty.");
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in layout node object.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "node_id") == 0) {
             status = parser_string(
                 parser, node->node_id, sizeof(node->node_id));
-        } else if (strcmp(key, "title") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "title") == 0) {
             status = parser_string(parser, node->title, sizeof(node->title));
-        } else if (strcmp(key, "component_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "component_id") == 0) {
             status = parser_string(
                 parser, node->component_id, sizeof(node->component_id));
-        } else if (strcmp(key, "owner_application_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "owner_application_id") == 0) {
             status = parser_string(
                 parser,
                 node->owner_application_id,
                 sizeof(node->owner_application_id));
-        } else if (strcmp(key, "context_group_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "context_group_id") == 0) {
             status = parser_string(
                 parser,
                 node->context_group_id,
                 sizeof(node->context_group_id));
-        } else if (strcmp(key, "monitor_id") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "monitor_id") == 0) {
             status = parser_string(
                 parser, node->monitor_id, sizeof(node->monitor_id));
-        } else if (strcmp(key, "kind") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "kind") == 0) {
             status = parser_string(parser, text, sizeof(text));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 node->kind = node_kind_from_text(text);
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (node->kind == 0) {
                     status = parser_fail(parser, "Unknown layout node kind.");
                 }
             }
-        } else if (strcmp(key, "orientation") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "orientation") == 0) {
             status = parser_string(parser, text, sizeof(text));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 node->orientation = orientation_from_text(text);
+                /* Apply this branch only when its contract condition is satisfied. */
                 if ((int)node->orientation < 0) {
                     status = parser_fail(
                         parser, "Unknown layout orientation.");
                 }
             }
-        } else if (strcmp(key, "dock_region") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "dock_region") == 0) {
             status = parser_string(parser, text, sizeof(text));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 node->dock_region = dock_region_from_text(text);
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (node->dock_region == 0) {
                     status = parser_fail(parser, "Unknown dock region.");
                 }
             }
-        } else if (strcmp(key, "visibility") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "visibility") == 0) {
             status = parser_string(parser, text, sizeof(text));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 node->visibility = visibility_from_text(text);
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (node->visibility == 0) {
                     status = parser_fail(parser, "Unknown visibility value.");
                 }
             }
-        } else if (strcmp(key, "split_ratio") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "split_ratio") == 0) {
             status = parser_double(parser, &node->split_ratio);
-        } else if (strcmp(key, "bounds") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "bounds") == 0) {
             status = parser_rect(parser, &node->bounds);
-        } else if (strcmp(key, "minimum_size") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "minimum_size") == 0) {
             status = parser_size(parser, &node->minimum_size);
-        } else if (strcmp(key, "preferred_size") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "preferred_size") == 0) {
             status = parser_size(parser, &node->preferred_size);
-        } else if (strcmp(key, "parent_index") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "parent_index") == 0) {
             status = parser_size_index(parser, &node->parent_index);
-        } else if (strcmp(key, "children") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "children") == 0) {
             node->child_count = 0U;
             status = parser_child_indices(parser, node);
-        } else if (strcmp(key, "active_child_index") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "active_child_index") == 0) {
             status = parser_size_index(parser, &node->active_child_index);
-        } else if (strcmp(key, "flags") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "flags") == 0) {
             status = parser_u32(parser, &node->flags);
-        } else if (strcmp(key, "order") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "order") == 0) {
             status = parser_i32(parser, &node->order);
-        } else if (strcmp(key, "z_order") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "z_order") == 0) {
             status = parser_i32(parser, &node->z_order);
-        } else if (strcmp(key, "revision") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "revision") == 0) {
             status = parser_u64(parser, &node->revision);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = parser_skip_value(parser);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (parser_consume(parser, '}')) break;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in layout node object.");
         }
@@ -1341,30 +1703,39 @@ static UmiStatus parser_node(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser nodes operation used by this module and its client applications. */
 static UmiStatus parser_nodes(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutDocument *document)
 {
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '[')) {
         return parser_fail(parser, "Expected a semantic layout node array.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (document->node_count >= UMI_WORKBENCH_LAYOUT_MAX_NODES) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         status = parser_node(
             parser, &document->nodes[document->node_count]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         document->node_count += 1U;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, ']')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' between layout nodes.");
         }
     }
 }
 
+/* Provide the parser layout operation used by this module and its client applications. */
 static UmiStatus parser_layout(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutDocument *document)
@@ -1372,58 +1743,68 @@ static UmiStatus parser_layout(
     char key[UMI_JSON_KEY_CAPACITY];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a layout object.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_consume(parser, '}')) {
         return parser_fail(parser, "The layout object cannot be empty.");
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in layout object.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "identity") == 0) {
             status = parser_identity(parser, &document->identity);
-        } else if (strcmp(key, "version") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "version") == 0) {
             status = parser_version(parser, &document->version);
-        } else if (strcmp(key, "audit") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "audit") == 0) {
             status = parser_audit(parser, &document->audit);
-        } else if (strcmp(key, "name") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "name") == 0) {
             status = parser_string(
                 parser, document->name, sizeof(document->name));
-        } else if (strcmp(key, "category") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "category") == 0) {
             status = parser_string(
                 parser, document->category, sizeof(document->category));
-        } else if (strcmp(key, "description") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "description") == 0) {
             status = parser_string(
                 parser,
                 document->description,
                 sizeof(document->description));
-        } else if (strcmp(key, "tags") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "tags") == 0) {
             document->tag_count = 0U;
             status = parser_tags(parser, document);
-        } else if (strcmp(key, "root_index") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "root_index") == 0) {
             status = parser_size_index(parser, &document->root_index);
-        } else if (strcmp(key, "flags") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "flags") == 0) {
             status = parser_u32(parser, &document->flags);
-        } else if (strcmp(key, "content_hash") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "content_hash") == 0) {
             status = parser_u64(parser, &document->content_hash);
-        } else if (strcmp(key, "nodes") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "nodes") == 0) {
             document->node_count = 0U;
             status = parser_nodes(parser, document);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = parser_skip_value(parser);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parser_consume(parser, '}')) return UMI_STATUS_OK;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in layout object.");
         }
     }
 }
 
+/* Provide the parser root operation used by this module and its client applications. */
 static UmiStatus parser_root(
     UmiJsonParser *parser,
     UmiWorkbenchLayoutDocument *document)
@@ -1434,39 +1815,51 @@ static UmiStatus parser_root(
     bool layout_seen = false;
 
     schema[0] = '\0';
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_consume(parser, '{')) {
         return parser_fail(parser, "Expected a JSON document object.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_consume(parser, '}')) {
         return parser_fail(parser, "The JSON document cannot be empty.");
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         status = parser_string(parser, key, sizeof(key));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ':')) {
             return parser_fail(parser, "Expected ':' in JSON document.");
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, "schema") == 0) {
             status = parser_string(parser, schema, sizeof(schema));
-        } else if (strcmp(key, "layout") == 0) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(key, "layout") == 0) {
             status = parser_layout(parser, document);
             layout_seen = status == UMI_STATUS_OK;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = parser_skip_value(parser);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (parser_consume(parser, '}')) break;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!parser_consume(parser, ',')) {
             return parser_fail(parser, "Expected ',' in JSON document.");
         }
     }
     parser_skip_space(parser);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->offset != parser->length) {
         return parser_fail(parser, "Unexpected data after the JSON document.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!layout_seen) {
         return parser_fail(parser, "The JSON document does not contain layout data.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (schema[0] != '\0' &&
         strcmp(schema, "umicom.workbench-layout/2") != 0 &&
         strcmp(schema, "umicom.workbench-layout/1") != 0) {
@@ -1475,6 +1868,10 @@ static UmiStatus parser_root(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Read workbench layout json into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_json_decode(
     const char *json,
     size_t length,
@@ -1486,6 +1883,10 @@ UmiStatus umi_workbench_layout_json_decode(
     UmiStatus status;
 
     json_result_init(out_result);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || out_document == NULL) {
         return json_result_finish(
             out_result,
@@ -1495,6 +1896,7 @@ UmiStatus umi_workbench_layout_json_decode(
             0U,
             "JSON input and a destination document are required.");
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U) length = strlen(json);
     (void)memset(&parser, 0, sizeof(parser));
     parser.text = json;
@@ -1502,6 +1904,7 @@ UmiStatus umi_workbench_layout_json_decode(
 
     umi_workbench_layout_document_init(out_document, "", "");
     status = parser_root(&parser, out_document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return json_result_finish(
             out_result,
@@ -1512,23 +1915,28 @@ UmiStatus umi_workbench_layout_json_decode(
             parser.message);
     }
     out_document->structure_size = sizeof(*out_document);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_document->version.schema_version == 0U) {
         out_document->version.schema_version =
             UMI_WORKBENCH_LAYOUT_SCHEMA_VERSION;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_document->version.revision == 0U) {
         out_document->version.revision = 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_document->version.generation == 0U) {
         out_document->version.generation = 1U;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_document->version.schema_version !=
         UMI_WORKBENCH_LAYOUT_SCHEMA_VERSION) {
         status = umi_workbench_layout_migrate_in_place(
             out_document,
             UMI_WORKBENCH_LAYOUT_SCHEMA_VERSION,
             &migration);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return json_result_finish(
                 out_result,
@@ -1540,6 +1948,7 @@ UmiStatus umi_workbench_layout_json_decode(
         }
     }
     status = umi_workbench_layout_document_validate_structure(out_document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return json_result_finish(
             out_result,
@@ -1549,6 +1958,7 @@ UmiStatus umi_workbench_layout_json_decode(
             parser.offset,
             "Decoded JSON does not describe a structurally valid layout.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_document->content_hash == 0U) {
         umi_workbench_layout_document_refresh_hash(out_document);
     }
@@ -1561,6 +1971,10 @@ UmiStatus umi_workbench_layout_json_decode(
         "The layout was decoded successfully.");
 }
 
+/*
+ * Check that workbench layout json satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_workbench_layout_json_validate(
     const char *json,
     size_t length,
@@ -1571,6 +1985,10 @@ UmiStatus umi_workbench_layout_json_validate(
     UmiWorkbenchLayoutValidationOptions options;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_report == NULL) {
         return json_result_finish(
             out_result,
@@ -1581,24 +1999,34 @@ UmiStatus umi_workbench_layout_json_validate(
             "A validation report destination is required.");
     }
     document = (UmiWorkbenchLayoutDocument *)calloc(1U, sizeof(*document));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_workbench_layout_json_decode(
         json, length, document, out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         options = umi_workbench_layout_validation_options_default();
         options.validate_hash = true;
         status = umi_workbench_layout_validate(
             document, &options, out_report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK && !out_report->valid) {
             status = UMI_STATUS_INVALID_STATE;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         umi_workbench_layout_validation_report_init(out_report);
     }
     free(document);
     return status;
 }
 
+/*
+ * Provide the workbench layout json escape operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_json_escape(
     const char *text,
     char *buffer,
@@ -1606,6 +2034,10 @@ UmiStatus umi_workbench_layout_json_escape(
     size_t *out_required)
 {
     UmiJsonWriter writer;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_required == NULL ||
         (buffer == NULL && capacity != 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -1613,6 +2045,10 @@ UmiStatus umi_workbench_layout_json_escape(
     (void)memset(&writer, 0, sizeof(writer));
     writer.buffer = buffer;
     writer.capacity = capacity;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer != NULL && capacity > 0U) buffer[0] = '\0';
     writer_string(&writer, text);
     *out_required = writer.required + 1U;
@@ -1621,6 +2057,10 @@ UmiStatus umi_workbench_layout_json_escape(
         : UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout json unescape operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_json_unescape(
     const char *text,
     size_t length,
@@ -1632,19 +2072,29 @@ UmiStatus umi_workbench_layout_json_unescape(
     UmiStatus status;
     char *quoted;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_required == NULL ||
         (buffer == NULL && capacity != 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U) length = strlen(text);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= 2U && text[0] == '\"' && text[length - 1U] == '\"') {
         quoted = NULL;
         (void)memset(&parser, 0, sizeof(parser));
         parser.text = text;
         parser.length = length;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         quoted = (char *)malloc(length + 3U);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (quoted == NULL) return UMI_STATUS_OUT_OF_MEMORY;
         quoted[0] = '\"';
         (void)memcpy(quoted + 1U, text, length);
@@ -1655,17 +2105,27 @@ UmiStatus umi_workbench_layout_json_unescape(
         parser.length = length + 2U;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer != NULL && capacity > 0U) {
         status = parser_string(&parser, buffer, capacity);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) *out_required = strlen(buffer) + 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         size_t temporary_capacity = length * 4U + 1U;
         char *temporary = (char *)malloc(temporary_capacity);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (temporary == NULL) {
             free(quoted);
             return UMI_STATUS_OUT_OF_MEMORY;
         }
         status = parser_string(&parser, temporary, temporary_capacity);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) *out_required = strlen(temporary) + 1U;
         free(temporary);
     }

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection provider from test item operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_test_item(
     const UmiTestPlatformItemSnapshot *item,
     const char *application_id,
@@ -31,6 +35,10 @@ UmiStatus umi_workbench_selection_provider_from_test_item(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Provide the workbench selection provider from test row operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_test_row(
     const UmiTestExplorerRow *row,
     const char *application_id,
@@ -39,6 +47,10 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider test model while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_test_model_find(
     const UmiTestExplorerModel *model,
     const char *item_id,
@@ -48,6 +60,10 @@ UmiStatus umi_workbench_selection_provider_test_model_find(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider test model visible while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_test_model_visible_at(
     const UmiTestExplorerModel *model,
     size_t visible_index,

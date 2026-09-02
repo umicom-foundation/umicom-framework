@@ -29,7 +29,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host host handshake data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostHostHandshake { uint32_t host_protocol; uint32_t plugin_protocol; uint32_t host_abi; uint32_t plugin_min_abi; uint32_t plugin_max_abi; uint64_t required_features; uint64_t host_features; int signature_verified; } UmiPluginExtensionHostHostHandshake;
+/**
+ * Provide the plugin extension host host handshake evaluate operation used by this module
+ * and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_host_handshake_evaluate(const UmiPluginExtensionHostHostHandshake *value, uint64_t *out_negotiated_features);
 
 #ifdef __cplusplus

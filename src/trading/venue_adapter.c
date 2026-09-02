@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/venue_adapter.h"
+/* Check that venue adapter satisfies its contract before another service relies on it. */
 int umi_venue_adapter_valid(const UmiVenueAdapter *a){return a!=NULL&&a->instance!=NULL&&a->venue_name!=NULL&&a->route_order!=NULL;}

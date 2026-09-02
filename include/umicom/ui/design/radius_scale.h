@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 #define UMI_DESIGN_RADIUS_SCALE_LEVELS 8U
+/**
+ * Represent the design radius scale data shared with callers of this public contract.
+ */
 typedef struct UmiDesignRadiusScale { double values[8U]; } UmiDesignRadiusScale;
 /* Initialise the canonical scale used as a stable design-system baseline. */
 UmiDesignRadiusScale radius_scale_default(void);

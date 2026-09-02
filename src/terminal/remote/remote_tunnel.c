@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_tunnel.h"
+/*
+ * Provide the terminal remote remote tunnel ready operation used by this module and its
+ * client applications.
+ */
 bool umi_terminal_remote_remote_tunnel_ready(bool endpoint_ready,bool authenticated,UmiTerminalRemoteHealth health) { return endpoint_ready&&authenticated&&(health==UMI_TERMINAL_REMOTE_HEALTH_HEALTHY||health==UMI_TERMINAL_REMOTE_HEALTH_WARNING); }

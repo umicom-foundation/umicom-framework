@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcLayoutAdaptation a=umi_fc_layout_adaptation_plan(true,false,false); CHECK(a.kind==UMI_FC_LAYOUT_TAB); CHECK(a.lost_capabilities!=0U); CHECK(a.user_visible);
     return 0;

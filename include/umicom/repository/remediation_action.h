@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository remediation action data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryRemediationAction { UmiRepositoryRemediationKind kind; UmiRepositoryRemediationRisk risk; char title[UMI_REPOSITORY_REMEDIATION_TEXT_CAPACITY]; char rationale[UMI_REPOSITORY_REMEDIATION_TEXT_CAPACITY]; char command_preview[UMI_REPOSITORY_REMEDIATION_TEXT_CAPACITY]; int executable_automatically; } UmiRepositoryRemediationAction;
 /* Initialise one remediation proposal with bounded explanatory text. */
 UmiStatus umi_repository_remediation_action_set(UmiRepositoryRemediationAction *action,UmiRepositoryRemediationKind kind,UmiRepositoryRemediationRisk risk,const char *title,const char *rationale,const char *command_preview,int executable_automatically);

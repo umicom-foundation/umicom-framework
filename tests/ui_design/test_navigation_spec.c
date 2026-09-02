@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/navigation_spec.h"
 
-int main(void){UmiDesignNavigationSpec s;if(umi_design_navigation_spec_init(&s,UMI_UI_PLACEMENT_LEFT,7U,1,1)!=UMI_STATUS_OK)return 1;return s.item_count==7U?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignNavigationSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_navigation_spec_init(&s,UMI_UI_PLACEMENT_LEFT,7U,1,1)!=UMI_STATUS_OK)return 1;return s.item_count==7U?0:2;}

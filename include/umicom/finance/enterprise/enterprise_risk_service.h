@@ -27,6 +27,9 @@ extern "C" {
 
 #include "umicom/finance/enterprise/valuation_service.h"
 #include "umicom/finance/enterprise/risk_snapshot.h"
+/**
+ * Represent the enterprise risk service data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseRiskService { UmiEnterpriseValuationService valuation; UmiEnterpriseRiskSnapshot risk; uint64_t scenario_runs; uint64_t report_runs; } UmiEnterpriseRiskService;
 /* Initialise the enterprise valuation/risk aggregate at one risk as-of time. */
 UmiStatus umi_enterprise_risk_service_init(UmiEnterpriseRiskService *service,int64_t freshness_ms,int64_t risk_as_of_ms);

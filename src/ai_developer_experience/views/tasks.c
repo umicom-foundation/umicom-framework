@@ -19,6 +19,10 @@
 
 #include "umicom/ai_developer_experience/action_ids.h"
 
+/*
+ * Initialise ai developer tasks view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_tasks_view_create(
     const char *view_id,
     const UmiAiDeveloperTaskRegistry *tasks,
@@ -32,10 +36,15 @@ UmiStatus umi_ai_developer_tasks_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tasks == NULL || active_task_id == NULL || visible_rows == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (visible_rows > UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY) {
         visible_rows = UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY;
     }
@@ -46,6 +55,7 @@ UmiStatus umi_ai_developer_tasks_view_create(
         "AI Tasks",
         "Coding-agent task state, iterations, patch size and validation failures.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     total = umi_ai_developer_task_registry_count(tasks);
@@ -54,13 +64,16 @@ UmiStatus umi_ai_developer_tasks_view_create(
 
     status = umi_ai_developer_view_set_integer(
         *out_view, "ai-tasks.total-count", (int64_t)total);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view, "ai-tasks.row-count", (int64_t)count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_string(
             *out_view, "ai-tasks.active-id", active_task_id);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiAiDeveloperTaskEntry entry;
         char key[96];
@@ -69,6 +82,7 @@ UmiStatus umi_ai_developer_tasks_view_create(
 
         status = umi_ai_developer_task_registry_at(
             tasks, first + index, &entry);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
 
         active =
@@ -92,6 +106,7 @@ UmiStatus umi_ai_developer_tasks_view_create(
         status = umi_ai_developer_view_set_string(*out_view, key, row);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 0U,
@@ -99,6 +114,7 @@ UmiStatus umi_ai_developer_tasks_view_create(
             "Overview",
             "Return to AI Developer overview",
             1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 1U,
@@ -106,6 +122,7 @@ UmiStatus umi_ai_developer_tasks_view_create(
             "Patch Review",
             "Open the current patch review",
             active_task_id[0] != '\0');
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 2U,

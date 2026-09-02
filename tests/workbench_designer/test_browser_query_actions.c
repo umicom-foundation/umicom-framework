@@ -17,6 +17,10 @@
 #include "test_fixture.h"
 
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchDesignerBrowser browser;
@@ -27,6 +31,7 @@ int main(void)
     size_t index;
 
     umi_workbench_designer_browser_init(&browser);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 4U; ++index) {
         (void)memset(&summary, 0, sizeof(summary));
         summary.structure_size = sizeof(summary);

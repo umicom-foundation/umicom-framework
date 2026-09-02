@@ -25,22 +25,42 @@ extern "C" {
 
 #define UMI_DISTRIBUTION_UI_VISIBLE_ROWS 32U
 
+/**
+ * Initialise distribution ui marketplace view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_distribution_ui_marketplace_view_create(
     const char *view_id,
     UmiDistributionService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise distribution ui installed view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_distribution_ui_installed_view_create(
     const char *view_id,
     UmiDistributionService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise distribution ui updates view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_distribution_ui_updates_view_create(
     const char *view_id,
     UmiDistributionService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise distribution ui transactions view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_distribution_ui_transactions_view_create(
     const char *view_id,
     UmiDistributionService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise distribution ui evidence view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_distribution_ui_evidence_view_create(
     const char *view_id,
     UmiDistributionService *service,

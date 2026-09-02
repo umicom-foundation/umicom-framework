@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc regression comparison data shared with callers of this public contract.
+ */
 typedef struct UmiFcRegressionComparison { double score_delta; int64_t blocker_delta; bool fingerprint_changed; bool regressed; } UmiFcRegressionComparison;
+/**
+ * Perform fc regression compare through the module contract so client applications do not
+ * duplicate its policy.
+ */
 void umi_fc_regression_compare_run(const UmiFcRegressionBaseline *baseline,double current_score,size_t current_blockers,uint64_t current_fingerprint,double allowed_drop,UmiFcRegressionComparison *out_comparison);
 
 #ifdef __cplusplus

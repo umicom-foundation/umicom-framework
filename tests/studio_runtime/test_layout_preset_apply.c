@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/studio_runtime/layout_presets/zen.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationShellRegistry *registry=NULL;

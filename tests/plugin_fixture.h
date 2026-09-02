@@ -19,6 +19,10 @@
 #include <string.h>
 #include "umicom/umicom.h"
 
+/**
+ * Exercise plugin test version and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiVersion plugin_test_version(unsigned int major,
                                              unsigned int minor,
                                              unsigned int patch)
@@ -30,6 +34,10 @@ static inline UmiVersion plugin_test_version(unsigned int major,
     return version;
 }
 
+/**
+ * Exercise plugin test manifest and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiPluginManifest plugin_test_manifest(const char *id,
                                                      const char *name)
 {

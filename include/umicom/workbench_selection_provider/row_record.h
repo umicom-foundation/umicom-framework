@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider row record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderRowRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderRowRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderRowRecord;
 
+/**
+ * Initialise workbench selection provider row record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_provider_row_record_init(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider row record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_validate(
     const UmiWorkbenchSelectionProviderRowRecord *record);
+/**
+ * Provide the workbench selection provider row record set provider operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_set_provider(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider row record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_set_source(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider row record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_set_subject(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider row record set related operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_set_related(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider row record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_set_group(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider row record set description operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_row_record_set_description(
     UmiWorkbenchSelectionProviderRowRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider row record hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_row_record_hash(
     const UmiWorkbenchSelectionProviderRowRecord *record);
+/**
+ * Provide the workbench selection provider row record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_selection_provider_row_record_touch(
     UmiWorkbenchSelectionProviderRowRecord *record,
     uint64_t sequence,

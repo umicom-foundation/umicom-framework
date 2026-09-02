@@ -30,8 +30,18 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ct boundary domain values accepted by this public contract.
+ */
 typedef enum UmiCtBoundaryDomain { UMI_CT_DOMAIN_USER=1, UMI_CT_DOMAIN_KERNEL=2, UMI_CT_DOMAIN_HYPERVISOR=3, UMI_CT_DOMAIN_FIRMWARE=4 } UmiCtBoundaryDomain;
+/**
+ * Represent the ct kernel boundary data shared with callers of this public contract.
+ */
 typedef struct UmiCtKernelBoundary { char boundary_id[UMI_CT_ID_CAPACITY]; UmiCtBoundaryDomain caller; UmiCtBoundaryDomain callee; bool copy_in; bool copy_out; bool privileged; } UmiCtKernelBoundary;
+/**
+ * Check that ct kernel boundary satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ct_kernel_boundary_validate(const UmiCtKernelBoundary *boundary);
 
 #ifdef __cplusplus

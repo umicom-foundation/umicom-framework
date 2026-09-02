@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding tool policy data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingToolPolicy {
     uint64_t allowed_capabilities;
     uint64_t auto_approved_capabilities;
@@ -32,8 +35,16 @@ typedef struct UmiAiCodingToolPolicy {
     int allow_checkpoint_restore;
 } UmiAiCodingToolPolicy;
 
+/**
+ * Initialise ai coding tool policy from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_coding_tool_policy_init(UmiAiCodingToolPolicy *policy);
 
+/**
+ * Provide the ai coding tool policy check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_policy_check(
     const UmiAiCodingToolPolicy *policy,
     const UmiAiCodingToolDescriptor *descriptor,

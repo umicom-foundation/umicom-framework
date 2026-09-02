@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "umicom/trading/trading.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiTradingKillSwitch k={0};umi_kill_switch_engage(&k,"test");assert(k.engaged);umi_kill_switch_reset(&k);assert(!k.engaged);
     UmiOrderThrottle t;umi_order_throttle_init(&t,2U,1000);assert(umi_order_throttle_accept(&t,100));assert(umi_order_throttle_accept(&t,200));assert(!umi_order_throttle_accept(&t,300));assert(umi_order_throttle_accept(&t,1200));return 0;

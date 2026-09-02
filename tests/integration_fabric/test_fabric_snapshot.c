@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricSnapshot s; CHECK(umi_fabric_snapshot_build(1U,2U,3U,4U,5U,6U,UMI_FABRIC_STATE_READY,7U,&s)==UMI_STATUS_OK); CHECK(s.fingerprint!=0U&&s.routes==6U);
     return 0;

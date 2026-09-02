@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital transfer instruction data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalTransferInstruction {
     UmiDigitalAssetId id;
     UmiDigitalAssetId source_account_id;

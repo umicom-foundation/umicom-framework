@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer media adaptation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerMediaAdaptation {
     int transport_overlay;
     int timeline_below;

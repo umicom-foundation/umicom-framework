@@ -27,16 +27,27 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the promotion data shared with callers of this public contract.
+ */
 typedef struct UmiPromotion {
     char release_id[UMI_DELIVERY_ID_CAPACITY];
     UmiReleaseChannel from_channel;
     UmiReleaseChannel to_channel;
     UmiEvidenceStatus status;
 } UmiPromotion;
+/**
+ * Initialise promotion from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_promotion_init(UmiPromotion *promotion,
                              const char *release_id,
                              UmiReleaseChannel from_channel,
                              UmiReleaseChannel to_channel);
+/**
+ * Check that promotion direction satisfies its contract before another service relies on
+ * it.
+ */
 int umi_promotion_direction_valid(const UmiPromotion *promotion);
 
 #ifdef __cplusplus

@@ -22,9 +22,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote process log binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTerminalRemoteProcessLogBinding { char left_id[UMI_TERMINAL_REMOTE_ID_CAPACITY]; char right_id[UMI_TERMINAL_REMOTE_ID_CAPACITY]; uint64_t revision; bool enabled; } UmiTerminalRemoteProcessLogBinding;
+/**
+ * Initialise terminal remote process log binding from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_process_log_binding_init(UmiTerminalRemoteProcessLogBinding *value,const char *left_id,const char *right_id);
+/**
+ * Check that terminal remote process log binding satisfies its contract before another
+ * service relies on it.
+ */
 bool umi_terminal_remote_process_log_binding_valid(const UmiTerminalRemoteProcessLogBinding *value);
+/**
+ * Provide the terminal remote process log binding fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_terminal_remote_process_log_binding_fingerprint(const UmiTerminalRemoteProcessLogBinding *value);
 #ifdef __cplusplus
 }

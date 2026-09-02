@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_PANEL_FLOATING_API_VERSION 1U
 
+/**
+ * Represent the desktop panel floating snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopPanelFloatingSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

@@ -27,12 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai message data shared with callers of this public contract.
+ */
 typedef struct UmiAiMessage {
     UmiAiRole role;
     char name[UMI_AI_ID_CAPACITY];
     char text[UMI_AI_TEXT_CAPACITY];
 } UmiAiMessage;
 
+/**
+ * Copy ai message into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_ai_message_set(UmiAiMessage *message,
                              UmiAiRole role,
                              const char *name,

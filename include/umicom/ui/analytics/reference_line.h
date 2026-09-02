@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics reference line data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsReferenceLine { char label[UMI_ANALYTICS_TEXT_CAPACITY]; UmiAnalyticsOrientation orientation; double value; } UmiAnalyticsReferenceLine;
+/**
+ * Initialise analytics reference line from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_reference_line_init(UmiAnalyticsReferenceLine *item);
+/**
+ * Check that analytics reference line satisfies its contract before another service relies
+ * on it.
+ */
 int umi_analytics_reference_line_valid(const UmiAnalyticsReferenceLine *item);
 
 #ifdef __cplusplus

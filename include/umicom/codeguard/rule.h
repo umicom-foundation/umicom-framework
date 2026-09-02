@@ -26,11 +26,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named code guard match mode values accepted by this public contract.
+ */
 typedef enum UmiCodeGuardMatchMode {
     UMI_CODEGUARD_MATCH_CODE = 0,
     UMI_CODEGUARD_MATCH_RAW = 1,
     UMI_CODEGUARD_MATCH_INCLUDE = 2
 } UmiCodeGuardMatchMode;
+/**
+ * Represent the code guard rule data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardRule {
     const char *rule_id;
     const char *cwe;

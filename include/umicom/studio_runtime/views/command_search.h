@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise studio command search view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_command_search_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,

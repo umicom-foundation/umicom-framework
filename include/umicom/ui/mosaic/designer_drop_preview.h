@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic designer drop preview data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicDesignerDropPreview {
     char workspace_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char active_id[UMI_UI_MOSAIC_ID_CAPACITY];

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 #include "umicom/ui/mosaic/context_link_group.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiUiMosaicContextLinkGroup value;
     umi_ui_mosaic_context_link_group_init(&value);

@@ -25,6 +25,7 @@
 #define UMI_WCH_SESSION_CHUNK_PREFIX "H1:"
 #define UMI_WCH_SESSION_CHUNK_PREFIX_LENGTH 3U
 
+/* Provide the make key operation used by this module and its client applications. */
 static UmiStatus make_key(
     char *out_key,
     size_t capacity,
@@ -33,6 +34,10 @@ static UmiStatus make_key(
 {
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_key == NULL || prefix == NULL || suffix == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -43,6 +48,7 @@ static UmiStatus make_key(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the make chunk key operation used by this module and its client applications. */
 static UmiStatus make_chunk_key(
     char *out_key,
     size_t capacity,
@@ -53,6 +59,7 @@ static UmiStatus make_chunk_key(
     int written;
 
     written = snprintf(suffix, sizeof(suffix), "chunk.%zu", index);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(suffix)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -76,10 +83,15 @@ static UmiStatus encode_chunk(
     size_t index;
     size_t output_index = UMI_WCH_SESSION_CHUNK_PREFIX_LENGTH;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (input == NULL || out_text == NULL || out_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (input_length >
         (SIZE_MAX - UMI_WCH_SESSION_CHUNK_PREFIX_LENGTH - 1U) / 2U) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -87,6 +99,7 @@ static UmiStatus encode_chunk(
 
     required =
         UMI_WCH_SESSION_CHUNK_PREFIX_LENGTH + (input_length * 2U) + 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (required > out_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -96,6 +109,7 @@ static UmiStatus encode_chunk(
         UMI_WCH_SESSION_CHUNK_PREFIX,
         UMI_WCH_SESSION_CHUNK_PREFIX_LENGTH);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < input_length; ++index) {
         const unsigned char value = (unsigned char)input[index];
 
@@ -107,14 +121,18 @@ static UmiStatus encode_chunk(
     return UMI_STATUS_OK;
 }
 
+/* Provide the hex value operation used by this module and its client applications. */
 static int hex_value(char character)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= '0' && character <= '9') {
         return (int)(character - '0');
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= 'A' && character <= 'F') {
         return 10 + (int)(character - 'A');
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= 'a' && character <= 'f') {
         return 10 + (int)(character - 'a');
     }
@@ -136,6 +154,10 @@ static UmiStatus decode_chunk(
 {
     size_t stored_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stored_text == NULL || out_chunk == NULL ||
         out_capacity == 0U || out_length == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -144,6 +166,7 @@ static UmiStatus decode_chunk(
     *out_length = 0U;
     stored_length = strlen(stored_text);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (stored_length >= UMI_WCH_SESSION_CHUNK_PREFIX_LENGTH &&
         strncmp(
             stored_text,
@@ -156,17 +179,21 @@ static UmiStatus decode_chunk(
         const size_t decoded_length = hex_length / 2U;
         size_t index;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((hex_length % 2U) != 0U) {
             return UMI_STATUS_PARSE_ERROR;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (decoded_length + 1U > out_capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < decoded_length; ++index) {
             const int high = hex_value(hex_text[index * 2U]);
             const int low = hex_value(hex_text[(index * 2U) + 1U]);
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (high < 0 || low < 0) {
                 return UMI_STATUS_PARSE_ERROR;
             }
@@ -180,6 +207,7 @@ static UmiStatus decode_chunk(
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (stored_length + 1U > out_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -201,14 +229,20 @@ static UmiStatus parse_chunk_count(
     size_t value = 0U;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_count == NULL || text[0] == '\0') {
         return UMI_STATUS_PARSE_ERROR;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; text[index] != '\0'; ++index) {
         const unsigned char character = (unsigned char)text[index];
         size_t digit;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character < (unsigned char)'0' ||
             character > (unsigned char)'9') {
             return UMI_STATUS_PARSE_ERROR;
@@ -216,6 +250,7 @@ static UmiStatus parse_chunk_count(
 
         digit = (size_t)(character - (unsigned char)'0');
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value >
             (UMI_WORKBENCH_CONTEXT_HOST_SESSION_MAX_CHUNKS - digit) / 10U) {
             return UMI_STATUS_PARSE_ERROR;
@@ -224,6 +259,7 @@ static UmiStatus parse_chunk_count(
         value = (value * 10U) + digit;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value > UMI_WORKBENCH_CONTEXT_HOST_SESSION_MAX_CHUNKS) {
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -232,6 +268,10 @@ static UmiStatus parse_chunk_count(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the remove partial chunks operation used by this module and its client
+ * applications.
+ */
 static void remove_partial_chunks(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -239,13 +279,19 @@ static void remove_partial_chunks(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL) {
         return;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < chunk_count; ++index) {
         char key[UMI_SESSION_KEY_CAPACITY];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (make_chunk_key(
                 key, sizeof(key), key_prefix, index) == UMI_STATUS_OK) {
             const UmiStatus status = umi_session_store_remove(store, key);
@@ -254,6 +300,10 @@ static void remove_partial_chunks(
     }
 }
 
+/*
+ * Write workbench context host session in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_context_host_session_save(
     const UmiWorkbenchContextHost *host,
     UmiSessionStore *store,
@@ -268,6 +318,10 @@ UmiStatus umi_workbench_context_host_session_save(
     char count_text[32U];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || store == NULL || key_prefix == NULL ||
         key_prefix[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -275,17 +329,23 @@ UmiStatus umi_workbench_context_host_session_save(
 
     encoded = (char *)calloc(
         UMI_WORKBENCH_CONTEXT_HOST_SESSION_TEXT_CAPACITY, 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (encoded == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
 
     status = umi_workbench_context_host_session_capture(host, &session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_context_host_session_encode(
             &session,
             encoded,
             UMI_WORKBENCH_CONTEXT_HOST_SESSION_TEXT_CAPACITY);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(encoded);
         return status;
@@ -297,12 +357,17 @@ UmiStatus umi_workbench_context_host_session_save(
      * generation appear complete to restore.
      */
     status = umi_workbench_context_host_session_remove(store, key_prefix);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(encoded);
         return status;
     }
 
     encoded_length = strlen(encoded);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (offset < encoded_length) {
         char stored_chunk[UMI_SESSION_VALUE_CAPACITY];
         size_t remaining = encoded_length - offset;
@@ -312,6 +377,7 @@ UmiStatus umi_workbench_context_host_session_save(
                 ? UMI_WORKBENCH_CONTEXT_HOST_SESSION_CHUNK_CAPACITY
                 : remaining;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (chunk_count >=
             UMI_WORKBENCH_CONTEXT_HOST_SESSION_MAX_CHUNKS) {
             remove_partial_chunks(store, key_prefix, chunk_count);
@@ -324,6 +390,7 @@ UmiStatus umi_workbench_context_host_session_save(
             count,
             stored_chunk,
             sizeof(stored_chunk));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             remove_partial_chunks(store, key_prefix, chunk_count);
             free(encoded);
@@ -332,6 +399,7 @@ UmiStatus umi_workbench_context_host_session_save(
 
         status = make_chunk_key(
             key, sizeof(key), key_prefix, chunk_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             remove_partial_chunks(store, key_prefix, chunk_count);
             free(encoded);
@@ -339,6 +407,7 @@ UmiStatus umi_workbench_context_host_session_save(
         }
 
         status = umi_session_store_set(store, key, stored_chunk);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             remove_partial_chunks(store, key_prefix, chunk_count + 1U);
             free(encoded);
@@ -350,19 +419,23 @@ UmiStatus umi_workbench_context_host_session_save(
     }
 
     status = make_key(key, sizeof(key), key_prefix, "count");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         const int written = snprintf(
             count_text, sizeof(count_text), "%zu", chunk_count);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(count_text)) {
             status = UMI_STATUS_CAPACITY_EXCEEDED;
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_session_store_set(store, key, count_text);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         remove_partial_chunks(store, key_prefix, chunk_count);
     }
@@ -371,6 +444,10 @@ UmiStatus umi_workbench_context_host_session_save(
     return status;
 }
 
+/*
+ * Provide the workbench context host session restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_session_restore(
     UmiWorkbenchContextHost *host,
     const UmiSessionStore *store,
@@ -386,6 +463,10 @@ UmiStatus umi_workbench_context_host_session_restore(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || store == NULL || key_prefix == NULL ||
         key_prefix[0] == '\0' || out_restored == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -394,32 +475,41 @@ UmiStatus umi_workbench_context_host_session_restore(
     *out_restored = false;
 
     status = make_key(key, sizeof(key), key_prefix, "count");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = umi_session_store_get(
         store, key, count_text, sizeof(count_text));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = parse_chunk_count(count_text, &chunk_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     encoded = (char *)calloc(
         UMI_WORKBENCH_CONTEXT_HOST_SESSION_TEXT_CAPACITY, 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (encoded == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
 
     status = UMI_STATUS_OK;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < chunk_count; ++index) {
         char stored_chunk[UMI_SESSION_VALUE_CAPACITY];
         char chunk[
@@ -428,12 +518,14 @@ UmiStatus umi_workbench_context_host_session_restore(
 
         status = make_chunk_key(
             key, sizeof(key), key_prefix, index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             break;
         }
 
         status = umi_session_store_get(
             store, key, stored_chunk, sizeof(stored_chunk));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             break;
         }
@@ -443,10 +535,12 @@ UmiStatus umi_workbench_context_host_session_restore(
             chunk,
             sizeof(chunk),
             &chunk_length);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             break;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (used + chunk_length + 1U >
             UMI_WORKBENCH_CONTEXT_HOST_SESSION_TEXT_CAPACITY) {
             status = UMI_STATUS_CAPACITY_EXCEEDED;
@@ -458,16 +552,19 @@ UmiStatus umi_workbench_context_host_session_restore(
         encoded[used] = '\0';
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_context_host_session_decode(
             encoded, &session);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_context_host_session_apply(
             host, &session);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *out_restored = true;
     }
@@ -476,6 +573,10 @@ UmiStatus umi_workbench_context_host_session_restore(
     return status;
 }
 
+/*
+ * Remove workbench context host session while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_workbench_context_host_session_remove(
     UmiSessionStore *store,
     const char *key_prefix)
@@ -486,38 +587,49 @@ UmiStatus umi_workbench_context_host_session_remove(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         key_prefix[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = make_key(key, sizeof(key), key_prefix, "count");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = umi_session_store_get(
         store, key, count_text, sizeof(count_text));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = parse_chunk_count(count_text, &chunk_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < chunk_count; ++index) {
         status = make_chunk_key(
             key, sizeof(key), key_prefix, index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
 
         status = umi_session_store_remove(store, key);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK &&
             status != UMI_STATUS_NOT_FOUND) {
             return status;
@@ -525,6 +637,7 @@ UmiStatus umi_workbench_context_host_session_remove(
     }
 
     status = make_key(key, sizeof(key), key_prefix, "count");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

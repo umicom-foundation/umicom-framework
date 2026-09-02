@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host manifest evidence data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostManifestEvidence {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,9 +44,25 @@ typedef struct UmiPluginExtensionHostManifestEvidence {
     uint64_t revision;
 } UmiPluginExtensionHostManifestEvidence;
 
+/**
+ * Initialise plugin extension host manifest evidence from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_manifest_evidence_init(UmiPluginExtensionHostManifestEvidence *value);
+/**
+ * Provide the plugin extension host manifest evidence configure operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_manifest_evidence_configure(UmiPluginExtensionHostManifestEvidence *value, const char *id, const char *subject, uint32_t version, uint32_t risk, uint64_t flags);
+/**
+ * Check that plugin extension host manifest evidence satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_manifest_evidence_validate(const UmiPluginExtensionHostManifestEvidence *value);
+/**
+ * Provide the plugin extension host manifest evidence fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_manifest_evidence_fingerprint(const UmiPluginExtensionHostManifestEvidence *value);
 
 #ifdef __cplusplus

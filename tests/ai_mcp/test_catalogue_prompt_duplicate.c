@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai/mcp/prompt_catalogue.h"
+/*
+ * Exercise test ai mcp catalogue prompt duplicate and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_ai_mcp_catalogue_prompt_duplicate(void){UmiAiMcpPromptCatalogue c;UmiAiMcpPromptDescriptor d={0};umi_ai_mcp_prompt_catalogue_init(&c);strcpy(d.name,"review");assert(umi_ai_mcp_prompt_catalogue_add(&c,&d)==UMI_STATUS_OK);assert(umi_ai_mcp_prompt_catalogue_add(&c,&d)==UMI_STATUS_ALREADY_EXISTS);return 0;}

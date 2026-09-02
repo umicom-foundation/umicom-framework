@@ -27,6 +27,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise chart model from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_chart_model_create(
     const char *title,
     UmiChartModel **out_model)
@@ -34,6 +38,10 @@ UmiStatus umi_chart_model_create(
     UmiChartModel *model;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (title == NULL || out_model == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -45,11 +53,16 @@ UmiStatus umi_chart_model_create(
     *out_model = NULL;
 
     model = (UmiChartModel *)calloc(1U, sizeof(*model));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
 
     status = umi_chart_model_init(model, title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(model);
         return status;
@@ -59,6 +72,7 @@ UmiStatus umi_chart_model_create(
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by chart model so the same storage can be reused safely. */
 void umi_chart_model_destroy(UmiChartModel *model)
 {
     /* free(NULL) is defined, but the explicit check documents the contract. */
@@ -69,10 +83,18 @@ void umi_chart_model_destroy(UmiChartModel *model)
     free(model);
 }
 
+/*
+ * Initialise chart model from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_chart_model_init(
     UmiChartModel *model,
     const char *title)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || title == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -82,14 +104,23 @@ UmiStatus umi_chart_model_init(
     return umi_web_copy_text(model->title, sizeof(model->title), title);
 }
 
+/*
+ * Provide the chart model add series operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_model_add_series(
     UmiChartModel *model,
     const UmiChartSeries *series)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || series == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->series_count >= UMI_CHART_MAX_SERIES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -104,17 +135,27 @@ UmiStatus umi_chart_model_add_series(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the chart model find series operation used by this module and its client
+ * applications.
+ */
 UmiChartSeries *umi_chart_model_find_series(
     UmiChartModel *model,
     const char *id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || id == NULL) {
         return NULL;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->series_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(model->series[index].id, id) == 0) {
             return &model->series[index];
         }

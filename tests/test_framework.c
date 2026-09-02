@@ -25,6 +25,10 @@ static int stops = 0;
 static int scheduled_runs = 0;
 static size_t replay_events = 0U;
 
+/*
+ * Exercise on start and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus on_start(UmiModuleContext *context)
 {
     starts++;
@@ -37,6 +41,10 @@ static UmiStatus on_start(UmiModuleContext *context)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise on stop and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus on_stop(UmiModuleContext *context)
 {
     (void)context;
@@ -44,12 +52,20 @@ static UmiStatus on_stop(UmiModuleContext *context)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise echo command and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus echo_command(const char *payload, void *user_data)
 {
     (void)user_data;
     return strcmp(payload, "hello") == 0 ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Exercise state query and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus state_query(const char *request, char *response, size_t capacity, void *user_data)
 {
     (void)request;
@@ -58,6 +74,10 @@ static UmiStatus state_query(const char *request, char *response, size_t capacit
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise scheduled task and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void scheduled_task(uint64_t task_id, void *user_data)
 {
     (void)task_id;
@@ -65,12 +85,21 @@ static void scheduled_task(uint64_t task_id, void *user_data)
     scheduled_runs++;
 }
 
+/*
+ * Exercise replay handler and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void replay_handler(const UmiMessageEnvelope *event, void *user_data)
 {
     (void)user_data;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (event != 0) replay_events += 1U;
 }
 
+/*
+ * Exercise test clock scheduler and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_clock_scheduler(void)
 {
     UmiClock clock = umi_clock_fake(1000U);
@@ -89,6 +118,10 @@ static void test_clock_scheduler(void)
     umi_clock_dispose(&clock);
 }
 
+/*
+ * Exercise test journal and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void test_journal(void)
 {
     const char *path = "umicom-framework-test.journal";
@@ -117,6 +150,10 @@ static void test_journal(void)
     (void)remove(path);
 }
 
+/*
+ * Exercise test sqlite data server and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_sqlite_data_server(void)
 {
 #ifdef UMICOM_HAS_SQLITE
@@ -136,6 +173,10 @@ static void test_sqlite_data_server(void)
 #endif
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMasterController *master = 0;

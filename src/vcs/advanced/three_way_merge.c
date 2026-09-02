@@ -22,6 +22,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the vcs advanced three way merge text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_three_way_merge_text(
     const char *base,
     const char *ours,
@@ -31,6 +35,10 @@ UmiStatus umi_vcs_advanced_three_way_merge_text(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (base == NULL || ours == NULL || theirs == NULL ||
         out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -40,28 +48,32 @@ UmiStatus umi_vcs_advanced_three_way_merge_text(
     out_result->struct_size = (uint32_t)sizeof(*out_result);
     out_result->api_version = UMI_VCS_ADVANCED_API_VERSION;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(ours, theirs) == 0) {
         status = umi_vcs_advanced_copy_text(
             out_result->text, sizeof(out_result->text), ours);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
         out_result->clean = 1;
-    } else if (strcmp(base, ours) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(base, ours) == 0) {
         status = umi_vcs_advanced_copy_text(
             out_result->text, sizeof(out_result->text), theirs);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
         out_result->clean = 1;
-    } else if (strcmp(base, theirs) == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(base, theirs) == 0) {
         status = umi_vcs_advanced_copy_text(
             out_result->text, sizeof(out_result->text), ours);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
         out_result->clean = 1;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         written = snprintf(
             out_result->text,
             sizeof(out_result->text),
@@ -69,6 +81,7 @@ UmiStatus umi_vcs_advanced_three_way_merge_text(
             ours,
             base,
             theirs);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(out_result->text)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }

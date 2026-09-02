@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced compare export data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedCompareExport {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,14 +40,29 @@ typedef struct UmiVcsAdvancedCompareExport {
     int overwrite;
 } UmiVcsAdvancedCompareExport;
 
+/**
+ * Initialise vcs advanced compare export from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_compare_export_init(UmiVcsAdvancedCompareExport *value);
+/**
+ * Check that vcs advanced compare export satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_compare_export_validate(const UmiVcsAdvancedCompareExport *value);
+/**
+ * List the named vcs compare export format values accepted by this public contract.
+ */
 typedef enum UmiVcsCompareExportFormat {
     UMI_VCS_COMPARE_EXPORT_UNIFIED_PATCH = 0,
     UMI_VCS_COMPARE_EXPORT_TEXT_REPORT = 1,
     UMI_VCS_COMPARE_EXPORT_JSON = 2,
     UMI_VCS_COMPARE_EXPORT_MERGED_TEXT = 3
 } UmiVcsCompareExportFormat;
+/**
+ * Copy vcs advanced compare export into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_compare_export_set(UmiVcsAdvancedCompareExport *value,
                                                 const char *destination,
                                                 UmiVcsCompareExportFormat format);

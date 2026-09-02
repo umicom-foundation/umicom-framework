@@ -29,6 +29,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design selection control spec data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignSelectionControlSpec {
     UmiUiComponentKind kind;
     int selected;

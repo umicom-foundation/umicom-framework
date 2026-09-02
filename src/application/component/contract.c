@@ -17,7 +17,9 @@
 
 #include <string.h>
 
+/* Provide the factory for role operation used by this module and its client applications. */
 static const char *factory_for_role(UmiApplicationComponentRole role) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (role) {
   case UMI_APPLICATION_COMPONENT_VIEW:
     return "umicom.application.factory.view";
@@ -36,8 +38,10 @@ static const char *factory_for_role(UmiApplicationComponentRole role) {
   }
 }
 
+/* Provide the region for role operation used by this module and its client applications. */
 static UmiApplicationComponentRegion
 region_for_role(UmiApplicationComponentRole role) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (role) {
   case UMI_APPLICATION_COMPONENT_VIEW:
     return UMI_APPLICATION_COMPONENT_REGION_LEFT;
@@ -50,11 +54,20 @@ region_for_role(UmiApplicationComponentRole role) {
   }
 }
 
+/*
+ * Provide the application component contract from definition operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_component_contract_from_definition(
     const UmiApplicationComponentDefinition *definition,
     UmiApplicationComponentContract *out_contract) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (definition == NULL || out_contract == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (umi_application_component_definition_validate(definition) != UMI_STATUS_OK)
     return UMI_STATUS_INVALID_STATE;
 
@@ -76,11 +89,20 @@ UmiStatus umi_application_component_contract_from_definition(
   return umi_application_component_contract_validate(out_contract);
 }
 
+/*
+ * Check that application component contract satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_component_contract_validate(
     const UmiApplicationComponentContract *contract) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (contract == NULL || contract->definition == NULL ||
       contract->factory_id == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (contract->struct_size < sizeof(*contract) ||
       contract->api_version != UMI_APPLICATION_COMPONENT_MODEL_API_VERSION ||
       contract->version.major == 0U || contract->factory_id[0] == '\0' ||
@@ -92,6 +114,10 @@ UmiStatus umi_application_component_contract_validate(
   return umi_application_component_definition_validate(contract->definition);
 }
 
+/*
+ * Provide the application component contract supports operation used by this module and
+ * its client applications.
+ */
 int umi_application_component_contract_supports(
     const UmiApplicationComponentContract *contract,
     UmiApplicationComponentFrontend frontend) {
@@ -100,11 +126,17 @@ int umi_application_component_contract_supports(
          (contract->frontend_mask & (uint32_t)frontend) != 0U;
 }
 
+/*
+ * Provide the application component version compatible operation used by this module and
+ * its client applications.
+ */
 int umi_application_component_version_compatible(
     UmiApplicationComponentVersion available,
     UmiApplicationComponentVersion required) {
+  /* Apply this branch only when its contract condition is satisfied. */
   if (available.major == 0U || available.major != required.major)
     return 0;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (available.minor != required.minor)
     return available.minor > required.minor;
   return available.patch >= required.patch;

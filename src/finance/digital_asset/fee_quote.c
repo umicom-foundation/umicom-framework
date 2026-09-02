@@ -24,11 +24,17 @@
 UmiStatus umi_digital_asset_fee_quote_init(UmiDigitalFeeQuote *value, const char *network_id, int64_t fee_units, int32_t scale, const char *asset_symbol, int64_t expires_time_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || fee_units < 0 || scale < 0 || expires_time_ms < 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_digital_asset_copy_text(value->network_id.value, sizeof value->network_id.value, network_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_digital_asset_copy_text(value->estimated_fee.asset_symbol, sizeof value->estimated_fee.asset_symbol, asset_symbol);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->estimated_fee.units = fee_units;
     value->estimated_fee.scale = scale;

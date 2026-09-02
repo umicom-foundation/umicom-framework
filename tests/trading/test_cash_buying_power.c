@@ -19,4 +19,8 @@
 
 #include <assert.h>
 #include "umicom/trading/trading.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiMoney balance={10000,2,{{'U','S','D','\0'}}};UmiMoney move={-2500,2,{{'U','S','D','\0'}}};assert(umi_cash_apply(&balance,&move)==UMI_STATUS_OK);assert(balance.minor_units==7500);assert(umi_buying_power(1000,4)==4000);assert(umi_execution_fee(2,1.5,1)==3);return 0;}

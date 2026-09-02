@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_checkpoint.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseValuationCheckpoint c;CHECK(umi_enterprise_valuation_checkpoint_init(&c,"j",5U,10U,12U,1)==UMI_STATUS_OK);CHECK(c.completed_tasks==5U);return 0;}

@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/color_role.h"
+/**
+ * Represent the design focus ring data shared with callers of this public contract.
+ */
 typedef struct UmiDesignFocusRing { double width; double offset; UmiDesignColorRole color_role; double opacity; } UmiDesignFocusRing;
 /* Initialise an accessible focus-ring geometry and semantic colour role. */
 UmiStatus umi_design_focus_ring_init(UmiDesignFocusRing *ring, double width, double offset, UmiDesignColorRole color_role, double opacity);

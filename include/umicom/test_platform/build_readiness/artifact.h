@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform build artifact data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformBuildArtifact {
     uint32_t structure_size;
     uint32_t api_version;
@@ -34,6 +38,10 @@ typedef struct UmiTestPlatformBuildArtifact {
     bool required;
 } UmiTestPlatformBuildArtifact;
 
+/**
+ * Initialise test platform build artifact from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_test_platform_build_artifact_init(
     UmiTestPlatformBuildArtifact *artifact,
     const char *product_id,
@@ -42,6 +50,10 @@ UmiStatus umi_test_platform_build_artifact_init(
     const char *labels,
     const char *preset,
     bool required);
+/**
+ * Check that test platform build artifact satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_platform_build_artifact_validate(
     const UmiTestPlatformBuildArtifact *artifact);
 

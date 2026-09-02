@@ -18,4 +18,5 @@
 
 #include "umicom/finance/prudential/stress_path.h"
 
-UmiStatus umi_pru_stress_path_add(UmiPrudentialStressPath *path,double multiplier) { if(path==NULL||!umi_pru_number_valid(multiplier)||multiplier<0.0)return UMI_STATUS_INVALID_ARGUMENT; if(path->count>=UMI_PRU_MAX_PERIODS)return UMI_STATUS_CAPACITY_EXCEEDED; path->multipliers[path->count++]=multiplier; return UMI_STATUS_OK; }
+/* Add pru stress path only after its inputs and available capacity have been checked. */
+UmiStatus umi_pru_stress_path_add(UmiPrudentialStressPath *path,double multiplier) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(path==NULL||!umi_pru_number_valid(multiplier)||multiplier<0.0)return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(path->count>=UMI_PRU_MAX_PERIODS)return UMI_STATUS_CAPACITY_EXCEEDED; path->multipliers[path->count++]=multiplier; return UMI_STATUS_OK; }

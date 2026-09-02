@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_REMOTE_PROVIDER "umicom.document.provider.remote_provider"
 
+/**
+ * Provide the document capability remote provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_remote_provider(void);
 

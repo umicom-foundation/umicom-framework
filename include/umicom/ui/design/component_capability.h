@@ -26,7 +26,14 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design component capability flag values accepted by this public contract.
+ */
 typedef enum UmiDesignComponentCapabilityFlag { UMI_DESIGN_CAP_FOCUS=1U<<0, UMI_DESIGN_CAP_KEYBOARD=1U<<1, UMI_DESIGN_CAP_POINTER=1U<<2, UMI_DESIGN_CAP_TOUCH=1U<<3, UMI_DESIGN_CAP_DRAG=1U<<4, UMI_DESIGN_CAP_DROP=1U<<5, UMI_DESIGN_CAP_SELECTION=1U<<6, UMI_DESIGN_CAP_EDIT=1U<<7 } UmiDesignComponentCapabilityFlag;
+/**
+ * Represent the design component capability data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignComponentCapability { uint32_t flags; } UmiDesignComponentCapability;
 /* Add one semantic interaction capability. */
 void umi_design_component_capability_add(UmiDesignComponentCapability *capability, UmiDesignComponentCapabilityFlag flag);

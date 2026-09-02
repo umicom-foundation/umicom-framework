@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_PROVIDER_EXTENSION_POINT "umicom.document.integration.provider_extension_point"
 
+/**
+ * Provide the document capability provider extension point operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_provider_extension_point(void);
 

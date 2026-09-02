@@ -28,6 +28,10 @@
 
 #include "umicom/editor/edit_transaction.h"
 
+/*
+ * Exercise edit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorWorkspaceTextEdit edit(const char *id, const char *uri,
                                        const char *expected,
                                        const char *replacement,
@@ -50,6 +54,10 @@ static UmiEditorWorkspaceTextEdit edit(const char *id, const char *uri,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorTextBuffer *first_buffer = NULL;

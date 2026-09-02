@@ -32,6 +32,9 @@ extern "C" {
 #define UMI_DATA_ENTERPRISE_MAX_EDGES 128U
 #define UMI_DATA_ENTERPRISE_MAX_OPERATIONS 128U
 
+/**
+ * List the named data enterprise state values accepted by this public contract.
+ */
 typedef enum UmiDataEnterpriseState {
     UMI_DATA_ENTERPRISE_UNKNOWN = 0,
     UMI_DATA_ENTERPRISE_READY = 1,
@@ -40,6 +43,9 @@ typedef enum UmiDataEnterpriseState {
     UMI_DATA_ENTERPRISE_FAILED = 4
 } UmiDataEnterpriseState;
 
+/**
+ * List the named data value kind values accepted by this public contract.
+ */
 typedef enum UmiDataValueKind {
     UMI_DATA_VALUE_NULL = 0,
     UMI_DATA_VALUE_INTEGER = 1,
@@ -51,6 +57,9 @@ typedef enum UmiDataValueKind {
     UMI_DATA_VALUE_DECIMAL = 7
 } UmiDataValueKind;
 
+/**
+ * List the named data change kind values accepted by this public contract.
+ */
 typedef enum UmiDataChangeKind {
     UMI_DATA_CHANGE_NONE = 0,
     UMI_DATA_CHANGE_INSERT = 1,
@@ -58,12 +67,18 @@ typedef enum UmiDataChangeKind {
     UMI_DATA_CHANGE_DELETE = 3
 } UmiDataChangeKind;
 
+/**
+ * List the named data compatibility values accepted by this public contract.
+ */
 typedef enum UmiDataCompatibility {
     UMI_DATA_COMPATIBLE = 1,
     UMI_DATA_COMPATIBLE_WITH_REBUILD = 2,
     UMI_DATA_BREAKING = 3
 } UmiDataCompatibility;
 
+/**
+ * List the named data consistency values accepted by this public contract.
+ */
 typedef enum UmiDataConsistency {
     UMI_DATA_CONSISTENCY_EVENTUAL = 1,
     UMI_DATA_CONSISTENCY_SESSION = 2,

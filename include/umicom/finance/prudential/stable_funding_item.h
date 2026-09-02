@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stable funding item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStableFundingItem { char item_id[UMI_PRU_ID_CAPACITY]; double base_amount; double factor; double stressed_amount; } UmiPrudentialStableFundingItem;
 /* Calculate a stressed liquidity or stable-funding amount from a bounded factor. */
 UmiStatus umi_pru_stable_funding_item_calculate(UmiPrudentialStableFundingItem *result, const char *item_id, double base_amount, double factor);

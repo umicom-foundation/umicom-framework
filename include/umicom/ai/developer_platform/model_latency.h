@@ -29,11 +29,34 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev model latency data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevModelLatency { uint64_t limit; uint64_t reserved; uint64_t consumed; uint64_t revision; } UmiAiDevModelLatency;
+/**
+ * Initialise ai dev model latency from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_model_latency_init(UmiAiDevModelLatency *budget, uint64_t limit);
+/**
+ * Provide the ai dev model latency reserve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_model_latency_reserve(UmiAiDevModelLatency *budget, uint64_t amount);
+/**
+ * Provide the ai dev model latency consume operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_model_latency_consume(UmiAiDevModelLatency *budget, uint64_t amount);
+/**
+ * Provide the ai dev model latency remaining operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ai_dev_model_latency_remaining(const UmiAiDevModelLatency *budget);
+/**
+ * Provide the ai dev model latency utilisation operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_dev_model_latency_utilisation(const UmiAiDevModelLatency *budget);
 
 #ifdef __cplusplus

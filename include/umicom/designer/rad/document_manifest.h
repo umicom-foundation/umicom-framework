@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad document manifest data shared with callers of this public contract.
+ */
 typedef struct UmiRadDocumentManifest {
     char application_id[UMI_RAD_ID_CAPACITY];
     size_t page_count;
@@ -26,7 +29,15 @@ typedef struct UmiRadDocumentManifest {
     size_t binding_count;
     uint64_t revision;
 } UmiRadDocumentManifest;
+/**
+ * Initialise rad document manifest from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_document_manifest_init(UmiRadDocumentManifest *item);
+/**
+ * Check that rad document manifest satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_document_manifest_is_valid(const UmiRadDocumentManifest *item);
 #ifdef __cplusplus
 }

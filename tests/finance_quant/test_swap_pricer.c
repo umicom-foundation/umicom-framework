@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/swap_pricer.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double pv=0.0; CHECK(umi_quant_swap_pricer_value(1000000.0,4.0,0.03,0.031,&pv)==UMI_STATUS_OK); CHECK(pv>3999.0&&pv<4001.0);

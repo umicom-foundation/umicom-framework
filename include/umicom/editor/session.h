@@ -35,7 +35,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the editor session data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSession UmiEditorSession;
+/**
+ * Represent the editor session snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSessionSnapshot { uint32_t struct_size; uint32_t api_version;
     size_t document_count;
     size_t cursor_count;
@@ -50,19 +56,74 @@ typedef struct UmiEditorSessionSnapshot { uint32_t struct_size; uint32_t api_ver
     size_t configuration_count;
     uint64_t revision;
 } UmiEditorSessionSnapshot;
+/**
+ * Initialise editor session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_editor_session_create(UmiEditorSession **out_session);
+/**
+ * Release or reset state held by editor session so the same storage can be reused safely.
+ */
 void umi_editor_session_destroy(UmiEditorSession *session);
+/**
+ * Provide the editor session snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_session_snapshot(const UmiEditorSession *session,UmiEditorSessionSnapshot *out_snapshot);
+/**
+ * Provide the editor session document operation used by this module and its client
+ * applications.
+ */
 UmiEditorDocumentRegistry *umi_editor_session_document(UmiEditorSession *session);
+/**
+ * Provide the editor session cursor operation used by this module and its client
+ * applications.
+ */
 UmiEditorCursorRegistry *umi_editor_session_cursor(UmiEditorSession *session);
+/**
+ * Provide the editor session selection range operation used by this module and its client
+ * applications.
+ */
 UmiEditorSelectionRangeRegistry *umi_editor_session_selection_range(UmiEditorSession *session);
+/**
+ * Provide the editor session marker operation used by this module and its client
+ * applications.
+ */
 UmiEditorMarkerRegistry *umi_editor_session_marker(UmiEditorSession *session);
+/**
+ * Provide the editor session fold region operation used by this module and its client
+ * applications.
+ */
 UmiEditorFoldRegionRegistry *umi_editor_session_fold_region(UmiEditorSession *session);
+/**
+ * Provide the editor session symbol operation used by this module and its client
+ * applications.
+ */
 UmiEditorSymbolRegistry *umi_editor_session_symbol(UmiEditorSession *session);
+/**
+ * Provide the editor session diagnostic operation used by this module and its client
+ * applications.
+ */
 UmiEditorDiagnosticRegistry *umi_editor_session_diagnostic(UmiEditorSession *session);
+/**
+ * Provide the editor session completion operation used by this module and its client
+ * applications.
+ */
 UmiEditorCompletionRegistry *umi_editor_session_completion(UmiEditorSession *session);
+/**
+ * Provide the editor session code action operation used by this module and its client
+ * applications.
+ */
 UmiEditorCodeActionRegistry *umi_editor_session_code_action(UmiEditorSession *session);
+/**
+ * Provide the editor session diff hunk operation used by this module and its client
+ * applications.
+ */
 UmiEditorDiffHunkRegistry *umi_editor_session_diff_hunk(UmiEditorSession *session);
+/**
+ * Provide the editor session configuration operation used by this module and its client
+ * applications.
+ */
 UmiEditorConfigurationRegistry *umi_editor_session_configuration(UmiEditorSession *session);
 #ifdef __cplusplus
 }

@@ -17,6 +17,10 @@
 
 #include "umicom/application_ui/application_ui.h"
 
+/*
+ * Exercise integer property and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int64_t integer_property(UmiUiViewModel *view, const char *key)
 {
     UmiUiValue value;
@@ -25,6 +29,10 @@ static int64_t integer_property(UmiUiViewModel *view, const char *key)
     return value.integer_value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiViewModel *view = NULL;

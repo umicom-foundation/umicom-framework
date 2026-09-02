@@ -26,11 +26,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the venue adapter data shared with callers of this public contract.
+ */
 typedef struct UmiVenueAdapter {
     void *instance;
     const char *venue_name;
     UmiStatus (*route_order)(void *instance, const UmiOrderRequest *request);
 } UmiVenueAdapter;
+/**
+ * Check that venue adapter satisfies its contract before another service relies on it.
+ */
 int umi_venue_adapter_valid(const UmiVenueAdapter *adapter);
 #ifdef __cplusplus
 }

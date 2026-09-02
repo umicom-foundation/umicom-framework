@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data backup manifest data shared with callers of this public contract.
+ */
 typedef struct UmiDataBackupManifest {
     char backup_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     uint64_t created_at;

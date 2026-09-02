@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric transform rule data shared with callers of this public contract.
+ */
 typedef struct UmiFabricTransformRule {
     char rule_id[UMI_FABRIC_ID_CAPACITY];
     char source_path[UMI_FABRIC_TEXT_CAPACITY];
@@ -33,7 +36,15 @@ typedef struct UmiFabricTransformRule {
     bool required;
 } UmiFabricTransformRule;
 
+/**
+ * Initialise fabric transform rule from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_fabric_transform_rule_init(UmiFabricTransformRule *item, const char *rule_id, const char *source_path, const char *target_path, const char *operation, bool required);
+/**
+ * Check that fabric transform rule satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_fabric_transform_rule_validate(const UmiFabricTransformRule *item);
 
 #ifdef __cplusplus

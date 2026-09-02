@@ -26,6 +26,10 @@ extern "C" {
 
 #define UMI_EDITOR_INTEL_CODE_ACTION_PROJECTION_API_VERSION 1U
 
+/**
+ * Represent the editor intel code action projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelCodeActionProjection {
     uint32_t struct_size;
     uint32_t api_version;
@@ -39,16 +43,36 @@ typedef struct UmiEditorIntelCodeActionProjection {
     int has_selection;
 } UmiEditorIntelCodeActionProjection;
 
+/**
+ * Initialise editor intel code action projection from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_code_action_projection_init(
     UmiEditorIntelCodeActionProjection *projection);
+/**
+ * Provide the editor intel code action projection refresh operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_code_action_projection_refresh(
     UmiEditorIntelCodeActionProjection *projection,
     UmiEditorCodeActionOrchestration *orchestration);
+/**
+ * Provide the editor intel code action projection select operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_intel_code_action_projection_select(
     UmiEditorIntelCodeActionProjection *projection,
     size_t index);
+/**
+ * Find editor intel code action projection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_code_action_projection_selected(
     const UmiEditorIntelCodeActionProjection *projection);
+/**
+ * Check that editor intel code action projection satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_code_action_projection_valid(
     const UmiEditorIntelCodeActionProjection *projection);
 

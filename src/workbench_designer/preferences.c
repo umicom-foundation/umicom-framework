@@ -19,6 +19,10 @@
 #include <math.h>
 
 
+/*
+ * Provide the workbench designer preferences default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchDesignerPreferences umi_workbench_designer_preferences_default(void)
 {
     UmiWorkbenchDesignerPreferences preferences;
@@ -47,46 +51,69 @@ UmiWorkbenchDesignerPreferences umi_workbench_designer_preferences_default(void)
     return preferences;
 }
 
+/* Provide the preferences error operation used by this module and its client applications. */
 static UmiStatus preferences_error(
     char *error,
     size_t capacity,
     const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (error != NULL && capacity > 0U) {
         UmiStatus status = umi_workbench_designer_copy_text(error, capacity, message);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Check that workbench designer preferences satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_designer_preferences_validate(
     const UmiWorkbenchDesignerPreferences *preferences,
     char *error,
     size_t error_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (error != NULL && error_capacity > 0U) error[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferences == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!isfinite(preferences->grid_size) || preferences->grid_size < 1.0 ||
         preferences->grid_size > 256.0) {
         return preferences_error(error, error_capacity,
             "Grid size must be between 1 and 256 logical units.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!isfinite(preferences->snap_threshold) ||
         preferences->snap_threshold < 0.0 || preferences->snap_threshold > 64.0) {
         return preferences_error(error, error_capacity,
             "Snap threshold must be between 0 and 64 logical units.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!isfinite(preferences->default_zoom) ||
         preferences->default_zoom < 0.1 || preferences->default_zoom > 8.0) {
         return preferences_error(error, error_capacity,
             "Default zoom must be between 0.1 and 8.0.");
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (preferences->autosave_enabled &&
         (preferences->autosave_debounce_ms == 0U ||
          preferences->autosave_maximum_delay_ms < preferences->autosave_debounce_ms)) {
         return preferences_error(error, error_capacity,
             "Autosave maximum delay must be at least the debounce interval.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (preferences->theme_mode < UMI_WORKBENCH_DESIGNER_THEME_SYSTEM ||
         preferences->theme_mode > UMI_WORKBENCH_DESIGNER_THEME_HIGH_CONTRAST) {
         return preferences_error(error, error_capacity,
@@ -95,27 +122,44 @@ UmiStatus umi_workbench_designer_preferences_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer preferences overlay operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_preferences_overlay(
     UmiWorkbenchDesignerPreferences *destination,
     const UmiWorkbenchDesignerPreferences *source)
 {
     char error[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_designer_preferences_validate(
         source, error, sizeof(error));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     *destination = *source;
     destination->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer preferences equal operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_preferences_equal(
     const UmiWorkbenchDesignerPreferences *left,
     const UmiWorkbenchDesignerPreferences *right)
 {
     UmiWorkbenchDesignerPreferences left_copy;
     UmiWorkbenchDesignerPreferences right_copy;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL) return false;
     left_copy = *left;
     right_copy = *right;

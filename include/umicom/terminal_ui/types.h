@@ -30,6 +30,10 @@ extern "C" {
 #define UMI_TERMINAL_UI_PROCESS_ROWS 64U
 #define UMI_TERMINAL_UI_TASK_ROWS 128U
 
+/**
+ * Represent the terminal controller snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTerminalControllerSnapshot {
     size_t profiles;
     size_t sessions;

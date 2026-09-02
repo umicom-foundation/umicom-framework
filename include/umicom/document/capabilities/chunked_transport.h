@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_CHUNKED_TRANSPORT "umicom.document.performance.chunked_transport"
 
+/**
+ * Provide the document capability chunked transport operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_chunked_transport(void);
 

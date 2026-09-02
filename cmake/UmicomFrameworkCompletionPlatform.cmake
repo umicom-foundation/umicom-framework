@@ -17,6 +17,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_developer)
     message(FATAL_ERROR
         "UmicomFrameworkCompletionPlatform requires existing umicom_developer")
@@ -33,6 +34,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer/acceptance/toolchain_gate.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-language-profile-acceptance-tests)
     add_executable(umicom-language-profile-acceptance-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/language_profile_acceptance/test_assembly.c"
@@ -69,6 +71,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-language-profile-acceptance-tests)
         COMMAND umicom-language-profile-acceptance-tests)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-toolchain-binding-acceptance-tests)
     add_executable(umicom-toolchain-binding-acceptance-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_binding_acceptance/test_assembly_llvm.c"
@@ -109,6 +112,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-toolchain-binding-acceptance-tests)
         COMMAND umicom-toolchain-binding-acceptance-tests)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-language-support-acceptance-tests)
     add_executable(umicom-language-support-acceptance-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/language_support_acceptance/test_all_tools.c"
@@ -133,6 +137,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-language-support-acceptance-tests)
         COMMAND umicom-language-support-acceptance-tests)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-desktop-monitor-acceptance-tests)
     add_executable(umicom-desktop-monitor-acceptance-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/desktop_monitor_acceptance/test_add_primary.c"
@@ -161,6 +166,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-desktop-monitor-acceptance-tests)
         COMMAND umicom-desktop-monitor-acceptance-tests)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-application-experience-acceptance-tests)
     add_executable(umicom-application-experience-acceptance-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/application_experience_acceptance/test_accountant.c"
@@ -199,6 +205,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-application-experience-acceptance-tests)
         COMMAND umicom-application-experience-acceptance-tests)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-developer-acceptance-tests)
     add_executable(umicom-developer-acceptance-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_acceptance/test_evidence.c"

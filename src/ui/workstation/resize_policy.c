@@ -15,11 +15,20 @@
 
 #include "umicom/ui/workstation/resize_policy.h"
 
+/*
+ * Initialise ws resize policy from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_resize_policy_init(UmiWsResizePolicy *policy,
                                     UmiUiSize minimum,
                                     UmiUiSize preferred,
                                     UmiUiSize maximum) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL || minimum.width < 0 || minimum.height < 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (maximum.width < minimum.width || maximum.height < minimum.height) return UMI_STATUS_INVALID_ARGUMENT;
     *policy = (UmiWsResizePolicy){ minimum, preferred, maximum };
     policy->preferred.width = umi_ws_clamp_i32(preferred.width, minimum.width, maximum.width);
@@ -27,8 +36,16 @@ UmiStatus umi_ws_resize_policy_init(UmiWsResizePolicy *policy,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform ws resize policy through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiUiSize umi_ws_resize_policy_apply(const UmiWsResizePolicy *policy, UmiUiSize requested) {
     UmiUiSize result = requested;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return result;
     result.width = umi_ws_clamp_i32(requested.width, policy->minimum.width, policy->maximum.width);
     result.height = umi_ws_clamp_i32(requested.height, policy->minimum.height, policy->maximum.height);

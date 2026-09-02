@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb active editor data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbActiveEditor { char item_id[UMI_EDITOR_WB_ID_CAPACITY]; char group_id[UMI_EDITOR_WB_ID_CAPACITY]; uint64_t revision; } UmiEditorWbActiveEditor;
+/**
+ * Copy editor wb active editor into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_editor_wb_active_editor_set(UmiEditorWbActiveEditor *state,const char *item_id,const char *group_id); void umi_editor_wb_active_editor_clear(UmiEditorWbActiveEditor *state);
 
 #ifdef __cplusplus

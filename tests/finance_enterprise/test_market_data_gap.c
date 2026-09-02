@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/market_data_gap.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseMarketDataGap g; CHECK(umi_enterprise_market_data_gap_detect(&g,10U,13U)==UMI_STATUS_OK); CHECK(g.missing_count==3U); return 0; }

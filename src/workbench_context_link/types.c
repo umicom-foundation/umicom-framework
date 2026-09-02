@@ -17,45 +17,84 @@
 
 #include <string.h>
 
+/*
+ * Provide the workbench context link bounded length operation used by this module and its
+ * client applications.
+ */
 size_t umi_workbench_context_link_bounded_length(const char *text, size_t capacity)
 {
     size_t length = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (length < capacity && text[length] != '\0') ++length;
     return length;
 }
 
+/*
+ * Check that workbench context link text satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_workbench_context_link_text_is_valid(const char *text, size_t capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || capacity == 0U) return false;
     return umi_workbench_context_link_bounded_length(text, capacity) < capacity;
 }
 
+/*
+ * Provide the workbench context link copy text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_copy_text(char *destination,
                                                size_t capacity,
                                                const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = umi_workbench_context_link_bounded_length(source, capacity);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         destination[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length != 0U) memcpy(destination, source, length);
     destination[length] = '\0';
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context link hash bytes operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_link_hash_bytes(uint64_t hash,
                                                const void *bytes,
                                                size_t count)
 {
     const unsigned char *input = (const unsigned char *)bytes;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bytes == NULL && count != 0U) return hash;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         hash ^= (uint64_t)input[index];
         hash *= UINT64_C(1099511628211);
@@ -63,30 +102,52 @@ uint64_t umi_workbench_context_link_hash_bytes(uint64_t hash,
     return hash;
 }
 
+/*
+ * Provide the workbench context link hash text operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_link_hash_text(uint64_t hash,
                                               const char *text,
                                               size_t capacity)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return hash;
     length = umi_workbench_context_link_bounded_length(text, capacity);
     return umi_workbench_context_link_hash_bytes(hash, text, length);
 }
 
+/*
+ * Provide the workbench context link kind mask operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_link_kind_mask(UmiContextKind kind)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind < UMI_CONTEXT_KIND_GENERIC || kind > UMI_CONTEXT_KIND_SELECTION) return 0U;
     return UINT64_C(1) << ((unsigned)kind - 1U);
 }
 
+/*
+ * Provide the workbench context link kind allowed operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_context_link_kind_allowed(uint64_t mask, UmiContextKind kind)
 {
     const uint64_t bit = umi_workbench_context_link_kind_mask(kind);
     return bit != 0U && (mask & bit) != 0U;
 }
 
+/*
+ * Provide the workbench context link mode text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_link_mode_text(UmiWorkbenchContextLinkMode mode)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (mode) {
     case UMI_WORKBENCH_CONTEXT_LINK_MODE_NONE: return "none";
     case UMI_WORKBENCH_CONTEXT_LINK_MODE_FOLLOW: return "follow";
@@ -96,8 +157,13 @@ const char *umi_workbench_context_link_mode_text(UmiWorkbenchContextLinkMode mod
     }
 }
 
+/*
+ * Provide the workbench context link state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_link_state_text(UmiWorkbenchContextLinkState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_WORKBENCH_CONTEXT_LINK_STATE_DETACHED: return "detached";
     case UMI_WORKBENCH_CONTEXT_LINK_STATE_ATTACHED: return "attached";
@@ -108,8 +174,13 @@ const char *umi_workbench_context_link_state_text(UmiWorkbenchContextLinkState s
     }
 }
 
+/*
+ * Provide the workbench context link origin text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_link_origin_text(UmiWorkbenchContextLinkOrigin origin)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (origin) {
     case UMI_WORKBENCH_CONTEXT_LINK_ORIGIN_USER: return "user";
     case UMI_WORKBENCH_CONTEXT_LINK_ORIGIN_LAYOUT: return "layout";
@@ -119,8 +190,13 @@ const char *umi_workbench_context_link_origin_text(UmiWorkbenchContextLinkOrigin
     }
 }
 
+/*
+ * Provide the workbench context link priority text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_link_priority_text(UmiWorkbenchContextLinkPriority priority)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (priority) {
     case UMI_WORKBENCH_CONTEXT_LINK_PRIORITY_LOW: return "low";
     case UMI_WORKBENCH_CONTEXT_LINK_PRIORITY_NORMAL: return "normal";

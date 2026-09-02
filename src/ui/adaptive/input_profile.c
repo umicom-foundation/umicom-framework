@@ -22,6 +22,10 @@ UmiStatus umi_adaptive_input_profile_init(UmiAdaptiveInputProfile *profile,
                                           int hover,
                                           int precise_pointer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -36,15 +40,22 @@ UmiStatus umi_adaptive_input_profile_init(UmiAdaptiveInputProfile *profile,
 /* Choose a stable primary mode while preserving hybrid capability in the profile. */
 UmiAdaptiveInputMode umi_adaptive_input_profile_primary(const UmiAdaptiveInputProfile *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) {
         return UMI_ADAPTIVE_INPUT_POINTER;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->touch != 0 && profile->pointer != 0) {
         return UMI_ADAPTIVE_INPUT_HYBRID;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->touch != 0) {
         return UMI_ADAPTIVE_INPUT_TOUCH;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->pointer != 0) {
         return UMI_ADAPTIVE_INPUT_POINTER;
     }

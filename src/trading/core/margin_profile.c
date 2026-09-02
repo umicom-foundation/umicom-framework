@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise and validate define conservative initial and maintenance margin ratios in basis points.. */
 UmiStatus umi_trading_margin_profile_init(UmiTradingMarginProfile *value,uint32_t initial_margin_bps, uint32_t maintenance_margin_bps, uint32_t concentration_addon_bps) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
     value->initial_margin_bps=initial_margin_bps;

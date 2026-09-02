@@ -27,12 +27,22 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai retrieval result data shared with callers of this public contract.
+ */
 typedef struct UmiAiRetrievalResult {
     UmiAiChunk chunk;
     double score;
 } UmiAiRetrievalResult;
 
+/**
+ * Provide the ai retrieval lexical score operation used by this module and its client
+ * applications.
+ */
 double umi_ai_retrieval_lexical_score(const char *query, const char *text);
+/**
+ * Provide the ai retrieval rank operation used by this module and its client applications.
+ */
 size_t umi_ai_retrieval_rank(const char *query,
                              const UmiAiChunk *chunks,
                              size_t chunk_count,

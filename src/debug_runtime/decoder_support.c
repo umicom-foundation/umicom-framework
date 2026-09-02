@@ -16,19 +16,35 @@
 
 #include <string.h>
 
+/*
+ * Provide the debug runtime decoder body token operation used by this module and its
+ * client applications.
+ */
 int umi_debug_runtime_decoder_body_token(
     const UmiLanguageRuntimeJsonDocument *document)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || document->token_count == 0U) return -1;
     return umi_language_runtime_json_object_get(document, 0, "body");
 }
 
+/*
+ * Provide the debug runtime decoder event body token operation used by this module and its
+ * client applications.
+ */
 int umi_debug_runtime_decoder_event_body_token(
     const UmiLanguageRuntimeJsonDocument *document)
 {
     return umi_debug_runtime_decoder_body_token(document);
 }
 
+/*
+ * Provide the debug runtime decoder optional string operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_decoder_optional_string(
     const UmiLanguageRuntimeJsonDocument *document,
     int object_token,
@@ -39,26 +55,34 @@ UmiStatus umi_debug_runtime_decoder_optional_string(
     const int token = umi_language_runtime_json_object_get(
         document, object_token, key);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     out_text[0] = '\0';
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (token < 0 || umi_language_runtime_json_is_null(document, token)) {
         return UMI_STATUS_OK;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (document->tokens[token].type == UMI_LANGUAGE_RUNTIME_JSON_STRING) {
         return umi_language_runtime_json_string(
             document, token, out_text, capacity);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (document->tokens[token].type ==
         UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE) {
         const UmiLanguageRuntimeJsonToken *item = &document->tokens[token];
         const size_t length = (size_t)(item->end - item->start);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
         (void)memcpy(out_text, document->json + item->start, length);
         out_text[length] = '\0';
@@ -68,6 +92,10 @@ UmiStatus umi_debug_runtime_decoder_optional_string(
     return UMI_STATUS_PARSE_ERROR;
 }
 
+/*
+ * Provide the debug runtime decoder optional int operation used by this module and its
+ * client applications.
+ */
 int64_t umi_debug_runtime_decoder_optional_int(
     const UmiLanguageRuntimeJsonDocument *document,
     int object_token,
@@ -78,6 +106,7 @@ int64_t umi_debug_runtime_decoder_optional_int(
         document, object_token, key);
     int64_t value = default_value;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (token >= 0) {
         (void)umi_language_runtime_json_int64(document, token, &value);
     }
@@ -85,6 +114,10 @@ int64_t umi_debug_runtime_decoder_optional_int(
     return value;
 }
 
+/*
+ * Provide the debug runtime decoder optional bool operation used by this module and its
+ * client applications.
+ */
 int umi_debug_runtime_decoder_optional_bool(
     const UmiLanguageRuntimeJsonDocument *document,
     int object_token,
@@ -95,6 +128,7 @@ int umi_debug_runtime_decoder_optional_bool(
         document, object_token, key);
     int value = default_value;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (token >= 0) {
         (void)umi_language_runtime_json_bool(document, token, &value);
     }
@@ -102,6 +136,10 @@ int umi_debug_runtime_decoder_optional_bool(
     return value;
 }
 
+/*
+ * Provide the debug runtime decoder source operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_decoder_source(
     const UmiLanguageRuntimeJsonDocument *document,
     int source_token,
@@ -109,12 +147,17 @@ UmiStatus umi_debug_runtime_decoder_source(
 {
     int64_t reference;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || out_source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(out_source, 0, sizeof(*out_source));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (source_token < 0 ||
         umi_language_runtime_json_is_null(document, source_token)) {
         return UMI_STATUS_OK;

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise ide inline ai view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_inline_ai_view_create(
     const char *view_id,
     UmiIdeIntegrationPlatform *platform,

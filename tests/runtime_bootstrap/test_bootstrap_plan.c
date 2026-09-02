@@ -27,6 +27,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiBootstrapStage a,b; UmiBootstrapPlan p; umi_bootstrap_plan_init(&p);

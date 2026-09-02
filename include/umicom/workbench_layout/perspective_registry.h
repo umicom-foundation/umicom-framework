@@ -25,6 +25,10 @@ extern "C" {
 #define UMI_WORKBENCH_PERSPECTIVE_MAX_PANELS 32U
 #define UMI_WORKBENCH_PERSPECTIVE_MAX_COMMANDS 64U
 
+/**
+ * Represent the workbench perspective definition data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchPerspectiveDefinition {
     uint32_t structure_size;
     char perspective_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -43,6 +47,10 @@ typedef struct UmiWorkbenchPerspectiveDefinition {
     uint64_t revision;
 } UmiWorkbenchPerspectiveDefinition;
 
+/**
+ * Represent the workbench perspective registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchPerspectiveRegistry {
     uint32_t structure_size;
     UmiWorkbenchPerspectiveDefinition
@@ -51,39 +59,75 @@ typedef struct UmiWorkbenchPerspectiveRegistry {
     uint64_t revision;
 } UmiWorkbenchPerspectiveRegistry;
 
+/**
+ * Initialise workbench perspective registry from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_perspective_registry_init(
     UmiWorkbenchPerspectiveRegistry *registry);
 
+/**
+ * Check that workbench perspective definition satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_perspective_definition_validate(
     const UmiWorkbenchPerspectiveDefinition *definition);
 
+/**
+ * Add workbench perspective registry only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_perspective_registry_add(
     UmiWorkbenchPerspectiveRegistry *registry,
     const UmiWorkbenchPerspectiveDefinition *definition);
 
+/**
+ * Remove workbench perspective registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_workbench_perspective_registry_remove(
     UmiWorkbenchPerspectiveRegistry *registry,
     const char *perspective_id);
 
+/**
+ * Find workbench perspective registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchPerspectiveDefinition *
 umi_workbench_perspective_registry_find(
     const UmiWorkbenchPerspectiveRegistry *registry,
     const char *perspective_id);
 
+/**
+ * Provide the workbench perspective registry default for application operation used by
+ * this module and its client applications.
+ */
 const UmiWorkbenchPerspectiveDefinition *
 umi_workbench_perspective_registry_default_for_application(
     const UmiWorkbenchPerspectiveRegistry *registry,
     const char *owner_application_id);
 
+/**
+ * Find workbench perspective registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchPerspectiveDefinition *
 umi_workbench_perspective_registry_at(
     const UmiWorkbenchPerspectiveRegistry *registry,
     size_t index);
 
+/**
+ * Provide the workbench perspective definition add panel operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_perspective_definition_add_panel(
     UmiWorkbenchPerspectiveDefinition *definition,
     const char *panel_id);
 
+/**
+ * Provide the workbench perspective definition add command operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_perspective_definition_add_command(
     UmiWorkbenchPerspectiveDefinition *definition,
     const char *command_id);

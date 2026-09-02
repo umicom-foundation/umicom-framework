@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data statement plan data shared with callers of this public contract.
+ */
 typedef struct UmiDataStatementPlan {
     char statement_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     uint64_t query_fingerprint;

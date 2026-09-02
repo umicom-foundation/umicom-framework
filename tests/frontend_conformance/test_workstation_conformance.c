@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcWorkstationConformance w={0.95,0.94,0.98,0.96,0.90,0U}; CHECK(umi_fc_workstation_conformance_score(&w)>0.94); CHECK(umi_fc_workstation_conformance_outcome(&w,0.90)==UMI_FC_PASS);
     return 0;

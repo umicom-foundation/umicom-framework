@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrResourcePolicy p; umi_dr_resource_policy_init(&p); CHECK(umi_dr_copy_text(p.preferred_locale,sizeof(p.preferred_locale),"en-GB")==UMI_STATUS_OK); p.allow_locale_fallback=false; CHECK(umi_dr_resource_policy_accepts(&p,"en-GB",100U)); CHECK(!umi_dr_resource_policy_accepts(&p,"fr-FR",100U));
     return 0;

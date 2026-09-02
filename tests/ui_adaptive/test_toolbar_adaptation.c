@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/toolbar_adaptation.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAdaptiveToolbarDecision d = umi_adaptive_toolbar_adaptation_resolve(8U, UMI_DESIGN_SIZE_COMPACT);

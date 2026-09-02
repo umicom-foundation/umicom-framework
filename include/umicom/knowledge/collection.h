@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the knowledge collection data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeCollection {
     char collection_id[UMI_KNOWLEDGE_ID_CAPACITY];
     char display_name[UMI_KNOWLEDGE_NAME_CAPACITY];
@@ -27,6 +30,10 @@ typedef struct UmiKnowledgeCollection {
     int enabled;
 } UmiKnowledgeCollection;
 
+/**
+ * Initialise knowledge collection from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_knowledge_collection_init(UmiKnowledgeCollection *collection,
                                         const char *collection_id,
                                         const char *display_name,

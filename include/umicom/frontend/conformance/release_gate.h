@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc release gate data shared with callers of this public contract.
+ */
 typedef struct UmiFcReleaseGate { double minimum_score; double minimum_accessibility; double maximum_regression; bool require_zero_blockers; } UmiFcReleaseGate;
+/**
+ * Provide the fc release gate accepts operation used by this module and its client
+ * applications.
+ */
 bool umi_fc_release_gate_accepts(const UmiFcReleaseGate *gate,double score,double accessibility,double regression,size_t blockers);
 
 #ifdef __cplusplus

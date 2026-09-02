@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_FABRIC_MAX_HEADERS 32U
 #define UMI_FABRIC_MAX_DEDUPE 64U
 
+/**
+ * List the named fabric state values accepted by this public contract.
+ */
 typedef enum UmiFabricState {
     UMI_FABRIC_STATE_UNKNOWN=0,
     UMI_FABRIC_STATE_READY=1,
@@ -42,6 +45,9 @@ typedef enum UmiFabricState {
     UMI_FABRIC_STATE_FAILED=4
 } UmiFabricState;
 
+/**
+ * List the named fabric protocol values accepted by this public contract.
+ */
 typedef enum UmiFabricProtocol {
     UMI_FABRIC_PROTOCOL_INPROC=1,
     UMI_FABRIC_PROTOCOL_HTTP=2,
@@ -51,18 +57,27 @@ typedef enum UmiFabricProtocol {
     UMI_FABRIC_PROTOCOL_FILE=6
 } UmiFabricProtocol;
 
+/**
+ * List the named fabric delivery mode values accepted by this public contract.
+ */
 typedef enum UmiFabricDeliveryMode {
     UMI_FABRIC_DELIVERY_AT_MOST_ONCE=1,
     UMI_FABRIC_DELIVERY_AT_LEAST_ONCE=2,
     UMI_FABRIC_DELIVERY_IDEMPOTENT_EFFECT=3
 } UmiFabricDeliveryMode;
 
+/**
+ * List the named fabric circuit state values accepted by this public contract.
+ */
 typedef enum UmiFabricCircuitState {
     UMI_FABRIC_CIRCUIT_CLOSED=1,
     UMI_FABRIC_CIRCUIT_OPEN=2,
     UMI_FABRIC_CIRCUIT_HALF_OPEN=3
 } UmiFabricCircuitState;
 
+/**
+ * Represent the fabric version data shared with callers of this public contract.
+ */
 typedef struct UmiFabricVersion { uint32_t major, minor, patch; } UmiFabricVersion;
 
 /* Copy text into a bounded Framework buffer and always terminate it. */

@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the abi contract fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_abi_contract_fingerprint(const UmiAbiDescriptor *descriptor);
 #ifdef __cplusplus
 }

@@ -17,6 +17,10 @@
 #include "umicom/language_runtime/requests/did_close.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   RequestTestFixture f;
   char b[UMI_LANGUAGE_RUNTIME_FRAME_CAPACITY];

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/editor.h"
 
+/*
+ * Provide the ide surface profile editor operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_editor(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

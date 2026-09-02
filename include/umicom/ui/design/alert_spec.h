@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design alert spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignAlertSpec {
     UmiUiSeverity severity;
     char message[UMI_DESIGN_TEXT_CAPACITY];

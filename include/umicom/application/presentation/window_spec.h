@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Check that application presentation window spec satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_presentation_window_spec_validate(
     const UmiApplicationPresentationWindowSpec *spec);
 

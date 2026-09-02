@@ -16,6 +16,10 @@
 
 #include <string.h>
 /* Initialize service. */ void umi_financial_core_service_init(UmiFinancialCoreService *s) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (s == NULL)
     return;
   memset(s, 0, sizeof *s);
@@ -30,8 +34,13 @@
 }
 /* Start service after reference data configuration. */ UmiStatus
 umi_financial_core_service_start(UmiFinancialCoreService *s) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (s == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this operation only while the related capability or state is available. */
   if (s->ready)
     return UMI_STATUS_ALREADY_EXISTS;
   s->ready = true;

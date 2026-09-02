@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading commission schedule data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingCommissionSchedule { int64_t per_lot_minor; int64_t minimum_minor; int64_t maximum_minor; } UmiTradingCommissionSchedule;
 /* Initialise and validate define per-lot and minimum brokerage commission in integer minor units. */
 UmiStatus umi_trading_commission_schedule_init(UmiTradingCommissionSchedule *value,int64_t per_lot_minor, int64_t minimum_minor, int64_t maximum_minor);

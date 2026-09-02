@@ -40,18 +40,28 @@ struct UmiDataServer {
 #endif
 };
 
+/*
+ * Provide the data server create memory operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_server_create_memory(UmiDataServer **out_server)
 {
     UmiDataServer *server;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (out_server == 0) return UMI_STATUS_INVALID_ARGUMENT;
     *out_server = 0;
     server = (UmiDataServer *)calloc(1U, sizeof(*server));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (server == 0) return UMI_STATUS_OUT_OF_MEMORY;
     server->backend = UMI_DATA_BACKEND_MEMORY;
     *out_server = server;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the data server create sqlite operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_server_create_sqlite(const char *database_path,
                                         UmiDataServer **out_server)
 {
@@ -66,16 +76,21 @@ UmiStatus umi_data_server_create_sqlite(const char *database_path,
         " key TEXT PRIMARY KEY NOT NULL,"
         " value TEXT NOT NULL"
         ");";
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (database_path == 0 || out_server == 0) return UMI_STATUS_INVALID_ARGUMENT;
     *out_server = 0;
     server = (UmiDataServer *)calloc(1U, sizeof(*server));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (server == 0) return UMI_STATUS_OUT_OF_MEMORY;
     server->backend = UMI_DATA_BACKEND_SQLITE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (sqlite3_open(database_path, &server->sqlite) != SQLITE_OK) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (server->sqlite != 0) sqlite3_close(server->sqlite);
         free(server);
         return UMI_STATUS_IO_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (sqlite3_exec(server->sqlite, schema, 0, 0, 0) != SQLITE_OK) {
         sqlite3_close(server->sqlite);
         free(server);
@@ -86,28 +101,36 @@ UmiStatus umi_data_server_create_sqlite(const char *database_path,
 #endif
 }
 
+/* Release or reset state held by data server so the same storage can be reused safely. */
 void umi_data_server_destroy(UmiDataServer *server)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server == 0) return;
 #ifdef UMICOM_HAS_SQLITE
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_SQLITE && server->sqlite != 0)
         sqlite3_close(server->sqlite);
 #endif
     free(server);
 }
 
+/* Copy memory into module-owned storage so callers keep ownership of their input values. */
 static UmiStatus memory_set(UmiDataServer *server, const char *key, const char *value)
 {
     size_t index;
     UmiDataRecord *free_record = 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_DATA_MAX_RECORDS; ++index) {
         UmiDataRecord *record = &server->records[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (record->used && strcmp(record->key, key) == 0) {
             (void)snprintf(record->value, sizeof(record->value), "%s", value);
             return UMI_STATUS_OK;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!record->used && free_record == 0) free_record = record;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (free_record == 0) return UMI_STATUS_CAPACITY_EXCEEDED;
     free_record->used = 1;
     (void)snprintf(free_record->key, sizeof(free_record->key), "%s", key);
@@ -116,22 +139,31 @@ static UmiStatus memory_set(UmiDataServer *server, const char *key, const char *
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy data server into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_data_server_set(UmiDataServer *server, const char *key,
                               const char *value)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server == 0 || key == 0 || key[0] == '\0' || value == 0)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_MEMORY) return memory_set(server, key, value);
 #ifdef UMICOM_HAS_SQLITE
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
         const char *sql =
             "INSERT INTO umicom_kv(key,value) VALUES(?1,?2) "
             "ON CONFLICT(key) DO UPDATE SET value=excluded.value;";
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (sqlite3_prepare(server->sqlite, sql, -1, &statement, 0) != SQLITE_OK)
             return UMI_STATUS_IO_ERROR;
         (void)sqlite3_bind_text(statement, 1, key, -1, SQLITE_TRANSIENT);
         (void)sqlite3_bind_text(statement, 2, value, -1, SQLITE_TRANSIENT);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (sqlite3_step(statement) != SQLITE_DONE) {
             sqlite3_finalize(statement);
             return UMI_STATUS_IO_ERROR;
@@ -143,16 +175,21 @@ UmiStatus umi_data_server_set(UmiDataServer *server, const char *key,
     return UMI_STATUS_INVALID_STATE;
 }
 
+/* Provide the data server get operation used by this module and its client applications. */
 UmiStatus umi_data_server_get(const UmiDataServer *server, const char *key,
                               char *value, size_t value_capacity)
 {
     size_t index;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server == 0 || key == 0 || value == 0 || value_capacity == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
     value[0] = '\0';
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_MEMORY) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < UMI_DATA_MAX_RECORDS; ++index) {
             const UmiDataRecord *record = &server->records[index];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (record->used && strcmp(record->key, key) == 0) {
                 (void)snprintf(value, value_capacity, "%s", record->value);
                 return UMI_STATUS_OK;
@@ -161,14 +198,17 @@ UmiStatus umi_data_server_get(const UmiDataServer *server, const char *key,
         return UMI_STATUS_NOT_FOUND;
     }
 #ifdef UMICOM_HAS_SQLITE
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
         const unsigned char *text;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (sqlite3_prepare(server->sqlite,
                                "SELECT value FROM umicom_kv WHERE key=?1;",
                                -1, &statement, 0) != SQLITE_OK)
             return UMI_STATUS_IO_ERROR;
         (void)sqlite3_bind_text(statement, 1, key, -1, SQLITE_TRANSIENT);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (sqlite3_step(statement) != SQLITE_ROW) {
             sqlite3_finalize(statement);
             return UMI_STATUS_NOT_FOUND;
@@ -182,13 +222,21 @@ UmiStatus umi_data_server_get(const UmiDataServer *server, const char *key,
     return UMI_STATUS_INVALID_STATE;
 }
 
+/*
+ * Provide the data server delete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_server_delete(UmiDataServer *server, const char *key)
 {
     size_t index;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (server == 0 || key == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_MEMORY) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < UMI_DATA_MAX_RECORDS; ++index) {
             UmiDataRecord *record = &server->records[index];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (record->used && strcmp(record->key, key) == 0) {
                 memset(record, 0, sizeof(*record));
                 server->count--;
@@ -198,13 +246,16 @@ UmiStatus umi_data_server_delete(UmiDataServer *server, const char *key)
         return UMI_STATUS_NOT_FOUND;
     }
 #ifdef UMICOM_HAS_SQLITE
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (sqlite3_prepare(server->sqlite,
                                "DELETE FROM umicom_kv WHERE key=?1;",
                                -1, &statement, 0) != SQLITE_OK)
             return UMI_STATUS_IO_ERROR;
         (void)sqlite3_bind_text(statement, 1, key, -1, SQLITE_TRANSIENT);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (sqlite3_step(statement) != SQLITE_DONE) {
             sqlite3_finalize(statement);
             return UMI_STATUS_IO_ERROR;
@@ -216,19 +267,25 @@ UmiStatus umi_data_server_delete(UmiDataServer *server, const char *key)
     return UMI_STATUS_INVALID_STATE;
 }
 
+/* Return the number of records represented by data server without changing their state. */
 size_t umi_data_server_count(const UmiDataServer *server)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server == 0) return 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (server->backend == UMI_DATA_BACKEND_MEMORY) return server->count;
 #ifdef UMICOM_HAS_SQLITE
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server->backend == UMI_DATA_BACKEND_SQLITE) {
         sqlite3_stmt *statement = 0;
         size_t count = 0U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (sqlite3_prepare(server->sqlite,
                                "SELECT COUNT(*) FROM umicom_kv;",
                                -1, &statement, 0) == SQLITE_OK &&
             sqlite3_step(statement) == SQLITE_ROW)
             count = (size_t)sqlite3_column_int64(statement, 0);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (statement != 0) sqlite3_finalize(statement);
         return count;
     }
@@ -236,13 +293,22 @@ size_t umi_data_server_count(const UmiDataServer *server)
     return 0U;
 }
 
+/*
+ * Provide the data server backend operation used by this module and its client
+ * applications.
+ */
 UmiDataServerBackend umi_data_server_backend(const UmiDataServer *server)
 {
     return server != 0 ? server->backend : UMI_DATA_BACKEND_MEMORY;
 }
 
+/*
+ * Provide the data server backend name operation used by this module and its client
+ * applications.
+ */
 const char *umi_data_server_backend_name(const UmiDataServer *server)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (server == 0) return "none";
     return server->backend == UMI_DATA_BACKEND_SQLITE ? "sqlite" : "memory";
 }

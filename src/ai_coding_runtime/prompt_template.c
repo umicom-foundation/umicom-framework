@@ -21,8 +21,13 @@
 #include "umicom/ai_coding_runtime/prompts/refactor.h"
 #include "umicom/ai_coding_runtime/prompts/generate_tests.h"
 
+/*
+ * Provide the ai coding prompt system operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_prompt_system(UmiAiCodingTaskKind task)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (task) {
         case UMI_AI_CODING_TASK_CHAT:
             return umi_ai_coding_prompt_chat();
@@ -39,12 +44,20 @@ const char *umi_ai_coding_prompt_system(UmiAiCodingTaskKind task)
     }
 }
 
+/*
+ * Provide the ai coding prompt task may modify operation used by this module and its
+ * client applications.
+ */
 int umi_ai_coding_prompt_task_may_modify(UmiAiCodingTaskKind task)
 {
     return task == UMI_AI_CODING_TASK_REFACTOR ||
         task == UMI_AI_CODING_TASK_GENERATE_TESTS;
 }
 
+/*
+ * Provide the ai coding prompt response protocol operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_coding_prompt_response_protocol(void)
 {
     return

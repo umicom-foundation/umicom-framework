@@ -21,6 +21,10 @@
 #include "umicom/delivery/promotion.h"
 #include "umicom/delivery/release_lock.h"
 #include "umicom/delivery/rollback_history.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiPromotion promotion;
     UmiReleaseLock lock;

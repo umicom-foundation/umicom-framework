@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/safety_gate.h"
-int main(void){ UmiHelixSafetyGate g; umi_helix_safety_gate_init(&g); g.maximum_risk=0.4; g.allow_destructive=false; if(umi_helix_safety_gate_evaluate(&g,0.2,false)!=UMI_HELIX_DECISION_ALLOW||umi_helix_safety_gate_evaluate(&g,0.8,false)!=UMI_HELIX_DECISION_DENY){ return 1; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixSafetyGate g; umi_helix_safety_gate_init(&g); g.maximum_risk=0.4; g.allow_destructive=false; /* Apply this branch only when its contract condition is satisfied. */ if(umi_helix_safety_gate_evaluate(&g,0.2,false)!=UMI_HELIX_DECISION_ALLOW||umi_helix_safety_gate_evaluate(&g,0.8,false)!=UMI_HELIX_DECISION_DENY){ return 1; } return 0; }

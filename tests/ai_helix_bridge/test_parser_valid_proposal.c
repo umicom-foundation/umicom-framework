@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test parser valid proposal and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_parser_valid_proposal(void){UmiAiHelixParsedResponse p;const char *t="disposition=propose_action\naction=filesystem\ntarget=src/a.c\nsummary=edit file\nconfidence=0.75\nrationale=needed";TEST_CHECK(umi_ai_helix_response_parse(t,1,&p)==UMI_STATUS_OK);TEST_CHECK(p.action_kind==UMI_HELIX_ACTION_FILESYSTEM);TEST_CHECK(p.confidence>0.74 && p.confidence<0.76);return 0;}

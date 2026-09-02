@@ -15,6 +15,7 @@
 
 #include "umicom/workbench_selection_provider/studio_bridge.h"
 
+/* Provide the provider operation used by this module and its client applications. */
 static const UmiWorkbenchSelectionProviderDescriptor *provider(
     const UmiWorkbenchSelectionProviderService *service,
     const char *provider_id)
@@ -25,6 +26,10 @@ static const UmiWorkbenchSelectionProviderDescriptor *provider(
         : NULL;
 }
 
+/*
+ * Provide the workbench selection provider publish project operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_publish_project(
     UmiWorkbenchSelectionProviderService *service,
     const UmiProjectWorkspaceSelectionSnapshot *snapshot,
@@ -35,6 +40,10 @@ UmiStatus umi_workbench_selection_provider_publish_project(
         provider(service, "studio.provider.project");
     UmiWorkbenchSelection selection;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_selection_provider_from_project_selection(
@@ -44,6 +53,7 @@ UmiStatus umi_workbench_selection_provider_publish_project(
         workspace_id,
         timestamp_ms,
         &selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_workbench_selection_provider_service_publish(
@@ -54,6 +64,10 @@ UmiStatus umi_workbench_selection_provider_publish_project(
         UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_SELECT);
 }
 
+/*
+ * Provide the workbench selection provider publish problem operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_publish_problem(
     UmiWorkbenchSelectionProviderService *service,
     const UmiUiProblemSnapshot *problem_snapshot,
@@ -64,6 +78,10 @@ UmiStatus umi_workbench_selection_provider_publish_problem(
         provider(service, "studio.provider.problems");
     UmiWorkbenchSelection selection;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_selection_provider_from_problem(
@@ -73,6 +91,7 @@ UmiStatus umi_workbench_selection_provider_publish_problem(
         workspace_id,
         timestamp_ms,
         &selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_workbench_selection_provider_service_publish(
@@ -83,6 +102,10 @@ UmiStatus umi_workbench_selection_provider_publish_problem(
         UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_SELECT);
 }
 
+/*
+ * Provide the workbench selection provider publish source change operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_publish_source_change(
     UmiWorkbenchSelectionProviderService *service,
     const UmiSourceControlChangeSnapshot *change,
@@ -95,6 +118,10 @@ UmiStatus umi_workbench_selection_provider_publish_source_change(
         provider(service, "studio.provider.source-control");
     UmiWorkbenchSelection selection;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_selection_provider_from_source_control_change(
@@ -106,6 +133,7 @@ UmiStatus umi_workbench_selection_provider_publish_source_change(
         branch,
         timestamp_ms,
         &selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_workbench_selection_provider_service_publish(
@@ -116,6 +144,10 @@ UmiStatus umi_workbench_selection_provider_publish_source_change(
         UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_SELECT);
 }
 
+/*
+ * Provide the workbench selection provider publish source commit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_publish_source_commit(
     UmiWorkbenchSelectionProviderService *service,
     const UmiSourceControlCommitSnapshot *commit,
@@ -126,6 +158,10 @@ UmiStatus umi_workbench_selection_provider_publish_source_commit(
         provider(service, "studio.provider.source-control");
     UmiWorkbenchSelection selection;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_selection_provider_from_source_control_commit(
@@ -135,6 +171,7 @@ UmiStatus umi_workbench_selection_provider_publish_source_commit(
         workspace_id,
         timestamp_ms,
         &selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_workbench_selection_provider_service_publish(
@@ -145,6 +182,10 @@ UmiStatus umi_workbench_selection_provider_publish_source_commit(
         UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_SELECT);
 }
 
+/*
+ * Provide the workbench selection provider publish source branch operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_publish_source_branch(
     UmiWorkbenchSelectionProviderService *service,
     const UmiSourceControlBranchSnapshot *branch,
@@ -155,6 +196,10 @@ UmiStatus umi_workbench_selection_provider_publish_source_branch(
         provider(service, "studio.provider.source-control");
     UmiWorkbenchSelection selection;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_selection_provider_from_source_control_branch(
@@ -164,6 +209,7 @@ UmiStatus umi_workbench_selection_provider_publish_source_branch(
         workspace_id,
         timestamp_ms,
         &selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_workbench_selection_provider_service_publish(
@@ -174,6 +220,10 @@ UmiStatus umi_workbench_selection_provider_publish_source_branch(
         UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_SELECT);
 }
 
+/*
+ * Provide the workbench selection provider publish test row operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_publish_test_row(
     UmiWorkbenchSelectionProviderService *service,
     const UmiTestExplorerRow *row,
@@ -184,6 +234,10 @@ UmiStatus umi_workbench_selection_provider_publish_test_row(
         provider(service, "studio.provider.test-explorer");
     UmiWorkbenchSelection selection;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_selection_provider_from_test_row(
@@ -193,6 +247,7 @@ UmiStatus umi_workbench_selection_provider_publish_test_row(
         workspace_id,
         timestamp_ms,
         &selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_workbench_selection_provider_service_publish(

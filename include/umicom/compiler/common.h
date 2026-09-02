@@ -28,6 +28,9 @@
 #define UMI_COMPILER_MAX_PROVIDERS 16U
 #define UMI_COMPILER_MAX_PROFILES 32U
 #define UMI_COMPILER_API_VERSION 1U
+/**
+ * List the named compiler language values accepted by this public contract.
+ */
 typedef enum UmiCompilerLanguage {
     UMI_COMPILER_LANGUAGE_UNKNOWN = 0,
     UMI_COMPILER_LANGUAGE_C = 1,
@@ -37,6 +40,9 @@ typedef enum UmiCompilerLanguage {
     UMI_COMPILER_LANGUAGE_ZIG = 5,
     UMI_COMPILER_LANGUAGE_UAI = 6
 } UmiCompilerLanguage;
+/**
+ * List the named compiler family values accepted by this public contract.
+ */
 typedef enum UmiCompilerFamily {
     UMI_COMPILER_FAMILY_UNKNOWN = 0,
     UMI_COMPILER_FAMILY_GCC,
@@ -48,6 +54,9 @@ typedef enum UmiCompilerFamily {
     UMI_COMPILER_FAMILY_UAI,
     UMI_COMPILER_FAMILY_UMICC
 } UmiCompilerFamily;
+/**
+ * List the named compiler action values accepted by this public contract.
+ */
 typedef enum UmiCompilerAction {
     UMI_COMPILER_ACTION_COMPILE = 1,
     UMI_COMPILER_ACTION_ASSEMBLE,
@@ -56,6 +65,9 @@ typedef enum UmiCompilerAction {
     UMI_COMPILER_ACTION_ARCHIVE,
     UMI_COMPILER_ACTION_CHECK
 } UmiCompilerAction;
+/**
+ * List the named compiler object format values accepted by this public contract.
+ */
 typedef enum UmiCompilerObjectFormat {
     UMI_COMPILER_OBJECT_UNKNOWN = 0,
     UMI_COMPILER_OBJECT_COFF,
@@ -63,6 +75,9 @@ typedef enum UmiCompilerObjectFormat {
     UMI_COMPILER_OBJECT_MACH_O,
     UMI_COMPILER_OBJECT_WASM
 } UmiCompilerObjectFormat;
+/**
+ * List the named compiler diagnostic severity values accepted by this public contract.
+ */
 typedef enum UmiCompilerDiagnosticSeverity {
     UMI_COMPILER_DIAGNOSTIC_NOTE = 1,
     UMI_COMPILER_DIAGNOSTIC_WARNING,

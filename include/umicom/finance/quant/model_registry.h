@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant model descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiQuantModelDescriptor { char name[UMI_QUANT_NAME_CAPACITY]; UmiQuantModelKind kind; int32_t priority; int enabled; } UmiQuantModelDescriptor;
+/**
+ * Represent the quant model registry data shared with callers of this public contract.
+ */
 typedef struct UmiQuantModelRegistry { UmiQuantModelDescriptor models[UMI_QUANT_MAX_MODELS]; size_t count; } UmiQuantModelRegistry;
 /* Initialise an empty model registry. */
 void umi_quant_model_registry_init(UmiQuantModelRegistry *registry);

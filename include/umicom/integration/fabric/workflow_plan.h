@@ -26,7 +26,14 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric workflow plan data shared with callers of this public contract.
+ */
 typedef struct UmiFabricWorkflowPlan { char step_ids[UMI_FABRIC_MAX_STEPS][UMI_FABRIC_ID_CAPACITY]; size_t count; uint64_t fingerprint; } UmiFabricWorkflowPlan;
+/**
+ * Provide the fabric workflow plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_workflow_plan_build(const UmiFabricWorkflowGraph *graph,UmiFabricWorkflowPlan *out_plan);
 
 #ifdef __cplusplus

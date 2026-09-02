@@ -25,7 +25,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the decl generate c main operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_generate_c_main(const UmiDeclApplicationPlan *plan,char *out_text,size_t capacity);
+/**
+ * Provide the decl generate cmake operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_generate_cmake(const UmiDeclApplicationPlan *plan,char *out_text,size_t capacity);
 #ifdef __cplusplus
 }

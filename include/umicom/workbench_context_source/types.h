@@ -36,6 +36,9 @@ extern "C" {
 #define UMI_WORKBENCH_CONTEXT_SOURCE_MAX_DIAGNOSTICS 128U
 #define UMI_WORKBENCH_CONTEXT_SOURCE_ALL_KINDS_MASK UINT64_C(0x1ff)
 
+/**
+ * List the named workbench context source kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchContextSourceKind {
     UMI_WORKBENCH_CONTEXT_SOURCE_GENERIC = 1,
     UMI_WORKBENCH_CONTEXT_SOURCE_EDITOR = 2,
@@ -55,6 +58,9 @@ typedef enum UmiWorkbenchContextSourceKind {
     UMI_WORKBENCH_CONTEXT_SOURCE_MEDIA = 16
 } UmiWorkbenchContextSourceKind;
 
+/**
+ * List the named workbench context source trigger values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchContextSourceTrigger {
     UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_ACTIVATE = 1,
     UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_SELECT = 2,
@@ -66,6 +72,9 @@ typedef enum UmiWorkbenchContextSourceTrigger {
     UMI_WORKBENCH_CONTEXT_SOURCE_TRIGGER_NAVIGATE = 8
 } UmiWorkbenchContextSourceTrigger;
 
+/**
+ * List the named workbench context source state values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchContextSourceState {
     UMI_WORKBENCH_CONTEXT_SOURCE_STATE_CREATED = 1,
     UMI_WORKBENCH_CONTEXT_SOURCE_STATE_READY = 2,
@@ -75,6 +84,10 @@ typedef enum UmiWorkbenchContextSourceState {
     UMI_WORKBENCH_CONTEXT_SOURCE_STATE_STOPPED = 6
 } UmiWorkbenchContextSourceState;
 
+/**
+ * List the named workbench context source policy decision values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextSourcePolicyDecision {
     UMI_WORKBENCH_CONTEXT_SOURCE_POLICY_ACCEPT = 1,
     UMI_WORKBENCH_CONTEXT_SOURCE_POLICY_COALESCE = 2,
@@ -82,24 +95,52 @@ typedef enum UmiWorkbenchContextSourcePolicyDecision {
     UMI_WORKBENCH_CONTEXT_SOURCE_POLICY_REJECT = 4
 } UmiWorkbenchContextSourcePolicyDecision;
 
+/**
+ * Provide the workbench context source bounded length operation used by this module and
+ * its client applications.
+ */
 size_t umi_workbench_context_source_bounded_length(
     const char *text,
     size_t capacity);
+/**
+ * Check that workbench context source text satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_workbench_context_source_text_is_valid(
     const char *text,
     size_t capacity);
+/**
+ * Provide the workbench context source copy text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_source_copy_text(
     char *destination,
     size_t capacity,
     const char *source);
+/**
+ * Provide the workbench context source hash text operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_source_hash_text(
     uint64_t hash,
     const char *text,
     size_t capacity);
+/**
+ * Provide the workbench context source kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_source_kind_text(
     UmiWorkbenchContextSourceKind kind);
+/**
+ * Provide the workbench context source trigger text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_source_trigger_text(
     UmiWorkbenchContextSourceTrigger trigger);
+/**
+ * Provide the workbench context source state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_source_state_text(
     UmiWorkbenchContextSourceState state);
 

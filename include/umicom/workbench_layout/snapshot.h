@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout node snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutNodeSnapshot {
     uint32_t structure_size;
     char node_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -44,6 +48,10 @@ typedef struct UmiWorkbenchLayoutNodeSnapshot {
     bool locked;
 } UmiWorkbenchLayoutNodeSnapshot;
 
+/**
+ * Represent the workbench layout snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSnapshot {
     uint32_t structure_size;
     UmiWorkbenchLayoutIdentity identity;
@@ -63,16 +71,28 @@ typedef struct UmiWorkbenchLayoutSnapshot {
     uint64_t content_hash;
 } UmiWorkbenchLayoutSnapshot;
 
+/**
+ * Provide the workbench layout snapshot build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_snapshot_build(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutSession *session,
     UmiWorkbenchLayoutSnapshot *out_snapshot);
 
+/**
+ * Find workbench layout snapshot while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchLayoutNodeSnapshot *
 umi_workbench_layout_snapshot_find(
     const UmiWorkbenchLayoutSnapshot *snapshot,
     const char *node_id);
 
+/**
+ * Find workbench layout snapshot while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchLayoutNodeSnapshot *
 umi_workbench_layout_snapshot_at(
     const UmiWorkbenchLayoutSnapshot *snapshot,

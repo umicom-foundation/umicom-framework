@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application ui health row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationUiHealthRow {
     const char *severity;
     unsigned readiness_percent;
@@ -29,6 +33,10 @@ typedef struct UmiApplicationUiHealthRow {
     size_t open_priority_features;
 } UmiApplicationUiHealthRow;
 
+/**
+ * Provide the application ui health row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_health_row(
     const UmiApplicationRuntimeHealth *health,
     UmiApplicationUiHealthRow *out_row);

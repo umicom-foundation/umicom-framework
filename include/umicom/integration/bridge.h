@@ -35,6 +35,9 @@ typedef UmiStatus (*UmiIntegrationSendFn)(
     const UmiIntegrationEnvelope *envelope,
     void *user_data);
 
+/**
+ * Represent the integration bridge data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationBridge {
     UmiIntegrationLaunchFn launch;
     UmiIntegrationStopFn stop;
@@ -42,6 +45,10 @@ typedef struct UmiIntegrationBridge {
     void *user_data;
 } UmiIntegrationBridge;
 
+/**
+ * Check that integration bridge satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_integration_bridge_valid(const UmiIntegrationBridge *bridge);
 
 #endif

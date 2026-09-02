@@ -22,19 +22,29 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *out, size_t capacity, const char *text)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(out, text, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide ai request from selection runtime operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_ai_request_from_selection_runtime(
     const UmiIdeEditorSelection *selection,
     UmiAiCodingTaskKind task_kind,
@@ -47,6 +57,10 @@ UmiStatus umi_ide_ai_request_from_selection_runtime(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selection == NULL || request_id == NULL ||
         session_id == NULL || runtime_id == NULL ||
         workspace_root == NULL || instruction == NULL ||
@@ -55,6 +69,7 @@ UmiStatus umi_ide_ai_request_from_selection_runtime(
     }
 
     status = umi_ide_editor_selection_validate(selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_ai_coding_request_init(out_request, task_kind);
@@ -63,42 +78,49 @@ UmiStatus umi_ide_ai_request_from_selection_runtime(
         out_request->request_id,
         sizeof(out_request->request_id),
         request_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_request->session_id,
             sizeof(out_request->session_id),
             session_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_request->runtime_id,
             sizeof(out_request->runtime_id),
             runtime_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_request->workspace_root,
             sizeof(out_request->workspace_root),
             workspace_root);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_request->active_path,
             sizeof(out_request->active_path),
             selection->path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_request->language_id,
             sizeof(out_request->language_id),
             selection->language_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_request->instruction,
             sizeof(out_request->instruction),
             instruction);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_request->selection_start_line = selection->start_line;
@@ -109,6 +131,10 @@ UmiStatus umi_ide_ai_request_from_selection_runtime(
     return umi_ai_coding_request_validate(out_request);
 }
 
+/*
+ * Provide the ide ai request from selection operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_ai_request_from_selection(
     const UmiIdeEditorSelection *selection,
     UmiAiCodingTaskKind task_kind,

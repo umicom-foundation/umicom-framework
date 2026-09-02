@@ -36,6 +36,9 @@ extern "C" {
 #define UMI_ENTERPRISE_MAX_POSITIONS 128U
 #define UMI_ENTERPRISE_MAX_HIERARCHY_NODES 64U
 
+/**
+ * List the named enterprise work state values accepted by this public contract.
+ */
 typedef enum UmiEnterpriseWorkState {
     UMI_ENTERPRISE_PENDING = 0,
     UMI_ENTERPRISE_RUNNING = 1,
@@ -44,6 +47,9 @@ typedef enum UmiEnterpriseWorkState {
     UMI_ENTERPRISE_CANCELLED = 4
 } UmiEnterpriseWorkState;
 
+/**
+ * Represent the enterprise named metric data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseNamedMetric {
     char name[UMI_ENTERPRISE_NAME_CAPACITY];
     double value;

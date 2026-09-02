@@ -17,6 +17,10 @@
 
 #include <stdio.h>
 
+/*
+ * Provide the workbench selection provider make id operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_provider_make_id(
     char *out_id,
     size_t capacity,
@@ -25,6 +29,10 @@ UmiStatus umi_workbench_selection_provider_make_id(
     uint64_t revision)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_id == NULL || capacity == 0U ||
         prefix == NULL || subject_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -41,6 +49,10 @@ UmiStatus umi_workbench_selection_provider_make_id(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/*
+ * Provide the workbench selection provider make indexed id operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_make_indexed_id(
     char *out_id,
     size_t capacity,
@@ -49,6 +61,10 @@ UmiStatus umi_workbench_selection_provider_make_indexed_id(
     uint64_t revision)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_id == NULL || capacity == 0U || prefix == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

@@ -44,13 +44,19 @@
         }                                                                     \
     } while (0)
 
+/**
+ * Exercise test copy text and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline void test_copy_text(
     char *destination,
     size_t capacity,
     const char *source)
 {
     const size_t length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity == 0U) return;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         (void)fprintf(stderr, "Fixture text exceeded its destination.\n");
         abort();
@@ -58,6 +64,10 @@ static inline void test_copy_text(
     (void)memcpy(destination, source, length + 1U);
 }
 
+/**
+ * Exercise test layout identity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiWorkbenchLayoutIdentity test_layout_identity(
     const char *layout_id)
 {
@@ -79,6 +89,10 @@ static inline UmiWorkbenchLayoutIdentity test_layout_identity(
     return identity;
 }
 
+/**
+ * Exercise test layout principal and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiWorkbenchLayoutPrincipal test_layout_principal(void)
 {
     UmiWorkbenchLayoutPrincipal principal;
@@ -98,6 +112,10 @@ static inline UmiWorkbenchLayoutPrincipal test_layout_principal(void)
     return principal;
 }
 
+/**
+ * Exercise test initialise node and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline void test_initialise_node(
     UmiWorkbenchLayoutNode *node,
     const char *node_id,
@@ -108,6 +126,10 @@ static inline void test_initialise_node(
     (void)umi_workbench_layout_node_set_title(node, title);
 }
 
+/**
+ * Exercise test create development layout and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static inline UmiStatus test_create_development_layout(
     const char *layout_id,
     UmiWorkbenchLayoutDocument *document)
@@ -134,12 +156,14 @@ static inline UmiStatus test_create_development_layout(
     umi_workbench_layout_document_init(
         document, layout_id, "Development Workbench");
     status = umi_workbench_layout_document_set_identity(document, &identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_set_metadata(
         document,
         "Development Workbench",
         "development",
         "Project, editor, chat and output panels in a portable semantic tree.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_workbench_layout_document_add_tag(document, "development");
     (void)umi_workbench_layout_document_add_tag(document, "studio");
@@ -193,30 +217,37 @@ static inline UmiStatus test_create_development_layout(
 
     status = umi_workbench_layout_document_add_node(
         document, &root, &root_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &left, &left_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &centre, &centre_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &right, &right_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &project, &project_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &editor, &editor_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &chat, &chat_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_add_node(
             document, &output, &output_index);
@@ -229,37 +260,46 @@ static inline UmiStatus test_create_development_layout(
     (void)editor_index;
     (void)chat_index;
     (void)output_index;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_workbench_layout_document_set_root(document, "root");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "root", "left", 0U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "root", "centre", 1U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "root", "right", 2U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "left", "project", 0U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "centre", "editor", 0U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "centre", "output", 1U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_attach_child(
             document, "right", "chat", 0U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     document->nodes[document->root_index].active_child_index = 1U;
@@ -280,12 +320,21 @@ static inline UmiStatus test_create_development_layout(
     return UMI_STATUS_OK;
 }
 
+/**
+ * Exercise test allocate layout and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiWorkbenchLayoutDocument *test_allocate_layout(
     const char *layout_id)
 {
     UmiWorkbenchLayoutDocument *document =
         (UmiWorkbenchLayoutDocument *)calloc(1U, sizeof(*document));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) return NULL;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (test_create_development_layout(layout_id, document) !=
         UMI_STATUS_OK) {
         free(document);

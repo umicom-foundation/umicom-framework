@@ -26,7 +26,14 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric routing decision data shared with callers of this public contract.
+ */
 typedef struct UmiFabricRoutingDecision { char route_id[UMI_FABRIC_ID_CAPACITY]; char destination_id[UMI_FABRIC_ID_CAPACITY]; char reason[UMI_FABRIC_TEXT_CAPACITY]; uint64_t decided_ms; bool fallback; } UmiFabricRoutingDecision;
+/**
+ * Initialise fabric routing decision from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_routing_decision_init(UmiFabricRoutingDecision *decision,const UmiFabricRouteRule *rule,const char *reason,uint64_t decided_ms,bool fallback);
 
 #ifdef __cplusplus

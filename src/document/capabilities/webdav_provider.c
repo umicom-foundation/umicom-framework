@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/webdav_provider.h"
 
+/*
+ * Provide the document capability webdav provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_webdav_provider(void)
 {

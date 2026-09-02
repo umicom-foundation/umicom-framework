@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_SDK_RUNTIME_MAX_DEPENDENCIES 256U
 #define UMI_SDK_RUNTIME_MAX_SEARCH_PATHS 64U
 
+/**
+ * List the named sdk runtime state values accepted by this public contract.
+ */
 typedef enum UmiSdkRuntimeState {
     UMI_SDK_RUNTIME_STATE_UNKNOWN = 0,
     UMI_SDK_RUNTIME_STATE_DISCOVERED = 1,
@@ -39,6 +42,9 @@ typedef enum UmiSdkRuntimeState {
     UMI_SDK_RUNTIME_STATE_MISSING = 6
 } UmiSdkRuntimeState;
 
+/**
+ * List the named sdk runtime component kind values accepted by this public contract.
+ */
 typedef enum UmiSdkRuntimeComponentKind {
     UMI_SDK_RUNTIME_COMPONENT_STATIC_LIBRARY = 1,
     UMI_SDK_RUNTIME_COMPONENT_SHARED_LIBRARY = 2,
@@ -50,9 +56,24 @@ typedef enum UmiSdkRuntimeComponentKind {
     UMI_SDK_RUNTIME_COMPONENT_PLUGIN = 8
 } UmiSdkRuntimeComponentKind;
 
+/**
+ * Provide the sdk runtime state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_sdk_runtime_state_text(UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime component kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_sdk_runtime_component_kind_text(UmiSdkRuntimeComponentKind kind);
+/**
+ * Provide the sdk runtime copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_sdk_runtime_copy_text(char *destination, size_t capacity, const char *source);
+/**
+ * Check that sdk runtime text satisfies its contract before another service relies on it.
+ */
 bool umi_sdk_runtime_text_is_valid(const char *text, size_t capacity);
 #ifdef __cplusplus
 }

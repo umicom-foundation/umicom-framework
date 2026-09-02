@@ -18,13 +18,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive event binding data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveEventBinding {
     char source_id[UMI_UI_REACTIVE_ID_CAPACITY];
     char event_name[UMI_UI_REACTIVE_ID_CAPACITY];
     char action_id[UMI_UI_REACTIVE_ID_CAPACITY];
     bool enabled;
 } UmiUiReactiveEventBinding;
+/**
+ * Initialise ui reactive event binding from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ui_reactive_event_binding_init(UmiUiReactiveEventBinding *item);
+/**
+ * Check that ui reactive event binding satisfies its contract before another service
+ * relies on it.
+ */
 int umi_ui_reactive_event_binding_valid(const UmiUiReactiveEventBinding *item);
 #ifdef __cplusplus
 }

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio surface profile ai validation operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_ai_validation(void);
 #ifdef __cplusplus
 }

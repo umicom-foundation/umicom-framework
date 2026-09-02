@@ -18,12 +18,20 @@
 
 #include "umicom/application/production/production.h"
 
+/*
+ * Provide the structural capability probe operation used by this module and its client
+ * applications.
+ */
 static int structural_capability_probe(const char *capability_id, void *context)
 {
     (void)context;
     return capability_id != NULL && capability_id[0] != '\0';
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationProductionPortfolio *portfolio =
@@ -31,12 +39,17 @@ int main(void)
     UmiApplicationProductionGapAudit audit;
     size_t application_index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (portfolio == NULL) {
         (void)fprintf(stderr, "application production audit: allocation failed\n");
         return 2;
     }
     status = umi_application_production_portfolio_build(
         structural_capability_probe, NULL, portfolio);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr, "application production audit: %s\n",
                       umi_status_text(status));
@@ -44,6 +57,7 @@ int main(void)
         return 3;
     }
     status = umi_application_production_gap_audit_build(portfolio, &audit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr, "application production audit: %s\n",
                       umi_status_text(status));
@@ -64,6 +78,7 @@ int main(void)
     (void)printf(
         "application_id|panels|layouts|features|planned|foundation|implemented|"
         "verified|application_open|adapter_open|acceptance\n");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (application_index = 0U;
          application_index < portfolio->count; ++application_index) {
         const UmiApplicationProductionRuntime *runtime =
@@ -73,8 +88,10 @@ int main(void)
         size_t foundation = 0U;
         size_t implemented = 0U;
         size_t verified = 0U;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (feature_index = 0U; feature_index < runtime->features.count;
              ++feature_index) {
+            /* Select the behaviour associated with the requested command or state value. */
             switch (runtime->features.entries[feature_index].feature->state) {
             case UMI_EXPERIENCE_FEATURE_PLANNED: planned += 1U; break;
             case UMI_EXPERIENCE_FEATURE_FOUNDATION: foundation += 1U; break;

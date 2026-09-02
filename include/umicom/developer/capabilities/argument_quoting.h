@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ARGUMENT_QUOTING "umicom.developer.execution.argument_quoting"
 
+/**
+ * Provide the developer capability argument quoting operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_argument_quoting(void);
 

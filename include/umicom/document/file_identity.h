@@ -22,8 +22,16 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the document file info operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_file_info(const char *path,
                                  UmiDocumentFileInfo *out_info);
+/**
+ * Provide the document file changed operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_file_changed(const char *path,
                                     const UmiDocumentFingerprint *baseline,
                                     int *out_changed,

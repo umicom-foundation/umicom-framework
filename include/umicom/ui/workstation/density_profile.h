@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws density profile data shared with callers of this public contract.
+ */
 typedef struct UmiWsDensityProfile {
     UmiWsDensity density;
     int32_t spacing;
@@ -31,6 +34,10 @@ typedef struct UmiWsDensityProfile {
     int32_t hit_target;
 } UmiWsDensityProfile;
 
+/**
+ * Provide the ws density profile make operation used by this module and its client
+ * applications.
+ */
 UmiWsDensityProfile umi_ws_density_profile_make(UmiWsDensity density);
 
 #ifdef __cplusplus

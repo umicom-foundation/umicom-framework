@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project template bash tool operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_bash_tool(void);
 
 #ifdef __cplusplus

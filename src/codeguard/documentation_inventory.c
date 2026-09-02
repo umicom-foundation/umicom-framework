@@ -34,7 +34,7 @@ static unsigned inventory_percent(size_t value, size_t total)
         if (accumulator >= total - value) {
             accumulator -= total - value;
             percent += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             accumulator += value;
         }
     }

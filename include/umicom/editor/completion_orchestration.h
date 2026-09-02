@@ -27,6 +27,10 @@ extern "C" {
 
 #define UMI_EDITOR_COMPLETION_ORCHESTRATION_API_VERSION 1U
 
+/**
+ * List the named editor completion orchestration state values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorCompletionOrchestrationState {
     UMI_EDITOR_COMPLETION_ORCHESTRATION_IDLE = 0,
     UMI_EDITOR_COMPLETION_ORCHESTRATION_COLLECTING = 1,
@@ -35,6 +39,9 @@ typedef enum UmiEditorCompletionOrchestrationState {
     UMI_EDITOR_COMPLETION_ORCHESTRATION_FAILED = 4
 } UmiEditorCompletionOrchestrationState;
 
+/**
+ * Represent the editor completion policy data shared with callers of this public contract.
+ */
 typedef struct UmiEditorCompletionPolicy {
     uint32_t struct_size;
     uint32_t api_version;
@@ -48,6 +55,10 @@ typedef struct UmiEditorCompletionPolicy {
     int resolve_before_accept;
 } UmiEditorCompletionPolicy;
 
+/**
+ * Represent the editor completion provider report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorCompletionProviderReport {
     uint32_t struct_size;
     uint32_t api_version;
@@ -60,6 +71,10 @@ typedef struct UmiEditorCompletionProviderReport {
     int truncated;
 } UmiEditorCompletionProviderReport;
 
+/**
+ * Represent the editor completion orchestration snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionOrchestrationSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -77,38 +92,90 @@ typedef struct UmiEditorCompletionOrchestrationSnapshot {
     int incomplete;
 } UmiEditorCompletionOrchestrationSnapshot;
 
+/**
+ * Represent the editor completion orchestration data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorCompletionOrchestration
     UmiEditorCompletionOrchestration;
 
+/**
+ * Provide the editor completion policy default operation used by this module and its
+ * client applications.
+ */
 UmiEditorCompletionPolicy umi_editor_completion_policy_default(void);
+/**
+ * Initialise editor completion orchestration from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_completion_orchestration_create(
     UmiEditorCompletionProviderRegistry *provider_registry,
     UmiEditorCompletionOrchestration **out_orchestration);
+/**
+ * Release or reset state held by editor completion orchestration so the same storage can
+ * be reused safely.
+ */
 void umi_editor_completion_orchestration_destroy(
     UmiEditorCompletionOrchestration *orchestration);
+/**
+ * Provide the editor completion orchestration set policy operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_set_policy(
     UmiEditorCompletionOrchestration *orchestration,
     const UmiEditorCompletionPolicy *policy);
+/**
+ * Provide the editor completion orchestration begin operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_begin(
     UmiEditorCompletionOrchestration *orchestration,
     const UmiEditorCompletionRequest *request,
     const UmiEditorCompletionRankingConfig *ranking);
+/**
+ * Provide the editor completion orchestration cancel operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_cancel(
     UmiEditorCompletionOrchestration *orchestration);
+/**
+ * Find editor completion orchestration resolve while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_completion_orchestration_resolve_selected(
     UmiEditorCompletionOrchestration *orchestration);
+/**
+ * Find editor completion orchestration report while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_completion_orchestration_report_at(
     const UmiEditorCompletionOrchestration *orchestration,
     size_t position,
     UmiEditorCompletionProviderReport *out_report);
+/**
+ * Provide the editor completion orchestration snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_snapshot(
     const UmiEditorCompletionOrchestration *orchestration,
     UmiEditorCompletionOrchestrationSnapshot *out_snapshot);
+/**
+ * Provide the editor completion orchestration session operation used by this module and
+ * its client applications.
+ */
 UmiEditorCompletionSession *umi_editor_completion_orchestration_session(
     UmiEditorCompletionOrchestration *orchestration);
+/**
+ * Provide the editor completion orchestration result operation used by this module and its
+ * client applications.
+ */
 const UmiEditorCompletionQueryResult *
 umi_editor_completion_orchestration_result(
     const UmiEditorCompletionOrchestration *orchestration);
+/**
+ * Provide the editor completion orchestration revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_editor_completion_orchestration_revision(
     const UmiEditorCompletionOrchestration *orchestration);
 

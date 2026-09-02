@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/build.h"
 
+/*
+ * Provide the ide surface profile build operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_build(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

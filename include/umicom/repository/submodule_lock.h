@@ -34,6 +34,10 @@ extern "C" {
 #define UMI_REPOSITORY_SUBMODULE_LOCK_CAPACITY 64U
 #define UMI_REPOSITORY_GIT_SHA_CAPACITY 65U
 
+/**
+ * Represent the repository submodule lock entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositorySubmoduleLockEntry {
     char name[UMI_REPOSITORY_TEXT_CAPACITY];
     char path[UMI_REPOSITORY_PATH_CAPACITY];
@@ -41,11 +45,19 @@ typedef struct UmiRepositorySubmoduleLockEntry {
     int staged;
 } UmiRepositorySubmoduleLockEntry;
 
+/**
+ * Represent the repository submodule lock request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositorySubmoduleLockRequest {
     const char *repository_root;
     int dry_run;
 } UmiRepositorySubmoduleLockRequest;
 
+/**
+ * Represent the repository submodule lock report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositorySubmoduleLockReport {
     UmiRepositorySubmoduleLockEntry entries[
         UMI_REPOSITORY_SUBMODULE_LOCK_CAPACITY];

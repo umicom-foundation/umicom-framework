@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection node path data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchSelectionNodePath {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -39,28 +43,64 @@ typedef struct UmiWorkbenchSelectionNodePath {
     uint64_t revision;
 } UmiWorkbenchSelectionNodePath;
 
+/**
+ * Initialise workbench selection node path from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_selection_node_path_init(
     UmiWorkbenchSelectionNodePath *record,
     const char *record_id);
+/**
+ * Check that workbench selection node path satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_selection_node_path_validate(
     const UmiWorkbenchSelectionNodePath *record);
+/**
+ * Provide the workbench selection node path set source operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_node_path_set_source(
     UmiWorkbenchSelectionNodePath *record,
     const char *source_id);
+/**
+ * Provide the workbench selection node path set subject operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_node_path_set_subject(
     UmiWorkbenchSelectionNodePath *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection node path set related operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_node_path_set_related(
     UmiWorkbenchSelectionNodePath *record,
     const char *related_id);
+/**
+ * Provide the workbench selection node path set group operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_node_path_set_group(
     UmiWorkbenchSelectionNodePath *record,
     const char *group_id);
+/**
+ * Provide the workbench selection node path set description operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_node_path_set_description(
     UmiWorkbenchSelectionNodePath *record,
     const char *description);
+/**
+ * Provide the workbench selection node path hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_selection_node_path_hash(
     const UmiWorkbenchSelectionNodePath *record);
+/**
+ * Provide the workbench selection node path touch operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_selection_node_path_touch(
     UmiWorkbenchSelectionNodePath *record,
     uint64_t sequence,

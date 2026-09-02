@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime workspace edit to editor operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_runtime_workspace_edit_to_editor(const UmiLanguageRuntimeWorkspaceEdit*r,UmiEditorWorkspaceEditSet**out);
 #ifdef __cplusplus
 }

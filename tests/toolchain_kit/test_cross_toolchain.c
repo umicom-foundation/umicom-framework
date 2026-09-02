@@ -18,6 +18,10 @@
 #include <string.h>
 #include "umicom/toolchain/cross_toolchain.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCrossToolchainRequest request;

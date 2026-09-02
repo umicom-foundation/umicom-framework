@@ -39,6 +39,9 @@ extern "C" {
 #define UMI_DISTRIBUTION_URI_CAPACITY 512U
 #define UMI_DISTRIBUTION_PACKAGE_CAPACITY 1024U
 
+/**
+ * List the named distribution package kind values accepted by this public contract.
+ */
 typedef enum UmiDistributionPackageKind {
     UMI_DISTRIBUTION_APPLICATION = 1,
     UMI_DISTRIBUTION_EXTENSION = 2,
@@ -47,6 +50,9 @@ typedef enum UmiDistributionPackageKind {
     UMI_DISTRIBUTION_CONTENT = 5
 } UmiDistributionPackageKind;
 
+/**
+ * Represent the distribution package data shared with callers of this public contract.
+ */
 typedef struct UmiDistributionPackage {
     uint32_t struct_size;
     uint32_t api_version;
@@ -71,6 +77,10 @@ typedef struct UmiDistributionPackage {
     uint64_t revision;
 } UmiDistributionPackage;
 
+/**
+ * Initialise distribution package from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_distribution_package_init(
     UmiDistributionPackage *package,
     const char *release_id,
@@ -80,11 +90,23 @@ UmiStatus umi_distribution_package_init(
     UmiVersion version,
     UmiDistributionPackageKind kind,
     UmiReleaseChannel channel);
+/**
+ * Check that distribution package satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_distribution_package_validate(
     const UmiDistributionPackage *package,
     char *out_reason,
     size_t reason_capacity);
+/**
+ * Provide the distribution version compare operation used by this module and its client
+ * applications.
+ */
 int umi_distribution_version_compare(UmiVersion left, UmiVersion right);
+/**
+ * Provide the distribution package kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_distribution_package_kind_text(UmiDistributionPackageKind kind);
 
 #ifdef __cplusplus

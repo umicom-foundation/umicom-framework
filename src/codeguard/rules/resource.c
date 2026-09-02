@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-RES-001", "CWE-772", UMI_CODEGUARD_LOW, UMI_CODEGUARD_CATEGORY_RESOURCE, 55U, UMI_CODEGUARD_MATCH_CODE, "CreateFileA(NULL", "Windows HANDLE creation requires CloseHandle on every terminal path.", "Wrap HANDLE ownership or centralise cleanup so every successful create is closed."}
 };
 
+/*
+ * Provide the codeguard rules resource operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_resource(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

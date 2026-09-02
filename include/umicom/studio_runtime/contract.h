@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime contract data shared with callers of this public contract.
+ */
 typedef struct UmiStudioRuntimeContract {
     const char *application_id;
     const char *title;
@@ -41,8 +44,16 @@ typedef struct UmiStudioRuntimeContract {
     size_t required_layout_count;
 } UmiStudioRuntimeContract;
 
+/**
+ * Provide the studio runtime contract operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeContract *umi_studio_runtime_contract(void);
 
+/**
+ * Check that studio runtime contract satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_studio_runtime_contract_validate(
     const UmiStudioRuntimeContract *contract);
 

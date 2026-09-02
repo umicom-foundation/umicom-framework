@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance elevation style projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceElevationStyleProjection {
     char style_id[UMI_APPEARANCE_ID_CAPACITY];
     int32_t elevation_level;

@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap property condition match operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_property_condition_match(
     const UmiBootstrapPropertySet *properties,
     const char *key,

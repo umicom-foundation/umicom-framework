@@ -17,12 +17,20 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the ai coding patch preview operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_patch_preview(
     const UmiAiCodingPatch *patch,
     UmiAiCodingPatchPreview *out_preview)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (patch == NULL || out_preview == NULL ||
         patch->file_count > UMI_AI_CODING_PATCH_FILE_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -45,6 +53,7 @@ UmiStatus umi_ai_coding_patch_preview(
         "%s",
         patch->rationale);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < patch->file_count; ++index) {
         const UmiAiCodingPatchFile *source = &patch->files[index];
         UmiAiCodingPatchPreviewFile *target =
@@ -64,6 +73,7 @@ UmiStatus umi_ai_coding_patch_preview(
         out_preview->added_lines += source->added_lines;
         out_preview->removed_lines += source->removed_lines;
 
+        /* Select the behaviour associated with the requested command or state value. */
         switch (source->operation) {
             case UMI_AI_CODING_PATCH_CREATE:
                 out_preview->create_count += 1U;

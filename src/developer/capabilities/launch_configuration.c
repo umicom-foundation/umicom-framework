@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/launch_configuration.h"
 
+/*
+ * Provide the developer capability launch configuration operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_launch_configuration(void)
 {

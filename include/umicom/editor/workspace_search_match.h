@@ -37,6 +37,10 @@ extern "C" {
 #define UMI_EDITOR_WORKSPACE_SEARCH_MATCH_TEXT_CAPACITY 512U
 #define UMI_EDITOR_WORKSPACE_SEARCH_MATCH_LINE_CAPACITY 512U
 
+/**
+ * Represent the editor workspace search match data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceSearchMatch {
     uint32_t struct_size;
     uint32_t api_version;
@@ -57,6 +61,10 @@ typedef struct UmiEditorWorkspaceSearchMatch {
     int generated;
 } UmiEditorWorkspaceSearchMatch;
 
+/**
+ * Initialise editor workspace search match from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_match_initialize(
     UmiEditorWorkspaceSearchMatch *match,
     const UmiEditorWorkspaceSearchDocumentView *document,
@@ -64,11 +72,23 @@ UmiStatus umi_editor_workspace_search_match_initialize(
     uint64_t index_revision,
     size_t ordinal_in_document);
 
+/**
+ * Check that editor workspace search match satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_editor_workspace_search_match_validate(
     const UmiEditorWorkspaceSearchMatch *match);
+/**
+ * Provide the editor workspace search match compare operation used by this module and its
+ * client applications.
+ */
 int umi_editor_workspace_search_match_compare(
     const UmiEditorWorkspaceSearchMatch *left,
     const UmiEditorWorkspaceSearchMatch *right);
+/**
+ * Provide the editor workspace search match format operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_match_format(
     const UmiEditorWorkspaceSearchMatch *match,
     char *out_text,

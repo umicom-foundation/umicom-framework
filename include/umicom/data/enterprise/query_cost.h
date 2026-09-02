@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query cost data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryCost { double estimated_cost; double join_penalty; double predicate_discount; bool expensive; } UmiDataQueryCost;
 /* Estimate a portable relative query cost from query-plan structure. */ UmiStatus umi_data_query_cost_estimate(const UmiDataQueryPlan *plan,double expensive_threshold,UmiDataQueryCost *out_cost);
 

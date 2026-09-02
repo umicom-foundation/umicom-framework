@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio host sync operation used by this module and its client applications.
+ */
 UmiStatus umi_studio_host_sync(
     UmiStudioRuntimePlatform *platform,
     const UmiStudioRuntimeHostAdapter *adapter);

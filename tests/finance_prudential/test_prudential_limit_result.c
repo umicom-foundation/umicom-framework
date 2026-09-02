@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/prudential_limit_result.h"
 
-int main(void) { UmiPrudentialLimitResult r; UmiPrudentialLimit l; if(umi_pru_prudential_limit_init(&l,"LCR",1.0,1,UMI_PRU_SEVERITY_BREACH)!=UMI_STATUS_OK)return 1; if(umi_pru_prudential_limit_result_evaluate(&r,&l,0.9)!=UMI_STATUS_OK)return 2; return r.breached==1?0:3; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialLimitResult r; UmiPrudentialLimit l; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_prudential_limit_init(&l,"LCR",1.0,1,UMI_PRU_SEVERITY_BREACH)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_prudential_limit_result_evaluate(&r,&l,0.9)!=UMI_STATUS_OK)return 2; return r.breached==1?0:3; }

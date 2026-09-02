@@ -19,16 +19,25 @@
 
 #include "umicom/trading/position.h"
 
+/* Provide the absolute quantity operation used by this module and its client applications. */
 static double absolute_quantity(double value)
 {
     return value < 0.0 ? -value : value;
 }
 
+/*
+ * Provide the position apply fill operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_position_apply_fill(UmiPosition *position,
                                   UmiSide side,
                                   double quantity,
                                   double price)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (position == NULL || quantity <= 0.0 || price <= 0.0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -42,6 +51,7 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
         (old_quantity > 0.0 && signed_quantity > 0.0) ||
         (old_quantity < 0.0 && signed_quantity < 0.0);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (same_direction) {
         const double old_absolute = absolute_quantity(old_quantity);
         const double added_absolute = absolute_quantity(signed_quantity);
@@ -59,6 +69,7 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
 
     double closing_quantity = quantity;
     const double old_absolute = absolute_quantity(old_quantity);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (closing_quantity > old_absolute) {
         closing_quantity = old_absolute;
     }
@@ -68,9 +79,10 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
         (price - position->average_price) * closing_quantity * direction;
     position->quantity = old_quantity + signed_quantity;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position->quantity == 0.0) {
         position->average_price = 0.0;
-    } else if ((old_quantity > 0.0 && position->quantity < 0.0) ||
+    } else /* Apply this branch only when its contract condition is satisfied. */ if ((old_quantity > 0.0 && position->quantity < 0.0) ||
                (old_quantity < 0.0 && position->quantity > 0.0)) {
         position->average_price = price;
     }

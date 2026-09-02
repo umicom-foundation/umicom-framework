@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/backup_rotation.h"
 
+/*
+ * Provide the document capability backup rotation operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_backup_rotation(void)
 {

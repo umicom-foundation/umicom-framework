@@ -97,7 +97,7 @@ static const UmiExperienceFeatureDefinition FEATURES[] = {
       "Non-linear performance/arrangement", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P2,
       UMI_EXPERIENCE_OWNER_APPLICATION, "umicom.media" },
     { sizeof(UmiExperienceFeatureDefinition), "music.ui", "Production UI",
-      "GTK/web layouts and multi-monitor workspaces", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P1,
+      "GTK/web layouts and multi-monitor workspaces", UMI_EXPERIENCE_FEATURE_FOUNDATION, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_APPLICATION, "umicom.ui" }
 };
 
@@ -115,6 +115,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience music operation used by this module and its client
+ * applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_music(void)
 {
     return &DEFINITION;

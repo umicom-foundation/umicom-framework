@@ -37,6 +37,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the chart model data shared with callers of this public contract.
+ */
 typedef struct UmiChartModel {
     char title[UMI_CHART_NAME_CAPACITY];
     UmiChartSeries series[UMI_CHART_MAX_SERIES];
@@ -68,11 +71,19 @@ UmiStatus umi_chart_model_init(
     const char *title
 );
 
+/**
+ * Provide the chart model add series operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_model_add_series(
     UmiChartModel *model,
     const UmiChartSeries *series
 );
 
+/**
+ * Provide the chart model find series operation used by this module and its client
+ * applications.
+ */
 UmiChartSeries *umi_chart_model_find_series(
     UmiChartModel *model,
     const char *id

@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix agent data shared with callers of this public contract.
+ */
 typedef struct UmiHelixAgent {
     char agent_id[UMI_HELIX_ID_CAPACITY];
     UmiHelixAgentKind kind;
@@ -37,6 +40,10 @@ typedef struct UmiHelixAgent {
     int enabled;
 } UmiHelixAgent;
 
+/**
+ * Initialise helix agent from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_helix_agent_init(UmiHelixAgent *agent,
                                const char *agent_id,
                                UmiHelixAgentKind kind,

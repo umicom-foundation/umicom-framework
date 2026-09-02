@@ -26,7 +26,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the order book top liquidity operation used by this module and its client
+ * applications.
+ */
 double umi_order_book_top_liquidity(const UmiMarketDepth *depth);
+/**
+ * Provide the order book imbalance operation used by this module and its client
+ * applications.
+ */
 double umi_order_book_imbalance(const UmiMarketDepth *depth);
 #ifdef __cplusplus
 }

@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the debug runtime decode event operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_decode_event(
     const char *json,
     UmiDebugRuntimeEvent *out_result)
@@ -28,22 +32,30 @@ UmiStatus umi_debug_runtime_decode_event(
     int64_t exit_code;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || out_result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_result, 0, sizeof(*out_result));
     status = umi_language_runtime_json_parse(json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     event_token = umi_language_runtime_json_object_get(
         &document, 0, "event");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (event_token < 0) return UMI_STATUS_PARSE_ERROR;
     status = umi_language_runtime_json_string(
         &document,
         event_token,
         out_result->event,
         sizeof(out_result->event));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     body = umi_debug_runtime_decoder_event_body_token(&document);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (body < 0 || umi_language_runtime_json_is_null(&document, body)) {
         return UMI_STATUS_OK;
     }

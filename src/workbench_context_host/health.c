@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the workbench context host health evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_health_evaluate(
     const UmiWorkbenchContextHost *host,
     UmiWorkbenchContextHostHealth *out_health)
@@ -26,11 +30,16 @@ UmiStatus umi_workbench_context_host_health_evaluate(
     size_t queued = 0U;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || out_health == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     memset(out_health, 0, sizeof(*out_health));
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < host->inboxes.count; ++index) {
         queued += host->inboxes.items[index].count;
         dropped += host->inboxes.items[index].dropped_count;
@@ -39,6 +48,7 @@ UmiStatus umi_workbench_context_host_health_evaluate(
     out_health->queued_delivery_count = queued;
     out_health->dropped_delivery_count = dropped;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (host->suspended) {
         out_health->state =
             UMI_WORKBENCH_CONTEXT_HOST_HEALTH_DEGRADED;
@@ -46,14 +56,14 @@ UmiStatus umi_workbench_context_host_health_evaluate(
             out_health->message,
             sizeof(out_health->message),
             "Context host is suspended");
-    } else if (host->endpoints.count == 0U) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (host->endpoints.count == 0U) {
         out_health->state =
             UMI_WORKBENCH_CONTEXT_HOST_HEALTH_UNAVAILABLE;
         (void)snprintf(
             out_health->message,
             sizeof(out_health->message),
             "No context-aware endpoints are registered");
-    } else if (dropped > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (dropped > 0U) {
         out_health->state =
             UMI_WORKBENCH_CONTEXT_HOST_HEALTH_DEGRADED;
         (void)snprintf(
@@ -61,7 +71,7 @@ UmiStatus umi_workbench_context_host_health_evaluate(
             sizeof(out_health->message),
             "Delivery pressure dropped %llu contexts",
             (unsigned long long)dropped);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_health->state =
             UMI_WORKBENCH_CONTEXT_HOST_HEALTH_HEALTHY;
         (void)snprintf(

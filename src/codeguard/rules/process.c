@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-PROC-001", "CWE-78", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_COMMAND, 70U, UMI_CODEGUARD_MATCH_CODE, "execl(", "Process launch arguments must not be assembled from unchecked external strings.", "Use the Framework process service and explicit validated argv elements."}
 };
 
+/*
+ * Provide the codeguard rules process operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_process(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

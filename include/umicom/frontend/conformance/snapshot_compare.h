@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc snapshot comparison data shared with callers of this public contract.
+ */
 typedef struct UmiFcSnapshotComparison { double node_score; double text_score; double interaction_score; bool fingerprint_match; double total_score; } UmiFcSnapshotComparison;
+/**
+ * Perform fc snapshot compare through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_fc_snapshot_compare_run(const UmiFcRenderSnapshot *expected,const UmiFcRenderSnapshot *actual,UmiFcSnapshotComparison *out_comparison);
 
 #ifdef __cplusplus

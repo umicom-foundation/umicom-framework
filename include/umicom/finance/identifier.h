@@ -24,7 +24,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that financial id satisfies its contract before another service relies on it.
+ */
 int umi_financial_id_valid(const UmiFinancialId *id);
+/**
+ * Provide the financial id equal operation used by this module and its client
+ * applications.
+ */
 int umi_financial_id_equal(const UmiFinancialId *left, const UmiFinancialId *right);
 #ifdef __cplusplus
 }

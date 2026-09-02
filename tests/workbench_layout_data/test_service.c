@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise create started service and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiWorkbenchLayoutDataService *create_started_service(
     UmiDataServer *server)
 {
@@ -25,10 +29,12 @@ static UmiWorkbenchLayoutDataService *create_started_service(
                    "replica-test");
     test_copy_text(config.actor_id, sizeof(config.actor_id),
                    "developer");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_service_create(
             server, &config, &service) != UMI_STATUS_OK) {
         return NULL;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_service_start(service, 1000U) !=
         UMI_STATUS_OK) {
         umi_workbench_layout_data_service_destroy(service);
@@ -37,6 +43,10 @@ static UmiWorkbenchLayoutDataService *create_started_service(
     return service;
 }
 
+/*
+ * Exercise test service lifecycle and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_service_lifecycle(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -67,6 +77,10 @@ static int test_service_lifecycle(void)
     return 0;
 }
 
+/*
+ * Exercise test layout save load delete and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_layout_save_load_delete(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -107,6 +121,10 @@ static int test_layout_save_load_delete(void)
     return 0;
 }
 
+/*
+ * Exercise test sharing and lease and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_sharing_and_lease(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -133,6 +151,10 @@ static int test_sharing_and_lease(void)
     return 0;
 }
 
+/*
+ * Exercise test session checkpoint and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_session_checkpoint(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -156,6 +178,10 @@ static int test_session_checkpoint(void)
     return 0;
 }
 
+/*
+ * Exercise test quiesced write rejected and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_quiesced_write_rejected(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -177,6 +203,10 @@ static int test_quiesced_write_rejected(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_service_lifecycle() == 0,

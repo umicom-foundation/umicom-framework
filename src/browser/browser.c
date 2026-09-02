@@ -18,4 +18,5 @@
  */
 
 #include "umicom/browser/browser.h"
-UmiStatus umi_browser_validate(const UmiBrowser *browser){if(browser==NULL||browser->instance==NULL||browser->navigate==NULL||browser->current_url==NULL||browser->destroy==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that browser satisfies its contract before another service relies on it. */
+UmiStatus umi_browser_validate(const UmiBrowser *browser){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(browser==NULL||browser->instance==NULL||browser->navigate==NULL||browser->current_url==NULL||browser->destroy==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

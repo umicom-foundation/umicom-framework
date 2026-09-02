@@ -16,12 +16,20 @@
 #include "umicom/developer/acceptance/gate.h"
 #include <string.h>
 
+/*
+ * Provide the developer acceptance gate evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_acceptance_gate_evaluate(
     const UmiDeveloperAcceptanceGate *gate,
     const UmiDeveloperAcceptanceEvidenceStore *evidence,
     UmiDeveloperAcceptanceGateResult *out_result)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (gate == NULL || evidence == NULL || out_result == NULL ||
         gate->gate_id[0] == '\0' ||
         gate->requirement_count > UMI_DEVELOPER_ACCEPTANCE_MAX_REQUIREMENTS)
@@ -31,18 +39,25 @@ UmiStatus umi_developer_acceptance_gate_evaluate(
     (void)strncpy(out_result->gate_id, gate->gate_id,
                   sizeof(out_result->gate_id) - 1U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < gate->requirement_count; ++index) {
         const UmiDeveloperAcceptanceEvidence *item =
             umi_developer_acceptance_evidence_find(
                 evidence, gate->required_capability_ids[index]);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (item == NULL) {
             out_result->missing_count += 1U;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->state == UMI_DEVELOPER_ACCEPTANCE_PASS)
             out_result->passed_count += 1U;
-        else if (item->state == UMI_DEVELOPER_ACCEPTANCE_BLOCKED)
+        else /* Apply this branch only when its contract condition is satisfied. */ if (item->state == UMI_DEVELOPER_ACCEPTANCE_BLOCKED)
             out_result->blocked_count += 1U;
+        /* Use this fallback path when the earlier condition does not apply. */
         else
             out_result->failed_count += 1U;
     }

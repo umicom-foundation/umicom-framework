@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital confirmation policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalConfirmationPolicy {
     UmiDigitalAssetId network_id;
     uint32_t required_confirmations;

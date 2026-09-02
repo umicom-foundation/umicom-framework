@@ -28,19 +28,37 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai runtime data shared with callers of this public contract.
+ */
 typedef struct UmiAiRuntime {
     UmiAiProviderRegistry providers;
     UmiAiToolRegistry tools;
     UmiAiPolicy policy;
 } UmiAiRuntime;
 
+/**
+ * Initialise ai runtime from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_runtime_init(UmiAiRuntime *runtime);
+/**
+ * Release or reset state held by ai runtime so the same storage can be reused safely.
+ */
 void umi_ai_runtime_destroy(UmiAiRuntime *runtime);
+/**
+ * Provide the ai runtime generate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_runtime_generate(UmiAiRuntime *runtime,
                                   const char *provider_id,
                                   int approved,
                                   const UmiAiRequest *request,
                                   UmiAiResponse *response);
+/**
+ * Provide the ai runtime invoke tool operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_runtime_invoke_tool(UmiAiRuntime *runtime,
                                      const char *tool_id,
                                      int approved,

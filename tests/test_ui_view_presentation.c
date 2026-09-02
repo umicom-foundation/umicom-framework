@@ -21,6 +21,10 @@
 
 #include "umicom/ui/view_presentation.h"
 
+/*
+ * Exercise create demo view and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus create_demo_view(const char *view_id,
                                   void *user_data,
                                   UmiUiViewModel **out_view)
@@ -31,20 +35,25 @@ static UmiStatus create_demo_view(const char *view_id,
 
     status = umi_ui_view_model_create(
         view_id, "test.presentation", UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ui_value_set_string(&value, "Presentation Demo");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ui_view_model_set_property(*out_view, "title", &value);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ui_value_set_integer(&value, 42);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ui_view_model_set_property(*out_view, "items", &value);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -52,6 +61,10 @@ static UmiStatus create_demo_view(const char *view_id,
     return status;
 }
 
+/*
+ * Exercise create full property view and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static UmiStatus create_full_property_view(const char *view_id,
                                            void *user_data,
                                            UmiUiViewModel **out_view)
@@ -63,18 +76,25 @@ static UmiStatus create_full_property_view(const char *view_id,
 
     status = umi_ui_view_model_create(
         view_id, "test.presentation.full", UMI_UI_ROLE_PANE, out_view);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK &&
          index < UMI_UI_PROPERTY_MAX; ++index) {
         char key[UMI_UI_PROPERTY_KEY_CAPACITY];
         const int written = snprintf(key, sizeof(key), "property.%03zu", index);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(key)) {
             status = UMI_STATUS_CAPACITY_EXCEEDED;
             break;
         }
         status = umi_ui_value_set_integer(&value, (int64_t)index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = umi_ui_view_model_set_property(*out_view, key, &value);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && out_view != NULL && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -82,6 +102,10 @@ static UmiStatus create_full_property_view(const char *view_id,
     return status;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiViewFactoryRegistry *registry = NULL;

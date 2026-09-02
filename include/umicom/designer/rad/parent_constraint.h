@@ -18,12 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad parent constraint data shared with callers of this public contract.
+ */
 typedef struct UmiRadParentConstraint {
     char parent_type[UMI_RAD_ID_CAPACITY];
     char child_family[UMI_RAD_ID_CAPACITY];
     bool accepted;
 } UmiRadParentConstraint;
+/**
+ * Initialise rad parent constraint from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_parent_constraint_init(UmiRadParentConstraint *item);
+/**
+ * Check that rad parent constraint satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_parent_constraint_is_valid(const UmiRadParentConstraint *item);
 #ifdef __cplusplus
 }

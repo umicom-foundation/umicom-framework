@@ -14,8 +14,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_runtime/types.h"
 
+/*
+ * Provide the ai coding runtime state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_runtime_state_text(UmiAiCodingRuntimeState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_CODING_RUNTIME_IDLE: return "idle";
         case UMI_AI_CODING_RUNTIME_PREPARING: return "preparing";
@@ -33,8 +38,13 @@ const char *umi_ai_coding_runtime_state_text(UmiAiCodingRuntimeState state)
     }
 }
 
+/*
+ * Provide the ai coding validation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_validation_kind_text(UmiAiCodingValidationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_CODING_VALIDATION_CUSTOM: return "custom";
         case UMI_AI_CODING_VALIDATION_CONFIGURE: return "configure";
@@ -47,8 +57,13 @@ const char *umi_ai_coding_validation_kind_text(UmiAiCodingValidationKind kind)
     }
 }
 
+/*
+ * Provide the ai coding event kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_event_kind_text(UmiAiCodingEventKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_CODING_EVENT_STATE: return "state";
         case UMI_AI_CODING_EVENT_CONTEXT: return "context";

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/time_bucket.h"
 
-int main(void){int64_t b;if(umi_analytics_time_bucket_floor(123,60,&b)!=0)return 1;return b==120?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){int64_t b;/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_time_bucket_floor(123,60,&b)!=0)return 1;return b==120?0:2;}

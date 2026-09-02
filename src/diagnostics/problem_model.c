@@ -37,17 +37,25 @@ typedef struct ProblemSortEntry {
     UmiDiagnosticProblemSort sort;
 } ProblemSortEntry;
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t value)
 {
     return value == UINT64_MAX ? 1U : value + 1U;
 }
 
+/* Provide the find fingerprint operation used by this module and its client applications. */
 static size_t find_fingerprint(const UmiDiagnosticProblemModel *model,
                                uint64_t fingerprint)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || fingerprint == 0U) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < model->count; ++position) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (model->items[position].finding.fingerprint == fingerprint) {
             return position;
         }
@@ -55,33 +63,51 @@ static size_t find_fingerprint(const UmiDiagnosticProblemModel *model,
     return SIZE_MAX;
 }
 
+/* Provide the reserve problems operation used by this module and its client applications. */
 static UmiStatus reserve_problems(UmiDiagnosticProblemModel *model,
                                   size_t required)
 {
     size_t capacity;
     UmiDiagnosticProblem *replacement;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= model->capacity) return UMI_STATUS_OK;
     capacity = model->capacity > 0U ? model->capacity : PROBLEM_INITIAL_CAPACITY;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity >= PROBLEM_MAX_CAPACITY || capacity > SIZE_MAX / 2U) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         capacity *= 2U;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > PROBLEM_MAX_CAPACITY) capacity = PROBLEM_MAX_CAPACITY;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (UmiDiagnosticProblem *)realloc(
         model->items, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     model->items = replacement;
     model->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the validate problem operation used by this module and its client applications. */
 static UmiStatus validate_problem(const UmiDiagnosticProblem *problem)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (problem == NULL ||
         problem->struct_size != (uint32_t)sizeof(*problem) ||
         problem->api_version != UMI_DIAGNOSTIC_PROBLEM_MODEL_API_VERSION ||
@@ -100,6 +126,10 @@ static UmiStatus validate_problem(const UmiDiagnosticProblem *problem)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the text contains case insensitive operation used by this module and its client
+ * applications.
+ */
 static int text_contains_case_insensitive(const char *haystack,
                                           const char *needle)
 {
@@ -107,26 +137,40 @@ static int text_contains_case_insensitive(const char *haystack,
     size_t needle_length;
     size_t start;
     size_t offset;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (needle == NULL || needle[0] == '\0') return 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (haystack == NULL) return 0;
     haystack_length = strlen(haystack);
     needle_length = strlen(needle);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (needle_length > haystack_length) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (start = 0U; start + needle_length <= haystack_length; ++start) {
         int match = 1;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (offset = 0U; offset < needle_length; ++offset) {
             unsigned char left = (unsigned char)haystack[start + offset];
             unsigned char right = (unsigned char)needle[offset];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (tolower(left) != tolower(right)) {
                 match = 0;
                 break;
             }
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (match) return 1;
     }
     return 0;
 }
 
+/* Provide the problem matches operation used by this module and its client applications. */
 static int problem_matches(const UmiDiagnosticProblem *problem,
                            const UmiDiagnosticProblemQuery *query)
 {
@@ -136,24 +180,37 @@ static int problem_matches(const UmiDiagnosticProblem *problem,
         (uint32_t)problem->finding.diagnostic.kind;
     uint32_t baseline_bit = UINT32_C(1) <<
         (uint32_t)problem->baseline_state;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->severity_mask != 0U &&
         (query->severity_mask & severity_bit) == 0U) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->kind_mask != 0U && (query->kind_mask & kind_bit) == 0U) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->baseline_mask != 0U &&
         (query->baseline_mask & baseline_bit) == 0U) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!query->include_suppressed && problem->suppression.suppressed) return 0;
+    /* Apply this operation only while the related capability or state is available. */
     if (!query->include_resolved && !problem->active) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!query->include_disabled && problem->policy_disabled) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->only_fixable && !problem->fixable) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->only_selected && !problem->selected) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->provider[0] != '\0' &&
         strcmp(query->provider, problem->finding.provider_id) != 0) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->source[0] != '\0' &&
         strcmp(query->source, problem->finding.diagnostic.source) != 0) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->code[0] != '\0' &&
         strcmp(query->code, problem->finding.diagnostic.code) != 0) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->uri[0] != '\0' &&
         strcmp(query->uri, problem->finding.diagnostic.uri) != 0) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->text[0] != '\0' &&
         !text_contains_case_insensitive(problem->finding.diagnostic.message,
                                         query->text) &&
@@ -170,21 +227,29 @@ static int problem_matches(const UmiDiagnosticProblem *problem,
     return 1;
 }
 
+/* Provide the compare location operation used by this module and its client applications. */
 static int compare_location(const UmiDiagnosticProblem *left,
                             const UmiDiagnosticProblem *right)
 {
     int order = strcmp(left->finding.diagnostic.uri,
                        right->finding.diagnostic.uri);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (order != 0) return order;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->finding.diagnostic.line < right->finding.diagnostic.line) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->finding.diagnostic.line > right->finding.diagnostic.line) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->finding.diagnostic.column < right->finding.diagnostic.column) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->finding.diagnostic.column > right->finding.diagnostic.column) return 1;
     return strcmp(left->finding.diagnostic.id, right->finding.diagnostic.id);
 }
 
+/* Provide the baseline rank operation used by this module and its client applications. */
 static int baseline_rank(UmiDiagnosticBaselineState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_DIAGNOSTIC_BASELINE_NEW: return 0;
         case UMI_DIAGNOSTIC_BASELINE_UPDATED: return 1;
@@ -194,14 +259,20 @@ static int baseline_rank(UmiDiagnosticBaselineState state)
     }
 }
 
+/*
+ * Provide the compare sort entries operation used by this module and its client
+ * applications.
+ */
 static int compare_sort_entries(const void *left_pointer,
                                 const void *right_pointer)
 {
     const ProblemSortEntry *left = (const ProblemSortEntry *)left_pointer;
     const ProblemSortEntry *right = (const ProblemSortEntry *)right_pointer;
     int order;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (left->sort) {
         case UMI_DIAGNOSTIC_PROBLEM_SORT_SEVERITY:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (left->problem.effective_severity !=
                 right->problem.effective_severity) {
                 return left->problem.effective_severity >
@@ -213,14 +284,17 @@ static int compare_sort_entries(const void *left_pointer,
         case UMI_DIAGNOSTIC_PROBLEM_SORT_PROVIDER:
             order = strcmp(left->problem.finding.provider_id,
                            right->problem.finding.provider_id);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (order != 0) return order;
             break;
         case UMI_DIAGNOSTIC_PROBLEM_SORT_BASELINE:
             order = baseline_rank(left->problem.baseline_state) -
                     baseline_rank(right->problem.baseline_state);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (order != 0) return order;
             break;
         case UMI_DIAGNOSTIC_PROBLEM_SORT_NEWEST:
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (left->problem.last_seen_run_id !=
                 right->problem.last_seen_run_id) {
                 return left->problem.last_seen_run_id >
@@ -231,14 +305,20 @@ static int compare_sort_entries(const void *left_pointer,
             break;
     }
     order = compare_location(&left->problem, &right->problem);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (order != 0) return order;
     return strcmp(left->problem.finding.provider_id,
                   right->problem.finding.provider_id);
 }
 
+/* Provide the hash text operation used by this module and its client applications. */
 static uint64_t hash_text(uint64_t hash, const char *text)
 {
     const unsigned char *cursor = (const unsigned char *)(text != NULL ? text : "");
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
         hash ^= (uint64_t)*cursor++;
         hash *= GROUP_HASH_PRIME;
@@ -248,10 +328,12 @@ static uint64_t hash_text(uint64_t hash, const char *text)
     return hash;
 }
 
+/* Provide the group hash operation used by this module and its client applications. */
 static uint64_t group_hash(const UmiDiagnosticProblem *problem,
                            UmiDiagnosticProblemGroup group)
 {
     uint64_t hash = GROUP_HASH_OFFSET;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (group) {
         case UMI_DIAGNOSTIC_PROBLEM_GROUP_FILE:
             return hash_text(hash, problem->finding.diagnostic.uri);
@@ -270,40 +352,76 @@ static uint64_t group_hash(const UmiDiagnosticProblem *problem,
     }
 }
 
+/*
+ * Initialise diagnostic problem model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_diagnostic_problem_model_create(
     UmiDiagnosticProblemModel **out_model)
 {
     UmiDiagnosticProblemModel *model;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_model = NULL;
     model = (UmiDiagnosticProblemModel *)calloc(1U, sizeof(*model));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     model->revision = 1U;
     *out_model = model;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by diagnostic problem model so the same storage can be
+ * reused safely.
+ */
 void umi_diagnostic_problem_model_destroy(UmiDiagnosticProblemModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return;
     free(model->items);
     model->items = NULL;
     free(model);
 }
 
+/*
+ * Release or reset state held by diagnostic problem model so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_diagnostic_problem_model_clear(UmiDiagnosticProblemModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     model->count = 0U;
     model->revision = next_revision(model->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform diagnostic problem model begin provider through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_diagnostic_problem_model_begin_provider_run(
     UmiDiagnosticProblemModel *model,
     const char *provider_id,
     uint64_t run_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || provider_id == NULL || provider_id[0] == '\0' ||
         run_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -311,6 +429,10 @@ UmiStatus umi_diagnostic_problem_model_begin_provider_run(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic problem model upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_problem_model_upsert(
     UmiDiagnosticProblemModel *model,
     const UmiDiagnosticProblem *problem)
@@ -319,6 +441,10 @@ UmiStatus umi_diagnostic_problem_model_upsert(
     size_t position;
     uint64_t previous_revision = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || validate_problem(problem) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -328,19 +454,24 @@ UmiStatus umi_diagnostic_problem_model_upsert(
     normalized.policy_disabled = problem->policy_disabled != 0;
     normalized.fixable = problem->fixable != 0;
     position = find_fingerprint(model, normalized.finding.fingerprint);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position == SIZE_MAX) {
         status = reserve_problems(model, model->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         position = model->count++;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (normalized.first_seen_run_id == 0U) {
             normalized.first_seen_run_id = normalized.last_seen_run_id;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         previous_revision = model->items[position].revision;
         normalized.first_seen_run_id = model->items[position].first_seen_run_id;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (normalized.first_seen_run_id == 0U) {
             normalized.first_seen_run_id = normalized.last_seen_run_id;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!problem->selected) {
             normalized.selected = model->items[position].selected;
         }
@@ -351,6 +482,10 @@ UmiStatus umi_diagnostic_problem_model_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform diagnostic problem model finish provider through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_diagnostic_problem_model_finish_provider_run(
     UmiDiagnosticProblemModel *model,
     const char *provider_id,
@@ -359,12 +494,18 @@ UmiStatus umi_diagnostic_problem_model_finish_provider_run(
 {
     size_t position;
     size_t resolved = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || provider_id == NULL || provider_id[0] == '\0' ||
         run_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < model->count; ++position) {
         UmiDiagnosticProblem *problem = &model->items[position];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(problem->finding.provider_id, provider_id) != 0 ||
             problem->last_seen_run_id == run_id || !problem->active) {
             continue;
@@ -374,19 +515,34 @@ UmiStatus umi_diagnostic_problem_model_finish_provider_run(
         problem->revision = next_revision(problem->revision);
         ++resolved;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (resolved > 0U) model->revision = next_revision(model->revision);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_resolved_count != NULL) *out_resolved_count = resolved;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove diagnostic problem model while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_diagnostic_problem_model_remove(
     UmiDiagnosticProblemModel *model,
     uint64_t fingerprint)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || fingerprint == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     position = find_fingerprint(model, fingerprint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position + 1U < model->count) {
         (void)memmove(&model->items[position],
                       &model->items[position + 1U],
@@ -397,40 +553,67 @@ UmiStatus umi_diagnostic_problem_model_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find diagnostic problem model while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_diagnostic_problem_model_find(
     const UmiDiagnosticProblemModel *model,
     uint64_t fingerprint,
     UmiDiagnosticProblem *out_problem)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || fingerprint == 0U || out_problem == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_fingerprint(model, fingerprint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_problem = model->items[position];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find diagnostic problem model while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_diagnostic_problem_model_at(
     const UmiDiagnosticProblemModel *model,
     size_t position,
     UmiDiagnosticProblem *out_problem)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_problem == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= model->count) return UMI_STATUS_NOT_FOUND;
     *out_problem = model->items[position];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic problem model select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_problem_model_select(
     UmiDiagnosticProblemModel *model,
     uint64_t fingerprint,
     int selected)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || fingerprint == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     position = find_fingerprint(model, fingerprint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     model->items[position].selected = selected != 0;
     model->items[position].revision =
@@ -439,25 +622,44 @@ UmiStatus umi_diagnostic_problem_model_select(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic problem model clear selection operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_diagnostic_problem_model_clear_selection(
     UmiDiagnosticProblemModel *model)
 {
     size_t position;
     int changed = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < model->count; ++position) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!model->items[position].selected) continue;
         model->items[position].selected = 0;
         model->items[position].revision =
             next_revision(model->items[position].revision);
         changed = 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (changed) model->revision = next_revision(model->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise diagnostic problem query from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_diagnostic_problem_query_init(UmiDiagnosticProblemQuery *query)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (query == NULL) return;
     (void)memset(query, 0, sizeof(*query));
     query->sort = UMI_DIAGNOSTIC_PROBLEM_SORT_SEVERITY;
@@ -465,6 +667,10 @@ void umi_diagnostic_problem_query_init(UmiDiagnosticProblemQuery *query)
     query->limit = UMI_DIAGNOSTIC_PROBLEM_QUERY_RESULT_MAX;
 }
 
+/*
+ * Perform diagnostic problem query through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_diagnostic_problem_query_execute(
     const UmiDiagnosticProblemModel *model,
     const UmiDiagnosticProblemQuery *query,
@@ -477,6 +683,10 @@ UmiStatus umi_diagnostic_problem_query_execute(
     size_t group_count = 0U;
     size_t output_limit;
     size_t start;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || query == NULL || out_result == NULL ||
         query->sort < UMI_DIAGNOSTIC_PROBLEM_SORT_SEVERITY ||
         query->sort > UMI_DIAGNOSTIC_PROBLEM_SORT_NEWEST ||
@@ -485,46 +695,61 @@ UmiStatus umi_diagnostic_problem_query_execute(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_result, 0, sizeof(*out_result));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count == 0U) return UMI_STATUS_OK;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count > SIZE_MAX / sizeof(*matches)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     matches = (ProblemSortEntry *)malloc(model->count * sizeof(*matches));
     group_hashes = (uint64_t *)calloc(model->count, sizeof(*group_hashes));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (matches == NULL || group_hashes == NULL) {
         free(matches);
         free(group_hashes);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < model->count; ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!problem_matches(&model->items[position], query)) continue;
         matches[match_count].problem = model->items[position];
         matches[match_count].sort = query->sort;
         ++match_count;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (match_count > 1U) {
         qsort(matches, match_count, sizeof(*matches), compare_sort_entries);
     }
     out_result->total_matches = match_count;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < match_count; ++position) {
         uint64_t current = group_hash(&matches[position].problem, query->group);
         size_t comparison;
         int unique = 1;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = 0U; comparison < group_count; ++comparison) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (group_hashes[comparison] == current) {
                 unique = 0;
                 break;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (unique) group_hashes[group_count++] = current;
     }
     out_result->group_count = group_count;
     start = query->offset < match_count ? query->offset : match_count;
     output_limit = query->limit > 0U ? query->limit
                                     : UMI_DIAGNOSTIC_PROBLEM_QUERY_RESULT_MAX;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (output_limit > UMI_DIAGNOSTIC_PROBLEM_QUERY_RESULT_MAX) {
         output_limit = UMI_DIAGNOSTIC_PROBLEM_QUERY_RESULT_MAX;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = start;
          position < match_count && out_result->count < output_limit;
          ++position) {
@@ -536,30 +761,47 @@ UmiStatus umi_diagnostic_problem_query_execute(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic problem model snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_problem_model_snapshot(
     const UmiDiagnosticProblemModel *model,
     UmiDiagnosticProblemModelSnapshot *out_snapshot)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
     out_snapshot->api_version = UMI_DIAGNOSTIC_PROBLEM_MODEL_API_VERSION;
     out_snapshot->problem_count = model->count;
     out_snapshot->revision = model->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < model->count; ++position) {
         const UmiDiagnosticProblem *problem = &model->items[position];
+        /* Apply this operation only while the related capability or state is available. */
         if (problem->active) ++out_snapshot->active_count;
+        /* Use this fallback path when the earlier condition does not apply. */
         else ++out_snapshot->resolved_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (problem->suppression.suppressed) ++out_snapshot->suppressed_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (problem->policy_disabled) ++out_snapshot->disabled_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (problem->selected) ++out_snapshot->selected_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (problem->fixable) ++out_snapshot->fixable_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (problem->baseline_state == UMI_DIAGNOSTIC_BASELINE_NEW) {
             ++out_snapshot->new_count;
-        } else if (problem->baseline_state == UMI_DIAGNOSTIC_BASELINE_UPDATED) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (problem->baseline_state == UMI_DIAGNOSTIC_BASELINE_UPDATED) {
             ++out_snapshot->updated_count;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((size_t)problem->effective_severity <
             UMI_DIAGNOSTIC_SEVERITY_COUNT) {
             ++out_snapshot->by_effective_severity[problem->effective_severity];
@@ -568,11 +810,19 @@ UmiStatus umi_diagnostic_problem_model_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by diagnostic problem model without changing
+ * their state.
+ */
 size_t umi_diagnostic_problem_model_count(const UmiDiagnosticProblemModel *model)
 {
     return model != NULL ? model->count : 0U;
 }
 
+/*
+ * Provide the diagnostic problem model revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_diagnostic_problem_model_revision(
     const UmiDiagnosticProblemModel *model)
 {

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the source system data shared with callers of this public contract.
+ */
 typedef struct UmiSourceSystem {
     char source_id[UMI_REG_ID_CAPACITY];
     char name[UMI_REG_NAME_CAPACITY];

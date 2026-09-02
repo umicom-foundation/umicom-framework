@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/msvc_toolchain.h"
 
+/*
+ * Provide the developer capability msvc toolchain operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_msvc_toolchain(void)
 {

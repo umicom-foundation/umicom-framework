@@ -19,6 +19,10 @@
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/workbench_context_host/experience_policy.h"
 
+/*
+ * Exercise resolve and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchContextHostExperiencePanelPolicy resolve(
     const char *application_id,
     const char *panel_id)
@@ -36,6 +40,10 @@ static UmiWorkbenchContextHostExperiencePanelPolicy resolve(
     return policy;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextHostExperiencePanelPolicy policy;

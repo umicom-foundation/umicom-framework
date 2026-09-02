@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/token_set.h"
+/**
+ * Represent the design token resolver data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTokenResolver { const UmiDesignTokenSet *system_tokens; const UmiDesignTokenSet *application_tokens; const UmiDesignTokenSet *component_tokens; } UmiDesignTokenResolver;
 /* Resolve a token using component then application then system precedence. */
 UmiStatus umi_design_token_resolver_resolve(const UmiDesignTokenResolver *resolver, const char *token_id, UmiDesignToken *out_token, uint8_t *out_layer);

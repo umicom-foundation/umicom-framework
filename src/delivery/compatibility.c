@@ -18,6 +18,10 @@
  */
 
 #include "umicom/delivery/compatibility.h"
+/*
+ * Provide the compatibility passed operation used by this module and its client
+ * applications.
+ */
 int umi_compatibility_passed(const UmiCompatibility *compatibility)
 {
     return compatibility != NULL &&

@@ -24,7 +24,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc event contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcEventContract { uint64_t required_families; bool ordered; bool cancellable; } UmiFcEventContract;
+/**
+ * Check that fc event contract satisfies its contract before another service relies on it.
+ */
 bool umi_fc_event_contract_validate(const UmiFcEventContract *item);
 
 #ifdef __cplusplus

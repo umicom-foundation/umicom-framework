@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema compatibility policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataSchemaCompatibilityPolicy {
     bool allow_additive;
     bool allow_rebuild;

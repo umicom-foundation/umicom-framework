@@ -19,20 +19,27 @@
 
 #include "umicom/base/text.h"
 
+/* Provide the record change operation used by this module and its client applications. */
 static UmiStatus record_change(UmiApplicationComponentCustomiser *customiser,
                                UmiApplicationComponentChange *change, const char *summary) {
   int drops_oldest_change;
   UmiStatus status = umi_text_copy(change->summary, sizeof(change->summary), summary);
+  /* Apply this operation only while the related capability or state is available. */
   if (customiser->saved_cursor_valid && customiser->saved_cursor > customiser->history.cursor)
     customiser->saved_cursor_valid = 0;
   drops_oldest_change = customiser->history.count == UMI_APPLICATION_COMPONENT_HISTORY_CAPACITY &&
                         customiser->history.cursor == customiser->history.count;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_application_component_history_record(&customiser->history, change);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
+    /* Apply this operation only while the related capability or state is available. */
     if (drops_oldest_change && customiser->saved_cursor_valid) {
+      /* Apply this branch only when its contract condition is satisfied. */
       if (customiser->saved_cursor == 0U)
         customiser->saved_cursor_valid = 0;
+      /* Use this fallback path when the earlier condition does not apply. */
       else
         customiser->saved_cursor -= 1U;
     }
@@ -41,8 +48,13 @@ static UmiStatus record_change(UmiApplicationComponentCustomiser *customiser,
   return status;
 }
 
+/* Provide the find slot operation used by this module and its client applications. */
 static UmiStatus find_slot(UmiApplicationComponentCustomiser *customiser, const char *instance_id,
                            size_t *out_index) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL || instance_id == NULL || out_index == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   return umi_application_component_workspace_draft_find(&customiser->draft, instance_id,
@@ -51,13 +63,22 @@ static UmiStatus find_slot(UmiApplicationComponentCustomiser *customiser, const 
              : UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Initialise application component customiser from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_component_customiser_init(UmiApplicationComponentCustomiser *customiser,
                                                     const UmiApplicationComponentRecipe *recipe) {
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   (void)memset(customiser, 0, sizeof(*customiser));
   status = umi_application_component_workspace_draft_init(&customiser->draft, recipe);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   umi_application_component_history_init(&customiser->history);
@@ -67,6 +88,10 @@ UmiStatus umi_application_component_customiser_init(UmiApplicationComponentCusto
   return UMI_STATUS_OK;
 }
 
+/*
+ * Add application component customiser only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_application_component_customiser_add(UmiApplicationComponentCustomiser *customiser,
                                                    const char *component_id,
                                                    const char *instance_id,
@@ -74,6 +99,10 @@ UmiStatus umi_application_component_customiser_add(UmiApplicationComponentCustom
                                                    uint32_t weight) {
   UmiApplicationComponentChange change;
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL || component_id == NULL || instance_id == NULL ||
       component_id[0] == '\0' || instance_id[0] == '\0')
     return UMI_STATUS_INVALID_ARGUMENT;
@@ -82,6 +111,7 @@ UmiStatus umi_application_component_customiser_add(UmiApplicationComponentCustom
   change.after_index = customiser->draft.slot_count;
   status = umi_text_copy(change.after_slot.component_id, sizeof(change.after_slot.component_id),
                          component_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(change.after_slot.instance_id, sizeof(change.after_slot.instance_id),
                            instance_id);
@@ -89,20 +119,27 @@ UmiStatus umi_application_component_customiser_add(UmiApplicationComponentCustom
   change.after_slot.order = (uint32_t)change.after_index;
   change.after_slot.weight = weight;
   change.after_slot.visible = 1;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_application_component_workspace_draft_insert(
         &customiser->draft, change.after_index, &change.after_slot);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = record_change(customiser, &change, "Add component");
   return status;
 }
 
+/*
+ * Remove application component customiser while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_application_component_customiser_remove(UmiApplicationComponentCustomiser *customiser,
                                                       const char *instance_id) {
   UmiApplicationComponentChange change;
   UmiStatus status;
   size_t index;
   status = find_slot(customiser, instance_id, &index);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   (void)memset(&change, 0, sizeof(change));
@@ -110,19 +147,26 @@ UmiStatus umi_application_component_customiser_remove(UmiApplicationComponentCus
   change.before_index = index;
   status = umi_application_component_workspace_draft_remove(&customiser->draft, index,
                                                             &change.before_slot);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = record_change(customiser, &change, "Remove component");
   return status;
 }
 
+/*
+ * Provide the application component customiser move operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_component_customiser_move(UmiApplicationComponentCustomiser *customiser,
                                                     const char *instance_id, size_t new_index) {
   UmiApplicationComponentChange change;
   UmiStatus status;
   size_t index;
   status = find_slot(customiser, instance_id, &index);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (status != UMI_STATUS_OK || new_index >= customiser->draft.slot_count)
     return status != UMI_STATUS_OK ? status : UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == new_index)
     return UMI_STATUS_OK;
   (void)memset(&change, 0, sizeof(change));
@@ -131,6 +175,7 @@ UmiStatus umi_application_component_customiser_move(UmiApplicationComponentCusto
   change.after_index = new_index;
   change.before_slot = customiser->draft.slots[index];
   status = umi_application_component_workspace_draft_move(&customiser->draft, index, new_index);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     change.after_slot = customiser->draft.slots[new_index];
     status = record_change(customiser, &change, "Move component");
@@ -138,6 +183,10 @@ UmiStatus umi_application_component_customiser_move(UmiApplicationComponentCusto
   return status;
 }
 
+/*
+ * Provide the record slot change operation used by this module and its client
+ * applications.
+ */
 static UmiStatus record_slot_change(UmiApplicationComponentCustomiser *customiser, size_t index,
                                     UmiApplicationComponentChangeKind kind,
                                     const UmiApplicationComponentDraftSlot *before,
@@ -152,15 +201,21 @@ static UmiStatus record_slot_change(UmiApplicationComponentCustomiser *customise
   return record_change(customiser, &change, summary);
 }
 
+/*
+ * Provide the application component customiser set visible operation used by this module
+ * and its client applications.
+ */
 UmiStatus
 umi_application_component_customiser_set_visible(UmiApplicationComponentCustomiser *customiser,
                                                  const char *instance_id, int visible) {
   UmiApplicationComponentDraftSlot before;
   size_t index;
   UmiStatus status = find_slot(customiser, instance_id, &index);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   before = customiser->draft.slots[index];
+  /* Apply this operation only while the related capability or state is available. */
   if (before.visible == (visible != 0))
     return UMI_STATUS_OK;
   status =
@@ -171,6 +226,10 @@ umi_application_component_customiser_set_visible(UmiApplicationComponentCustomis
              : status;
 }
 
+/*
+ * Provide the application component customiser set region operation used by this module
+ * and its client applications.
+ */
 UmiStatus
 umi_application_component_customiser_set_region(UmiApplicationComponentCustomiser *customiser,
                                                 const char *instance_id,
@@ -178,9 +237,11 @@ umi_application_component_customiser_set_region(UmiApplicationComponentCustomise
   UmiApplicationComponentDraftSlot before;
   size_t index;
   UmiStatus status = find_slot(customiser, instance_id, &index);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   before = customiser->draft.slots[index];
+  /* Apply this branch only when its contract condition is satisfied. */
   if (before.region == region)
     return UMI_STATUS_OK;
   status = umi_application_component_workspace_draft_set_region(&customiser->draft, index, region);
@@ -190,15 +251,21 @@ umi_application_component_customiser_set_region(UmiApplicationComponentCustomise
              : status;
 }
 
+/*
+ * Provide the application component customiser set weight operation used by this module
+ * and its client applications.
+ */
 UmiStatus
 umi_application_component_customiser_set_weight(UmiApplicationComponentCustomiser *customiser,
                                                 const char *instance_id, uint32_t weight) {
   UmiApplicationComponentDraftSlot before;
   size_t index;
   UmiStatus status = find_slot(customiser, instance_id, &index);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   before = customiser->draft.slots[index];
+  /* Apply this branch only when its contract condition is satisfied. */
   if (before.weight == weight)
     return UMI_STATUS_OK;
   status = umi_application_component_workspace_draft_set_weight(&customiser->draft, index, weight);
@@ -208,54 +275,93 @@ umi_application_component_customiser_set_weight(UmiApplicationComponentCustomise
              : status;
 }
 
+/*
+ * Provide the application component customiser set title operation used by this module and
+ * its client applications.
+ */
 UmiStatus
 umi_application_component_customiser_set_title(UmiApplicationComponentCustomiser *customiser,
                                                const char *title) {
   UmiApplicationComponentChange change;
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL || title == NULL || title[0] == '\0')
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Use the stable identifier comparison to choose the matching record or policy. */
   if (strcmp(customiser->draft.title, title) == 0)
     return UMI_STATUS_OK;
   (void)memset(&change, 0, sizeof(change));
   change.kind = UMI_APPLICATION_COMPONENT_CHANGE_TITLE;
   status = umi_text_copy(change.before_title, sizeof(change.before_title), customiser->draft.title);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(change.after_title, sizeof(change.after_title), title);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_application_component_workspace_draft_set_title(&customiser->draft, title);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = record_change(customiser, &change, "Rename workspace");
   return status;
 }
 
+/* Provide the refresh dirty operation used by this module and its client applications. */
 static void refresh_dirty(UmiApplicationComponentCustomiser *customiser) {
   customiser->draft.dirty =
       !customiser->saved_cursor_valid || customiser->history.cursor != customiser->saved_cursor;
 }
 
+/*
+ * Provide the application component customiser undo operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_component_customiser_undo(UmiApplicationComponentCustomiser *customiser) {
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   status = umi_application_component_history_undo(&customiser->history, &customiser->draft);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     refresh_dirty(customiser);
   return status;
 }
 
+/*
+ * Provide the application component customiser redo operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_component_customiser_redo(UmiApplicationComponentCustomiser *customiser) {
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   status = umi_application_component_history_redo(&customiser->history, &customiser->draft);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     refresh_dirty(customiser);
   return status;
 }
 
+/*
+ * Provide the application component customiser mark saved operation used by this module
+ * and its client applications.
+ */
 void umi_application_component_customiser_mark_saved(
     UmiApplicationComponentCustomiser *customiser) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser != NULL) {
     customiser->saved_revision = customiser->draft.revision;
     customiser->saved_cursor = customiser->history.cursor;
@@ -264,10 +370,18 @@ void umi_application_component_customiser_mark_saved(
   }
 }
 
+/*
+ * Provide the application component customiser snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_component_customiser_snapshot(
     const UmiApplicationComponentCustomiser *customiser,
     UmiApplicationComponentCustomiserSnapshot *out_snapshot) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (customiser == NULL || out_snapshot == NULL ||
       customiser->draft.slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY ||
       customiser->history.cursor > customiser->history.count)
@@ -277,6 +391,7 @@ UmiStatus umi_application_component_customiser_snapshot(
   out_snapshot->application_id = customiser->draft.application_id;
   out_snapshot->title = customiser->draft.title;
   out_snapshot->slot_count = customiser->draft.slot_count;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < customiser->draft.slot_count; ++index)
     out_snapshot->visible_count += customiser->draft.slots[index].visible != 0;
   out_snapshot->undo_count = customiser->history.cursor;

@@ -36,18 +36,27 @@ extern "C" {
 #define UMI_CROSS_TOOLCHAIN_EXECUTABLE_CAPACITY 256U
 #define UMI_CROSS_TOOLCHAIN_VERSION_CAPACITY 256U
 
+/**
+ * List the named cross toolchain family values accepted by this public contract.
+ */
 typedef enum UmiCrossToolchainFamily {
     UMI_CROSS_TOOLCHAIN_UNKNOWN = 0,
     UMI_CROSS_TOOLCHAIN_GNU = 1,
     UMI_CROSS_TOOLCHAIN_CLANG = 2
 } UmiCrossToolchainFamily;
 
+/**
+ * List the named cross toolchain state values accepted by this public contract.
+ */
 typedef enum UmiCrossToolchainState {
     UMI_CROSS_TOOLCHAIN_UNAVAILABLE = 0,
     UMI_CROSS_TOOLCHAIN_PARTIAL = 1,
     UMI_CROSS_TOOLCHAIN_READY = 2
 } UmiCrossToolchainState;
 
+/**
+ * Represent the cross toolchain request data shared with callers of this public contract.
+ */
 typedef struct UmiCrossToolchainRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -65,6 +74,9 @@ typedef struct UmiCrossToolchainRequest {
     int validate_versions;
 } UmiCrossToolchainRequest;
 
+/**
+ * Represent the cross toolchain plan data shared with callers of this public contract.
+ */
 typedef struct UmiCrossToolchainPlan {
     uint32_t struct_size;
     uint32_t api_version;
@@ -79,6 +91,9 @@ typedef struct UmiCrossToolchainPlan {
     UmiCrossToolchainFamily family;
 } UmiCrossToolchainPlan;
 
+/**
+ * Represent the cross toolchain snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiCrossToolchainSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -101,12 +116,32 @@ typedef struct UmiCrossToolchainSnapshot {
     size_t required_tools_missing;
 } UmiCrossToolchainSnapshot;
 
+/**
+ * Initialise cross toolchain request from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_cross_toolchain_request_init(UmiCrossToolchainRequest *request);
+/**
+ * Provide the cross toolchain plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_cross_toolchain_plan(const UmiCrossToolchainRequest *request,
                                    UmiCrossToolchainPlan *out_plan);
+/**
+ * Provide the cross toolchain discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_cross_toolchain_discover(const UmiCrossToolchainRequest *request,
                                        UmiCrossToolchainSnapshot *out_snapshot);
+/**
+ * Provide the cross toolchain family text operation used by this module and its client
+ * applications.
+ */
 const char *umi_cross_toolchain_family_text(UmiCrossToolchainFamily family);
+/**
+ * Provide the cross toolchain state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_cross_toolchain_state_text(UmiCrossToolchainState state);
 
 #ifdef __cplusplus

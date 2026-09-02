@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/asynchronous_save.h"
 
+/*
+ * Write document capability asynchronous in its stable representation and report capacity
+ * or input failures to the caller.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_asynchronous_save(void)
 {

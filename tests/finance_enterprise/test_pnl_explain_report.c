@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/pnl_explain_report.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterprisePnlExplainReport r;UmiEnterprisePnlExplainBucket b;CHECK(umi_enterprise_pnl_explain_report_init(&r,"p",10.0)==UMI_STATUS_OK);CHECK(umi_enterprise_pnl_explain_bucket_init(&b,"delta",7.0)==UMI_STATUS_OK);CHECK(umi_enterprise_pnl_explain_report_add(&r,&b)==UMI_STATUS_OK);CHECK(umi_enterprise_pnl_explain_report_residual(&r)==3.0);return 0;}

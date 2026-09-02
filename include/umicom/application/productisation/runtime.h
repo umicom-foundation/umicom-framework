@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the productisation runtime data shared with callers of this public contract.
+ */
 typedef struct UmiProductisationRuntime {
     UmiProductisationEvidenceLedger evidence;
     UmiProductPortfolioInventory inventory;

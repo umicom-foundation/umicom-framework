@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the editor wb indentation guides depth operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_editor_wb_indentation_guides_depth(uint32_t leading_columns,uint32_t tab_width);
 
 #ifdef __cplusplus

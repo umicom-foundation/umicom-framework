@@ -36,6 +36,9 @@ extern "C" {
 #define UMI_TEST_RUNTIME_MAX_SHARDS 64U
 #define UMI_TEST_RUNTIME_MAX_FAILURES 256U
 
+/**
+ * List the named test runtime state values accepted by this public contract.
+ */
 typedef enum UmiTestRuntimeState {
     UMI_TEST_RUNTIME_STATE_CREATED = 1,
     UMI_TEST_RUNTIME_STATE_READY = 2,
@@ -49,6 +52,9 @@ typedef enum UmiTestRuntimeState {
     UMI_TEST_RUNTIME_STATE_CANCELLED = 10
 } UmiTestRuntimeState;
 
+/**
+ * List the named test runtime failure kind values accepted by this public contract.
+ */
 typedef enum UmiTestRuntimeFailureKind {
     UMI_TEST_RUNTIME_FAILURE_NONE = 0,
     UMI_TEST_RUNTIME_FAILURE_BAD_COMMAND = 1,
@@ -67,6 +73,9 @@ typedef enum UmiTestRuntimeFailureKind {
     UMI_TEST_RUNTIME_FAILURE_FAST_FAIL = 14
 } UmiTestRuntimeFailureKind;
 
+/**
+ * List the named test runtime profile kind values accepted by this public contract.
+ */
 typedef enum UmiTestRuntimeProfileKind {
     UMI_TEST_RUNTIME_PROFILE_SMOKE = 1,
     UMI_TEST_RUNTIME_PROFILE_FRAMEWORK_CORE = 2,
@@ -80,12 +89,19 @@ typedef enum UmiTestRuntimeProfileKind {
     UMI_TEST_RUNTIME_PROFILE_FULL_REGRESSION = 10
 } UmiTestRuntimeProfileKind;
 
+/**
+ * Represent the test runtime time budget data shared with callers of this public contract.
+ */
 typedef struct UmiTestRuntimeTimeBudget {
     uint64_t start_timeout_ms;
     uint64_t execution_timeout_ms;
     uint64_t shutdown_timeout_ms;
 } UmiTestRuntimeTimeBudget;
 
+/**
+ * Represent the test runtime failure evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeFailureEvidence {
     uint32_t structure_size;
     UmiTestRuntimeFailureKind kind;
@@ -98,10 +114,29 @@ typedef struct UmiTestRuntimeFailureEvidence {
     uint64_t revision;
 } UmiTestRuntimeFailureEvidence;
 
+/**
+ * Provide the test runtime state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_test_runtime_state_text(UmiTestRuntimeState state);
+/**
+ * Provide the test runtime failure kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_test_runtime_failure_kind_text(UmiTestRuntimeFailureKind kind);
+/**
+ * Provide the test runtime profile kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_test_runtime_profile_kind_text(UmiTestRuntimeProfileKind kind);
+/**
+ * Provide the test runtime copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_runtime_copy_text(char *destination, size_t capacity, const char *source);
+/**
+ * Check that test runtime text satisfies its contract before another service relies on it.
+ */
 bool umi_test_runtime_text_is_valid(const char *text, size_t capacity);
 
 #ifdef __cplusplus

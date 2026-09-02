@@ -26,8 +26,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the execution store data shared with callers of this public contract.
+ */
 typedef struct UmiExecutionStore { UmiExecutionReport reports[UMI_TRADING_MAX_ORDERS]; size_t count; } UmiExecutionStore;
+/**
+ * Initialise execution store from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_execution_store_init(UmiExecutionStore *store);
+/**
+ * Add execution store only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_execution_store_add(UmiExecutionStore *store, const UmiExecutionReport *report);
 #ifdef __cplusplus
 }

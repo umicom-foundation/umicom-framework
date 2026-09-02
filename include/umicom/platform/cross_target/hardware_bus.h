@@ -30,8 +30,17 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ct bus type values accepted by this public contract.
+ */
 typedef enum UmiCtBusType { UMI_CT_BUS_PLATFORM=1, UMI_CT_BUS_PCI=2, UMI_CT_BUS_VIRTIO=3, UMI_CT_BUS_USB=4, UMI_CT_BUS_I2C=5, UMI_CT_BUS_SPI=6 } UmiCtBusType;
+/**
+ * Represent the ct hardware bus data shared with callers of this public contract.
+ */
 typedef struct UmiCtHardwareBus { char bus_id[UMI_CT_ID_CAPACITY]; UmiCtBusType type; bool enumerable; bool hotplug; bool dma; uint32_t address_bits; } UmiCtHardwareBus;
+/**
+ * Check that ct hardware bus satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ct_hardware_bus_validate(const UmiCtHardwareBus *bus);
 
 #ifdef __cplusplus

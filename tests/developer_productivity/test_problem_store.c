@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/developer_productivity/problem_store.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperProblemStore *store = NULL;

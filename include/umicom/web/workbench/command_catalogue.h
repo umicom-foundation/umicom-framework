@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the web workbench command descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWebWorkbenchCommandDescriptor {
     uint32_t structure_size;
     uint32_t api_version;
@@ -32,9 +36,21 @@ typedef struct UmiWebWorkbenchCommandDescriptor {
     bool mutates_external_state;
 } UmiWebWorkbenchCommandDescriptor;
 
+/**
+ * Return the number of records represented by web workbench command without changing their
+ * state.
+ */
 size_t umi_web_workbench_command_count(void);
+/**
+ * Find web workbench command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiWebWorkbenchCommandDescriptor *umi_web_workbench_command_at(
     size_t index);
+/**
+ * Find web workbench command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiWebWorkbenchCommandDescriptor *umi_web_workbench_command_find(
     const char *command_id);
 

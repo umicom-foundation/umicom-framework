@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/restart_frame.h"
 
+/*
+ * Provide the debug runtime request restart frame operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_restart_frame(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t frame_id,

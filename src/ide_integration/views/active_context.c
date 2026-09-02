@@ -16,6 +16,10 @@
 
 #include <stdio.h>
 
+/*
+ * Initialise ide active context view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ide_active_context_view_create(
     const char *view_id,
     UmiIdeIntegrationPlatform *platform,
@@ -25,9 +29,14 @@ UmiStatus umi_ide_active_context_view_create(
     char text[512];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_ide_integration_platform_snapshot(platform, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ide_view_create_base(
@@ -36,6 +45,7 @@ UmiStatus umi_ide_active_context_view_create(
         "Active IDE Context",
         "Current authoritative document, diagnostics, tests, source control, debugger and AI state.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)snprintf(
@@ -51,25 +61,30 @@ UmiStatus umi_ide_active_context_view_create(
             ? snapshot.context.document.revision : 0U));
 
     status = umi_ide_view_set_string(*out_view, "ide.context.document", text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_integer(
             *out_view, "ide.context.problems",
             snapshot.context.has_problems
                 ? (int64_t)snapshot.context.problems.count : 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_integer(
             *out_view, "ide.context.tests",
             snapshot.context.has_tests
                 ? (int64_t)snapshot.context.tests.item_count : 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_string(
             *out_view, "ide.context.branch",
             snapshot.context.has_source_control
                 ? snapshot.context.source_control.branch.name : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_boolean(
             *out_view, "ide.context.debug-active",
             snapshot.context.has_debug && snapshot.context.debug.active);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_string(
             *out_view, "ide.context.ai-state",

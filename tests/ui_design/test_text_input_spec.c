@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/text_input_spec.h"
 
-int main(void){UmiDesignTextInputSpec s;if(umi_design_text_input_spec_init(&s,"Search…",256U,0,1,0)!=UMI_STATUS_OK)return 1;return s.search?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignTextInputSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_text_input_spec_init(&s,"Search…",256U,0,1,0)!=UMI_STATUS_OK)return 1;return s.search?0:2;}

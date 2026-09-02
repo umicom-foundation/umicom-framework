@@ -24,11 +24,17 @@
 
 #include "umicom/integration/types.h"
 
+/**
+ * List the named integration dependency target values accepted by this public contract.
+ */
 typedef enum UmiIntegrationDependencyTarget {
     UMI_INTEGRATION_TARGET_APPLICATION = 0,
     UMI_INTEGRATION_TARGET_CAPABILITY = 1
 } UmiIntegrationDependencyTarget;
 
+/**
+ * Represent the integration dependency data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationDependency {
     UmiIntegrationDependencyTarget target_type;
     UmiIntegrationDependencyKind kind;

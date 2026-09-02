@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/developer/acceptance/report.h"
+/*
+ * Exercise test developer acceptance report empty and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_developer_acceptance_report_empty(void)
 {
     UmiDeveloperAcceptanceReport report;

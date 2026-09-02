@@ -14,9 +14,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/types.h"
 
+/*
+ * Provide the developer workbench command action text operation used by this module and
+ * its client applications.
+ */
 const char *umi_developer_workbench_command_action_text(
     UmiDeveloperWorkbenchCommandAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL: return "external";
         case UMI_DEVELOPER_WORKBENCH_ACTION_CONFIGURE: return "configure";
@@ -32,9 +37,17 @@ const char *umi_developer_workbench_command_action_text(
     }
 }
 
+/*
+ * Check that developer workbench command definition satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_command_definition_validate(
     const UmiDeveloperWorkbenchCommandDefinition *definition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL ||
         definition->command_id == NULL ||
         definition->command_id[0] == '\0' ||

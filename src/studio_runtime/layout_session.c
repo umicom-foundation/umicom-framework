@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Provide the key operation used by this module and its client applications. */
 static UmiStatus key(
     const char *prefix,
     const char *suffix,
@@ -30,6 +31,7 @@ static UmiStatus key(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the set number operation used by this module and its client applications. */
 static UmiStatus set_number(
     UmiSessionStore *store,
     const char *prefix,
@@ -41,9 +43,11 @@ static UmiStatus set_number(
     int written;
     UmiStatus status = key(prefix, suffix, k, sizeof(k));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(v, sizeof(v), "%llu", (unsigned long long)value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(v)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -51,6 +55,7 @@ static UmiStatus set_number(
     return umi_session_store_set(store, k, v);
 }
 
+/* Provide the get number operation used by this module and its client applications. */
 static UmiStatus get_number(
     const UmiSessionStore *store,
     const char *prefix,
@@ -64,22 +69,27 @@ static UmiStatus get_number(
     unsigned long long parsed;
     UmiStatus status = key(prefix, suffix, k, sizeof(k));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_session_store_get(store, k, v, sizeof(v));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         *out_value = default_value;
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     parsed = strtoull(v, &end, 10);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (end == v || *end != '\0') return UMI_STATUS_PARSE_ERROR;
 
     *out_value = (uint64_t)parsed;
     return UMI_STATUS_OK;
 }
 
+/* Provide the set text operation used by this module and its client applications. */
 static UmiStatus set_text(
     UmiSessionStore *store,
     const char *prefix,
@@ -88,10 +98,12 @@ static UmiStatus set_text(
 {
     char k[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status = key(prefix, suffix, k, sizeof(k));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_session_store_set(store, k, value);
 }
 
+/* Provide the get text operation used by this module and its client applications. */
 static UmiStatus get_text(
     const UmiSessionStore *store,
     const char *prefix,
@@ -101,10 +113,15 @@ static UmiStatus get_text(
 {
     char k[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status = key(prefix, suffix, k, sizeof(k));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_session_store_get(store, k, out, capacity);
 }
 
+/*
+ * Write studio layout session in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_studio_layout_session_save(
     UmiSessionStore *store,
     const char *prefix,
@@ -115,6 +132,10 @@ UmiStatus umi_studio_layout_session_save(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || prefix == NULL ||
         active_preset_id == NULL || state == NULL || layout == NULL ||
         layout->placement_count > UMI_STUDIO_LAYOUT_SESSION_MAX_PLACEMENTS) {
@@ -122,69 +143,93 @@ UmiStatus umi_studio_layout_session_save(
     }
 
     status = set_text(store, prefix, "preset", active_preset_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_text(store, prefix, "activity", state->active_activity_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_text(store, prefix, "view", state->active_view_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_text(store, prefix, "focus", state->focused_view_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_text(
             store, prefix, "perspective", state->active_perspective_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_text(store, prefix, "layoutId", layout->layout_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_text(store, prefix, "layoutTitle", layout->title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, prefix, "primary", state->primary_sidebar_visible ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, prefix, "secondary", state->secondary_sidebar_visible ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, prefix, "bottom", state->bottom_panel_visible ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, prefix, "status", state->status_bar_visible ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, prefix, "zen", state->zen_mode ? 1U : 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_number(
             store, prefix, "placementCount", layout->placement_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->placement_count; ++index) {
         const UmiApplicationShellPlacement *placement =
             &layout->placements[index];
         char p[UMI_SESSION_KEY_CAPACITY];
         int written = snprintf(p, sizeof(p), "%s.p%zu", prefix, index);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(p)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
         status = set_text(
             store, p, "id", placement->contribution_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_text(
                 store, p, "container", placement->container_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(
                 store, p, "region", (uint64_t)placement->region);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(
                 store, p, "order", placement->order);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = set_number(
                 store, p, "visible", placement->visible ? 1U : 0U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio layout session restore operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_layout_session_restore(
     const UmiSessionStore *store,
     const char *prefix,
@@ -201,6 +246,10 @@ UmiStatus umi_studio_layout_session_restore(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || prefix == NULL ||
         out_preset_id == NULL || preset_capacity == 0U ||
         state == NULL || layout == NULL || out_restored == NULL) {
@@ -211,30 +260,38 @@ UmiStatus umi_studio_layout_session_restore(
 
     status = get_text(
         store, prefix, "preset", out_preset_id, preset_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = get_text(
         store, prefix, "activity",
         state->active_activity_id, sizeof(state->active_activity_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = get_text(
             store, prefix, "view",
             state->active_view_id, sizeof(state->active_view_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = get_text(
             store, prefix, "focus",
             state->focused_view_id, sizeof(state->focused_view_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = get_text(
             store, prefix, "perspective",
             state->active_perspective_id, sizeof(state->active_perspective_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = get_text(
             store, prefix, "layoutId", layout_id, sizeof(layout_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = get_text(
             store, prefix, "layoutTitle", layout_title, sizeof(layout_title));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
 #define GET_BOOL(name, target) \
@@ -255,6 +312,7 @@ UmiStatus umi_studio_layout_session_restore(
 #undef GET_BOOL
 
     status = get_number(store, prefix, "placementCount", 0U, &count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         count > UMI_STUDIO_LAYOUT_SESSION_MAX_PLACEMENTS) {
         return status != UMI_STATUS_OK
@@ -264,6 +322,7 @@ UmiStatus umi_studio_layout_session_restore(
 
     umi_application_shell_layout_init(layout, layout_id, layout_title);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < (size_t)count; ++index) {
         char p[UMI_SESSION_KEY_CAPACITY];
         char id[UMI_APPLICATION_SHELL_ID_CAPACITY];
@@ -273,20 +332,26 @@ UmiStatus umi_studio_layout_session_restore(
         uint64_t visible = 0U;
         int written = snprintf(p, sizeof(p), "%s.p%zu", prefix, index);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(p)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
         status = get_text(store, p, "id", id, sizeof(id));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = get_text(
                 store, p, "container", container, sizeof(container));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = get_number(store, p, "region", 0U, &region);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = get_number(store, p, "order", 0U, &order);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             status = get_number(store, p, "visible", 0U, &visible);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             region > UMI_APPLICATION_SHELL_REGION_WINDOW ||
             order > SIZE_MAX ||
@@ -303,6 +368,7 @@ UmiStatus umi_studio_layout_session_restore(
             (UmiApplicationShellRegion)region,
             (size_t)order,
             visible != 0U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

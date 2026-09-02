@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the transport data shared with callers of this public contract.
+ */
 typedef struct UmiTransport {
     uint32_t structure_size;
     const char *name;
@@ -34,8 +37,15 @@ typedef struct UmiTransport {
     void (*destroy)(void *instance);
 } UmiTransport;
 
+/**
+ * Initialise memory transport from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_memory_transport_create(size_t capacity,
                                       UmiTransport *out_transport);
+/**
+ * Release or reset state held by transport so the same storage can be reused safely.
+ */
 void umi_transport_dispose(UmiTransport *transport);
 
 #ifdef __cplusplus

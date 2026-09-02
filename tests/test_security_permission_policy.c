@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Permission and role policy v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "security_governance_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSecurityGovernanceCentre centre;

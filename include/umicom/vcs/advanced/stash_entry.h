@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced stash entry data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedStashEntry {
     uint32_t struct_size;
     uint32_t api_version;
@@ -37,8 +40,20 @@ typedef struct UmiVcsAdvancedStashEntry {
     int includes_untracked;
 } UmiVcsAdvancedStashEntry;
 
+/**
+ * Initialise vcs advanced stash entry from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_stash_entry_init(UmiVcsAdvancedStashEntry *value);
+/**
+ * Check that vcs advanced stash entry satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_stash_entry_validate(const UmiVcsAdvancedStashEntry *value);
+/**
+ * Copy vcs advanced stash entry into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_stash_entry_set(UmiVcsAdvancedStashEntry *value,
                                              size_t index,
                                              const char *stash_ref,

@@ -24,11 +24,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel workspace edit plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorIntelWorkspaceEditPlan { UmiEditorIntelEntry items[UMI_EDITOR_INTEL_MAX_ITEMS]; size_t count; uint64_t revision; } UmiEditorIntelWorkspaceEditPlan;
+/**
+ * Initialise editor intel workspace edit plan from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_workspace_edit_plan_init(UmiEditorIntelWorkspaceEditPlan *model);
+/**
+ * Add editor intel workspace edit plan only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_editor_intel_workspace_edit_plan_add(UmiEditorIntelWorkspaceEditPlan *model,const UmiEditorIntelEntry *entry);
+/**
+ * Find editor intel workspace edit plan while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_workspace_edit_plan_find(const UmiEditorIntelWorkspaceEditPlan *model,const char *id);
+/**
+ * Release or reset state held by editor intel workspace edit plan so the same storage can
+ * be reused safely.
+ */
 UmiStatus umi_editor_intel_workspace_edit_plan_clear(UmiEditorIntelWorkspaceEditPlan *model);
+/**
+ * Check that editor intel workspace edit plan satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_workspace_edit_plan_valid(const UmiEditorIntelWorkspaceEditPlan *model);
 
 #ifdef __cplusplus

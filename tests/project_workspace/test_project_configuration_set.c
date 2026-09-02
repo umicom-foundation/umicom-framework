@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_configuration_set.h"
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspaceProjectConfigurationSet v;
     umi_project_workspace_project_configuration_set_init(&v);

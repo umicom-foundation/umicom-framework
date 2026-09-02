@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that risk limit satisfies its contract before another service relies on it.
+ */
 int umi_risk_limit_valid(const UmiRiskLimit *limit);
 #ifdef __cplusplus
 }

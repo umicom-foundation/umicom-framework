@@ -32,6 +32,9 @@ typedef UmiStatus (*UmiPackageCreateFn)(void *instance,
                                         const UmiPackageSpec *spec,
                                         UmiPackageResult *result);
 
+/**
+ * Represent the package provider data shared with callers of this public contract.
+ */
 typedef struct UmiPackageProvider {
     char provider_id[UMI_DELIVERY_ID_CAPACITY];
     UmiPackageFormat format;
@@ -39,11 +42,19 @@ typedef struct UmiPackageProvider {
     UmiPackageCreateFn create;
 } UmiPackageProvider;
 
+/**
+ * Initialise package provider from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_package_provider_init(UmiPackageProvider *provider,
                                     const char *provider_id,
                                     UmiPackageFormat format,
                                     void *instance,
                                     UmiPackageCreateFn create);
+/**
+ * Initialise package provider from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_package_provider_create(const UmiPackageProvider *provider,
                                       const UmiPackageSpec *spec,
                                       UmiPackageResult *result);

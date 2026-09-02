@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix session data shared with callers of this public contract.
+ */
 typedef struct UmiHelixSession { uint32_t structure_size; uint32_t api_version; char id[UMI_HELIX_ID_CAPACITY]; UmiHelixState state; UmiHelixAutonomyMode autonomy; uint64_t baseline_fingerprint; uint64_t current_fingerprint; uint32_t iteration; uint32_t max_iterations; size_t blockers; bool approved; bool checkpoint_ready; } UmiHelixSession;
 /* Initialise a supervised Helix session with a bounded iteration budget. */
 UmiStatus umi_helix_session_init(UmiHelixSession *session,const char *id,uint32_t max_iterations);

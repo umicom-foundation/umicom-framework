@@ -11,9 +11,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/build_readiness/types.h"
 
+/*
+ * Provide the test platform build readiness state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_test_platform_build_readiness_state_text(
     UmiTestPlatformBuildReadinessState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_TEST_PLATFORM_BUILD_STATE_UNKNOWN: return "unknown";
         case UMI_TEST_PLATFORM_BUILD_STATE_READY: return "ready";
@@ -30,9 +35,14 @@ const char *umi_test_platform_build_readiness_state_text(
     }
 }
 
+/*
+ * Provide the test platform validation step kind text operation used by this module and
+ * its client applications.
+ */
 const char *umi_test_platform_validation_step_kind_text(
     UmiTestPlatformValidationStepKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_TEST_PLATFORM_VALIDATION_STEP_CONFIGURE: return "configure";
         case UMI_TEST_PLATFORM_VALIDATION_STEP_BUILD_ARTIFACTS:

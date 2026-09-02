@@ -22,6 +22,13 @@
 #ifndef UMICOM_UI_COMPONENTS_STATE_H
 #define UMICOM_UI_COMPONENTS_STATE_H
 #include <stdbool.h>
+/**
+ * Represent the ui component state data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentState { bool visible; bool enabled; bool busy; bool has_error; } UmiUiComponentState;
+/**
+ * Provide the ui component state default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentState umi_ui_component_state_default(void);
 #endif

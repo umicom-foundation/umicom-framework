@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_worker.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationWorker w; CHECK(umi_enterprise_valuation_worker_init(&w,"w",1U)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_worker_acquire(&w)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_worker_acquire(&w)==UMI_STATUS_BUSY); CHECK(umi_enterprise_valuation_worker_release(&w)==UMI_STATUS_OK); return 0; }

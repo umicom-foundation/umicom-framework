@@ -27,6 +27,9 @@ extern "C" {
 #define UMI_PYTHON_RUNTIME_API_VERSION 1U
 #define UMI_PYTHON_RUNTIME_VERSION_CAPACITY 256U
 
+/**
+ * Represent the python runtime request data shared with callers of this public contract.
+ */
 typedef struct UmiPythonRuntimeRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,6 +38,9 @@ typedef struct UmiPythonRuntimeRequest {
     int validate_version;
 } UmiPythonRuntimeRequest;
 
+/**
+ * Represent the python runtime snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiPythonRuntimeSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -45,7 +51,15 @@ typedef struct UmiPythonRuntimeSnapshot {
     int validated;
 } UmiPythonRuntimeSnapshot;
 
+/**
+ * Initialise python runtime request from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_python_runtime_request_init(UmiPythonRuntimeRequest *request);
+/**
+ * Provide the python runtime discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_python_runtime_discover(const UmiPythonRuntimeRequest *request,
                                       UmiPythonRuntimeSnapshot *out_snapshot);
 

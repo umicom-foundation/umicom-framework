@@ -26,7 +26,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the position unrealised pnl operation used by this module and its client
+ * applications.
+ */
 double umi_position_unrealised_pnl(const UmiPosition *position, double mark_price);
+/**
+ * Provide the position total pnl operation used by this module and its client
+ * applications.
+ */
 double umi_position_total_pnl(const UmiPosition *position, double mark_price);
 #ifdef __cplusplus
 }

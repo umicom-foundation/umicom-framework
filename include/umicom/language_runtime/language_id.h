@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime normalize language id operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_normalize_language_id(const char*language_id,char*out,size_t cap);
 #ifdef __cplusplus
 }

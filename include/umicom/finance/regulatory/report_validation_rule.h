@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the report validation rule data shared with callers of this public contract.
+ */
 typedef struct UmiReportValidationRule {
     char rule_id[UMI_REG_ID_CAPACITY];
     char field_id[UMI_REG_ID_CAPACITY];

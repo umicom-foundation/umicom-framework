@@ -17,34 +17,62 @@
 #include <ctype.h>
 #include <string.h>
 
+/* Provide the valid identifier operation used by this module and its client applications. */
 static int valid_identifier(const char *text)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || text[0] == '\0' ||
         !islower((unsigned char)text[0])) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; text[index] != '\0'; ++index) {
         const unsigned char value = (unsigned char)text[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!islower(value) && !isdigit(value) && value != '.' &&
             value != '-') return 0;
     }
     return 1;
 }
 
+/*
+ * Provide the valid string array operation used by this module and its client
+ * applications.
+ */
 static int valid_string_array(const char *const *items, size_t count)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (count > 0U && items == NULL) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (items[index] == NULL || items[index][0] == '\0') return 0;
     }
     return 1;
 }
 
+/*
+ * Check that application definition satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_application_definition_validate(
     const UmiApplicationDefinition *definition)
 {
     const uint32_t required_flags = UMI_APPLICATION_STANDALONE |
                                     UMI_APPLICATION_FEDERATED;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL ||
         definition->structure_size < sizeof(*definition) ||
         !valid_identifier(definition->application_id) ||
@@ -77,21 +105,36 @@ UmiStatus umi_application_definition_validate(
     return UMI_STATUS_OK;
 }
 
+/* Provide the array contains operation used by this module and its client applications. */
 static int array_contains(const char *const *items, size_t count,
                           const char *value)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (items == NULL || value == NULL) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(items[index], value) == 0) return 1;
     }
     return 0;
 }
 
+/*
+ * Provide the application definition declares capability operation used by this module and
+ * its client applications.
+ */
 int umi_application_definition_declares_capability(
     const UmiApplicationDefinition *definition,
     const char *capability_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL || capability_id == NULL) return 0;
     return array_contains(definition->required_capabilities,
                           definition->required_capability_count,
@@ -101,6 +144,10 @@ int umi_application_definition_declares_capability(
                           capability_id);
 }
 
+/*
+ * Provide the application definition uses domain operation used by this module and its
+ * client applications.
+ */
 int umi_application_definition_uses_domain(
     const UmiApplicationDefinition *definition,
     const char *domain_id)
@@ -110,8 +157,13 @@ int umi_application_definition_uses_domain(
                        definition->component_domain_count, domain_id);
 }
 
+/*
+ * Provide the application family text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_family_text(UmiApplicationFamily family)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (family) {
         case UMI_APPLICATION_FAMILY_PLATFORM: return "platform";
         case UMI_APPLICATION_FAMILY_DEVELOPMENT: return "development";
@@ -128,8 +180,13 @@ const char *umi_application_family_text(UmiApplicationFamily family)
     }
 }
 
+/*
+ * Provide the application maturity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_maturity_text(UmiApplicationMaturity maturity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (maturity) {
         case UMI_APPLICATION_AVAILABLE: return "available";
         case UMI_APPLICATION_FOUNDATION: return "foundation";

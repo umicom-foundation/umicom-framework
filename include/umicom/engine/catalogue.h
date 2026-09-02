@@ -41,12 +41,19 @@ typedef struct UmiEngineDescriptor {
     UmiEngineCapabilityMask capabilities;
 } UmiEngineDescriptor;
 
+/**
+ * Represent the engine requirement data shared with callers of this public contract.
+ */
 typedef struct UmiEngineRequirement {
     UmiEngineKind kind;
     UmiEngineMaturity minimum_maturity;
     UmiEngineCapabilityMask required_capabilities;
 } UmiEngineRequirement;
 
+/**
+ * Represent the engine requirement report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEngineRequirementReport {
     uint32_t struct_size;
     uint32_t api_version;

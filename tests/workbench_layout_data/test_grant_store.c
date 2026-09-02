@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test grant codec and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int test_grant_codec(void)
 {
     UmiWorkbenchLayoutGrant source = test_create_grant(
@@ -38,6 +42,10 @@ static int test_grant_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test permission evaluation and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_permission_evaluation(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -72,6 +80,10 @@ static int test_permission_evaluation(void)
     return 0;
 }
 
+/*
+ * Exercise test expiry and revocation and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_expiry_and_revocation(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -104,6 +116,10 @@ static int test_expiry_and_revocation(void)
     return 0;
 }
 
+/*
+ * Exercise test grant listing and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_grant_listing(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -131,6 +147,10 @@ static int test_grant_listing(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_grant_codec() == 0, "grant codec");

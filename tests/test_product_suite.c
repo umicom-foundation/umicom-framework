@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/product/product.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){const UmiProductProfile *items[]={umi_reference_product_studio(),umi_reference_product_designer()};UmiProductSuite s={"umicom.development-suite",items,2U};assert(umi_product_suite_validate(&s)==UMI_STATUS_OK);assert(umi_product_suite_find(&s,"org.umicom.designer")!=NULL);return 0;}

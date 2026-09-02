@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_ATOMIC_SAVE "umicom.document.persistence.atomic_save"
 
+/**
+ * Write document capability atomic in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_atomic_save(void);
 

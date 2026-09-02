@@ -53,6 +53,9 @@ extern "C" {
 #define UMI_TRADING_UI_ACTION_RESET_KILL_SWITCH \
     "studio.action.trading.reset-kill-switch"
 
+/**
+ * List the named trading ui action kind values accepted by this public contract.
+ */
 typedef enum UmiTradingUiActionKind {
     UMI_TRADING_UI_ACTION_KIND_UNKNOWN = 0,
     UMI_TRADING_UI_ACTION_KIND_REFRESH = 1,
@@ -72,8 +75,20 @@ typedef enum UmiTradingUiActionKind {
     UMI_TRADING_UI_ACTION_KIND_RESET_KILL_SWITCH = 15
 } UmiTradingUiActionKind;
 
+/**
+ * Provide the trading ui action kind operation used by this module and its client
+ * applications.
+ */
 UmiTradingUiActionKind umi_trading_ui_action_kind(const char *action_id);
+/**
+ * Provide the trading ui action id operation used by this module and its client
+ * applications.
+ */
 const char *umi_trading_ui_action_id(UmiTradingUiActionKind kind);
+/**
+ * Provide the trading ui action requires payload operation used by this module and its
+ * client applications.
+ */
 int umi_trading_ui_action_requires_payload(UmiTradingUiActionKind kind);
 
 #ifdef __cplusplus

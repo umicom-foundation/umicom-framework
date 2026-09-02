@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test outbox round trip and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_outbox_round_trip(void)
 {
     UmiWorkbenchLayoutOutboxEntry source;
@@ -41,6 +45,10 @@ static int test_outbox_round_trip(void)
     return 0;
 }
 
+/*
+ * Exercise test conflict round trip and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_conflict_round_trip(void)
 {
     UmiWorkbenchLayoutConflict source;
@@ -73,6 +81,10 @@ static int test_conflict_round_trip(void)
     return 0;
 }
 
+/*
+ * Exercise test cursor round trip and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_cursor_round_trip(void)
 {
     UmiWorkbenchLayoutSyncCursor source;
@@ -98,6 +110,10 @@ static int test_cursor_round_trip(void)
     return 0;
 }
 
+/*
+ * Exercise test offline round trip and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_offline_round_trip(void)
 {
     UmiWorkbenchLayoutOfflineOperation source;
@@ -128,6 +144,10 @@ static int test_offline_round_trip(void)
     return 0;
 }
 
+/*
+ * Exercise test presence round trip and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_presence_round_trip(void)
 {
     UmiWorkbenchLayoutPresence source;
@@ -159,6 +179,10 @@ static int test_presence_round_trip(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_outbox_round_trip() == 0,

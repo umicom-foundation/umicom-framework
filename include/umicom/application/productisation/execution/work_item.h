@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the product execution work item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionWorkItem {
     size_t plan_index;
     UmiProductisationCompletionStep step;

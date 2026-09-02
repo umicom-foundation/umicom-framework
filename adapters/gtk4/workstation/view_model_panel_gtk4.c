@@ -33,25 +33,41 @@ typedef struct ActionBinding {
     char action_id[UMI_UI_ID_CAPACITY];
 } ActionBinding;
 
+/* Release or reset state held by action binding so the same storage can be reused safely. */
 static void action_binding_destroy(gpointer data, GClosure *closure)
 {
     (void)closure;
     free(data);
 }
 
+/* Provide the on action clicked operation used by this module and its client applications. */
 static void on_action_clicked(GtkButton *button, gpointer data)
 {
     ActionBinding *binding = (ActionBinding *)data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding != NULL && binding->handler != NULL)
         (void)binding->handler(binding->action_id, binding->user_data);
 }
 
+/* Provide the value text operation used by this module and its client applications. */
 static void value_text(const UmiUiValue *value, char *text, size_t capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || capacity == 0U) return;
     text[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (value->kind) {
     case UMI_UI_VALUE_BOOLEAN:
         (void)snprintf(text, capacity, "%s",
@@ -72,20 +88,27 @@ static void value_text(const UmiUiValue *value, char *text, size_t capacity)
     }
 }
 
+/* Provide the read string operation used by this module and its client applications. */
 static const char *read_string(UmiUiViewModel *view, const char *key,
                                UmiUiValue *storage, const char *fallback)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_view_model_get_property(view, key, storage) == UMI_STATUS_OK &&
         storage->kind == UMI_UI_VALUE_STRING && storage->string_value[0] != '\0')
         return storage->string_value;
     return fallback;
 }
 
+/* Provide the is row property operation used by this module and its client applications. */
 static int is_row_property(const char *key)
 {
     return key != NULL && strncmp(key, "trading.row.", 12U) == 0;
 }
 
+/*
+ * Provide the is hidden property operation used by this module and its client
+ * applications.
+ */
 static int is_hidden_property(const char *key)
 {
     return key == NULL || strcmp(key, "title") == 0 ||
@@ -94,6 +117,10 @@ static int is_hidden_property(const char *key)
            umi_ui_command_view_property_is_reserved(key);
 }
 
+/*
+ * Provide the create chart if needed operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_chart_if_needed(UmiUiViewModel *view,
                                          const char *view_kind,
                                          const char *title)
@@ -101,12 +128,22 @@ static GtkWidget *create_chart_if_needed(UmiUiViewModel *view,
     UmiWsChartSurface *chart;
     UmiUiViewSnapshot snapshot;
     GtkWidget *widget;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_kind == NULL || strcmp(view_kind, "trading-chart") != 0)
         return NULL;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_view_model_snapshot(view, &snapshot) != UMI_STATUS_OK)
         return NULL;
     chart = (UmiWsChartSurface *)calloc(1U, sizeof(*chart));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chart == NULL) return NULL;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ws_chart_surface_init(chart, snapshot.view_id, title) != UMI_STATUS_OK) {
         free(chart);
         return NULL;
@@ -116,6 +153,10 @@ static GtkWidget *create_chart_if_needed(UmiUiViewModel *view,
     chart->sync_time = true;
     chart->sync_crosshair = true;
     widget = umi_gtk4_ws_chart_surface_create(chart);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (widget == NULL) {
         free(chart);
         return NULL;
@@ -129,6 +170,10 @@ static GtkWidget *create_chart_if_needed(UmiUiViewModel *view,
     return widget;
 }
 
+/*
+ * Initialise gtk4 view model panel from caller-provided values so later operations receive
+ * a known state.
+ */
 GtkWidget *umi_gtk4_view_model_panel_create(
     UmiUiViewModel *view,
     UmiGtk4ViewModelActionHandler action_handler,
@@ -151,6 +196,10 @@ GtkWidget *umi_gtk4_view_model_panel_create(
     int row_count = 0;
     int action_count = 0;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL) return NULL;
     title = read_string(view, "title", &title_value, "Framework View");
     summary = read_string(view, "summary", &summary_value, "");
@@ -181,7 +230,12 @@ GtkWidget *umi_gtk4_view_model_panel_create(
         gtk_label_set_xalign(GTK_LABEL(description), 0.0F);
         gtk_label_set_wrap(GTK_LABEL(description), TRUE);
         gtk_box_append(GTK_BOX(content), heading);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (summary[0] != '\0') gtk_box_append(GTK_BOX(content), description);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (chart != NULL) {
             gtk_widget_set_size_request(chart, -1, 220);
             gtk_widget_set_hexpand(chart, TRUE);
@@ -190,22 +244,30 @@ GtkWidget *umi_gtk4_view_model_panel_create(
     }
 
     properties = umi_ui_view_model_properties(view);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (properties != NULL) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < umi_ui_property_bag_count(properties); ++index) {
             UmiUiPropertySnapshot property;
             char text[UMI_GTK4_VIEW_MODEL_TEXT_CAPACITY];
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (umi_ui_property_bag_at(properties, index, &property) !=
                 UMI_STATUS_OK)
                 continue;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (is_hidden_property(property.key)) continue;
             value_text(&property.value, text, sizeof(text));
+            /* Apply this branch only when its contract condition is satisfied. */
             if (is_row_property(property.key)) {
                 GtkWidget *row = gtk_label_new(text);
                 gtk_label_set_xalign(GTK_LABEL(row), 0.0F);
                 gtk_widget_add_css_class(row, "umicom-view-model-row");
                 gtk_box_append(GTK_BOX(rows), row);
                 row_count += 1;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 GtkWidget *key = gtk_label_new(property.key);
                 GtkWidget *value = gtk_label_new(text);
                 gtk_label_set_xalign(GTK_LABEL(key), 0.0F);
@@ -219,20 +281,32 @@ GtkWidget *umi_gtk4_view_model_panel_create(
             }
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (metric_row > 0) gtk_box_append(GTK_BOX(content), metrics);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (row_count > 0) gtk_box_append(GTK_BOX(content), rows);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_UI_COMMAND_VIEW_ACTION_MAX; ++index) {
         UmiUiCommandViewAction action;
         GtkWidget *button;
         ActionBinding *binding;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_command_view_action_at(view, index, &action) != UMI_STATUS_OK)
             continue;
         button = gtk_button_new_with_label(action.label);
         gtk_widget_set_tooltip_text(button, action.tooltip);
         gtk_widget_set_sensitive(button, action.enabled && action_handler != NULL);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (action_handler != NULL) {
             binding = (ActionBinding *)calloc(1U, sizeof(*binding));
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (binding != NULL) {
                 binding->handler = action_handler;
                 binding->user_data = user_data;
@@ -246,6 +320,7 @@ GtkWidget *umi_gtk4_view_model_panel_create(
         gtk_box_append(GTK_BOX(actions), button);
         action_count += 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action_count > 0) gtk_box_append(GTK_BOX(content), actions);
     return scroller;
 }

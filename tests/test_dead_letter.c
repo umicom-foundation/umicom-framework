@@ -18,6 +18,10 @@
 #include <string.h>
 
 
+/*
+ * Exercise make message and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiMessageEnvelope make_message(const char *name,
                                        uint64_t sequence,
                                        uint64_t correlation)
@@ -31,6 +35,10 @@ static UmiMessageEnvelope make_message(const char *name,
     return message;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeadLetterStore *store = NULL;

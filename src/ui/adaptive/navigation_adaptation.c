@@ -21,6 +21,10 @@ UmiStatus umi_adaptive_navigation_adaptation_resolve(const UmiAdaptiveNavigation
                                                      UmiAdaptiveNavigationDecision *out_decision)
 {
     size_t capacity;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_decision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     capacity = size_class == UMI_DESIGN_SIZE_COMPACT ? 4U :
                size_class == UMI_DESIGN_SIZE_MEDIUM ? 6U :

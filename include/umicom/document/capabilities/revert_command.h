@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_REVERT_COMMAND "umicom.document.command.revert_command"
 
+/**
+ * Provide the document capability revert command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_revert_command(void);
 

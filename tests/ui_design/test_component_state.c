@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/component_state.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiDesignComponentState s={0};umi_design_component_state_add(&s,UMI_DESIGN_STATE_FOCUSED);umi_design_component_state_add(&s,UMI_DESIGN_STATE_SELECTED);return umi_design_component_state_has(&s,UMI_DESIGN_STATE_SELECTED)?0:1;}

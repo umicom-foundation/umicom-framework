@@ -18,6 +18,10 @@
 
 #include "umicom/application/experiences/experiences.h"
 
+/*
+ * Exercise test application experience acceptance os and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_application_experience_acceptance_os(void)
 {
     const UmiApplicationExperienceDefinition *definition =

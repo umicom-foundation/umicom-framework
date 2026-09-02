@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ARTIFACT_SIGNING "umicom.developer.delivery.artifact_signing"
 
+/**
+ * Provide the developer capability artifact signing operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_artifact_signing(void);
 

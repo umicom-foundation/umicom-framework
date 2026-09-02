@@ -20,6 +20,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the nc copy propagate operation used by this module and its client applications.
+ */
 UmiStatus umi_nc_copy_propagate(UmiNativeIrFunction *function,size_t *out_replacements,size_t *out_removed_copies);
 #ifdef __cplusplus
 }

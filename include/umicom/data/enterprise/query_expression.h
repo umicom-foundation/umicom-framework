@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query expression data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryExpression {
     char expression_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char field[UMI_DATA_ENTERPRISE_ID_CAPACITY];

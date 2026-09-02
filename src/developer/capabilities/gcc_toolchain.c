@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/gcc_toolchain.h"
 
+/*
+ * Provide the developer capability gcc toolchain operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_gcc_toolchain(void)
 {

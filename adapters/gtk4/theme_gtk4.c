@@ -431,19 +431,29 @@ _Static_assert(sizeof(WORKBENCH_CSS_DESKTOP) <= 4096U,
 _Static_assert(sizeof(WORKBENCH_CSS_PANELS) <= 4096U,
                "GTK4 panel CSS exceeds ISO C's portable string limit");
 
+/*
+ * Provide the palette for workbench operation used by this module and its client
+ * applications.
+ */
 static const char *palette_for_workbench(UmiUiWorkbench *workbench)
 {
     UmiUiContextSnapshot context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench != NULL &&
         umi_ui_context_get(umi_ui_workbench_context(workbench),
                            "studio.ui.theme",
                            &context) == UMI_STATUS_OK &&
         context.kind == UMI_UI_CONTEXT_STRING) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(context.string_value, "light") == 0 ||
             strcmp(context.string_value, "umicom-light") == 0 ||
             strcmp(context.string_value, "umicom-system") == 0) {
             return LIGHT_PALETTE;
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(context.string_value, "high-contrast") == 0 ||
             strcmp(context.string_value, "umicom-high-contrast") == 0) {
             return HIGH_CONTRAST_PALETTE;
@@ -452,6 +462,7 @@ static const char *palette_for_workbench(UmiUiWorkbench *workbench)
     return DARK_PALETTE;
 }
 
+/* Provide the appearance css operation used by this module and its client applications. */
 static char *appearance_css(UmiUiWorkbench *workbench,
                             int *out_prefer_dark)
 {
@@ -461,13 +472,25 @@ static char *appearance_css(UmiUiWorkbench *workbench,
     int control_height;
     int toolbar_padding;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_prefer_dark != NULL) *out_prefer_dark = 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL ||
         umi_ui_appearance_model_active(
             umi_ui_workbench_appearance(workbench), &profile) !=
             UMI_STATUS_OK) {
         return NULL;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_prefer_dark != NULL) {
         *out_prefer_dark = profile.mode == UMI_UI_THEME_MODE_DARK ||
                            profile.mode == UMI_UI_THEME_MODE_HIGH_CONTRAST;
@@ -509,6 +532,7 @@ static char *appearance_css(UmiUiWorkbench *workbench,
         control_height);
 }
 
+/* Provide the gtk4 apply theme operation used by this module and its client applications. */
 UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                                UmiUiWorkbench *workbench)
 {
@@ -519,11 +543,19 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
     GtkSettings *settings;
     int prefer_dark = 1;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->window == NULL || workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     display = gtk_widget_get_display(GTK_WIDGET(adapter->window));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter->theme_provider == NULL) {
         adapter->theme_provider = gtk_css_provider_new();
         adapter->theme_display = display;
@@ -547,10 +579,18 @@ UmiStatus umi_gtk4_apply_theme(UmiGtk4Adapter *adapter,
                       WORKBENCH_CSS_PANELS,
                       profile_css != NULL ? profile_css : "", NULL);
     g_free(profile_css);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (css == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     gtk_css_provider_load_from_string(adapter->theme_provider, css);
     g_free(css);
     settings = gtk_settings_get_for_display(display);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (settings != NULL) {
         g_object_set(settings, "gtk-application-prefer-dark-theme",
                      prefer_dark != 0, NULL);

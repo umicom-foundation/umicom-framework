@@ -17,6 +17,10 @@
 
 /* Initialise the state graph contract to deterministic zero/default state. */
 void umi_ui_reactive_state_graph_init(UmiUiReactiveStateGraph *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item != NULL) memset(item, 0, sizeof *item);
 }
 

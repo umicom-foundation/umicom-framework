@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the update decide operation used by this module and its client applications.
+ */
 UmiUpdateDecision umi_update_decide(uint64_t installed_generation,
                                     uint64_t available_generation,
                                     int compatible,

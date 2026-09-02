@@ -20,5 +20,13 @@
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Exercise health and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus health(const UmiWebRequest *req,UmiWebResponse *res,void *data){(void)req;(void)data;return umi_web_rest_json(res,200,"{\"status\":\"ok\"}");}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiWebService *s=NULL;char out[2048];size_t n=0U;const char *wire="GET /health HTTP/1.1\r\nHost: local\r\n\r\n";assert(umi_web_service_create(&s)==UMI_STATUS_OK);assert(umi_web_rest_register(umi_web_service_router(s),UMI_HTTP_METHOD_GET,"/health",health,NULL)==UMI_STATUS_OK);assert(umi_web_runtime_process(s,wire,strlen(wire),out,sizeof(out),&n)==UMI_STATUS_OK);assert(n>0U&&strstr(out,"status")!=NULL);umi_web_service_destroy(s);return 0;}

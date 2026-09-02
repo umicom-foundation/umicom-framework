@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-LOCK-001", "CWE-833", UMI_CODEGUARD_LOW, UMI_CODEGUARD_CATEGORY_CONCURRENCY, 55U, UMI_CODEGUARD_MATCH_CODE, "pthread_mutex_lock(&global", "Lock acquisition requires a guaranteed unlock path.", "Use one cleanup path and keep lock scope short and ordered."}
 };
 
+/*
+ * Provide the codeguard rules lock operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_lock(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

@@ -22,8 +22,16 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap configuration bind bool operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_bootstrap_configuration_bind_bool(const char *value,
                                                 bool *out_value);
+/**
+ * Provide the bootstrap configuration bind i64 operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_bootstrap_configuration_bind_i64(const char *value,
                                                int64_t *out_value);
 

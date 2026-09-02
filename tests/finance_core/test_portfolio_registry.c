@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/portfolio_registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiPortfolioRegistry r; UmiFinancialPortfolio x; umi_portfolio_registry_init(&r); CHECK(umi_portfolio_init(&x,"P","Portfolio","B")==UMI_STATUS_OK); CHECK(umi_portfolio_registry_add(&r,&x)==UMI_STATUS_OK);

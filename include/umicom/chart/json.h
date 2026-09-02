@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the chart model to json operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_model_to_json(const UmiChartModel *model,char *out_json,size_t capacity);
 #ifdef __cplusplus
 }

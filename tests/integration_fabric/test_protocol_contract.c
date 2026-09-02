@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricProtocolContract item;
     CHECK(umi_fabric_protocol_contract_init(&item,"http.v1",UMI_FABRIC_PROTOCOL_HTTP,(UmiFabricVersion){1U,0U,0U},(UmiFabricVersion){1U,9U,0U},false,false)==UMI_STATUS_OK);

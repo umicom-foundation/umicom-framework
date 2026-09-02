@@ -23,12 +23,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application context binding entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationContextBindingEntry {
     char group_id[UMI_APPLICATION_RUNTIME_TEXT_CAPACITY];
     char value[UMI_APPLICATION_RUNTIME_TEXT_CAPACITY];
     uint64_t revision;
 } UmiApplicationContextBindingEntry;
 
+/**
+ * Represent the application context binding store data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationContextBindingStore {
     uint32_t structure_size;
     UmiApplicationContextBindingEntry entries[UMI_APPLICATION_RUNTIME_MAX_CONTEXT_BINDINGS];
@@ -36,15 +44,31 @@ typedef struct UmiApplicationContextBindingStore {
     uint64_t revision;
 } UmiApplicationContextBindingStore;
 
+/**
+ * Initialise application context binding store from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_context_binding_store_init(
     UmiApplicationContextBindingStore *store);
+/**
+ * Copy application context binding into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_application_context_binding_set(
     UmiApplicationContextBindingStore *store,
     const char *group_id,
     const char *value);
+/**
+ * Provide the application context binding get operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_context_binding_get(
     const UmiApplicationContextBindingStore *store,
     const char *group_id);
+/**
+ * Release or reset state held by application context binding so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_application_context_binding_clear(
     UmiApplicationContextBindingStore *store,
     const char *group_id);

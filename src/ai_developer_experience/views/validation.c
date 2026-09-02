@@ -18,6 +18,10 @@
 
 #include "umicom/ai_developer_experience/action_ids.h"
 
+/*
+ * Initialise ai developer validation view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_validation_view_create(
     const char *view_id,
     const UmiAiCodingValidationReport *report,
@@ -28,10 +32,15 @@ UmiStatus umi_ai_developer_validation_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || visible_rows == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (visible_rows > UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY) {
         visible_rows = UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY;
     }
@@ -42,6 +51,7 @@ UmiStatus umi_ai_developer_validation_view_create(
         "AI Validation",
         "Build, test, lint and package evidence used to accept, repair or roll back AI changes.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     count =
@@ -51,20 +61,24 @@ UmiStatus umi_ai_developer_validation_view_create(
 
     status = umi_ai_developer_view_set_boolean(
         *out_view, "ai-validation.passed", report->passed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view, "ai-validation.row-count", (int64_t)count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view,
             "ai-validation.failed-count",
             (int64_t)report->failed_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view,
             "ai-validation.required-failures",
             (int64_t)report->required_failed_count);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         const UmiAiCodingValidationResult *result = &report->results[index];
         char key[96];
@@ -84,6 +98,7 @@ UmiStatus umi_ai_developer_validation_view_create(
         status = umi_ai_developer_view_set_string(*out_view, key, row);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 0U,
@@ -91,6 +106,7 @@ UmiStatus umi_ai_developer_validation_view_create(
             "Tasks",
             "Return to AI tasks",
             1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 1U,

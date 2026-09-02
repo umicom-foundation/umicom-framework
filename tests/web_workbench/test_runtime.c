@@ -19,6 +19,10 @@ typedef struct TransportEvidence {
     bool saw_resolved_url;
 } TransportEvidence;
 
+/*
+ * Exercise execute stub and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus execute_stub(
     void *context,
     const UmiWebWorkbenchRequest *request,
@@ -40,6 +44,10 @@ static UmiStatus execute_stub(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWebWorkbenchRuntime *runtime = NULL;

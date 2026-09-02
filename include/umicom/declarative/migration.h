@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the decl migrate to current operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_migrate_to_current(UmiDeclDocument *document,size_t *out_steps);
 #ifdef __cplusplus
 }

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode diagnostics operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_diagnostics(const char*json,UmiLanguageRuntimeDiagnosticList*out);
 #ifdef __cplusplus
 }

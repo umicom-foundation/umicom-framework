@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital signing policy data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalSigningPolicy {
     UmiDigitalAssetId id;
     uint32_t required_approvals;

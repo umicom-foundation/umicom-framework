@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_tunnel.h"
-int main(void) { if(!umi_terminal_remote_remote_tunnel_ready(true,true,UMI_TERMINAL_REMOTE_HEALTH_HEALTHY)) return 1; return umi_terminal_remote_remote_tunnel_ready(true,true,UMI_TERMINAL_REMOTE_HEALTH_CRITICAL)?2:0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_tunnel_ready(true,true,UMI_TERMINAL_REMOTE_HEALTH_HEALTHY)) return 1; return umi_terminal_remote_remote_tunnel_ready(true,true,UMI_TERMINAL_REMOTE_HEALTH_CRITICAL)?2:0; }

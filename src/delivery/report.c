@@ -21,15 +21,31 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise delivery report from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_delivery_report_init(UmiDeliveryReport *report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report != NULL) (void)memset(report, 0, sizeof(*report));
 }
+/*
+ * Provide the delivery report format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_delivery_report_format(const UmiDeliveryReport *report,
                                      char *buffer,
                                      size_t capacity)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || buffer == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

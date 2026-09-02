@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_TEST_SUITE_MAX_CASES 1024U
 #define UMI_TEST_REGISTRY_MAX_SUITES 128U
 
+/**
+ * List the named test kind values accepted by this public contract.
+ */
 typedef enum UmiTestKind {
     UMI_TEST_KIND_UNIT = 0,
     UMI_TEST_KIND_CONTRACT = 1,
@@ -39,6 +42,9 @@ typedef enum UmiTestKind {
     UMI_TEST_KIND_EXTERNAL = 4
 } UmiTestKind;
 
+/**
+ * List the named test state values accepted by this public contract.
+ */
 typedef enum UmiTestState {
     UMI_TEST_STATE_NOT_RUN = 0,
     UMI_TEST_STATE_RUNNING = 1,
@@ -49,7 +55,13 @@ typedef enum UmiTestState {
     UMI_TEST_STATE_TIMED_OUT = 6
 } UmiTestState;
 
+/**
+ * Provide the test kind text operation used by this module and its client applications.
+ */
 const char *umi_test_kind_text(UmiTestKind kind);
+/**
+ * Provide the test state text operation used by this module and its client applications.
+ */
 const char *umi_test_state_text(UmiTestState state);
 
 #ifdef __cplusplus

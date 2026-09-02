@@ -26,6 +26,10 @@ extern "C" {
 #include "umicom/application/production/portfolio_report.h"
 #include "umicom/application/production/registry.h"
 
+/**
+ * Represent the application production control plane data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionControlPlane {
     UmiApplicationProductionRegistry registry;
     UmiApplicationProductionPortfolio portfolio;
@@ -34,11 +38,23 @@ typedef struct UmiApplicationProductionControlPlane {
     int initialised;
 } UmiApplicationProductionControlPlane;
 
+/**
+ * Initialise application production control plane from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_production_control_plane_init(
     UmiApplicationCapabilityProbe probe, void *probe_context,
     UmiApplicationProductionControlPlane *out_control_plane);
+/**
+ * Provide the application production control plane refresh operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_control_plane_refresh(
     UmiApplicationProductionControlPlane *control_plane);
+/**
+ * Provide the application production control plane runtime operation used by this module
+ * and its client applications.
+ */
 const UmiApplicationProductionRuntime *
 umi_application_production_control_plane_runtime(
     const UmiApplicationProductionControlPlane *control_plane,

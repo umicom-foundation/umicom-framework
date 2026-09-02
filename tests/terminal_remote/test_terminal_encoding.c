@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_encoding.h"
-int main(void) { if(!umi_terminal_remote_terminal_encoding_supported("UTF-8")) return 1; return umi_terminal_remote_terminal_encoding_supported("EBCDIC")?2:0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_terminal_encoding_supported("UTF-8")) return 1; return umi_terminal_remote_terminal_encoding_supported("EBCDIC")?2:0; }

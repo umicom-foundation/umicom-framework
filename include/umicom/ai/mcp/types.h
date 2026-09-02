@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_AI_MCP_MAX_PROMPTS 32U
 #define UMI_AI_MCP_MAX_TOOL_BINDINGS UMI_AI_MAX_TOOLS
 
+/**
+ * List the named ai mcp session state values accepted by this public contract.
+ */
 typedef enum UmiAiMcpSessionState {
     UMI_AI_MCP_SESSION_DISCONNECTED = 0,
     UMI_AI_MCP_SESSION_CONNECTED = 1,
@@ -42,6 +45,9 @@ typedef enum UmiAiMcpSessionState {
     UMI_AI_MCP_SESSION_FAILED = 4
 } UmiAiMcpSessionState;
 
+/**
+ * List the named ai mcp trust values accepted by this public contract.
+ */
 typedef enum UmiAiMcpTrust {
     UMI_AI_MCP_TRUST_UNTRUSTED = 0,
     UMI_AI_MCP_TRUST_LOCAL = 1,
@@ -62,6 +68,9 @@ enum {
     UMI_AI_MCP_TOOL_FLAG_FILESYSTEM = 1U << 3
 };
 
+/**
+ * Represent the ai mcp server descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpServerDescriptor {
     char server_id[UMI_AI_ID_CAPACITY];
     char display_name[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -72,6 +81,10 @@ typedef struct UmiAiMcpServerDescriptor {
     int enabled;
 } UmiAiMcpServerDescriptor;
 
+/**
+ * Represent the ai mcp server capabilities data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiMcpServerCapabilities {
     uint32_t flags;
     char protocol_version[64];
@@ -79,6 +92,9 @@ typedef struct UmiAiMcpServerCapabilities {
     char server_version[128];
 } UmiAiMcpServerCapabilities;
 
+/**
+ * Represent the ai mcp tool descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpToolDescriptor {
     char name[UMI_AI_ID_CAPACITY];
     char description[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -87,6 +103,10 @@ typedef struct UmiAiMcpToolDescriptor {
     uint32_t flags;
 } UmiAiMcpToolDescriptor;
 
+/**
+ * Represent the ai mcp resource descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiMcpResourceDescriptor {
     char uri[UMI_AI_TEXT_CAPACITY];
     char name[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -94,6 +114,9 @@ typedef struct UmiAiMcpResourceDescriptor {
     char mime_type[128];
 } UmiAiMcpResourceDescriptor;
 
+/**
+ * Represent the ai mcp prompt descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpPromptDescriptor {
     char name[UMI_AI_ID_CAPACITY];
     char description[UMI_AI_SMALL_TEXT_CAPACITY];

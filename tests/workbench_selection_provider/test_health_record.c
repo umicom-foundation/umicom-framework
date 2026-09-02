@@ -18,6 +18,10 @@
 
 #include "umicom/workbench_selection_provider/health_record.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchSelectionProviderHealthRecord record;

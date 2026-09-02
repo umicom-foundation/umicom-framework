@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_DEPLOYMENT_CENTRE "umicom.developer.experience.deployment_centre"
 
+/**
+ * Provide the developer capability deployment centre operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_deployment_centre(void);
 

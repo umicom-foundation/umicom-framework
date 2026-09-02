@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc surface support data shared with callers of this public contract.
+ */
 typedef struct UmiFcSurfaceSupport { uint64_t required; uint64_t supported; } UmiFcSurfaceSupport;
+/**
+ * Initialise fc surface support from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_fc_surface_support_init(UmiFcSurfaceSupport *self);
+/**
+ * Provide the fc surface support satisfied operation used by this module and its client
+ * applications.
+ */
 bool umi_fc_surface_support_satisfied(const UmiFcSurfaceSupport *self);
+/**
+ * Provide the fc surface support score operation used by this module and its client
+ * applications.
+ */
 double umi_fc_surface_support_score(const UmiFcSurfaceSupport *self);
 
 #ifdef __cplusplus

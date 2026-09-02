@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/lineage_graph.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiLineageGraph g; umi_reg_lineage_graph_init(&g); CHECK(umi_reg_lineage_graph_add_node(&g,"source")==UMI_STATUS_OK); CHECK(umi_reg_lineage_graph_add_node(&g,"report")==UMI_STATUS_OK); CHECK(umi_reg_lineage_graph_add_edge(&g,"source","report")==UMI_STATUS_OK); CHECK(umi_reg_lineage_graph_add_edge(&g,"report","source")==UMI_STATUS_INVALID_STATE); return 0; }

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/views/runtime_overview.h"
 
+/*
+ * Initialise studio runtime overview view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_runtime_overview_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,
@@ -22,9 +26,14 @@ UmiStatus umi_studio_runtime_overview_view_create(
     UmiStudioRuntimeSnapshot snapshot;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_studio_runtime_platform_snapshot(platform, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_view_create_base(
@@ -33,39 +42,49 @@ UmiStatus umi_studio_runtime_overview_view_create(
         "Studio Runtime",
         "Framework-owned Studio shell, IDE integration, documents, commands, layouts and status.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_view_set_string(
         *out_view, "studio.window-title", snapshot.window_title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_string(
             *out_view, "studio.layout", snapshot.active_layout_preset_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_integer(
             *out_view, "studio.open-documents", (int64_t)snapshot.tabs.count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_integer(
             *out_view, "studio.aliases", (int64_t)snapshot.registered_alias_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_integer(
             *out_view, "studio.commands-enabled",
             (int64_t)snapshot.command_sync.enabled_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_integer(
             *out_view, "studio.commands-disabled",
             (int64_t)snapshot.command_sync.disabled_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_boolean(
             *out_view, "studio.workflow-ready", snapshot.ide.workflow.ready);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_action(
             *out_view, 0U, "studio.refresh",
             "Refresh", "Refresh all Framework Studio state.", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_action(
             *out_view, 1U, "studio.contract.check",
             "Check Contract", "Verify thin-Studio runtime closure.", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_action(
             *out_view, 2U, "studio.layout.manager",

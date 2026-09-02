@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant scenario data shared with callers of this public contract.
+ */
 typedef struct UmiQuantScenario {
     double rate_shift;
     double spot_shift;

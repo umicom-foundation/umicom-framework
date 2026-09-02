@@ -29,16 +29,32 @@ extern "C" {
 
 #define UMI_DESIGNER_SEMANTIC_CLIPBOARD_NODE_CAPACITY 64U
 
+/**
+ * Represent the designer semantic clipboard data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerSemanticClipboard {
     UmiDeclNode nodes[UMI_DESIGNER_SEMANTIC_CLIPBOARD_NODE_CAPACITY];
     size_t node_count;
     uint64_t revision;
 } UmiDesignerSemanticClipboard;
 
+/**
+ * Initialise designer clipboard from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_designer_clipboard_init(UmiDesignerSemanticClipboard *clipboard);
+/**
+ * Copy designer clipboard into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_designer_clipboard_copy(UmiDesignerSemanticClipboard *clipboard,
                                          const UmiDesignerDocument *document,
                                          const UmiDesignerSelection *selection);
+/**
+ * Provide the designer clipboard paste operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_clipboard_paste(const UmiDesignerSemanticClipboard *clipboard,
                                           UmiDesignerDocument *document,
                                           UmiDesignerTransactionHistory *history,

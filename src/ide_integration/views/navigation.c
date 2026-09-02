@@ -16,6 +16,10 @@
 
 #include <stdio.h>
 
+/*
+ * Initialise ide navigation view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_navigation_view_create(
     const char *view_id,
     UmiIdeIntegrationPlatform *platform,
@@ -26,9 +30,17 @@ UmiStatus umi_ide_navigation_view_create(
     size_t count;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     navigation = umi_ide_integration_platform_navigation(platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (navigation == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_ide_view_create_base(
@@ -37,6 +49,7 @@ UmiStatus umi_ide_navigation_view_create(
         "Navigation History",
         "Cross-domain history shared by Problems, Tests, Source Control, Debug, language and AI.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     count = umi_ide_navigation_history_count(navigation->history);
@@ -44,6 +57,7 @@ UmiStatus umi_ide_navigation_view_create(
     status = umi_ide_view_set_integer(
         *out_view, "ide.navigation.count", (int64_t)count);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         umi_ide_navigation_history_current(
             navigation->history,
@@ -66,11 +80,13 @@ UmiStatus umi_ide_navigation_view_create(
             *out_view, "ide.navigation.current", text);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_action(
             *out_view, 0U, "ide.navigate.back",
             "Back", "Navigate to the previous cross-domain location.",
             count > 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ide_view_set_action(
             *out_view, 1U, "ide.navigate.forward",

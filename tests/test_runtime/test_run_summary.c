@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/test_runtime/run_summary.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestRuntimeRunSummary v,s;

@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/pnl_explain_bucket.h"
+/**
+ * Represent the enterprise pnl explain report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePnlExplainReport { char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; double actual_pnl; UmiEnterprisePnlExplainBucket buckets[32U]; size_t count; } UmiEnterprisePnlExplainReport;
 /* Initialise an empty report for one actual portfolio P&L. */
 UmiStatus umi_enterprise_pnl_explain_report_init(UmiEnterprisePnlExplainReport *report,const char *portfolio_id,double actual_pnl);

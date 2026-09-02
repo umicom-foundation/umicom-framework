@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/indentation_guides.h"
-int main(void){ if(umi_editor_wb_indentation_guides_depth(12U,4U)!=3U)return 1; if(umi_editor_wb_indentation_guides_depth(4U,0U)!=0U)return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ /* Apply this branch only when its contract condition is satisfied. */ if(umi_editor_wb_indentation_guides_depth(12U,4U)!=3U)return 1; /* Apply this branch only when its contract condition is satisfied. */ if(umi_editor_wb_indentation_guides_depth(4U,0U)!=0U)return 2; return 0; }

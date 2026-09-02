@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer source control operation stage all operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_stage_all(void);
 
 #ifdef __cplusplus

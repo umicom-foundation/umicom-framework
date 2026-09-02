@@ -28,6 +28,10 @@
 
 #include "umicom/editor/workspace_edit.h"
 
+/*
+ * Exercise make edit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorWorkspaceTextEdit make_edit(const char *id,
                                             uint64_t start,
                                             uint64_t end,
@@ -54,6 +58,10 @@ static UmiEditorWorkspaceTextEdit make_edit(const char *id,
     return edit;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorWorkspaceEditSet *edits = NULL;

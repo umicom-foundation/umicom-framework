@@ -17,12 +17,20 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the developer workbench start centre snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_workbench_start_centre_snapshot(
     const UmiRecentItemRegistry *recent_items,
     UmiDeveloperWorkbenchStartCentreSnapshot *out_snapshot)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recent_items == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -41,6 +49,7 @@ UmiStatus umi_developer_workbench_start_centre_snapshot(
                    "%s",
                    "repository.clone");
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_platform_recent_items_registry_count(recent_items) &&
          out_snapshot->recent_count <
@@ -48,11 +57,13 @@ UmiStatus umi_developer_workbench_start_centre_snapshot(
          ++index) {
         UmiRecentItemSnapshot item;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_platform_recent_items_registry_at(
                 recent_items, index, &item) != UMI_STATUS_OK) {
             continue;
         }
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(item.kind, "project") != 0 &&
             strcmp(item.kind, "workspace") != 0) {
             continue;

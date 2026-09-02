@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced commit node data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedCommitNode {
     uint32_t struct_size;
     uint32_t api_version;
@@ -37,8 +40,20 @@ typedef struct UmiVcsAdvancedCommitNode {
     int merge_commit;
 } UmiVcsAdvancedCommitNode;
 
+/**
+ * Initialise vcs advanced commit node from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_commit_node_init(UmiVcsAdvancedCommitNode *value);
+/**
+ * Check that vcs advanced commit node satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_commit_node_validate(const UmiVcsAdvancedCommitNode *value);
+/**
+ * Copy vcs advanced commit node into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_commit_node_set(UmiVcsAdvancedCommitNode *value,
                                               const char *oid,
                                               const char *subject,

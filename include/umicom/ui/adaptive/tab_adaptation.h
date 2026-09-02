@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive tab decision data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveTabDecision { size_t visible_tabs; int scrollable; int compact_titles; } UmiAdaptiveTabDecision;
 /* Resolve visible tab budget and scrolling behaviour for one size class. */
 UmiAdaptiveTabDecision umi_adaptive_tab_adaptation_resolve(size_t tab_count, UmiDesignSizeClass size_class);

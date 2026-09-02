@@ -41,6 +41,9 @@ enum {
     UMI_EDITOR_INLINE_SUGGESTION_ALL_FLAGS = (1U << 6) - 1U
 };
 
+/**
+ * Represent the editor inline suggestion data shared with callers of this public contract.
+ */
 typedef struct UmiEditorInlineSuggestion {
     uint32_t struct_size;
     uint32_t api_version;
@@ -61,6 +64,10 @@ typedef struct UmiEditorInlineSuggestion {
     UmiEditorInlineSuggestionFlags flags;
 } UmiEditorInlineSuggestion;
 
+/**
+ * Represent the editor inline suggestion collection snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorInlineSuggestionCollectionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -72,40 +79,92 @@ typedef struct UmiEditorInlineSuggestionCollectionSnapshot {
     uint64_t revision;
 } UmiEditorInlineSuggestionCollectionSnapshot;
 
+/**
+ * Represent the editor inline suggestion collection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorInlineSuggestionCollection
     UmiEditorInlineSuggestionCollection;
 
+/**
+ * Initialise editor inline suggestion collection from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_inline_suggestion_collection_create(
     UmiEditorInlineSuggestionCollection **out_collection);
+/**
+ * Release or reset state held by editor inline suggestion collection so the same storage
+ * can be reused safely.
+ */
 void umi_editor_inline_suggestion_collection_destroy(
     UmiEditorInlineSuggestionCollection *collection);
+/**
+ * Release or reset state held by editor inline suggestion collection so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_inline_suggestion_collection_clear(
     UmiEditorInlineSuggestionCollection *collection);
+/**
+ * Provide the editor inline suggestion collection upsert operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_inline_suggestion_collection_upsert(
     UmiEditorInlineSuggestionCollection *collection,
     const UmiEditorInlineSuggestion *suggestion);
+/**
+ * Find editor inline suggestion collection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_inline_suggestion_collection_find(
     const UmiEditorInlineSuggestionCollection *collection,
     const char *provider_id,
     const char *suggestion_id,
     UmiEditorInlineSuggestion *out_suggestion);
+/**
+ * Find editor inline suggestion collection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_inline_suggestion_collection_at(
     const UmiEditorInlineSuggestionCollection *collection,
     size_t position,
     UmiEditorInlineSuggestion *out_suggestion);
+/**
+ * Provide the editor inline suggestion collection snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_inline_suggestion_collection_snapshot(
     const UmiEditorInlineSuggestionCollection *collection,
     UmiEditorInlineSuggestionCollectionSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor inline suggestion collection without
+ * changing their state.
+ */
 size_t umi_editor_inline_suggestion_collection_count(
     const UmiEditorInlineSuggestionCollection *collection);
+/**
+ * Provide the editor inline suggestion collection revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_inline_suggestion_collection_revision(
     const UmiEditorInlineSuggestionCollection *collection);
+/**
+ * Check that editor inline suggestion satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_editor_inline_suggestion_validate(
     const UmiEditorInlineSuggestion *suggestion);
+/**
+ * Provide the editor inline suggestion accepts typed prefix operation used by this module
+ * and its client applications.
+ */
 int umi_editor_inline_suggestion_accepts_typed_prefix(
     const UmiEditorInlineSuggestion *suggestion,
     const char *typed_text);
 
+/**
+ * Represent the editor inline suggestion provider descriptor data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorInlineSuggestionProviderDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -125,6 +184,10 @@ typedef struct UmiEditorInlineSuggestionProviderDescriptor {
     int enabled;
 } UmiEditorInlineSuggestionProviderDescriptor;
 
+/**
+ * Represent the editor inline suggestion provider response data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorInlineSuggestionProviderResponse {
     uint32_t struct_size;
     uint32_t api_version;
@@ -147,6 +210,10 @@ typedef UmiStatus (*UmiEditorInlineSuggestionCancelFunction)(
     uint64_t request_id,
     void *provider_user_data);
 
+/**
+ * Represent the editor inline suggestion provider callbacks data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorInlineSuggestionProviderCallbacks {
     uint32_t struct_size;
     uint32_t api_version;
@@ -154,6 +221,10 @@ typedef struct UmiEditorInlineSuggestionProviderCallbacks {
     UmiEditorInlineSuggestionCancelFunction cancel;
 } UmiEditorInlineSuggestionProviderCallbacks;
 
+/**
+ * Represent the editor inline suggestion provider registry snapshot data shared with
+ * callers of this public contract.
+ */
 typedef struct UmiEditorInlineSuggestionProviderRegistrySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -165,35 +236,75 @@ typedef struct UmiEditorInlineSuggestionProviderRegistrySnapshot {
     uint64_t revision;
 } UmiEditorInlineSuggestionProviderRegistrySnapshot;
 
+/**
+ * Represent the editor inline suggestion provider registry data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorInlineSuggestionProviderRegistry
     UmiEditorInlineSuggestionProviderRegistry;
 
+/**
+ * Initialise editor inline suggestion provider registry from caller-provided values so
+ * later operations receive a known state.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_create(
     UmiEditorInlineSuggestionProviderRegistry **out_registry);
+/**
+ * Release or reset state held by editor inline suggestion provider registry so the same
+ * storage can be reused safely.
+ */
 void umi_editor_inline_suggestion_provider_registry_destroy(
     UmiEditorInlineSuggestionProviderRegistry *registry);
+/**
+ * Add editor inline suggestion provider registry only after its inputs and available
+ * capacity have been checked.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_register(
     UmiEditorInlineSuggestionProviderRegistry *registry,
     const UmiEditorInlineSuggestionProviderDescriptor *descriptor,
     const UmiEditorInlineSuggestionProviderCallbacks *callbacks,
     void *provider_user_data);
+/**
+ * Remove editor inline suggestion provider registry while keeping the remaining records in
+ * a valid and discoverable state.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_unregister(
     UmiEditorInlineSuggestionProviderRegistry *registry,
     const char *provider_id);
+/**
+ * Find editor inline suggestion provider registry while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_at(
     const UmiEditorInlineSuggestionProviderRegistry *registry,
     size_t position,
     UmiEditorInlineSuggestionProviderDescriptor *out_descriptor);
+/**
+ * Find editor inline suggestion provider registry while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_find(
     const UmiEditorInlineSuggestionProviderRegistry *registry,
     const char *provider_id,
     UmiEditorInlineSuggestionProviderDescriptor *out_descriptor);
+/**
+ * Provide the editor inline suggestion provider registry snapshot operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_snapshot(
     const UmiEditorInlineSuggestionProviderRegistry *registry,
     UmiEditorInlineSuggestionProviderRegistrySnapshot *out_snapshot);
+/**
+ * Provide the editor inline suggestion provider supports request operation used by this
+ * module and its client applications.
+ */
 int umi_editor_inline_suggestion_provider_supports_request(
     const UmiEditorInlineSuggestionProviderDescriptor *descriptor,
     const UmiEditorCompletionRequest *request);
+/**
+ * Provide the editor inline suggestion provider registry invoke operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_invoke(
     const UmiEditorInlineSuggestionProviderRegistry *registry,
     const char *provider_id,
@@ -201,12 +312,24 @@ UmiStatus umi_editor_inline_suggestion_provider_registry_invoke(
     UmiEditorInlineSuggestionSink sink,
     void *sink_user_data,
     UmiEditorInlineSuggestionProviderResponse *out_response);
+/**
+ * Provide the editor inline suggestion provider registry cancel operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_inline_suggestion_provider_registry_cancel(
     const UmiEditorInlineSuggestionProviderRegistry *registry,
     const char *provider_id,
     uint64_t request_id);
+/**
+ * Return the number of records represented by editor inline suggestion provider registry
+ * without changing their state.
+ */
 size_t umi_editor_inline_suggestion_provider_registry_count(
     const UmiEditorInlineSuggestionProviderRegistry *registry);
+/**
+ * Provide the editor inline suggestion provider registry revision operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_editor_inline_suggestion_provider_registry_revision(
     const UmiEditorInlineSuggestionProviderRegistry *registry);
 

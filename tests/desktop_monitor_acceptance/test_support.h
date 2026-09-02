@@ -20,6 +20,10 @@
 
 #include "umicom/desktop/monitor_topology.h"
 
+/**
+ * Exercise test desktop monitor and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiDesktopMonitor umi_test_desktop_monitor(
     const char *monitor_id,
     const char *name,

@@ -31,8 +31,18 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/boot_phase.h"
+/**
+ * Represent the ct boot service data shared with callers of this public contract.
+ */
 typedef struct UmiCtBootService { char service_id[UMI_CT_ID_CAPACITY]; UmiCtBootPhase phase; bool essential; uint32_t timeout_ms; } UmiCtBootService;
+/**
+ * Check that ct boot service satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ct_boot_service_validate(const UmiCtBootService *service);
+/**
+ * Check that ct boot dependency phase satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_ct_boot_dependency_phase_valid(const UmiCtBootService *service,const UmiCtBootService *dependency);
 
 #ifdef __cplusplus

@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws dock preview data shared with callers of this public contract.
+ */
 typedef struct UmiWsDockPreview {
     UmiWsDockRegion region;
     UmiUiRect bounds;
@@ -29,6 +32,10 @@ typedef struct UmiWsDockPreview {
     bool visible;
 } UmiWsDockPreview;
 
+/**
+ * Provide the ws dock preview compute operation used by this module and its client
+ * applications.
+ */
 UmiWsDockPreview umi_ws_dock_preview_compute(UmiUiRect host, UmiWsDockRegion region, double split_fraction);
 
 #ifdef __cplusplus

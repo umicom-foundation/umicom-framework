@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform execution summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformExecutionSummary {
     size_t planned;
     size_t executed;

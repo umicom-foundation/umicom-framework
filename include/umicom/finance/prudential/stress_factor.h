@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress factor data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialStressFactor { char factor_id[UMI_PRU_ID_CAPACITY]; UmiStressDirection direction; double magnitude; UmiPrudentialSeverity severity; } UmiPrudentialStressFactor;
 /* Initialise a bounded percentage stress factor. */
 UmiStatus umi_pru_stress_factor_init(UmiPrudentialStressFactor *factor, const char *factor_id, UmiStressDirection direction, double magnitude, UmiPrudentialSeverity severity);

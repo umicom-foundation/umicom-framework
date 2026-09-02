@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the buying power operation used by this module and its client applications.
+ */
 double umi_buying_power(double cash_value, double leverage);
 #ifdef __cplusplus
 }

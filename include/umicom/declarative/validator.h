@@ -27,6 +27,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that decl satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_decl_validate(const UmiDeclDocument *document,const UmiDeclSchema *schema,UmiDeclDiagnosticList *diagnostics);
 #ifdef __cplusplus
 }

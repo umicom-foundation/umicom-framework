@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data quality rule data shared with callers of this public contract.
+ */
 typedef struct UmiDataQualityRule {
     char rule_id[UMI_REG_ID_CAPACITY];
     char domain_id[UMI_REG_ID_CAPACITY];

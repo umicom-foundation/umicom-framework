@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the trading weekday open operation used by this module and its client
+ * applications.
+ */
 int umi_trading_weekday_open(unsigned weekday);
 #ifdef __cplusplus
 }

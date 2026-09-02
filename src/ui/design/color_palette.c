@@ -19,17 +19,32 @@
 
 #include "umicom/ui/design/color_palette.h"
 
+/*
+ * Provide the design color palette upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_design_color_palette_upsert(UmiDesignColorPalette *palette,UmiDesignColorRole role,UmiDesignRgba color)
 {
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette==NULL || !umi_design_color_valid(color) || role<UMI_DESIGN_COLOR_BACKGROUND || role>UMI_DESIGN_COLOR_BORDER) return UMI_STATUS_INVALID_ARGUMENT;
-    for(i=0U;i<palette->count;++i) if(palette->entries[i].role==role){ palette->entries[i].color=color; return UMI_STATUS_OK; }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(i=0U;i<palette->count;++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(palette->entries[i].role==role){ palette->entries[i].color=color; return UMI_STATUS_OK; }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if(palette->count>=UMI_DESIGN_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED;
     palette->entries[palette->count].role=role; palette->entries[palette->count].color=color; ++palette->count; return UMI_STATUS_OK;
 }
+/*
+ * Find design color palette while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_design_color_palette_find(const UmiDesignColorPalette *palette,UmiDesignColorRole role,UmiDesignRgba *out_color)
 {
-    size_t i; if(palette==NULL||out_color==NULL)return UMI_STATUS_INVALID_ARGUMENT;
-    for(i=0U;i<palette->count;++i) if(palette->entries[i].role==role){*out_color=palette->entries[i].color;return UMI_STATUS_OK;}
+    size_t i; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(palette==NULL||out_color==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(i=0U;i<palette->count;++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(palette->entries[i].role==role){*out_color=palette->entries[i].color;return UMI_STATUS_OK;}
     return UMI_STATUS_NOT_FOUND;
 }

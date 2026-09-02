@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive layout rule data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveLayoutRule {
     char rule_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     char component_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the regulatory limit result data shared with callers of this public contract.
+ */
 typedef struct UmiRegulatoryLimitResult { char limit_id[UMI_REG_ID_CAPACITY]; double observed; double threshold; int breached; } UmiRegulatoryLimitResult;
 /* Evaluate one observed metric against an inclusive minimum or maximum threshold. */
 UmiStatus umi_reg_regulatory_limit_result_evaluate(UmiRegulatoryLimitResult *result,const char *limit_id,double observed,double threshold,int minimum_rule);

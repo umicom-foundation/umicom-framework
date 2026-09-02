@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/binding_endpoint.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveBindingEndpoint item; umi_ui_reactive_binding_endpoint_init(&item); return umi_ui_reactive_binding_endpoint_valid(&item) ? 0 : 1; }

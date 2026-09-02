@@ -25,6 +25,9 @@ extern "C" {
 
 #define UMI_SDK_PACKAGE_PATH_CAPACITY 512U
 
+/**
+ * Represent the sdk consumer package data shared with callers of this public contract.
+ */
 typedef struct UmiSdkConsumerPackage {
     char package_name[UMI_SDK_EXPORT_ID_CAPACITY];
     char namespace_name[UMI_SDK_EXPORT_ID_CAPACITY];
@@ -34,13 +37,25 @@ typedef struct UmiSdkConsumerPackage {
     int include_toolchain_file;
 } UmiSdkConsumerPackage;
 
+/**
+ * Initialise sdk consumer package from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_sdk_consumer_package_init(UmiSdkConsumerPackage *package,
                                             const char *package_name,
                                             const char *namespace_name,
                                             const char *minimum_version,
                                             const char *config_directory);
+/**
+ * Check that sdk consumer package satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_sdk_consumer_package_validate(
     const UmiSdkConsumerPackage *package);
+/**
+ * Provide the sdk consumer package render cmake operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_consumer_package_render_cmake(
     const UmiSdkConsumerPackage *package,
     const UmiSdkExportCatalogue *catalogue,

@@ -17,6 +17,10 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the toolbar button clicked operation used by this module and its client
+ * applications.
+ */
 static void toolbar_button_clicked(GtkButton *button, gpointer user_data)
 {
     UmiWorkbenchDesignerGtk4 *designer = user_data;
@@ -25,6 +29,7 @@ static void toolbar_button_clicked(GtkButton *button, gpointer user_data)
     umi_workbench_designer_gtk4_dispatch(designer, command_id);
 }
 
+/* Provide the toolbar button operation used by this module and its client applications. */
 static GtkWidget *toolbar_button(
     UmiWorkbenchDesignerGtk4 *designer,
     const char *label,
@@ -41,6 +46,10 @@ static GtkWidget *toolbar_button(
     return button;
 }
 
+/*
+ * Provide the workbench designer gtk4 build toolbar operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_toolbar(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -71,17 +80,33 @@ GtkWidget *umi_workbench_designer_gtk4_build_toolbar(
     return toolbar;
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh toolbar operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_toolbar(
     UmiWorkbenchDesignerGtk4 *designer)
 {
     GtkWidget *child;
     bool mutating_enabled;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->toolbar == NULL) return;
     mutating_enabled = designer->bundle.validation_gate.can_preview;
     child = gtk_widget_get_first_child(designer->toolbar);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         const char *command_id = g_object_get_data(
             G_OBJECT(child), "umicom-command-id");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (command_id != NULL &&
             (g_str_has_prefix(command_id, "designer.split") ||
              g_str_has_prefix(command_id, "designer.tab") ||

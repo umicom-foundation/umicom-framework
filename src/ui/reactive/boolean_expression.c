@@ -17,6 +17,10 @@
 
 /* Initialise the boolean expression contract to deterministic zero/default state. */
 void umi_ui_reactive_boolean_expression_init(UmiUiReactiveBooleanExpression *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item != NULL) memset(item, 0, sizeof *item);
 }
 

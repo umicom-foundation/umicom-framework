@@ -26,7 +26,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the fabric route pattern match operation used by this module and its client
+ * applications.
+ */
 bool umi_fabric_route_pattern_match(const char *pattern,const char *value);
+/**
+ * Provide the fabric route match operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_route_match(const UmiFabricRouteTable *table,const char *source,const char *message_type,UmiFabricRouteRule *out_rule);
 
 #ifdef __cplusplus

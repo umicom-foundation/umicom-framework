@@ -20,6 +20,10 @@
 
 #include "umicom/application/presentation/surface_behavior_catalogue.h"
 
+/*
+ * Provide the default controller operation used by this module and its client
+ * applications.
+ */
 static UmiStatus default_controller(
     const UmiApplicationPresentationPanelPlacement *placement,
     UmiApplicationPresentationSurfaceEvent event,
@@ -28,12 +32,20 @@ static UmiStatus default_controller(
 {
     const char *component_id;
     const UmiApplicationPresentationSurfaceBehavior *behavior;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (placement == NULL || placement->panel == NULL || out_update == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     component_id = placement->panel->component_id;
     behavior = umi_application_presentation_surface_behavior_catalogue_find(
         component_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (behavior == NULL) return UMI_STATUS_NOT_FOUND;
     (void)memset(out_update, 0, sizeof(*out_update));
     out_update->state = event == UMI_APPLICATION_PRESENTATION_EVENT_UNMOUNT ||
@@ -48,12 +60,24 @@ static UmiStatus default_controller(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise application presentation surface controller registry from caller-provided
+ * values so later operations receive a known state.
+ */
 void umi_application_presentation_surface_controller_registry_init(
     UmiApplicationPresentationSurfaceControllerRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry != NULL) (void)memset(registry, 0, sizeof(*registry));
 }
 
+/*
+ * Add application presentation surface controller only after its inputs and available
+ * capacity have been checked.
+ */
 UmiStatus umi_application_presentation_surface_controller_register(
     UmiApplicationPresentationSurfaceControllerRegistry *registry,
     const char *component_id,
@@ -61,15 +85,22 @@ UmiStatus umi_application_presentation_surface_controller_register(
     void *context)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || component_id == NULL || component_id[0] == '\0' ||
         controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->bindings[index].component_id, component_id) == 0) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_APPLICATION_PRESENTATION_PLAN_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -79,14 +110,24 @@ UmiStatus umi_application_presentation_surface_controller_register(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find application presentation surface controller while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 const UmiApplicationPresentationSurfaceControllerBinding *
 umi_application_presentation_surface_controller_find(
     const UmiApplicationPresentationSurfaceControllerRegistry *registry,
     const char *component_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || component_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->bindings[index].component_id, component_id) == 0) {
             return &registry->bindings[index];
         }
@@ -94,6 +135,10 @@ umi_application_presentation_surface_controller_find(
     return NULL;
 }
 
+/*
+ * Perform application presentation surface controller through the module contract so
+ * client applications do not duplicate its policy.
+ */
 UmiStatus umi_application_presentation_surface_controller_dispatch(
     const UmiApplicationPresentationSurfaceControllerRegistry *registry,
     const UmiApplicationPresentationPanelPlacement *placement,
@@ -102,6 +147,10 @@ UmiStatus umi_application_presentation_surface_controller_dispatch(
     UmiApplicationPresentationSurfaceUpdate *out_update)
 {
     const UmiApplicationPresentationSurfaceControllerBinding *binding;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || placement == NULL || placement->panel == NULL ||
         out_update == NULL ||
         event < UMI_APPLICATION_PRESENTATION_EVENT_MOUNT ||
@@ -110,6 +159,10 @@ UmiStatus umi_application_presentation_surface_controller_dispatch(
     }
     binding = umi_application_presentation_surface_controller_find(
         registry, placement->panel->component_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL) {
         return default_controller(placement, event, payload, out_update);
     }

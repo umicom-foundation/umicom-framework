@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress result data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialStressResult { char metric_id[UMI_PRU_ID_CAPACITY]; double stressed_value; double threshold; int passed; } UmiPrudentialStressResult;
 /* Evaluate one stressed metric against a minimum threshold. */
 UmiStatus umi_pru_stress_result_evaluate(UmiPrudentialStressResult *result, const char *metric_id, double stressed_value, double threshold);

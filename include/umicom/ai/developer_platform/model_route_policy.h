@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev model route policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevModelRoutePolicy {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +42,25 @@ typedef struct UmiAiDevModelRoutePolicy {
     int enabled;
 } UmiAiDevModelRoutePolicy;
 
+/**
+ * Initialise ai dev model route policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_model_route_policy_init(UmiAiDevModelRoutePolicy *policy);
+/**
+ * Provide the ai dev model route policy configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_route_policy_configure(UmiAiDevModelRoutePolicy *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev model route policy allows operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_model_route_policy_allows(const UmiAiDevModelRoutePolicy *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev model route policy approval required operation used by this module
+ * and its client applications.
+ */
 int umi_ai_dev_model_route_policy_approval_required(const UmiAiDevModelRoutePolicy *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

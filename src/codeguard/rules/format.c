@@ -25,8 +25,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-FMT-002", "CWE-134", UMI_CODEGUARD_HIGH, UMI_CODEGUARD_CATEGORY_FORMAT, 88U, UMI_CODEGUARD_MATCH_CODE, "fprintf(stderr, input)", "Formatted output should use a constant format string for external data.", "Pass external strings as arguments to a fixed format string."}
 };
 
+/*
+ * Provide the codeguard rules format operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_format(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

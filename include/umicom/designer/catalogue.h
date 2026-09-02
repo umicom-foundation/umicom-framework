@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise designer catalogue from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_designer_catalogue_create(UmiDeclComponentRegistry **out_registry,UmiDeclSchema *out_schema);
 #ifdef __cplusplus
 }

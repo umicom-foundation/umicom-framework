@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics decimated pair data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsDecimatedPair { double minimum; double maximum; } UmiAnalyticsDecimatedPair;
+/**
+ * Provide the analytics decimate min max operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_decimate_min_max(const double *values,size_t count,size_t buckets,UmiAnalyticsDecimatedPair *out_pairs,size_t capacity);
 
 #ifdef __cplusplus

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential hqla bucket data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialHqlaBucket { UmiHqlaLevel level; double gross_value; double eligible_value; } UmiPrudentialHqlaBucket;
 /* Add gross and eligible value to one HQLA regulatory level bucket. */
 UmiStatus umi_pru_hqla_bucket_add(UmiPrudentialHqlaBucket *bucket, UmiHqlaLevel level, double gross_value, double eligible_value);

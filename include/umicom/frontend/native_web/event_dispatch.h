@@ -27,7 +27,15 @@ extern "C" {
 
 #include "umicom/frontend/native_web/ui_event.h"
 typedef UmiStatus (*UmiNativeWebEventHandler)(void *context, const UmiNativeWebUiEvent *event);
+/**
+ * Represent the native web event dispatch entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebEventDispatchEntry { UmiNativeWebEventKind kind; UmiNativeWebEventHandler handler; void *context; } UmiNativeWebEventDispatchEntry;
+/**
+ * Represent the native web event dispatcher data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebEventDispatcher { UmiNativeWebEventDispatchEntry entries[32]; size_t count; } UmiNativeWebEventDispatcher;
 /* Initialise an empty semantic event dispatcher. */
 void umi_native_web_event_dispatch_init(UmiNativeWebEventDispatcher *dispatcher);

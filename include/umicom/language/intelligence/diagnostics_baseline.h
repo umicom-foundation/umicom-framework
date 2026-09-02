@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_DIAGNOSTICS_BASELINE_API_VERSION 1U
+/**
+ * Represent the language intelligence diagnostics baseline data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceDiagnosticsBaseline {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,16 +39,28 @@ typedef struct UmiLanguageIntelligenceDiagnosticsBaseline {
     uint64_t revision;
     int valid;
 } UmiLanguageIntelligenceDiagnosticsBaseline;
+/**
+ * Initialise language intelligence diagnostics baseline from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_diagnostics_baseline_init(
     UmiLanguageIntelligenceDiagnosticsBaseline *entry,
     const char *key,
     uint64_t fingerprint,
     uint64_t now,
     uint64_t ttl);
+/**
+ * Provide the language intelligence diagnostics baseline is fresh operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_diagnostics_baseline_is_fresh(
     const UmiLanguageIntelligenceDiagnosticsBaseline *entry,
     uint64_t now,
     uint64_t expected_fingerprint);
+/**
+ * Provide the language intelligence diagnostics baseline invalidate operation used by this
+ * module and its client applications.
+ */
 void umi_language_intelligence_diagnostics_baseline_invalidate(UmiLanguageIntelligenceDiagnosticsBaseline *entry);
 #ifdef __cplusplus
 }

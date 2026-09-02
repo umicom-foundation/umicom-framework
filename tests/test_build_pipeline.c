@@ -17,6 +17,10 @@
 
 #include "umicom/build/pipeline.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildTaskRegistry *tasks = NULL;
@@ -72,8 +76,13 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_build_delivery_pipeline_begin_deployment(pipeline) ==
            UMI_STATUS_OK);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (umi_build_delivery_pipeline_next_deployment_step(
                pipeline, &step) == UMI_STATUS_OK) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (step.rollback_step) break;
         assert(umi_build_delivery_pipeline_start_deployment_step(
                    pipeline, step.step_id) == UMI_STATUS_OK);

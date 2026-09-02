@@ -25,19 +25,26 @@ struct UmiEditorCodeActionProviderRegistry {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the validate provider operation used by this module and its client applications. */
 static UmiStatus validate_provider(
     const UmiEditorCodeActionProviderItem *provider)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL ||
         provider->struct_size != (uint32_t)sizeof(*provider) ||
         provider->api_version != UMI_EDITOR_CODE_ACTION_PROVIDER_API_VERSION ||
@@ -54,37 +61,56 @@ static UmiStatus validate_provider(
     return UMI_STATUS_OK;
 }
 
+/* Provide the reserve providers operation used by this module and its client applications. */
 static UmiStatus reserve_providers(UmiEditorCodeActionProviderRegistry *registry,
                                    size_t required)
 {
     size_t capacity;
     UmiEditorCodeActionProviderItem *replacement;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= registry->capacity) return UMI_STATUS_OK;
     capacity = registry->capacity > 0U ? registry->capacity : 8U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (UmiEditorCodeActionProviderItem *)realloc(
         registry->providers, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->providers = replacement;
     registry->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the find provider operation used by this module and its client applications. */
 static size_t find_provider(
     const UmiEditorCodeActionProviderRegistry *registry,
     const char *provider_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->providers[index].id, provider_id) == 0) {
             return index;
         }
@@ -92,39 +118,71 @@ static size_t find_provider(
     return SIZE_MAX;
 }
 
+/*
+ * Initialise editor code action provider registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_code_action_provider_registry_create(
     UmiEditorCodeActionProviderRegistry **out_registry)
 {
     UmiEditorCodeActionProviderRegistry *registry;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiEditorCodeActionProviderRegistry *)calloc(
         1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->revision = 1U;
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor code action provider registry so the same storage
+ * can be reused safely.
+ */
 void umi_editor_code_action_provider_registry_destroy(
     UmiEditorCodeActionProviderRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
     free(registry->providers);
     registry->providers = NULL;
     free(registry);
 }
 
+/*
+ * Release or reset state held by editor code action provider registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_code_action_provider_registry_clear(
     UmiEditorCodeActionProviderRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     registry->count = 0U;
     registry->revision = next_revision(registry->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor code action provider registry upsert operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_code_action_provider_registry_upsert(
     UmiEditorCodeActionProviderRegistry *registry,
     const UmiEditorCodeActionProviderItem *provider)
@@ -133,12 +191,18 @@ UmiStatus umi_editor_code_action_provider_registry_upsert(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || validate_provider(provider) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_provider(registry, provider->id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         status = reserve_providers(registry, registry->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         index = registry->count++;
     }
@@ -155,17 +219,27 @@ UmiStatus umi_editor_code_action_provider_registry_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove editor code action provider registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_editor_code_action_provider_registry_remove(
     UmiEditorCodeActionProviderRegistry *registry,
     const char *provider_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || provider_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_provider(registry, provider_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < registry->count) {
         (void)memmove(&registry->providers[index],
                       &registry->providers[index + 1U],
@@ -177,6 +251,10 @@ UmiStatus umi_editor_code_action_provider_registry_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor code action provider registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_code_action_provider_registry_find(
     const UmiEditorCodeActionProviderRegistry *registry,
     const char *provider_id,
@@ -184,33 +262,52 @@ UmiStatus umi_editor_code_action_provider_registry_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || out_provider == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_provider(registry, provider_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_provider = registry->providers[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor code action provider registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_code_action_provider_registry_at(
     const UmiEditorCodeActionProviderRegistry *registry,
     size_t index,
     UmiEditorCodeActionProviderItem *out_provider)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_provider == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
     *out_provider = registry->providers[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor code action provider supports operation used by this module and its
+ * client applications.
+ */
 int umi_editor_code_action_provider_supports(
     const UmiEditorCodeActionProviderItem *provider,
     const char *language_id,
     UmiEditorCodeActionKindMask kind_mask)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (validate_provider(provider) != UMI_STATUS_OK ||
         language_id == NULL || language_id[0] == '\0' || kind_mask == 0U ||
         !provider->enabled) {
@@ -221,6 +318,10 @@ int umi_editor_code_action_provider_supports(
            (provider->kind_mask & kind_mask) != 0U;
 }
 
+/*
+ * Provide the editor code action provider registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_code_action_provider_registry_snapshot(
     const UmiEditorCodeActionProviderRegistry *registry,
     UmiEditorCodeActionProviderSnapshot *out_snapshot)
@@ -228,6 +329,10 @@ UmiStatus umi_editor_code_action_provider_registry_snapshot(
     size_t index;
     size_t comparison;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -236,31 +341,44 @@ UmiStatus umi_editor_code_action_provider_registry_snapshot(
     out_snapshot->api_version = UMI_EDITOR_CODE_ACTION_PROVIDER_API_VERSION;
     out_snapshot->provider_count = registry->count;
     out_snapshot->revision = registry->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         int first_language = 1;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->providers[index].enabled) {
             ++out_snapshot->enabled_provider_count;
             out_snapshot->provided_kind_mask |=
                 registry->providers[index].kind_mask;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = 0U; comparison < index; ++comparison) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (strcmp(registry->providers[index].language_id,
                        registry->providers[comparison].language_id) == 0) {
                 first_language = 0;
                 break;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (first_language) ++out_snapshot->language_count;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by editor code action provider registry without
+ * changing their state.
+ */
 size_t umi_editor_code_action_provider_registry_count(
     const UmiEditorCodeActionProviderRegistry *registry)
 {
     return registry != NULL ? registry->count : 0U;
 }
 
+/*
+ * Provide the editor code action provider registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_code_action_provider_registry_revision(
     const UmiEditorCodeActionProviderRegistry *registry)
 {

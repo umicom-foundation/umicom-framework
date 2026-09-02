@@ -41,17 +41,33 @@ extern "C" {
 #define UMI_APPLICATION_UI_VIEW_GTK4_COVERAGE \
     "umicom.application.gtk4-coverage"
 
+/**
+ * Initialise application ui portfolio view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_ui_portfolio_view_create(
     const char *view_id,
     const char *selected_application_id,
     UmiUiViewModel **out_view);
+/**
+ * Initialise application ui boundary audit view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_ui_boundary_audit_view_create(
     const char *view_id,
     UmiUiViewModel **out_view);
+/**
+ * Initialise application ui component catalogue view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_ui_component_catalogue_view_create(
     const char *view_id,
     const char *domain_id,
     UmiUiViewModel **out_view);
+/**
+ * Initialise application ui gtk4 coverage view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_ui_gtk4_coverage_view_create(
     const char *view_id,
     UmiUiViewModel **out_view);

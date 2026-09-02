@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection resolve source sample operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_resolve_source_sample(
     const UmiWorkbenchSelection *selection,
     const char *source_id,

@@ -22,11 +22,31 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by application portfolio without changing their
+ * state.
+ */
 size_t umi_application_portfolio_count(void);
+/**
+ * Find application portfolio while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiApplicationDefinition *umi_application_portfolio_at(size_t index);
+/**
+ * Find application portfolio while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiApplicationDefinition *umi_application_portfolio_find(
     const char *application_id);
+/**
+ * Return the number of records represented by application portfolio family without
+ * changing their state.
+ */
 size_t umi_application_portfolio_family_count(UmiApplicationFamily family);
+/**
+ * Return the number of records represented by application portfolio maturity without
+ * changing their state.
+ */
 size_t umi_application_portfolio_maturity_count(
     UmiApplicationMaturity maturity);
 

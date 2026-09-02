@@ -21,7 +21,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the compiler diagnostic parser operation used by this module and its client
+ * applications.
+ */
 UmiDiagnosticParser umi_compiler_diagnostic_parser(void);
+/**
+ * Read compiler diagnostic into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_compiler_diagnostic_parse(const UmiOutputRecord *output,
                                         UmiDiagnosticSnapshot *out_diagnostic,
                                         int *out_matched,

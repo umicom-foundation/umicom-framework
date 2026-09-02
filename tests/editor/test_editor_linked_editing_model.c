@@ -28,6 +28,10 @@
 
 #include "umicom/editor/linked_editing_model.h"
 
+/*
+ * Exercise linked range and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorLinkedRange linked_range(const char *id,
                                          uint64_t start,
                                          uint64_t revision,
@@ -53,6 +57,10 @@ static UmiEditorLinkedRange linked_range(const char *id,
     return range;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorLinkedEditingModel *model = NULL;

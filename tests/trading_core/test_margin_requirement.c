@@ -13,11 +13,17 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/margin_requirement.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingMarginProfile p;
     UmiTradingMarginRequirement r;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_margin_profile_init(&p,5000U,3000U,500U)!=UMI_STATUS_OK)return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_margin_requirement_compute(&p,100000,false,&r)!=UMI_STATUS_OK)return 2;
     return r.initial_minor==50000&&r.maintenance_minor==30000?0:3;
 }

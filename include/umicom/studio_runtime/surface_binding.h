@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime surface binding data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeSurfaceBinding {
     UmiStudioRuntimeSurfaceKind kind;
     const char *ide_surface_id;
@@ -41,14 +45,26 @@ typedef struct UmiStudioRuntimeSurfaceBinding {
     int create_if_missing;
 } UmiStudioRuntimeSurfaceBinding;
 
+/**
+ * Check that studio runtime surface binding satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_studio_runtime_surface_binding_validate(
     const UmiStudioRuntimeSurfaceBinding *binding);
 
+/**
+ * Provide the studio runtime surface resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_surface_resolve(
     UmiApplicationShellRegistry *registry,
     const UmiStudioRuntimeSurfaceBinding *binding,
     UmiApplicationShellContribution *out_contribution);
 
+/**
+ * Provide the studio runtime surface install operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_surface_install(
     UmiApplicationShellRegistry *registry,
     UmiApplicationShellLayout *layout,

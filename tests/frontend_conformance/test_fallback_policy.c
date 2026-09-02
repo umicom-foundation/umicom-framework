@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     CHECK(umi_fc_fallback_policy_for(UMI_FC_CAP_FLOAT,UMI_FC_FRONTEND_NATIVE_WEB)==UMI_FC_FALLBACK_TAB); CHECK(umi_fc_fallback_policy_preserves_semantics(UMI_FC_FALLBACK_TAB));
     return 0;

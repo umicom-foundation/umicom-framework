@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer inspector snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerInspectorSnapshot {
     char node_id[UMI_DECL_ID_CAPACITY];
     char component_type[UMI_DECL_ID_CAPACITY];
@@ -33,29 +37,48 @@ typedef struct UmiDesignerInspectorSnapshot {
     size_t attribute_count;
 } UmiDesignerInspectorSnapshot;
 
+/**
+ * Represent the designer inspector schema data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerInspectorSchema {
     char component_type[UMI_DECL_ID_CAPACITY];
     UmiDeclPropertyDescriptor properties[UMI_DECL_MAX_PROPERTIES];
     size_t property_count;
 } UmiDesignerInspectorSchema;
 
+/**
+ * Provide the designer inspect operation used by this module and its client applications.
+ */
 UmiStatus umi_designer_inspect(
     const UmiDesignerDocument *document,
     const char *node_id,
     UmiDesignerInspectorSnapshot *out_snapshot
 );
 
+/**
+ * Provide the designer inspector schema operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_inspector_schema(
     const UmiDeclComponentRegistry *registry,
     const char *component_type,
     UmiDesignerInspectorSchema *out_schema
 );
 
+/**
+ * Provide the designer inspector property operation used by this module and its client
+ * applications.
+ */
 const UmiDeclPropertyDescriptor *umi_designer_inspector_property(
     const UmiDesignerInspectorSchema *schema,
     const char *property_name
 );
 
+/**
+ * Provide the designer inspector validate property operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_designer_inspector_validate_property(
     const UmiDeclComponentRegistry *registry,
     const char *component_type,

@@ -24,8 +24,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi struct layout data shared with callers of this public contract.
+ */
 typedef struct UmiAbiStructLayout { const char *name; size_t size; size_t alignment; uint32_t abi_version; } UmiAbiStructLayout;
+/**
+ * Check that abi struct layout satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_abi_struct_layout_validate(const UmiAbiStructLayout *layout);
+/**
+ * Provide the abi struct layout compatible operation used by this module and its client
+ * applications.
+ */
 int umi_abi_struct_layout_compatible(const UmiAbiStructLayout *required, const UmiAbiStructLayout *available);
 #ifdef __cplusplus
 }

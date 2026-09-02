@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance color vision assistance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceColorVisionAssistance {
     char profile_id[UMI_APPEARANCE_ID_CAPACITY];
     bool require_icons;

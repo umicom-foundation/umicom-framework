@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting taxonomy data shared with callers of this public contract.
+ */
 typedef struct UmiReportingTaxonomy {
     char taxonomy_id[UMI_REG_ID_CAPACITY];
     char authority_id[UMI_REG_ID_CAPACITY];

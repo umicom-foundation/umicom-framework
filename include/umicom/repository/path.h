@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the repository control path is safe relative operation used by this module and
+ * its client applications.
+ */
 int umi_repository_control_path_is_safe_relative(const char *path);
+/**
+ * Provide the repository control path normalize operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_repository_control_path_normalize(
     const char *path, char *out_path, size_t capacity);
 #ifdef __cplusplus

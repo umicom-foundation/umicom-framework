@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer state migrate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_state_migrate(
     UmiSessionStore *store,
     const char *key_prefix,

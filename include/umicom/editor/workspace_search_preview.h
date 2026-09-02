@@ -40,6 +40,10 @@ extern "C" {
 #define UMI_EDITOR_WORKSPACE_REPLACEMENT_CONTEXT_CAPACITY 1024U
 #define UMI_EDITOR_WORKSPACE_REPLACEMENT_REASON_CAPACITY 256U
 
+/**
+ * Represent the editor workspace replacement request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceReplacementRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -48,6 +52,10 @@ typedef struct UmiEditorWorkspaceReplacementRequest {
     int preserve_case;
 } UmiEditorWorkspaceReplacementRequest;
 
+/**
+ * List the named editor workspace replacement preview state values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorWorkspaceReplacementPreviewState {
     UMI_EDITOR_WORKSPACE_REPLACEMENT_PREVIEW_READY = 1,
     UMI_EDITOR_WORKSPACE_REPLACEMENT_PREVIEW_READ_ONLY = 2,
@@ -57,6 +65,10 @@ typedef enum UmiEditorWorkspaceReplacementPreviewState {
     UMI_EDITOR_WORKSPACE_REPLACEMENT_PREVIEW_REPLACEMENT_TOO_LARGE = 6
 } UmiEditorWorkspaceReplacementPreviewState;
 
+/**
+ * Represent the editor workspace replacement preview item data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceReplacementPreviewItem {
     uint32_t struct_size;
     uint32_t api_version;
@@ -72,6 +84,10 @@ typedef struct UmiEditorWorkspaceReplacementPreviewItem {
     int applicable;
 } UmiEditorWorkspaceReplacementPreviewItem;
 
+/**
+ * Represent the editor workspace replacement preview snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorWorkspaceReplacementPreviewSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -86,46 +102,98 @@ typedef struct UmiEditorWorkspaceReplacementPreviewSnapshot {
     int ready;
 } UmiEditorWorkspaceReplacementPreviewSnapshot;
 
+/**
+ * Represent the editor workspace replacement preview data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceReplacementPreview
     UmiEditorWorkspaceReplacementPreview;
 
+/**
+ * Initialise editor workspace replacement request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_editor_workspace_replacement_request_init(
     UmiEditorWorkspaceReplacementRequest *request,
     const char *replacement_template);
 
+/**
+ * Initialise editor workspace replacement preview from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_create(
     UmiEditorWorkspaceReplacementPreview **out_preview);
+/**
+ * Release or reset state held by editor workspace replacement preview so the same storage
+ * can be reused safely.
+ */
 void umi_editor_workspace_replacement_preview_destroy(
     UmiEditorWorkspaceReplacementPreview *preview);
+/**
+ * Release or reset state held by editor workspace replacement preview so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_clear(
     UmiEditorWorkspaceReplacementPreview *preview);
 
+/**
+ * Provide the editor workspace replacement preview build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_build(
     UmiEditorWorkspaceReplacementPreview *preview,
     const UmiEditorWorkspaceSearchIndex *index,
     const UmiEditorWorkspaceSearchQuery *query,
     const UmiEditorWorkspaceReplacementRequest *request);
+/**
+ * Find editor workspace replacement preview while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_at(
     const UmiEditorWorkspaceReplacementPreview *preview,
     size_t position,
     UmiEditorWorkspaceReplacementPreviewItem *out_item);
+/**
+ * Find editor workspace replacement preview while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_find(
     const UmiEditorWorkspaceReplacementPreview *preview,
     const char *match_id,
     UmiEditorWorkspaceReplacementPreviewItem *out_item);
+/**
+ * Provide the editor workspace replacement preview select operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_select(
     UmiEditorWorkspaceReplacementPreview *preview,
     const char *match_id,
     int selected);
+/**
+ * Provide the editor workspace replacement preview select all operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_select_all(
     UmiEditorWorkspaceReplacementPreview *preview,
     int selected);
+/**
+ * Provide the editor workspace replacement preview snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replacement_preview_snapshot(
     const UmiEditorWorkspaceReplacementPreview *preview,
     UmiEditorWorkspaceReplacementPreviewSnapshot *out_snapshot);
 
+/**
+ * Return the number of records represented by editor workspace replacement preview without
+ * changing their state.
+ */
 size_t umi_editor_workspace_replacement_preview_count(
     const UmiEditorWorkspaceReplacementPreview *preview);
+/**
+ * Provide the editor workspace replacement preview revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_workspace_replacement_preview_revision(
     const UmiEditorWorkspaceReplacementPreview *preview);
 

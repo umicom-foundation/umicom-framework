@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive layout rule set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveLayoutRuleSet {
     UmiDesignerAdaptiveLayoutRule rules[UMI_DESIGNER_ADAPTIVE_MAX_ITEMS];
     size_t count;

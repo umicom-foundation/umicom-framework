@@ -19,20 +19,36 @@
 #include "umicom/ai_coding_tools/tool_contract.h"
 #include "umicom/ai_coding_runtime/scanner.h"
 
+/**
+ * Provide the ai coding tool safe path operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_safe_path(
     const UmiLanguageRuntimeJsonDocument *document,
     const char *key,
     char *out_path,
     size_t capacity);
 
+/**
+ * Provide the ai coding tool write ok begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_write_ok_begin(
     UmiLanguageRuntimeJsonWriter *writer,
     char *output,
     size_t capacity);
 
+/**
+ * Provide the ai coding tool write status end operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_write_status_end(
     UmiLanguageRuntimeJsonWriter *writer);
 
+/**
+ * Provide the ai coding tool execute program operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_execute_program(
     UmiAiCodingToolEnvironment *environment,
     UmiDeveloperOperationKind kind,

@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design inspector spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignInspectorSpec {
     uint16_t category_count;
     size_t estimated_properties;

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime profile bash operation used by this module and its client
+ * applications.
+ */
 const UmiLanguageServerProfile *umi_language_runtime_profile_bash(void);
 #ifdef __cplusplus
 }

@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcAdaptationPlan p; umi_fc_adaptation_plan_build(7U,3U,4U,&p); CHECK(p.operations==3U); CHECK(umi_fc_adaptation_plan_outcome(&p)==UMI_FC_DEGRADED);
     return 0;

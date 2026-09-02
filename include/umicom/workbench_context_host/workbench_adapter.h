@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the workbench context host observation from workbench operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_observation_from_workbench(
     const UmiUiWorkbench *workbench,
     uint64_t now_ms,

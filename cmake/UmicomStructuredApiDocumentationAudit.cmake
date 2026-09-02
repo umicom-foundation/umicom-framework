@@ -59,6 +59,7 @@ foreach(UMICOM_DOCUMENTATION_HEADER IN LISTS UMICOM_DOCUMENTATION_HEADERS)
     set(UMICOM_DOCUMENTATION_COMMENT_DISTANCE 1000)
     set(UMICOM_DOCUMENTATION_LINE_NUMBER 0)
 
+    # Visit each bounded item once so every record receives the same rule.
     foreach(UMICOM_DOCUMENTATION_LINE IN LISTS UMICOM_DOCUMENTATION_LINES)
         math(EXPR UMICOM_DOCUMENTATION_LINE_NUMBER
              "${UMICOM_DOCUMENTATION_LINE_NUMBER} + 1")
@@ -74,6 +75,7 @@ foreach(UMICOM_DOCUMENTATION_HEADER IN LISTS UMICOM_DOCUMENTATION_HEADERS)
         # Lines inside the structured block may mention function names as
         # relationships, but those references are not declarations to audit.
         if(UMICOM_DOCUMENTATION_IN_COMMENT)
+            # Use the stable identifier comparison to choose the matching record or policy.
             if(UMICOM_DOCUMENTATION_TRIMMED MATCHES "\\*/")
                 set(UMICOM_DOCUMENTATION_IN_COMMENT FALSE)
                 set(UMICOM_DOCUMENTATION_COMMENT_DISTANCE 0)
@@ -109,6 +111,7 @@ foreach(UMICOM_DOCUMENTATION_HEADER IN LISTS UMICOM_DOCUMENTATION_HEADERS)
         # being reused accidentally by the next public function.
         if(UMICOM_DOCUMENTATION_TRIMMED MATCHES ";[ \\t]*$")
             set(UMICOM_DOCUMENTATION_COMMENT_DISTANCE 1000)
+        # Apply this branch only when its contract condition is satisfied.
         elseif(UMICOM_DOCUMENTATION_COMMENT_DISTANCE LESS 1000)
             math(EXPR UMICOM_DOCUMENTATION_COMMENT_DISTANCE
                  "${UMICOM_DOCUMENTATION_COMMENT_DISTANCE} + 1")

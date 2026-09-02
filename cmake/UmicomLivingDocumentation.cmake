@@ -108,6 +108,7 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
 
         set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
             "${UMICOM_DOCUMENTATION_OUTPUT_DIRECTORY}")
+    # Use this fallback path when the earlier condition does not apply.
     else()
         # A missing optional generator must not block normal application work.
         message(STATUS

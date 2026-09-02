@@ -31,16 +31,32 @@ struct UmiTopicRegistry {
     size_t count;
 };
 
+/*
+ * Initialise topic registry from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_topic_registry_create(size_t capacity,
                                     UmiTopicRegistry **out_registry)
 {
     UmiTopicRegistry *registry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (capacity == 0U || out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiTopicRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->topics = (UmiOwnedTopic *)calloc(capacity,
                                                sizeof(*registry->topics));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry->topics == NULL) {
         free(registry);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -50,10 +66,16 @@ UmiStatus umi_topic_registry_create(size_t capacity,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by topic registry so the same storage can be reused safely. */
 void umi_topic_registry_destroy(UmiTopicRegistry *registry)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         free(registry->topics[index].topic);
         free(registry->topics[index].schema);
@@ -62,25 +84,39 @@ void umi_topic_registry_destroy(UmiTopicRegistry *registry)
     free(registry);
 }
 
+/* Add topic registry only after its inputs and available capacity have been checked. */
 UmiStatus umi_topic_registry_register(UmiTopicRegistry *registry,
                                       const UmiTopicDescriptor *topic)
 {
     UmiOwnedTopic *entry;
     char *topic_copy;
     char *schema_copy;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || topic == NULL || topic->topic == NULL ||
         topic->topic[0] == '\0' || topic->partitions == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_topic_registry_find(registry, topic->topic) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= registry->capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     topic_copy = umi_message_strdup(topic->topic);
     schema_copy = umi_message_strdup(topic->schema_id != NULL
                                      ? topic->schema_id : "");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topic_copy == NULL || schema_copy == NULL) {
         free(topic_copy);
         free(schema_copy);
@@ -96,13 +132,23 @@ UmiStatus umi_topic_registry_register(UmiTopicRegistry *registry,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find topic registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiTopicDescriptor *umi_topic_registry_find(
     const UmiTopicRegistry *registry,
     const char *topic)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || topic == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->topics[index].topic, topic) == 0) {
             return &registry->topics[index].descriptor;
         }
@@ -110,6 +156,7 @@ const UmiTopicDescriptor *umi_topic_registry_find(
     return NULL;
 }
 
+/* Return the number of records represented by topic registry without changing their state. */
 size_t umi_topic_registry_count(const UmiTopicRegistry *registry)
 {
     return registry != NULL ? registry->count : 0U;

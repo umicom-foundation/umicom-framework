@@ -19,6 +19,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "workbench.view.outline", .surface = UMI_STUDIO_SURFACE_OUTLINE, .prefix_match = 0, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile outline operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_outline(void)
 {

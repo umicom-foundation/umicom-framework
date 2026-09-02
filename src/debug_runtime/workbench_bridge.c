@@ -32,6 +32,7 @@ struct UmiDebugRuntimeWorkbenchBridge {
     UmiDebugRuntimeWorkbenchContext context;
 };
 
+/* Provide the context can start operation used by this module and its client applications. */
 static int context_can_start(
     const UmiDebugRuntimeWorkbenchBridge *bridge)
 {
@@ -42,6 +43,10 @@ static int context_can_start(
         bridge->context.configuration_id[0] != '\0';
 }
 
+/*
+ * Provide the runtime session bound operation used by this module and its client
+ * applications.
+ */
 static int runtime_session_bound(
     const UmiDebugRuntimeWorkbenchBridge *bridge)
 {
@@ -50,6 +55,7 @@ static int runtime_session_bound(
         umi_debug_runtime_platform_adapter(bridge->runtime) != NULL;
 }
 
+/* Provide the start enabled operation used by this module and its client applications. */
 static int start_enabled(void *user_data, const char *argument)
 {
     UmiDebugRuntimeWorkbenchBridge *bridge =
@@ -64,6 +70,7 @@ static int start_enabled(void *user_data, const char *argument)
     return context_can_start(bridge) && !runtime_session_bound(bridge);
 }
 
+/* Provide the active enabled operation used by this module and its client applications. */
 static int active_enabled(void *user_data, const char *argument)
 {
     UmiDebugRuntimeWorkbenchBridge *bridge =
@@ -73,6 +80,7 @@ static int active_enabled(void *user_data, const char *argument)
     return runtime_session_bound(bridge);
 }
 
+/* Provide the continue enabled operation used by this module and its client applications. */
 static int continue_enabled(void *user_data, const char *argument)
 {
     UmiDebugRuntimeWorkbenchBridge *bridge =
@@ -80,6 +88,7 @@ static int continue_enabled(void *user_data, const char *argument)
     UmiDebugRuntimePlatformSnapshot snapshot;
     (void)argument;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!runtime_session_bound(bridge) || bridge->context.thread_id == 0U) {
         return 0;
     }
@@ -96,6 +105,7 @@ static int continue_enabled(void *user_data, const char *argument)
         snapshot.paused;
 }
 
+/* Provide the start action operation used by this module and its client applications. */
 static UmiStatus start_action(
     void *user_data,
     const char *argument,
@@ -122,6 +132,10 @@ static UmiStatus start_action(
             : NULL,
         bridge->context.timeout_ms);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -135,6 +149,7 @@ static UmiStatus start_action(
     return status;
 }
 
+/* Provide the attach action operation used by this module and its client applications. */
 static UmiStatus attach_action(
     void *user_data,
     const char *argument,
@@ -161,6 +176,10 @@ static UmiStatus attach_action(
             : NULL,
         bridge->context.timeout_ms);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -174,6 +193,7 @@ static UmiStatus attach_action(
     return status;
 }
 
+/* Provide the continue action operation used by this module and its client applications. */
 static UmiStatus continue_action(
     void *user_data,
     const char *argument,
@@ -191,6 +211,10 @@ static UmiStatus continue_action(
         bridge->context.thread_id,
         bridge->context.timeout_ms);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -204,6 +228,7 @@ static UmiStatus continue_action(
     return status;
 }
 
+/* Provide the stop action operation used by this module and its client applications. */
 static UmiStatus stop_action(
     void *user_data,
     const char *argument,
@@ -221,6 +246,10 @@ static UmiStatus stop_action(
         1,
         bridge->context.timeout_ms);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -234,6 +263,10 @@ static UmiStatus stop_action(
     return status;
 }
 
+/*
+ * Initialise debug runtime workbench bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_runtime_workbench_bridge_create(
     UmiDeveloperWorkbench *workbench,
     UmiDebugRuntimePlatform *runtime,
@@ -241,6 +274,10 @@ UmiStatus umi_debug_runtime_workbench_bridge_create(
 {
     UmiDebugRuntimeWorkbenchBridge *bridge;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || runtime == NULL || out_bridge == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -248,6 +285,10 @@ UmiStatus umi_debug_runtime_workbench_bridge_create(
     *out_bridge = NULL;
     bridge = (UmiDebugRuntimeWorkbenchBridge *)calloc(
         1U, sizeof(*bridge));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     bridge->workbench = workbench;
@@ -258,9 +299,17 @@ UmiStatus umi_debug_runtime_workbench_bridge_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by debug runtime workbench bridge so the same storage can be
+ * reused safely.
+ */
 void umi_debug_runtime_workbench_bridge_destroy(
     UmiDebugRuntimeWorkbenchBridge *bridge)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return;
 
     /* The workbench stores callback context as a borrowed pointer. Remove all
@@ -279,26 +328,43 @@ void umi_debug_runtime_workbench_bridge_destroy(
     free(bridge);
 }
 
+/*
+ * Provide the debug runtime workbench bridge set context operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_workbench_bridge_set_context(
     UmiDebugRuntimeWorkbenchBridge *bridge,
     const UmiDebugRuntimeWorkbenchContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || context == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     bridge->context = *context;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (bridge->context.timeout_ms == 0U) {
         bridge->context.timeout_ms = 1000U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime workbench bridge bind operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_workbench_bridge_bind(
     UmiDebugRuntimeWorkbenchBridge *bridge)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_workbench_bind_action(
@@ -307,6 +373,7 @@ UmiStatus umi_debug_runtime_workbench_bridge_bind(
         start_action,
         start_enabled,
         bridge);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_workbench_bind_action(
@@ -315,6 +382,7 @@ UmiStatus umi_debug_runtime_workbench_bridge_bind(
         attach_action,
         start_enabled,
         bridge);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_workbench_bind_action(
@@ -323,6 +391,7 @@ UmiStatus umi_debug_runtime_workbench_bridge_bind(
         continue_action,
         continue_enabled,
         bridge);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_workbench_bind_action(

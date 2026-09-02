@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench selection profile record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_profile_record_init(
     UmiWorkbenchSelectionProfileRecord *record,
     const char *record_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     memset(record, 0, sizeof(*record));
     record->structure_size = (uint32_t)sizeof(*record);
@@ -29,15 +37,27 @@ void umi_workbench_selection_profile_record_init(
     record->state = UMI_WORKBENCH_SELECTION_STATE_CREATED;
     record->context_kind = UMI_CONTEXT_KIND_SELECTION;
     record->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record_id != NULL) {
         (void)umi_workbench_selection_copy_text(
             record->record_id, sizeof(record->record_id), record_id);
     }
 }
 
+/*
+ * Check that workbench selection profile record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_profile_record_validate(
     const UmiWorkbenchSelectionProfileRecord *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || record->structure_size != sizeof(*record) ||
         record->record_id[0] == '\0' ||
         record->selection_kind < UMI_WORKBENCH_SELECTION_GENERIC ||
@@ -72,10 +92,18 @@ UMI_SELECTION_SETTER(umi_workbench_selection_profile_record_set_label, label)
 
 #undef UMI_SELECTION_SETTER
 
+/*
+ * Provide the workbench selection profile record hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_selection_profile_record_hash(
     const UmiWorkbenchSelectionProfileRecord *record)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0U;
     hash = umi_workbench_selection_hash_text(
         hash, record->record_id, sizeof(record->record_id));
@@ -96,11 +124,19 @@ uint64_t umi_workbench_selection_profile_record_hash(
     return hash;
 }
 
+/*
+ * Provide the workbench selection profile record touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_selection_profile_record_touch(
     UmiWorkbenchSelectionProfileRecord *record,
     uint64_t sequence,
     uint64_t timestamp_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;

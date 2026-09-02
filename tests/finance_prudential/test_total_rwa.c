@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/total_rwa.h"
 
-int main(void) { UmiPrudentialTotalRwa r; if(umi_pru_total_rwa_calculate(&r,70.0,20.0,10.0)!=UMI_STATUS_OK)return 1; return r.total_rwa==100.0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialTotalRwa r; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_total_rwa_calculate(&r,70.0,20.0,10.0)!=UMI_STATUS_OK)return 1; return r.total_rwa==100.0?0:2; }

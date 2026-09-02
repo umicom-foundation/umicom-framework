@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/wash_trade_detector.h"
 
+/*
+ * Provide the trading wash trade detector detect operation used by this module and its
+ * client applications.
+ */
 bool umi_trading_wash_trade_detector_detect(const UmiFinancialId *buyer_owner,const UmiFinancialId *seller_owner,UmiTradingQuantityLots lots,UmiTradingQuantityLots minimum_lots){return buyer_owner!=NULL&&seller_owner!=NULL&&lots>=minimum_lots&&minimum_lots>0&&umi_trading_core_id_equal(buyer_owner,seller_owner);}

@@ -24,6 +24,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_DIRECTORY_COMPARE_CAPACITY 256U
 
+/**
+ * List the named developer directory compare state values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperDirectoryCompareState {
     UMI_DEVELOPER_DIRECTORY_SAME = 0,
     UMI_DEVELOPER_DIRECTORY_LEFT_ONLY = 1,
@@ -32,6 +36,10 @@ typedef enum UmiDeveloperDirectoryCompareState {
     UMI_DEVELOPER_DIRECTORY_TYPE_MISMATCH = 4
 } UmiDeveloperDirectoryCompareState;
 
+/**
+ * Represent the developer directory compare item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperDirectoryCompareItem {
     char relative_path[UMI_DEVELOPER_PRODUCTIVITY_PATH_CAPACITY];
     UmiDeveloperDirectoryCompareState state;
@@ -41,6 +49,10 @@ typedef struct UmiDeveloperDirectoryCompareItem {
     int right_directory;
 } UmiDeveloperDirectoryCompareItem;
 
+/**
+ * Represent the developer directory compare model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperDirectoryCompareModel {
     UmiDeveloperDirectoryCompareItem
         items[UMI_DEVELOPER_DIRECTORY_COMPARE_CAPACITY];
@@ -52,9 +64,17 @@ typedef struct UmiDeveloperDirectoryCompareModel {
     uint64_t revision;
 } UmiDeveloperDirectoryCompareModel;
 
+/**
+ * Initialise developer directory compare from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_directory_compare_init(
     UmiDeveloperDirectoryCompareModel *model);
 
+/**
+ * Add developer directory compare only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_developer_directory_compare_add(
     UmiDeveloperDirectoryCompareModel *model,
     const UmiDeveloperDirectoryCompareItem *item);

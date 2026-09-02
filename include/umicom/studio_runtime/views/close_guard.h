@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise studio close guard view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_close_guard_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,

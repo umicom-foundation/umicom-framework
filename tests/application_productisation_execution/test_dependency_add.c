@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/* Add test dependency only after its inputs and available capacity have been checked. */
 void test_dependency_add(void)
 {
     UmiProductExecutionDependencyGraph g; umi_product_execution_dependency_graph_init(&g); assert(umi_product_execution_dependency_add(&g,0U,1U,2U)==UMI_STATUS_OK); assert(g.count==1U);

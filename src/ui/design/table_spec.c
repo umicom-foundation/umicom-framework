@@ -20,9 +20,18 @@
 #include "umicom/ui/design/table_spec.h"
 
 #include <string.h>
+/* Check that design table spec satisfies its contract before another service relies on it. */
 int umi_design_table_spec_valid(const UmiDesignTableSpec *spec) { return spec!=NULL && (spec->columns>0U && spec->frozen_columns<=spec->columns && spec->density>=UMI_DESIGN_DENSITY_COMPACT && spec->density<=UMI_DESIGN_DENSITY_TOUCH) ? 1 : 0; }
+/*
+ * Initialise design table spec from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_design_table_spec_init(UmiDesignTableSpec *spec, uint16_t columns, uint16_t frozen_columns, UmiDesignDensity density, int virtualised, int sortable, int filterable)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(spec,0,sizeof *spec);
     spec->columns=columns;spec->frozen_columns=frozen_columns;spec->density=density;spec->virtualised=virtualised?1:0;spec->sortable=sortable?1:0;spec->filterable=filterable?1:0;

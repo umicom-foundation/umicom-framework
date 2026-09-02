@@ -19,8 +19,13 @@
 
 #include "umicom/helix/types.h"
 
+/*
+ * Provide the helix agent kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_agent_kind_text(UmiHelixAgentKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_HELIX_AGENT_DESIGNER: return "designer";
         case UMI_HELIX_AGENT_BUILDER: return "builder";
@@ -32,8 +37,13 @@ const char *umi_helix_agent_kind_text(UmiHelixAgentKind kind)
     }
 }
 
+/*
+ * Provide the helix candidate state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_candidate_state_text(UmiHelixCandidateState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_HELIX_CANDIDATE_DRAFT: return "draft";
         case UMI_HELIX_CANDIDATE_BUILT: return "built";

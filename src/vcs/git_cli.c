@@ -26,6 +26,7 @@ typedef struct UmiGitCliProvider {
     int reserved;
 } UmiGitCliProvider;
 
+/* Provide the run git operation used by this module and its client applications. */
 static UmiStatus run_git(const char *root,
                          const char *const *arguments,
                          size_t argument_count,
@@ -38,7 +39,15 @@ static UmiStatus run_git(const char *root,
     UmiStatus status;
     (void)memset(&request, 0, sizeof(request));
     (void)memset(&result, 0, sizeof(result));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_text != NULL && capacity > 0U) out_text[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_exit_code != NULL) *out_exit_code = -1;
     request.program = "git";
     request.arguments = arguments;
@@ -47,20 +56,31 @@ static UmiStatus run_git(const char *root,
     request.capture_stdout = 1;
     request.capture_stderr = 1;
     status = umi_process_execute(&request, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_text != NULL && capacity > 0U) {
         size_t output_length = strlen(result.output);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (result.output_truncated || output_length + 1U > capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         (void)memcpy(out_text, result.output, output_length + 1U);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_exit_code != NULL) {
         *out_exit_code = result.exit_code;
     }
     return status;
 }
 
+/* Provide the run git checked operation used by this module and its client applications. */
 static UmiStatus run_git_checked(const char *root,
                                  const char *const *arguments,
                                  size_t argument_count,
@@ -70,10 +90,12 @@ static UmiStatus run_git_checked(const char *root,
     int exit_code = -1;
     UmiStatus status = run_git(root, arguments, argument_count,
                                out_text, capacity, &exit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return exit_code == 0 ? UMI_STATUS_OK : UMI_STATUS_INTERNAL_ERROR;
 }
 
+/* Provide the git status operation used by this module and its client applications. */
 static UmiStatus git_status(void *instance,
                             const char *root,
                             UmiVcsChangeList *out_changes,
@@ -90,6 +112,10 @@ static UmiStatus git_status(void *instance,
     int exit_code = 0;
     UmiStatus status;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_changes == NULL || out_branch == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -99,25 +125,29 @@ static UmiStatus git_status(void *instance,
                      output,
                      sizeof(output),
                      &exit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || exit_code != 0) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_UNAVAILABLE;
     }
     newline = strchr(output, '\n');
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(output, "## ", 3U) == 0) {
         char header[1024];
         size_t length = newline != NULL
             ? (size_t)(newline - output)
             : strlen(output);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= sizeof(header)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         (void)memcpy(header, output, length);
         header[length] = '\0';
         status = umi_vcs_branch_parse_status_header(header, out_branch);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         (void)memset(out_branch, 0, sizeof(*out_branch));
     }
     return umi_vcs_status_parse_porcelain(
@@ -127,6 +157,7 @@ static UmiStatus git_status(void *instance,
     );
 }
 
+/* Provide the git history operation used by this module and its client applications. */
 static UmiStatus git_history(void *instance,
                              const char *root,
                              size_t limit,
@@ -138,6 +169,10 @@ static UmiStatus git_history(void *instance,
     int exit_code = 0;
     UmiStatus status;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_history == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -155,24 +190,31 @@ static UmiStatus git_history(void *instance,
                      output,
                      sizeof(output),
                      &exit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || exit_code != 0) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_UNAVAILABLE;
     }
     return umi_vcs_history_parse(out_history, output, NULL);
 }
 
+/* Provide the git simple path operation used by this module and its client applications. */
 static UmiStatus git_simple_path(const char *root,
                                  const char *verb,
                                  const char *path)
 {
     const char *arguments[3];
     int exit_code = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || verb == NULL || path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     arguments[0] = verb;
     arguments[1] = "--";
     arguments[2] = path;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (run_git(root, arguments, 3U, NULL, 0U, &exit_code) !=
         UMI_STATUS_OK) {
         return UMI_STATUS_IO_ERROR;
@@ -180,6 +222,7 @@ static UmiStatus git_simple_path(const char *root,
     return exit_code == 0 ? UMI_STATUS_OK : UMI_STATUS_INTERNAL_ERROR;
 }
 
+/* Provide the git stage operation used by this module and its client applications. */
 static UmiStatus git_stage(void *instance,
                            const char *root,
                            const char *path)
@@ -188,6 +231,7 @@ static UmiStatus git_stage(void *instance,
     return git_simple_path(root, "add", path);
 }
 
+/* Provide the git unstage operation used by this module and its client applications. */
 static UmiStatus git_unstage(void *instance,
                              const char *root,
                              const char *path)
@@ -195,6 +239,10 @@ static UmiStatus git_unstage(void *instance,
     const char *arguments[] = {"restore", "--staged", "--", path};
     int exit_code = 0;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -208,6 +256,7 @@ static UmiStatus git_unstage(void *instance,
         : UMI_STATUS_INTERNAL_ERROR;
 }
 
+/* Provide the git commit operation used by this module and its client applications. */
 static UmiStatus git_commit(void *instance,
                             const char *root,
                             const char *message,
@@ -220,6 +269,10 @@ static UmiStatus git_commit(void *instance,
     int exit_code = 0;
     UmiStatus status;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || message == NULL || message[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -229,6 +282,7 @@ static UmiStatus git_commit(void *instance,
                      NULL,
                      0U,
                      &exit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || exit_code != 0) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_INTERNAL_ERROR;
     }
@@ -238,9 +292,11 @@ static UmiStatus git_commit(void *instance,
                      output,
                      sizeof(output),
                      &exit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && exit_code == 0 &&
         out_commit_id != NULL && capacity > 0U) {
         size_t length = strcspn(output, "\r\n");
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length + 1U > capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -250,6 +306,7 @@ static UmiStatus git_commit(void *instance,
     return status;
 }
 
+/* Provide the git remote operation used by this module and its client applications. */
 static UmiStatus git_remote(void *instance,
                             const char *root,
                             const char *verb)
@@ -268,16 +325,19 @@ static UmiStatus git_remote(void *instance,
         : UMI_STATUS_INTERNAL_ERROR;
 }
 
+/* Provide the git pull operation used by this module and its client applications. */
 static UmiStatus git_pull(void *instance, const char *root)
 {
     return git_remote(instance, root, "pull");
 }
 
+/* Provide the git push operation used by this module and its client applications. */
 static UmiStatus git_push(void *instance, const char *root)
 {
     return git_remote(instance, root, "push");
 }
 
+/* Provide the git branches operation used by this module and its client applications. */
 static UmiStatus git_branches(void *instance,
                               const char *root,
                               UmiVcsBranchList *out_branches)
@@ -288,11 +348,16 @@ static UmiStatus git_branches(void *instance,
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
     UmiStatus status;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_branches == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = run_git_checked(root, arguments, 2U, output, sizeof(output));
     return status == UMI_STATUS_OK ? umi_vcs_branch_list_parse(out_branches, output) : status;
 }
 
+/* Provide the git remotes operation used by this module and its client applications. */
 static UmiStatus git_remotes(void *instance,
                              const char *root,
                              UmiVcsRemoteList *out_remotes)
@@ -301,11 +366,16 @@ static UmiStatus git_remotes(void *instance,
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
     UmiStatus status;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_remotes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = run_git_checked(root, arguments, 2U, output, sizeof(output));
     return status == UMI_STATUS_OK ? umi_vcs_remote_list_parse(out_remotes, output) : status;
 }
 
+/* Provide the git tags operation used by this module and its client applications. */
 static UmiStatus git_tags(void *instance,
                           const char *root,
                           UmiVcsTagList *out_tags)
@@ -317,11 +387,16 @@ static UmiStatus git_tags(void *instance,
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
     UmiStatus status;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_tags == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = run_git_checked(root, arguments, 3U, output, sizeof(output));
     return status == UMI_STATUS_OK ? umi_vcs_tag_list_parse(out_tags, output) : status;
 }
 
+/* Provide the git diff text operation used by this module and its client applications. */
 static UmiStatus git_diff_text(void *instance,
                                const char *root,
                                const char *path,
@@ -332,6 +407,10 @@ static UmiStatus git_diff_text(void *instance,
     const char *unstaged_arguments[] = {"diff", "--no-ext-diff", "--", path};
     const char *staged_arguments[] = {"diff", "--cached", "--no-ext-diff", "--", path};
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || path == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -340,6 +419,7 @@ static UmiStatus git_diff_text(void *instance,
         : run_git_checked(root, unstaged_arguments, 4U, out_text, capacity);
 }
 
+/* Provide the git stage all operation used by this module and its client applications. */
 static UmiStatus git_stage_all(void *instance, const char *root)
 {
     const char *arguments[] = {"add", "-A"};
@@ -348,6 +428,7 @@ static UmiStatus git_stage_all(void *instance, const char *root)
                         : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/* Provide the git unstage all operation used by this module and its client applications. */
 static UmiStatus git_unstage_all(void *instance, const char *root)
 {
     const char *arguments[] = {"restore", "--staged", "."};
@@ -356,14 +437,20 @@ static UmiStatus git_unstage_all(void *instance, const char *root)
                         : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/* Provide the git discard operation used by this module and its client applications. */
 static UmiStatus git_discard(void *instance, const char *root, const char *path)
 {
     const char *arguments[] = {"restore", "--worktree", "--", path};
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || path == NULL || path[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     return run_git_checked(root, arguments, 4U, NULL, 0U);
 }
 
+/* Provide the git fetch operation used by this module and its client applications. */
 static UmiStatus git_fetch(void *instance, const char *root)
 {
     const char *arguments[] = {"fetch", "--all", "--prune"};
@@ -372,13 +459,25 @@ static UmiStatus git_fetch(void *instance, const char *root)
                         : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Provide the git validate branch name operation used by this module and its client
+ * applications.
+ */
 static UmiStatus git_validate_branch_name(const char *root, const char *name)
 {
     const char *arguments[] = {"check-ref-format", "--branch", name};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || name == NULL || name[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     return run_git_checked(root, arguments, 3U, NULL, 0U);
 }
 
+/*
+ * Initialise git branch from caller-provided values so later operations receive a known
+ * state.
+ */
 static UmiStatus git_branch_create(void *instance,
                                    const char *root,
                                    const char *name,
@@ -389,12 +488,17 @@ static UmiStatus git_branch_create(void *instance,
     UmiStatus status;
     (void)instance;
     status = git_validate_branch_name(root, name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return checkout
         ? run_git_checked(root, switch_arguments, 4U, NULL, 0U)
         : run_git_checked(root, create_arguments, 3U, NULL, 0U);
 }
 
+/*
+ * Provide the git branch checkout operation used by this module and its client
+ * applications.
+ */
 static UmiStatus git_branch_checkout(void *instance,
                                      const char *root,
                                      const char *name)
@@ -407,6 +511,7 @@ static UmiStatus git_branch_checkout(void *instance,
         ? run_git_checked(root, arguments, 3U, NULL, 0U) : status;
 }
 
+/* Provide the git branch delete operation used by this module and its client applications. */
 static UmiStatus git_branch_delete(void *instance,
                                    const char *root,
                                    const char *name,
@@ -417,24 +522,38 @@ static UmiStatus git_branch_delete(void *instance,
     UmiStatus status;
     (void)instance;
     status = git_validate_branch_name(root, name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return force
         ? run_git_checked(root, force_arguments, 4U, NULL, 0U)
         : run_git_checked(root, safe_arguments, 4U, NULL, 0U);
 }
 
+/* Release or reset state held by git so the same storage can be reused safely. */
 static void git_destroy(void *instance)
 {
     free(instance);
 }
 
+/*
+ * Provide the vcs git cli provider operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_git_cli_provider(UmiVcsProvider *out_provider)
 {
     UmiGitCliProvider *instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_provider == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     instance = calloc(1U, sizeof(*instance));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (instance == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -464,6 +583,10 @@ UmiStatus umi_vcs_git_cli_provider(UmiVcsProvider *out_provider)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs git cli is repository operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_git_cli_is_repository(const char *root, int *out_is_repo)
 {
     const char *arguments[] = {
@@ -473,6 +596,10 @@ UmiStatus umi_vcs_git_cli_is_repository(const char *root, int *out_is_repo)
     char output[128];
     int exit_code = 0;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || out_is_repo == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

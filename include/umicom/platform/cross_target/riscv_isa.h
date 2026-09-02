@@ -31,7 +31,14 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/cpu_feature_set.h"
+/**
+ * Represent the ct riscv isa data shared with callers of this public contract.
+ */
 typedef struct UmiCtRiscvIsa { uint32_t xlen; char canonical[128]; UmiCtCpuFeatureSet features; bool integer_base; bool multiply; bool zicsr; bool zifencei; } UmiCtRiscvIsa;
+/**
+ * Read ct riscv isa into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_ct_riscv_isa_parse(const char *isa,UmiCtRiscvIsa *out_isa);
 
 #ifdef __cplusplus

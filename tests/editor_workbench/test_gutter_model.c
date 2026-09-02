@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/gutter_model.h"
-int main(void){ UmiEditorWbGutterModel s; umi_editor_wb_gutter_model_init(&s); if(umi_editor_wb_gutter_model_channel_count(&s)!=4U)return 1; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiEditorWbGutterModel s; umi_editor_wb_gutter_model_init(&s); /* Apply this branch only when its contract condition is satisfied. */ if(umi_editor_wb_gutter_model_channel_count(&s)!=4U)return 1; return 0; }

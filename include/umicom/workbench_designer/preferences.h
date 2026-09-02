@@ -24,6 +24,9 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer theme mode values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerThemeMode {
     UMI_WORKBENCH_DESIGNER_THEME_SYSTEM = 1,
     UMI_WORKBENCH_DESIGNER_THEME_LIGHT = 2,
@@ -31,6 +34,10 @@ typedef enum UmiWorkbenchDesignerThemeMode {
     UMI_WORKBENCH_DESIGNER_THEME_HIGH_CONTRAST = 4
 } UmiWorkbenchDesignerThemeMode;
 
+/**
+ * Represent the workbench designer preferences data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerPreferences {
     bool show_grid;
     bool snap_to_grid;
@@ -54,9 +61,25 @@ typedef struct UmiWorkbenchDesignerPreferences {
     uint64_t revision;
 } UmiWorkbenchDesignerPreferences;
 
+/**
+ * Provide the workbench designer preferences default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchDesignerPreferences umi_workbench_designer_preferences_default(void);
+/**
+ * Check that workbench designer preferences satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_designer_preferences_validate(const UmiWorkbenchDesignerPreferences *preferences, char *error, size_t error_capacity);
+/**
+ * Provide the workbench designer preferences overlay operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_preferences_overlay(UmiWorkbenchDesignerPreferences *destination, const UmiWorkbenchDesignerPreferences *source);
+/**
+ * Provide the workbench designer preferences equal operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_preferences_equal(const UmiWorkbenchDesignerPreferences *left, const UmiWorkbenchDesignerPreferences *right);
 
 #ifdef __cplusplus

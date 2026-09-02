@@ -11,6 +11,10 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/helix/approval_gate.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiHelixApprovalGate gate;

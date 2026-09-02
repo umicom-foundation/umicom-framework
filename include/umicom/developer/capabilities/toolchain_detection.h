@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TOOLCHAIN_DETECTION "umicom.developer.configuration.toolchain_detection"
 
+/**
+ * Provide the developer capability toolchain detection operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_toolchain_detection(void);
 

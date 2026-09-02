@@ -27,7 +27,13 @@ extern "C" {
 #endif
 #define UMI_REPOSITORY_REMEDIATION_TEXT_CAPACITY 512U
 #define UMI_REPOSITORY_REMEDIATION_ACTION_CAPACITY 64U
+/**
+ * List the named repository remediation risk values accepted by this public contract.
+ */
 typedef enum UmiRepositoryRemediationRisk { UMI_REPOSITORY_REMEDIATION_SAFE=0, UMI_REPOSITORY_REMEDIATION_REVIEW=1, UMI_REPOSITORY_REMEDIATION_DESTRUCTIVE=2 } UmiRepositoryRemediationRisk;
+/**
+ * List the named repository remediation kind values accepted by this public contract.
+ */
 typedef enum UmiRepositoryRemediationKind { UMI_REMEDIATION_CONFIGURE_UPSTREAM=1, UMI_REMEDIATION_REVIEW_DIVERGENCE, UMI_REMEDIATION_REVIEW_WORKTREE, UMI_REMEDIATION_REVIEW_INDEX, UMI_REMEDIATION_INIT_SUBMODULES, UMI_REMEDIATION_REVIEW_SUBMODULE_HEADS, UMI_REMEDIATION_REVIEW_GITLINKS, UMI_REMEDIATION_ADD_GITIGNORE, UMI_REMEDIATION_ADD_GITATTRIBUTES } UmiRepositoryRemediationKind;
 /* Translate one remediation risk value to stable display text. */
 const char *umi_repository_remediation_risk_text(UmiRepositoryRemediationRisk risk);

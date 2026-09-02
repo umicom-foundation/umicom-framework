@@ -18,4 +18,8 @@
 
 #include "umicom/finance/regulatory/timeliness_check.h"
 
-int umi_reg_timeliness_check(int64_t as_of_ms,int64_t now_ms,int64_t maximum_age_ms){ if(as_of_ms<0||now_ms<0||maximum_age_ms<0||as_of_ms>now_ms)return 0; return now_ms-as_of_ms<=maximum_age_ms?1:0; }
+/*
+ * Provide the reg timeliness check operation used by this module and its client
+ * applications.
+ */
+int umi_reg_timeliness_check(int64_t as_of_ms,int64_t now_ms,int64_t maximum_age_ms){ /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(as_of_ms<0||now_ms<0||maximum_age_ms<0||as_of_ms>now_ms)return 0; return now_ms-as_of_ms<=maximum_age_ms?1:0; }

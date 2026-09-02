@@ -15,12 +15,21 @@
 
 #include "umicom/workbench_context_link/gtk4.h"
 
+/*
+ * Provide the workbench context link gtk4 history new operation used by this module and
+ * its client applications.
+ */
 GtkWidget *umi_workbench_context_link_gtk4_history_new(
     const UmiWorkbenchContextLinkService *service)
 {
     GtkWidget *list = gtk_list_box_new();
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return list;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < service->history.count; ++index) {
         const UmiWorkbenchContextLinkHistoryItem *item = &service->history.items[index];
         GtkWidget *row = gtk_label_new(item->payload.identity.context_id);

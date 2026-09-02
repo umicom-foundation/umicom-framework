@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that replay event satisfies its contract before another service relies on it.
+ */
 int umi_replay_event_valid(const UmiReplayEvent *event);
 #ifdef __cplusplus
 }

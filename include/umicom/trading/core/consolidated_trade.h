@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading consolidated trade data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingConsolidatedTrade { UmiFinancialId instrument_id; UmiFinancialId venue_id; UmiTradingPriceTicks price_ticks; UmiTradingQuantityLots quantity_lots; int64_t event_time_ms; } UmiTradingConsolidatedTrade;
 /* Initialise and validate represent a venue trade print with integer-normalised price and quantity. */
 UmiStatus umi_trading_consolidated_trade_init(UmiTradingConsolidatedTrade *value,const UmiFinancialId * instrument_id, const UmiFinancialId * venue_id, UmiTradingPriceTicks price_ticks, UmiTradingQuantityLots quantity_lots, int64_t event_time_ms);

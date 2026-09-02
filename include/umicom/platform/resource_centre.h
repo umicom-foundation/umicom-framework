@@ -33,8 +33,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the resource centre data shared with callers of this public contract.
+ */
 typedef struct UmiResourceCentre UmiResourceCentre;
 
+/**
+ * Represent the resource centre snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiResourceCentreSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -46,13 +52,45 @@ typedef struct UmiResourceCentreSnapshot {
     uint64_t revision;
 } UmiResourceCentreSnapshot;
 
+/**
+ * Initialise platform resource centre from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_platform_resource_centre_create(UmiResourceCentre **out_service);
+/**
+ * Release or reset state held by platform resource centre so the same storage can be
+ * reused safely.
+ */
 void umi_platform_resource_centre_destroy(UmiResourceCentre *service);
+/**
+ * Provide the platform resource centre snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_platform_resource_centre_snapshot(const UmiResourceCentre *service, UmiResourceCentreSnapshot *out_snapshot);
+/**
+ * Provide the platform resource centre recent items operation used by this module and its
+ * client applications.
+ */
 UmiRecentItemRegistry *umi_platform_resource_centre_recent_items(UmiResourceCentre *service);
+/**
+ * Provide the platform resource centre bookmarks operation used by this module and its
+ * client applications.
+ */
 UmiBookmarkRegistry *umi_platform_resource_centre_bookmarks(UmiResourceCentre *service);
+/**
+ * Provide the platform resource centre locations operation used by this module and its
+ * client applications.
+ */
 UmiResourceLocationRegistry *umi_platform_resource_centre_locations(UmiResourceCentre *service);
+/**
+ * Provide the platform resource centre workspaces operation used by this module and its
+ * client applications.
+ */
 UmiWorkspaceHistoryRegistry *umi_platform_resource_centre_workspaces(UmiResourceCentre *service);
+/**
+ * Provide the platform resource centre operations operation used by this module and its
+ * client applications.
+ */
 UmiFileOperationRegistry *umi_platform_resource_centre_operations(UmiResourceCentre *service);
 
 #ifdef __cplusplus

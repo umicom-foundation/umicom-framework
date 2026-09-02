@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider trading profile record data shared with
+ * callers of this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderTradingProfileRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderTradingProfileRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderTradingProfileRecord;
 
+/**
+ * Initialise workbench selection provider trading profile record from caller-provided
+ * values so later operations receive a known state.
+ */
 void umi_workbench_selection_provider_trading_profile_record_init(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider trading profile record satisfies its contract
+ * before another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_validate(
     const UmiWorkbenchSelectionProviderTradingProfileRecord *record);
+/**
+ * Provide the workbench selection provider trading profile record set provider operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_set_provider(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider trading profile record set source operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_set_source(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider trading profile record set subject operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_set_subject(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider trading profile record set related operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_set_related(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider trading profile record set group operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_set_group(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider trading profile record set description
+ * operation used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_profile_record_set_description(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider trading profile record hash operation used by
+ * this module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_trading_profile_record_hash(
     const UmiWorkbenchSelectionProviderTradingProfileRecord *record);
+/**
+ * Provide the workbench selection provider trading profile record touch operation used by
+ * this module and its client applications.
+ */
 void umi_workbench_selection_provider_trading_profile_record_touch(
     UmiWorkbenchSelectionProviderTradingProfileRecord *record,
     uint64_t sequence,

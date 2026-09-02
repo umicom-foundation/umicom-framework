@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix generation data shared with callers of this public contract.
+ */
 typedef struct UmiHelixGeneration {
     char generation_id[UMI_HELIX_ID_CAPACITY];
     char candidate_id[UMI_HELIX_ID_CAPACITY];
@@ -36,6 +39,10 @@ typedef struct UmiHelixGeneration {
     uint64_t promoted_at_ns;
 } UmiHelixGeneration;
 
+/**
+ * Initialise helix generation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_generation_init(UmiHelixGeneration *value);
 
 #ifdef __cplusplus

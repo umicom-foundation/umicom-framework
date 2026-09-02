@@ -22,9 +22,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote terminal working directory data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiTerminalRemoteTerminalWorkingDirectory { char path[UMI_TERMINAL_REMOTE_PATH_CAPACITY]; uint64_t revision; } UmiTerminalRemoteTerminalWorkingDirectory;
+/**
+ * Initialise terminal remote terminal working directory from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_terminal_remote_terminal_working_directory_init(UmiTerminalRemoteTerminalWorkingDirectory *value);
+/**
+ * Copy terminal remote terminal working directory into module-owned storage so callers
+ * keep ownership of their input values.
+ */
 UmiStatus umi_terminal_remote_terminal_working_directory_set(UmiTerminalRemoteTerminalWorkingDirectory *value,const char *path);
+/**
+ * Provide the terminal remote terminal working directory absolute operation used by this
+ * module and its client applications.
+ */
 bool umi_terminal_remote_terminal_working_directory_absolute(const UmiTerminalRemoteTerminalWorkingDirectory *value);
 #ifdef __cplusplus
 }

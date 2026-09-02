@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench debug toolbar state data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchDebugToolbarState {
     uint64_t enabled_commands;
     uint64_t visible_commands;
@@ -33,10 +37,30 @@ typedef struct UmiDebugWorkbenchDebugToolbarState {
     uint64_t revision;
 } UmiDebugWorkbenchDebugToolbarState;
 
+/**
+ * Initialise debug workbench debug toolbar state from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_debug_workbench_debug_toolbar_state_init(UmiDebugWorkbenchDebugToolbarState *model);
+/**
+ * Provide the debug workbench debug toolbar state set enabled operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_toolbar_state_set_enabled(UmiDebugWorkbenchDebugToolbarState *model, UmiDebugWorkbenchCommand command, bool enabled);
+/**
+ * Provide the debug workbench debug toolbar state is enabled operation used by this module
+ * and its client applications.
+ */
 int umi_debug_workbench_debug_toolbar_state_is_enabled(const UmiDebugWorkbenchDebugToolbarState *model, UmiDebugWorkbenchCommand command);
+/**
+ * Provide the debug workbench debug toolbar state set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_toolbar_state_set_primary(UmiDebugWorkbenchDebugToolbarState *model, UmiDebugWorkbenchCommand command);
+/**
+ * Check that debug workbench debug toolbar state satisfies its contract before another
+ * service relies on it.
+ */
 int umi_debug_workbench_debug_toolbar_state_valid(const UmiDebugWorkbenchDebugToolbarState *model);
 
 #ifdef __cplusplus

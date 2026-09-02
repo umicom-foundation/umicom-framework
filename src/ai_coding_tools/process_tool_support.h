@@ -16,6 +16,10 @@
 #define UMICOM_AI_CODING_TOOLS_PROCESS_TOOL_SUPPORT_H
 #include "tool_support.h"
 
+/**
+ * Provide the ai coding tool invoke process kind operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_invoke_process_kind(
     UmiAiCodingToolEnvironment *environment,
     UmiDeveloperOperationKind kind,

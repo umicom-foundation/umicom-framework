@@ -24,6 +24,7 @@ include_guard(GLOBAL)
 set(UMICOM_APPLICATION_RUNTIME_FRAMEWORK_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application OR NOT TARGET umicom_desktop)
     message(FATAL_ERROR
         "UmicomApplicationRuntimeIntegration.cmake must be included after "
@@ -44,14 +45,19 @@ target_sources(umicom_desktop PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/desktop/desk_runtime.c"
 )
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/desk_gtk4.c"
     )
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add application runtime test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_application_runtime_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
@@ -62,10 +68,12 @@ if(BUILD_TESTING)
 
         target_link_libraries("${target}" PRIVATE Umicom::Framework)
 
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
 
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

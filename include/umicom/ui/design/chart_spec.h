@@ -26,7 +26,13 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design chart kind values accepted by this public contract.
+ */
 typedef enum UmiDesignChartKind { UMI_DESIGN_CHART_LINE=1, UMI_DESIGN_CHART_AREA=2, UMI_DESIGN_CHART_BAR=3, UMI_DESIGN_CHART_SCATTER=4, UMI_DESIGN_CHART_CANDLESTICK=5 } UmiDesignChartKind;
+/**
+ * Represent the design chart spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignChartSpec { UmiDesignChartKind kind; uint16_t series_count; int legend; int crosshair; int zoom; int pan; } UmiDesignChartSpec;
 /* Initialise a semantic analytical-chart specification. */
 UmiStatus umi_design_chart_spec_init(UmiDesignChartSpec *spec, UmiDesignChartKind kind, uint16_t series_count, int legend, int crosshair, int zoom, int pan);

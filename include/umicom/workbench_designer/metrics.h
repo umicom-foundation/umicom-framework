@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer metrics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerMetrics {
     uint64_t sessions_opened;
     uint64_t sessions_closed;
@@ -47,18 +51,38 @@ typedef struct UmiWorkbenchDesignerMetrics {
     uint64_t revision;
 } UmiWorkbenchDesignerMetrics;
 
+/**
+ * Initialise workbench designer metrics from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_metrics_init(UmiWorkbenchDesignerMetrics *metrics);
+/**
+ * Provide the workbench designer metrics record command operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_metrics_record_command(
     UmiWorkbenchDesignerMetrics *metrics,
     UmiStatus status,
     uint64_t duration_us,
     bool undo,
     bool redo);
+/**
+ * Write workbench designer metrics record in its stable representation and report capacity
+ * or input failures to the caller.
+ */
 void umi_workbench_designer_metrics_record_save(
     UmiWorkbenchDesignerMetrics *metrics,
     UmiStatus status);
+/**
+ * Provide the workbench designer metrics command success rate operation used by this
+ * module and its client applications.
+ */
 double umi_workbench_designer_metrics_command_success_rate(
     const UmiWorkbenchDesignerMetrics *metrics);
+/**
+ * Provide the workbench designer metrics average command duration us operation used by
+ * this module and its client applications.
+ */
 double umi_workbench_designer_metrics_average_command_duration_us(
     const UmiWorkbenchDesignerMetrics *metrics);
 

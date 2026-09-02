@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application workspace runtime data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationWorkspaceRuntime {
     uint32_t structure_size;
     UmiApplicationSession session;
@@ -35,12 +39,24 @@ typedef struct UmiApplicationWorkspaceRuntime {
     UmiUiWorkbench *workbench;
 } UmiApplicationWorkspaceRuntime;
 
+/**
+ * Initialise application workspace runtime from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_workspace_runtime_init(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationWorkspaceRuntime *out_runtime);
+/**
+ * Provide the application workspace runtime select layout operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_workspace_runtime_select_layout(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *layout_id);
+/**
+ * Provide the application workspace runtime activate panel operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_workspace_runtime_activate_panel(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *panel_id);
@@ -52,6 +68,10 @@ UmiStatus umi_application_workspace_runtime_deactivate_panel(
 UmiStatus umi_application_workspace_runtime_set_layout_locked(
     UmiApplicationWorkspaceRuntime *runtime,
     bool locked);
+/**
+ * Provide the application workspace runtime set context operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_workspace_runtime_set_context(
     UmiApplicationWorkspaceRuntime *runtime,
     const char *group_id,

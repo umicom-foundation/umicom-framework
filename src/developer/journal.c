@@ -27,37 +27,60 @@ struct UmiDeveloperJournal {
     uint64_t revision;
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) {
         return;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) {
         source = "";
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         length = capacity - 1U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         memcpy(destination, source, length);
     }
     destination[length] = '\0';
 }
 
+/*
+ * Initialise developer journal from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_developer_journal_create(UmiDeveloperJournal **out_journal)
 {
     UmiDeveloperJournal *journal;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_journal == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_journal = NULL;
     journal = (UmiDeveloperJournal *)calloc(1U, sizeof(*journal));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -65,6 +88,10 @@ UmiStatus umi_developer_journal_create(UmiDeveloperJournal **out_journal)
     journal->entries = (UmiDeveloperJournalEntry *)calloc(
         UMI_DEVELOPER_JOURNAL_CAPACITY,
         sizeof(*journal->entries));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal->entries == NULL) {
         free(journal);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -76,8 +103,16 @@ UmiStatus umi_developer_journal_create(UmiDeveloperJournal **out_journal)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer journal so the same storage can be reused
+ * safely.
+ */
 void umi_developer_journal_destroy(UmiDeveloperJournal *journal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) {
         return;
     }
@@ -85,6 +120,7 @@ void umi_developer_journal_destroy(UmiDeveloperJournal *journal)
     free(journal);
 }
 
+/* Add developer journal only after its inputs and available capacity have been checked. */
 UmiStatus umi_developer_journal_append(
     UmiDeveloperJournal *journal,
     UmiDeveloperEventKind kind,
@@ -95,6 +131,10 @@ UmiStatus umi_developer_journal_append(
     UmiDeveloperJournalEntry entry;
     size_t destination_index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -107,11 +147,12 @@ UmiStatus umi_developer_journal_append(
     copy_text(entry.operation_id, sizeof(entry.operation_id), operation_id);
     copy_text(entry.message, sizeof(entry.message), message);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (journal->count < UMI_DEVELOPER_JOURNAL_CAPACITY) {
         destination_index =
             (journal->start + journal->count) % UMI_DEVELOPER_JOURNAL_CAPACITY;
         journal->count += 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         destination_index = journal->start;
         journal->start =
             (journal->start + 1U) % UMI_DEVELOPER_JOURNAL_CAPACITY;
@@ -121,12 +162,20 @@ UmiStatus umi_developer_journal_append(
     journal->entries[destination_index] = entry;
     journal->revision += 1U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_entry != NULL) {
         *out_entry = entry;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find developer journal while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_developer_journal_at(
     const UmiDeveloperJournal *journal,
     size_t index,
@@ -134,9 +183,14 @@ UmiStatus umi_developer_journal_at(
 {
     size_t physical_index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || out_entry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= journal->count) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -147,15 +201,27 @@ UmiStatus umi_developer_journal_at(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by developer journal without changing their
+ * state.
+ */
 size_t umi_developer_journal_count(const UmiDeveloperJournal *journal)
 {
     return journal != NULL ? journal->count : 0U;
 }
 
+/*
+ * Provide the developer journal snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_journal_snapshot(
     const UmiDeveloperJournal *journal,
     UmiDeveloperJournalSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -170,8 +236,16 @@ UmiStatus umi_developer_journal_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer journal so the same storage can be reused
+ * safely.
+ */
 void umi_developer_journal_clear(UmiDeveloperJournal *journal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) {
         return;
     }

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience state store data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceStateStore {
   UmiApplicationExperienceUiState current;
   UmiApplicationExperienceStateTransition history[UMI_APPLICATION_EXPERIENCE_HISTORY_CAPACITY];
@@ -29,13 +33,25 @@ typedef struct UmiApplicationExperienceStateStore {
   uint64_t next_sequence;
 } UmiApplicationExperienceStateStore;
 
+/**
+ * Initialise application experience state store from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus
 umi_application_experience_state_store_init(UmiApplicationExperienceStateStore *store,
                                             const UmiApplicationExperienceUiState *initial_state);
+/**
+ * Provide the application experience state store transition operation used by this module
+ * and its client applications.
+ */
 UmiStatus
 umi_application_experience_state_store_transition(UmiApplicationExperienceStateStore *store,
                                                   const UmiApplicationExperienceUiState *next_state,
                                                   const char *reason);
+/**
+ * Find application experience state store history while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 const UmiApplicationExperienceStateTransition *
 umi_application_experience_state_store_history_at(const UmiApplicationExperienceStateStore *store,
                                                   size_t index);

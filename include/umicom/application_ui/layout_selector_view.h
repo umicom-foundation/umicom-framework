@@ -22,8 +22,16 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by application ui layout without changing their
+ * state.
+ */
 size_t umi_application_ui_layout_count(
     const UmiApplicationExperienceDefinition *experience);
+/**
+ * Provide the application ui layout row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_layout_row(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,

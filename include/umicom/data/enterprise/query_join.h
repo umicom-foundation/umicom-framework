@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query join data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryJoin {
     char join_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char left_table[UMI_DATA_ENTERPRISE_ID_CAPACITY];

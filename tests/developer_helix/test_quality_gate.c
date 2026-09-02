@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/quality_gate.h"
-int main(void){ UmiHelixQualityGate g; umi_helix_quality_gate_init(&g); g.minimum_score=0.8; g.maximum_regression=0.05; if(umi_helix_quality_gate_evaluate(&g,0.9,0.01)!=UMI_HELIX_DECISION_ALLOW){ return 1; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixQualityGate g; umi_helix_quality_gate_init(&g); g.minimum_score=0.8; g.maximum_regression=0.05; /* Apply this branch only when its contract condition is satisfied. */ if(umi_helix_quality_gate_evaluate(&g,0.9,0.01)!=UMI_HELIX_DECISION_ALLOW){ return 1; } return 0; }

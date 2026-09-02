@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtTypeWidths w;CHECK(umi_ct_data_model_widths(UMI_CT_DATA_LP64,&w)==UMI_STATUS_OK);CHECK(w.long_bits==64U&&w.pointer_bits==64U);CHECK(umi_ct_data_model_widths(UMI_CT_DATA_LLP64,&w)==UMI_STATUS_OK);CHECK(w.long_bits==32U&&w.pointer_bits==64U);return 0;}

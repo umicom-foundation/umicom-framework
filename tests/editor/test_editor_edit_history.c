@@ -22,6 +22,10 @@
 
 #include "umicom/editor/edit_history.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorEditHistory *history = NULL;
@@ -36,13 +40,18 @@ int main(void)
     (void)memcpy(edit.inserted_bytes, "new!", 4U);
     edit.before_revision = 10U;
     edit.after_revision = 11U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_editor_edit_history_create(&history) != UMI_STATUS_OK) return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_editor_edit_history_push(history, &edit) != UMI_STATUS_OK ||
         umi_editor_edit_history_undo_count(history) != 1U) return 2;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_editor_edit_history_undo(history, &operation) != UMI_STATUS_OK ||
         operation.removed_byte_count != 4U || operation.inserted_byte_count != 3U ||
         memcmp(operation.inserted_bytes, "old", 3U) != 0) return 3;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_edit_history_redo_count(history) != 1U) return 4;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_editor_edit_history_redo(history, &operation) != UMI_STATUS_OK ||
         operation.operation_id != 7U) return 5;
     umi_editor_edit_history_destroy(history);

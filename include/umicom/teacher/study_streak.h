@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher study streak data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherStudyStreak {
     UmiTeacherState state;
     uint32_t score;
@@ -39,10 +42,30 @@ typedef struct UmiTeacherStudyStreak {
     uint64_t revision;
 } UmiTeacherStudyStreak;
 
+/**
+ * Initialise teacher study streak from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_teacher_study_streak_init(UmiTeacherStudyStreak *value);
+/**
+ * Provide the teacher study streak record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_study_streak_record(UmiTeacherStudyStreak *value, uint32_t score, int passed);
+/**
+ * Provide the teacher study streak set units operation used by this module and its client
+ * applications.
+ */
 void umi_teacher_study_streak_set_units(UmiTeacherStudyStreak *value, uint32_t completed_units, uint32_t total_units);
+/**
+ * Provide the teacher study streak completion operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_study_streak_completion(const UmiTeacherStudyStreak *value);
+/**
+ * Provide the teacher study streak complete operation used by this module and its client
+ * applications.
+ */
 int umi_teacher_study_streak_complete(const UmiTeacherStudyStreak *value);
 
 #ifdef __cplusplus

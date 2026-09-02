@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading surveillance rule data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingSurveillanceRule { uint32_t threshold; uint32_t window_seconds; UmiTradingCoreSeverity severity; } UmiTradingSurveillanceRule;
 /* Initialise and validate define reusable market-surveillance thresholds and alert severity. */
 UmiStatus umi_trading_surveillance_rule_init(UmiTradingSurveillanceRule *value,uint32_t threshold, uint32_t window_seconds, UmiTradingCoreSeverity severity);

@@ -17,6 +17,10 @@
 
 #include "umicom/application/application.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   const char *domains[] = {"shell",    "development", "trading",    "treasury", "media",
                            "music",    "creator",     "ai",         "rag",      "llm",
@@ -27,6 +31,7 @@ int main(void) {
   size_t maturity_total = 0U;
   assert(umi_application_component_catalogue_count() >= 90U);
   assert(umi_application_component_catalogue_validate() == UMI_STATUS_OK);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
     const UmiApplicationComponentDefinition *definition =
         umi_application_component_catalogue_at(index);
@@ -35,11 +40,14 @@ int main(void) {
     assert(umi_application_component_catalogue_find(definition->component_id) == definition);
     assert(umi_application_component_domain_at(definition->domain_id, 0U) != NULL);
   }
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < sizeof(domains) / sizeof(domains[0]); ++index)
     assert(umi_application_component_domain_exists(domains[index]));
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = UMI_APPLICATION_COMPONENT_VIEW; index <= UMI_APPLICATION_COMPONENT_SERVICE_SURFACE;
        ++index)
     role_total += umi_application_component_role_count((UmiApplicationComponentRole)index);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = UMI_CAPABILITY_IMPLEMENTED; index <= UMI_CAPABILITY_PLANNED; ++index)
     maturity_total += umi_application_component_maturity_count((UmiCapabilityMaturity)index);
   assert(role_total == umi_application_component_catalogue_count());

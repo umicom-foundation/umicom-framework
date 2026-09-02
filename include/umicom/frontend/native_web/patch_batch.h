@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/patch.h"
+/**
+ * Represent the native web patch batch data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebPatchBatch { UmiNativeWebPatch items[UMI_NATIVE_WEB_MAX_PATCHES]; size_t count; uint64_t revision; } UmiNativeWebPatchBatch;
 /* Initialise an empty patch batch for a render revision. */
 void umi_native_web_patch_batch_init(UmiNativeWebPatchBatch *batch, uint64_t revision);

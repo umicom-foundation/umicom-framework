@@ -16,6 +16,10 @@
 #include <assert.h>
 #include "umicom/ide_integration/builtin_surfaces.h"
 #include "umicom/ide_integration/self_host_manifest.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIdeSurfaceRegistry *registry = NULL;
@@ -23,6 +27,7 @@ int main(void)
     size_t i;
     assert(umi_ide_surface_registry_create(&registry) == UMI_STATUS_OK);
     assert(umi_ide_builtin_surfaces_install(registry) == UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i=0U;i<manifest->required_surface_count;++i)
         assert(umi_ide_surface_registry_find(
             registry, manifest->required_surface_ids[i]) != NULL);

@@ -18,13 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad guide data shared with callers of this public contract.
+ */
 typedef struct UmiRadGuide {
     char guide_id[UMI_RAD_ID_CAPACITY];
     UmiRadOrientation orientation;
     int32_t position;
     bool locked;
 } UmiRadGuide;
+/**
+ * Initialise rad guide from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_rad_guide_init(UmiRadGuide *item);
+/**
+ * Check that rad guide satisfies its contract before another service relies on it.
+ */
 int umi_rad_guide_is_valid(const UmiRadGuide *item);
 #ifdef __cplusplus
 }

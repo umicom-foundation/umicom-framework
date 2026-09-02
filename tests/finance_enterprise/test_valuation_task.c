@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_task.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationTask t; CHECK(umi_enterprise_valuation_task_init(&t,"t","j","swap",2.0)==UMI_STATUS_OK); CHECK(t.quantity==2.0); return 0; }

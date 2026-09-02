@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap graph node from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_bootstrap_graph_node_init(UmiBootstrapGraphNode *node,
                                         const char *id,
                                         int32_t priority,

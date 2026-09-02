@@ -21,8 +21,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native incremental unit data shared with callers of this public contract.
+ */
 typedef struct UmiNativeIncrementalUnit { char path[UMI_NC_PATH_CAPACITY]; uint64_t source_hash; uint64_t options_hash; uint64_t dependency_hash; uint64_t artifact_hash; bool artifact_present; } UmiNativeIncrementalUnit;
+/**
+ * Initialise nc incremental unit from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_nc_incremental_unit_init(UmiNativeIncrementalUnit *unit,const char *path,uint64_t source_hash,uint64_t options_hash,uint64_t dependency_hash);
+/**
+ * Provide the nc incremental needs rebuild operation used by this module and its client
+ * applications.
+ */
 bool umi_nc_incremental_needs_rebuild(const UmiNativeIncrementalUnit *previous,const UmiNativeIncrementalUnit *current);
 #ifdef __cplusplus
 }

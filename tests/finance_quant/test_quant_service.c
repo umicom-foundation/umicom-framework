@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/quant_service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiQuantService service; umi_quant_service_init(&service); CHECK(!umi_quant_service_ready(&service)); CHECK(umi_quant_service_configure(&service,2U,1U,3U,5U,1,1)==UMI_STATUS_OK); CHECK(umi_quant_service_ready(&service));

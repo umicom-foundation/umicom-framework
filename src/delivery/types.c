@@ -19,8 +19,13 @@
 
 #include "umicom/delivery/types.h"
 
+/*
+ * Provide the delivery stage text operation used by this module and its client
+ * applications.
+ */
 const char *umi_delivery_stage_text(UmiDeliveryStage stage)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (stage) {
         case UMI_DELIVERY_STAGE_SOURCE: return "source";
         case UMI_DELIVERY_STAGE_BUILD: return "build";
@@ -36,8 +41,13 @@ const char *umi_delivery_stage_text(UmiDeliveryStage stage)
     }
 }
 
+/*
+ * Provide the artifact kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_artifact_kind_text(UmiArtifactKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_ARTIFACT_EXECUTABLE: return "executable";
         case UMI_ARTIFACT_LIBRARY: return "library";
@@ -52,8 +62,13 @@ const char *umi_artifact_kind_text(UmiArtifactKind kind)
     }
 }
 
+/*
+ * Provide the package format text operation used by this module and its client
+ * applications.
+ */
 const char *umi_package_format_text(UmiPackageFormat format)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (format) {
         case UMI_PACKAGE_DIRECTORY: return "directory";
         case UMI_PACKAGE_ZIP: return "zip";
@@ -65,8 +80,13 @@ const char *umi_package_format_text(UmiPackageFormat format)
     }
 }
 
+/*
+ * Provide the release channel text operation used by this module and its client
+ * applications.
+ */
 const char *umi_release_channel_text(UmiReleaseChannel channel)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (channel) {
         case UMI_RELEASE_DEVELOPMENT: return "development";
         case UMI_RELEASE_NIGHTLY: return "nightly";
@@ -76,8 +96,13 @@ const char *umi_release_channel_text(UmiReleaseChannel channel)
     }
 }
 
+/*
+ * Provide the evidence status text operation used by this module and its client
+ * applications.
+ */
 const char *umi_evidence_status_text(UmiEvidenceStatus status)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (status) {
         case UMI_EVIDENCE_UNKNOWN: return "unknown";
         case UMI_EVIDENCE_PASS: return "pass";
@@ -87,8 +112,13 @@ const char *umi_evidence_status_text(UmiEvidenceStatus status)
     }
 }
 
+/*
+ * Provide the update decision text operation used by this module and its client
+ * applications.
+ */
 const char *umi_update_decision_text(UmiUpdateDecision decision)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (decision) {
         case UMI_UPDATE_NONE: return "none";
         case UMI_UPDATE_AVAILABLE: return "available";

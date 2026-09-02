@@ -23,9 +23,17 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai helix prompt build system operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_helix_prompt_build_system(UmiHelixAgentRole role,
                                            char *output,
                                            size_t output_capacity);
+/**
+ * Provide the ai helix prompt build user operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_helix_prompt_build_user(const UmiAiHelixAgentRequest *request,
                                          char *output,
                                          size_t output_capacity);

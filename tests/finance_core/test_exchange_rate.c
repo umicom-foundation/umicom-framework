@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/exchange_rate.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCurrency a={{'E','U','R','\0'}},b={{'U','S','D','\0'}}; UmiCurrencyPair p; UmiExchangeRate r; CHECK(umi_currency_pair_init(&p,a,b)==UMI_STATUS_OK); CHECK(umi_exchange_rate_init(&r,&p,1.2,1)==UMI_STATUS_OK);

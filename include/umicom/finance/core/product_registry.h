@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial product registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFinancialProductRegistry {
   UmiProductDescriptor items[UMI_FINANCIAL_CORE_MAX_ITEMS];
   size_t count;

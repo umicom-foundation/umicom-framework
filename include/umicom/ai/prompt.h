@@ -28,13 +28,27 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai prompt data shared with callers of this public contract.
+ */
 typedef struct UmiAiPrompt {
     char text[UMI_AI_TEXT_CAPACITY * 4U];
     size_t length;
 } UmiAiPrompt;
 
+/**
+ * Initialise ai prompt from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_prompt_init(UmiAiPrompt *prompt);
+/**
+ * Add ai prompt only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ai_prompt_append(UmiAiPrompt *prompt, const char *text);
+/**
+ * Provide the ai prompt append line operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_prompt_append_line(UmiAiPrompt *prompt, const char *text);
 
 #ifdef __cplusplus

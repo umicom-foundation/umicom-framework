@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "umicom/delivery/artifact_set.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiArtifactSet set;
     UmiDeliveryArtifact a;

@@ -24,12 +24,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the code guard config data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardConfig {
     const char *root;
     UmiCodeGuardProfile profile;
     const char *baseline_path;
     const char *suppression_path;
 } UmiCodeGuardConfig;
+/**
+ * Provide the codeguard config default operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardConfig umi_codeguard_config_default(const char *root);
 #ifdef __cplusplus
 }

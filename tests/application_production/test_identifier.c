@@ -16,6 +16,10 @@
 /* Umicom Framework application production test | identifier | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/application/production/identifier.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiApplicationProductionIdentifier a = {{0}}, b = {{0}};
     assert(umi_application_production_identifier_set(&a, "org.umicom.studio") == UMI_STATUS_OK);

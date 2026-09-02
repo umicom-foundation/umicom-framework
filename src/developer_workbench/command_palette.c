@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/command_palette.h"
 
+/*
+ * Provide the developer workbench command palette query operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_workbench_command_palette_query(
     UmiCommandRegistry *commands,
     const char *query,
@@ -24,6 +28,10 @@ UmiStatus umi_developer_workbench_command_palette_query(
 {
     UmiDeveloperWorkbenchSearchProvider provider;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (commands == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     umi_developer_workbench_command_search_provider_init(

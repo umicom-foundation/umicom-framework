@@ -28,6 +28,10 @@
 
 #include "umicom/editor/workspace_search_index.h"
 
+/*
+ * Exercise document and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorWorkspaceSearchDocumentInput document(
     const char *uri, const char *path, const char *content, uint64_t revision)
 {
@@ -44,6 +48,10 @@ static UmiEditorWorkspaceSearchDocumentInput document(
     return input;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorWorkspaceSearchIndex *index = NULL;

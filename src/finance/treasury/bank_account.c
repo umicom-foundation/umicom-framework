@@ -14,27 +14,50 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/treasury/bank_account.h"
 #include <string.h>
+/*
+ * Initialise treasury bank account from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_treasury_bank_account_init(UmiTreasuryBankAccount *value,
     const char *id,
     const char *bank_id,
     const char *currency_code,
     bool active) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     UmiStatus status = umi_treasury_id_copy(value->id, sizeof value->id, id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status=umi_treasury_id_copy(value->bank_id,sizeof value->bank_id,bank_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(status!=UMI_STATUS_OK)return status;
     status=umi_treasury_currency_from_code(currency_code,&value->currency);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(status!=UMI_STATUS_OK)return status;
     value->active=active;
     return umi_treasury_bank_account_valid(value) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
 }
+/*
+ * Check that treasury bank account satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_treasury_bank_account_valid(const UmiTreasuryBankAccount *value) {
     return value != NULL && (umi_treasury_id_valid(value->id) && umi_treasury_id_valid(value->bank_id) && value->currency.code[0] != '\0');
 }
 
+/*
+ * Provide the treasury bank account usable operation used by this module and its client
+ * applications.
+ */
 bool umi_treasury_bank_account_usable(const UmiTreasuryBankAccount *value) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return (bool)0;
     return value->active;
 }

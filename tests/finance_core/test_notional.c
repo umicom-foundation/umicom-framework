@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/notional.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNotional n; UmiMoney m={1,2U,{{'U','S','D','\0'}}}; CHECK(umi_notional_init(&n,m)==UMI_STATUS_OK);

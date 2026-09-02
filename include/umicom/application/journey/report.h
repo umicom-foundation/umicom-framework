@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the application journey report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationJourneyReport {
     char application_id[96];
     size_t journey_count;
@@ -31,6 +35,10 @@ typedef struct UmiApplicationJourneyReport {
     unsigned completion_percent;
     int release_ready;
 } UmiApplicationJourneyReport;
+/**
+ * Provide the application journey report build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_journey_report_build(
     const UmiApplicationJourneyCatalogue *catalogue,
     const UmiApplicationJourneyEvidenceRegistry *evidence,

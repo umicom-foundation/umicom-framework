@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that strategy signal satisfies its contract before another service relies on it.
+ */
 int umi_strategy_signal_valid(const UmiStrategySignal *signal, int64_t now_ms);
 #ifdef __cplusplus
 }

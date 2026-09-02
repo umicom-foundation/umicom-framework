@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity physical exposure data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityPhysicalExposure {
     UmiCommodityId commodity_id;
     int64_t purchase_units;

@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the valuation book data shared with callers of this public contract.
+ */
 typedef struct UmiValuationBook { UmiValuation items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiValuationBook;
 /* Reset collection. */ void umi_valuation_book_init(UmiValuationBook *c);
 /* Append valid item. */ UmiStatus umi_valuation_book_add(UmiValuationBook *c,const UmiValuation *item);

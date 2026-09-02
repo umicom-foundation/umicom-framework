@@ -22,9 +22,17 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer workbench workspace commands operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchCommandDefinition *
 umi_developer_workbench_workspace_commands(void);
 
+/**
+ * Return the number of records represented by developer workbench workspace command
+ * without changing their state.
+ */
 size_t umi_developer_workbench_workspace_command_count(void);
 
 #ifdef __cplusplus

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request stack trace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_stack_trace(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PROCESS_ALLOWLIST "umicom.developer.security.process_allowlist"
 
+/**
+ * Provide the developer capability process allowlist operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_process_allowlist(void);
 

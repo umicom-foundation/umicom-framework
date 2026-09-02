@@ -37,6 +37,10 @@ extern "C" {
 #define UMI_DEVELOPER_WORKSPACE_STATE_CODEC_PREFIX "UDW1"
 #define UMI_DEVELOPER_WORKSPACE_STATE_TEXT_CAPACITY 12288U
 
+/**
+ * Represent the developer workspace state snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkspaceStateSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -49,23 +53,43 @@ typedef struct UmiDeveloperWorkspaceStateSnapshot {
     uint64_t revision;
 } UmiDeveloperWorkspaceStateSnapshot;
 
+/**
+ * Initialise developer workspace state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_workspace_state_init(
     UmiDeveloperWorkspaceStateSnapshot *state);
 
+/**
+ * Write developer workspace state in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_developer_workspace_state_encode(
     const UmiDeveloperWorkspaceStateSnapshot *state,
     char *out_text,
     size_t capacity,
     size_t *out_length);
 
+/**
+ * Read developer workspace state into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_developer_workspace_state_decode(
     const char *text,
     UmiDeveloperWorkspaceStateSnapshot *out_state);
 
+/**
+ * Write developer workspace state in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_developer_workspace_state_save(
     const char *path,
     const UmiDeveloperWorkspaceStateSnapshot *state);
 
+/**
+ * Read developer workspace state into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_developer_workspace_state_load(
     const char *path,
     UmiDeveloperWorkspaceStateSnapshot *out_state);

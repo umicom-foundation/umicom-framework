@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/portfolio_position.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterprisePortfolioPosition p; CHECK(umi_enterprise_portfolio_position_init(&p,"bond",2.0,101.0)==UMI_STATUS_OK); CHECK(p.market_value==202.0); return 0; }

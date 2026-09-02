@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws snap policy data shared with callers of this public contract.
+ */
 typedef struct UmiWsSnapPolicy {
     int32_t edge_threshold;
     int32_t grid_size;
@@ -30,8 +33,20 @@ typedef struct UmiWsSnapPolicy {
     bool snap_grid;
 } UmiWsSnapPolicy;
 
+/**
+ * Provide the ws snap policy default operation used by this module and its client
+ * applications.
+ */
 UmiWsSnapPolicy umi_ws_snap_policy_default(UmiWsDensity density);
+/**
+ * Provide the ws snap policy coordinate operation used by this module and its client
+ * applications.
+ */
 int32_t umi_ws_snap_policy_coordinate(const UmiWsSnapPolicy *policy, int32_t coordinate);
+/**
+ * Provide the ws snap policy near edge operation used by this module and its client
+ * applications.
+ */
 bool umi_ws_snap_policy_near_edge(const UmiWsSnapPolicy *policy, int32_t coordinate, int32_t edge);
 
 #ifdef __cplusplus

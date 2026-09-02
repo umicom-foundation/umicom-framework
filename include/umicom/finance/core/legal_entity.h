@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the legal entity data shared with callers of this public contract.
+ */
 typedef struct UmiLegalEntity { UmiFinancialId entity_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; bool active; } UmiLegalEntity;
 /* Initialize the typed financial record. */ UmiStatus umi_legal_entity_init(UmiLegalEntity *item,const char *id,const char *name,const char *code);
 /* Validate the typed financial record. */ bool umi_legal_entity_is_valid(const UmiLegalEntity *item);

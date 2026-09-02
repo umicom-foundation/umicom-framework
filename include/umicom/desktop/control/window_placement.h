@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_WINDOW_PLACEMENT_API_VERSION 1U
 
+/**
+ * Represent the desktop window placement snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopWindowPlacementSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance palette override data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearancePaletteOverride {
     char override_id[UMI_APPEARANCE_ID_CAPACITY];
     char role_id[UMI_APPEARANCE_ID_CAPACITY];

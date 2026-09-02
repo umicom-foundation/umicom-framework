@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_PATH_TRAVERSAL_POLICY "umicom.document.security.path_traversal_policy"
 
+/**
+ * Provide the document capability path traversal policy operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_path_traversal_policy(void);
 

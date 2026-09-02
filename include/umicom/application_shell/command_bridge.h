@@ -23,10 +23,18 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application shell command bridge reconcile operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_shell_command_bridge_reconcile(
     UmiApplicationShellRegistry *shell,
     const UmiCommandRegistry *commands);
 
+/**
+ * Perform application shell command bridge through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_application_shell_command_bridge_execute(
     UmiApplicationShellRegistry *shell,
     UmiCommandRegistry *commands,

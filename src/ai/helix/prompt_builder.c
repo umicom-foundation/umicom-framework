@@ -18,16 +18,28 @@
 #include "umicom/ai/helix/role_profile.h"
 #include <stdio.h>
 
+/*
+ * Provide the ai helix prompt build system operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_helix_prompt_build_system(UmiHelixAgentRole role,
                                            char *output,
                                            size_t output_capacity)
 {
     const UmiAiHelixRoleProfile *profile;
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (output == NULL || output_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     profile = umi_ai_helix_role_profile_find(role);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -40,11 +52,17 @@ UmiStatus umi_ai_helix_prompt_build_system(UmiHelixAgentRole role,
         profile->name,
         profile->purpose,
         umi_ai_helix_protocol_specification());
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_INTERNAL_ERROR;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if ((size_t)written >= output_capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai helix prompt build user operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_helix_prompt_build_user(const UmiAiHelixAgentRequest *request,
                                          char *output,
                                          size_t output_capacity)
@@ -52,6 +70,10 @@ UmiStatus umi_ai_helix_prompt_build_user(const UmiAiHelixAgentRequest *request,
     int written;
     const char *target;
     const char *context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || output == NULL || output_capacity == 0U ||
         request->operation_id[0] == '\0' || request->objective[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -69,7 +91,9 @@ UmiStatus umi_ai_helix_prompt_build_user(const UmiAiHelixAgentRequest *request,
         request->objective,
         target,
         context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_INTERNAL_ERROR;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if ((size_t)written >= output_capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     return UMI_STATUS_OK;
 }

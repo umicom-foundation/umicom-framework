@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime decode evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_decode_evaluate(
     const char *json,
     UmiDebugRuntimeEvaluateResult *out_result);

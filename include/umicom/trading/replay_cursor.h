@@ -26,8 +26,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the replay cursor data shared with callers of this public contract.
+ */
 typedef struct UmiReplayCursor { uint64_t next_sequence; } UmiReplayCursor;
+/**
+ * Initialise replay cursor from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_replay_cursor_init(UmiReplayCursor *cursor, uint64_t first_sequence);
+/**
+ * Provide the replay cursor accept operation used by this module and its client
+ * applications.
+ */
 int umi_replay_cursor_accept(UmiReplayCursor *cursor, const UmiReplayEvent *event);
 #ifdef __cplusplus
 }

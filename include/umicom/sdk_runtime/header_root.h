@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk runtime header root data shared with callers of this public contract.
+ */
 typedef struct UmiSdkRuntimeHeaderRoot
 {
     uint32_t structure_size;
@@ -28,13 +31,45 @@ typedef struct UmiSdkRuntimeHeaderRoot
     uint64_t header_count;
     uint64_t generation;
     uint64_t revision;UmiSdkRuntimeState state;bool enabled;} UmiSdkRuntimeHeaderRoot;
+/**
+ * Initialise sdk runtime header root from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_sdk_runtime_header_root_init(UmiSdkRuntimeHeaderRoot *value,const char *id);
+/**
+ * Check that sdk runtime header root satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_sdk_runtime_header_root_validate(const UmiSdkRuntimeHeaderRoot *value);
+/**
+ * Provide the sdk runtime header root set path operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_header_root_set_path(UmiSdkRuntimeHeaderRoot *value,const char *path);
+/**
+ * Provide the sdk runtime header root set detail operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_header_root_set_detail(UmiSdkRuntimeHeaderRoot *value,const char *detail);
+/**
+ * Return the number of records represented by sdk runtime header root set header without
+ * changing their state.
+ */
 UmiStatus umi_sdk_runtime_header_root_set_header_count(UmiSdkRuntimeHeaderRoot *value,uint64_t number);
+/**
+ * Provide the sdk runtime header root set generation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_header_root_set_generation(UmiSdkRuntimeHeaderRoot *value,uint64_t number);
+/**
+ * Provide the sdk runtime header root set state operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_header_root_set_state(UmiSdkRuntimeHeaderRoot *value,UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime header root same identity operation used by this module and its
+ * client applications.
+ */
 bool umi_sdk_runtime_header_root_same_identity(const UmiSdkRuntimeHeaderRoot *left,const UmiSdkRuntimeHeaderRoot *right);
 #ifdef __cplusplus
 }

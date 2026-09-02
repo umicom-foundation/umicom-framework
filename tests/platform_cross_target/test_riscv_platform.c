@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtRiscvPlatform p={"qemu.rv64",UMI_CT_RISCV_MACHINE_QEMU_VIRT,UINT64_C(512)*1024U*1024U,4U,true,true,true,true};CHECK(umi_ct_riscv_platform_validate(&p)==UMI_STATUS_OK);p.clint=false;CHECK(umi_ct_riscv_platform_validate(&p)==UMI_STATUS_INVALID_STATE);return 0;}

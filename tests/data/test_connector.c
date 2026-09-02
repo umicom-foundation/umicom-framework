@@ -26,9 +26,17 @@ static UmiStatus fake_open(
 {
     int *connection;
     (void)driver_context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || out_connection == NULL ||
         request->credential_reference == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     connection = (int *)calloc(1U, sizeof(*connection));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (connection == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     *connection = 42;
     *out_connection = connection;
@@ -43,6 +51,10 @@ static UmiStatus fake_execute(
     void *driver_context)
 {
     (void)driver_context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (connection == NULL || request == NULL || out_summary == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

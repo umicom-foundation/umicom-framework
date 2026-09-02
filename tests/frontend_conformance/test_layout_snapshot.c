@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcLayoutSnapshot s; umi_fc_layout_snapshot_init(&s,"code"); CHECK(umi_fc_layout_snapshot_append(&s,0.5)==UMI_STATUS_OK); CHECK(umi_fc_layout_snapshot_fingerprint(&s)!=0U);
     return 0;

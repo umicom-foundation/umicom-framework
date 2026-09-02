@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding validation profile python operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_validation_profile_python(
     const char *workspace_root,
     UmiAiCodingValidationPlan *out_plan);

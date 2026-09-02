@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_PRODUCTISATION_MAX_GAPS 768U
 #define UMI_PRODUCTISATION_MAX_STEPS 768U
 
+/**
+ * List the named productisation asset kind values accepted by this public contract.
+ */
 typedef enum UmiProductisationAssetKind {
     UMI_PRODUCTISATION_ASSET_FEATURE = 1,
     UMI_PRODUCTISATION_ASSET_PANEL = 2,
@@ -42,6 +45,9 @@ typedef enum UmiProductisationAssetKind {
     UMI_PRODUCTISATION_ASSET_CAPABILITY = 5
 } UmiProductisationAssetKind;
 
+/**
+ * List the named productisation evidence state values accepted by this public contract.
+ */
 typedef enum UmiProductisationEvidenceState {
     UMI_PRODUCTISATION_EVIDENCE_DECLARED = 1,
     UMI_PRODUCTISATION_EVIDENCE_FOUNDATION = 2,
@@ -52,6 +58,9 @@ typedef enum UmiProductisationEvidenceState {
     UMI_PRODUCTISATION_EVIDENCE_BLOCKED = 7
 } UmiProductisationEvidenceState;
 
+/**
+ * List the named productisation gap kind values accepted by this public contract.
+ */
 typedef enum UmiProductisationGapKind {
     UMI_PRODUCTISATION_GAP_MISSING_CAPABILITY = 1,
     UMI_PRODUCTISATION_GAP_CAPABILITY_MATURITY = 2,
@@ -61,6 +70,9 @@ typedef enum UmiProductisationGapKind {
     UMI_PRODUCTISATION_GAP_EXTERNAL_ADAPTER = 6
 } UmiProductisationGapKind;
 
+/**
+ * List the named productisation severity values accepted by this public contract.
+ */
 typedef enum UmiProductisationSeverity {
     UMI_PRODUCTISATION_SEVERITY_LOW = 1,
     UMI_PRODUCTISATION_SEVERITY_MEDIUM = 2,
@@ -68,12 +80,18 @@ typedef enum UmiProductisationSeverity {
     UMI_PRODUCTISATION_SEVERITY_BLOCKER = 4
 } UmiProductisationSeverity;
 
+/**
+ * List the named productisation owner values accepted by this public contract.
+ */
 typedef enum UmiProductisationOwner {
     UMI_PRODUCTISATION_OWNER_FRAMEWORK = 1,
     UMI_PRODUCTISATION_OWNER_APPLICATION = 2,
     UMI_PRODUCTISATION_OWNER_EXTERNAL_ADAPTER = 3
 } UmiProductisationOwner;
 
+/**
+ * List the named productisation stage values accepted by this public contract.
+ */
 typedef enum UmiProductisationStage {
     UMI_PRODUCTISATION_STAGE_FRAMEWORK = 1,
     UMI_PRODUCTISATION_STAGE_STUDIO = 2,

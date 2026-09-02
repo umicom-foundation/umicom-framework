@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/productisation/adoption.h"
 
+/**
+ * Represent the application production binding data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationProductionBinding {
     uint32_t structure_size;
     const UmiProductApplicationAdoption *adoption;
@@ -31,9 +35,17 @@ typedef struct UmiApplicationProductionBinding {
     UmiProductApplicationAdoptionSnapshot adoption_snapshot;
 } UmiApplicationProductionBinding;
 
+/**
+ * Initialise application production binding from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_production_binding_init(
     const UmiProductApplicationAdoption *adoption,
     UmiApplicationProductionBinding *out_binding);
+/**
+ * Check that application production binding satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_production_binding_validate(
     const UmiApplicationProductionBinding *binding);
 

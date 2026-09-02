@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application readiness report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationReadinessReport {
     uint32_t structure_size;
     size_t feature_count;
@@ -38,9 +42,17 @@ typedef struct UmiApplicationReadinessReport {
     const UmiExperienceFeatureDefinition *next_feature;
 } UmiApplicationReadinessReport;
 
+/**
+ * Provide the application readiness report operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_readiness_report(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationReadinessReport *out_report);
+/**
+ * Provide the application readiness has open priority operation used by this module and
+ * its client applications.
+ */
 int umi_application_readiness_has_open_priority(
     const UmiApplicationReadinessReport *report);
 

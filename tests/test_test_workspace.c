@@ -19,6 +19,10 @@
 
 #include "umicom/test_platform/test_platform.h"
 
+/*
+ * Exercise add test and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_test(UmiTestPlatformService *service, const char *id,
                      const char *name, const char *labels)
 {
@@ -36,6 +40,10 @@ static void add_test(UmiTestPlatformService *service, const char *id,
            UMI_STATUS_OK);
 }
 
+/*
+ * Exercise add result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_result(UmiTestPlatformService *service, const char *id,
                        const char *item_id, int outcome, uint64_t sequence)
 {
@@ -53,6 +61,10 @@ static void add_result(UmiTestPlatformService *service, const char *id,
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformService *service = NULL;

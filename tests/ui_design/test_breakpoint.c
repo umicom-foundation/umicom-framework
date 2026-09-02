@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/breakpoint.h"
 
-int main(void){UmiDesignBreakpoint b;if(umi_design_breakpoint_init(&b,"desktop",900,1439,UMI_DESIGN_SIZE_EXPANDED)!=UMI_STATUS_OK)return 1;return umi_design_breakpoint_matches(&b,1200)?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignBreakpoint b;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_breakpoint_init(&b,"desktop",900,1439,UMI_DESIGN_SIZE_EXPANDED)!=UMI_STATUS_OK)return 1;return umi_design_breakpoint_matches(&b,1200)?0:2;}

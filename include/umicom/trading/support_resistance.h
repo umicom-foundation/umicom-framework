@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the room to level operation used by this module and its client applications.
+ */
 double umi_room_to_level(double price, double level, int direction);
 #ifdef __cplusplus
 }

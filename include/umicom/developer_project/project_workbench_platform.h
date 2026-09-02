@@ -22,9 +22,17 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project workbench platform data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectWorkbenchPlatform
     UmiDeveloperProjectWorkbenchPlatform;
 
+/**
+ * Represent the developer project workbench platform snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDeveloperProjectWorkbenchPlatformSnapshot {
     UmiDeveloperWorkbenchSnapshot workbench;
     UmiDeveloperProjectServiceSnapshot projects;
@@ -33,25 +41,49 @@ typedef struct UmiDeveloperProjectWorkbenchPlatformSnapshot {
     uint64_t revision;
 } UmiDeveloperProjectWorkbenchPlatformSnapshot;
 
+/**
+ * Initialise developer project workbench platform from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_project_workbench_platform_create(
     const UmiDeveloperWorkbenchBindings *bindings,
     UmiDeveloperProjectWorkbenchPlatform **out_platform);
 
+/**
+ * Release or reset state held by developer project workbench platform so the same storage
+ * can be reused safely.
+ */
 void umi_developer_project_workbench_platform_destroy(
     UmiDeveloperProjectWorkbenchPlatform *platform);
 
+/**
+ * Provide the developer project workbench platform workbench operation used by this module
+ * and its client applications.
+ */
 UmiDeveloperWorkbench *
 umi_developer_project_workbench_platform_workbench(
     UmiDeveloperProjectWorkbenchPlatform *platform);
 
+/**
+ * Provide the developer project workbench platform projects operation used by this module
+ * and its client applications.
+ */
 UmiDeveloperProjectService *
 umi_developer_project_workbench_platform_projects(
     UmiDeveloperProjectWorkbenchPlatform *platform);
 
+/**
+ * Provide the developer project workbench platform wizard operation used by this module
+ * and its client applications.
+ */
 UmiDeveloperWorkbenchProjectWizard *
 umi_developer_project_workbench_platform_wizard(
     UmiDeveloperProjectWorkbenchPlatform *platform);
 
+/**
+ * Provide the developer project workbench platform snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_project_workbench_platform_snapshot(
     UmiDeveloperProjectWorkbenchPlatform *platform,
     UmiDeveloperProjectWorkbenchPlatformSnapshot *out_snapshot);

@@ -23,24 +23,43 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding tool executor data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingToolExecutor {
     UmiAiCodingToolEnvironment *environment;
     UmiAiCodingToolResultHistory *history;
     uint64_t sequence;
 } UmiAiCodingToolExecutor;
 
+/**
+ * Initialise ai coding tool executor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_coding_tool_executor_init(
     UmiAiCodingToolExecutor *executor,
     UmiAiCodingToolEnvironment *environment);
 
+/**
+ * Provide the ai coding tool executor deinit operation used by this module and its client
+ * applications.
+ */
 void umi_ai_coding_tool_executor_deinit(
     UmiAiCodingToolExecutor *executor);
 
+/**
+ * Perform ai coding tool through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_tool_execute(
     UmiAiCodingToolExecutor *executor,
     const UmiAiCodingToolCall *call,
     UmiAiCodingToolResult *out_result);
 
+/**
+ * Provide the ai coding tool executor history operation used by this module and its client
+ * applications.
+ */
 UmiAiCodingToolResultHistory *umi_ai_coding_tool_executor_history(
     UmiAiCodingToolExecutor *executor);
 

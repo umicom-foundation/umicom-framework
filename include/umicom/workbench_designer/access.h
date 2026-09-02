@@ -25,6 +25,9 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer access reason values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerAccessReason {
     UMI_WORKBENCH_DESIGNER_ACCESS_GRANTED = 1,
     UMI_WORKBENCH_DESIGNER_ACCESS_LAYOUT_LOCKED = 2,
@@ -34,6 +37,10 @@ typedef enum UmiWorkbenchDesignerAccessReason {
     UMI_WORKBENCH_DESIGNER_ACCESS_READ_ONLY = 6
 } UmiWorkbenchDesignerAccessReason;
 
+/**
+ * Represent the workbench designer access decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerAccessDecision {
     bool can_view;
     bool can_edit;
@@ -45,6 +52,10 @@ typedef struct UmiWorkbenchDesignerAccessDecision {
     char explanation[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
 } UmiWorkbenchDesignerAccessDecision;
 
+/**
+ * Provide the workbench designer access evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_access_evaluate(
     const UmiWorkbenchLayoutDocument *document,
     UmiWorkbenchLayoutRole role,

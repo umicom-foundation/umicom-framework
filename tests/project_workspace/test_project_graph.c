@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/project/workspace/project_graph.h"
 #define CHECK(x) do{if(!(x))return __LINE__;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspaceProjectGraph g;
     umi_project_workspace_project_graph_init(&g);

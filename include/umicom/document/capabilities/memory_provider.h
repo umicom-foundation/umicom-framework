@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_MEMORY_PROVIDER "umicom.document.provider.memory_provider"
 
+/**
+ * Provide the document capability memory provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_memory_provider(void);
 

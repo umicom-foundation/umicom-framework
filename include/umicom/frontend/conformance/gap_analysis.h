@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc gap analysis data shared with callers of this public contract.
+ */
 typedef struct UmiFcGapAnalysis { uint64_t required_missing; uint64_t optional_missing; size_t required_count; size_t optional_count; double coverage; } UmiFcGapAnalysis;
+/**
+ * Perform fc gap analysis through the module contract so client applications do not
+ * duplicate its policy.
+ */
 void umi_fc_gap_analysis_run(uint64_t required,uint64_t optional,uint64_t actual,UmiFcGapAnalysis *out_analysis);
 
 #ifdef __cplusplus

@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix evidence data shared with callers of this public contract.
+ */
 typedef struct UmiHelixEvidence {
     char evidence_id[UMI_HELIX_ID_CAPACITY];
     char kind[UMI_HELIX_ID_CAPACITY];
@@ -36,6 +39,10 @@ typedef struct UmiHelixEvidence {
     uint64_t observed_at_ns;
 } UmiHelixEvidence;
 
+/**
+ * Initialise helix evidence from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_evidence_init(UmiHelixEvidence *value);
 
 #ifdef __cplusplus

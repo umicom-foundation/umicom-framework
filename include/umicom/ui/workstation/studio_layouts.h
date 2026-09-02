@@ -22,15 +22,55 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ws studio layout welcome operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_welcome(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout code operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_code(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout debug operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_debug(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout designer operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_designer(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout diff merge operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_diff_merge(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout testing operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_testing(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout database operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_database(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout ai development operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_ai_development(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout ai teacher operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_ai_teacher(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws studio layout focus operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_studio_layout_focus(UmiWsLayoutTemplate *layout);
 
 #ifdef __cplusplus

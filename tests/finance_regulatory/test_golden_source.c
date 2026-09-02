@@ -19,6 +19,10 @@
 
 #include "umicom/finance/regulatory/golden_source.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiGoldenSource record;

@@ -23,14 +23,23 @@
 
 #include <string.h>
 
+/* Provide the match text operation used by this module and its client applications. */
 static bool match_text(const char *pattern, const char *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL || value == NULL) {
         return false;
     }
     return strcmp(pattern, "*") == 0 || strcmp(pattern, value) == 0;
 }
 
+/*
+ * Provide the integration route matches operation used by this module and its client
+ * applications.
+ */
 bool umi_integration_route_matches(
     const UmiIntegrationRoute *route,
     const char *source_application,
@@ -38,6 +47,10 @@ bool umi_integration_route_matches(
     const char *topic,
     UmiIntegrationMessageKind kind)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (route == NULL) {
         return false;
     }

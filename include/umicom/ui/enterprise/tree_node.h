@@ -21,6 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui ent tree node data shared with callers of this public contract.
+ */
 typedef struct UmiUiEntTreeNode {
     char node_id[UMI_UI_ENT_ID_CAPACITY];
     char parent_id[UMI_UI_ENT_ID_CAPACITY];
@@ -30,7 +33,14 @@ typedef struct UmiUiEntTreeNode {
     int children_loaded;
     uint64_t revision;
 } UmiUiEntTreeNode;
+/**
+ * Initialise ui ent tree node from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ui_ent_tree_node_init(UmiUiEntTreeNode *value);
+/**
+ * Check that ui ent tree node satisfies its contract before another service relies on it.
+ */
 int umi_ui_ent_tree_node_validate(const UmiUiEntTreeNode *value);
 #ifdef __cplusplus
 }

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant correlation matrix data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCorrelationMatrix { double values[16][16]; size_t size; } UmiQuantCorrelationMatrix;
 /* Initialise an identity correlation matrix up to sixteen factors. */
 UmiStatus umi_quant_correlation_matrix_init(UmiQuantCorrelationMatrix *matrix, size_t size);

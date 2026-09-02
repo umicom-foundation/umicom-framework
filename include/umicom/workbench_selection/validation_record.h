@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection validation record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionValidationRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -39,28 +43,64 @@ typedef struct UmiWorkbenchSelectionValidationRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionValidationRecord;
 
+/**
+ * Initialise workbench selection validation record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_validation_record_init(
     UmiWorkbenchSelectionValidationRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection validation record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_validation_record_validate(
     const UmiWorkbenchSelectionValidationRecord *record);
+/**
+ * Provide the workbench selection validation record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_validation_record_set_source(
     UmiWorkbenchSelectionValidationRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection validation record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_validation_record_set_subject(
     UmiWorkbenchSelectionValidationRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection validation record set related operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_validation_record_set_related(
     UmiWorkbenchSelectionValidationRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection validation record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_validation_record_set_group(
     UmiWorkbenchSelectionValidationRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection validation record set description operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_validation_record_set_description(
     UmiWorkbenchSelectionValidationRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection validation record hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_selection_validation_record_hash(
     const UmiWorkbenchSelectionValidationRecord *record);
+/**
+ * Provide the workbench selection validation record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_selection_validation_record_touch(
     UmiWorkbenchSelectionValidationRecord *record,
     uint64_t sequence,

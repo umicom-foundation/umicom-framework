@@ -16,12 +16,20 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/event.h"
+/*
+ * Exercise on event and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void on_event(const UmiDiagnosticEvent *event, void *data)
 {
     size_t *count = (size_t *)data;
     assert(event != NULL);
     ++(*count);
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticEventStream *stream = NULL;

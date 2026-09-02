@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential total capital ratio data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialTotalCapitalRatio { double numerator; double denominator; double ratio; } UmiPrudentialTotalCapitalRatio;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_total_capital_ratio_calculate(UmiPrudentialTotalCapitalRatio *result, double numerator, double denominator);

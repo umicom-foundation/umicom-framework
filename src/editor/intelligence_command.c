@@ -53,11 +53,19 @@ static const UmiEditorIntelligenceCommandDescriptor COMMANDS[] = {
 
 #undef COMMAND
 
+/*
+ * Return the number of records represented by editor intelligence command without changing
+ * their state.
+ */
 size_t umi_editor_intelligence_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find editor intelligence command while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiEditorIntelligenceCommandDescriptor *
 umi_editor_intelligence_command_at(size_t index)
 {
@@ -65,25 +73,41 @@ umi_editor_intelligence_command_at(size_t index)
                                                            : NULL;
 }
 
+/*
+ * Find editor intelligence command while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiEditorIntelligenceCommandDescriptor *
 umi_editor_intelligence_command_find(const char *id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_editor_intelligence_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].id, id) == 0) return &COMMANDS[index];
     }
     return NULL;
 }
 
+/*
+ * Provide the editor intelligence command for kind operation used by this module and its
+ * client applications.
+ */
 const UmiEditorIntelligenceCommandDescriptor *
 umi_editor_intelligence_command_for_kind(
     UmiEditorIntelligenceCommandKind kind)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_editor_intelligence_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (COMMANDS[index].kind == kind) return &COMMANDS[index];
     }
     return NULL;

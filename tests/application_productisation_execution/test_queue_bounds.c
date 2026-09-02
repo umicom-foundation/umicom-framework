@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test queue bounds and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void test_queue_bounds(void)
 {
     UmiProductExecutionWorkQueue q; umi_product_execution_work_queue_init(&q); assert(umi_product_execution_work_queue_at(&q,0U)==NULL);

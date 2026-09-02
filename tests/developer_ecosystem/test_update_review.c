@@ -13,6 +13,10 @@
 
 #include "umicom/developer/ecosystem/update_review.h"
 
+/*
+ * Exercise make update and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void make_update(
     UmiEcosystemPackageRecord *record,
     const char *id,
@@ -31,6 +35,10 @@ static void make_update(
     record->download_bytes = 100U;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEcosystemUpdateReview review;

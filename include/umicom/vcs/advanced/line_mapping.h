@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced line mapping data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedLineMapping {
     uint32_t struct_size;
     uint32_t api_version;
@@ -34,8 +38,20 @@ typedef struct UmiVcsAdvancedLineMapping {
     UmiVcsDiffKind kind;
 } UmiVcsAdvancedLineMapping;
 
+/**
+ * Initialise vcs advanced line mapping from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_line_mapping_init(UmiVcsAdvancedLineMapping *value);
+/**
+ * Check that vcs advanced line mapping satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_line_mapping_validate(const UmiVcsAdvancedLineMapping *value);
+/**
+ * Provide the vcs advanced line mapping exact operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_line_mapping_exact(const UmiVcsAdvancedLineMapping *value);
 
 #ifdef __cplusplus

@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_PROCESS_MAX_ENVIRONMENT 32U
 #define UMI_PROCESS_OUTPUT_CAPACITY 65536U
 
+/**
+ * Represent the environment variable data shared with callers of this public contract.
+ */
 typedef struct UmiEnvironmentVariable {
     const char *name;
     const char *value;
@@ -50,6 +53,9 @@ typedef enum UmiProcessWindowMode {
     UMI_PROCESS_WINDOW_VISIBLE = 2
 } UmiProcessWindowMode;
 
+/**
+ * Represent the process request data shared with callers of this public contract.
+ */
 typedef struct UmiProcessRequest {
     const char *program;
     const char *const *arguments;
@@ -65,6 +71,9 @@ typedef struct UmiProcessRequest {
     UmiProcessWindowMode window_mode;
 } UmiProcessRequest;
 
+/**
+ * Represent the process result data shared with callers of this public contract.
+ */
 typedef struct UmiProcessResult {
     int exit_code;
     int launched;
@@ -76,14 +85,25 @@ typedef struct UmiProcessResult {
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
 } UmiProcessResult;
 
+/**
+ * Perform process through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_process_execute(const UmiProcessRequest *request,
                               UmiProcessResult *out_result);
+/**
+ * Provide the process capture operation used by this module and its client applications.
+ */
 UmiStatus umi_process_capture(const char *program,
                               const char *const *arguments,
                               size_t argument_count,
                               char *out_text,
                               size_t capacity,
                               int *out_exit_code);
+/**
+ * Perform process through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_process_run(const char *command, int *exit_code);
 
 #ifdef __cplusplus

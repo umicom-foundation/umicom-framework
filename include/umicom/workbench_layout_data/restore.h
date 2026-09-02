@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout restore options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutRestoreOptions {
     uint32_t structure_size;
     bool replace_existing;
@@ -35,6 +39,10 @@ typedef struct UmiWorkbenchLayoutRestoreOptions {
     bool validate_only;
 } UmiWorkbenchLayoutRestoreOptions;
 
+/**
+ * Represent the workbench layout restore result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutRestoreResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -46,9 +54,17 @@ typedef struct UmiWorkbenchLayoutRestoreResult {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutRestoreResult;
 
+/**
+ * Provide the workbench layout restore options default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutRestoreOptions
 umi_workbench_layout_restore_options_default(void);
 
+/**
+ * Perform workbench layout restore through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_restore_apply(
     UmiDataServer *server,
     const char *backup,

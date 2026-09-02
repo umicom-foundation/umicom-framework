@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer property draft data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerPropertyDraft {
     char node_id[UMI_DECL_ID_CAPACITY];
     char component_type[UMI_DECL_ID_CAPACITY];
@@ -32,15 +35,27 @@ typedef struct UmiDesignerPropertyDraft {
     int changed;
 } UmiDesignerPropertyDraft;
 
+/**
+ * Provide the designer property editor begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_property_editor_begin(
     const UmiDesignerDocument *document,
     const UmiDeclComponentRegistry *registry,
     const char *node_id,
     const char *property_name,
     UmiDesignerPropertyDraft *out_draft);
+/**
+ * Copy designer property editor into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_designer_property_editor_set(
     UmiDesignerPropertyDraft *draft,
     const char *value_text);
+/**
+ * Provide the designer property editor commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_property_editor_commit(
     UmiDesignerHistory *history,
     UmiDesignerDocument *document,

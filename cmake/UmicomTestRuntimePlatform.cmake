@@ -129,12 +129,15 @@ target_include_directories(umicom_test_runtime PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(umicom_test_runtime PUBLIC Umicom::base)
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_test_runtime)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_test_runtime)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE Umicom::test_runtime)
 endif()
@@ -143,8 +146,10 @@ endif()
 # build bin directory explicitly. This prevents CTest from reporting unrelated
 # tests as BAD_COMMAND when Windows cannot locate UCRT64 runtime DLLs.
 get_filename_component(UMICOM_TEST_RUNTIME_COMPILER_BIN "${CMAKE_C_COMPILER}" DIRECTORY)
+# Apply this branch only when its contract condition is satisfied.
 if(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(UMICOM_TEST_RUNTIME_BINARY_BIN "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+# Use this fallback path when the earlier condition does not apply.
 else()
     set(UMICOM_TEST_RUNTIME_BINARY_BIN "${CMAKE_BINARY_DIR}/bin")
 endif()
@@ -157,11 +162,14 @@ set_property(GLOBAL PROPERTY UMICOM_TEST_RUNTIME_COMPILER_BIN
 set_property(GLOBAL PROPERTY UMICOM_TEST_RUNTIME_BINARY_BIN
     "${UMICOM_TEST_RUNTIME_BINARY_BIN}")
 
+# Define the configure test runtime build helper so parent and application projects apply
+# one consistent rule.
 function(umicom_configure_test_runtime test_name test_directory)
     get_property(_umicom_test_runtime_binary_bin GLOBAL
         PROPERTY UMICOM_TEST_RUNTIME_BINARY_BIN)
     get_property(_umicom_test_runtime_compiler_bin GLOBAL
         PROPERTY UMICOM_TEST_RUNTIME_COMPILER_BIN)
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
         set_property(TEST "${test_name}" DIRECTORY "${test_directory}" APPEND
             PROPERTY ENVIRONMENT_MODIFICATION
@@ -174,6 +182,7 @@ function(umicom_configure_test_runtime test_name test_directory)
             "UMICOM_TEST_BUILD_ROOT=${CMAKE_BINARY_DIR}"
             "UMICOM_TEST_RUNTIME_BIN=${_umicom_test_runtime_binary_bin}"
         )
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(test_directory STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         set_property(TEST "${test_name}" APPEND PROPERTY ENVIRONMENT_MODIFICATION
             "PATH=path_list_prepend:${_umicom_test_runtime_binary_bin}"
@@ -187,17 +196,23 @@ function(umicom_configure_test_runtime test_name test_directory)
     endif()
 endfunction()
 
+# Define the configure test runtime directory build helper so parent and application
+# projects apply one consistent rule.
 function(umicom_configure_test_runtime_directory directory_path)
     get_property(_tests DIRECTORY "${directory_path}" PROPERTY TESTS)
+    # Visit each bounded item once so every record receives the same rule.
     foreach(_test IN LISTS _tests)
         umicom_configure_test_runtime("${_test}" "${directory_path}")
     endforeach()
     get_property(_children DIRECTORY "${directory_path}" PROPERTY SUBDIRECTORIES)
+    # Visit each bounded item once so every record receives the same rule.
     foreach(_child IN LISTS _children)
         umicom_configure_test_runtime_directory("${_child}")
     endforeach()
 endfunction()
 
+# Define the configure all registered test runtimes build helper so parent and application
+# projects apply one consistent rule.
 function(umicom_configure_all_registered_test_runtimes)
     umicom_configure_test_runtime_directory("${CMAKE_SOURCE_DIR}")
 endfunction()
@@ -207,13 +222,18 @@ endfunction()
 cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}"
     CALL umicom_configure_all_registered_test_runtimes)
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add test runtime test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_test_runtime_test target test_name source)
         add_executable("${target}" "${UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::test_runtime)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

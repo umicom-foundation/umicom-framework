@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/portfolio_snapshot.h"
+/**
+ * Represent the enterprise portfolio aggregation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePortfolioAggregation { double net_market_value; double gross_market_value; size_t position_count; } UmiEnterprisePortfolioAggregation;
 /* Aggregate finite portfolio market values into net and gross totals. */
 UmiStatus umi_enterprise_portfolio_aggregate(const UmiEnterprisePortfolioSnapshot *snapshot,UmiEnterprisePortfolioAggregation *out_aggregation);

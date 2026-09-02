@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace application generator request data shared with callers
+ * of this public contract.
+ */
     typedef struct UmiProjectWorkspaceApplicationGeneratorRequest {
         UmiProjectWorkspaceNamedState base;
         uint64_t metric;

@@ -19,4 +19,8 @@
 #include "umicom/finance/prudential/systemic_buffer.h"
 
 #include <string.h>
-UmiStatus umi_pru_systemic_buffer_calculate(UmiPrudentialSystemicBuffer *result,const char *buffer_id,double required_ratio,double rwa) { UmiStatus s; double amount; if(result==NULL||buffer_id==NULL||required_ratio<0.0)return UMI_STATUS_INVALID_ARGUMENT; s=umi_pru_weighted_amount(rwa,required_ratio,&amount); if(s!=UMI_STATUS_OK)return s; memset(result,0,sizeof *result); s=umi_pru_copy_text(result->buffer_id,sizeof result->buffer_id,buffer_id); if(s!=UMI_STATUS_OK)return s; result->required_ratio=required_ratio; result->rwa=rwa; result->required_amount=amount; return UMI_STATUS_OK; }
+/*
+ * Provide the pru systemic buffer calculate operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_pru_systemic_buffer_calculate(UmiPrudentialSystemicBuffer *result,const char *buffer_id,double required_ratio,double rwa) { UmiStatus s; double amount; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(result==NULL||buffer_id==NULL||required_ratio<0.0)return UMI_STATUS_INVALID_ARGUMENT; s=umi_pru_weighted_amount(rwa,required_ratio,&amount); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; memset(result,0,sizeof *result); s=umi_pru_copy_text(result->buffer_id,sizeof result->buffer_id,buffer_id); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; result->required_ratio=required_ratio; result->rwa=rwa; result->required_amount=amount; return UMI_STATUS_OK; }

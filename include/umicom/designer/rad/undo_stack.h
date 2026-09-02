@@ -18,10 +18,29 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad undo stack data shared with callers of this public contract.
+ */
 typedef struct UmiRadUndoStack { UmiRadUndoCommand commands[UMI_RAD_MAX_HISTORY]; size_t count; size_t cursor; } UmiRadUndoStack;
+/**
+ * Initialise rad undo stack from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_undo_stack_init(UmiRadUndoStack *stack);
+/**
+ * Provide the rad undo stack push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_rad_undo_stack_push(UmiRadUndoStack *stack,const UmiRadUndoCommand *command);
+/**
+ * Provide the rad undo stack undo operation used by this module and its client
+ * applications.
+ */
 const UmiRadUndoCommand *umi_rad_undo_stack_undo(UmiRadUndoStack *stack);
+/**
+ * Provide the rad undo stack redo operation used by this module and its client
+ * applications.
+ */
 const UmiRadUndoCommand *umi_rad_undo_stack_redo(UmiRadUndoStack *stack);
 #ifdef __cplusplus
 }

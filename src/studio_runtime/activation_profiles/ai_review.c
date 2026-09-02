@@ -20,6 +20,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "ai.developer.patch-", .surface = UMI_STUDIO_SURFACE_AI_REVIEW, .prefix_match = 1, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile ai review operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_ai_review(void)
 {

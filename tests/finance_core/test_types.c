@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/types.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFinancialId id= {0}; CHECK(umi_financial_id_assign(&id,"T1")==UMI_STATUS_OK); CHECK(umi_financial_id_is_valid(&id)); CHECK(umi_financial_date_is_valid((UmiFinancialDate){2028,2U,29U}));

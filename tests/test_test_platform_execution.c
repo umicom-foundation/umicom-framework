@@ -18,6 +18,10 @@
 
 #include "umicom/test_platform/test_platform.h"
 
+/*
+ * Exercise execute fake and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus execute_fake(const UmiTestPlatformItemSnapshot *item,
                               uint32_t attempt,
                               void *user_data,
@@ -35,6 +39,10 @@ static UmiStatus execute_fake(const UmiTestPlatformItemSnapshot *item,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise add item and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_item(UmiTestPlatformItemRegistry *items, const char *id)
 {
     UmiTestPlatformItemSnapshot item;
@@ -47,6 +55,10 @@ static void add_item(UmiTestPlatformItemRegistry *items, const char *id)
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformItemRegistry *items = NULL;

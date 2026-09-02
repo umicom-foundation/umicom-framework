@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr launcher manifest data shared with callers of this public contract.
+ */
 typedef struct UmiDrLauncherManifest { char id[UMI_DR_ID_CAPACITY]; char executable[UMI_DR_PATH_CAPACITY]; char working_directory[UMI_DR_PATH_CAPACITY]; char arguments[UMI_DR_TEXT_CAPACITY]; bool single_instance; } UmiDrLauncherManifest;
+/**
+ * Initialise dr launcher manifest from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_dr_launcher_manifest_init(UmiDrLauncherManifest *value);
+/**
+ * Check that dr launcher manifest satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_dr_launcher_manifest_valid(const UmiDrLauncherManifest *value);
+/**
+ * Provide the dr launcher manifest fingerprint operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_dr_launcher_manifest_fingerprint(const UmiDrLauncherManifest *value);
 
 #ifdef __cplusplus

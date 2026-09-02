@@ -18,6 +18,10 @@
 /* Reset authoring state while delegating breakpoint storage to the canonical adaptive catalogue. */
 void umi_designer_breakpoint_designer_init(UmiDesignerBreakpointDesigner *designer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(designer!=NULL){memset(designer,0,sizeof *designer); umi_adaptive_breakpoint_catalogue_init(&designer->catalogue);}
 }
 /* Add a canonical breakpoint and make it the active designer preview selection. */
@@ -25,9 +29,14 @@ UmiStatus umi_designer_breakpoint_designer_add(UmiDesignerBreakpointDesigner *de
                                                const UmiDesignBreakpoint *breakpoint)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(designer==NULL||breakpoint==NULL)return UMI_STATUS_INVALID_ARGUMENT;
-    status=umi_adaptive_breakpoint_catalogue_add(&designer->catalogue,breakpoint); if(status!=UMI_STATUS_OK)return status;
+    status=umi_adaptive_breakpoint_catalogue_add(&designer->catalogue,breakpoint); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(status!=UMI_STATUS_OK)return status;
     status=umi_designer_adaptive_copy_text(designer->selected_breakpoint_id,sizeof designer->selected_breakpoint_id,breakpoint->id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

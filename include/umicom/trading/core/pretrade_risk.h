@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading pretrade risk policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingPretradeRiskPolicy { UmiTradingQuantityLots max_order_lots; int64_t max_order_notional_minor; } UmiTradingPretradeRiskPolicy;
 /* Evaluate order size, notional and current buying power before routing. */
 UmiTradingCoreDecision umi_trading_pretrade_risk_check(const UmiTradingPretradeRiskPolicy *policy,UmiTradingQuantityLots lots,int64_t notional_minor,int64_t buying_power_minor);

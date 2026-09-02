@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named plugin isolation mode values accepted by this public contract.
+ */
 typedef enum UmiPluginIsolationMode {
     UMI_PLUGIN_ISOLATION_IN_PROCESS = 0,
     UMI_PLUGIN_ISOLATION_RESTRICTED_PROCESS = 1,
@@ -34,6 +37,9 @@ typedef enum UmiPluginIsolationMode {
     UMI_PLUGIN_ISOLATION_DENIED = 3
 } UmiPluginIsolationMode;
 
+/**
+ * List the named plugin trust level values accepted by this public contract.
+ */
 typedef enum UmiPluginTrustLevel {
     UMI_PLUGIN_TRUST_UNKNOWN = 0,
     UMI_PLUGIN_TRUST_LOCAL = 1,
@@ -42,6 +48,9 @@ typedef enum UmiPluginTrustLevel {
     UMI_PLUGIN_TRUST_BLOCKED = 4
 } UmiPluginTrustLevel;
 
+/**
+ * Represent the plugin policy data shared with callers of this public contract.
+ */
 typedef struct UmiPluginPolicy {
     int require_signature;
     int allow_native_code;
@@ -51,6 +60,9 @@ typedef struct UmiPluginPolicy {
     UmiPluginIsolationMode untrusted_isolation;
 } UmiPluginPolicy;
 
+/**
+ * Represent the plugin policy decision data shared with callers of this public contract.
+ */
 typedef struct UmiPluginPolicyDecision {
     int allowed;
     UmiPluginIsolationMode isolation;
@@ -60,14 +72,30 @@ typedef struct UmiPluginPolicyDecision {
     char reason[256];
 } UmiPluginPolicyDecision;
 
+/**
+ * Provide the plugin policy default operation used by this module and its client
+ * applications.
+ */
 UmiPluginPolicy umi_plugin_policy_default(void);
+/**
+ * Provide the plugin policy evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_plugin_policy_evaluate(const UmiPluginPolicy *policy,
                                      const UmiPluginManifest *manifest,
                                      const UmiPluginSignatureDecision *signature,
                                      const UmiPluginPermissionDecision *permissions,
                                      UmiPluginTrustLevel trust,
                                      UmiPluginPolicyDecision *out_decision);
+/**
+ * Provide the plugin isolation mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_plugin_isolation_mode_text(UmiPluginIsolationMode mode);
+/**
+ * Provide the plugin trust level text operation used by this module and its client
+ * applications.
+ */
 const char *umi_plugin_trust_level_text(UmiPluginTrustLevel level);
 
 #ifdef __cplusplus

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/orphan_cleanup.h"
 
+/*
+ * Provide the document capability orphan cleanup operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_orphan_cleanup(void)
 {

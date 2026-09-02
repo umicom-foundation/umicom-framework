@@ -34,6 +34,9 @@ typedef UmiStatus (*UmiAiMcpNotifyFn)(
     const char *method,
     const char *params_json);
 
+/**
+ * Represent the ai mcp transport data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpTransport {
     UmiAiMcpRequestFn request;
     UmiAiMcpNotifyFn notify;

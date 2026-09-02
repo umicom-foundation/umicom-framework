@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer breakpoint designer data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerBreakpointDesigner {
     UmiAdaptiveBreakpointCatalogue catalogue;
     char selected_breakpoint_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

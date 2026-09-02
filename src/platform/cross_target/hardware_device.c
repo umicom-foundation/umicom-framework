@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/hardware_device.h"
 
-UmiStatus umi_ct_hardware_device_validate(const UmiCtHardwareDevice*d){if(d==NULL||!umi_ct_id_valid(d->device_id)||d->device_class<UMI_CT_DEVICE_CPU||d->device_class>UMI_CT_DEVICE_OTHER)return UMI_STATUS_INVALID_ARGUMENT;if(d->mmio_size!=0U&&d->mmio_base+d->mmio_size<d->mmio_base)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/*
+ * Check that ct hardware device satisfies its contract before another service relies on
+ * it.
+ */
+UmiStatus umi_ct_hardware_device_validate(const UmiCtHardwareDevice*d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||!umi_ct_id_valid(d->device_id)||d->device_class<UMI_CT_DEVICE_CPU||d->device_class>UMI_CT_DEVICE_OTHER)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d->mmio_size!=0U&&d->mmio_base+d->mmio_size<d->mmio_base)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

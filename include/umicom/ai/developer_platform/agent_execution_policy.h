@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev agent execution policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevAgentExecutionPolicy {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +42,25 @@ typedef struct UmiAiDevAgentExecutionPolicy {
     int enabled;
 } UmiAiDevAgentExecutionPolicy;
 
+/**
+ * Initialise ai dev agent execution policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_agent_execution_policy_init(UmiAiDevAgentExecutionPolicy *policy);
+/**
+ * Provide the ai dev agent execution policy configure operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_dev_agent_execution_policy_configure(UmiAiDevAgentExecutionPolicy *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev agent execution policy allows operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_agent_execution_policy_allows(const UmiAiDevAgentExecutionPolicy *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev agent execution policy approval required operation used by this
+ * module and its client applications.
+ */
 int umi_ai_dev_agent_execution_policy_approval_required(const UmiAiDevAgentExecutionPolicy *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

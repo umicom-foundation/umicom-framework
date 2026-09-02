@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context event caret record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextEventCaretRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_EVENT_ID_CAPACITY];
@@ -39,25 +43,57 @@ typedef struct UmiWorkbenchContextEventCaretRecord {
     uint64_t revision;
 } UmiWorkbenchContextEventCaretRecord;
 
+/**
+ * Initialise workbench context event caret record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_event_caret_record_init(
     UmiWorkbenchContextEventCaretRecord *record,
     const char *record_id);
+/**
+ * Check that workbench context event caret record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_event_caret_record_validate(
     const UmiWorkbenchContextEventCaretRecord *record);
+/**
+ * Provide the workbench context event caret record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_caret_record_set_source(
     UmiWorkbenchContextEventCaretRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench context event caret record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_caret_record_set_subject(
     UmiWorkbenchContextEventCaretRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench context event caret record set group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_caret_record_set_group(
     UmiWorkbenchContextEventCaretRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench context event caret record set label operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_caret_record_set_label(
     UmiWorkbenchContextEventCaretRecord *record,
     const char *label);
+/**
+ * Provide the workbench context event caret record hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_event_caret_record_hash(
     const UmiWorkbenchContextEventCaretRecord *record);
+/**
+ * Provide the workbench context event caret record touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_event_caret_record_touch(
     UmiWorkbenchContextEventCaretRecord *record,
     uint64_t sequence,

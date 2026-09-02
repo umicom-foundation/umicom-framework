@@ -31,26 +31,50 @@ extern "C" {
 #define UMI_BUILD_UI_VIEW_ARTIFACTS "umicom.build.workspace.artifacts"
 #define UMI_BUILD_UI_VIEW_TASKS "umicom.build.workspace.tasks"
 
+/**
+ * Initialise build ui dashboard view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_build_ui_dashboard_view_create(
     const char *view_id,
     UmiBuildWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise build ui graph view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_build_ui_graph_view_create(
     const char *view_id,
     UmiBuildWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise build ui history view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_build_ui_history_view_create(
     const char *view_id,
     UmiBuildWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise build ui output view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_build_ui_output_view_create(
     const char *view_id,
     UmiBuildWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise build ui artifacts view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_build_ui_artifacts_view_create(
     const char *view_id,
     UmiBuildWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise build ui tasks view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_build_ui_tasks_view_create(
     const char *view_id,
     UmiBuildWorkspace *workspace,

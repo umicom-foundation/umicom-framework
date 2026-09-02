@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding provider execution data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingProviderExecution {
     char provider_id[UMI_AI_ID_CAPACITY];
     char model_id[UMI_AI_ID_CAPACITY];
@@ -29,6 +33,10 @@ typedef struct UmiAiCodingProviderExecution {
     uint64_t revision;
 } UmiAiCodingProviderExecution;
 
+/**
+ * Perform ai coding provider through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_provider_execute(
     UmiAiRuntime *runtime,
     const UmiAiCodingRuntimeConfig *config,

@@ -94,6 +94,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience games operation used by this module and its client
+ * applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_games(void)
 {
     return &DEFINITION;

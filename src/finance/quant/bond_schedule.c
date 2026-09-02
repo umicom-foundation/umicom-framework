@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_bond_schedule_init(UmiQuantBondSchedule *record, int32_t maturity_days, int32_t frequency_days)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(maturity_days > 0 && frequency_days > 0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->maturity_days = maturity_days;
@@ -35,6 +40,10 @@ UmiStatus umi_quant_bond_schedule_init(UmiQuantBondSchedule *record, int32_t mat
 /* Return the ceiling number of scheduled payment periods. */
 double umi_quant_bond_schedule_period_count(const UmiQuantBondSchedule *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return (double)((record->maturity_days + record->frequency_days - 1) / record->frequency_days);
 }

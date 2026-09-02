@@ -23,28 +23,48 @@ struct UmiDeveloperProjectLanguageRegistry {
     size_t count;
 };
 
+/*
+ * Initialise developer project language registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_project_language_registry_create(
     UmiDeveloperProjectLanguageRegistry **out_registry)
 {
     UmiDeveloperProjectLanguageRegistry *registry;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
 
     registry = (UmiDeveloperProjectLanguageRegistry *)calloc(
         1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer project language registry so the same storage
+ * can be reused safely.
+ */
 void umi_developer_project_language_registry_destroy(
     UmiDeveloperProjectLanguageRegistry *registry)
 {
     free(registry);
 }
 
+/*
+ * Add developer project language registry only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_developer_project_language_registry_register(
     UmiDeveloperProjectLanguageRegistry *registry,
     const UmiDeveloperProjectLanguagePack *pack)
@@ -52,14 +72,21 @@ UmiStatus umi_developer_project_language_registry_register(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || pack == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_language_pack_validate(pack);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->packs[index]->language_id,
                    pack->language_id) == 0) {
             registry->packs[index] = pack;
@@ -67,6 +94,7 @@ UmiStatus umi_developer_project_language_registry_register(
         }
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_DEVELOPER_PROJECT_LANGUAGE_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -75,6 +103,10 @@ UmiStatus umi_developer_project_language_registry_register(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find developer project language registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperProjectLanguagePack *
 umi_developer_project_language_registry_find(
     const UmiDeveloperProjectLanguageRegistry *registry,
@@ -82,9 +114,15 @@ umi_developer_project_language_registry_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || language_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->packs[index]->language_id,
                    language_id) == 0) {
             return registry->packs[index];
@@ -94,6 +132,10 @@ umi_developer_project_language_registry_find(
     return NULL;
 }
 
+/*
+ * Provide the developer project language registry for extension operation used by this
+ * module and its client applications.
+ */
 const UmiDeveloperProjectLanguagePack *
 umi_developer_project_language_registry_for_extension(
     const UmiDeveloperProjectLanguageRegistry *registry,
@@ -101,9 +143,15 @@ umi_developer_project_language_registry_for_extension(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || extension == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_developer_project_language_pack_supports_extension(
                 registry->packs[index], extension)) {
             return registry->packs[index];
@@ -113,6 +161,10 @@ umi_developer_project_language_registry_for_extension(
     return NULL;
 }
 
+/*
+ * Find developer project language registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperProjectLanguagePack *
 umi_developer_project_language_registry_at(
     const UmiDeveloperProjectLanguageRegistry *registry,
@@ -123,6 +175,10 @@ umi_developer_project_language_registry_at(
         : NULL;
 }
 
+/*
+ * Return the number of records represented by developer project language registry without
+ * changing their state.
+ */
 size_t umi_developer_project_language_registry_count(
     const UmiDeveloperProjectLanguageRegistry *registry)
 {

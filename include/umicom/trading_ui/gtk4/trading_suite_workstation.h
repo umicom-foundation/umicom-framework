@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the gtk4 trading suite workstation config data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiGtk4TradingSuiteWorkstationConfig {
     UmiTradingWorkspace *workspace;
     const char *application_id;
@@ -37,6 +41,10 @@ typedef struct UmiGtk4TradingSuiteWorkstationConfig {
     unsigned int simulation_step_interval_ms;
 } UmiGtk4TradingSuiteWorkstationConfig;
 
+/**
+ * Represent the gtk4 trading suite workstation snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiGtk4TradingSuiteWorkstationSnapshot {
     UmiApplicationSuiteGtk4WorkstationSnapshot layout;
     UmiTradingWorkspaceSnapshot trading;
@@ -46,18 +54,42 @@ typedef struct UmiGtk4TradingSuiteWorkstationSnapshot {
     int simulation_running;
 } UmiGtk4TradingSuiteWorkstationSnapshot;
 
+/**
+ * Represent the gtk4 trading suite workstation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiGtk4TradingSuiteWorkstation UmiGtk4TradingSuiteWorkstation;
 
+/**
+ * Provide the gtk4 trading suite workstation config default operation used by this module
+ * and its client applications.
+ */
 UmiGtk4TradingSuiteWorkstationConfig
 umi_gtk4_trading_suite_workstation_config_default(
     UmiTradingWorkspace *workspace);
+/**
+ * Initialise gtk4 trading suite workstation from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_create(
     const UmiGtk4TradingSuiteWorkstationConfig *config,
     UmiGtk4TradingSuiteWorkstation **out_workstation);
+/**
+ * Release or reset state held by gtk4 trading suite workstation so the same storage can be
+ * reused safely.
+ */
 void umi_gtk4_trading_suite_workstation_destroy(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation widget operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_gtk4_trading_suite_workstation_widget(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation select layout operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_select_layout(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *layout_id);
@@ -73,10 +105,22 @@ UmiStatus umi_gtk4_trading_suite_workstation_apply_custom_appearance(
 UmiStatus umi_gtk4_trading_suite_workstation_active_appearance(
     const UmiGtk4TradingSuiteWorkstation *workstation,
     UmiUiAppearanceProfile *out_profile);
+/**
+ * Provide the gtk4 trading suite workstation begin layout edit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_begin_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation commit layout edit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_commit_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation cancel layout edit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_cancel_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation);
 /* Forward portable layout persistence to the shared application workstation. */
@@ -85,6 +129,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_export_layout(
     uint64_t saved_at_ns,
     char *out_text,
     size_t capacity);
+/**
+ * Provide the gtk4 trading suite workstation import layout operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_import_layout(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *text,
@@ -94,8 +142,16 @@ UmiStatus umi_gtk4_trading_suite_workstation_import_layout(
 UmiStatus umi_gtk4_trading_suite_workstation_save_checkpoint(
     UmiGtk4TradingSuiteWorkstation *workstation,
     uint64_t saved_at_ns);
+/**
+ * Provide the gtk4 trading suite workstation restore checkpoint operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_restore_checkpoint(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation open window operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_open_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *tool_id,
@@ -104,6 +160,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_open_window(
     uint64_t opened_at_ms,
     char *out_window_id,
     size_t out_window_id_capacity);
+/**
+ * Provide the gtk4 trading suite workstation move window operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_move_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *window_id,
@@ -112,6 +172,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_move_window(
     double y,
     double width,
     double height);
+/**
+ * Provide the gtk4 trading suite workstation close window operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_close_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *window_id);
@@ -119,11 +183,23 @@ UmiStatus umi_gtk4_trading_suite_workstation_close_window(
 UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const UmiUiWorkspacePanelSettings *settings);
+/**
+ * Provide the gtk4 trading suite workstation refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_refresh(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation snapshot operation used by this module and
+ * its client applications.
+ */
 UmiGtk4TradingSuiteWorkstationSnapshot
 umi_gtk4_trading_suite_workstation_snapshot(
     UmiGtk4TradingSuiteWorkstation *workstation);
+/**
+ * Provide the gtk4 trading suite workstation controller operation used by this module and
+ * its client applications.
+ */
 UmiTradingUiController *umi_gtk4_trading_suite_workstation_controller(
     UmiGtk4TradingSuiteWorkstation *workstation);
 

@@ -47,6 +47,9 @@ extern "C" {
 #define UMI_WS_MAX_GRID_COLUMNS 32U
 #define UMI_WS_MAX_WORKSPACES 24U
 
+/**
+ * List the named ws application domain values accepted by this public contract.
+ */
 typedef enum UmiWsApplicationDomain {
     UMI_WS_DOMAIN_GENERIC = 0,
     UMI_WS_DOMAIN_STUDIO = 1,
@@ -60,6 +63,9 @@ typedef enum UmiWsApplicationDomain {
     UMI_WS_DOMAIN_OPERATIONS = 9
 } UmiWsApplicationDomain;
 
+/**
+ * List the named ws surface kind values accepted by this public contract.
+ */
 typedef enum UmiWsSurfaceKind {
     UMI_WS_SURFACE_PANEL = 1,
     UMI_WS_SURFACE_EDITOR = 2,
@@ -78,6 +84,9 @@ typedef enum UmiWsSurfaceKind {
     UMI_WS_SURFACE_TOOLBAR = 15
 } UmiWsSurfaceKind;
 
+/**
+ * List the named ws dock region values accepted by this public contract.
+ */
 typedef enum UmiWsDockRegion {
     UMI_WS_DOCK_LEFT = 1,
     UMI_WS_DOCK_RIGHT = 2,
@@ -87,18 +96,27 @@ typedef enum UmiWsDockRegion {
     UMI_WS_DOCK_FLOATING = 6
 } UmiWsDockRegion;
 
+/**
+ * List the named ws visibility values accepted by this public contract.
+ */
 typedef enum UmiWsVisibility {
     UMI_WS_VISIBILITY_HIDDEN = 0,
     UMI_WS_VISIBILITY_VISIBLE = 1,
     UMI_WS_VISIBILITY_AUTO_HIDE = 2
 } UmiWsVisibility;
 
+/**
+ * List the named ws density values accepted by this public contract.
+ */
 typedef enum UmiWsDensity {
     UMI_WS_DENSITY_COMFORTABLE = 1,
     UMI_WS_DENSITY_COMPACT = 2,
     UMI_WS_DENSITY_TOUCH = 3
 } UmiWsDensity;
 
+/**
+ * List the named ws layout variant kind values accepted by this public contract.
+ */
 typedef enum UmiWsLayoutVariantKind {
     UMI_WS_LAYOUT_LAPTOP = 1,
     UMI_WS_LAYOUT_DESKTOP = 2,
@@ -117,8 +135,19 @@ double umi_ws_clamp_unit(double value);
 int32_t umi_ws_clamp_i32(int32_t value, int32_t minimum, int32_t maximum);
 /* Produce a deterministic lightweight fingerprint for layout evidence. */
 uint64_t umi_ws_hash_text(const char *text);
+/**
+ * Provide the ws domain text operation used by this module and its client applications.
+ */
 const char *umi_ws_domain_text(UmiWsApplicationDomain domain);
+/**
+ * Provide the ws surface kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_surface_kind_text(UmiWsSurfaceKind kind);
+/**
+ * Provide the ws dock region text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_dock_region_text(UmiWsDockRegion region);
 
 #ifdef __cplusplus

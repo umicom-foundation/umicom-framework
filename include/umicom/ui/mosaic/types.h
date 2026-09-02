@@ -30,6 +30,9 @@ extern "C" {
 #define UMI_UI_MOSAIC_MAX_CELLS 64U
 #define UMI_UI_MOSAIC_MAX_MEMBERS 64U
 
+/**
+ * List the named ui mosaic application values accepted by this public contract.
+ */
 typedef enum UmiUiMosaicApplication {
     UMI_UI_MOSAIC_APP_FRAMEWORK = 1,
     UMI_UI_MOSAIC_APP_DESK = 2,
@@ -45,6 +48,9 @@ typedef enum UmiUiMosaicApplication {
     UMI_UI_MOSAIC_APP_OS = 12
 } UmiUiMosaicApplication;
 
+/**
+ * List the named ui mosaic dock zone values accepted by this public contract.
+ */
 typedef enum UmiUiMosaicDockZone {
     UMI_UI_MOSAIC_DOCK_LEFT = 1,
     UMI_UI_MOSAIC_DOCK_RIGHT = 2,
@@ -54,6 +60,9 @@ typedef enum UmiUiMosaicDockZone {
     UMI_UI_MOSAIC_DOCK_FLOAT = 6
 } UmiUiMosaicDockZone;
 
+/**
+ * List the named ui mosaic panel state values accepted by this public contract.
+ */
 typedef enum UmiUiMosaicPanelState {
     UMI_UI_MOSAIC_PANEL_HIDDEN = 1,
     UMI_UI_MOSAIC_PANEL_DOCKED = 2,
@@ -63,6 +72,9 @@ typedef enum UmiUiMosaicPanelState {
     UMI_UI_MOSAIC_PANEL_AUTO_HIDDEN = 6
 } UmiUiMosaicPanelState;
 
+/**
+ * List the named ui mosaic edit mode values accepted by this public contract.
+ */
 typedef enum UmiUiMosaicEditMode {
     UMI_UI_MOSAIC_EDIT_LOCKED = 1,
     UMI_UI_MOSAIC_EDIT_UNLOCKED = 2
@@ -70,8 +82,19 @@ typedef enum UmiUiMosaicEditMode {
 
 /* Copies user-visible identifiers/text into bounded Framework storage. */
 UmiStatus umi_ui_mosaic_copy_text(char *destination, size_t capacity, const char *source);
+/**
+ * Check that ui mosaic id satisfies its contract before another service relies on it.
+ */
 int umi_ui_mosaic_id_is_valid(const char *identifier);
+/**
+ * Provide the ui mosaic application name operation used by this module and its client
+ * applications.
+ */
 const char *umi_ui_mosaic_application_name(UmiUiMosaicApplication application);
+/**
+ * Provide the ui mosaic dock zone name operation used by this module and its client
+ * applications.
+ */
 const char *umi_ui_mosaic_dock_zone_name(UmiUiMosaicDockZone zone);
 
 #ifdef __cplusplus

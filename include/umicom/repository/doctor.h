@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the repository doctor evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_doctor_evaluate(
     const UmiRepositoryStatusSummary *summary,
     const UmiRepositoryDoctorPolicy *policy,

@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/change_set.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveChangeSet item; umi_ui_reactive_change_set_init(&item); return umi_ui_reactive_change_set_valid(&item) ? 0 : 1; }

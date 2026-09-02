@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_INSTALL_PLAN "umicom.developer.delivery.install_plan"
 
+/**
+ * Provide the developer capability install plan operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_install_plan(void);
 

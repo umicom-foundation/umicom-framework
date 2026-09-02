@@ -22,14 +22,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application production identifier data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationProductionIdentifier {
     char value[UMI_APPLICATION_PRODUCTION_ID_CAPACITY];
 } UmiApplicationProductionIdentifier;
 
+/**
+ * Copy application production identifier into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_application_production_identifier_set(
     UmiApplicationProductionIdentifier *identifier, const char *value);
+/**
+ * Check that application production identifier satisfies its contract before another
+ * service relies on it.
+ */
 int umi_application_production_identifier_valid(
     const UmiApplicationProductionIdentifier *identifier);
+/**
+ * Provide the application production identifier equal operation used by this module and
+ * its client applications.
+ */
 int umi_application_production_identifier_equal(
     const UmiApplicationProductionIdentifier *left,
     const UmiApplicationProductionIdentifier *right);

@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc accessibility contract data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFcAccessibilityContract { uint64_t required_roles; bool named; bool keyboard_reachable; bool state_exposed; } UmiFcAccessibilityContract;
+/**
+ * Check that fc accessibility contract satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_fc_accessibility_contract_validate(const UmiFcAccessibilityContract *item);
 
 #ifdef __cplusplus

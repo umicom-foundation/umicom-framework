@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant valuation adjustment data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantValuationAdjustment {
     double exposure;
     double probability;

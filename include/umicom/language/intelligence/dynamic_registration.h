@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_DYNAMIC_REGISTRATION_API_VERSION 1U
+/**
+ * Represent the language intelligence dynamic registration item data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiLanguageIntelligenceDynamicRegistrationItem {
     char id[UMI_LANGUAGE_INTELLIGENCE_ID_CAPACITY];
     char label[UMI_LANGUAGE_INTELLIGENCE_TEXT_CAPACITY];
@@ -32,6 +36,10 @@ typedef struct UmiLanguageIntelligenceDynamicRegistrationItem {
     uint32_t flags;
     int enabled;
 } UmiLanguageIntelligenceDynamicRegistrationItem;
+/**
+ * Represent the language intelligence dynamic registration data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceDynamicRegistration {
     uint32_t struct_size;
     uint32_t api_version;
@@ -39,13 +47,29 @@ typedef struct UmiLanguageIntelligenceDynamicRegistration {
     size_t count;
     uint64_t revision;
 } UmiLanguageIntelligenceDynamicRegistration;
+/**
+ * Initialise language intelligence dynamic registration from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_dynamic_registration_init(UmiLanguageIntelligenceDynamicRegistration *catalogue);
+/**
+ * Provide the language intelligence dynamic registration upsert operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_dynamic_registration_upsert(
     UmiLanguageIntelligenceDynamicRegistration *catalogue,
     const UmiLanguageIntelligenceDynamicRegistrationItem *item);
+/**
+ * Find language intelligence dynamic registration while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 const UmiLanguageIntelligenceDynamicRegistrationItem *umi_language_intelligence_dynamic_registration_find(
     const UmiLanguageIntelligenceDynamicRegistration *catalogue,
     const char *id);
+/**
+ * Provide the language intelligence dynamic registration best operation used by this
+ * module and its client applications.
+ */
 const UmiLanguageIntelligenceDynamicRegistrationItem *umi_language_intelligence_dynamic_registration_best(
     const UmiLanguageIntelligenceDynamicRegistration *catalogue);
 #ifdef __cplusplus

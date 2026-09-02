@@ -17,9 +17,17 @@
 #include "umicom/codeguard/duplicate_evidence.h"
 #include <stdio.h>
 #include <string.h>
+/*
+ * Provide the codeguard duplicate candidate build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_codeguard_duplicate_candidate_build(const UmiCodeGuardDuplicateFile *first,const UmiCodeGuardDuplicateFile *second,UmiCodeGuardDuplicateCandidate *out_candidate)
 {
     int length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (first == NULL || second == NULL || out_candidate == NULL || first->path[0] == '\0' || second->path[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_candidate,0,sizeof(*out_candidate));
     (void)umi_codeguard_quality_copy(out_candidate->primary_path,sizeof(out_candidate->primary_path),first->path);
@@ -30,20 +38,38 @@ UmiStatus umi_codeguard_duplicate_candidate_build(const UmiCodeGuardDuplicateFil
     out_candidate->automatic_action_permitted = false;
     out_candidate->disposition = UMI_CODEGUARD_CANDIDATE_REVIEW;
     length = snprintf(out_candidate->evidence,sizeof(out_candidate->evidence),"raw=%s normalized=%s size-a=%zu size-b=%zu; human review required",out_candidate->byte_identical ? "match" : "different",out_candidate->normalized_identical ? "match" : "different",first->size,second->size);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length < 0 || (size_t)length >= sizeof(out_candidate->evidence)) return UMI_STATUS_CAPACITY_EXCEEDED;
     return out_candidate->similarity_percent == 0U ? UMI_STATUS_NOT_FOUND : UMI_STATUS_OK;
 }
+/*
+ * Add codeguard duplicate review only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_codeguard_duplicate_review_add(UmiCodeGuardDuplicateReview *review,const UmiCodeGuardDuplicateCandidate *candidate)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (review == NULL || candidate == NULL || candidate->similarity_percent == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (review->count >= UMI_CODEGUARD_QUALITY_MAX_CANDIDATES) return UMI_STATUS_CAPACITY_EXCEEDED;
     review->items[review->count] = *candidate;
     review->items[review->count].automatic_action_permitted = false;
     review->count += 1U;
     return UMI_STATUS_OK;
 }
+/*
+ * Provide the codeguard duplicate review disposition operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_codeguard_duplicate_review_disposition(UmiCodeGuardDuplicateReview *review,size_t index,UmiCodeGuardCandidateDisposition disposition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (review == NULL || index >= review->count || disposition < UMI_CODEGUARD_CANDIDATE_REVIEW || disposition > UMI_CODEGUARD_CANDIDATE_CONSOLIDATE) return UMI_STATUS_INVALID_ARGUMENT;
     review->items[index].disposition = disposition;
     review->items[index].automatic_action_permitted = false;

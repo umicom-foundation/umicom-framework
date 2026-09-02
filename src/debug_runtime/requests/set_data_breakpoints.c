@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request set data breakpoints operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_request_set_data_breakpoints(
     UmiDebugRuntimeAdapter *adapter,
     const UmiDebugRuntimeDataBreakpoint *breakpoints,
@@ -27,6 +31,10 @@ UmiStatus umi_debug_runtime_request_set_data_breakpoints(
     UmiLanguageRuntimeJsonWriter writer;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL ||
         (breakpoint_count > 0U && breakpoints == NULL) ||
         breakpoint_count > UMI_DEBUG_RUNTIME_MAX_BREAKPOINTS) {
@@ -35,25 +43,30 @@ UmiStatus umi_debug_runtime_request_set_data_breakpoints(
 
     umi_language_runtime_json_writer_init(&writer, arguments, sizeof(arguments));
     (void)umi_language_runtime_json_writer_raw(&writer, "{\"breakpoints\":[");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < breakpoint_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index > 0U) {
             (void)umi_language_runtime_json_writer_raw(&writer, ",");
         }
         (void)umi_language_runtime_json_writer_raw(&writer, "{\"dataId\":");
         (void)umi_language_runtime_json_writer_string(
             &writer, breakpoints[index].data_id);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (breakpoints[index].access_type[0] != '\0') {
             (void)umi_language_runtime_json_writer_raw(
                 &writer, ",\"accessType\":");
             (void)umi_language_runtime_json_writer_string(
                 &writer, breakpoints[index].access_type);
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (breakpoints[index].condition[0] != '\0') {
             (void)umi_language_runtime_json_writer_raw(
                 &writer, ",\"condition\":");
             (void)umi_language_runtime_json_writer_string(
                 &writer, breakpoints[index].condition);
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (breakpoints[index].hit_condition[0] != '\0') {
             (void)umi_language_runtime_json_writer_raw(
                 &writer, ",\"hitCondition\":");
@@ -63,6 +76,7 @@ UmiStatus umi_debug_runtime_request_set_data_breakpoints(
         (void)umi_language_runtime_json_writer_raw(&writer, "}");
     }
     (void)umi_language_runtime_json_writer_raw(&writer, "]}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.status != UMI_STATUS_OK) return writer.status;
 
     return umi_debug_runtime_request_raw(

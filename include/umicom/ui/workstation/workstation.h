@@ -31,6 +31,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws workstation data shared with callers of this public contract.
+ */
 typedef struct UmiWsWorkstation {
     char workstation_id[UMI_UI_ID_CAPACITY];
     UmiWsSurfaceCatalogue surfaces;
@@ -47,12 +50,32 @@ typedef struct UmiWsWorkstation {
     uint64_t revision;
 } UmiWsWorkstation;
 
+/**
+ * Initialise ws workstation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_workstation_init(UmiWsWorkstation *workstation,
                                   const char *workstation_id,
                                   UmiWsDensity density);
+/**
+ * Provide the ws workstation activate layout operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_workstation_activate_layout(UmiWsWorkstation *workstation, const char *layout_id);
+/**
+ * Provide the ws workstation activate perspective operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ws_workstation_activate_perspective(UmiWsWorkstation *workstation, const char *perspective_id);
+/**
+ * Provide the ws workstation ready operation used by this module and its client
+ * applications.
+ */
 bool umi_ws_workstation_ready(const UmiWsWorkstation *workstation);
+/**
+ * Provide the ws workstation fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ws_workstation_fingerprint(const UmiWsWorkstation *workstation);
 
 #ifdef __cplusplus

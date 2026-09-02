@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer workbench command palette query operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_workbench_command_palette_query(
     UmiCommandRegistry *commands,
     const char *query,

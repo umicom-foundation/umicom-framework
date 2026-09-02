@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/sdk_runtime/environment_probe.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSdkRuntimeEnvironmentProbe value,same;

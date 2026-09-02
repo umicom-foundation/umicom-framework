@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital balance book data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalBalanceBook {
     UmiDigitalTokenBalance items[UMI_DIGITAL_ASSET_MAX_ITEMS];
     size_t count;

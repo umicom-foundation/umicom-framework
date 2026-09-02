@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/compiler_result.h"
-int main(void) { UmiTeacherCompilerResult s; umi_teacher_compiler_result_init(&s); if (umi_teacher_compiler_result_record(&s,82U,1)!=UMI_STATUS_OK) return 1; umi_teacher_compiler_result_set_units(&s,4U,4U); if (umi_teacher_compiler_result_completion(&s)!=100U) return 2; if (!umi_teacher_compiler_result_complete(&s)) return 3; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTeacherCompilerResult s; umi_teacher_compiler_result_init(&s); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (umi_teacher_compiler_result_record(&s,82U,1)!=UMI_STATUS_OK) return 1; umi_teacher_compiler_result_set_units(&s,4U,4U); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (umi_teacher_compiler_result_completion(&s)!=100U) return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if (!umi_teacher_compiler_result_complete(&s)) return 3; return 0; }

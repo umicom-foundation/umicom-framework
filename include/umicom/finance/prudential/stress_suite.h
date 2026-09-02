@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress suite data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialStressSuite { char suite_id[UMI_PRU_ID_CAPACITY]; char scenario_ids[UMI_PRU_MAX_SCENARIOS][UMI_PRU_ID_CAPACITY]; size_t count; } UmiPrudentialStressSuite;
 /* Append a scenario identifier to a bounded governed stress suite. */
 UmiStatus umi_pru_stress_suite_add(UmiPrudentialStressSuite *suite, const char *scenario_id);

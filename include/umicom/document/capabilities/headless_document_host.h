@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_HEADLESS_DOCUMENT_HOST "umicom.document.integration.headless_document_host"
 
+/**
+ * Provide the document capability headless document host operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_headless_document_host(void);
 

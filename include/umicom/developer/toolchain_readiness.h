@@ -31,6 +31,10 @@ typedef int (*UmiDeveloperToolAvailabilityProbe)(
     const char *program,
     void *user_data);
 
+/**
+ * Represent the developer toolchain readiness data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperToolchainReadiness {
     uint32_t struct_size;
     char binding_id[128];

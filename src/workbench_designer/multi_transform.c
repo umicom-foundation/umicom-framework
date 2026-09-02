@@ -19,13 +19,22 @@
 #include <math.h>
 
 
+/*
+ * Initialise workbench designer multi transform from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_multi_transform_init(
     UmiWorkbenchDesignerMultiTransform *transform)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transform == NULL) return;
     (void)memset(transform, 0, sizeof(*transform));
 }
 
+/* Provide the transform union operation used by this module and its client applications. */
 static UmiWorkbenchDesignerRect transform_union(
     UmiWorkbenchDesignerRect left,
     UmiWorkbenchDesignerRect right,
@@ -34,6 +43,7 @@ static UmiWorkbenchDesignerRect transform_union(
     UmiWorkbenchDesignerRect result;
     double right_edge;
     double bottom_edge;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first) return right;
     result.x = left.x < right.x ? left.x : right.x;
     result.y = left.y < right.y ? left.y : right.y;
@@ -46,22 +56,36 @@ static UmiWorkbenchDesignerRect transform_union(
     return result;
 }
 
+/*
+ * Provide the workbench designer multi transform begin operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_multi_transform_begin(
     UmiWorkbenchDesignerMultiTransform *transform,
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchDesignerSelection *selection)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transform == NULL || document == NULL || selection == NULL ||
         selection->count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_designer_multi_transform_init(transform);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < selection->count; ++index) {
         const char *node_id = selection->items[index].value;
         const UmiWorkbenchLayoutNode *node =
             umi_workbench_layout_document_find_node(document, node_id);
         UmiWorkbenchDesignerTransformItem *item;
         UmiWorkbenchDesignerRect bounds;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (node == NULL) return UMI_STATUS_NOT_FOUND;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (transform->count >= UMI_WORKBENCH_DESIGNER_MAX_SELECTIONS) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -83,16 +107,25 @@ UmiStatus umi_workbench_designer_multi_transform_begin(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer multi transform translate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_designer_multi_transform_translate(
     UmiWorkbenchDesignerMultiTransform *transform,
     double delta_x,
     double delta_y)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transform == NULL || transform->count == 0U ||
         !isfinite(delta_x) || !isfinite(delta_y)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < transform->count; ++index) {
         UmiWorkbenchDesignerTransformItem *item = &transform->items[index];
         item->resulting_bounds = item->original_bounds;
@@ -107,6 +140,10 @@ UmiStatus umi_workbench_designer_multi_transform_translate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer multi transform resize operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_multi_transform_resize(
     UmiWorkbenchDesignerMultiTransform *transform,
     UmiWorkbenchDesignerRect new_bounds,
@@ -115,6 +152,10 @@ UmiStatus umi_workbench_designer_multi_transform_resize(
     double scale_x;
     double scale_y;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transform == NULL || transform->count == 0U ||
         !umi_workbench_designer_rect_is_valid(&new_bounds) ||
         transform->original_selection_bounds.width <= 0.0 ||
@@ -123,6 +164,7 @@ UmiStatus umi_workbench_designer_multi_transform_resize(
     }
     scale_x = new_bounds.width / transform->original_selection_bounds.width;
     scale_y = new_bounds.height / transform->original_selection_bounds.height;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (preserve_aspect) {
         const double scale = scale_x < scale_y ? scale_x : scale_y;
         scale_x = scale;
@@ -130,6 +172,7 @@ UmiStatus umi_workbench_designer_multi_transform_resize(
         new_bounds.width = transform->original_selection_bounds.width * scale;
         new_bounds.height = transform->original_selection_bounds.height * scale;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < transform->count; ++index) {
         UmiWorkbenchDesignerTransformItem *item = &transform->items[index];
         const UmiWorkbenchDesignerRect original =
@@ -151,26 +194,42 @@ UmiStatus umi_workbench_designer_multi_transform_resize(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform workbench designer multi transform through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_designer_multi_transform_apply(
     const UmiWorkbenchDesignerMultiTransform *transform,
     UmiWorkbenchLayoutDocument *document)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transform == NULL || document == NULL || transform->count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (document->version.revision != transform->source_revision) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < transform->count; ++index) {
         const UmiWorkbenchDesignerTransformItem *item = &transform->items[index];
         UmiWorkbenchLayoutNode *node =
             umi_workbench_layout_document_find_node_mutable(document, item->node_id);
         UmiStatus status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (node == NULL) return UMI_STATUS_NOT_FOUND;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!item->changed) continue;
         status = umi_workbench_layout_node_set_bounds(
             node, &item->resulting_bounds);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     umi_workbench_layout_document_increment_revision(document);

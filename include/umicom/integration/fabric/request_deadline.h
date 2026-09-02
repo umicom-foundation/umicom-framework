@@ -26,9 +26,24 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric request deadline data shared with callers of this public contract.
+ */
 typedef struct UmiFabricRequestDeadline { uint64_t started_ms; uint64_t deadline_ms; } UmiFabricRequestDeadline;
+/**
+ * Initialise fabric request deadline from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_request_deadline_init(UmiFabricRequestDeadline *deadline,uint64_t now_ms,uint64_t timeout_ms);
+/**
+ * Provide the fabric request deadline expired operation used by this module and its client
+ * applications.
+ */
 bool umi_fabric_request_deadline_expired(const UmiFabricRequestDeadline *deadline,uint64_t now_ms);
+/**
+ * Provide the fabric request deadline remaining operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_fabric_request_deadline_remaining(const UmiFabricRequestDeadline *deadline,uint64_t now_ms);
 
 #ifdef __cplusplus

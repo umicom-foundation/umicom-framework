@@ -17,9 +17,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench context link inspector row from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_inspector_row_init(UmiWorkbenchContextLinkInspectorRow *record,
                                            const char *identity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     memset(record, 0, sizeof(*record));
     record->structure_size = (uint32_t)sizeof(*record);
@@ -30,37 +38,54 @@ void umi_workbench_context_link_inspector_row_init(UmiWorkbenchContextLinkInspec
     record->origin = UMI_WORKBENCH_CONTEXT_LINK_ORIGIN_USER;
     record->priority = UMI_WORKBENCH_CONTEXT_LINK_PRIORITY_NORMAL;
     record->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (identity != NULL) {
         (void)umi_workbench_context_link_copy_text(
             record->row_id, sizeof(record->row_id), identity);
     }
 }
 
+/*
+ * Check that workbench context link inspector row satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_inspector_row_validate(
     const UmiWorkbenchContextLinkInspectorRow *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || record->structure_size != sizeof(*record)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_context_link_text_is_valid(
             record->row_id, sizeof(record->row_id)) ||
         record->row_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_context_link_text_is_valid(
             record->label, sizeof(record->label)) ||
         !umi_workbench_context_link_text_is_valid(
             record->value_text, sizeof(record->value_text))) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (record->context_kind < UMI_CONTEXT_KIND_GENERIC ||
         record->context_kind > UMI_CONTEXT_KIND_SELECTION) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (record->colour < UMI_CONTEXT_COLOUR_NONE ||
         record->colour > UMI_CONTEXT_COLOUR_MAGENTA) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (record->mode < UMI_WORKBENCH_CONTEXT_LINK_MODE_NONE ||
         record->mode > UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -68,13 +93,22 @@ UmiStatus umi_workbench_context_link_inspector_row_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy workbench context link inspector row into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_inspector_row_copy(
     UmiWorkbenchContextLinkInspectorRow *destination,
     const UmiWorkbenchContextLinkInspectorRow *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_workbench_context_link_inspector_row_validate(source) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -82,10 +116,18 @@ UmiStatus umi_workbench_context_link_inspector_row_copy(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context link inspector row hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_link_inspector_row_hash(
     const UmiWorkbenchContextLinkInspectorRow *record)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0U;
     hash = umi_workbench_context_link_hash_text(
         hash, record->row_id, sizeof(record->row_id));
@@ -106,35 +148,61 @@ uint64_t umi_workbench_context_link_inspector_row_hash(
     return hash;
 }
 
+/*
+ * Provide the workbench context link inspector row set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_inspector_row_set_primary(
     UmiWorkbenchContextLinkInspectorRow *record,
     const char *value)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_link_copy_text(
         record->label, sizeof(record->label), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context link inspector row set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_inspector_row_set_secondary(
     UmiWorkbenchContextLinkInspectorRow *record,
     const char *value)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_link_copy_text(
         record->value_text, sizeof(record->value_text), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context link inspector row touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_link_inspector_row_touch(
     UmiWorkbenchContextLinkInspectorRow *record,
     uint64_t sequence,
     uint64_t timestamp_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;

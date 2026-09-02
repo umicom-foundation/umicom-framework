@@ -37,6 +37,7 @@ struct UmiDataWorkbenchRuntime {
     uint64_t revision;
 };
 
+/* Provide the finish operation used by this module and its client applications. */
 static UmiStatus finish(
     UmiDataWorkbenchRuntime *runtime,
     UmiStatus status,
@@ -52,6 +53,10 @@ static UmiStatus finish(
     return status;
 }
 
+/*
+ * Initialise data workbench runtime from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_data_workbench_runtime_create(
     UmiDatabaseExplorer *explorer,
     UmiDataWorkbenchRuntime **out_runtime)
@@ -59,13 +64,25 @@ UmiStatus umi_data_workbench_runtime_create(
     UmiDataWorkbenchRuntime *runtime;
     UmiStatus status;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (explorer == NULL || explorer->server == NULL || out_runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_runtime = NULL;
     runtime = (UmiDataWorkbenchRuntime *)calloc(1U, sizeof(*runtime));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     runtime->results = (UmiDataResultModel *)calloc(1U, sizeof(*runtime->results));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime->results == NULL) {
         free(runtime);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -73,21 +90,25 @@ UmiStatus umi_data_workbench_runtime_create(
     runtime->explorer = explorer;
     status = umi_data_workbench_connection_model_init(
         &runtime->connections, &explorer->connections);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_data_navigator_model_build(&runtime->navigator, explorer);
     }
     umi_data_result_model_init(runtime->results);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_data_query_builder_init(
             &runtime->query_builder, "workbench-query", "records");
     }
     umi_data_schema_compare_model_init(&runtime->schema_compare);
     umi_data_er_model_init(&runtime->er_model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_data_editor_model_init(
             &runtime->data_editor, "records", 1);
     }
     umi_data_transfer_workbench_init(&runtime->transfers);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < explorer->transfer_count;
          ++index) {
@@ -95,10 +116,12 @@ UmiStatus umi_data_workbench_runtime_create(
             &runtime->transfers, &explorer->transfers[index]);
     }
     umi_data_admin_model_init(&runtime->admin);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_data_admin_model_refresh(
             &runtime->admin, explorer->server, NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(runtime->results);
         free(runtime);
@@ -113,24 +136,42 @@ UmiStatus umi_data_workbench_runtime_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by data workbench runtime so the same storage can be reused
+ * safely.
+ */
 void umi_data_workbench_runtime_destroy(UmiDataWorkbenchRuntime *runtime)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return;
     free(runtime->results);
     free(runtime);
 }
 
+/*
+ * Provide the data workbench runtime refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_workbench_runtime_refresh(
     UmiDataWorkbenchRuntime *runtime,
     const UmiDataPlatformService *service)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_data_workbench_connection_model_refresh(&runtime->connections);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_data_navigator_model_build(
             &runtime->navigator, runtime->explorer);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_data_admin_model_refresh(
             &runtime->admin, runtime->explorer->server, service);
@@ -139,6 +180,10 @@ UmiStatus umi_data_workbench_runtime_refresh(
                   "Database workbench refreshed.");
 }
 
+/*
+ * Provide the data workbench runtime open sql operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_workbench_runtime_open_sql(
     UmiDataWorkbenchRuntime *runtime,
     const char *document_id,
@@ -147,9 +192,14 @@ UmiStatus umi_data_workbench_runtime_open_sql(
 {
     UmiStatus status;
     UmiDatabaseConnectionProfile active;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_data_sql_document_init(
         &runtime->sql, document_id, title, dialect);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         umi_database_connection_registry_active(
             &runtime->explorer->connections, &active) == UMI_STATUS_OK) {
@@ -160,15 +210,24 @@ UmiStatus umi_data_workbench_runtime_open_sql(
                   "SQL document opened.");
 }
 
+/*
+ * Perform data workbench runtime through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_data_workbench_runtime_execute(
     UmiDataWorkbenchRuntime *runtime)
 {
     char statement[UMI_DATABASE_SQL_CAPACITY];
     UmiDatabaseQueryResult result;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_data_sql_document_statement(
         &runtime->sql, statement, sizeof(statement));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return finish(runtime, status, UMI_DATA_WORKBENCH_FAILED,
                       "SQL statement unavailable.");
@@ -182,10 +241,18 @@ UmiStatus umi_data_workbench_runtime_execute(
                   "SQL statement completed.");
 }
 
+/*
+ * Provide the data workbench runtime snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_workbench_runtime_snapshot(
     const UmiDataWorkbenchRuntime *runtime,
     UmiDataWorkbenchRuntimeSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -242,6 +309,10 @@ ACCESSOR(umi_data_workbench_runtime_admin,
 
 #undef ACCESSOR
 
+/*
+ * Provide the data workbench runtime results operation used by this module and its client
+ * applications.
+ */
 UmiDataResultModel *umi_data_workbench_runtime_results(
     UmiDataWorkbenchRuntime *runtime)
 {

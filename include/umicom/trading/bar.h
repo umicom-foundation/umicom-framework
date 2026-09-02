@@ -26,8 +26,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that bar satisfies its contract before another service relies on it.
+ */
 int umi_bar_valid(const UmiBar *bar);
+/**
+ * Provide the bar range operation used by this module and its client applications.
+ */
 double umi_bar_range(const UmiBar *bar);
+/**
+ * Provide the bar typical price operation used by this module and its client applications.
+ */
 double umi_bar_typical_price(const UmiBar *bar);
 #ifdef __cplusplus
 }

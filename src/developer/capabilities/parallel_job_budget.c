@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/parallel_job_budget.h"
 
+/*
+ * Provide the developer capability parallel job budget operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_parallel_job_budget(void)
 {

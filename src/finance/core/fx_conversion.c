@@ -21,6 +21,7 @@ static double umi_fx_conversion_real_amount(UmiMoney money)
 {
     double divisor = 1.0;
     uint8_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < money.scale; ++index) {
         divisor *= 10.0;
     }
@@ -33,6 +34,7 @@ static int64_t umi_fx_conversion_minor_units(double amount, uint8_t scale)
     double multiplier = 1.0;
     double scaled;
     uint8_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scale; ++index) {
         multiplier *= 10.0;
     }
@@ -46,6 +48,10 @@ UmiStatus umi_fx_conversion_base_to_quote(UmiMoney input,
                                           uint8_t output_scale,
                                           UmiMoney *out_money)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_money == NULL || !umi_exchange_rate_is_valid(rate) ||
         strcmp(input.currency.code, rate->pair.base.code) != 0 ||
         output_scale > 9U) {
@@ -66,6 +72,10 @@ UmiStatus umi_fx_conversion_quote_to_base(UmiMoney input,
                                           uint8_t output_scale,
                                           UmiMoney *out_money)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_money == NULL || !umi_exchange_rate_is_valid(rate) ||
         strcmp(input.currency.code, rate->pair.quote.code) != 0 ||
         output_scale > 9U) {

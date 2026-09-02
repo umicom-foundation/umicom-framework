@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive content priority data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveContentPriority {
     char content_id[UMI_ADAPTIVE_ID_CAPACITY];
     uint32_t priority;

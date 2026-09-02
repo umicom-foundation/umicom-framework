@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive validation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveValidation {
     uint32_t invalid_variants;
     uint32_t invalid_rules;

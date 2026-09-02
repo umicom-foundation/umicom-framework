@@ -25,12 +25,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the gtk4 trading panel context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiGtk4TradingPanelContext {
     UmiTradingWorkspace *workspace;
     UmiTradingUiController *controller;
     int allow_live_environment;
 } UmiGtk4TradingPanelContext;
 
+/**
+ * Initialise gtk4 trading panel from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_trading_panel_create(
     const UmiUiWorkspaceWindow *window,
     UmiGtk4TradingPanelContext *context);

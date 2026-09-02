@@ -36,11 +36,17 @@ extern "C" {
 #define UMI_EDITOR_COMPLETION_COMMIT_CHARACTERS_CAPACITY 64U
 #define UMI_EDITOR_COMPLETION_COMMAND_ID_CAPACITY 128U
 
+/**
+ * List the named editor completion insert format values accepted by this public contract.
+ */
 typedef enum UmiEditorCompletionInsertFormat {
     UMI_EDITOR_COMPLETION_INSERT_PLAIN_TEXT = 1,
     UMI_EDITOR_COMPLETION_INSERT_SNIPPET = 2
 } UmiEditorCompletionInsertFormat;
 
+/**
+ * List the named editor completion source values accepted by this public contract.
+ */
 typedef enum UmiEditorCompletionSource {
     UMI_EDITOR_COMPLETION_SOURCE_OTHER = 0,
     UMI_EDITOR_COMPLETION_SOURCE_KEYWORD = 1,
@@ -65,6 +71,10 @@ enum {
     UMI_EDITOR_COMPLETION_CANDIDATE_ALL_FLAGS = (1U << 8) - 1U
 };
 
+/**
+ * Represent the editor completion candidate data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorCompletionCandidate {
     uint32_t struct_size;
     uint32_t api_version;
@@ -86,6 +96,10 @@ typedef struct UmiEditorCompletionCandidate {
     UmiEditorCompletionCandidateFlags flags;
 } UmiEditorCompletionCandidate;
 
+/**
+ * Represent the editor completion candidate collection snapshot data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiEditorCompletionCandidateCollectionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -98,44 +112,100 @@ typedef struct UmiEditorCompletionCandidateCollectionSnapshot {
     uint64_t revision;
 } UmiEditorCompletionCandidateCollectionSnapshot;
 
+/**
+ * Represent the editor completion candidate collection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionCandidateCollection
     UmiEditorCompletionCandidateCollection;
 
+/**
+ * Initialise editor completion candidate collection from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_completion_candidate_collection_create(
     UmiEditorCompletionCandidateCollection **out_collection);
+/**
+ * Release or reset state held by editor completion candidate collection so the same
+ * storage can be reused safely.
+ */
 void umi_editor_completion_candidate_collection_destroy(
     UmiEditorCompletionCandidateCollection *collection);
+/**
+ * Release or reset state held by editor completion candidate collection so the same
+ * storage can be reused safely.
+ */
 UmiStatus umi_editor_completion_candidate_collection_clear(
     UmiEditorCompletionCandidateCollection *collection);
+/**
+ * Provide the editor completion candidate collection upsert operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_completion_candidate_collection_upsert(
     UmiEditorCompletionCandidateCollection *collection,
     const UmiEditorCompletionCandidate *candidate);
+/**
+ * Remove editor completion candidate collection while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_editor_completion_candidate_collection_remove(
     UmiEditorCompletionCandidateCollection *collection,
     const char *provider_id,
     const char *candidate_id);
+/**
+ * Find editor completion candidate collection while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_completion_candidate_collection_find(
     const UmiEditorCompletionCandidateCollection *collection,
     const char *provider_id,
     const char *candidate_id,
     UmiEditorCompletionCandidate *out_candidate);
+/**
+ * Find editor completion candidate collection while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_completion_candidate_collection_at(
     const UmiEditorCompletionCandidateCollection *collection,
     size_t position,
     UmiEditorCompletionCandidate *out_candidate);
+/**
+ * Provide the editor completion candidate collection snapshot operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_completion_candidate_collection_snapshot(
     const UmiEditorCompletionCandidateCollection *collection,
     UmiEditorCompletionCandidateCollectionSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor completion candidate collection
+ * without changing their state.
+ */
 size_t umi_editor_completion_candidate_collection_count(
     const UmiEditorCompletionCandidateCollection *collection);
+/**
+ * Provide the editor completion candidate collection revision operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_editor_completion_candidate_collection_revision(
     const UmiEditorCompletionCandidateCollection *collection);
 
+/**
+ * Check that editor completion candidate satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_editor_completion_candidate_validate(
     const UmiEditorCompletionCandidate *candidate);
+/**
+ * Provide the editor completion candidate same edit operation used by this module and its
+ * client applications.
+ */
 int umi_editor_completion_candidate_same_edit(
     const UmiEditorCompletionCandidate *left,
     const UmiEditorCompletionCandidate *right);
+/**
+ * Provide the editor completion candidate accepts commit character operation used by this
+ * module and its client applications.
+ */
 int umi_editor_completion_candidate_accepts_commit_character(
     const UmiEditorCompletionCandidate *candidate,
     int character);

@@ -55,6 +55,10 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
     }
 };
 
+/*
+ * Provide the developer project template web service c23 operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_web_service_c23(void)
 {
     static const UmiDeveloperProjectTemplate project_template = {

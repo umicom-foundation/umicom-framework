@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_SELECTION_RANGE_API_VERSION 1U
+/**
+ * Represent the language intelligence selection range data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceSelectionRange {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,12 +37,28 @@ typedef struct UmiLanguageIntelligenceSelectionRange {
     uint32_t depth;
     uint64_t revision;
 } UmiLanguageIntelligenceSelectionRange;
+/**
+ * Initialise language intelligence selection range from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_selection_range_init(UmiLanguageIntelligenceSelectionRange *value, const char *uri);
+/**
+ * Provide the language intelligence selection range set ranges operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_selection_range_set_ranges(
     UmiLanguageIntelligenceSelectionRange *value,
     const UmiLanguageIntelligenceRange *primary,
     const UmiLanguageIntelligenceRange *parent);
+/**
+ * Check that language intelligence selection range satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_language_intelligence_selection_range_validate(const UmiLanguageIntelligenceSelectionRange *value);
+/**
+ * Provide the language intelligence selection range is nested operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_selection_range_is_nested(const UmiLanguageIntelligenceSelectionRange *value);
 #ifdef __cplusplus
 }

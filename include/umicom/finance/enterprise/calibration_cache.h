@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise calibration cache entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationCacheEntry { char object_id[UMI_ENTERPRISE_ID_CAPACITY]; uint64_t input_fingerprint; double fit_error; } UmiEnterpriseCalibrationCacheEntry;
+/**
+ * Represent the enterprise calibration cache data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationCache { UmiEnterpriseCalibrationCacheEntry entries[32U]; size_t count; } UmiEnterpriseCalibrationCache;
 /* Initialise an empty calibration cache. */
 void umi_enterprise_calibration_cache_init(UmiEnterpriseCalibrationCache *cache);

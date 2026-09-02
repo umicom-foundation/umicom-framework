@@ -20,6 +20,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the quote data shared with callers of this public contract.
+ */
 typedef struct UmiQuote { UmiMarketDataKey key; UmiQuoteSide side; UmiFinancialPrice price; int64_t timestamp; } UmiQuote;
 /* Initialize quote. */ UmiStatus umi_quote_init(UmiQuote *q,const UmiMarketDataKey *k,UmiQuoteSide side,UmiFinancialPrice p,int64_t ts);
 /* Validate quote. */ bool umi_quote_is_valid(const UmiQuote *q);

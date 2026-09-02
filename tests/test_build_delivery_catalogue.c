@@ -18,29 +18,37 @@
 
 #include "umicom/build/delivery_catalogue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     size_t other;
     assert(umi_build_delivery_command_count() == 36U);
     assert(umi_build_delivery_view_count() == 8U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_build_delivery_command_count(); ++index) {
         const UmiBuildDeliveryCommandDescriptor *command =
             umi_build_delivery_command_at(index);
         assert(command != NULL);
         assert(command->command_id[0] != '\0');
         assert(command->framework_contract[0] != '\0');
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U;
              other < umi_build_delivery_command_count(); ++other) {
             assert(strcmp(command->command_id,
                           umi_build_delivery_command_at(other)->command_id) != 0);
         }
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_build_delivery_view_count(); ++index) {
         const UmiBuildDeliveryViewDescriptor *view =
             umi_build_delivery_view_at(index);
         assert(view != NULL);
         assert(view->view_id[0] != '\0');
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U;
              other < umi_build_delivery_view_count(); ++other) {
             assert(strcmp(view->view_id,

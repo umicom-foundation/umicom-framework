@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime command sync report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeCommandSyncReport {
     size_t contribution_count;
     size_t command_backed_count;
@@ -30,6 +34,10 @@ typedef struct UmiStudioRuntimeCommandSyncReport {
     uint64_t shell_revision;
 } UmiStudioRuntimeCommandSyncReport;
 
+/**
+ * Provide the studio runtime sync commands operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_sync_commands(
     UmiStudioRuntimeBindings *bindings,
     UmiStudioRuntimeCommandSyncReport *out_report);

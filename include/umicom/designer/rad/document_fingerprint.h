@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the rad document fingerprint compute operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_rad_document_fingerprint_compute(const UmiRadDocumentManifest *manifest);
 #ifdef __cplusplus
 }

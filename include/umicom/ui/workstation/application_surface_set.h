@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws application surface set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWsApplicationSurfaceSet {
     char application_id[UMI_UI_ID_CAPACITY];
     UmiWsApplicationDomain domain;
@@ -32,11 +36,27 @@ typedef struct UmiWsApplicationSurfaceSet {
     bool allow_cross_application_hosting;
 } UmiWsApplicationSurfaceSet;
 
+/**
+ * Initialise ws application surface set from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ws_application_surface_set_init(UmiWsApplicationSurfaceSet *set,
                                               const char *application_id,
                                               UmiWsApplicationDomain domain);
+/**
+ * Add ws application surface set only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ws_application_surface_set_add(UmiWsApplicationSurfaceSet *set, const char *surface_id);
+/**
+ * Provide the ws application surface set contains operation used by this module and its
+ * client applications.
+ */
 bool umi_ws_application_surface_set_contains(const UmiWsApplicationSurfaceSet *set, const char *surface_id);
+/**
+ * Provide the ws application surface set can host operation used by this module and its
+ * client applications.
+ */
 bool umi_ws_application_surface_set_can_host(const UmiWsApplicationSurfaceSet *host,
                                              const UmiWsSurfaceDescriptor *surface);
 

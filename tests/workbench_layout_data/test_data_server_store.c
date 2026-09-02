@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test adapter layout lifecycle and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_adapter_layout_lifecycle(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -45,6 +49,10 @@ static int test_adapter_layout_lifecycle(void)
     return 0;
 }
 
+/*
+ * Exercise test adapter session lifecycle and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_adapter_session_lifecycle(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -71,6 +79,10 @@ static int test_adapter_session_lifecycle(void)
     return 0;
 }
 
+/*
+ * Exercise test adapter transactions and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_adapter_transactions(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -105,6 +117,10 @@ static int test_adapter_transactions(void)
     return 0;
 }
 
+/*
+ * Exercise test adapter verify and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_adapter_verify(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -132,6 +148,10 @@ static int test_adapter_verify(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid adapter creation and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_invalid_adapter_creation(void)
 {
     UmiWorkbenchLayoutDataServerStore store;
@@ -144,6 +164,10 @@ static int test_invalid_adapter_creation(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_adapter_layout_lifecycle() == 0,

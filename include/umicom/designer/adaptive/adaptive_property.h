@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive property data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveProperty {
     char property_path[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     UmiDesignerAdaptiveValue base_value;

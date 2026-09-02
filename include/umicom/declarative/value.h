@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the decl value data shared with callers of this public contract.
+ */
 typedef struct UmiDeclValue {
     UmiDeclValueKind kind;
     char text[UMI_DECL_TEXT_CAPACITY];
@@ -36,8 +39,19 @@ typedef struct UmiDeclValue {
     double real_value;
 } UmiDeclValue;
 
+/**
+ * Provide the decl value from text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_value_from_text(UmiDeclValueKind kind, const char *text, UmiDeclValue *out_value);
+/**
+ * Provide the decl value as text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_value_as_text(const UmiDeclValue *value, char *out_text, size_t capacity);
+/**
+ * Provide the decl value equal operation used by this module and its client applications.
+ */
 int umi_decl_value_equal(const UmiDeclValue *left, const UmiDeclValue *right);
 
 #ifdef __cplusplus

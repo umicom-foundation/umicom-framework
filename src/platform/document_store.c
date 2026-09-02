@@ -22,17 +22,27 @@
 #include "umicom/platform/atomic_file.h"
 #include "umicom/platform/threading.h"
 
+/* Provide the copy bounded text operation used by this module and its client applications. */
 static void copy_bounded_text(char *destination,
                               size_t capacity,
                               const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) {
         destination[0] = '\0';
         return;
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
     (void)memcpy(destination, source, length);
     destination[length] = '\0';
@@ -57,11 +67,17 @@ struct UmiDocumentStore {
     UmiMutex *mutex;
 };
 
+/*
+ * Provide the document store find index operation used by this module and its client
+ * applications.
+ */
 static size_t umi_document_store_find_index(const UmiDocumentStore *store,
                                             UmiDocumentId document_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < store->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->entries[index].document_id == document_id) {
             return index;
         }
@@ -69,11 +85,17 @@ static size_t umi_document_store_find_index(const UmiDocumentStore *store,
     return SIZE_MAX;
 }
 
+/*
+ * Provide the document store find path operation used by this module and its client
+ * applications.
+ */
 static size_t umi_document_store_find_path(const UmiDocumentStore *store,
                                            const char *path)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < store->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->entries[index].path[0] != '\0' &&
             strcmp(store->entries[index].path, path) == 0) {
             return index;
@@ -82,8 +104,13 @@ static size_t umi_document_store_find_path(const UmiDocumentStore *store,
     return SIZE_MAX;
 }
 
+/* Release or reset state held by document entry so the same storage can be reused safely. */
 static void umi_document_entry_dispose(UmiDocumentEntry *entry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entry == NULL) {
         return;
     }
@@ -91,18 +118,28 @@ static void umi_document_entry_dispose(UmiDocumentEntry *entry)
     (void)memset(entry, 0, sizeof(*entry));
 }
 
+/*
+ * Provide the document entry reserve operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_document_entry_reserve(UmiDocumentEntry *entry,
                                             size_t requested_capacity)
 {
     char *resized;
     size_t capacity;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (requested_capacity <= entry->capacity) {
         return UMI_STATUS_OK;
     }
 
     capacity = entry->capacity > 0U ? entry->capacity : 64U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < requested_capacity) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -110,6 +147,10 @@ static UmiStatus umi_document_entry_reserve(UmiDocumentEntry *entry,
     }
 
     resized = (char *)realloc(entry->text, capacity);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (resized == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -118,6 +159,10 @@ static UmiStatus umi_document_entry_reserve(UmiDocumentEntry *entry,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy document snapshot into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 static void umi_document_snapshot_copy(const UmiDocumentEntry *entry,
                                        UmiDocumentSnapshot *snapshot)
 {
@@ -139,6 +184,10 @@ static void umi_document_snapshot_copy(const UmiDocumentEntry *entry,
     snapshot->has_path = entry->path[0] != '\0';
 }
 
+/*
+ * Provide the document store allocate entry operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_document_store_allocate_entry(
     UmiDocumentStore *store,
     const char *display_name,
@@ -146,9 +195,14 @@ static UmiStatus umi_document_store_allocate_entry(
 {
     UmiDocumentEntry *entry;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (store->count >= UMI_DOCUMENT_STORE_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (display_name == NULL || display_name[0] == '\0' ||
         strlen(display_name) >= UMI_DOCUMENT_DISPLAY_NAME_CAPACITY) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -162,6 +216,10 @@ static UmiStatus umi_document_store_allocate_entry(
                    "%s",
                    display_name);
     entry->text = (char *)calloc(1U, 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entry->text == NULL) {
         store->count -= 1U;
         (void)memset(entry, 0, sizeof(*entry));
@@ -172,22 +230,35 @@ static UmiStatus umi_document_store_allocate_entry(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise document store from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_document_store_create(UmiDocumentStore **out_store)
 {
     UmiDocumentStore *store;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_store = NULL;
 
     store = (UmiDocumentStore *)calloc(1U, sizeof(*store));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
 
     status = umi_mutex_create(&store->mutex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(store);
         return status;
@@ -198,14 +269,20 @@ UmiStatus umi_document_store_create(UmiDocumentStore **out_store)
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by document store so the same storage can be reused safely. */
 void umi_document_store_destroy(UmiDocumentStore *store)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < store->count; ++index) {
         umi_document_entry_dispose(&store->entries[index]);
     }
@@ -213,6 +290,10 @@ void umi_document_store_destroy(UmiDocumentStore *store)
     free(store);
 }
 
+/*
+ * Provide the document store new operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_new(UmiDocumentStore *store,
                                  const char *display_name,
                                  UmiDocumentId *out_document_id)
@@ -220,6 +301,10 @@ UmiStatus umi_document_store_new(UmiDocumentStore *store,
     UmiDocumentEntry *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || out_document_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -227,6 +312,7 @@ UmiStatus umi_document_store_new(UmiDocumentStore *store,
 
     (void)umi_mutex_lock(store->mutex);
     status = umi_document_store_allocate_entry(store, display_name, &entry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *out_document_id = entry->document_id;
     }
@@ -234,6 +320,10 @@ UmiStatus umi_document_store_new(UmiDocumentStore *store,
     return status;
 }
 
+/*
+ * Provide the document store create loaded operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_create_loaded(UmiDocumentStore *store,
                                            const char *display_name,
                                            const char *path,
@@ -244,23 +334,32 @@ UmiStatus umi_document_store_create_loaded(UmiDocumentStore *store,
     char normalised[UMI_PATH_CAPACITY];
     UmiDocumentEntry *entry = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || display_name == NULL || path == NULL ||
         (text == NULL && length > 0U) || out_document_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_document_id = 0U;
     status = umi_path_normalise(path, normalised, sizeof(normalised));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_mutex_lock(store->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_document_store_find_path(store, normalised) != SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_ALREADY_EXISTS;
     }
     status = umi_document_store_allocate_entry(store, display_name, &entry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_document_entry_reserve(entry, length + 1U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U) (void)memcpy(entry->text, text, length);
         entry->text[length] = '\0';
         entry->length = length;
@@ -268,7 +367,7 @@ UmiStatus umi_document_store_create_loaded(UmiDocumentStore *store,
         entry->saved_revision = 1U;
         (void)snprintf(entry->path, sizeof(entry->path), "%s", normalised);
         *out_document_id = entry->document_id;
-    } else if (entry != NULL) {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (entry != NULL) {
         umi_document_entry_dispose(entry);
         store->count -= 1U;
     }
@@ -276,6 +375,10 @@ UmiStatus umi_document_store_create_loaded(UmiDocumentStore *store,
     return status;
 }
 
+/*
+ * Provide the document store open operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_open(UmiDocumentStore *store,
                                   const char *path,
                                   UmiDocumentId *out_document_id)
@@ -288,12 +391,17 @@ UmiStatus umi_document_store_open(UmiDocumentStore *store,
     UmiDocumentEntry *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || path == NULL || path[0] == '\0' ||
         out_document_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_document_id = 0U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(path) >= sizeof(normalised)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -301,6 +409,7 @@ UmiStatus umi_document_store_open(UmiDocumentStore *store,
     (void)umi_fs_normalise(normalised);
 
     status = umi_fs_read_text(normalised, &text, &length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -309,6 +418,10 @@ UmiStatus umi_document_store_open(UmiDocumentStore *store,
 #ifdef _WIN32
     {
         const char *backslash = strrchr(normalised, '\\');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (backslash != NULL && (separator == NULL || backslash > separator)) {
             separator = backslash;
         }
@@ -317,6 +430,7 @@ UmiStatus umi_document_store_open(UmiDocumentStore *store,
     display_name = separator != NULL ? separator + 1 : normalised;
 
     (void)umi_mutex_lock(store->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_document_store_find_path(store, normalised) != SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         umi_fs_free_text(text);
@@ -326,6 +440,7 @@ UmiStatus umi_document_store_open(UmiDocumentStore *store,
     status = umi_document_store_allocate_entry(store,
                                                display_name,
                                                &entry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         free(entry->text);
         entry->text = text;
@@ -346,6 +461,10 @@ UmiStatus umi_document_store_open(UmiDocumentStore *store,
     return status;
 }
 
+/*
+ * Provide the document store close operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_close(UmiDocumentStore *store,
                                    UmiDocumentId document_id,
                                    int force)
@@ -353,16 +472,22 @@ UmiStatus umi_document_store_close(UmiDocumentStore *store,
     size_t index;
     size_t move_count;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!force &&
         store->entries[index].revision != store->entries[index].saved_revision) {
         (void)umi_mutex_unlock(store->mutex);
@@ -371,6 +496,7 @@ UmiStatus umi_document_store_close(UmiDocumentStore *store,
 
     umi_document_entry_dispose(&store->entries[index]);
     move_count = store->count - index - 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (move_count > 0U) {
         (void)memmove(&store->entries[index],
                       &store->entries[index + 1U],
@@ -384,6 +510,10 @@ UmiStatus umi_document_store_close(UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the document store snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_snapshot(const UmiDocumentStore *store,
                                       UmiDocumentId document_id,
                                       UmiDocumentSnapshot *out_snapshot)
@@ -391,6 +521,10 @@ UmiStatus umi_document_store_snapshot(const UmiDocumentStore *store,
     size_t index;
     UmiDocumentStore *mutable_store;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -398,6 +532,7 @@ UmiStatus umi_document_store_snapshot(const UmiDocumentStore *store,
     mutable_store = (UmiDocumentStore *)store;
     (void)umi_mutex_lock(mutable_store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(mutable_store->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -407,18 +542,27 @@ UmiStatus umi_document_store_snapshot(const UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find document store while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_document_store_at(const UmiDocumentStore *store,
                                 size_t index,
                                 UmiDocumentSnapshot *out_snapshot)
 {
     UmiDocumentStore *mutable_store;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     mutable_store = (UmiDocumentStore *)store;
     (void)umi_mutex_lock(mutable_store->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= store->count) {
         (void)umi_mutex_unlock(mutable_store->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -428,11 +572,16 @@ UmiStatus umi_document_store_at(const UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/* Return the number of records represented by document store without changing their state. */
 size_t umi_document_store_count(const UmiDocumentStore *store)
 {
     size_t count;
     UmiDocumentStore *mutable_store;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return 0U;
     }
@@ -444,6 +593,10 @@ size_t umi_document_store_count(const UmiDocumentStore *store)
     return count;
 }
 
+/*
+ * Provide the document store copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_copy_text(const UmiDocumentStore *store,
                                        UmiDocumentId document_id,
                                        char **out_text,
@@ -453,10 +606,18 @@ UmiStatus umi_document_store_copy_text(const UmiDocumentStore *store,
     char *copy;
     UmiDocumentStore *mutable_store;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U || out_text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_text = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_length != NULL) {
         *out_length = 0U;
     }
@@ -464,12 +625,17 @@ UmiStatus umi_document_store_copy_text(const UmiDocumentStore *store,
     mutable_store = (UmiDocumentStore *)store;
     (void)umi_mutex_lock(mutable_store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(mutable_store->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
 
     copy = (char *)malloc(store->entries[index].length + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (copy == NULL) {
         (void)umi_mutex_unlock(mutable_store->mutex);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -477,6 +643,10 @@ UmiStatus umi_document_store_copy_text(const UmiDocumentStore *store,
     (void)memcpy(copy,
                  store->entries[index].text,
                  store->entries[index].length + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_length != NULL) {
         *out_length = store->entries[index].length;
     }
@@ -485,11 +655,19 @@ UmiStatus umi_document_store_copy_text(const UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the document store free text operation used by this module and its client
+ * applications.
+ */
 void umi_document_store_free_text(char *text)
 {
     free(text);
 }
 
+/*
+ * Provide the document store replace text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_replace_text(UmiDocumentStore *store,
                                           UmiDocumentId document_id,
                                           const char *text,
@@ -499,6 +677,10 @@ UmiStatus umi_document_store_replace_text(UmiDocumentStore *store,
     UmiDocumentEntry *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U ||
         (text == NULL && length > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -506,6 +688,7 @@ UmiStatus umi_document_store_replace_text(UmiDocumentStore *store,
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -513,7 +696,9 @@ UmiStatus umi_document_store_replace_text(UmiDocumentStore *store,
 
     entry = &store->entries[index];
     status = umi_document_entry_reserve(entry, length + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U) {
             (void)memcpy(entry->text, text, length);
         }
@@ -526,6 +711,7 @@ UmiStatus umi_document_store_replace_text(UmiDocumentStore *store,
     return status;
 }
 
+/* Add document store only after its inputs and available capacity have been checked. */
 UmiStatus umi_document_store_insert(UmiDocumentStore *store,
                                     UmiDocumentId document_id,
                                     size_t offset,
@@ -536,6 +722,10 @@ UmiStatus umi_document_store_insert(UmiDocumentStore *store,
     UmiDocumentEntry *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U ||
         (text == NULL && length > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -543,17 +733,20 @@ UmiStatus umi_document_store_insert(UmiDocumentStore *store,
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
 
     entry = &store->entries[index];
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (offset > entry->length) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_document_entry_reserve(entry, entry->length + length + 1U);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (status == UMI_STATUS_OK && length > 0U) {
         (void)memmove(entry->text + offset + length,
                       entry->text + offset,
@@ -567,6 +760,10 @@ UmiStatus umi_document_store_insert(UmiDocumentStore *store,
     return status;
 }
 
+/*
+ * Remove document store while keeping the remaining records in a valid and discoverable
+ * state.
+ */
 UmiStatus umi_document_store_erase(UmiDocumentStore *store,
                                    UmiDocumentId document_id,
                                    size_t offset,
@@ -575,23 +772,30 @@ UmiStatus umi_document_store_erase(UmiDocumentStore *store,
     size_t index;
     UmiDocumentEntry *entry;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
 
     entry = &store->entries[index];
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (offset > entry->length || length > entry->length - offset) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memmove(entry->text + offset,
                       entry->text + offset + length,
@@ -604,6 +808,10 @@ UmiStatus umi_document_store_erase(UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the document store save path operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
                                               UmiDocumentId document_id,
                                               const char *override_path)
@@ -617,12 +825,18 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (override_path != NULL) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (override_path[0] == '\0' ||
             strlen(override_path) >= sizeof(path)) {
             (void)umi_mutex_unlock(store->mutex);
@@ -630,7 +844,8 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
         }
         (void)snprintf(path, sizeof(path), "%s", override_path);
         (void)umi_fs_normalise(path);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->entries[index].path[0] == '\0') {
             (void)umi_mutex_unlock(store->mutex);
             return UMI_STATUS_INVALID_STATE;
@@ -644,6 +859,10 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
     length = store->entries[index].length;
     revision = store->entries[index].revision;
     text = (char *)malloc(length + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -653,21 +872,31 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
 
     status = umi_atomic_file_write(path, text, length);
     free(text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (override_path != NULL) {
         const char *separator = strrchr(path, '/');
 #ifdef _WIN32
         const char *backslash = strrchr(path, '\\');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (backslash != NULL && (separator == NULL || backslash > separator)) {
             separator = backslash;
         }
@@ -680,6 +909,7 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
                           sizeof(store->entries[index].display_name),
                           separator != NULL ? separator + 1 : path);
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (store->entries[index].revision == revision) {
         store->entries[index].saved_revision = revision;
         store->entries[index].external_change = 0;
@@ -688,25 +918,45 @@ static UmiStatus umi_document_store_save_path(UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Write document store in its stable representation and report capacity or input failures
+ * to the caller.
+ */
 UmiStatus umi_document_store_save(UmiDocumentStore *store,
                                   UmiDocumentId document_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return umi_document_store_save_path(store, document_id, NULL);
 }
 
+/*
+ * Provide the document store save as operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_save_as(UmiDocumentStore *store,
                                      UmiDocumentId document_id,
                                      const char *path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U || path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return umi_document_store_save_path(store, document_id, path);
 }
 
+/*
+ * Provide the document store mark saved as operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_store_mark_saved_as(UmiDocumentStore *store,
                                            UmiDocumentId document_id,
                                            const char *path)
@@ -715,15 +965,24 @@ UmiStatus umi_document_store_mark_saved_as(UmiDocumentStore *store,
     char normalised[UMI_PATH_CAPACITY];
     const char *separator;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U || path == NULL || path[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_path_normalise(path, normalised, sizeof(normalised));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     separator = strrchr(normalised, '/');
 #ifdef _WIN32
     {
         const char *backslash = strrchr(normalised, '\\');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (backslash != NULL && (separator == NULL || backslash > separator)) {
             separator = backslash;
         }
@@ -731,6 +990,7 @@ UmiStatus umi_document_store_mark_saved_as(UmiDocumentStore *store,
 #endif
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -746,6 +1006,10 @@ UmiStatus umi_document_store_mark_saved_as(UmiDocumentStore *store,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the document store mark external change operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_document_store_mark_external_change(
     UmiDocumentStore *store,
     UmiDocumentId document_id,
@@ -753,12 +1017,17 @@ UmiStatus umi_document_store_mark_external_change(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)umi_mutex_lock(store->mutex);
     index = umi_document_store_find_index(store, document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(store->mutex);
         return UMI_STATUS_NOT_FOUND;

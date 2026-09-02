@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/build_dashboard.h"
 
+/*
+ * Provide the developer capability build dashboard operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_build_dashboard(void)
 {

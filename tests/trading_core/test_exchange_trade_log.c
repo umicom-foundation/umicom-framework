@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/exchange_trade_log.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingExchangeTradeLog l;
@@ -22,6 +26,7 @@ int main(void) {
     umi_trading_core_id_assign(&b,"b");
     umi_trading_core_id_assign(&s,"s");
     umi_trading_trade_capture_init(&t,"t",&b,&s,100,1,1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_exchange_trade_log_append(&l,&t)!=UMI_STATUS_OK)return 1;
     return umi_trading_exchange_trade_log_find(&l,&t.trade_id)!=NULL?0:2;
 }

@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench thread group data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugWorkbenchThreadGroup {
     UmiDebugWorkbenchEntry items[UMI_DEBUG_WORKBENCH_MAX_ITEMS];
     size_t count;
@@ -33,11 +37,35 @@ typedef struct UmiDebugWorkbenchThreadGroup {
     uint64_t revision;
 } UmiDebugWorkbenchThreadGroup;
 
+/**
+ * Initialise debug workbench thread group from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_debug_workbench_thread_group_init(UmiDebugWorkbenchThreadGroup *model);
+/**
+ * Add debug workbench thread group only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_debug_workbench_thread_group_add(UmiDebugWorkbenchThreadGroup *model, const UmiDebugWorkbenchEntry *entry);
+/**
+ * Remove debug workbench thread group while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_debug_workbench_thread_group_remove(UmiDebugWorkbenchThreadGroup *model, const char *id);
+/**
+ * Provide the debug workbench thread group select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_workbench_thread_group_select(UmiDebugWorkbenchThreadGroup *model, const char *id);
+/**
+ * Find debug workbench thread group while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiDebugWorkbenchEntry *umi_debug_workbench_thread_group_find(const UmiDebugWorkbenchThreadGroup *model, const char *id);
+/**
+ * Check that debug workbench thread group satisfies its contract before another service
+ * relies on it.
+ */
 int umi_debug_workbench_thread_group_valid(const UmiDebugWorkbenchThreadGroup *model);
 
 #ifdef __cplusplus

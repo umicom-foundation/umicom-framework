@@ -20,4 +20,8 @@
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiFrontendPlan p;UmiFrontendPage page;UmiFrontendRoute route;char json[512];assert(umi_frontend_plan_init(&p,"org.umicom.demo",UMI_FRONTEND_KIND_WEB)==UMI_STATUS_OK);assert(umi_frontend_page_init(&page,"home","Home","shell")==UMI_STATUS_OK);assert(umi_frontend_route_init(&route,"/","home")==UMI_STATUS_OK);assert(umi_frontend_plan_add_page(&p,&page)==UMI_STATUS_OK);assert(umi_frontend_plan_add_route(&p,&route)==UMI_STATUS_OK);assert(umi_frontend_generate_manifest(&p,json,sizeof(json))==UMI_STATUS_OK);assert(strstr(json,"org.umicom.demo")!=NULL);return 0;}

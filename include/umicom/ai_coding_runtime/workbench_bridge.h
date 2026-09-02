@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding workbench context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingWorkbenchContext {
     char session_id[UMI_AI_ID_CAPACITY];
     char runtime_id[UMI_AI_ID_CAPACITY];
@@ -38,20 +42,40 @@ typedef struct UmiAiCodingWorkbenchContext {
     int sensitive_approved;
 } UmiAiCodingWorkbenchContext;
 
+/**
+ * Represent the ai coding workbench bridge data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingWorkbenchBridge UmiAiCodingWorkbenchBridge;
 
+/**
+ * Initialise ai coding workbench bridge from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_coding_workbench_bridge_create(
     UmiDeveloperWorkbench *workbench,
     UmiAiCodingRuntimePlatform *platform,
     UmiAiCodingWorkbenchBridge **out_bridge);
 
+/**
+ * Release or reset state held by ai coding workbench bridge so the same storage can be
+ * reused safely.
+ */
 void umi_ai_coding_workbench_bridge_destroy(
     UmiAiCodingWorkbenchBridge *bridge);
 
+/**
+ * Provide the ai coding workbench bridge set context operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_workbench_bridge_set_context(
     UmiAiCodingWorkbenchBridge *bridge,
     const UmiAiCodingWorkbenchContext *context);
 
+/**
+ * Provide the ai coding workbench bridge bind operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_workbench_bridge_bind(
     UmiAiCodingWorkbenchBridge *bridge);
 

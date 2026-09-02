@@ -22,12 +22,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application ui capability row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationUiCapabilityRow {
     const char *capability_id;
     int available;
     size_t consumer_count;
 } UmiApplicationUiCapabilityRow;
 
+/**
+ * Provide the application ui capability row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_capability_row(
     const UmiApplicationCapabilityStatus *status,
     size_t index,

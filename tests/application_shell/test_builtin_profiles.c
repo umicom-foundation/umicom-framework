@@ -16,6 +16,10 @@
 
 #include "umicom/application_shell/builtin_profiles.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationShellRegistry *registry = NULL;
@@ -23,6 +27,7 @@ int main(void)
 
     assert(umi_application_shell_builtin_profile_count() >= 32U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_shell_builtin_profile_count();
          ++index) {

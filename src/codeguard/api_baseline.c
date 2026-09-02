@@ -160,7 +160,7 @@ UmiStatus umi_codeguard_api_baseline_compare(
             }
             out_comparison->removals += 1U;
         /* A retained name with a changed signature is still binary breaking. */
-        } else if (now->signature_hash !=
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (now->signature_hash !=
                    expected->symbols[index].signature_hash) {
             status = add_change(
                 out_comparison,

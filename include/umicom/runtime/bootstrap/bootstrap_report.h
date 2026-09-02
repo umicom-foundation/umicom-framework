@@ -22,7 +22,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap report from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_bootstrap_report_init(UmiBootstrapReport *report);
+/**
+ * Provide the bootstrap report record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_report_record(UmiBootstrapReport *report,
                                       const UmiBootstrapStage *stage,
                                       const char *message);

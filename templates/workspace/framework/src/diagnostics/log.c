@@ -15,9 +15,11 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/diagnostics/log.h"
 
+/* Provide the log operation used by this module and its client applications. */
 void umi_log(UmiLogger *logger, UmiDiagnosticSeverity severity,
              const char *message, uint64_t correlation_id)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (logger == 0) {
         return;
     }

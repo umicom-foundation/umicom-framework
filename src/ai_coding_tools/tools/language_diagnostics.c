@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the ai coding tool language diagnostics descriptor operation used by this module
+ * and its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_language_diagnostics_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -33,6 +37,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_language_diagnostics_descrip
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool language diagnostics invoke operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_coding_tool_language_diagnostics_invoke(
     const char *arguments_json,
     char *output,
@@ -50,49 +58,66 @@ UmiStatus umi_ai_coding_tool_language_diagnostics_invoke(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->language == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
 
     status = umi_ai_coding_tool_json_parse_object(arguments_json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_string(
             &document, "documentId", "", document_id, sizeof(document_id));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_uint64(
             &document, "limit", 100U, &limit);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (limit == 0U || limit > 256U) limit = 256U;
 
     registry = umi_language_service_diagnostic(environment->language);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(
         &writer, ",\"diagnostics\":[");
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_language_diagnostic_registry_count(registry) &&
          emitted < limit;
          ++index) {
         UmiLanguageDiagnosticSnapshot diagnostic;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_language_diagnostic_registry_at(
                 registry, index, &diagnostic) != UMI_STATUS_OK) {
             continue;
         }
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (document_id[0] != '\0' &&
             strcmp(diagnostic.document_id, document_id) != 0) {
             continue;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (emitted > 0U) {
             (void)umi_language_runtime_json_writer_raw(&writer, ",");
         }
@@ -119,6 +144,7 @@ UmiStatus umi_ai_coding_tool_language_diagnostics_invoke(
             &writer, diagnostic.message);
         (void)umi_language_runtime_json_writer_raw(&writer, "}");
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (writer.status != UMI_STATUS_OK) return writer.status;
         emitted += 1U;
     }

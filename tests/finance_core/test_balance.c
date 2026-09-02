@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/balance.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFinancialBalance x; UmiMoney m={10,2U,{{'U','S','D','\0'}}}; CHECK(umi_balance_init(&x,"ID",m,(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_balance_is_valid(&x));

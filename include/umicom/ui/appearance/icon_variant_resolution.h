@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance icon variant resolution data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceIconVariantResolution {
     char icon_id[UMI_APPEARANCE_ID_CAPACITY];
     char resolved_variant_id[UMI_APPEARANCE_ID_CAPACITY];

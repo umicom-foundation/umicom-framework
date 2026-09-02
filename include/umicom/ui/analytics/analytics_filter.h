@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics filter data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsFilter { UmiAnalyticsCompare comparison; double threshold; } UmiAnalyticsFilter;
+/**
+ * Initialise analytics filter from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_analytics_filter_init(UmiAnalyticsFilter *f,UmiAnalyticsCompare comparison,double threshold);
+/**
+ * Provide the analytics filter matches operation used by this module and its client
+ * applications.
+ */
 int umi_analytics_filter_matches(const UmiAnalyticsFilter *f,double value);
 
 #ifdef __cplusplus

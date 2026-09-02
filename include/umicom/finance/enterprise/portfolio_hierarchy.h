@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise portfolio hierarchy node data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEnterprisePortfolioHierarchyNode { char node_id[UMI_ENTERPRISE_ID_CAPACITY]; char parent_id[UMI_ENTERPRISE_ID_CAPACITY]; double weight; } UmiEnterprisePortfolioHierarchyNode;
+/**
+ * Represent the enterprise portfolio hierarchy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePortfolioHierarchy { UmiEnterprisePortfolioHierarchyNode nodes[UMI_ENTERPRISE_MAX_HIERARCHY_NODES]; size_t count; } UmiEnterprisePortfolioHierarchy;
 /* Initialise an empty hierarchy. */
 void umi_enterprise_portfolio_hierarchy_init(UmiEnterprisePortfolioHierarchy *hierarchy);

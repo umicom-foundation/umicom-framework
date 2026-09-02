@@ -37,11 +37,19 @@ static const char *CAPABILITIES[] = {
     "umicom.integration.run-monitoring/1"
 };
 
+/*
+ * Return the number of records represented by integration catalogue without changing their
+ * state.
+ */
 size_t umi_integration_catalogue_count(void)
 {
     return sizeof(CAPABILITIES) / sizeof(CAPABILITIES[0]);
 }
 
+/*
+ * Find integration catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const char *umi_integration_catalogue_at(size_t index)
 {
     return index < umi_integration_catalogue_count()

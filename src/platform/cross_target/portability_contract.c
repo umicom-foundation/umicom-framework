@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/portability_contract.h"
 
+/*
+ * Provide the ct portability missing operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ct_portability_missing(const UmiCtPortabilityContract*c,uint64_t a){return c==NULL?UINT64_MAX:(c->required&~a);}bool umi_ct_portability_satisfied(const UmiCtPortabilityContract*c,uint64_t a){return umi_ct_portability_missing(c,a)==0U;}

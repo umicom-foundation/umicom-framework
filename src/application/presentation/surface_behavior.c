@@ -17,14 +17,23 @@
 
 #include "umicom/application/presentation/panel_catalogue.h"
 
+/* Check that boolean satisfies its contract before another service relies on it. */
 static int boolean_valid(int value)
 {
     return value == 0 || value == 1;
 }
 
+/*
+ * Check that application presentation surface behavior satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_application_presentation_surface_behavior_validate(
     const UmiApplicationPresentationSurfaceBehavior *behavior)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (behavior == NULL || behavior->struct_size != sizeof(*behavior) ||
         behavior->api_version != UMI_APPLICATION_PRESENTATION_BEHAVIOR_API_VERSION ||
         behavior->component_id == NULL || behavior->component_id[0] == '\0' ||
@@ -45,6 +54,7 @@ UmiStatus umi_application_presentation_surface_behavior_validate(
         !boolean_valid(behavior->accept_context)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((behavior->refresh_policy == UMI_APPLICATION_PRESENTATION_REFRESH_INTERVAL ||
          behavior->refresh_policy == UMI_APPLICATION_PRESENTATION_REFRESH_STREAMING) !=
         (behavior->refresh_interval_seconds > 0U)) {
@@ -56,9 +66,14 @@ UmiStatus umi_application_presentation_surface_behavior_validate(
         : UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the application presentation refresh policy text operation used by this module
+ * and its client applications.
+ */
 const char *umi_application_presentation_refresh_policy_text(
     UmiApplicationPresentationRefreshPolicy policy)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (policy) {
     case UMI_APPLICATION_PRESENTATION_REFRESH_MANUAL: return "manual";
     case UMI_APPLICATION_PRESENTATION_REFRESH_ON_FOCUS: return "on-focus";
@@ -68,9 +83,14 @@ const char *umi_application_presentation_refresh_policy_text(
     }
 }
 
+/*
+ * Provide the application presentation selection policy text operation used by this module
+ * and its client applications.
+ */
 const char *umi_application_presentation_selection_policy_text(
     UmiApplicationPresentationSelectionPolicy policy)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (policy) {
     case UMI_APPLICATION_PRESENTATION_SELECTION_NONE: return "none";
     case UMI_APPLICATION_PRESENTATION_SELECTION_SINGLE: return "single";
@@ -80,9 +100,14 @@ const char *umi_application_presentation_selection_policy_text(
     }
 }
 
+/*
+ * Provide the application presentation persistence policy text operation used by this
+ * module and its client applications.
+ */
 const char *umi_application_presentation_persistence_policy_text(
     UmiApplicationPresentationPersistencePolicy policy)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (policy) {
     case UMI_APPLICATION_PRESENTATION_PERSISTENCE_TRANSIENT: return "transient";
     case UMI_APPLICATION_PRESENTATION_PERSISTENCE_SESSION: return "session";
@@ -91,9 +116,14 @@ const char *umi_application_presentation_persistence_policy_text(
     }
 }
 
+/*
+ * Provide the application presentation command mode text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_command_mode_text(
     UmiApplicationPresentationCommandMode mode)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (mode) {
     case UMI_APPLICATION_PRESENTATION_COMMAND_READ_ONLY: return "read-only";
     case UMI_APPLICATION_PRESENTATION_COMMAND_EDITABLE: return "editable";

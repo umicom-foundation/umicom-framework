@@ -18,10 +18,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive throttle policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveThrottlePolicy {
     uint64_t interval_millis;
     uint64_t last_dispatch_millis;
 } UmiUiReactiveThrottlePolicy;
+/**
+ * Provide the ui reactive throttle policy admit operation used by this module and its
+ * client applications.
+ */
 int umi_ui_reactive_throttle_policy_admit(UmiUiReactiveThrottlePolicy *item,uint64_t now_millis);
 #ifdef __cplusplus
 }

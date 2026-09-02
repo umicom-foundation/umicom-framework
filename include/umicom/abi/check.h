@@ -23,7 +23,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi check result data shared with callers of this public contract.
+ */
 typedef struct UmiAbiCheckResult { int descriptor_valid; int platform_valid; int baseline_valid; int passed; } UmiAbiCheckResult;
+/**
+ * Perform abi check through the module contract so client applications do not duplicate
+ * its policy.
+ */
 UmiStatus umi_abi_check_run(const UmiAbiDescriptor *descriptor, const UmiAbiBaseline *expected, const UmiAbiBaseline *actual, UmiAbiCheckResult *out_result);
 #ifdef __cplusplus
 }

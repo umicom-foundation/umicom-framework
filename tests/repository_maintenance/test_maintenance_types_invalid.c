@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/repository/maintenance_types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ assert(strcmp(umi_repository_doctor_severity_text((UmiRepositoryDoctorSeverity)99),"unknown")==0); return 0; }

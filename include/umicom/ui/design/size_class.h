@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design size class values accepted by this public contract.
+ */
 typedef enum UmiDesignSizeClass { UMI_DESIGN_SIZE_COMPACT=1, UMI_DESIGN_SIZE_MEDIUM=2, UMI_DESIGN_SIZE_EXPANDED=3, UMI_DESIGN_SIZE_WIDE=4 } UmiDesignSizeClass;
 /* Classify a non-negative viewport width using Framework baseline thresholds. */
 UmiStatus umi_design_size_class_from_width(int32_t width, UmiDesignSizeClass *out_class);

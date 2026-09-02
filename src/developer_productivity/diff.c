@@ -35,6 +35,7 @@ struct UmiDeveloperDiffDocument {
     UmiDeveloperDiffStats stats;
 };
 
+/* Provide the split lines operation used by this module and its client applications. */
 static UmiStatus split_lines(const char *text,
                              DiffLine *lines,
                              size_t capacity,
@@ -43,22 +44,32 @@ static UmiStatus split_lines(const char *text,
     const char *cursor;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || lines == NULL || out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     cursor = text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         const char *end = strchr(cursor, '\n');
         size_t length = end != NULL
             ? (size_t)(end - cursor)
             : strlen(cursor);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U && cursor[length - 1U] == '\r') {
             length -= 1U;
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (count >= capacity ||
             length >= UMI_DEVELOPER_PRODUCTIVITY_LINE_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -68,10 +79,15 @@ static UmiStatus split_lines(const char *text,
         lines[count].text[length] = '\0';
         count += 1U;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (end == NULL) break;
         cursor = end + 1;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (text[0] == '\0') {
         lines[0].text[0] = '\0';
         count = 1U;
@@ -81,6 +97,7 @@ static UmiStatus split_lines(const char *text,
     return UMI_STATUS_OK;
 }
 
+/* Provide the line equal operation used by this module and its client applications. */
 static int line_equal(const char *left,
                       const char *right,
                       const UmiDeveloperDiffOptions *options)
@@ -90,37 +107,64 @@ static int line_equal(const char *left,
     size_t left_length;
     size_t right_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL || options == NULL) return 0;
 
     left_length = strlen(left);
     right_length = strlen(right);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (options->ignore_trailing_whitespace) {
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (left_length > 0U &&
                isspace((unsigned char)left[left_length - 1U])) {
             left_length -= 1U;
         }
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (right_length > 0U &&
                isspace((unsigned char)right[right_length - 1U])) {
             right_length -= 1U;
         }
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (li < left_length || ri < right_length) {
         unsigned char lc;
         unsigned char rc;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (options->ignore_all_whitespace) {
+            /*
+             * Continue only while work remains available; the loop body advances the state on each
+             * pass.
+             */
             while (li < left_length &&
                    isspace((unsigned char)left[li])) {
                 li += 1U;
             }
+            /*
+             * Continue only while work remains available; the loop body advances the state on each
+             * pass.
+             */
             while (ri < right_length &&
                    isspace((unsigned char)right[ri])) {
                 ri += 1U;
             }
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (li >= left_length || ri >= right_length) {
             return li >= left_length && ri >= right_length;
         }
@@ -128,33 +172,47 @@ static int line_equal(const char *left,
         lc = (unsigned char)left[li++];
         rc = (unsigned char)right[ri++];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (options->ignore_case) {
             lc = (unsigned char)tolower(lc);
             rc = (unsigned char)tolower(rc);
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (lc != rc) return 0;
     }
 
     return 1;
 }
 
+/* Provide the copy line operation used by this module and its client applications. */
 static void copy_line(char *destination,
                       size_t capacity,
                       const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the append row operation used by this module and its client applications. */
 static UmiStatus append_row(
     UmiDeveloperDiffDocument *document,
     UmiDeveloperDiffRowKind kind,
@@ -165,6 +223,10 @@ static UmiStatus append_row(
 {
     UmiDeveloperDiffRow *row;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL ||
         document->row_count >= UMI_DEVELOPER_DIFF_MAX_ROWS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -178,6 +240,7 @@ static UmiStatus append_row(
     copy_line(row->left_text, sizeof(row->left_text), left_text);
     copy_line(row->right_text, sizeof(row->right_text), right_text);
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEVELOPER_DIFF_EQUAL:
             document->stats.equal_rows += 1U;
@@ -201,14 +264,26 @@ static UmiStatus append_row(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise developer diff options from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_diff_options_init(UmiDeveloperDiffOptions *options)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (options == NULL) return;
 
     (void)memset(options, 0, sizeof(*options));
     options->context_lines = 3U;
 }
 
+/*
+ * Initialise developer diff document from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_developer_diff_document_create(
     const char *left_text,
     const char *right_text,
@@ -228,6 +303,10 @@ UmiStatus umi_developer_diff_document_create(
     size_t j;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left_text == NULL || right_text == NULL ||
         out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -235,6 +314,10 @@ UmiStatus umi_developer_diff_document_create(
 
     *out_document = NULL;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (active_options == NULL) {
         umi_developer_diff_options_init(&default_options);
         active_options = &default_options;
@@ -246,6 +329,10 @@ UmiStatus umi_developer_diff_document_create(
         UMI_DEVELOPER_DIFF_MAX_LINES, sizeof(*right_lines));
     document = (UmiDeveloperDiffDocument *)calloc(1U, sizeof(*document));
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left_lines == NULL || right_lines == NULL || document == NULL) {
         status = UMI_STATUS_OUT_OF_MEMORY;
         goto cleanup;
@@ -256,6 +343,7 @@ UmiStatus umi_developer_diff_document_create(
         left_lines,
         UMI_DEVELOPER_DIFF_MAX_LINES,
         &left_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto cleanup;
 
     status = split_lines(
@@ -263,22 +351,30 @@ UmiStatus umi_developer_diff_document_create(
         right_lines,
         UMI_DEVELOPER_DIFF_MAX_LINES,
         &right_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto cleanup;
 
     width = right_count + 1U;
     matrix = (uint16_t *)calloc(
         (left_count + 1U) * width, sizeof(*matrix));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (matrix == NULL) {
         status = UMI_STATUS_OUT_OF_MEMORY;
         goto cleanup;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = left_count; i > 0U; --i) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (j = right_count; j > 0U; --j) {
             const size_t left_index = i - 1U;
             const size_t right_index = j - 1U;
             const size_t cell = left_index * width + right_index;
 
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (line_equal(
                     left_lines[left_index].text,
                     right_lines[right_index].text,
@@ -286,7 +382,7 @@ UmiStatus umi_developer_diff_document_create(
                 matrix[cell] =
                     (uint16_t)(1U +
                         matrix[i * width + j]);
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 const uint16_t down =
                     matrix[i * width + right_index];
                 const uint16_t across =
@@ -299,7 +395,12 @@ UmiStatus umi_developer_diff_document_create(
     i = 0U;
     j = 0U;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (i < left_count || j < right_count) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (i < left_count && j < right_count &&
             line_equal(
                 left_lines[i].text,
@@ -312,6 +413,7 @@ UmiStatus umi_developer_diff_document_create(
                 left_lines[i].text,
                 j + 1U,
                 right_lines[j].text);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto cleanup;
             ++i;
             ++j;
@@ -333,10 +435,11 @@ UmiStatus umi_developer_diff_document_create(
                 left_lines[i].text,
                 j + 1U,
                 right_lines[j].text);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto cleanup;
             ++i;
             ++j;
-        } else if (j < right_count &&
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (j < right_count &&
                    (i >= left_count ||
                     matrix[i * width + (j + 1U)] >
                         matrix[(i + 1U) * width + j])) {
@@ -347,9 +450,10 @@ UmiStatus umi_developer_diff_document_create(
                 "",
                 j + 1U,
                 right_lines[j].text);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto cleanup;
             ++j;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             status = append_row(
                 document,
                 UMI_DEVELOPER_DIFF_DELETE,
@@ -357,6 +461,7 @@ UmiStatus umi_developer_diff_document_create(
                 left_lines[i].text,
                 0U,
                 "");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto cleanup;
             ++i;
         }
@@ -374,33 +479,54 @@ cleanup:
     return status;
 }
 
+/*
+ * Release or reset state held by developer diff document so the same storage can be reused
+ * safely.
+ */
 void umi_developer_diff_document_destroy(
     UmiDeveloperDiffDocument *document)
 {
     free(document);
 }
 
+/*
+ * Return the number of records represented by developer diff document row without changing
+ * their state.
+ */
 size_t umi_developer_diff_document_row_count(
     const UmiDeveloperDiffDocument *document)
 {
     return document != NULL ? document->row_count : 0U;
 }
 
+/*
+ * Find developer diff document row while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_developer_diff_document_row_at(
     const UmiDeveloperDiffDocument *document,
     size_t index,
     UmiDeveloperDiffRow *out_row)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || out_row == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= document->row_count) return UMI_STATUS_NOT_FOUND;
 
     *out_row = document->rows[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer diff document stats operation used by this module and its client
+ * applications.
+ */
 UmiDeveloperDiffStats umi_developer_diff_document_stats(
     const UmiDeveloperDiffDocument *document)
 {

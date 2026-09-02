@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/toolchain/operation_service.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ assert(umi_toolchain_operation_service_prepare(NULL,UMI_TOOLCHAIN_OPERATION_RUN,NULL,NULL,NULL,NULL)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

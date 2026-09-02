@@ -19,6 +19,10 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/data_grid_surface.h"
 
+/**
+ * Initialise gtk4 ws data grid from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_data_grid_create(const UmiWsDataGridSurface *grid);
 
 #endif

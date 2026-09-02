@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * List the named developer source control operation kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperSourceControlOperationKind {
     UMI_DEVELOPER_SOURCE_CONTROL_REFRESH = 1,
     UMI_DEVELOPER_SOURCE_CONTROL_STAGE = 2,
@@ -38,6 +42,10 @@ typedef enum UmiDeveloperSourceControlOperationKind {
     UMI_DEVELOPER_SOURCE_CONTROL_DIFF = 13
 } UmiDeveloperSourceControlOperationKind;
 
+/**
+ * Represent the developer source control operation definition data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDeveloperSourceControlOperationDefinition {
     uint32_t structure_size;
     uint32_t api_version;
@@ -50,6 +58,10 @@ typedef struct UmiDeveloperSourceControlOperationDefinition {
     int requires_argument;
 } UmiDeveloperSourceControlOperationDefinition;
 
+/**
+ * Check that developer source control operation satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_source_control_operation_validate(
     const UmiDeveloperSourceControlOperationDefinition *definition);
 

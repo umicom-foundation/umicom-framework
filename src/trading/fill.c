@@ -21,9 +21,17 @@
 #include "umicom/trading/execution_report.h"
 #include "umicom/finance/identifier.h"
 
+/*
+ * Provide the order apply execution operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_order_apply_execution(UmiOrder *order,
                                     const UmiExecutionReport *report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (order == NULL ||
         !umi_execution_report_valid(report) ||
         !umi_financial_id_equal(&order->request.client_order_id,
@@ -34,10 +42,12 @@ UmiStatus umi_order_apply_execution(UmiOrder *order,
     const double old_filled = order->filled_quantity;
     const double total_filled = old_filled + report->fill_quantity;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (total_filled > order->request.quantity + 1.0e-9) {
         return UMI_STATUS_INVALID_STATE;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (total_filled > 0.0) {
         order->average_fill_price =
             ((order->average_fill_price * old_filled) +

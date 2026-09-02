@@ -20,6 +20,10 @@
 
 #include "umicom/desktop/layout_tabs.h"
 
+/*
+ * Exercise tab and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDesktopLayoutTab tab(const char *id, const char *label)
 {
     UmiDesktopLayoutTab value = {0};
@@ -30,6 +34,10 @@ static UmiDesktopLayoutTab tab(const char *id, const char *label)
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesktopLayoutTabs tabs;

@@ -21,8 +21,13 @@
 
 #include "umicom/integration/types.h"
 
+/*
+ * Provide the integration application state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_integration_application_state_text(UmiIntegrationApplicationState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_INTEGRATION_APP_UNKNOWN: return "unknown";
         case UMI_INTEGRATION_APP_DISCOVERED: return "discovered";
@@ -36,8 +41,13 @@ const char *umi_integration_application_state_text(UmiIntegrationApplicationStat
     }
 }
 
+/*
+ * Provide the integration message kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_integration_message_kind_text(UmiIntegrationMessageKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_INTEGRATION_MESSAGE_COMMAND: return "command";
         case UMI_INTEGRATION_MESSAGE_EVENT: return "event";

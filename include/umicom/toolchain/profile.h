@@ -44,6 +44,9 @@ _Static_assert((size_t)UMI_TOOL_COUNT <= UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY,
                "Increase the toolchain profile capacity before adding tools");
 #endif
 
+/**
+ * List the named toolchain family values accepted by this public contract.
+ */
 typedef enum UmiToolchainFamily {
     UMI_TOOLCHAIN_UNKNOWN = 0,
     UMI_TOOLCHAIN_MSYS2_UCRT64 = 1,
@@ -54,6 +57,9 @@ typedef enum UmiToolchainFamily {
     UMI_TOOLCHAIN_MSYS2_MINGW64 = 6
 } UmiToolchainFamily;
 
+/**
+ * Represent the toolchain profile data shared with callers of this public contract.
+ */
 typedef struct UmiToolchainProfile {
     uint32_t structure_size;
     uint32_t api_version;
@@ -88,19 +94,43 @@ UmiStatus umi_toolchain_profile_initialize(
     ((void)umi_toolchain_profile_initialize(                                 \
         (profile), sizeof(*(profile))))
 
+/**
+ * Provide the toolchain profile storage compatible operation used by this module and its
+ * client applications.
+ */
 bool umi_toolchain_profile_storage_compatible(
     const UmiToolchainProfile *profile);
+/**
+ * Provide the toolchain profile tool operation used by this module and its client
+ * applications.
+ */
 const UmiToolInfo *umi_toolchain_profile_tool(
     const UmiToolchainProfile *profile,
     UmiToolKind kind
 );
+/**
+ * Provide the toolchain profile tool mutable operation used by this module and its client
+ * applications.
+ */
 UmiToolInfo *umi_toolchain_profile_tool_mutable(
     UmiToolchainProfile *profile,
     UmiToolKind kind
 );
+/**
+ * Provide the toolchain family text operation used by this module and its client
+ * applications.
+ */
 const char *umi_toolchain_family_text(UmiToolchainFamily family);
+/**
+ * Provide the toolchain profile c compiler operation used by this module and its client
+ * applications.
+ */
 const UmiToolInfo *umi_toolchain_profile_c_compiler(
     const UmiToolchainProfile *profile);
+/**
+ * Provide the toolchain profile cpp compiler operation used by this module and its client
+ * applications.
+ */
 const UmiToolInfo *umi_toolchain_profile_cpp_compiler(
     const UmiToolchainProfile *profile);
 

@@ -36,6 +36,10 @@ static const UmiEditorFeatureDescriptor FEATURE = {
     .revision = 1U
 };
 
+/*
+ * Provide the editor feature go to reference operation used by this module and its client
+ * applications.
+ */
 const UmiEditorFeatureDescriptor *umi_editor_feature_go_to_reference(void)
 {
     return &FEATURE;

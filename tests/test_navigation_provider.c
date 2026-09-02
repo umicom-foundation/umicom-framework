@@ -27,6 +27,10 @@
 
 #include "umicom/editor/navigation_provider.h"
 
+/*
+ * Exercise unused query and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus unused_query(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -44,6 +48,10 @@ static UmiStatus unused_query(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise make registration and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiEditorNavigationProviderRegistration make_registration(
     const char *id,
     const char *languages,
@@ -65,6 +73,10 @@ static UmiEditorNavigationProviderRegistration make_registration(
     return registration;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;

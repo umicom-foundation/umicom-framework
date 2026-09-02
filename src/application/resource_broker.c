@@ -259,68 +259,106 @@ static const UmiApplicationPresentation APPLICATION_PRESENTATIONS[] = {
      UMI_APPLICATION_ENTRY_SYSTEM, true, false},
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity,
                            const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL ||
         source[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the is non empty operation used by this module and its client applications. */
 static int is_non_empty(const char *value)
 {
     return value != NULL && value[0] != '\0';
 }
 
+/* Provide the locator is file operation used by this module and its client applications. */
 static int locator_is_file(const char *path)
 {
     FILE *stream;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!is_non_empty(path)) return 0;
     stream = fopen(path, "rb");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stream == NULL) return 0;
     (void)fclose(stream);
     return 1;
 }
 
+/* Provide the lease conflicts operation used by this module and its client applications. */
 static int lease_conflicts(const UmiResourceLease *lease,
                            const UmiResourceLeaseRequest *request)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!lease->active || strcmp(lease->resource_id, request->resource_id) != 0)
         return 0;
     return lease->mode == UMI_RESOURCE_LEASE_EXCLUSIVE ||
            request->mode == UMI_RESOURCE_LEASE_EXCLUSIVE;
 }
 
+/*
+ * Return the number of records represented by application resource catalogue without
+ * changing their state.
+ */
 size_t umi_application_resource_catalogue_count(void)
 {
     return COUNT_OF(STATIC_RESOURCES);
 }
 
+/*
+ * Find application resource catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationResourceDescriptor *umi_application_resource_catalogue_at(
     size_t index)
 {
     return index < COUNT_OF(STATIC_RESOURCES) ? &STATIC_RESOURCES[index] : NULL;
 }
 
+/*
+ * Find application resource catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationResourceDescriptor *umi_application_resource_catalogue_find(
     const char *resource_id)
 {
     size_t index;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!is_non_empty(resource_id)) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < COUNT_OF(STATIC_RESOURCES); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(STATIC_RESOURCES[index].resource_id, resource_id) == 0)
             return &STATIC_RESOURCES[index];
     }
     return NULL;
 }
 
+/*
+ * Check that application resource descriptor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_resource_descriptor_validate(
     const UmiApplicationResourceDescriptor *descriptor)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL ||
         descriptor->structure_size < sizeof(UmiApplicationResourceDescriptor) ||
         !is_non_empty(descriptor->resource_id) ||
@@ -334,15 +372,23 @@ UmiStatus umi_application_resource_descriptor_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Check that application resource catalogue satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_resource_catalogue_validate(void)
 {
     size_t first;
     size_t second;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (first = 0U; first < COUNT_OF(STATIC_RESOURCES); ++first) {
+        /* Apply this operation only while the related capability or state is available. */
         if (umi_application_resource_descriptor_validate(
                 &STATIC_RESOURCES[first]) != UMI_STATUS_OK)
             return UMI_STATUS_INVALID_ARGUMENT;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (second = first + 1U; second < COUNT_OF(STATIC_RESOURCES); ++second) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(STATIC_RESOURCES[first].resource_id,
                        STATIC_RESOURCES[second].resource_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
@@ -351,6 +397,10 @@ UmiStatus umi_application_resource_catalogue_validate(void)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application resource resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_resource_resolve(
     const char *resource_root,
     const char *resource_id,
@@ -360,24 +410,36 @@ UmiStatus umi_application_resource_resolve(
     const char *effective_root;
     int written;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!is_non_empty(resource_id) || out_location == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     descriptor = umi_application_resource_catalogue_find(resource_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL) return UMI_STATUS_NOT_FOUND;
     (void)memset(out_location, 0, sizeof(*out_location));
     status = copy_text(out_location->resource_id,
                        sizeof(out_location->resource_id), resource_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_text(out_location->media_type,
                        sizeof(out_location->media_type), descriptor->media_type);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_location->kind = descriptor->kind;
     out_location->scope = descriptor->scope;
     out_location->flags = descriptor->flags;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->kind == UMI_APPLICATION_RESOURCE_THEME_ICON) {
         status = copy_text(out_location->locator,
                            sizeof(out_location->locator), descriptor->locator);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) out_location->available = true;
         return status;
     }
@@ -385,15 +447,21 @@ UmiStatus umi_application_resource_resolve(
     effective_root = is_non_empty(resource_root)
         ? resource_root
         : umi_application_resource_default_root();
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!is_non_empty(effective_root)) return UMI_STATUS_INVALID_STATE;
     written = snprintf(out_location->locator, sizeof(out_location->locator),
                        "%s/%s", effective_root, descriptor->locator);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(out_location->locator))
         return UMI_STATUS_CAPACITY_EXCEEDED;
     out_location->available = locator_is_file(out_location->locator) != 0;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application resource default root operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_resource_default_root(void)
 {
     const char *environment_root = getenv("UMICOM_FRAMEWORK_RESOURCE_ROOT");
@@ -402,9 +470,14 @@ const char *umi_application_resource_default_root(void)
         : UMICOM_FRAMEWORK_RESOURCE_ROOT_DEFAULT;
 }
 
+/*
+ * Provide the application resource kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_resource_kind_text(
     UmiApplicationResourceKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_APPLICATION_RESOURCE_FILE: return "file";
     case UMI_APPLICATION_RESOURCE_THEME_ICON: return "theme-icon";
@@ -417,9 +490,14 @@ const char *umi_application_resource_kind_text(
     }
 }
 
+/*
+ * Provide the application resource scope text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_resource_scope_text(
     UmiApplicationResourceScope scope)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (scope) {
     case UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK: return "framework";
     case UMI_APPLICATION_RESOURCE_SCOPE_PRODUCT: return "product";
@@ -428,11 +506,19 @@ const char *umi_application_resource_scope_text(
     }
 }
 
+/*
+ * Return the number of records represented by application presentation without changing
+ * their state.
+ */
 size_t umi_application_presentation_count(void)
 {
     return COUNT_OF(APPLICATION_PRESENTATIONS);
 }
 
+/*
+ * Find application presentation while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationPresentation *umi_application_presentation_at(size_t index)
 {
     return index < COUNT_OF(APPLICATION_PRESENTATIONS)
@@ -440,12 +526,19 @@ const UmiApplicationPresentation *umi_application_presentation_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find application presentation while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationPresentation *umi_application_presentation_find(
     const char *application_id)
 {
     size_t index;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!is_non_empty(application_id)) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < COUNT_OF(APPLICATION_PRESENTATIONS); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(APPLICATION_PRESENTATIONS[index].application_id,
                    application_id) == 0)
             return &APPLICATION_PRESENTATIONS[index];
@@ -453,10 +546,18 @@ const UmiApplicationPresentation *umi_application_presentation_find(
     return NULL;
 }
 
+/*
+ * Check that application presentation satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_application_presentation_validate(
     const UmiApplicationPresentation *presentation)
 {
     const UmiApplicationResourceDescriptor *icon;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (presentation == NULL ||
         presentation->structure_size < sizeof(UmiApplicationPresentation) ||
         !is_non_empty(presentation->application_id) ||
@@ -468,23 +569,35 @@ UmiStatus umi_application_presentation_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     icon = umi_application_resource_catalogue_find(
         presentation->icon_resource_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (icon == NULL || icon->kind != UMI_APPLICATION_RESOURCE_THEME_ICON ||
         (icon->flags & UMI_APPLICATION_RESOURCE_APPLICATION_ICON) == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Check that application presentation catalogue satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_presentation_catalogue_validate(void)
 {
     size_t first;
     size_t second;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (first = 0U; first < COUNT_OF(APPLICATION_PRESENTATIONS); ++first) {
+        /* Apply this operation only while the related capability or state is available. */
         if (umi_application_presentation_validate(
                 &APPLICATION_PRESENTATIONS[first]) != UMI_STATUS_OK)
             return UMI_STATUS_INVALID_ARGUMENT;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (second = first + 1U;
              second < COUNT_OF(APPLICATION_PRESENTATIONS);
              ++second) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(APPLICATION_PRESENTATIONS[first].application_id,
                        APPLICATION_PRESENTATIONS[second].application_id) == 0)
                 return UMI_STATUS_ALREADY_EXISTS;
@@ -493,8 +606,13 @@ UmiStatus umi_application_presentation_catalogue_validate(void)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application entry kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_entry_kind_text(UmiApplicationEntryKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_APPLICATION_ENTRY_WORKBENCH: return "workbench";
     case UMI_APPLICATION_ENTRY_UTILITY: return "utility";
@@ -504,24 +622,44 @@ const char *umi_application_entry_kind_text(UmiApplicationEntryKind kind)
     }
 }
 
+/*
+ * Initialise application resource broker from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_resource_broker_create(
     UmiApplicationResourceBroker **out_broker)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_broker == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_broker = (UmiApplicationResourceBroker *)calloc(1U,
                                                          sizeof(**out_broker));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (*out_broker == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     (*out_broker)->next_id = 1U;
     (*out_broker)->revision = 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by application resource broker so the same storage can be
+ * reused safely.
+ */
 void umi_application_resource_broker_destroy(
     UmiApplicationResourceBroker *broker)
 {
     free(broker);
 }
 
+/*
+ * Provide the application resource broker acquire operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_resource_broker_acquire(
     UmiApplicationResourceBroker *broker,
     const UmiResourceLeaseRequest *request,
@@ -530,6 +668,10 @@ UmiStatus umi_application_resource_broker_acquire(
     size_t index;
     UmiResourceLease *slot = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || request == NULL || out_lease == NULL ||
         umi_application_definition_validate(request->application) !=
             UMI_STATUS_OK ||
@@ -539,27 +681,41 @@ UmiStatus umi_application_resource_broker_acquire(
         request->quota_units == 0U ||
         umi_framework_capability_catalogue_find(request->capability_id) == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_application_definition_declares_capability(
             request->application, request->capability_id))
         return UMI_STATUS_PERMISSION_DENIED;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_RESOURCE_BROKER_MAX_LEASES; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (lease_conflicts(&broker->leases[index], request))
             return UMI_STATUS_BUSY;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (!broker->leases[index].active && slot == NULL)
             slot = &broker->leases[index];
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (slot == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memset(slot, 0, sizeof(*slot));
     (void)snprintf(slot->lease_id, sizeof(slot->lease_id), "lease-%llu",
                    (unsigned long long)broker->next_id++);
     status = copy_text(slot->application_id, sizeof(slot->application_id),
                        request->application->application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(slot->resource_id, sizeof(slot->resource_id),
                            request->resource_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(slot->capability_id, sizeof(slot->capability_id),
                            request->capability_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)memset(slot, 0, sizeof(*slot));
         return status;
@@ -573,6 +729,10 @@ UmiStatus umi_application_resource_broker_acquire(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application resource broker renew operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_resource_broker_renew(
     UmiApplicationResourceBroker *broker,
     const char *application_id,
@@ -581,11 +741,18 @@ UmiStatus umi_application_resource_broker_renew(
     UmiResourceLease *out_lease)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || application_id == NULL || lease_id == NULL ||
         out_lease == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_RESOURCE_BROKER_MAX_LEASES; ++index) {
         UmiResourceLease *lease = &broker->leases[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (lease->active && strcmp(lease->lease_id, lease_id) == 0) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(lease->application_id, application_id) != 0)
                 return UMI_STATUS_PERMISSION_DENIED;
             lease->expires_at = expires_at;
@@ -597,17 +764,28 @@ UmiStatus umi_application_resource_broker_renew(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Release or reset state held by application resource broker so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_application_resource_broker_release(
     UmiApplicationResourceBroker *broker,
     const char *application_id,
     const char *lease_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || application_id == NULL || lease_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_RESOURCE_BROKER_MAX_LEASES; ++index) {
         UmiResourceLease *lease = &broker->leases[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (lease->active && strcmp(lease->lease_id, lease_id) == 0) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(lease->application_id, application_id) != 0)
                 return UMI_STATUS_PERMISSION_DENIED;
             lease->active = 0;
@@ -618,15 +796,25 @@ UmiStatus umi_application_resource_broker_release(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Find application resource broker while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_resource_broker_find(
     const UmiApplicationResourceBroker *broker,
     const char *lease_id,
     UmiResourceLease *out_lease)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || lease_id == NULL || out_lease == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_RESOURCE_BROKER_MAX_LEASES; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (broker->leases[index].active &&
             strcmp(broker->leases[index].lease_id, lease_id) == 0) {
             *out_lease = broker->leases[index];
@@ -636,13 +824,23 @@ UmiStatus umi_application_resource_broker_find(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Return the number of records represented by application resource broker active without
+ * changing their state.
+ */
 size_t umi_application_resource_broker_active_count(
     const UmiApplicationResourceBroker *broker)
 {
     size_t index;
     size_t count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_RESOURCE_BROKER_MAX_LEASES; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (broker->leases[index].active) count += 1U;
     }
     return count;

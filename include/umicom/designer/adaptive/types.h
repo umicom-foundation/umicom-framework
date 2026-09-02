@@ -35,18 +35,27 @@ extern "C" {
 #define UMI_DESIGNER_ADAPTIVE_MAX_VARIANTS 32U
 #define UMI_DESIGNER_ADAPTIVE_MAX_PREVIEWS 32U
 
+/**
+ * List the named designer adaptive inheritance values accepted by this public contract.
+ */
 typedef enum UmiDesignerAdaptiveInheritance {
     UMI_DESIGNER_ADAPTIVE_INHERIT_PARENT = 1,
     UMI_DESIGNER_ADAPTIVE_OVERRIDE = 2,
     UMI_DESIGNER_ADAPTIVE_RESET = 3
 } UmiDesignerAdaptiveInheritance;
 
+/**
+ * List the named designer adaptive preview status values accepted by this public contract.
+ */
 typedef enum UmiDesignerAdaptivePreviewStatus {
     UMI_DESIGNER_PREVIEW_PENDING = 1,
     UMI_DESIGNER_PREVIEW_PASS = 2,
     UMI_DESIGNER_PREVIEW_FAIL = 3
 } UmiDesignerAdaptivePreviewStatus;
 
+/**
+ * Represent the designer adaptive value data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerAdaptiveValue {
     char text[UMI_DESIGNER_ADAPTIVE_VALUE_CAPACITY];
     int64_t integer_value;

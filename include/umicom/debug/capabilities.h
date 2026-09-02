@@ -53,6 +53,9 @@ enum UmiDebugCapability {
     UMI_DEBUG_CAP_REVERSE_CONTINUE = 1ULL << 19
 };
 
+/**
+ * Represent the debug capability set data shared with callers of this public contract.
+ */
 typedef struct UmiDebugCapabilitySet {
     uint64_t supported;
     uint64_t advertised;
@@ -60,14 +63,34 @@ typedef struct UmiDebugCapabilitySet {
     uint64_t revision;
 } UmiDebugCapabilitySet;
 
+/**
+ * Initialise debug capability set from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_debug_capability_set_init(UmiDebugCapabilitySet *set);
+/**
+ * Provide the debug capability set advertise operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_capability_set_advertise(
     UmiDebugCapabilitySet *set,
     uint64_t capabilities);
+/**
+ * Provide the debug capability set require operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_capability_set_require(
     UmiDebugCapabilitySet *set,
     uint64_t capabilities);
+/**
+ * Provide the debug capability set ready operation used by this module and its client
+ * applications.
+ */
 int umi_debug_capability_set_ready(const UmiDebugCapabilitySet *set);
+/**
+ * Provide the debug capability set has operation used by this module and its client
+ * applications.
+ */
 int umi_debug_capability_set_has(
     const UmiDebugCapabilitySet *set,
     uint64_t capability);

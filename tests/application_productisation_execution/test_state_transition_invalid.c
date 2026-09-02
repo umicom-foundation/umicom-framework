@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test state transition invalid and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_state_transition_invalid(void)
 {
     assert(!umi_product_execution_state_can_transition(UMI_PRODUCT_EXECUTION_PENDING, UMI_PRODUCT_EXECUTION_SUCCEEDED));

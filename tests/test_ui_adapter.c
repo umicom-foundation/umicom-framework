@@ -21,8 +21,20 @@
 
 
 static int destroyed = 0;
+/*
+ * Exercise present and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus present(void *instance, UmiUiApplicationShell *shell) { (void)instance; (void)shell; return UMI_STATUS_OK; }
+/*
+ * Exercise destroy and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void destroy(void *instance) { (void)instance; destroyed = 1; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiAdapterRegistry *registry = NULL;

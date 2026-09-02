@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential lcr measure data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialLcrMeasure { double numerator; double denominator; double ratio; } UmiPrudentialLcrMeasure;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_lcr_measure_calculate(UmiPrudentialLcrMeasure *result, double numerator, double denominator);

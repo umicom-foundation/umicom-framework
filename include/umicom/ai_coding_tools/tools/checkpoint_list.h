@@ -18,7 +18,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding tool checkpoint list descriptor operation used by this module and
+ * its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_checkpoint_list_descriptor(void);
+/**
+ * Provide the ai coding tool checkpoint list invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_checkpoint_list_invoke(
     const char *arguments_json,
     char *output,

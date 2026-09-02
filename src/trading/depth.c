@@ -18,6 +18,15 @@
  */
 
 #include "umicom/trading/depth.h"
+/* Check that market depth satisfies its contract before another service relies on it. */
 int umi_market_depth_valid(const UmiMarketDepth *d){return d!=NULL&&d->bid_count<=UMI_TRADING_MAX_DEPTH&&d->ask_count<=UMI_TRADING_MAX_DEPTH;}
+/*
+ * Provide the market depth best bid operation used by this module and its client
+ * applications.
+ */
 double umi_market_depth_best_bid(const UmiMarketDepth *d){return umi_market_depth_valid(d)&&d->bid_count>0U?d->bids[0].price:0.0;}
+/*
+ * Provide the market depth best ask operation used by this module and its client
+ * applications.
+ */
 double umi_market_depth_best_ask(const UmiMarketDepth *d){return umi_market_depth_valid(d)&&d->ask_count>0U?d->asks[0].price:0.0;}

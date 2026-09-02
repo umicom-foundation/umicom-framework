@@ -113,41 +113,92 @@ typedef struct UmiEditorFeatureQueryResult {
     uint64_t catalog_revision;
 } UmiEditorFeatureQueryResult;
 
+/**
+ * Represent the editor feature catalog data shared with callers of this public contract.
+ */
 typedef struct UmiEditorFeatureCatalog UmiEditorFeatureCatalog;
 
+/**
+ * Initialise editor feature catalog from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_feature_catalog_create(UmiEditorFeatureCatalog **out_catalog);
+/**
+ * Release or reset state held by editor feature catalog so the same storage can be reused
+ * safely.
+ */
 void umi_editor_feature_catalog_destroy(UmiEditorFeatureCatalog *catalog);
 
+/**
+ * Check that editor feature descriptor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_editor_feature_descriptor_validate(
     const UmiEditorFeatureDescriptor *descriptor,
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the editor feature catalog upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_feature_catalog_upsert(
     UmiEditorFeatureCatalog *catalog,
     const UmiEditorFeatureDescriptor *descriptor);
+/**
+ * Remove editor feature catalog while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_feature_catalog_remove(
     UmiEditorFeatureCatalog *catalog,
     const char *feature_id);
+/**
+ * Find editor feature catalog while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_editor_feature_catalog_find(
     const UmiEditorFeatureCatalog *catalog,
     const char *feature_id,
     UmiEditorFeatureDescriptor *out_descriptor);
+/**
+ * Find editor feature catalog while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_editor_feature_catalog_at(
     const UmiEditorFeatureCatalog *catalog,
     size_t index,
     UmiEditorFeatureDescriptor *out_descriptor);
+/**
+ * Return the number of records represented by editor feature catalog without changing
+ * their state.
+ */
 size_t umi_editor_feature_catalog_count(const UmiEditorFeatureCatalog *catalog);
+/**
+ * Provide the editor feature catalog revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_editor_feature_catalog_revision(const UmiEditorFeatureCatalog *catalog);
 
+/**
+ * Provide the editor feature catalog query category operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_feature_catalog_query_category(
     const UmiEditorFeatureCatalog *catalog,
     UmiEditorFeatureCategory category,
     UmiEditorFeatureQueryResult *out_result);
+/**
+ * Provide the editor feature catalog query flags operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_feature_catalog_query_flags(
     const UmiEditorFeatureCatalog *catalog,
     uint32_t required_flags,
     UmiEditorFeatureQueryResult *out_result);
+/**
+ * Provide the editor feature catalog snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_feature_catalog_snapshot(
     const UmiEditorFeatureCatalog *catalog,
     UmiEditorFeatureCatalogSnapshot *out_snapshot);
@@ -162,7 +213,15 @@ UmiStatus umi_editor_feature_catalog_validate_dependencies(
 UmiStatus umi_editor_feature_catalog_register_builtins(
     UmiEditorFeatureCatalog *catalog);
 
+/**
+ * Provide the editor feature category text operation used by this module and its client
+ * applications.
+ */
 const char *umi_editor_feature_category_text(UmiEditorFeatureCategory category);
+/**
+ * Provide the editor feature maturity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_editor_feature_maturity_text(UmiEditorFeatureMaturity maturity);
 
 #ifdef __cplusplus

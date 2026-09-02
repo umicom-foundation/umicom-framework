@@ -21,6 +21,10 @@
 #include "umicom/delivery/update.h"
 #include "umicom/delivery/update_plan.h"
 #include "umicom/delivery/rollback.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiUpdatePlan update;
     UmiRollbackPlan rollback;

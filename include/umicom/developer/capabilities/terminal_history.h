@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_HISTORY "umicom.developer.terminal.terminal_history"
 
+/**
+ * Provide the developer capability terminal history operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_history(void);
 

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DIRTY_CONFLICT "umicom.document.conflict.dirty_conflict"
 
+/**
+ * Provide the document capability dirty conflict operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_dirty_conflict(void);
 

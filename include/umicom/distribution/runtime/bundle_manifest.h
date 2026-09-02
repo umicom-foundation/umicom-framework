@@ -25,8 +25,18 @@ extern "C" {
 #endif
 
 #include "umicom/distribution/runtime/bundle_file.h"
+/**
+ * Represent the dr bundle manifest data shared with callers of this public contract.
+ */
 typedef struct UmiDrBundleManifest { size_t file_count; uint64_t total_bytes; uint64_t fingerprint; } UmiDrBundleManifest;
+/**
+ * Initialise dr bundle manifest from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_bundle_manifest_init(UmiDrBundleManifest *manifest);
+/**
+ * Add dr bundle manifest only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_dr_bundle_manifest_add(UmiDrBundleManifest *manifest,const UmiDrBundleFile *file);
 
 #ifdef __cplusplus

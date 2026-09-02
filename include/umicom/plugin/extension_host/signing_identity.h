@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host signing identity data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostSigningIdentity {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,9 +44,25 @@ typedef struct UmiPluginExtensionHostSigningIdentity {
     uint64_t revision;
 } UmiPluginExtensionHostSigningIdentity;
 
+/**
+ * Initialise plugin extension host signing identity from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_signing_identity_init(UmiPluginExtensionHostSigningIdentity *value);
+/**
+ * Provide the plugin extension host signing identity configure operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_signing_identity_configure(UmiPluginExtensionHostSigningIdentity *value, const char *id, const char *subject, uint32_t version, uint32_t risk, uint64_t flags);
+/**
+ * Check that plugin extension host signing identity satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_signing_identity_validate(const UmiPluginExtensionHostSigningIdentity *value);
+/**
+ * Provide the plugin extension host signing identity fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_signing_identity_fingerprint(const UmiPluginExtensionHostSigningIdentity *value);
 
 #ifdef __cplusplus

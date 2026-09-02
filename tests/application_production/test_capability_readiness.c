@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 #include "test_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiApplicationProductionCapabilityProbeResults results;
     UmiApplicationProductionCapabilityRequirement requirement = {{0}, 1U, 0U, 1U};

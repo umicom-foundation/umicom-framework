@@ -22,7 +22,15 @@
 extern "C" {
 #endif
 #define UMI_NC_MAX_ARGUMENT_REGISTERS 8U
+/**
+ * Represent the native calling convention data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeCallingConvention { char name[UMI_NC_NAME_CAPACITY]; uint32_t integer_argument_registers[UMI_NC_MAX_ARGUMENT_REGISTERS]; size_t integer_argument_count; uint32_t return_register; size_t stack_alignment; bool caller_cleans_stack; } UmiNativeCallingConvention;
+/**
+ * Provide the nc calling convention default operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_calling_convention_default(const UmiNativeTargetProfile *target,UmiNativeCallingConvention *out_convention);
 #ifdef __cplusplus
 }

@@ -15,6 +15,10 @@
 #include <assert.h>
 #include "umicom/delivery/delivery.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiPackageManifest package;
@@ -43,6 +47,7 @@ int main(void)
                UMI_INSTALL_SCOPE_USER) == UMI_STATUS_OK);
     assert(umi_product_release_add_installer(&release, &installer) ==
            UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(checks) / sizeof(checks[0]); ++index) {
         assert(umi_release_evidence_set(
                    &release.evidence, checks[index], UMI_EVIDENCE_PASS) ==

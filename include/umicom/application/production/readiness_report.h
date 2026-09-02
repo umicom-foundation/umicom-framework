@@ -26,6 +26,10 @@ extern "C" {
 #include "umicom/application/production/capability_readiness.h"
 #include "umicom/application/runtime/readiness.h"
 
+/**
+ * Represent the application production readiness report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionReadinessReport {
     UmiApplicationProductionState state;
     UmiApplicationReadinessReport features;
@@ -36,6 +40,10 @@ typedef struct UmiApplicationProductionReadinessReport {
     unsigned combined_percent;
 } UmiApplicationProductionReadinessReport;
 
+/**
+ * Provide the application production readiness report build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_readiness_report_build(
     const UmiApplicationProductionBinding *binding,
     const UmiApplicationProductionCapabilityReadiness *capabilities,

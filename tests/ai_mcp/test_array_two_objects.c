@@ -15,5 +15,13 @@
 
 #include <assert.h>
 #include "umicom/ai/mcp/json_array.h"
+/*
+ * Exercise visit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus visit(const char*object,void*user){size_t*count=(size_t*)user;assert(object[0]=='{');*count+=1U;return UMI_STATUS_OK;}
+/*
+ * Exercise test ai mcp array two objects and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_ai_mcp_array_two_objects(void){size_t count=0,visited=0;assert(umi_ai_mcp_json_array_visit_objects("{\"tools\":[{\"name\":\"a\"},{\"name\":\"b\"}]}","tools",visit,&visited,&count)==UMI_STATUS_OK);assert(count==2U&&visited==2U);return 0;}

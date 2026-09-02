@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_APPLICATION_RESOURCE_LOCATOR_CAPACITY 512U
 #define UMI_APPLICATION_RESOURCE_MEDIA_TYPE_CAPACITY 96U
 
+/**
+ * List the named application resource kind values accepted by this public contract.
+ */
 typedef enum UmiApplicationResourceKind {
     UMI_APPLICATION_RESOURCE_FILE = 1,
     UMI_APPLICATION_RESOURCE_THEME_ICON = 2,
@@ -47,12 +50,18 @@ typedef enum UmiApplicationResourceKind {
     UMI_APPLICATION_RESOURCE_TRANSLATION = 7
 } UmiApplicationResourceKind;
 
+/**
+ * List the named application resource scope values accepted by this public contract.
+ */
 typedef enum UmiApplicationResourceScope {
     UMI_APPLICATION_RESOURCE_SCOPE_FRAMEWORK = 1,
     UMI_APPLICATION_RESOURCE_SCOPE_PRODUCT = 2,
     UMI_APPLICATION_RESOURCE_SCOPE_OPERATING_SYSTEM = 3
 } UmiApplicationResourceScope;
 
+/**
+ * List the named application resource flags values accepted by this public contract.
+ */
 typedef enum UmiApplicationResourceFlags {
     UMI_APPLICATION_RESOURCE_INSTALLABLE = 1U << 0,
     UMI_APPLICATION_RESOURCE_SHARED = 1U << 1,
@@ -65,6 +74,10 @@ typedef enum UmiApplicationResourceFlags {
     UMI_APPLICATION_RESOURCE_DERIVED = 1U << 6
 } UmiApplicationResourceFlags;
 
+/**
+ * Represent the application resource descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationResourceDescriptor {
     uint32_t structure_size;
     const char *resource_id;
@@ -75,6 +88,10 @@ typedef struct UmiApplicationResourceDescriptor {
     uint32_t flags;
 } UmiApplicationResourceDescriptor;
 
+/**
+ * Represent the application resource location data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationResourceLocation {
     char resource_id[UMI_APPLICATION_RESOURCE_ID_CAPACITY];
     char locator[UMI_APPLICATION_RESOURCE_LOCATOR_CAPACITY];
@@ -85,13 +102,33 @@ typedef struct UmiApplicationResourceLocation {
     bool available;
 } UmiApplicationResourceLocation;
 
+/**
+ * Return the number of records represented by application resource catalogue without
+ * changing their state.
+ */
 size_t umi_application_resource_catalogue_count(void);
+/**
+ * Find application resource catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationResourceDescriptor *umi_application_resource_catalogue_at(
     size_t index);
+/**
+ * Find application resource catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationResourceDescriptor *umi_application_resource_catalogue_find(
     const char *resource_id);
+/**
+ * Check that application resource descriptor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_resource_descriptor_validate(
     const UmiApplicationResourceDescriptor *descriptor);
+/**
+ * Check that application resource catalogue satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_resource_catalogue_validate(void);
 
 /*
@@ -112,8 +149,16 @@ UmiStatus umi_application_resource_resolve(
  */
 const char *umi_application_resource_default_root(void);
 
+/**
+ * Provide the application resource kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_resource_kind_text(
     UmiApplicationResourceKind kind);
+/**
+ * Provide the application resource scope text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_resource_scope_text(
     UmiApplicationResourceScope scope);
 

@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding session data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingSession {
     char session_id[UMI_AI_ID_CAPACITY];
     char workspace_root[UMI_AI_TEXT_CAPACITY];
@@ -31,15 +34,27 @@ typedef struct UmiAiCodingSession {
     uint64_t revision;
 } UmiAiCodingSession;
 
+/**
+ * Initialise ai coding session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_coding_session_init(
     UmiAiCodingSession *session,
     const char *session_id,
     const char *workspace_root);
 
+/**
+ * Provide the ai coding session begin task operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_session_begin_task(
     UmiAiCodingSession *session,
     const char *task_id);
 
+/**
+ * Provide the ai coding session complete task operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_session_complete_task(
     UmiAiCodingSession *session,
     UmiAiCodingRuntimeState final_state);

@@ -37,7 +37,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui workbench platform data shared with callers of this public contract.
+ */
 typedef struct UmiUiWorkbenchPlatform UmiUiWorkbenchPlatform;
+/**
+ * Represent the ui workbench platform snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiWorkbenchPlatformSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -55,18 +62,70 @@ typedef struct UmiUiWorkbenchPlatformSnapshot {
     uint64_t revision;
 } UmiUiWorkbenchPlatformSnapshot;
 
+/**
+ * Initialise ui workbench platform from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ui_workbench_platform_create(UmiUiWorkbenchPlatform **out_platform);
+/**
+ * Release or reset state held by ui workbench platform so the same storage can be reused
+ * safely.
+ */
 void umi_ui_workbench_platform_destroy(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_platform_snapshot(const UmiUiWorkbenchPlatform *platform, UmiUiWorkbenchPlatformSnapshot *out_snapshot);
+/**
+ * Provide the ui workbench platform lists operation used by this module and its client
+ * applications.
+ */
 UmiUiListModelRegistry *umi_ui_workbench_platform_lists(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform trees operation used by this module and its client
+ * applications.
+ */
 UmiUiTreeModelRegistry *umi_ui_workbench_platform_trees(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform selection operation used by this module and its client
+ * applications.
+ */
 UmiUiSelectionModelRegistry *umi_ui_workbench_platform_selection(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform docks operation used by this module and its client
+ * applications.
+ */
 UmiUiDockRegistry *umi_ui_workbench_platform_docks(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform tabs operation used by this module and its client
+ * applications.
+ */
 UmiUiTabRegistry *umi_ui_workbench_platform_tabs(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform panels operation used by this module and its client
+ * applications.
+ */
 UmiUiPanelRegistry *umi_ui_workbench_platform_panels(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform context menus operation used by this module and its
+ * client applications.
+ */
 UmiUiContextMenuItemRegistry *umi_ui_workbench_platform_context_menus(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform inspector operation used by this module and its client
+ * applications.
+ */
 UmiUiInspectorPropertyRegistry *umi_ui_workbench_platform_inspector(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform commands operation used by this module and its client
+ * applications.
+ */
 UmiUiCommandSurfaceRegistry *umi_ui_workbench_platform_commands(UmiUiWorkbenchPlatform *platform);
+/**
+ * Provide the ui workbench platform undo operation used by this module and its client
+ * applications.
+ */
 UmiUiUndoStack *umi_ui_workbench_platform_undo(UmiUiWorkbenchPlatform *platform);
 
 #ifdef __cplusplus

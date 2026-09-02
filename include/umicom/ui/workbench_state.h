@@ -34,12 +34,18 @@ extern "C" {
 #define UMI_UI_EDITOR_SPLIT_RATIO_MAX 9000
 #define UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT 5000
 
+/**
+ * List the named ui editor split mode values accepted by this public contract.
+ */
 typedef enum UmiUiEditorSplitMode {
     UMI_UI_EDITOR_SPLIT_SINGLE = 0,
     UMI_UI_EDITOR_SPLIT_COLUMNS = 1,
     UMI_UI_EDITOR_SPLIT_ROWS = 2
 } UmiUiEditorSplitMode;
 
+/**
+ * Represent the ui workbench state data shared with callers of this public contract.
+ */
 typedef struct UmiUiWorkbenchState {
     char active_activity[UMI_UI_ID_CAPACITY];
     char active_view_container[UMI_UI_ID_CAPACITY];
@@ -58,11 +64,23 @@ typedef struct UmiUiWorkbenchState {
     uint64_t revision;
 } UmiUiWorkbenchState;
 
+/**
+ * Initialise ui workbench state from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ui_workbench_state_init(UmiUiWorkbenchState *state);
+/**
+ * Write ui workbench state in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ui_workbench_state_encode(
     const UmiUiWorkbenchState *state,
     char *out_text,
     size_t capacity);
+/**
+ * Read ui workbench state into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_ui_workbench_state_decode(
     const char *text,
     UmiUiWorkbenchState *out_state);

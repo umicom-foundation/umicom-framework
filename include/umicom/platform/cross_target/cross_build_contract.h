@@ -30,7 +30,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct cross build contract data shared with callers of this public contract.
+ */
 typedef struct UmiCtCrossBuildContract { char contract_id[UMI_CT_ID_CAPACITY]; UmiCtTarget target; char required_toolchain_family[32]; char required_abi[32]; bool require_sysroot; bool require_emulator; bool require_debugger; bool require_assembly; } UmiCtCrossBuildContract;
+/**
+ * Check that ct cross build contract satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ct_cross_build_contract_validate(const UmiCtCrossBuildContract *contract);
 
 #ifdef __cplusplus

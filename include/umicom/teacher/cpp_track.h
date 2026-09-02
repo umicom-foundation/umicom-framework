@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher cpp track data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherCppTrack {
     char id[UMI_TEACHER_ID_CAPACITY];
     char title[UMI_TEACHER_TEXT_CAPACITY];
@@ -41,9 +44,24 @@ typedef struct UmiTeacherCppTrack {
     int enabled;
 } UmiTeacherCppTrack;
 
+/**
+ * Initialise teacher cpp track from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_teacher_cpp_track_init(UmiTeacherCppTrack *value);
+/**
+ * Provide the teacher cpp track configure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_cpp_track_configure(UmiTeacherCppTrack *value, const char *id, const char *title, UmiTeacherLanguage language, UmiTeacherLevel level, uint32_t weight, uint32_t required_score);
+/**
+ * Check that teacher cpp track satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_teacher_cpp_track_validate(const UmiTeacherCppTrack *value);
+/**
+ * Provide the teacher cpp track priority operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_cpp_track_priority(const UmiTeacherCppTrack *value, uint32_t relevance);
 
 #ifdef __cplusplus

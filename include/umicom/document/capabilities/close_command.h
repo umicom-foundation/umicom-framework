@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_CLOSE_COMMAND "umicom.document.command.close_command"
 
+/**
+ * Provide the document capability close command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_close_command(void);
 

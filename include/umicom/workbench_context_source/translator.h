@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench context source translate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_source_translate(
     const UmiWorkbenchContextSourceDefinition *definition,
     const UmiWorkbenchContextSourceSample *sample,

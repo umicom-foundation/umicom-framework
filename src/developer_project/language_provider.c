@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/language_provider.h"
 
+/*
+ * Check that developer project language provider satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_project_language_provider_validate(
     const UmiDeveloperProjectLanguageProvider *provider)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL ||
         provider->structure_size != sizeof(*provider) ||
         provider->api_version != UMI_DEVELOPER_PROJECT_API_VERSION ||

@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/component_capability.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiDesignComponentCapability c={0};umi_design_component_capability_add(&c,UMI_DESIGN_CAP_KEYBOARD);umi_design_component_capability_add(&c,UMI_DESIGN_CAP_FOCUS);return umi_design_component_capability_has(&c,UMI_DESIGN_CAP_KEYBOARD)?0:1;}

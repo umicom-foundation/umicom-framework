@@ -16,6 +16,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/resilience/health_gate.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiHealthRegistry *r = NULL; UmiHealthGate *g = NULL; char reason[256];
     assert(umi_health_registry_create(&r) == UMI_STATUS_OK); assert(umi_health_gate_create(&g) == UMI_STATUS_OK);

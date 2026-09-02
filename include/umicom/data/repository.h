@@ -24,21 +24,39 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository data shared with callers of this public contract.
+ */
 typedef struct UmiRepository {
     UmiStore store;
     char prefix[160];
 } UmiRepository;
 
+/**
+ * Initialise repository from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_repository_init(UmiRepository *repository,
                               const UmiStore *store,
                               const char *namespace_name);
+/**
+ * Write repository in its stable representation and report capacity or input failures to
+ * the caller.
+ */
 UmiStatus umi_repository_save(UmiRepository *repository,
                               const char *record_id,
                               const char *serialised_value);
+/**
+ * Read repository into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_repository_load(const UmiRepository *repository,
                               const char *record_id,
                               char *out_value,
                               size_t value_capacity);
+/**
+ * Remove repository while keeping the remaining records in a valid and discoverable state.
+ */
 UmiStatus umi_repository_remove(UmiRepository *repository,
                                 const char *record_id);
 

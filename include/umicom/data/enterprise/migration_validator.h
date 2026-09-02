@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data migration validation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataMigrationValidation { bool valid; bool requires_backup; bool requires_approval; size_t blockers; } UmiDataMigrationValidation;
 /* Validate a migration plan against compatibility and operational policy. */ UmiStatus umi_data_migration_validator_check(const UmiDataMigrationPlan *plan,UmiDataCompatibility compatibility,bool backup_available,bool destructive_approved,UmiDataMigrationValidation *out_validation);
 

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/ctest_provider.h"
 
+/*
+ * Provide the developer capability ctest provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_ctest_provider(void)
 {

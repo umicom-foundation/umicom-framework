@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/types.h"
 
+/**
+ * Represent the application production diagnostic entry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionDiagnosticEntry {
     UmiApplicationProductionDiagnosticSeverity severity;
     char code[UMI_APPLICATION_PRODUCTION_ID_CAPACITY];
@@ -31,6 +35,10 @@ typedef struct UmiApplicationProductionDiagnosticEntry {
     char message[UMI_APPLICATION_PRODUCTION_TEXT_CAPACITY];
 } UmiApplicationProductionDiagnosticEntry;
 
+/**
+ * Copy application production diagnostic entry into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_application_production_diagnostic_entry_set(
     UmiApplicationProductionDiagnosticEntry *entry,
     UmiApplicationProductionDiagnosticSeverity severity,

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Read developer location link into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_developer_location_link_parse(
     const char *text,
     UmiDeveloperProductivityLocation *out_location,

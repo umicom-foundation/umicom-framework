@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/diagnostics/output_buffer.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiOutputBufferConfig config = {2U};

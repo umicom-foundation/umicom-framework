@@ -30,6 +30,9 @@ extern "C" {
 #define UMI_HELIX_CAPABILITY_TEST (UINT32_C(1) << 3)
 #define UMI_HELIX_CAPABILITY_REVIEW (UINT32_C(1) << 4)
 
+/**
+ * Represent the helix runtime agent data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRuntimeAgent {
     char agent_id[UMI_HELIX_ID_CAPACITY];
     UmiHelixAgentRole role;
@@ -37,17 +40,36 @@ typedef struct UmiHelixRuntimeAgent {
     int enabled;
 } UmiHelixRuntimeAgent;
 
+/**
+ * Represent the helix agent runtime data shared with callers of this public contract.
+ */
 typedef struct UmiHelixAgentRuntime {
     UmiHelixRuntimeAgent agents[UMI_HELIX_RUNTIME_MAX_AGENTS];
     size_t count;
 } UmiHelixAgentRuntime;
 
+/**
+ * Initialise helix agent runtime from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_helix_agent_runtime_init(UmiHelixAgentRuntime *runtime);
+/**
+ * Provide the helix agent runtime register defaults operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_helix_agent_runtime_register_defaults(
     UmiHelixAgentRuntime *runtime);
+/**
+ * Find helix agent runtime while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiHelixRuntimeAgent *umi_helix_agent_runtime_find(
     const UmiHelixAgentRuntime *runtime,
     UmiHelixAgentRole role);
+/**
+ * Provide the helix runtime agent has capability operation used by this module and its
+ * client applications.
+ */
 int umi_helix_runtime_agent_has_capability(const UmiHelixRuntimeAgent *agent,
                                       uint32_t capability);
 

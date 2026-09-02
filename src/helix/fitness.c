@@ -20,11 +20,16 @@
 #include "umicom/helix/fitness.h"
 #include <stddef.h>
 
+/* Provide the valid score operation used by this module and its client applications. */
 static int valid_score(double value)
 {
     return value >= 0.0 && value <= 1.0;
 }
 
+/*
+ * Provide the helix fitness calculate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_fitness_calculate(UmiHelixFitness *fitness,
                                       double correctness,
                                       double security,
@@ -33,6 +38,10 @@ UmiStatus umi_helix_fitness_calculate(UmiHelixFitness *fitness,
                                       double compatibility,
                                       double pass_threshold)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (fitness == NULL || !valid_score(correctness) || !valid_score(security) ||
         !valid_score(performance) || !valid_score(maintainability) ||
         !valid_score(compatibility) || !valid_score(pass_threshold)) {

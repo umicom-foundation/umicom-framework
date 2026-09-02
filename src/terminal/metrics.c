@@ -21,19 +21,29 @@
 
 #include <string.h>
 
+/*
+ * Provide the terminal metrics collect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_metrics_collect(UmiTerminalManager *manager,
                                        UmiProcessSupervisor *supervisor,
                                        UmiTaskQueue *task_queue,
                                        UmiTerminalMetrics *out_metrics)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL || supervisor == NULL || task_queue == NULL ||
         out_metrics == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_metrics, 0, sizeof(*out_metrics));
     out_metrics->sessions = umi_terminal_manager_count(manager);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < out_metrics->sessions; ++index) {
         UmiTerminalSessionSnapshot snapshot;
         UmiTerminalSession *session = umi_terminal_manager_at(manager, index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (umi_terminal_session_snapshot(session, &snapshot) != UMI_STATUS_OK) {
             continue;
         }

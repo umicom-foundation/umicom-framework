@@ -62,6 +62,9 @@ enum {
         UMI_LANGUAGE_INTELLIGENCE_CAP_NOTEBOOK
 };
 
+/**
+ * List the named language intelligence state values accepted by this public contract.
+ */
 typedef enum UmiLanguageIntelligenceState {
     UMI_LANGUAGE_INTELLIGENCE_UNKNOWN = 0,
     UMI_LANGUAGE_INTELLIGENCE_STARTING = 1,
@@ -72,6 +75,9 @@ typedef enum UmiLanguageIntelligenceState {
     UMI_LANGUAGE_INTELLIGENCE_FAILED = 6
 } UmiLanguageIntelligenceState;
 
+/**
+ * List the named language intelligence severity values accepted by this public contract.
+ */
 typedef enum UmiLanguageIntelligenceSeverity {
     UMI_LANGUAGE_INTELLIGENCE_SEVERITY_INFORMATION = 0,
     UMI_LANGUAGE_INTELLIGENCE_SEVERITY_WARNING = 1,
@@ -79,16 +85,28 @@ typedef enum UmiLanguageIntelligenceSeverity {
     UMI_LANGUAGE_INTELLIGENCE_SEVERITY_FATAL = 3
 } UmiLanguageIntelligenceSeverity;
 
+/**
+ * Represent the language intelligence position data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageIntelligencePosition {
     uint32_t line;
     uint32_t character;
 } UmiLanguageIntelligencePosition;
 
+/**
+ * Represent the language intelligence range data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageIntelligenceRange {
     UmiLanguageIntelligencePosition start;
     UmiLanguageIntelligencePosition end;
 } UmiLanguageIntelligenceRange;
 
+/**
+ * Represent the language intelligence scored id data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageIntelligenceScoredId {
     char id[UMI_LANGUAGE_INTELLIGENCE_ID_CAPACITY];
     uint64_t score;
@@ -96,28 +114,64 @@ typedef struct UmiLanguageIntelligenceScoredId {
     int enabled;
 } UmiLanguageIntelligenceScoredId;
 
+/**
+ * Provide the language intelligence types init range operation used by this module and its
+ * client applications.
+ */
 void umi_language_intelligence_types_init_range(
     UmiLanguageIntelligenceRange *range,
     uint32_t start_line,
     uint32_t start_character,
     uint32_t end_line,
     uint32_t end_character);
+/**
+ * Check that language intelligence range satisfies its contract before another service
+ * relies on it.
+ */
 int umi_language_intelligence_range_is_valid(
     const UmiLanguageIntelligenceRange *range);
+/**
+ * Provide the language intelligence range contains operation used by this module and its
+ * client applications.
+ */
 int umi_language_intelligence_range_contains(
     const UmiLanguageIntelligenceRange *outer,
     const UmiLanguageIntelligenceRange *inner);
+/**
+ * Provide the language intelligence copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_intelligence_copy_text(
     char *destination,
     size_t capacity,
     const char *source);
+/**
+ * Check that language intelligence text satisfies its contract before another service
+ * relies on it.
+ */
 int umi_language_intelligence_text_is_valid(const char *text);
+/**
+ * Provide the language intelligence hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_language_intelligence_hash_text(const char *text);
+/**
+ * Add language intelligence score saturating only after its inputs and available capacity
+ * have been checked.
+ */
 uint64_t umi_language_intelligence_score_saturating_add(
     uint64_t left,
     uint64_t right);
+/**
+ * Provide the language intelligence state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_language_intelligence_state_text(
     UmiLanguageIntelligenceState state);
+/**
+ * Provide the language intelligence severity text operation used by this module and its
+ * client applications.
+ */
 const char *umi_language_intelligence_severity_text(
     UmiLanguageIntelligenceSeverity severity);
 

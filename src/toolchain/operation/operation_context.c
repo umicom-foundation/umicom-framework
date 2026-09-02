@@ -20,6 +20,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the toolchain operation context prepare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_operation_context_prepare(
     UmiToolchainOperationKind kind,
     const char *explicit_toolchain_root,
@@ -30,9 +34,14 @@ UmiStatus umi_toolchain_operation_context_prepare(
 {
     UmiToolchainScopedDiscoveryRequest request;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_context, 0, sizeof(*out_context));
     status = umi_toolchain_operation_catalogue_profile(kind, &out_context->operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&request, 0, sizeof(request));
     request.operation = &out_context->operation;
@@ -41,9 +50,11 @@ UmiStatus umi_toolchain_operation_context_prepare(
     request.diagnostic_sink = diagnostic_sink;
     request.diagnostic_user_data = diagnostic_user_data;
     status = umi_toolchain_discover_scoped(&request, &out_context->discovery);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_toolchain_scoped_environment(
         &out_context->discovery.profile, &out_context->operation, &out_context->environment);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_context->ready = 1;
     return UMI_STATUS_OK;

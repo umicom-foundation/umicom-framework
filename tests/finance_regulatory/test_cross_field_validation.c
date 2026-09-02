@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/cross_field_validation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiCrossFieldValidation r; CHECK(umi_reg_cross_field_validation_init(&r,"balance",0.01)==UMI_STATUS_OK); CHECK(umi_reg_cross_field_validation_passes(&r,10.0,10.005)==1); return 0; }

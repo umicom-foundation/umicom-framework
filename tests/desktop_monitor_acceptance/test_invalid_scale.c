@@ -17,6 +17,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test desktop monitor invalid scale and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_desktop_monitor_invalid_scale(void)
 {
     UmiDesktopMonitorTopology topology;

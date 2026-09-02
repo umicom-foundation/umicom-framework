@@ -20,6 +20,10 @@
 #include <string.h>
 #include "umicom/repository/control_types.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(strcmp(umi_repository_control_state_text((UmiRepositoryControlState)99), "unknown") == 0);

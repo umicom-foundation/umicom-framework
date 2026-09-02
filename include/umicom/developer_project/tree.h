@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project tree node data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectTreeNode {
     char node_id[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
     char parent_id[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
@@ -35,6 +39,9 @@ typedef struct UmiDeveloperProjectTreeNode {
     uint64_t revision;
 } UmiDeveloperProjectTreeNode;
 
+/**
+ * Represent the developer project tree data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperProjectTree {
     UmiDeveloperProjectTreeNode
         nodes[UMI_DEVELOPER_PROJECT_TREE_CAPACITY];
@@ -43,13 +50,25 @@ typedef struct UmiDeveloperProjectTree {
     uint64_t revision;
 } UmiDeveloperProjectTree;
 
+/**
+ * Initialise developer project tree from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_project_tree_init(UmiDeveloperProjectTree *tree);
 
+/**
+ * Provide the developer project tree build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_project_tree_build(
     UmiDeveloperProjectTree *tree,
     const UmiFileIndex *file_index,
     const UmiDeveloperProjectLanguageRegistry *languages);
 
+/**
+ * Find developer project tree while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_developer_project_tree_at(
     const UmiDeveloperProjectTree *tree,
     size_t index,

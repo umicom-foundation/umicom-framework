@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the control exception data shared with callers of this public contract.
+ */
 typedef struct UmiControlException {
     char exception_id[UMI_REG_ID_CAPACITY];
     char control_id[UMI_REG_ID_CAPACITY];

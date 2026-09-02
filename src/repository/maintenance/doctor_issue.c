@@ -21,21 +21,39 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise repository doctor issue list from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_doctor_issue_list_init(UmiRepositoryDoctorIssueList *issues)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (issues != NULL) (void)memset(issues, 0, sizeof(*issues));
 }
 
+/*
+ * Add repository doctor issue only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_repository_doctor_issue_add(UmiRepositoryDoctorIssueList *issues,
                                           UmiRepositoryDoctorSeverity severity,
                                           const char *code,
                                           const char *message)
 {
     UmiRepositoryDoctorIssue *item;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (issues == NULL || code == NULL || code[0] == '\0' || message == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (issues->count >= UMI_REPOSITORY_DOCTOR_ISSUE_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(code) >= sizeof(issues->items[0].code) ||
         strlen(message) >= sizeof(issues->items[0].message)) return UMI_STATUS_CAPACITY_EXCEEDED;
     item = &issues->items[issues->count++];

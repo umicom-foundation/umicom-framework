@@ -24,6 +24,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that currency satisfies its contract before another service relies on it.
+ */
 int umi_currency_valid(const UmiCurrency *currency);
 #ifdef __cplusplus
 }

@@ -23,6 +23,10 @@
 typedef UmiStatus (*ViewFactory)(
     const char *, UmiBuildWorkspace *, UmiUiViewModel **);
 
+/*
+ * Exercise verify view and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void verify_view(ViewFactory factory, const char *view_id,
                         const char *expected_kind,
                         UmiBuildWorkspace *workspace)
@@ -38,6 +42,10 @@ static void verify_view(ViewFactory factory, const char *view_id,
     umi_ui_view_model_destroy(view);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildGraph *graph = NULL;

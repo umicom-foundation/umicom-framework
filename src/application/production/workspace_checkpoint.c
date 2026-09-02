@@ -17,6 +17,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the application production workspace checkpoint capture operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_workspace_checkpoint_capture(
     const UmiApplicationWorkspaceRuntime *runtime, uint64_t sequence,
     const char *reason, int clean_shutdown,
@@ -24,16 +28,23 @@ UmiStatus umi_application_production_workspace_checkpoint_capture(
 {
     size_t length;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || reason == NULL || out_checkpoint == NULL ||
         sequence == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(out_checkpoint->reason))
         return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memset(out_checkpoint, 0, sizeof(*out_checkpoint));
     status = umi_application_session_snapshot_capture(
         &runtime->session, &out_checkpoint->session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_checkpoint->sequence = sequence;
     (void)memcpy(out_checkpoint->reason, reason, length + 1U);
@@ -42,9 +53,17 @@ UmiStatus umi_application_production_workspace_checkpoint_capture(
         out_checkpoint);
 }
 
+/*
+ * Check that application production workspace checkpoint satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_application_production_workspace_checkpoint_validate(
     const UmiApplicationProductionWorkspaceCheckpoint *checkpoint)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (checkpoint == NULL || checkpoint->sequence == 0U ||
         checkpoint->reason[0] == '\0' ||
         checkpoint->session.application_id[0] == '\0' ||

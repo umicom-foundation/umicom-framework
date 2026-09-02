@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link project bridge data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextLinkProjectBridge {
     uint32_t structure_size;
     char bridge_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkProjectBridge {
     uint64_t revision;
 } UmiWorkbenchContextLinkProjectBridge;
 
+/**
+ * Initialise workbench context link project bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_project_bridge_init(UmiWorkbenchContextLinkProjectBridge *record,
                                            const char *identity);
+/**
+ * Check that workbench context link project bridge satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_project_bridge_validate(
     const UmiWorkbenchContextLinkProjectBridge *record);
+/**
+ * Copy workbench context link project bridge into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_project_bridge_copy(
     UmiWorkbenchContextLinkProjectBridge *destination,
     const UmiWorkbenchContextLinkProjectBridge *source);
+/**
+ * Provide the workbench context link project bridge hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_link_project_bridge_hash(
     const UmiWorkbenchContextLinkProjectBridge *record);
+/**
+ * Provide the workbench context link project bridge set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_project_bridge_set_primary(
     UmiWorkbenchContextLinkProjectBridge *record,
     const char *value);
+/**
+ * Provide the workbench context link project bridge set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_project_bridge_set_secondary(
     UmiWorkbenchContextLinkProjectBridge *record,
     const char *value);
+/**
+ * Provide the workbench context link project bridge touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_link_project_bridge_touch(
     UmiWorkbenchContextLinkProjectBridge *record,
     uint64_t sequence,

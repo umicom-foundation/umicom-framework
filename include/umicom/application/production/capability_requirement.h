@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/application_binding.h"
 
+/**
+ * Represent the application production capability requirement data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionCapabilityRequirement {
     char capability_id[UMI_APPLICATION_PRODUCTION_ID_CAPACITY];
     size_t panel_consumers;
@@ -31,6 +35,10 @@ typedef struct UmiApplicationProductionCapabilityRequirement {
     size_t critical_consumers;
 } UmiApplicationProductionCapabilityRequirement;
 
+/**
+ * Represent the application production capability requirements data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionCapabilityRequirements {
     UmiApplicationProductionCapabilityRequirement
         entries[UMI_APPLICATION_PRODUCTION_MAX_CAPABILITIES];
@@ -38,9 +46,17 @@ typedef struct UmiApplicationProductionCapabilityRequirements {
     size_t critical_count;
 } UmiApplicationProductionCapabilityRequirements;
 
+/**
+ * Provide the application production capability requirements build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_capability_requirements_build(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionCapabilityRequirements *out_requirements);
+/**
+ * Find application production capability requirements while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 const UmiApplicationProductionCapabilityRequirement *
 umi_application_production_capability_requirements_find(
     const UmiApplicationProductionCapabilityRequirements *requirements,

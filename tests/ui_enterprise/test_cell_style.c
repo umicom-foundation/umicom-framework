@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/cell_style.h"
 #include <stdio.h>
-int main(void){UmiUiEntCellStyle v;if(umi_ui_ent_cell_style_init(&v)!=UMI_STATUS_OK)return 1;if(!umi_ui_ent_cell_style_validate(&v))return 9;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntCellStyle v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_cell_style_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_cell_style_validate(&v))return 9;puts("ok");return 0;}

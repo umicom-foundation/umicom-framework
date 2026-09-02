@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the accounting accounting service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAccountingAccountingService {
     UmiFinancialId id;
     bool running;
@@ -26,6 +30,10 @@ typedef struct UmiAccountingAccountingService {
     size_t open_periods;
     size_t control_breaches;
 } UmiAccountingAccountingService;
+/**
+ * Initialise accounting accounting service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_accounting_accounting_service_init(UmiAccountingAccountingService *value,
     const char *id,
     bool running,
@@ -33,7 +41,15 @@ UmiStatus umi_accounting_accounting_service_init(UmiAccountingAccountingService 
     size_t posted_journals,
     size_t open_periods,
     size_t control_breaches);
+/**
+ * Check that accounting accounting service satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_accounting_accounting_service_valid(const UmiAccountingAccountingService *value);
+/**
+ * Provide the accounting accounting service ready operation used by this module and its
+ * client applications.
+ */
 bool umi_accounting_accounting_service_ready(const UmiAccountingAccountingService *value);
 #ifdef __cplusplus
 }

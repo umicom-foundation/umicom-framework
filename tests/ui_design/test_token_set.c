@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/token_set.h"
 
-int main(void){UmiDesignTokenSet s;UmiDesignToken t,o;if(umi_design_token_set_init(&s,"base")!=UMI_STATUS_OK)return 1;if(umi_design_token_number(&t,"space",8.0)!=UMI_STATUS_OK)return 2;if(umi_design_token_set_upsert(&s,&t)!=UMI_STATUS_OK)return 3;if(umi_design_token_set_find(&s,"space",&o)!=UMI_STATUS_OK)return 4;return o.number==8.0&&s.revision==1U?0:5;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignTokenSet s;UmiDesignToken t,o;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_set_init(&s,"base")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_number(&t,"space",8.0)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_set_upsert(&s,&t)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_set_find(&s,"space",&o)!=UMI_STATUS_OK)return 4;return o.number==8.0&&s.revision==1U?0:5;}

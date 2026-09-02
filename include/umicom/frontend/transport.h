@@ -31,6 +31,10 @@ extern "C" {
 
 #define UMI_FRONTEND_TRANSPORT_CAPACITY 1024U
 
+/**
+ * Represent the frontend transport snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFrontendTransportSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -45,15 +49,51 @@ typedef struct UmiFrontendTransportSnapshot {
     uint64_t revision;
 } UmiFrontendTransportSnapshot;
 
+/**
+ * Represent the frontend transport registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFrontendTransportRegistry UmiFrontendTransportRegistry;
 
+/**
+ * Initialise frontend transport registry from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_frontend_transport_registry_create(UmiFrontendTransportRegistry **out_registry);
+/**
+ * Release or reset state held by frontend transport registry so the same storage can be
+ * reused safely.
+ */
 void umi_frontend_transport_registry_destroy(UmiFrontendTransportRegistry *registry);
+/**
+ * Provide the frontend transport registry upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_frontend_transport_registry_upsert(UmiFrontendTransportRegistry *registry, const UmiFrontendTransportSnapshot *item);
+/**
+ * Remove frontend transport registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_frontend_transport_registry_remove(UmiFrontendTransportRegistry *registry, const char *id);
+/**
+ * Find frontend transport registry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_frontend_transport_registry_find(const UmiFrontendTransportRegistry *registry, const char *id, UmiFrontendTransportSnapshot *out_item);
+/**
+ * Find frontend transport registry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_frontend_transport_registry_at(const UmiFrontendTransportRegistry *registry, size_t index, UmiFrontendTransportSnapshot *out_item);
+/**
+ * Return the number of records represented by frontend transport registry without changing
+ * their state.
+ */
 size_t umi_frontend_transport_registry_count(const UmiFrontendTransportRegistry *registry);
+/**
+ * Provide the frontend transport registry revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_frontend_transport_registry_revision(const UmiFrontendTransportRegistry *registry);
 
 #ifdef __cplusplus

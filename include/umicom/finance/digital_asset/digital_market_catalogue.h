@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital market catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalMarketCatalogue {
     UmiDigitalMarket items[UMI_DIGITAL_ASSET_MAX_ITEMS];
     size_t count;

@@ -20,6 +20,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the schedule rule data shared with callers of this public contract.
+ */
 typedef struct UmiScheduleRule { UmiFinancialDate start; UmiFinancialDate end; UmiTenor frequency; UmiBusinessDayConvention convention; } UmiScheduleRule;
 /* Validate a schedule rule. */ bool umi_schedule_rule_is_valid(const UmiScheduleRule *r);
 #ifdef __cplusplus

@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_persistence.h"
-int main(void) { UmiTerminalRemoteTerminalPersistence v; umi_terminal_remote_terminal_persistence_init(&v); if(umi_terminal_remote_terminal_persistence_dirty(&v)) return 1; umi_terminal_remote_terminal_persistence_touch(&v); if(!umi_terminal_remote_terminal_persistence_dirty(&v)) return 2; umi_terminal_remote_terminal_persistence_mark_saved(&v); return umi_terminal_remote_terminal_persistence_dirty(&v)?3:0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteTerminalPersistence v; umi_terminal_remote_terminal_persistence_init(&v); /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_terminal_persistence_dirty(&v)) return 1; umi_terminal_remote_terminal_persistence_touch(&v); /* Apply this branch only when its contract condition is satisfied. */ if(!umi_terminal_remote_terminal_persistence_dirty(&v)) return 2; umi_terminal_remote_terminal_persistence_mark_saved(&v); return umi_terminal_remote_terminal_persistence_dirty(&v)?3:0; }

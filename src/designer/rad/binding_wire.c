@@ -14,7 +14,15 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/binding_wire.h"
 #include <string.h>
+/*
+ * Initialise rad binding wire from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_binding_wire_init(UmiRadBindingWire *item){
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(item,0,sizeof *item);
     (void)umi_rad_copy_text(item->wire_id, sizeof item->wire_id, "binding_wire");
@@ -23,4 +31,5 @@ UmiStatus umi_rad_binding_wire_init(UmiRadBindingWire *item){
     item->enabled = true;
     return UMI_STATUS_OK;
 }
-int umi_rad_binding_wire_is_valid(const UmiRadBindingWire *item){if(item==NULL)return 0;return umi_rad_id_valid(item->wire_id) && umi_rad_id_valid(item->source_node_id) && umi_rad_id_valid(item->target_node_id);}
+/* Check that rad binding wire satisfies its contract before another service relies on it. */
+int umi_rad_binding_wire_is_valid(const UmiRadBindingWire *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return umi_rad_id_valid(item->wire_id) && umi_rad_id_valid(item->source_node_id) && umi_rad_id_valid(item->target_node_id);}

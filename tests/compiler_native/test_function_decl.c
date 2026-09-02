@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/function_decl.h"
-int main(void){UmiNativeFunctionDecl d;if(umi_nc_function_decl_init(&d,"sum",1U)!=UMI_STATUS_OK)return 1;if(umi_nc_function_decl_add_parameter(&d,2U)!=UMI_STATUS_OK||umi_nc_function_decl_add_parameter(&d,2U)!=UMI_STATUS_OK)return 2;if(umi_nc_function_decl_signature(&d)==0U)return 3;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeFunctionDecl d;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_function_decl_init(&d,"sum",1U)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_function_decl_add_parameter(&d,2U)!=UMI_STATUS_OK||umi_nc_function_decl_add_parameter(&d,2U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_function_decl_signature(&d)==0U)return 3;return 0;}

@@ -49,6 +49,7 @@ static bool valid_open_request(const UmiDataConnectorOpenRequest *request)
 /* Convert family values to stable display text without allocating memory. */
 const char *umi_data_connector_family_text(UmiDataConnectorFamily family)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (family) {
         case UMI_DATA_CONNECTOR_RELATIONAL: return "relational";
         case UMI_DATA_CONNECTOR_DOCUMENT: return "document";
@@ -66,12 +67,20 @@ UmiStatus umi_data_connector_registry_create(
     UmiDataConnectorRegistry **out_registry)
 {
     UmiDataConnectorRegistry *registry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL || connector_capacity == 0U ||
         connector_capacity > SIZE_MAX / sizeof(UmiDataConnectorDescriptor)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_registry = NULL;
     registry = (UmiDataConnectorRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->descriptors = (UmiDataConnectorDescriptor *)calloc(
         connector_capacity, sizeof(*registry->descriptors));
@@ -88,6 +97,10 @@ UmiStatus umi_data_connector_registry_create(
 /* Release copied descriptors only; driver contexts remain application-owned. */
 void umi_data_connector_registry_destroy(UmiDataConnectorRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
     free(registry->descriptors);
     free(registry);
@@ -99,9 +112,14 @@ UmiStatus umi_data_connector_registry_register(
     const UmiDataConnectorDescriptor *descriptor)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || !valid_descriptor(descriptor)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         /* Duplicate identifiers would make connection selection order-dependent. */
         if (strcmp(registry->descriptors[index].connector_id,
@@ -109,6 +127,7 @@ UmiStatus umi_data_connector_registry_register(
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= registry->capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -124,9 +143,15 @@ UmiStatus umi_data_connector_registry_find(
     UmiDataConnectorDescriptor *out_descriptor)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || connector_id == NULL || connector_id[0] == '\0' ||
         out_descriptor == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->descriptors[index].connector_id,
                    connector_id) == 0) {
             *out_descriptor = registry->descriptors[index];
@@ -146,6 +171,10 @@ UmiStatus umi_data_connector_registry_open(
     UmiDataConnectorDescriptor descriptor;
     void *connection = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_handle == NULL || !valid_open_request(request)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -153,12 +182,14 @@ UmiStatus umi_data_connector_registry_open(
     (void)memset(out_handle, 0, sizeof(*out_handle));
     status = umi_data_connector_registry_find(
         registry, connector_id, &descriptor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = descriptor.open(request, descriptor.driver_context, &connection);
     /* Successful adapters must return concrete connection state. */
     if (status == UMI_STATUS_OK && connection == NULL) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_handle->connection = connection;
     out_handle->execute = descriptor.execute;
@@ -174,6 +205,10 @@ UmiStatus umi_data_connector_handle_execute(
     const UmiDataConnectorQueryRequest *request,
     UmiDataConnectorQuerySummary *out_summary)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (handle == NULL || !handle->open || handle->connection == NULL ||
         handle->execute == NULL || request == NULL ||
         request->query_text == NULL || request->query_text[0] == '\0' ||
@@ -186,6 +221,10 @@ UmiStatus umi_data_connector_handle_execute(
 /* Close provider state once and erase callbacks to prevent accidental reuse. */
 void umi_data_connector_handle_close(UmiDataConnectorHandle *handle)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (handle == NULL) return;
     /* Callback runs only for a complete open handle created by this API. */
     if (handle->open && handle->connection != NULL && handle->close != NULL) {

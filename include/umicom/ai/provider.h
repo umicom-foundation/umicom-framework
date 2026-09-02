@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai provider data shared with callers of this public contract.
+ */
 typedef struct UmiAiProvider {
     uint32_t structure_size;
     uint32_t abi_version;
@@ -42,6 +45,9 @@ typedef struct UmiAiProvider {
     void (*destroy)(void *instance);
 } UmiAiProvider;
 
+/**
+ * Check that ai provider satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ai_provider_validate(const UmiAiProvider *provider);
 
 #ifdef __cplusplus

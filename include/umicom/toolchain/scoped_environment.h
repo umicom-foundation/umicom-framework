@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the toolchain scoped environment operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_scoped_environment(
     const UmiToolchainProfile *profile,
     const UmiToolchainOperationProfile *operation,

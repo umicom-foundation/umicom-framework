@@ -19,7 +19,12 @@
 
 #include "umicom/ui/design/semantic_role.h"
 
+/*
+ * Provide the design semantic role name operation used by this module and its client
+ * applications.
+ */
 const char *umi_design_semantic_role_name(UmiDesignSemanticRole value)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (value) { case UMI_DESIGN_ROLE_NEUTRAL: return "neutral"; case UMI_DESIGN_ROLE_PRIMARY: return "primary"; case UMI_DESIGN_ROLE_SECONDARY: return "secondary"; case UMI_DESIGN_ROLE_INFO: return "info"; case UMI_DESIGN_ROLE_SUCCESS: return "success"; case UMI_DESIGN_ROLE_WARNING: return "warning"; case UMI_DESIGN_ROLE_DANGER: return "danger"; case UMI_DESIGN_ROLE_ACCENT: return "accent"; default: return "unknown"; }
 }

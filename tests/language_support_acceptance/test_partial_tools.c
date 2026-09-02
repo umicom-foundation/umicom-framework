@@ -16,11 +16,19 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer/language_support_matrix.h"
+/*
+ * Exercise only clang and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int only_clang(const char *program, void *user_data)
 {
     (void)user_data;
     return strcmp(program,"clang")==0 || strcmp(program,"native")==0;
 }
+/*
+ * Exercise test language support partial tools and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_language_support_partial_tools(void)
 {
     UmiLanguageProfileRegistry *profiles=NULL;

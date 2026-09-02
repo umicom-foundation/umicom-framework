@@ -17,15 +17,24 @@
 
 /* Initialisation centralises bounded text handling and defaults. */
 UmiStatus umi_data_replica_descriptor_init(UmiDataReplicaDescriptor *item, const char *replica_id, const char *endpoint, uint32_t priority, bool primary) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(item, 0, sizeof(*item));
-    UmiStatus s=umi_data_enterprise_copy_text(item->replica_id,sizeof(item->replica_id),replica_id);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->endpoint,sizeof(item->endpoint),endpoint);if(s!=UMI_STATUS_OK)return s;item->priority=priority;item->primary=primary;item->healthy=true;item->writable=primary;
+    UmiStatus s=umi_data_enterprise_copy_text(item->replica_id,sizeof(item->replica_id),replica_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->endpoint,sizeof(item->endpoint),endpoint);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->priority=priority;item->primary=primary;item->healthy=true;item->writable=primary;
     return umi_data_replica_descriptor_validate(item);
 }
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_replica_descriptor_validate(const UmiDataReplicaDescriptor *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(item->replica_id[0] != '\0' && item->endpoint[0] != '\0')) return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }

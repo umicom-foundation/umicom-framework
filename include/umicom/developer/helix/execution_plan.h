@@ -18,7 +18,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix execution edge data shared with callers of this public contract.
+ */
 typedef struct UmiHelixExecutionEdge { uint16_t from; uint16_t to; } UmiHelixExecutionEdge;
+/**
+ * Represent the helix execution plan data shared with callers of this public contract.
+ */
 typedef struct UmiHelixExecutionPlan { UmiHelixExecutionStep steps[UMI_HELIX_MAX_ITEMS]; size_t count; UmiHelixExecutionEdge edges[UMI_HELIX_MAX_EDGES]; size_t edge_count; bool approved; } UmiHelixExecutionPlan;
 /* Add a validated execution step. */
 UmiStatus umi_helix_execution_plan_add(UmiHelixExecutionPlan *plan,const UmiHelixExecutionStep *step);

@@ -27,6 +27,10 @@ extern "C" {
 
 #define UMI_STUDIO_RUNTIME_MISSING_CAPACITY 96U
 
+/**
+ * Represent the studio runtime closure report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeClosureReport {
     char missing_surfaces[UMI_STUDIO_RUNTIME_MISSING_CAPACITY]
                          [UMI_STUDIO_RUNTIME_ID_CAPACITY];
@@ -47,6 +51,10 @@ typedef struct UmiStudioRuntimeClosureReport {
     uint64_t revision;
 } UmiStudioRuntimeClosureReport;
 
+/**
+ * Provide the studio runtime closure check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_closure_check(
     const UmiStudioRuntimeContract *contract,
     UmiApplicationShellRegistry *shell,

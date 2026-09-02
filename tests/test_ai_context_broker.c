@@ -17,6 +17,10 @@
 
 #include "umicom/ai/context_broker.h"
 
+/*
+ * Exercise source and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiAiContextSource source(const char *id,
                                  uint32_t tokens,
                                  uint32_t priority,
@@ -34,6 +38,10 @@ static UmiAiContextSource source(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiContextBroker *broker = NULL;

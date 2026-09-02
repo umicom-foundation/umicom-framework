@@ -18,6 +18,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the ai coding tool workspace read descriptor operation used by this module and
+ * its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_workspace_read_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -34,6 +38,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_workspace_read_descriptor(vo
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool workspace read invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_workspace_read_invoke(
     const char *arguments_json,
     char *output,
@@ -49,13 +57,19 @@ UmiStatus umi_ai_coding_tool_workspace_read_invoke(
     size_t length = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_ai_coding_tool_json_parse_object(arguments_json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_safe_path(
         &document, "path", path, sizeof(path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = environment->workspace.read(
@@ -64,10 +78,12 @@ UmiStatus umi_ai_coding_tool_workspace_read_invoke(
         content,
         sizeof(content),
         &length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"path\":");

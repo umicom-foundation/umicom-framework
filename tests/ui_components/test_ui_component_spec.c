@@ -20,4 +20,8 @@
  */
 #include <string.h>
 #include "umicom/ui/components/component.h"
-int main(void){UmiUiComponentSpec s=umi_ui_component_spec_default(UMI_UI_COMPONENT_BUTTON);if(umi_ui_component_spec_set_id(&s,"save")!=UMI_STATUS_OK)return 1;if(umi_ui_component_spec_set_text(&s,"Save")!=UMI_STATUS_OK)return 2;if(umi_ui_component_spec_validate(&s)!=UMI_STATUS_OK)return 3;return strcmp(umi_ui_component_kind_name(s.kind),"button")==0?0:4;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiComponentSpec s=umi_ui_component_spec_default(UMI_UI_COMPONENT_BUTTON);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_spec_set_id(&s,"save")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_spec_set_text(&s,"Save")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_spec_validate(&s)!=UMI_STATUS_OK)return 3;return strcmp(umi_ui_component_kind_name(s.kind),"button")==0?0:4;}

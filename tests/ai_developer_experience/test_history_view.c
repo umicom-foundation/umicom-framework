@@ -19,6 +19,10 @@
 #include "umicom/ai_developer_experience/views/history.h"
 #include "umicom/ui/view_model.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiDeveloperTimeline *timeline = NULL;

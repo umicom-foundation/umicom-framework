@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai approval data shared with callers of this public contract.
+ */
 typedef struct UmiAiApproval {
     char approval_id[UMI_AI_ID_CAPACITY];
     char action[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -37,6 +40,10 @@ typedef struct UmiAiApproval {
     char approved_by[UMI_AI_ID_CAPACITY];
 } UmiAiApproval;
 
+/**
+ * Initialise ai approval from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_approval_init(UmiAiApproval *value);
 
 #ifdef __cplusplus

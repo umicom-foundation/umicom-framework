@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcSelectionEquivalence x={7U,3U}; CHECK(umi_fc_selection_equivalence_evaluate(&x)>0.0); CHECK(umi_fc_selection_equivalence_outcome(&x)==UMI_FC_FAIL);
     return 0;

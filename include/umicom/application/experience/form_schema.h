@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience form schema data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceFormSchema {
   uint32_t struct_size;
   uint32_t api_version;
@@ -33,11 +37,23 @@ typedef struct UmiApplicationExperienceFormSchema {
   size_t field_count;
 } UmiApplicationExperienceFormSchema;
 
+/**
+ * Check that application experience form schema satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus
 umi_application_experience_form_schema_validate(const UmiApplicationExperienceFormSchema *schema);
+/**
+ * Provide the application experience form schema field operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationExperienceField *
 umi_application_experience_form_schema_field(const UmiApplicationExperienceFormSchema *schema,
                                              const char *field_id);
+/**
+ * Provide the application experience form schema index operation used by this module and
+ * its client applications.
+ */
 size_t
 umi_application_experience_form_schema_index(const UmiApplicationExperienceFormSchema *schema,
                                              const char *field_id);

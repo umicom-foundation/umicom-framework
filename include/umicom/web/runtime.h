@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the web runtime process operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_runtime_process(UmiWebService *service,const char *request_text,size_t request_length,char *out_response,size_t capacity,size_t *out_length);
 #ifdef __cplusplus
 }

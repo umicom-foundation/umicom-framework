@@ -26,8 +26,19 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric rate limit policy data shared with callers of this public contract.
+ */
 typedef struct UmiFabricRateLimitPolicy { uint32_t maximum_requests; uint64_t window_ms; } UmiFabricRateLimitPolicy;
+/**
+ * Provide the fabric rate limit policy default operation used by this module and its
+ * client applications.
+ */
 void umi_fabric_rate_limit_policy_default(UmiFabricRateLimitPolicy *policy);
+/**
+ * Provide the fabric rate limit policy evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_fabric_rate_limit_policy_evaluate(const UmiFabricRateLimitPolicy *policy,uint32_t requests_in_window,bool *out_allowed,uint32_t *out_remaining);
 
 #ifdef __cplusplus

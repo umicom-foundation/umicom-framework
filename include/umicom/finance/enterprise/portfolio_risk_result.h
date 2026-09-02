@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise portfolio risk result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePortfolioRiskResult { char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; double value_at_risk; double expected_shortfall; double worst_stress_loss; } UmiEnterprisePortfolioRiskResult;
 /* Initialise coherent non-negative portfolio risk measures. */
 UmiStatus umi_enterprise_portfolio_risk_result_init(UmiEnterprisePortfolioRiskResult *result,const char *portfolio_id,double value_at_risk,double expected_shortfall,double worst_stress_loss);

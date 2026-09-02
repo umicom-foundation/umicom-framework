@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance border style projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceBorderStyleProjection {
     char style_id[UMI_APPEARANCE_ID_CAPACITY];
     char color_token[UMI_APPEARANCE_TOKEN_CAPACITY];

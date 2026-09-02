@@ -18,6 +18,10 @@
 
 #include "umicom/editor/features.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorFeatureCatalog *catalog = NULL;
@@ -25,8 +29,13 @@ int main(void)
     UmiStatus status;
 
     status = umi_editor_feature_catalog_create(&catalog);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || catalog == NULL) return EXIT_FAILURE;
     status = umi_editor_feature_catalog_register_builtins(catalog);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_editor_feature_catalog_destroy(catalog);
         return EXIT_FAILURE;
@@ -34,6 +43,10 @@ int main(void)
 
     {
         const UmiEditorFeatureDescriptor *descriptor = umi_editor_feature_workspace_session();
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor == NULL ||
             descriptor->struct_size != sizeof(*descriptor) ||
             descriptor->api_version != UMI_EDITOR_FEATURE_API_VERSION ||
@@ -48,6 +61,7 @@ int main(void)
         status = umi_editor_feature_catalog_find(catalog,
                                                   descriptor->feature_id,
                                                   &found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             strcmp(found.feature_id, descriptor->feature_id) != 0) {
             umi_editor_feature_catalog_destroy(catalog);
@@ -57,6 +71,10 @@ int main(void)
 
     {
         const UmiEditorFeatureDescriptor *descriptor = umi_editor_feature_file_watcher_sync();
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor == NULL ||
             descriptor->struct_size != sizeof(*descriptor) ||
             descriptor->api_version != UMI_EDITOR_FEATURE_API_VERSION ||
@@ -71,6 +89,7 @@ int main(void)
         status = umi_editor_feature_catalog_find(catalog,
                                                   descriptor->feature_id,
                                                   &found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             strcmp(found.feature_id, descriptor->feature_id) != 0) {
             umi_editor_feature_catalog_destroy(catalog);
@@ -80,6 +99,10 @@ int main(void)
 
     {
         const UmiEditorFeatureDescriptor *descriptor = umi_editor_feature_file_compare();
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor == NULL ||
             descriptor->struct_size != sizeof(*descriptor) ||
             descriptor->api_version != UMI_EDITOR_FEATURE_API_VERSION ||
@@ -94,6 +117,7 @@ int main(void)
         status = umi_editor_feature_catalog_find(catalog,
                                                   descriptor->feature_id,
                                                   &found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             strcmp(found.feature_id, descriptor->feature_id) != 0) {
             umi_editor_feature_catalog_destroy(catalog);
@@ -103,6 +127,10 @@ int main(void)
 
     {
         const UmiEditorFeatureDescriptor *descriptor = umi_editor_feature_three_way_merge();
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor == NULL ||
             descriptor->struct_size != sizeof(*descriptor) ||
             descriptor->api_version != UMI_EDITOR_FEATURE_API_VERSION ||
@@ -117,6 +145,7 @@ int main(void)
         status = umi_editor_feature_catalog_find(catalog,
                                                   descriptor->feature_id,
                                                   &found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             strcmp(found.feature_id, descriptor->feature_id) != 0) {
             umi_editor_feature_catalog_destroy(catalog);
@@ -126,6 +155,10 @@ int main(void)
 
     {
         const UmiEditorFeatureDescriptor *descriptor = umi_editor_feature_diff_editor();
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor == NULL ||
             descriptor->struct_size != sizeof(*descriptor) ||
             descriptor->api_version != UMI_EDITOR_FEATURE_API_VERSION ||
@@ -140,6 +173,7 @@ int main(void)
         status = umi_editor_feature_catalog_find(catalog,
                                                   descriptor->feature_id,
                                                   &found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             strcmp(found.feature_id, descriptor->feature_id) != 0) {
             umi_editor_feature_catalog_destroy(catalog);

@@ -21,6 +21,10 @@
 #include "delivery_internal.h"
 #include <string.h>
 
+/*
+ * Initialise signature record from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_signature_record_init(UmiSignatureRecord *record,
                                     const char *artifact_id,
                                     const char *signer_id,
@@ -28,14 +32,21 @@ UmiStatus umi_signature_record_init(UmiSignatureRecord *record,
                                     const char *signature)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || artifact_id == NULL || signer_id == NULL ||
         algorithm == NULL || signature == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(record, 0, sizeof(*record));
     status = umi_delivery_copy_text(record->artifact_id, sizeof(record->artifact_id), artifact_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_delivery_copy_text(record->signer_id, sizeof(record->signer_id), signer_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_delivery_copy_text(record->algorithm, sizeof(record->algorithm), algorithm);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_delivery_copy_text(record->signature, sizeof(record->signature), signature);
 }

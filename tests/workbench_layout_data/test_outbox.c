@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make entry and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchLayoutOutboxEntry make_entry(
     const char *entry_id,
     uint64_t sequence,
@@ -42,6 +46,10 @@ static UmiWorkbenchLayoutOutboxEntry make_entry(
     return entry;
 }
 
+/*
+ * Exercise test outbox codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_outbox_codec(void)
 {
     UmiWorkbenchLayoutOutboxEntry source = make_entry(
@@ -61,6 +69,10 @@ static int test_outbox_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test claim and deliver and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_claim_and_deliver(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -101,6 +113,10 @@ static int test_claim_and_deliver(void)
     return 0;
 }
 
+/*
+ * Exercise test retry and dead letter and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_retry_and_dead_letter(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -135,6 +151,10 @@ static int test_retry_and_dead_letter(void)
     return 0;
 }
 
+/*
+ * Exercise test no available entry and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_no_available_entry(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -154,6 +174,10 @@ static int test_no_available_entry(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_outbox_codec() == 0, "outbox codec");

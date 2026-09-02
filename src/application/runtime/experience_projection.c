@@ -17,12 +17,20 @@
 
 #include <string.h>
 
+/*
+ * Find application panel projection while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_panel_projection_at(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,
     UmiApplicationPanelProjection *out_projection)
 {
     const UmiExperiencePanelDefinition *panel;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_projection == NULL || index >= experience->panel_count)
         return UMI_STATUS_INVALID_ARGUMENT;
     panel = &experience->panels[index];
@@ -35,12 +43,20 @@ UmiStatus umi_application_panel_projection_at(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find application layout projection while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_layout_projection_at(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,
     UmiApplicationLayoutProjection *out_projection)
 {
     const UmiExperienceLayoutDefinition *layout;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_projection == NULL || index >= experience->layout_count)
         return UMI_STATUS_INVALID_ARGUMENT;
     layout = &experience->layouts[index];
@@ -52,12 +68,20 @@ UmiStatus umi_application_layout_projection_at(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find application feature projection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_application_feature_projection_at(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,
     UmiApplicationFeatureProjection *out_projection)
 {
     const UmiExperienceFeatureDefinition *feature;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_projection == NULL || index >= experience->feature_count)
         return UMI_STATUS_INVALID_ARGUMENT;
     feature = &experience->features[index];

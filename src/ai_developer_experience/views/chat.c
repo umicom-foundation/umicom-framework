@@ -18,8 +18,10 @@
 
 #include "umicom/ai_developer_experience/action_ids.h"
 
+/* Provide the role text operation used by this module and its client applications. */
 static const char *role_text(UmiAiRole role)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
         case UMI_AI_ROLE_SYSTEM: return "system";
         case UMI_AI_ROLE_USER: return "user";
@@ -29,6 +31,10 @@ static const char *role_text(UmiAiRole role)
     }
 }
 
+/*
+ * Initialise ai developer chat view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_chat_view_create(
     const char *view_id,
     const UmiAiCodingToolChatSession *session,
@@ -40,10 +46,15 @@ UmiStatus umi_ai_developer_chat_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || visible_rows == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (visible_rows > UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY) {
         visible_rows = UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY;
     }
@@ -54,6 +65,7 @@ UmiStatus umi_ai_developer_chat_view_create(
         "AI Coding Chat",
         "Repository-aware coding conversation with controlled developer tools.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     count =
@@ -64,24 +76,30 @@ UmiStatus umi_ai_developer_chat_view_create(
 
     status = umi_ai_developer_view_set_string(
         *out_view, "ai-chat.session-id", session->session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_string(
             *out_view, "ai-chat.provider", session->provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_string(
             *out_view, "ai-chat.model", session->model_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view, "ai-chat.row-count", (int64_t)count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view, "ai-chat.turn-count", (int64_t)session->turn_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_integer(
             *out_view,
             "ai-chat.tool-result-count",
             (int64_t)session->tool_result_count);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         const UmiAiMessage *message = &session->messages[first + index];
         char key[96];
@@ -99,6 +117,7 @@ UmiStatus umi_ai_developer_chat_view_create(
         status = umi_ai_developer_view_set_string(*out_view, key, row);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 0U,
@@ -106,6 +125,7 @@ UmiStatus umi_ai_developer_chat_view_create(
             "New Chat",
             "Start another coding conversation",
             1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 1U,
@@ -113,6 +133,7 @@ UmiStatus umi_ai_developer_chat_view_create(
             "Context",
             "Inspect repository context",
             1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_ai_developer_view_set_action(
             *out_view, 2U,

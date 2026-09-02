@@ -17,9 +17,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench context link history state from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_history_state_init(UmiWorkbenchContextLinkHistoryState *record,
                                            const char *identity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     memset(record, 0, sizeof(*record));
     record->structure_size = (uint32_t)sizeof(*record);
@@ -30,37 +38,54 @@ void umi_workbench_context_link_history_state_init(UmiWorkbenchContextLinkHistor
     record->origin = UMI_WORKBENCH_CONTEXT_LINK_ORIGIN_USER;
     record->priority = UMI_WORKBENCH_CONTEXT_LINK_PRIORITY_NORMAL;
     record->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (identity != NULL) {
         (void)umi_workbench_context_link_copy_text(
             record->state_id, sizeof(record->state_id), identity);
     }
 }
 
+/*
+ * Check that workbench context link history state satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_history_state_validate(
     const UmiWorkbenchContextLinkHistoryState *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || record->structure_size != sizeof(*record)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_context_link_text_is_valid(
             record->state_id, sizeof(record->state_id)) ||
         record->state_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_context_link_text_is_valid(
             record->group_id, sizeof(record->group_id)) ||
         !umi_workbench_context_link_text_is_valid(
             record->cursor_id, sizeof(record->cursor_id))) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (record->context_kind < UMI_CONTEXT_KIND_GENERIC ||
         record->context_kind > UMI_CONTEXT_KIND_SELECTION) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (record->colour < UMI_CONTEXT_COLOUR_NONE ||
         record->colour > UMI_CONTEXT_COLOUR_MAGENTA) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (record->mode < UMI_WORKBENCH_CONTEXT_LINK_MODE_NONE ||
         record->mode > UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -68,13 +93,22 @@ UmiStatus umi_workbench_context_link_history_state_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy workbench context link history state into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_history_state_copy(
     UmiWorkbenchContextLinkHistoryState *destination,
     const UmiWorkbenchContextLinkHistoryState *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_workbench_context_link_history_state_validate(source) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -82,10 +116,18 @@ UmiStatus umi_workbench_context_link_history_state_copy(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context link history state hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_link_history_state_hash(
     const UmiWorkbenchContextLinkHistoryState *record)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0U;
     hash = umi_workbench_context_link_hash_text(
         hash, record->state_id, sizeof(record->state_id));
@@ -106,35 +148,61 @@ uint64_t umi_workbench_context_link_history_state_hash(
     return hash;
 }
 
+/*
+ * Provide the workbench context link history state set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_history_state_set_primary(
     UmiWorkbenchContextLinkHistoryState *record,
     const char *value)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_link_copy_text(
         record->group_id, sizeof(record->group_id), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context link history state set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_history_state_set_secondary(
     UmiWorkbenchContextLinkHistoryState *record,
     const char *value)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_link_copy_text(
         record->cursor_id, sizeof(record->cursor_id), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context link history state touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_link_history_state_touch(
     UmiWorkbenchContextLinkHistoryState *record,
     uint64_t sequence,
     uint64_t timestamp_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;

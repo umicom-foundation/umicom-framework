@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the document local provider operation used by this module and its client
+ * applications.
+ */
 UmiDocumentProvider umi_document_local_provider(void);
 
 #ifdef __cplusplus

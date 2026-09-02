@@ -27,7 +27,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk validation result data shared with callers of this public contract.
+ */
 typedef struct UmiSdkValidationResult { UmiSdkProbeResult probe; UmiSdkConformance conformance; int compatible; int passed; } UmiSdkValidationResult;
+/**
+ * Provide the sdk validate prefix operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_sdk_validate_prefix(const char *prefix,const UmiSdkRequirement *requirement,UmiSdkValidationResult *out_result);
 #ifdef __cplusplus
 }

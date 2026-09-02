@@ -19,4 +19,8 @@
 
 #include "umicom/umicom.h"
 #include <assert.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiWebServerConfig c=umi_web_server_config_default();UmiWebServerState s;assert(umi_web_server_config_validate(&c)==UMI_STATUS_OK);umi_web_server_state_init(&s);assert(s.phase==UMI_WEB_SERVER_STOPPED);return 0;}

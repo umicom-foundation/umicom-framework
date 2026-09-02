@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/process_exit_policy.h"
-int main(void) { UmiTerminalRemoteProcessExitPolicy v; umi_terminal_remote_process_exit_policy_init(&v); if(!umi_terminal_remote_process_exit_policy_successful(&v,0)) return 1; return umi_terminal_remote_process_exit_policy_restart(&v,2)?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteProcessExitPolicy v; umi_terminal_remote_process_exit_policy_init(&v); /* Apply this branch only when its contract condition is satisfied. */ if(!umi_terminal_remote_process_exit_policy_successful(&v,0)) return 1; return umi_terminal_remote_process_exit_policy_restart(&v,2)?0:2; }

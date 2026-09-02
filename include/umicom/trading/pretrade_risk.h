@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the pretrade risk evaluate operation used by this module and its client
+ * applications.
+ */
 UmiRiskDecision umi_pretrade_risk_evaluate(const UmiOrderRequest *request, const UmiRiskLimit *limit, double current_position, double daily_pnl);
 #ifdef __cplusplus
 }

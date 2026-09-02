@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer problem next operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_problem_next(
     const UmiDeveloperProblemStore *store,
     size_t after_index,
@@ -28,6 +32,10 @@ UmiStatus umi_developer_problem_next(
     size_t *out_index,
     UmiDeveloperProblem *out_problem);
 
+/**
+ * Provide the developer problem previous operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_problem_previous(
     const UmiDeveloperProblemStore *store,
     size_t before_index,

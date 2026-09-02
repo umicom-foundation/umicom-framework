@@ -19,6 +19,10 @@
 
 #include "umicom/trading/movement_event.h"
 
+/*
+ * Provide the movement event measure operation used by this module and its client
+ * applications.
+ */
 UmiMovementEvent umi_movement_event_measure(double start_price,
                                             double end_price,
                                             int64_t start_ms,
@@ -31,6 +35,7 @@ UmiMovementEvent umi_movement_event_measure(double start_price,
     event.end_price = end_price;
     event.absolute_points = end_price - start_price;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (event.absolute_points < 0.0) {
         event.absolute_points = -event.absolute_points;
     }

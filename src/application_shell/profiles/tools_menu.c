@@ -145,6 +145,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
     }
 };
 
+/*
+ * Provide the application shell profile tools menu operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_tools_menu(void)
 {
     static const UmiApplicationShellProfileDefinition profile = {

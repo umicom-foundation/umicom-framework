@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/finance/enterprise/market_data_update.h"
 
+/**
+ * Represent the enterprise market data cache data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataCache {
     UmiEnterpriseMarketDataUpdate updates[UMI_ENTERPRISE_MAX_ITEMS];
     size_t count;

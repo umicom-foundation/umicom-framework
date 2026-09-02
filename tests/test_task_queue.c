@@ -24,6 +24,10 @@ typedef struct TaskFixture {
     atomic_uint progress_events;
 } TaskFixture;
 
+/*
+ * Exercise progress sink and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void progress_sink(uint64_t task_id,
                           unsigned progress,
                           const char *message,
@@ -36,6 +40,10 @@ static void progress_sink(uint64_t task_id,
     (void)atomic_fetch_add(&fixture->progress_events, 1U);
 }
 
+/*
+ * Exercise counting task and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus counting_task(UmiTaskContext *context, void *user_data)
 {
     TaskFixture *fixture = (TaskFixture *)user_data;
@@ -44,11 +52,17 @@ static UmiStatus counting_task(UmiTaskContext *context, void *user_data)
     return umi_task_context_report(context, 100U, "complete");
 }
 
+/*
+ * Exercise cancellable task and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus cancellable_task(UmiTaskContext *context, void *user_data)
 {
     unsigned index;
     (void)user_data;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 100U; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_task_context_is_cancelled(context)) {
             return UMI_STATUS_CANCELLED;
         }
@@ -57,6 +71,10 @@ static UmiStatus cancellable_task(UmiTaskContext *context, void *user_data)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTaskQueueConfig queue_config = {2U, 16U};
@@ -72,6 +90,7 @@ int main(void)
 
     assert(umi_task_queue_create(&queue_config, &queue) == UMI_STATUS_OK);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 6U; ++index) {
         UmiTaskConfig config = {
             "counting task",
@@ -98,6 +117,7 @@ int main(void)
     }
 
     assert(umi_task_queue_wait_idle(queue, 5000U) == UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 6U; ++index) {
         assert(umi_task_wait(tasks[index], 1000U) == UMI_STATUS_OK);
         assert(umi_task_state(tasks[index]) == UMI_TASK_SUCCEEDED);
@@ -116,6 +136,7 @@ int main(void)
     assert(atomic_load(&fixture.progress_events) == 12U);
 
     assert(umi_task_queue_shutdown(queue, 0) == UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 6U; ++index) {
         umi_task_destroy(tasks[index]);
     }

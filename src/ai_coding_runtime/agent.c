@@ -41,6 +41,7 @@ struct UmiAiCodingAgent {
     uint64_t event_sequence;
 };
 
+/* Provide the record snapshot operation used by this module and its client applications. */
 static UmiStatus record_snapshot(UmiAiCodingAgent *agent)
 {
     return umi_ai_coding_history_record(
@@ -48,6 +49,7 @@ static UmiStatus record_snapshot(UmiAiCodingAgent *agent)
         &agent->snapshot);
 }
 
+/* Provide the emit operation used by this module and its client applications. */
 static UmiStatus emit(
     UmiAiCodingAgent *agent,
     UmiAiCodingEventKind kind,
@@ -101,12 +103,14 @@ static UmiStatus emit(
         audit_status = umi_ai_coding_audit_log_append(
             agent->audit,
             &audit);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (audit_status != UMI_STATUS_OK) return audit_status;
     }
 
     return umi_ai_coding_event_queue_push(agent->events, &event);
 }
 
+/* Provide the set state operation used by this module and its client applications. */
 static UmiStatus set_state(
     UmiAiCodingAgent *agent,
     UmiAiCodingRuntimeState state,
@@ -120,18 +124,22 @@ static UmiStatus set_state(
     agent->snapshot.revision += 1U;
 
     event_status = record_snapshot(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (event_status != UMI_STATUS_OK) return event_status;
 
     return emit(agent, UMI_AI_CODING_EVENT_STATE, status, message);
 }
 
+/* Provide the cancelled operation used by this module and its client applications. */
 static int cancelled(UmiAiCodingAgent *agent)
 {
     return umi_ai_coding_cancellation_is_requested(&agent->cancellation);
 }
 
+/* Provide the check cancelled operation used by this module and its client applications. */
 static UmiStatus check_cancelled(UmiAiCodingAgent *agent)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!cancelled(agent)) return UMI_STATUS_OK;
 
     agent->snapshot.cancelled = 1;
@@ -143,6 +151,7 @@ static UmiStatus check_cancelled(UmiAiCodingAgent *agent)
     return UMI_STATUS_CANCELLED;
 }
 
+/* Provide the prepare iteration operation used by this module and its client applications. */
 static UmiStatus prepare_iteration(UmiAiCodingAgent *agent)
 {
     UmiStatus status;
@@ -152,6 +161,7 @@ static UmiStatus prepare_iteration(UmiAiCodingAgent *agent)
         UMI_AI_CODING_RUNTIME_MATERIALISING_CONTEXT,
         UMI_STATUS_OK,
         "Materialising governed repository context.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(&agent->context, 0, sizeof(agent->context));
@@ -160,6 +170,7 @@ static UmiStatus prepare_iteration(UmiAiCodingAgent *agent)
         &agent->plan,
         &agent->bindings.workspace,
         &agent->context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     agent->snapshot.context_files = agent->context.file_count;
@@ -171,6 +182,10 @@ static UmiStatus prepare_iteration(UmiAiCodingAgent *agent)
         "Repository context materialised.");
 }
 
+/*
+ * Provide the generate iteration operation used by this module and its client
+ * applications.
+ */
 static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
 {
     UmiAiRequest provider_request;
@@ -187,6 +202,7 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
         agent->snapshot.iteration > 1U
             ? "Generating a repair from validation evidence."
             : "Generating coding response.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_build_provider_request(
@@ -197,6 +213,7 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
             ? agent->validation_feedback
             : NULL,
         &provider_request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_provider_execute(
@@ -206,6 +223,7 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
         &provider_request,
         &provider_response,
         &agent->provider_execution);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)emit(
@@ -221,8 +239,10 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
         &agent->plan,
         &agent->bindings.workspace,
         &agent->response);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!agent->response.has_patch) return UMI_STATUS_OK;
 
     {
@@ -232,8 +252,10 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
             &agent->response.patch,
             &agent->change_guard,
             &guard);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!guard.accepted) {
             (void)emit(
                 agent,
@@ -259,6 +281,7 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
     status = umi_ai_coding_assistant_record_patch(
         agent->bindings.assistant,
         &agent->response.patch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     agent->snapshot.patch_recorded = 1;
@@ -276,12 +299,17 @@ static UmiStatus generate_iteration(UmiAiCodingAgent *agent)
         "Reviewable coding patch recorded.");
 }
 
+/*
+ * Provide the approve pending internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus approve_pending_internal(
     UmiAiCodingAgent *agent,
     const char *approved_by)
 {
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!agent->snapshot.patch_recorded ||
         agent->snapshot.patch_id[0] == '\0') {
         return UMI_STATUS_NOT_FOUND;
@@ -291,6 +319,7 @@ static UmiStatus approve_pending_internal(
         agent->bindings.assistant,
         agent->snapshot.patch_id,
         approved_by);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return emit(
@@ -300,6 +329,7 @@ static UmiStatus approve_pending_internal(
         "Coding patch approved.");
 }
 
+/* Provide the apply patch operation used by this module and its client applications. */
 static UmiStatus apply_patch(UmiAiCodingAgent *agent)
 {
     UmiAiCodingFileAdapter file_adapter;
@@ -308,6 +338,7 @@ static UmiStatus apply_patch(UmiAiCodingAgent *agent)
     status = umi_ai_coding_workspace_file_adapter(
         &agent->bindings.workspace,
         &file_adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = set_state(
@@ -315,12 +346,14 @@ static UmiStatus apply_patch(UmiAiCodingAgent *agent)
         UMI_AI_CODING_RUNTIME_APPLYING,
         UMI_STATUS_OK,
         "Applying approved coding patch.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_assistant_apply_patch(
         agent->bindings.assistant,
         agent->snapshot.patch_id,
         &file_adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     agent->snapshot.patch_applied = 1;
@@ -332,6 +365,7 @@ static UmiStatus apply_patch(UmiAiCodingAgent *agent)
         "Coding patch applied.");
 }
 
+/* Provide the revert patch operation used by this module and its client applications. */
 static UmiStatus revert_patch(UmiAiCodingAgent *agent)
 {
     UmiAiCodingFileAdapter file_adapter;
@@ -340,12 +374,14 @@ static UmiStatus revert_patch(UmiAiCodingAgent *agent)
     status = umi_ai_coding_workspace_file_adapter(
         &agent->bindings.workspace,
         &file_adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_assistant_revert_patch(
         agent->bindings.assistant,
         agent->snapshot.patch_id,
         &file_adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     agent->snapshot.patch_applied = 0;
@@ -359,13 +395,16 @@ static UmiStatus revert_patch(UmiAiCodingAgent *agent)
 }
 
 
+/* Provide the validate patch operation used by this module and its client applications. */
 static UmiStatus validate_patch(UmiAiCodingAgent *agent)
 {
     UmiStatus status;
 
     (void)memset(&agent->validation, 0, sizeof(agent->validation));
 
+    /* Apply this operation only while the related capability or state is available. */
     if (agent->validation_plan.step_count == 0U) {
+        /* Apply this operation only while the related capability or state is available. */
         if (agent->config.require_validation) {
             return UMI_STATUS_INVALID_STATE;
         }
@@ -374,6 +413,10 @@ static UmiStatus validate_patch(UmiAiCodingAgent *agent)
         return UMI_STATUS_OK;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent->bindings.executor == NULL ||
         agent->bindings.executor->execute == NULL) {
         return UMI_STATUS_INVALID_STATE;
@@ -384,12 +427,14 @@ static UmiStatus validate_patch(UmiAiCodingAgent *agent)
         UMI_AI_CODING_RUNTIME_VALIDATING,
         UMI_STATUS_OK,
         "Running configured build/test validation.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_validation_run(
         &agent->validation_plan,
         agent->bindings.executor,
         &agent->validation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     agent->snapshot.validation_steps = agent->validation.result_count;
@@ -409,6 +454,7 @@ static UmiStatus validate_patch(UmiAiCodingAgent *agent)
     return UMI_STATUS_OK;
 }
 
+/* Provide the finish success operation used by this module and its client applications. */
 static UmiStatus finish_success(UmiAiCodingAgent *agent)
 {
     agent->snapshot.validation_passed =
@@ -423,14 +469,20 @@ static UmiStatus finish_success(UmiAiCodingAgent *agent)
         "Coding task completed.");
 }
 
+/*
+ * Provide the run after generation operation used by this module and its client
+ * applications.
+ */
 static UmiStatus run_after_generation(UmiAiCodingAgent *agent)
 {
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!agent->response.has_patch) {
         return finish_success(agent);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!agent->config.auto_approve) {
         return set_state(
             agent,
@@ -442,8 +494,10 @@ static UmiStatus run_after_generation(UmiAiCodingAgent *agent)
     status = approve_pending_internal(
         agent,
         "umicom-agent-policy");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!agent->config.auto_apply_approved_patch) {
         return set_state(
             agent,
@@ -455,6 +509,10 @@ static UmiStatus run_after_generation(UmiAiCodingAgent *agent)
     return umi_ai_coding_agent_apply_pending(agent);
 }
 
+/*
+ * Initialise ai coding agent from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_coding_agent_create(
     const UmiAiCodingAgentBindings *bindings,
     const UmiAiCodingRuntimeConfig *config,
@@ -463,6 +521,10 @@ UmiStatus umi_ai_coding_agent_create(
     UmiAiCodingAgent *agent;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || config == NULL || out_agent == NULL ||
         bindings->ai_runtime == NULL ||
         bindings->assistant == NULL) {
@@ -470,14 +532,20 @@ UmiStatus umi_ai_coding_agent_create(
     }
 
     status = umi_ai_coding_workspace_adapter_validate(&bindings->workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_runtime_config_validate(config);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     *out_agent = NULL;
 
     agent = (UmiAiCodingAgent *)calloc(1U, sizeof(*agent));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     agent->bindings = *bindings;
@@ -488,13 +556,16 @@ UmiStatus umi_ai_coding_agent_create(
     umi_ai_coding_cancellation_init(&agent->cancellation);
 
     status = umi_ai_coding_event_queue_create(&agent->events);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_history_create(&agent->history);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_audit_log_create(&agent->audit);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_ai_coding_audit_log_destroy(agent->audit);
         umi_ai_coding_history_destroy(agent->history);
@@ -512,8 +583,13 @@ UmiStatus umi_ai_coding_agent_create(
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by ai coding agent so the same storage can be reused safely. */
 void umi_ai_coding_agent_destroy(UmiAiCodingAgent *agent)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL) return;
 
     umi_ai_coding_audit_log_destroy(agent->audit);
@@ -522,14 +598,23 @@ void umi_ai_coding_agent_destroy(UmiAiCodingAgent *agent)
     free(agent);
 }
 
+/*
+ * Provide the ai coding agent set validation plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_agent_set_validation_plan(
     UmiAiCodingAgent *agent,
     const UmiAiCodingValidationPlan *plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL || plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (agent->snapshot.state != UMI_AI_CODING_RUNTIME_IDLE &&
         agent->snapshot.state != UMI_AI_CODING_RUNTIME_COMPLETED &&
         agent->snapshot.state != UMI_AI_CODING_RUNTIME_FAILED &&
@@ -541,16 +626,25 @@ UmiStatus umi_ai_coding_agent_set_validation_plan(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding agent set change guard operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_agent_set_change_guard(
     UmiAiCodingAgent *agent,
     const UmiAiCodingChangeGuardPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL || policy == NULL ||
         policy->maximum_files == 0U ||
         policy->maximum_changed_lines == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (agent->snapshot.state != UMI_AI_CODING_RUNTIME_IDLE &&
         agent->snapshot.state != UMI_AI_CODING_RUNTIME_COMPLETED &&
         agent->snapshot.state != UMI_AI_CODING_RUNTIME_FAILED &&
@@ -562,6 +656,10 @@ UmiStatus umi_ai_coding_agent_set_change_guard(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform ai coding agent through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_agent_run(
     UmiAiCodingAgent *agent,
     const char *task_id,
@@ -569,11 +667,16 @@ UmiStatus umi_ai_coding_agent_run(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL || task_id == NULL || task_id[0] == '\0' ||
         request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (agent->snapshot.state != UMI_AI_CODING_RUNTIME_IDLE &&
         agent->snapshot.state != UMI_AI_CODING_RUNTIME_COMPLETED &&
         agent->snapshot.state != UMI_AI_CODING_RUNTIME_FAILED &&
@@ -621,11 +724,13 @@ UmiStatus umi_ai_coding_agent_run(
         UMI_AI_CODING_RUNTIME_PREPARING,
         UMI_STATUS_OK,
         "Preparing governed coding task.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     {
         UmiAiCodingRequest effective_request = *request;
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (effective_request.context_token_budget == 0U ||
             effective_request.context_token_budget >
                 agent->config.context_token_budget) {
@@ -633,6 +738,7 @@ UmiStatus umi_ai_coding_agent_run(
                 agent->config.context_token_budget;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (effective_request.maximum_context_files == 0U ||
             effective_request.maximum_context_files >
                 agent->config.maximum_context_files) {
@@ -640,6 +746,7 @@ UmiStatus umi_ai_coding_agent_run(
                 agent->config.maximum_context_files;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!agent->config.allow_sensitive_context) {
             effective_request.sensitive_approved = 0;
         }
@@ -650,28 +757,36 @@ UmiStatus umi_ai_coding_agent_run(
             agent->config.provider_kind,
             &agent->plan);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (agent->snapshot.iteration = 1U;
          agent->snapshot.iteration <= agent->config.maximum_iterations;
          ++agent->snapshot.iteration) {
         status = check_cancelled(agent);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = prepare_iteration(agent);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
 
         status = generate_iteration(agent);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
 
         status = run_after_generation(agent);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (agent->snapshot.state ==
             UMI_AI_CODING_RUNTIME_REVIEW_REQUIRED) {
             return UMI_STATUS_OK;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (agent->snapshot.state ==
             UMI_AI_CODING_RUNTIME_COMPLETED) {
             return UMI_STATUS_OK;
@@ -686,6 +801,7 @@ UmiStatus umi_ai_coding_agent_run(
             return finish_success(agent);
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (agent->snapshot.iteration >=
             agent->config.maximum_iterations) {
             break;
@@ -703,15 +819,24 @@ failure:
     return status;
 }
 
+/*
+ * Provide the ai coding agent approve pending operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_agent_approve_pending(
     UmiAiCodingAgent *agent,
     const char *approved_by)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL || approved_by == NULL ||
         approved_by[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (agent->snapshot.state !=
         UMI_AI_CODING_RUNTIME_REVIEW_REQUIRED) {
         return UMI_STATUS_INVALID_STATE;
@@ -720,34 +845,49 @@ UmiStatus umi_ai_coding_agent_approve_pending(
     return approve_pending_internal(agent, approved_by);
 }
 
+/*
+ * Provide the ai coding agent apply pending operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_agent_apply_pending(
     UmiAiCodingAgent *agent)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!agent->snapshot.patch_recorded ||
         agent->snapshot.patch_id[0] == '\0') {
         return UMI_STATUS_NOT_FOUND;
     }
 
     status = check_cancelled(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = apply_patch(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = validate_patch(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (agent->validation.passed ||
         agent->validation_plan.step_count == 0U) {
         return finish_success(agent);
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (agent->config.rollback_on_validation_failure) {
         status = revert_patch(agent);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
     }
 
@@ -758,11 +898,14 @@ UmiStatus umi_ai_coding_agent_apply_pending(
         agent->validation_feedback,
         sizeof(agent->validation_feedback));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CAPACITY_EXCEEDED) {
         status = UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (agent->snapshot.iteration <
         agent->config.maximum_iterations) {
         return set_state(
@@ -783,13 +926,22 @@ failure:
     return status;
 }
 
+/*
+ * Provide the ai coding agent continue repair operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_agent_continue_repair(
     UmiAiCodingAgent *agent)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (agent->snapshot.state != UMI_AI_CODING_RUNTIME_REPAIRING ||
         agent->snapshot.iteration >= agent->config.maximum_iterations) {
         return UMI_STATUS_INVALID_STATE;
@@ -798,15 +950,19 @@ UmiStatus umi_ai_coding_agent_continue_repair(
     agent->snapshot.iteration += 1U;
 
     status = check_cancelled(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = prepare_iteration(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = generate_iteration(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     status = run_after_generation(agent);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     return UMI_STATUS_OK;
@@ -820,13 +976,22 @@ failure:
     return status;
 }
 
+/*
+ * Provide the ai coding agent reject pending operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_agent_reject_pending(
     UmiAiCodingAgent *agent)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (agent->snapshot.state !=
         UMI_AI_CODING_RUNTIME_REVIEW_REQUIRED) {
         return UMI_STATUS_INVALID_STATE;
@@ -835,6 +1000,7 @@ UmiStatus umi_ai_coding_agent_reject_pending(
     status = umi_ai_coding_assistant_reject_patch(
         agent->bindings.assistant,
         agent->snapshot.patch_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return set_state(
@@ -844,21 +1010,41 @@ UmiStatus umi_ai_coding_agent_reject_pending(
         "Coding patch rejected.");
 }
 
+/*
+ * Provide the ai coding agent cancel operation used by this module and its client
+ * applications.
+ */
 void umi_ai_coding_agent_cancel(UmiAiCodingAgent *agent)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent != NULL) {
         umi_ai_coding_cancellation_request(&agent->cancellation);
     }
 }
 
+/*
+ * Provide the ai coding agent next event operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_agent_next_event(
     UmiAiCodingAgent *agent,
     UmiAiCodingEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_ai_coding_event_queue_pop(agent->events, out_event);
 }
 
+/*
+ * Return the number of records represented by ai coding agent event without changing their
+ * state.
+ */
 size_t umi_ai_coding_agent_event_count(
     const UmiAiCodingAgent *agent)
 {
@@ -867,10 +1053,18 @@ size_t umi_ai_coding_agent_event_count(
         : 0U;
 }
 
+/*
+ * Provide the ai coding agent snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_agent_snapshot(
     const UmiAiCodingAgent *agent,
     UmiAiCodingAgentSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (agent == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -879,23 +1073,39 @@ UmiStatus umi_ai_coding_agent_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding agent last response operation used by this module and its client
+ * applications.
+ */
 const UmiAiCodingParsedResponse *umi_ai_coding_agent_last_response(
     const UmiAiCodingAgent *agent)
 {
     return agent != NULL ? &agent->response : NULL;
 }
 
+/*
+ * Provide the ai coding agent last validation operation used by this module and its client
+ * applications.
+ */
 const UmiAiCodingValidationReport *umi_ai_coding_agent_last_validation(
     const UmiAiCodingAgent *agent)
 {
     return agent != NULL ? &agent->validation : NULL;
 }
 
+/*
+ * Provide the ai coding agent history operation used by this module and its client
+ * applications.
+ */
 UmiAiCodingHistory *umi_ai_coding_agent_history(UmiAiCodingAgent *agent)
 {
     return agent != NULL ? agent->history : NULL;
 }
 
+/*
+ * Provide the ai coding agent audit operation used by this module and its client
+ * applications.
+ */
 UmiAiCodingAuditLog *umi_ai_coding_agent_audit(UmiAiCodingAgent *agent)
 {
     return agent != NULL ? agent->audit : NULL;

@@ -29,20 +29,36 @@ extern "C" {
 #endif
 
 #define UMI_HELIX_MEMORY_CAPACITY 128U
+/**
+ * Represent the helix memory entry data shared with callers of this public contract.
+ */
 typedef struct UmiHelixMemoryEntry {
     char key[UMI_HELIX_ID_CAPACITY];
     char value[UMI_HELIX_TEXT_CAPACITY];
 } UmiHelixMemoryEntry;
 
+/**
+ * Represent the helix memory data shared with callers of this public contract.
+ */
 typedef struct UmiHelixMemory {
     UmiHelixMemoryEntry entries[UMI_HELIX_MEMORY_CAPACITY];
     size_t count;
 } UmiHelixMemory;
 
+/**
+ * Initialise helix memory from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_helix_memory_init(UmiHelixMemory *memory);
+/**
+ * Provide the helix memory put operation used by this module and its client applications.
+ */
 UmiStatus umi_helix_memory_put(UmiHelixMemory *memory,
                                const char *key,
                                const char *value);
+/**
+ * Provide the helix memory get operation used by this module and its client applications.
+ */
 const char *umi_helix_memory_get(const UmiHelixMemory *memory, const char *key);
 
 #ifdef __cplusplus

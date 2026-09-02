@@ -16,6 +16,10 @@
 
 #include "headless_internal.h"
 
+/*
+ * Provide the headless render panes operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_headless_render_panes(UmiUiHeadlessAdapter *adapter,
                                     UmiUiWorkbench *workbench)
 {
@@ -23,6 +27,7 @@ UmiStatus umi_headless_render_panes(UmiUiHeadlessAdapter *adapter,
     size_t index;
     UmiStatus status = umi_headless_append(adapter, "[panes]\n");
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK &&
          index < umi_ui_pane_model_count(panes);
@@ -30,6 +35,7 @@ UmiStatus umi_headless_render_panes(UmiUiHeadlessAdapter *adapter,
         UmiUiPaneSnapshot pane;
 
         status = umi_ui_pane_model_at(panes, index, &pane);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_headless_append(
                 adapter,
@@ -41,6 +47,7 @@ UmiStatus umi_headless_render_panes(UmiUiHeadlessAdapter *adapter,
             adapter->pane_count += 1U;
         }
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK && pane.visible) {
             status = umi_headless_render_pane_view(
                 adapter, workbench, &pane);

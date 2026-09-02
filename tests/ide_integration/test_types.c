@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ide_integration/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(strcmp(umi_ide_domain_text(UMI_IDE_DOMAIN_TESTS), "tests") == 0);

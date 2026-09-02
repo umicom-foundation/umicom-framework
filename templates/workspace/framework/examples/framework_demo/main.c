@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 
+/* Provide the print diagnostic operation used by this module and its client applications. */
 static void print_diagnostic(const UmiDiagnostic *diagnostic, void *user_data)
 {
     (void)user_data;
@@ -24,11 +25,16 @@ static void print_diagnostic(const UmiDiagnostic *diagnostic, void *user_data)
            diagnostic->source, diagnostic->message);
 }
 
+/* Provide the sample start operation used by this module and its client applications. */
 static UmiStatus sample_start(UmiModuleContext *context)
 {
     return umi_event_bus_publish(context->events, "framework.sample.started", "ready", 1U);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMasterController *master = 0;
@@ -39,8 +45,11 @@ int main(void)
         UMI_MODULE_SERVICE, 0, 0, 0,
         {0, 0, sample_start, 0, 0, 0}
     };
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_master_controller_create(&config, &master) != UMI_STATUS_OK) return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_master_controller_register(master, &sample) != UMI_STATUS_OK) return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_master_controller_start(master) != UMI_STATUS_OK) return 1;
     printf("Framework version: %s\n", UMICOM_FRAMEWORK_VERSION_STRING);
     printf("Application: %s\n", umi_master_controller_application_name(master));

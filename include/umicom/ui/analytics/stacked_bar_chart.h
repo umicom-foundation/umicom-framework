@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics stack total data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsStackTotal { double positive; double negative; } UmiAnalyticsStackTotal;
+/**
+ * Provide the analytics stacked bar total operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_stacked_bar_total(const double *values,size_t count,UmiAnalyticsStackTotal *out_total);
 
 #ifdef __cplusplus

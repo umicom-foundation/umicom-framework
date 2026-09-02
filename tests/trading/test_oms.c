@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiOms o;UmiRiskLimit l={5,1000000,10,5000};umi_oms_init(&o,l);UmiOrderRequest r=test_order_request();UmiRiskDecision d={0};
     assert(umi_oms_submit(&o,&r,0,0,100,&d)==UMI_STATUS_OK);assert(d.allowed);assert(o.orders.count==1U);

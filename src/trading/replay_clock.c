@@ -18,5 +18,13 @@
  */
 
 #include "umicom/trading/replay_clock.h"
-void umi_replay_clock_init(UmiReplayClock *c,int64_t start,double speed){if(c!=NULL){c->now_ms=start;c->speed=speed>0.0?speed:1.0;}}
-void umi_replay_clock_advance(UmiReplayClock *c,int64_t event_time){if(c!=NULL&&event_time>=c->now_ms)c->now_ms=event_time;}
+/*
+ * Initialise replay clock from caller-provided values so later operations receive a known
+ * state.
+ */
+void umi_replay_clock_init(UmiReplayClock *c,int64_t start,double speed){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c!=NULL){c->now_ms=start;c->speed=speed>0.0?speed:1.0;}}
+/*
+ * Provide the replay clock advance operation used by this module and its client
+ * applications.
+ */
+void umi_replay_clock_advance(UmiReplayClock *c,int64_t event_time){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c!=NULL&&event_time>=c->now_ms)c->now_ms=event_time;}

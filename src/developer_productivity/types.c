@@ -14,9 +14,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/types.h"
 
+/*
+ * Provide the developer productivity severity text operation used by this module and its
+ * client applications.
+ */
 const char *umi_developer_productivity_severity_text(
     UmiDeveloperProductivitySeverity severity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
         case UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_HINT: return "hint";
         case UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_INFO: return "info";
@@ -27,13 +32,22 @@ const char *umi_developer_productivity_severity_text(
     }
 }
 
+/*
+ * Check that developer productivity location satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_productivity_location_validate(
     const UmiDeveloperProductivityLocation *location)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (location == NULL || location->uri[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (location->end_line != 0U &&
         location->end_line < location->line) {
         return UMI_STATUS_INVALID_ARGUMENT;

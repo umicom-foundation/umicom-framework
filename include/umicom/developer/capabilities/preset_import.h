@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PRESET_IMPORT "umicom.developer.configuration.preset_import"
 
+/**
+ * Provide the developer capability preset import operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_preset_import(void);
 

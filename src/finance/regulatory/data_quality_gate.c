@@ -18,4 +18,8 @@
 
 #include "umicom/finance/regulatory/data_quality_gate.h"
 
+/*
+ * Provide the reg data quality gate passes operation used by this module and its client
+ * applications.
+ */
 int umi_reg_data_quality_gate_passes(double observed,double threshold){ return umi_reg_number_valid(observed)&&umi_reg_number_valid(threshold)&&observed>=0.0&&observed<=1.0&&threshold>=0.0&&threshold<=1.0&&observed>=threshold?1:0; }

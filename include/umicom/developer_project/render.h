@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project render text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_project_render_text(
     const char *template_text,
     const UmiDeveloperProjectVariableSet *variables,

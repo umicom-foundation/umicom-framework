@@ -17,11 +17,16 @@
 
 #include "umicom/application/presentation/presentation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationPresentationSurfaceJournal journal;
     size_t index;
     umi_application_presentation_surface_journal_init(&journal);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_APPLICATION_PRESENTATION_JOURNAL_CAPACITY + 5U;
          ++index) {
         umi_application_presentation_surface_journal_record(

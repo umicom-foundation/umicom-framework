@@ -31,6 +31,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs provider data shared with callers of this public contract.
+ */
 typedef struct UmiVcsProvider {
     uint32_t structure_size;
     const char *provider_id;
@@ -94,7 +97,14 @@ typedef struct UmiVcsProvider {
                                int force);
 } UmiVcsProvider;
 
+/**
+ * Check that vcs provider satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_vcs_provider_validate(const UmiVcsProvider *provider);
+/**
+ * Provide the vcs provider capabilities operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_vcs_provider_capabilities(const UmiVcsProvider *provider);
 
 #ifdef __cplusplus

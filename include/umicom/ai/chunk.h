@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai chunk data shared with callers of this public contract.
+ */
 typedef struct UmiAiChunk {
     char chunk_id[UMI_AI_ID_CAPACITY];
     char document_id[UMI_AI_ID_CAPACITY];
@@ -37,6 +40,9 @@ typedef struct UmiAiChunk {
     char text[UMI_AI_TEXT_CAPACITY];
 } UmiAiChunk;
 
+/**
+ * Copy ai chunk into module-owned storage so callers keep ownership of their input values.
+ */
 UmiStatus umi_ai_chunk_set(UmiAiChunk *chunk,
                            const char *document_id,
                            size_t index,

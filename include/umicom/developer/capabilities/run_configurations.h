@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_RUN_CONFIGURATIONS "umicom.developer.experience.run_configurations"
 
+/**
+ * Provide the developer capability run configurations operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_run_configurations(void);
 

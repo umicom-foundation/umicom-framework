@@ -48,23 +48,41 @@ static const UmiProductisationCommandDefinition COMMANDS[] = {
 
 #define COUNT_OF(values) (sizeof(values) / sizeof((values)[0]))
 
+/*
+ * Return the number of records represented by productisation command catalogue without
+ * changing their state.
+ */
 size_t umi_productisation_command_catalogue_count(void)
 {
     return COUNT_OF(COMMANDS);
 }
 
+/*
+ * Find productisation command catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiProductisationCommandDefinition *
 umi_productisation_command_catalogue_at(size_t index)
 {
     return index < COUNT_OF(COMMANDS) ? &COMMANDS[index] : NULL;
 }
 
+/*
+ * Find productisation command catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiProductisationCommandDefinition *
 umi_productisation_command_catalogue_find(const char *command_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < COUNT_OF(COMMANDS); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].command_id, command_id) == 0)
             return &COMMANDS[index];
     }

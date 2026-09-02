@@ -1,39 +1,63 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
+ * File: resources/themes/workbench-context-host.css
+ *
+ * PURPOSE:
+ *   Implement the workbench context host behaviour used by its public contract
+ *   and client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
  * Workbench Context Host GTK4 presentation.
  *
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
+/* The link strip presents shared context above the active work area. */
 .umicom-context-link-strip {
     padding: 4px 8px;
     border-bottom: 1px solid alpha(currentColor, 0.18);
 }
+/* Picker spacing separates context choice from surrounding commands. */
 .umicom-context-group-picker {
     margin-left: 4px;
     margin-right: 8px;
 }
+/* Rounded buttons make context groups easy to identify and select. */
 .umicom-context-group-button {
     min-height: 24px;
     padding-left: 8px;
     padding-right: 8px;
     border-radius: 12px;
 }
+/* Secondary status remains visible without competing with primary content. */
 .umicom-context-status {
     opacity: 0.82;
 }
+/* Compact badges expose the active relationship inside a panel header. */
 .umicom-context-panel-badge {
     padding: 2px 8px;
     border-radius: 999px;
     font-weight: 600;
 }
+/* Inspector padding keeps linked details separate from the panel boundary. */
 .umicom-context-inspector {
     padding: 8px;
 }
+/* Neutral context uses the current foreground colour instead of a group hue. */
 .umicom-context-group-none {
     border-bottom: 3px solid alpha(currentColor, 0.35);
 }
+/* Named group colours provide the same visual relationship across applications. */
 .umicom-context-group-red {
     border-bottom: 3px solid #d9544d;
 }

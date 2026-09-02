@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design card spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignCardSpec {
     UmiDesignSemanticRole role;
     uint8_t elevation_level;

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link search result data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextLinkSearchResult {
     uint32_t structure_size;
     char result_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkSearchResult {
     uint64_t revision;
 } UmiWorkbenchContextLinkSearchResult;
 
+/**
+ * Initialise workbench context link search result from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_search_result_init(UmiWorkbenchContextLinkSearchResult *record,
                                            const char *identity);
+/**
+ * Check that workbench context link search result satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_search_result_validate(
     const UmiWorkbenchContextLinkSearchResult *record);
+/**
+ * Copy workbench context link search result into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_search_result_copy(
     UmiWorkbenchContextLinkSearchResult *destination,
     const UmiWorkbenchContextLinkSearchResult *source);
+/**
+ * Provide the workbench context link search result hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_link_search_result_hash(
     const UmiWorkbenchContextLinkSearchResult *record);
+/**
+ * Provide the workbench context link search result set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_search_result_set_primary(
     UmiWorkbenchContextLinkSearchResult *record,
     const char *value);
+/**
+ * Provide the workbench context link search result set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_search_result_set_secondary(
     UmiWorkbenchContextLinkSearchResult *record,
     const char *value);
+/**
+ * Provide the workbench context link search result touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_link_search_result_touch(
     UmiWorkbenchContextLinkSearchResult *record,
     uint64_t sequence,

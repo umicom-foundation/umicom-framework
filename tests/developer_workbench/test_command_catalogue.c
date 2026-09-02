@@ -17,6 +17,10 @@
 
 #include "umicom/developer_workbench/command_catalogue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_developer_workbench_command_catalogue_validate() ==

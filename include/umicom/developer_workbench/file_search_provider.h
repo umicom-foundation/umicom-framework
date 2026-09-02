@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise developer workbench file search provider from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_workbench_file_search_provider_init(
     UmiDeveloperWorkbenchSearchProvider *provider,
     UmiFileIndex *file_index);

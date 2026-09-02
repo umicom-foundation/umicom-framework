@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/document_telemetry.h"
 
+/*
+ * Provide the document capability document telemetry operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_telemetry(void)
 {

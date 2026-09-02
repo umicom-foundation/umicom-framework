@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design component slot data shared with callers of this public contract.
+ */
 typedef struct UmiDesignComponentSlot { char id[UMI_DESIGN_ID_CAPACITY]; UmiUiComponentKind accepted_kind; uint16_t minimum_children; uint16_t maximum_children; } UmiDesignComponentSlot;
 /* Initialise a compound-component slot with explicit child cardinality. */
 UmiStatus umi_design_component_slot_init(UmiDesignComponentSlot *slot, const char *id, UmiUiComponentKind accepted_kind, uint16_t minimum_children, uint16_t maximum_children);

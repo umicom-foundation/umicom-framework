@@ -28,6 +28,9 @@ extern "C" {
 #define UMI_TERMINAL_ANSI_SEGMENT_MAX 256U
 #define UMI_TERMINAL_ANSI_DEFAULT_COLOUR 0xFFFFFFFFU
 
+/**
+ * Represent the terminal ansi style data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalAnsiStyle {
     uint32_t foreground;
     uint32_t background;
@@ -37,6 +40,9 @@ typedef struct UmiTerminalAnsiStyle {
     int inverse;
 } UmiTerminalAnsiStyle;
 
+/**
+ * Represent the terminal ansi segment data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalAnsiSegment {
     size_t source_offset;
     size_t text_offset;
@@ -44,6 +50,9 @@ typedef struct UmiTerminalAnsiSegment {
     UmiTerminalAnsiStyle style;
 } UmiTerminalAnsiSegment;
 
+/**
+ * Represent the terminal ansi document data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalAnsiDocument {
     char text[UMI_TERMINAL_LINE_CAPACITY];
     UmiTerminalAnsiSegment segments[UMI_TERMINAL_ANSI_SEGMENT_MAX];
@@ -51,7 +60,15 @@ typedef struct UmiTerminalAnsiDocument {
     int truncated;
 } UmiTerminalAnsiDocument;
 
+/**
+ * Release or reset state held by terminal ansi style so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_ansi_style_reset(UmiTerminalAnsiStyle *style);
+/**
+ * Read terminal ansi into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_terminal_ansi_parse(const char *source,
                                   UmiTerminalAnsiDocument *out_document);
 

@@ -32,6 +32,7 @@ struct UmiRecoveryManager {
     UmiMutex *mutex;
 };
 
+/* Provide the recovery path operation used by this module and its client applications. */
 static UmiStatus umi_recovery_path(const UmiRecoveryManager *manager,
                                    UmiDocumentId document_id,
                                    char *out_path,
@@ -40,6 +41,10 @@ static UmiStatus umi_recovery_path(const UmiRecoveryManager *manager,
     char name[96];
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL || document_id == 0U ||
         out_path == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -49,29 +54,43 @@ static UmiStatus umi_recovery_path(const UmiRecoveryManager *manager,
                        sizeof(name),
                        "%" PRIu64 ".recovery",
                        document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(name)) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
     return umi_fs_join(out_path, capacity, manager->root, name);
 }
 
+/*
+ * Initialise recovery manager from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_recovery_manager_create(const char *root_directory,
                                       UmiRecoveryManager **out_manager)
 {
     UmiRecoveryManager *manager;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root_directory == NULL || root_directory[0] == '\0' ||
         out_manager == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_manager = NULL;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(root_directory) >= UMI_PATH_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     manager = (UmiRecoveryManager *)calloc(1U, sizeof(*manager));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -82,11 +101,13 @@ UmiStatus umi_recovery_manager_create(const char *root_directory,
     (void)umi_fs_normalise(manager->root);
 
     status = umi_fs_make_directories(manager->root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(manager);
         return status;
     }
     status = umi_mutex_create(&manager->mutex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(manager);
         return status;
@@ -96,8 +117,16 @@ UmiStatus umi_recovery_manager_create(const char *root_directory,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by recovery manager so the same storage can be reused
+ * safely.
+ */
 void umi_recovery_manager_destroy(UmiRecoveryManager *manager)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL) {
         return;
     }
@@ -105,6 +134,10 @@ void umi_recovery_manager_destroy(UmiRecoveryManager *manager)
     free(manager);
 }
 
+/*
+ * Write recovery manager in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_recovery_manager_save(UmiRecoveryManager *manager,
                                     UmiDocumentId document_id,
                                     const char *source_path,
@@ -121,10 +154,18 @@ UmiStatus umi_recovery_manager_save(UmiRecoveryManager *manager,
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL || document_id == 0U ||
         source_path == NULL || (text == NULL && length > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strchr(source_path, '\n') != NULL ||
         strchr(source_path, '\r') != NULL ||
         strlen(source_path) >= UMI_PATH_CAPACITY) {
@@ -132,6 +173,7 @@ UmiStatus umi_recovery_manager_save(UmiRecoveryManager *manager,
     }
 
     status = umi_recovery_path(manager, document_id, path, sizeof(path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -148,22 +190,29 @@ UmiStatus umi_recovery_manager_save(UmiRecoveryManager *manager,
                        revision,
                        source_length,
                        length);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(header)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     header_length = (size_t)written;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (header_length > SIZE_MAX - source_length ||
         header_length + source_length > SIZE_MAX - length) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     total_length = header_length + source_length + length;
     payload = (char *)malloc(total_length > 0U ? total_length : 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (payload == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     (void)memcpy(payload, header, header_length);
     (void)memcpy(payload + header_length, source_path, source_length);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(payload + header_length + source_length, text, length);
     }
@@ -175,6 +224,10 @@ UmiStatus umi_recovery_manager_save(UmiRecoveryManager *manager,
     return status;
 }
 
+/*
+ * Provide the recovery parse number operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_recovery_parse_number(const char *line,
                                            const char *prefix,
                                            uint64_t *out_value)
@@ -183,10 +236,12 @@ static UmiStatus umi_recovery_parse_number(const char *line,
     unsigned long long value;
     size_t prefix_length = strlen(prefix);
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(line, prefix, prefix_length) != 0) {
         return UMI_STATUS_PARSE_ERROR;
     }
     value = strtoull(line + prefix_length, &end, 10);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (end == line + prefix_length || *end != '\0') {
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -194,12 +249,14 @@ static UmiStatus umi_recovery_parse_number(const char *line,
     return UMI_STATUS_OK;
 }
 
+/* Return the number of records represented by recovery parse without changing their state. */
 static UmiStatus umi_recovery_parse_size(const char *line,
                                          const char *prefix,
                                          size_t *out_value)
 {
     uint64_t value;
     UmiStatus status = umi_recovery_parse_number(line, prefix, &value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || value > SIZE_MAX) {
         return status != UMI_STATUS_OK
             ? status
@@ -209,6 +266,10 @@ static UmiStatus umi_recovery_parse_size(const char *line,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Read recovery manager into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
                                     UmiDocumentId document_id,
                                     UmiRecoveryRecord *out_record)
@@ -227,12 +288,17 @@ UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
     UmiStatus status;
     int line_number;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL || document_id == 0U || out_record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_record, 0, sizeof(*out_record));
 
     status = umi_recovery_path(manager, document_id, path, sizeof(path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -241,21 +307,29 @@ UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
     (void)umi_mutex_lock(mutable_manager->mutex);
     status = umi_fs_read_text(path, &payload, &payload_length);
     (void)umi_mutex_unlock(mutable_manager->mutex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     cursor = payload;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (line_number = 0; line_number < 6; ++line_number) {
         line_end = strchr(cursor, '\n');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (line_end == NULL) {
             umi_fs_free_text(payload);
             return UMI_STATUS_PARSE_ERROR;
         }
         *line_end = '\0';
 
+        /* Select the behaviour associated with the requested command or state value. */
         switch (line_number) {
             case 0:
+                /* Use the stable identifier comparison to choose the matching record or policy. */
                 if (strcmp(cursor, "UMICOM-RECOVERY-1") != 0) {
                     umi_fs_free_text(payload);
                     return UMI_STATUS_PARSE_ERROR;
@@ -290,6 +364,7 @@ UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
                 status = UMI_STATUS_INTERNAL_ERROR;
                 break;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             umi_fs_free_text(payload);
             return status;
@@ -298,6 +373,7 @@ UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
     }
 
     header_length = (size_t)(cursor - payload);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (parsed_document != document_id ||
         source_length >= sizeof(out_record->source_path) ||
         header_length > payload_length ||
@@ -308,15 +384,21 @@ UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
         return UMI_STATUS_PARSE_ERROR;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (source_length > 0U) {
         (void)memcpy(out_record->source_path, cursor, source_length);
     }
     out_record->source_path[source_length] = '\0';
     out_record->text = (char *)malloc(content_length + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_record->text == NULL) {
         umi_fs_free_text(payload);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (content_length > 0U) {
         (void)memcpy(out_record->text,
                      cursor + source_length,
@@ -331,8 +413,13 @@ UmiStatus umi_recovery_manager_load(const UmiRecoveryManager *manager,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by recovery record so the same storage can be reused safely. */
 void umi_recovery_record_dispose(UmiRecoveryRecord *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) {
         return;
     }
@@ -340,10 +427,15 @@ void umi_recovery_record_dispose(UmiRecoveryRecord *record)
     (void)memset(record, 0, sizeof(*record));
 }
 
+/*
+ * Provide the recovery manager exists operation used by this module and its client
+ * applications.
+ */
 int umi_recovery_manager_exists(const UmiRecoveryManager *manager,
                                 UmiDocumentId document_id)
 {
     char path[UMI_PATH_CAPACITY];
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (umi_recovery_path(manager, document_id, path, sizeof(path)) !=
         UMI_STATUS_OK) {
         return 0;
@@ -351,25 +443,35 @@ int umi_recovery_manager_exists(const UmiRecoveryManager *manager,
     return umi_fs_is_file(path);
 }
 
+/*
+ * Remove recovery manager while keeping the remaining records in a valid and discoverable
+ * state.
+ */
 UmiStatus umi_recovery_manager_remove(UmiRecoveryManager *manager,
                                       UmiDocumentId document_id)
 {
     char path[UMI_PATH_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL || document_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_recovery_path(manager, document_id, path, sizeof(path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     (void)umi_mutex_lock(manager->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_fs_exists(path)) {
         status = UMI_STATUS_OK;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = remove(path) == 0
             ? UMI_STATUS_OK
             : UMI_STATUS_IO_ERROR;
@@ -378,16 +480,25 @@ UmiStatus umi_recovery_manager_remove(UmiRecoveryManager *manager,
     return status;
 }
 
+/*
+ * Provide the recovery manager purge operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_recovery_manager_purge(UmiRecoveryManager *manager)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (manager == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)umi_mutex_lock(manager->mutex);
     status = umi_fs_remove_tree(manager->root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_fs_make_directories(manager->root);
     }
@@ -395,6 +506,10 @@ UmiStatus umi_recovery_manager_purge(UmiRecoveryManager *manager)
     return status;
 }
 
+/*
+ * Provide the recovery manager root operation used by this module and its client
+ * applications.
+ */
 const char *umi_recovery_manager_root(const UmiRecoveryManager *manager)
 {
     return manager != NULL ? manager->root : "";

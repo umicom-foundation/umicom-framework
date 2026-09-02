@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic split layout data shared with callers of this public contract.
+ */
 typedef struct UmiUiMosaicSplitLayout {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char name[UMI_UI_MOSAIC_TEXT_CAPACITY];

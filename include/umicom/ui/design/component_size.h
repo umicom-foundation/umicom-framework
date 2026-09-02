@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design component size data shared with callers of this public contract.
+ */
 typedef struct UmiDesignComponentSize { UmiUiSize minimum; UmiUiSize preferred; UmiUiSize maximum; } UmiDesignComponentSize;
 /* Initialise ordered component size constraints. */
 UmiStatus umi_design_component_size_init(UmiDesignComponentSize *size, UmiUiSize minimum, UmiUiSize preferred, UmiUiSize maximum);

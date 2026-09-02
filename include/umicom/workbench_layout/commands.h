@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout command data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutCommand {
     uint32_t structure_size;
     UmiWorkbenchLayoutCommandKind kind;
@@ -41,6 +44,10 @@ typedef struct UmiWorkbenchLayoutCommand {
     bool bool_value;
 } UmiWorkbenchLayoutCommand;
 
+/**
+ * Represent the workbench layout command result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutCommandResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -53,6 +60,10 @@ typedef struct UmiWorkbenchLayoutCommandResult {
     char message[UMI_WORKBENCH_LAYOUT_ERROR_CAPACITY];
 } UmiWorkbenchLayoutCommandResult;
 
+/**
+ * Initialise workbench layout command from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_command_init(
     UmiWorkbenchLayoutCommand *command,
     UmiWorkbenchLayoutCommandKind kind,
@@ -60,18 +71,38 @@ void umi_workbench_layout_command_init(
     const char *actor_id,
     const char *correlation_id);
 
+/**
+ * Check that workbench layout command satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_workbench_layout_command_validate(
     const UmiWorkbenchLayoutCommand *command);
 
+/**
+ * Provide the workbench layout command mutates state operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_command_mutates_state(
     const UmiWorkbenchLayoutCommand *command);
 
+/**
+ * Provide the workbench layout command requires layout operation used by this module and
+ * its client applications.
+ */
 bool umi_workbench_layout_command_requires_layout(
     const UmiWorkbenchLayoutCommand *command);
 
+/**
+ * Provide the workbench layout command requires unlocked layout operation used by this
+ * module and its client applications.
+ */
 bool umi_workbench_layout_command_requires_unlocked_layout(
     const UmiWorkbenchLayoutCommand *command);
 
+/**
+ * Initialise workbench layout command result from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_layout_command_result_init(
     UmiWorkbenchLayoutCommandResult *result,
     const UmiWorkbenchLayoutCommand *command);

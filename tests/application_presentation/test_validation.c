@@ -17,6 +17,10 @@
 
 #include <assert.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_application_presentation_catalogues_validate() == UMI_STATUS_OK);

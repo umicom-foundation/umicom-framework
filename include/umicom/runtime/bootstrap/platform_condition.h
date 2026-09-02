@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap platform condition match operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_platform_condition_match(const char *platform_id,
                                             const char *expected_platform_id);
 

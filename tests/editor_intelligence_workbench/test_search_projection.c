@@ -18,6 +18,10 @@
 
 #include "umicom/editor/intelligence_workbench/search_projection.h"
 
+/*
+ * Exercise add document and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_document(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const char *uri,
@@ -40,6 +44,10 @@ static void add_document(
                &input) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorWorkspaceSearchOrchestration *orchestration = NULL;

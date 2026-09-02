@@ -17,6 +17,10 @@
 
 #include "umicom/test_runtime/check.h"
 #include "umicom/studio_runtime/surface_catalogue.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationShellRegistry *registry=NULL;

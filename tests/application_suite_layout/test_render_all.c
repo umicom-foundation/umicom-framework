@@ -25,6 +25,7 @@ int main(void)
     size_t application_index;
 
     UMI_TEST_REQUIRE(layout != NULL && plan != NULL);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (application_index = 0U;
          application_index < umi_application_experience_catalogue_count();
          ++application_index) {
@@ -32,6 +33,7 @@ int main(void)
             umi_application_experience_catalogue_at(application_index);
         size_t layout_index;
         UMI_TEST_REQUIRE(experience != NULL);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (layout_index = 0U;
              layout_index < experience->layout_count;
              ++layout_index) {

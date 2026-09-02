@@ -1,3 +1,18 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: examples/sdk_consumer/CMakeLists.txt
+#
+# PURPOSE:
+#   Configure the sdk consumer build rules without duplicating product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
 # Minimal installed-SDK consumer used by integrators and release validation.
 cmake_minimum_required(VERSION 3.24)
 project(UmicomSdkConsumer LANGUAGES C)

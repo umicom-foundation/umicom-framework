@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/sanitizer_profile.h"
 
+/*
+ * Provide the developer capability sanitizer profile operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_sanitizer_profile(void)
 {

@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the nc constant fold function operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_constant_fold_function(UmiNativeIrFunction *function,size_t *out_folded);
 #ifdef __cplusplus
 }

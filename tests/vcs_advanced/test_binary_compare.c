@@ -17,10 +17,16 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/binary_compare.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiVcsAdvancedBinaryCompare r;
     umi_vcs_advanced_binary_compare_values(5U,1U,5U,1U,&r);
+/* Apply this branch only when its contract condition is satisfied. */
 if(!r.same_size||!r.same_content)return 1;
     umi_vcs_advanced_binary_compare_values(5U,1U,6U,1U,&r);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (r.same_content)return 2;
     return 0;
 }

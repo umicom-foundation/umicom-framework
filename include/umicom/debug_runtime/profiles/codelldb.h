@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime profile codelldb operation used by this module and its client
+ * applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_codelldb(void);
 #ifdef __cplusplus
 }

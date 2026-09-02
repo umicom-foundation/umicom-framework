@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap configuration property from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_bootstrap_configuration_property_init(
     UmiBootstrapConfigurationProperty *property,
     const char *key,

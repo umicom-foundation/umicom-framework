@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 #include "umicom/repository/repository_operation.h"
+/**
+ * Represent the repository operation request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryOperationRequest { UmiRepositoryOperationKind kind; const char *repository_root; int json_output; int include_plan; } UmiRepositoryOperationRequest;
 /* Initialise a request with a path and operation kind. */
 void umi_repository_operation_request_init(UmiRepositoryOperationRequest *request,UmiRepositoryOperationKind kind,const char *repository_root);

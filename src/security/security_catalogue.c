@@ -28,5 +28,13 @@ static const char *CAPABILITIES[] = {
     "umicom.security.governance-audit/2",
     "umicom.security.policy-centre/2"
 };
+/*
+ * Return the number of records represented by security catalogue without changing their
+ * state.
+ */
 size_t umi_security_catalogue_count(void) { return sizeof(CAPABILITIES) / sizeof(CAPABILITIES[0]); }
+/*
+ * Find security catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const char *umi_security_catalogue_at(size_t index) { return index < umi_security_catalogue_count() ? CAPABILITIES[index] : NULL; }

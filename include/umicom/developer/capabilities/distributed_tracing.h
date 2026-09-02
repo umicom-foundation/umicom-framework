@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_DISTRIBUTED_TRACING "umicom.developer.diagnostics.distributed_tracing"
 
+/**
+ * Provide the developer capability distributed tracing operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_distributed_tracing(void);
 

@@ -23,14 +23,23 @@
 
 
 
+/*
+ * Copy workbench layout data store into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_workbench_layout_data_store_set(
     UmiDataServer *server,
     const char *key,
     const char *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || key == NULL || value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(key) >= UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY ||
         strlen(value) >= UMI_WORKBENCH_LAYOUT_DATA_VALUE_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -38,6 +47,10 @@ UmiStatus umi_workbench_layout_data_store_set(
     return umi_data_server_set(server, key, value);
 }
 
+/*
+ * Provide the workbench layout data store get allocated operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_store_get_allocated(
     const UmiDataServer *server,
     const char *key,
@@ -47,23 +60,44 @@ UmiStatus umi_workbench_layout_data_store_get_allocated(
     char *buffer;
     size_t capacity = UMI_WORKBENCH_LAYOUT_DATA_VALUE_CAPACITY;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || key == NULL || out_value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_value = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_size != NULL) *out_size = 0U;
     buffer = (char *)calloc(capacity, sizeof(char));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_data_server_get(server, key, buffer, capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(buffer);
         return status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_size != NULL) *out_size = strlen(buffer);
     *out_value = buffer;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout data store delete if present operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_store_delete_if_present(
     UmiDataServer *server,
     const char *key)
@@ -72,6 +106,7 @@ UmiStatus umi_workbench_layout_data_store_delete_if_present(
     return status == UMI_STATUS_NOT_FOUND ? UMI_STATUS_OK : status;
 }
 
+/* Provide the visit bridge operation used by this module and its client applications. */
 static UmiStatus visit_bridge(
     const char *key,
     const char *value,
@@ -79,18 +114,31 @@ static UmiStatus visit_bridge(
 {
     UmiWorkbenchLayoutDataVisitContext *visit =
         (UmiWorkbenchLayoutDataVisitContext *)user_data;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (visit == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     visit->visited += 1U;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_workbench_layout_data_key_matches_prefix(
             key, visit->prefix)) {
         return UMI_STATUS_OK;
     }
     visit->accepted += 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (visit->accept == NULL) return UMI_STATUS_OK;
     visit->status = visit->accept(key, value, visit->context);
     return visit->status;
 }
 
+/*
+ * Provide the workbench layout data store visit prefix operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_store_visit_prefix(
     const UmiDataServer *server,
     const char *prefix,
@@ -100,6 +148,10 @@ UmiStatus umi_workbench_layout_data_store_visit_prefix(
 {
     UmiWorkbenchLayoutDataVisitContext visit;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || prefix == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -109,32 +161,55 @@ UmiStatus umi_workbench_layout_data_store_visit_prefix(
     visit.context = context;
     visit.status = UMI_STATUS_OK;
     status = umi_data_server_visit(server, visit_bridge, &visit);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_accepted != NULL) *out_accepted = visit.accepted;
     return status != UMI_STATUS_OK ? status : visit.status;
 }
 
+/*
+ * Provide the workbench layout data transaction begin operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_transaction_begin(
     UmiDataServer *server,
     bool *out_started)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || out_started == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_started = false;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_data_server_in_transaction(server)) return UMI_STATUS_OK;
     status = umi_data_server_begin(server);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) *out_started = true;
     return status;
 }
 
+/*
+ * Provide the workbench layout data transaction finish operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_transaction_finish(
     UmiDataServer *server,
     bool started,
     UmiStatus operation_status)
 {
     UmiStatus finish_status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!started) return operation_status;
     finish_status = operation_status == UMI_STATUS_OK
         ? umi_data_server_commit(server)
@@ -143,6 +218,10 @@ UmiStatus umi_workbench_layout_data_transaction_finish(
         ? operation_status : finish_status;
 }
 
+/*
+ * Provide the workbench layout data make record id operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_make_record_id(
     const char *prefix,
     const char *aggregate_id,
@@ -151,6 +230,10 @@ UmiStatus umi_workbench_layout_data_make_record_id(
     size_t capacity)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (prefix == NULL || aggregate_id == NULL ||
         buffer == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -158,7 +241,9 @@ UmiStatus umi_workbench_layout_data_make_record_id(
     written = snprintf(buffer, capacity, "%s-%s-%020llu",
                        prefix, aggregate_id,
                        (unsigned long long)sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_INTERNAL_ERROR;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if ((size_t)written >= capacity) {
         buffer[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -166,6 +251,10 @@ UmiStatus umi_workbench_layout_data_make_record_id(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise workbench layout data record repository from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_init(
     UmiWorkbenchLayoutDataRecordRepository *repository,
     UmiDataServer *server,
@@ -174,6 +263,10 @@ UmiStatus umi_workbench_layout_data_record_repository_init(
     UmiWorkbenchLayoutDataRecordEncoder encode,
     UmiWorkbenchLayoutDataRecordDecoder decode)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || server == NULL ||
         record_size == 0U || encode == NULL || decode == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -188,6 +281,7 @@ UmiStatus umi_workbench_layout_data_record_repository_init(
     return UMI_STATUS_OK;
 }
 
+/* Provide the repository key operation used by this module and its client applications. */
 static UmiStatus repository_key(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -196,6 +290,10 @@ static UmiStatus repository_key(
     char *key,
     size_t capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL ||
         repository->structure_size < sizeof(*repository)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -205,6 +303,10 @@ static UmiStatus repository_key(
         sequence, 0U, key, capacity);
 }
 
+/*
+ * Write workbench layout data record repository in its stable representation and report
+ * capacity or input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_save(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -216,20 +318,31 @@ UmiStatus umi_workbench_layout_data_record_repository_save(
     char value[UMI_WORKBENCH_LAYOUT_DATA_VALUE_CAPACITY];
     size_t required = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = repository_key(repository, aggregate_id, record_id,
                             sequence, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = repository->encode(
         record, value, sizeof(value), &required);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (required > sizeof(value)) return UMI_STATUS_CAPACITY_EXCEEDED;
     return umi_workbench_layout_data_store_set(
         repository->server, key, value);
 }
 
+/*
+ * Read workbench layout data record repository into validated module state and return a
+ * status when input cannot be used.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_load(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -240,14 +353,20 @@ UmiStatus umi_workbench_layout_data_record_repository_load(
     char key[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
     char *value = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || out_record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = repository_key(repository, aggregate_id, record_id,
                             sequence, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_data_store_get_allocated(
         repository->server, key, &value, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = repository->decode(value, out_record);
     }
@@ -255,6 +374,10 @@ UmiStatus umi_workbench_layout_data_record_repository_load(
     return status;
 }
 
+/*
+ * Provide the workbench layout data record repository delete operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_delete(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -263,9 +386,14 @@ UmiStatus umi_workbench_layout_data_record_repository_delete(
 {
     char key[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = repository_key(repository, aggregate_id, record_id,
                             sequence, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_data_server_delete(repository->server, key);
 }
@@ -278,6 +406,7 @@ typedef struct RepositoryListContext {
     void *decoded_record;
 } RepositoryListContext;
 
+/* Provide the repository accept operation used by this module and its client applications. */
 static UmiStatus repository_accept(
     const char *key,
     const char *value,
@@ -288,6 +417,10 @@ static UmiStatus repository_accept(
     bool matches = true;
     UmiStatus status;
     (void)key;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL || list->page == NULL ||
         list->decoded_record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -295,15 +428,23 @@ static UmiStatus repository_accept(
     (void)memset(list->decoded_record, 0,
                  list->repository->record_size);
     status = list->repository->decode(value, list->decoded_record);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list->predicate != NULL) {
         status = list->predicate(
             list->decoded_record, list->predicate_context, &matches);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!matches) return UMI_STATUS_OK;
 
     list->page->total_available += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (list->page->count >= list->page->capacity) {
         list->page->truncated = true;
         return UMI_STATUS_OK;
@@ -316,6 +457,10 @@ static UmiStatus repository_accept(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout data record repository list operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_list(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -326,6 +471,10 @@ UmiStatus umi_workbench_layout_data_record_repository_list(
     char prefix[UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
     RepositoryListContext context;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || page == NULL ||
         page->structure_size < sizeof(*page) ||
         page->records == NULL ||
@@ -338,6 +487,7 @@ UmiStatus umi_workbench_layout_data_record_repository_list(
     page->truncated = false;
     status = umi_workbench_layout_data_key_prefix(
         repository->kind, aggregate_id, prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&context, 0, sizeof(context));
     context.repository = repository;
@@ -345,6 +495,10 @@ UmiStatus umi_workbench_layout_data_record_repository_list(
     context.predicate_context = predicate_context;
     context.page = page;
     context.decoded_record = calloc(1U, repository->record_size);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context.decoded_record == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }

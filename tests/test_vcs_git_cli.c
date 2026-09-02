@@ -21,6 +21,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/umicom.h"
+/*
+ * Exercise run git and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void run_git(const char *root, const char *const *arguments, size_t count)
 {
     UmiProcessRequest request = {0}; UmiProcessResult result;
@@ -28,6 +32,10 @@ static void run_git(const char *root, const char *const *arguments, size_t count
     request.working_directory = root; request.capture_stdout = 1; request.capture_stderr = 1;
     assert(umi_process_execute(&request, &result) == UMI_STATUS_OK); assert(result.exit_code == 0);
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const char *init[] = {"init", "-b", "main"}; const char *name[] = {"config", "user.name", "Umicom Test"};

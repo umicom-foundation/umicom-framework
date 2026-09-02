@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise stress scenario data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseStressScenario { char scenario_id[UMI_ENTERPRISE_ID_CAPACITY]; char factor_name[UMI_ENTERPRISE_NAME_CAPACITY]; double shock; int severity; } UmiEnterpriseStressScenario;
 /* Initialise a stress scenario with severity in the range 1..5. */
 UmiStatus umi_enterprise_stress_scenario_init(UmiEnterpriseStressScenario *scenario,const char *scenario_id,const char *factor_name,double shock,int severity);

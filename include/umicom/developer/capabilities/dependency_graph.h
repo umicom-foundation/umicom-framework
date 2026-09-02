@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_DEPENDENCY_GRAPH "umicom.developer.configuration.dependency_graph"
 
+/**
+ * Provide the developer capability dependency graph operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_dependency_graph(void);
 

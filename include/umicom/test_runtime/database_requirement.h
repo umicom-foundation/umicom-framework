@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime database requirement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeDatabaseRequirement
 {
     uint32_t structure_size;
@@ -29,11 +33,35 @@ typedef struct UmiTestRuntimeDatabaseRequirement
     uint64_t revision;
     bool enabled;
     } UmiTestRuntimeDatabaseRequirement;
+/**
+ * Initialise test runtime database requirement from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_test_runtime_database_requirement_init(UmiTestRuntimeDatabaseRequirement *value,const char *id);
+/**
+ * Check that test runtime database requirement satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_test_runtime_database_requirement_validate(const UmiTestRuntimeDatabaseRequirement *value);
+/**
+ * Provide the test runtime database requirement set detail operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_test_runtime_database_requirement_set_detail(UmiTestRuntimeDatabaseRequirement *value,const char *detail);
+/**
+ * Provide the test runtime database requirement set required operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_test_runtime_database_requirement_set_required(UmiTestRuntimeDatabaseRequirement *value,uint64_t number);
+/**
+ * Provide the test runtime database requirement set available operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_database_requirement_set_available(UmiTestRuntimeDatabaseRequirement *value,uint64_t number);
+/**
+ * Provide the test runtime database requirement same identity operation used by this
+ * module and its client applications.
+ */
 bool umi_test_runtime_database_requirement_same_identity(const UmiTestRuntimeDatabaseRequirement *left,const UmiTestRuntimeDatabaseRequirement *right);
 #ifdef __cplusplus
 }

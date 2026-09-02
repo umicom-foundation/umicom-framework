@@ -24,8 +24,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc layout contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcLayoutContract { size_t panel_count; size_t split_count; size_t tab_count; size_t floating_count; uint64_t required_features; } UmiFcLayoutContract;
+/**
+ * Provide the fc layout contract satisfied operation used by this module and its client
+ * applications.
+ */
 bool umi_fc_layout_contract_satisfied(const UmiFcLayoutContract *required,const UmiFcLayoutContract *actual);
+/**
+ * Provide the fc layout contract score operation used by this module and its client
+ * applications.
+ */
 double umi_fc_layout_contract_score(const UmiFcLayoutContract *required,const UmiFcLayoutContract *actual);
 
 #ifdef __cplusplus

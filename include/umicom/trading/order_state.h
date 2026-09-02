@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the order transition allowed operation used by this module and its client
+ * applications.
+ */
 int umi_order_transition_allowed(UmiOrderStatus from, UmiOrderStatus to);
 #ifdef __cplusplus
 }

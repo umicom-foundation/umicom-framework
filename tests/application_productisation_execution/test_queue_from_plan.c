@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test queue from plan and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void test_queue_from_plan(void)
 {
     UmiProductExecutionWorkQueue q; UmiProductisationCompletionPlan p=test_plan_two_stage(); assert(umi_product_execution_work_queue_from_plan(&q,&p,3U)==UMI_STATUS_OK); assert(q.count==2U);

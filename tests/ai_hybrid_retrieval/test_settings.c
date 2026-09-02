@@ -15,4 +15,8 @@
 
 #include <assert.h>
 #include "umicom/ai/hybrid_retrieval.h"
+/*
+ * Exercise test ai hybrid settings and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_ai_hybrid_settings(void){UmiAiHybridRetrievalSettings s=umi_ai_hybrid_retrieval_settings_default();assert(s.lexical_weight==0.5);assert(s.vector_weight==0.5);assert(s.candidate_limit==UMI_AI_MAX_RETRIEVAL_RESULTS);return 0;}

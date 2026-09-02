@@ -20,9 +20,17 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer task state from agent operation used by this module and its
+ * client applications.
+ */
 UmiAiDeveloperTaskState umi_ai_developer_task_state_from_agent(
     UmiAiCodingRuntimeState state);
 
+/**
+ * Provide the ai developer task project operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_task_project(
     const UmiAiCodingAgentSnapshot *snapshot,
     const char *title,

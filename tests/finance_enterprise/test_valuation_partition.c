@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_partition.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationPartition p; CHECK(umi_enterprise_valuation_partition_init(&p,0U,0U,10U,25U)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_partition_init(&p,0U,20U,10U,25U)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

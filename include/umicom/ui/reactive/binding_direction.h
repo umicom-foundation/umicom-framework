@@ -18,12 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive binding direction policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiUiReactiveBindingDirectionPolicy {
     UmiUiReactiveBindingDirection direction;
     UmiUiReactiveUpdateTrigger trigger;
     bool propagate_initial;
 } UmiUiReactiveBindingDirectionPolicy;
+/**
+ * Initialise ui reactive binding direction from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ui_reactive_binding_direction_init(UmiUiReactiveBindingDirectionPolicy *item);
+/**
+ * Check that ui reactive binding direction satisfies its contract before another service
+ * relies on it.
+ */
 int umi_ui_reactive_binding_direction_valid(const UmiUiReactiveBindingDirectionPolicy *item);
 #ifdef __cplusplus
 }

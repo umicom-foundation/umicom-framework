@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/argument_quoting.h"
 
+/*
+ * Provide the developer capability argument quoting operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_argument_quoting(void)
 {

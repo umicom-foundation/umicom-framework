@@ -34,6 +34,9 @@ extern "C" {
 #include "umicom/ui/design/color_palette.h"
 #include "umicom/ui/design/component_catalogue.h"
 #include "umicom/ui/design/density.h"
+/**
+ * Represent the design system data shared with callers of this public contract.
+ */
 typedef struct UmiDesignSystem { char id[UMI_DESIGN_ID_CAPACITY]; UmiDesignThemeMode default_theme; UmiDesignDensity default_density; UmiDesignTokenSet tokens; UmiDesignColorPalette palette; UmiDesignComponentCatalogue components; uint64_t revision; } UmiDesignSystem;
 /* Initialise a named design system with explicit default theme and density. */
 UmiStatus umi_design_system_init(UmiDesignSystem *system, const char *id, UmiDesignThemeMode theme, UmiDesignDensity density);

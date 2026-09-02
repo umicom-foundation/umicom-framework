@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_OUTPUT_CHANNELS "umicom.developer.diagnostics.output_channels"
 
+/**
+ * Provide the developer capability output channels operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_output_channels(void);
 

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the web mime from path operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_mime_from_path(const char *path);
 #ifdef __cplusplus
 }

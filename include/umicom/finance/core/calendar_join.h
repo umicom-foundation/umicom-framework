@@ -19,7 +19,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named calendar join mode values accepted by this public contract.
+ */
 typedef enum UmiCalendarJoinMode { UMI_CALENDAR_ALL_OPEN=0, UMI_CALENDAR_ANY_OPEN=1 } UmiCalendarJoinMode;
+/**
+ * Represent the calendar join data shared with callers of this public contract.
+ */
 typedef struct UmiCalendarJoin { const UmiHolidayCalendar *items[8U]; size_t count; UmiCalendarJoinMode mode; } UmiCalendarJoin;
 /* Initialize join. */ void umi_calendar_join_init(UmiCalendarJoin *j,UmiCalendarJoinMode mode);
 /* Add calendar. */ UmiStatus umi_calendar_join_add(UmiCalendarJoin *j,const UmiHolidayCalendar *c);

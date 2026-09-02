@@ -21,21 +21,41 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the helix ui overview operation used by this module and its client applications.
+ */
 UmiStatus umi_helix_ui_overview(const char *view_id,
                                    const UmiHelixOrchestrator *runtime,
                                    UmiUiViewModel **out_view);
+/**
+ * Provide the helix ui agents operation used by this module and its client applications.
+ */
 UmiStatus umi_helix_ui_agents(const char *view_id,
                                  const UmiHelixOrchestrator *runtime,
                                  UmiUiViewModel **out_view);
+/**
+ * Provide the helix ui approvals operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_ui_approvals(const char *view_id,
                                     const UmiHelixOrchestrator *runtime,
                                     UmiUiViewModel **out_view);
+/**
+ * Provide the helix ui journal operation used by this module and its client applications.
+ */
 UmiStatus umi_helix_ui_journal(const char *view_id,
                                   const UmiHelixOrchestrator *runtime,
                                   UmiUiViewModel **out_view);
+/**
+ * Provide the helix ui candidates operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_ui_candidates(const char *view_id,
                                      const UmiHelixOrchestrator *runtime,
                                      UmiUiViewModel **out_view);
+/**
+ * Provide the helix ui rollback operation used by this module and its client applications.
+ */
 UmiStatus umi_helix_ui_rollback(const char *view_id,
                                    const UmiHelixOrchestrator *runtime,
                                    UmiUiViewModel **out_view);

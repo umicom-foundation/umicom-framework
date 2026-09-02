@@ -22,6 +22,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_OBSERVABILITY_PERFORMANCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_observability)
     message(FATAL_ERROR "UmicomObservabilityPerformancePlatform.cmake requires umicom_observability")
 endif()
@@ -95,16 +96,22 @@ target_sources(umicom_observability PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/observability/performance/operations_dashboard.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add observability performance test build helper so parent and application
+    # projects apply one consistent rule.
     function(umicom_add_observability_performance_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_OBSERVABILITY_PERFORMANCE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::observability)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

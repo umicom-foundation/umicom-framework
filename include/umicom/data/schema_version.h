@@ -24,8 +24,16 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the schema version get operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_schema_version_get(const UmiStore *store,
                                  uint32_t *out_version);
+/**
+ * Copy schema version into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_schema_version_set(UmiStore *store, uint32_t version);
 
 #ifdef __cplusplus

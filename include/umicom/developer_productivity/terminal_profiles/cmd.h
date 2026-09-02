@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer terminal profile cmd operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_cmd(void);
 
 #ifdef __cplusplus

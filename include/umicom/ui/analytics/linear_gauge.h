@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics linear gauge data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsLinearGauge { UmiAnalyticsOrientation orientation; int reversed; } UmiAnalyticsLinearGauge;
+/**
+ * Initialise analytics linear gauge from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_linear_gauge_init(UmiAnalyticsLinearGauge *item);
+/**
+ * Check that analytics linear gauge satisfies its contract before another service relies
+ * on it.
+ */
 int umi_analytics_linear_gauge_valid(const UmiAnalyticsLinearGauge *item);
 
 #ifdef __cplusplus

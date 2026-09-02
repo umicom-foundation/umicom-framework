@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix rollback data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRollback {
     char from_generation[UMI_HELIX_ID_CAPACITY];
     char to_generation[UMI_HELIX_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixRollback {
     int approved;
 } UmiHelixRollback;
 
+/**
+ * Initialise helix rollback from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_rollback_init(UmiHelixRollback *value);
 
 #ifdef __cplusplus

@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/browser_capability.h"
+/**
+ * Represent the native web conformance result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebConformanceResult { uint64_t required_flags; uint64_t provided_flags; uint64_t missing_flags; unsigned score_percent; bool conformant; } UmiNativeWebConformanceResult;
 /* Evaluate native-web capability parity against a semantic frontend requirement mask. */
 UmiStatus umi_native_web_frontend_conformance(uint64_t required_flags, const UmiNativeWebBrowserCapability *provided, UmiNativeWebConformanceResult *out_result);

@@ -1,3 +1,19 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDeveloperCapabilityTests.cmake
+#
+# PURPOSE:
+#   Configure the umicom developer capability tests build rules without
+#   duplicating product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
 # Creator: Sammy Hegab | Umicom Foundation | MIT
 function(umicom_add_developer_capability_tests)
     umicom_add_framework_test(umicom-developer-capabilities-01 framework.developer.capabilities.01 tests/developer_capabilities/test_developer_capabilities_01.c)

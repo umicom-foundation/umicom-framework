@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make cursor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchLayoutSyncCursor make_cursor(void)
 {
     UmiWorkbenchLayoutSyncCursor cursor;
@@ -28,6 +32,10 @@ static UmiWorkbenchLayoutSyncCursor make_cursor(void)
     return cursor;
 }
 
+/*
+ * Exercise test cursor codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_cursor_codec(void)
 {
     UmiWorkbenchLayoutSyncCursor source = make_cursor();
@@ -50,6 +58,10 @@ static int test_cursor_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test attempt and success and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_attempt_and_success(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -85,6 +97,10 @@ static int test_attempt_and_success(void)
     return 0;
 }
 
+/*
+ * Exercise test sequence never moves backwards and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_sequence_never_moves_backwards(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -107,6 +123,10 @@ static int test_sequence_never_moves_backwards(void)
     return 0;
 }
 
+/*
+ * Exercise test cursor listing and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_cursor_listing(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -135,6 +155,10 @@ static int test_cursor_listing(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_cursor_codec() == 0, "cursor codec");

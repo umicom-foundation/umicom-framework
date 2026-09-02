@@ -14,6 +14,10 @@
 
 #include "umicom/developer/ecosystem/package_query.h"
 
+/*
+ * Exercise add package and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_package(
     UmiEcosystemPackageCatalogue *catalogue,
     const char *id,
@@ -31,6 +35,10 @@ static void add_package(
         UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEcosystemPackageCatalogue packages;

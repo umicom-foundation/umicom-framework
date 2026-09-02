@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtOperatingSystem os;CHECK(umi_ct_operating_system_parse("umos",&os)==UMI_STATUS_OK);CHECK(os==UMI_CT_OS_UMICOM);CHECK(umi_ct_operating_system_is_unix_like(os));CHECK(umi_ct_operating_system_parse("plan9",&os)==UMI_STATUS_NOT_FOUND);return 0;}

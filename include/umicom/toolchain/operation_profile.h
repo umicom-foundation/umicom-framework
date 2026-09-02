@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain operation profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainOperationProfile {
     char id[UMI_TOOLCHAIN_OPERATION_ID_CAPACITY];
     char display_name[UMI_TOOLCHAIN_OPERATION_TEXT_CAPACITY];
@@ -34,10 +38,18 @@ typedef struct UmiToolchainOperationProfile {
     int inherit_path;
 } UmiToolchainOperationProfile;
 
+/**
+ * Initialise toolchain operation profile from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_operation_profile_init(UmiToolchainOperationProfile *profile,
                                           UmiToolchainOperationKind kind,
                                           const char *id,
                                           const char *display_name);
+/**
+ * Check that toolchain operation profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_toolchain_operation_profile_validate(
     const UmiToolchainOperationProfile *profile);
 

@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data platform snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiDataPlatformSnapshot { uint64_t schema_fingerprint; size_t entity_count; size_t pool_total; size_t pool_leased; size_t replica_count; size_t queued_operations; UmiDataEnterpriseState health_state; uint64_t revision; } UmiDataPlatformSnapshot;
 /* Build a point-in-time snapshot from canonical enterprise-data models. */ UmiStatus umi_data_data_platform_snapshot_build(UmiDataPlatformSnapshot *snapshot,uint64_t schema_fingerprint,const UmiDataEntityRegistry *entities,const UmiDataConnectionPool *pool,const UmiDataReplicaSet *replicas,const UmiDataOperationQueue *queue,UmiDataEnterpriseState health_state,uint64_t revision);
 

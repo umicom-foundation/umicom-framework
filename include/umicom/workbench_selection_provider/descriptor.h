@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderDescriptor {
     uint32_t structure_size;
     char provider_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -39,18 +43,34 @@ typedef struct UmiWorkbenchSelectionProviderDescriptor {
     bool enabled;
 } UmiWorkbenchSelectionProviderDescriptor;
 
+/**
+ * Initialise workbench selection provider descriptor from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_provider_descriptor_init(
     UmiWorkbenchSelectionProviderDescriptor *descriptor,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider descriptor set identity operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_descriptor_set_identity(
     UmiWorkbenchSelectionProviderDescriptor *descriptor,
     const char *application_id,
     const char *panel_id,
     const char *display_name);
+/**
+ * Provide the workbench selection provider descriptor set routing operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_descriptor_set_routing(
     UmiWorkbenchSelectionProviderDescriptor *descriptor,
     const char *source_id,
     const char *group_id);
+/**
+ * Check that workbench selection provider descriptor satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_descriptor_validate(
     const UmiWorkbenchSelectionProviderDescriptor *descriptor);
 

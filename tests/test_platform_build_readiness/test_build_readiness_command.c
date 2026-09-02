@@ -12,11 +12,16 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/test_platform/build_readiness/command.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     size_t index;
     assert(umi_test_platform_build_readiness_command_count() == 9U);
     assert(umi_test_platform_build_readiness_command_find(
         "test.explain.not-run") != NULL);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index <
         umi_test_platform_build_readiness_command_count(); ++index) {
         const UmiTestPlatformBuildReadinessCommand *command =

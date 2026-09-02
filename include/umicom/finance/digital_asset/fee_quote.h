@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital fee quote data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalFeeQuote {
     UmiDigitalAssetId network_id;
     UmiDigitalAmount estimated_fee;

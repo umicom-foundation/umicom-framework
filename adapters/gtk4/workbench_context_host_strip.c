@@ -15,40 +15,64 @@
 
 #include "workbench_context_host_internal.h"
 #include <stdio.h>
+/* Provide the refresh parent operation used by this module and its client applications. */
 static void refresh_parent(GtkWidget *button,UmiWorkbenchContextHost *host)
 {
     GtkWidget *strip=gtk_widget_get_parent(button);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while(strip&&g_object_get_data(G_OBJECT(strip),UMI_WCH_DATA_HOST)!=host)
         strip=gtk_widget_get_parent(strip);
+    /* Apply this branch only when its contract condition is satisfied. */
     if(strip)(void)umi_workbench_context_host_gtk4_strip_refresh(strip,host);
 }
+/* Provide the back clicked operation used by this module and its client applications. */
 static void back_clicked(GtkButton *button,gpointer data)
-{UmiWorkbenchContextHost *host=(UmiWorkbenchContextHost*)data;if(host)(void)umi_workbench_context_host_back(host,0U);refresh_parent(GTK_WIDGET(button),host);}
+{UmiWorkbenchContextHost *host=(UmiWorkbenchContextHost*)data;/* Apply this branch only when its contract condition is satisfied. */ if(host)(void)umi_workbench_context_host_back(host,0U);refresh_parent(GTK_WIDGET(button),host);}
+/* Provide the forward clicked operation used by this module and its client applications. */
 static void forward_clicked(GtkButton *button,gpointer data)
-{UmiWorkbenchContextHost *host=(UmiWorkbenchContextHost*)data;if(host)(void)umi_workbench_context_host_forward(host,0U);refresh_parent(GTK_WIDGET(button),host);}
+{UmiWorkbenchContextHost *host=(UmiWorkbenchContextHost*)data;/* Apply this branch only when its contract condition is satisfied. */ if(host)(void)umi_workbench_context_host_forward(host,0U);refresh_parent(GTK_WIDGET(button),host);}
+/* Provide the pin clicked operation used by this module and its client applications. */
 static void pin_clicked(GtkButton *button,gpointer data)
 {
     UmiWorkbenchContextHost *host=(UmiWorkbenchContextHost*)data;char pin[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];int n;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL) return;
     n = snprintf(
         pin,
         sizeof(pin),
         "pin-%llu",
         (unsigned long long)host->revision);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (n >= 0 && (size_t)n < sizeof(pin)) {
         (void)umi_workbench_context_host_pin(host, pin, 0U);
     }
     refresh_parent(GTK_WIDGET(button), host);
 }
+/*
+ * Provide the workbench context host gtk4 strip refresh operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_host_gtk4_strip_refresh(GtkWidget *strip,UmiWorkbenchContextHost *host)
 {
-    GtkWidget *picker,*status;if(!GTK_IS_BOX(strip)||!host)return UMI_STATUS_INVALID_ARGUMENT;
+    GtkWidget *picker,*status;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!GTK_IS_BOX(strip)||!host)return UMI_STATUS_INVALID_ARGUMENT;
     picker=(GtkWidget*)g_object_get_data(G_OBJECT(strip),"umicom-context-picker");
     status=(GtkWidget*)g_object_get_data(G_OBJECT(strip),UMI_WCH_DATA_STATUS);
+    /* Apply this branch only when its contract condition is satisfied. */
     if(picker)(void)umi_workbench_context_host_gtk4_group_picker_refresh(picker,host);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(status)(void)umi_workbench_context_host_gtk4_status_refresh(status,host);
     return UMI_STATUS_OK;
 }
+/*
+ * Provide the workbench context host gtk4 strip new operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_context_host_gtk4_strip_new(UmiWorkbenchContextHost *host)
 {
     GtkWidget *strip=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,6);

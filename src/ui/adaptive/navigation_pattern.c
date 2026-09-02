@@ -18,14 +18,17 @@
 UmiAdaptiveNavigationPattern umi_adaptive_navigation_pattern_select(UmiDesignSizeClass size_class,
                                                                     UmiAdaptiveInputMode input_mode)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (size_class == UMI_DESIGN_SIZE_COMPACT) {
         return input_mode == UMI_ADAPTIVE_INPUT_TOUCH
             ? UMI_ADAPTIVE_NAV_BOTTOM_BAR
             : UMI_ADAPTIVE_NAV_DRAWER;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (size_class == UMI_DESIGN_SIZE_MEDIUM) {
         return UMI_ADAPTIVE_NAV_DRAWER;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (size_class == UMI_DESIGN_SIZE_WIDE) {
         return UMI_ADAPTIVE_NAV_SIDE_RAIL;
     }

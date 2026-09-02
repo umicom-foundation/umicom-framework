@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/calibration_cache.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseCalibrationCache c; UmiEnterpriseCalibrationCacheEntry e={{0},123U,1e-8}; umi_enterprise_calibration_cache_init(&c); CHECK(umi_quant_copy_text(e.object_id,sizeof e.object_id,"curve")==UMI_STATUS_OK); CHECK(umi_enterprise_calibration_cache_put(&c,&e)==UMI_STATUS_OK); CHECK(umi_enterprise_calibration_cache_find(&c,"curve",123U)!=NULL); return 0; }

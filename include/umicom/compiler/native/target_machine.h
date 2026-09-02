@@ -22,8 +22,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native target machine data shared with callers of this public contract.
+ */
 typedef struct UmiNativeTargetMachine { UmiNativeTargetProfile target; UmiNativeOptimizationProfile optimization; size_t integer_registers; size_t floating_registers; bool supports_division; bool supports_vectors; } UmiNativeTargetMachine;
+/**
+ * Initialise nc target machine from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_nc_target_machine_init(UmiNativeTargetMachine *machine,const UmiNativeTargetProfile *target,const UmiNativeOptimizationProfile *optimization);
+/**
+ * Provide the nc target machine supports opcode operation used by this module and its
+ * client applications.
+ */
 bool umi_nc_target_machine_supports_opcode(const UmiNativeTargetMachine *machine,UmiNativeIrOpcode opcode);
 #ifdef __cplusplus
 }

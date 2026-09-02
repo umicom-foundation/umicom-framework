@@ -43,6 +43,9 @@ extern "C" {
 #define UMI_TERMINAL_EVENT_MAX 2048U
 #define UMI_TERMINAL_QUERY_CAPACITY 512U
 
+/**
+ * List the named terminal state values accepted by this public contract.
+ */
 typedef enum UmiTerminalState {
     UMI_TERMINAL_CREATED = 0,
     UMI_TERMINAL_READY = 1,
@@ -51,6 +54,9 @@ typedef enum UmiTerminalState {
     UMI_TERMINAL_FAILED = 4
 } UmiTerminalState;
 
+/**
+ * List the named terminal stream values accepted by this public contract.
+ */
 typedef enum UmiTerminalStream {
     UMI_TERMINAL_STREAM_INPUT = 0,
     UMI_TERMINAL_STREAM_OUTPUT = 1,
@@ -58,11 +64,17 @@ typedef enum UmiTerminalStream {
     UMI_TERMINAL_STREAM_SYSTEM = 3
 } UmiTerminalStream;
 
+/**
+ * List the named terminal orientation values accepted by this public contract.
+ */
 typedef enum UmiTerminalOrientation {
     UMI_TERMINAL_ORIENTATION_HORIZONTAL = 0,
     UMI_TERMINAL_ORIENTATION_VERTICAL = 1
 } UmiTerminalOrientation;
 
+/**
+ * List the named terminal profile kind values accepted by this public contract.
+ */
 typedef enum UmiTerminalProfileKind {
     UMI_TERMINAL_PROFILE_CUSTOM = 0,
     UMI_TERMINAL_PROFILE_POWERSHELL = 1,
@@ -73,6 +85,9 @@ typedef enum UmiTerminalProfileKind {
     UMI_TERMINAL_PROFILE_MSYS2_UCRT64 = 6
 } UmiTerminalProfileKind;
 
+/**
+ * List the named terminal event kind values accepted by this public contract.
+ */
 typedef enum UmiTerminalEventKind {
     UMI_TERMINAL_EVENT_SESSION_OPENED = 0,
     UMI_TERMINAL_EVENT_SESSION_ACTIVATED = 1,
@@ -87,10 +102,30 @@ typedef enum UmiTerminalEventKind {
     UMI_TERMINAL_EVENT_HISTORY_CLEARED = 10
 } UmiTerminalEventKind;
 
+/**
+ * Provide the terminal state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_state_text(UmiTerminalState state);
+/**
+ * Provide the terminal stream text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_stream_text(UmiTerminalStream stream);
+/**
+ * Provide the terminal orientation text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_orientation_text(UmiTerminalOrientation orientation);
+/**
+ * Provide the terminal profile kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_profile_kind_text(UmiTerminalProfileKind kind);
+/**
+ * Provide the terminal event kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_event_kind_text(UmiTerminalEventKind kind);
 
 #ifdef __cplusplus

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PLUGIN_TRUST "umicom.developer.security.plugin_trust"
 
+/**
+ * Provide the developer capability plugin trust operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_plugin_trust(void);
 

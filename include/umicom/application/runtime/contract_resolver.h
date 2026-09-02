@@ -23,15 +23,26 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application contract data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationContract {
     uint32_t structure_size;
     const UmiApplicationDefinition *definition;
     const UmiApplicationExperienceDefinition *experience;
 } UmiApplicationContract;
 
+/**
+ * Provide the application contract resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_contract_resolve(
     const char *application_id,
     UmiApplicationContract *out_contract);
+/**
+ * Check that application contract satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_application_contract_validate(
     const UmiApplicationContract *contract);
 

@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/abi/abi.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiAbiPlatform p=umi_abi_platform_current();assert(umi_abi_platform_validate(&p)==UMI_STATUS_OK);assert(umi_abi_platform_compatible(&p,&p));return 0;}

@@ -33,14 +33,30 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_TRANSFORMER_ENGINE_NAME "transformer-engine"
+/**
+ * Represent the context transformer engine state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiContextTransformerEngineState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextTransformerEngineState;
+/**
+ * Initialise context transformer engine state from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_context_transformer_engine_state_init(UmiContextTransformerEngineState *state);
+/**
+ * Provide the context transformer engine state record operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_context_transformer_engine_state_record(UmiContextTransformerEngineState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context transformer engine operation without
+ * changing their state.
+ */
 uint64_t umi_context_transformer_engine_operation_count(const UmiContextTransformerEngineState *state);
 #ifdef __cplusplus
 }

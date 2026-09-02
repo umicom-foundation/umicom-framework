@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_SEARCH_CATALOGUE_API_VERSION 1U
 
+/**
+ * Represent the desktop search catalogue snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopSearchCatalogueSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

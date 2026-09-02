@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/distributed_job.h"
+/**
+ * Represent the enterprise distributed job queue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseDistributedJobQueue { UmiEnterpriseDistributedJob jobs[UMI_ENTERPRISE_MAX_ITEMS]; uint64_t insertion[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; uint64_t next_insertion; } UmiEnterpriseDistributedJobQueue;
 /* Initialise an empty distributed-job queue. */
 void umi_enterprise_distributed_job_queue_init(UmiEnterpriseDistributedJobQueue *queue);

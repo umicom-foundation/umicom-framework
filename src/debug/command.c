@@ -141,31 +141,46 @@ static const UmiDebugCommandDescriptor COMMANDS[] = {
 
 #undef COMMAND
 
+/* Return the number of records represented by debug command without changing their state. */
 size_t umi_debug_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/* Find debug command while leaving the underlying catalogue or model owned by this module. */
 const UmiDebugCommandDescriptor *umi_debug_command_at(size_t index)
 {
     return index < umi_debug_command_count() ? &COMMANDS[index] : NULL;
 }
 
+/* Find debug command while leaving the underlying catalogue or model owned by this module. */
 const UmiDebugCommandDescriptor *umi_debug_command_find(const char *command_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_debug_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].id, command_id) == 0) return &COMMANDS[index];
     }
     return NULL;
 }
 
+/*
+ * Provide the debug command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiDebugCommandDescriptor *umi_debug_command_for_kind(
     UmiDebugCommandKind kind)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_debug_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (COMMANDS[index].kind == kind) return &COMMANDS[index];
     }
     return NULL;

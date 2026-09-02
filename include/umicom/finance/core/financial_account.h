@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial core account data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialCoreAccount { UmiFinancialId account_id; UmiFinancialId parent_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; bool active; } UmiFinancialCoreAccount;
 /* Initialize the typed financial record. */ UmiStatus umi_financial_account_init(UmiFinancialCoreAccount *item,const char *id,const char *name,const char *parent_id,const char *code);
 /* Validate the typed financial record. */ bool umi_financial_account_is_valid(const UmiFinancialCoreAccount *item);

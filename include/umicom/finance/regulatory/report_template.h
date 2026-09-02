@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the report template data shared with callers of this public contract.
+ */
 typedef struct UmiReportTemplate {
     char template_id[UMI_REG_ID_CAPACITY];
     char taxonomy_id[UMI_REG_ID_CAPACITY];

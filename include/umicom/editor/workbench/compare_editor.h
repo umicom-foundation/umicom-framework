@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb compare editor data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbCompareEditor { char left_id[UMI_EDITOR_WB_ID_CAPACITY]; char right_id[UMI_EDITOR_WB_ID_CAPACITY]; bool sync_scroll; bool ignore_whitespace; } UmiEditorWbCompareEditor;
+/**
+ * Initialise editor wb compare editor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_compare_editor_init(UmiEditorWbCompareEditor *state,const char *left_id,const char *right_id);
 
 #ifdef __cplusplus

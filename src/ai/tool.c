@@ -23,6 +23,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise ai tool from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_tool_init(UmiAiTool *tool,
                            const char *tool_id,
                            const char *description,
@@ -33,6 +37,10 @@ UmiStatus umi_ai_tool_init(UmiAiTool *tool,
     int a;
     int b;
     int c;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool == NULL || tool_id == NULL || description == NULL ||
         permission == NULL || invoke == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -41,6 +49,7 @@ UmiStatus umi_ai_tool_init(UmiAiTool *tool,
     a = snprintf(tool->tool_id, sizeof(tool->tool_id), "%s", tool_id);
     b = snprintf(tool->description, sizeof(tool->description), "%s", description);
     c = snprintf(tool->permission, sizeof(tool->permission), "%s", permission);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (a < 0 || b < 0 || c < 0 ||
         (size_t)a >= sizeof(tool->tool_id) ||
         (size_t)b >= sizeof(tool->description) ||

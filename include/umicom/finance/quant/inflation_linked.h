@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant inflation linked data shared with callers of this public contract.
+ */
 typedef struct UmiQuantInflationLinked {
     double base_index;
     double current_index;

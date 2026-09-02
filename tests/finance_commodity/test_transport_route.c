@@ -18,6 +18,10 @@
 
 #include "umicom/finance/commodity/transport_route.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommodityTransportRoute value;

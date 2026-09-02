@@ -1,9 +1,26 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: resources/themes/workbench-designer.css
+ *
+ * PURPOSE:
+ *   Implement the workbench designer behaviour used by its public contract and
+ *   client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework shared GTK4 presentation for the semantic Layout Browser and visual designer. */
 .umicom-layout-designer {
     background: @umi_background;
     color: @umi_foreground;
 }
 
+/* The toolbar keeps editing commands stable above every designer workspace. */
 .umicom-layout-designer toolbar,
 .umicom-layout-designer .designer-toolbar {
     min-height: 38px;
@@ -24,6 +41,7 @@
     box-shadow: inset 0 0 0 1px alpha(@umi_accent, 0.75);
 }
 
+/* Reusable side surfaces separate discovery, structure, properties and review. */
 .umicom-layout-designer .designer-palette,
 .umicom-layout-designer .designer-outline,
 .umicom-layout-designer .designer-properties,
@@ -37,6 +55,7 @@
     color: @umi_foreground;
 }
 
+/* Search entries use the same spacing in palette, command and layout browsers. */
 .umicom-layout-designer .designer-palette searchentry,
 .umicom-layout-designer .designer-command-palette searchentry,
 .umicom-layout-browser searchentry {
@@ -64,6 +83,7 @@
     color: @umi_foreground;
 }
 
+/* The canvas and frame distinguish editable layout content from surrounding tools. */
 .umicom-layout-designer .designer-canvas {
     background: @umi_canvas_background;
 }
@@ -81,6 +101,7 @@
     box-shadow: 0 4px 12px alpha(black, 0.22);
 }
 
+/* Property styling keeps labels, validation and values easy to compare. */
 .umicom-layout-designer .designer-properties grid {
     padding: 8px;
 }
@@ -106,6 +127,7 @@
     border-left: 3px solid @umi_accent;
 }
 
+/* Collaboration states make active editing and conflicts visible without dialogs. */
 .umicom-layout-designer .designer-collaborator {
     padding: 5px 8px;
     border-radius: 4px;
@@ -136,6 +158,7 @@
     color: @warning_color;
 }
 
+/* Status colours explain whether saving is complete, pending or blocked. */
 .umicom-layout-designer .designer-status {
     min-height: 25px;
     padding: 3px 8px;
@@ -167,6 +190,7 @@
     padding: 5px 9px;
 }
 
+/* Layout browser rules present saved workspaces and their preview consistently. */
 .umicom-layout-browser {
     padding: 8px;
     background: @umi_surface;
@@ -193,6 +217,7 @@
     padding-top: 8px;
 }
 
+/* Accessibility variants strengthen boundaries and remove optional motion. */
 .umicom-layout-designer.high-contrast .designer-canvas-frame,
 .umicom-layout-designer.high-contrast .designer-minimap,
 .umicom-layout-designer.high-contrast row:selected {

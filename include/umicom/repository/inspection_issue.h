@@ -35,6 +35,10 @@ typedef enum UmiRepositoryInspectionIssueKind {
     UMI_REPOSITORY_INSPECTION_MISSING_GITATTRIBUTES = 4
 } UmiRepositoryInspectionIssueKind;
 
+/**
+ * Represent the repository inspection issue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryInspectionIssue {
     UmiRepositoryInspectionIssueKind kind;
     UmiRepositoryInspectionSeverity severity;

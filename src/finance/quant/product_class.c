@@ -24,6 +24,7 @@
 /* Keep product-family labels stable for diagnostics and persisted configuration. */
 const char *umi_quant_product_class_name(UmiQuantProductClass value)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (value) {
         case UMI_QUANT_PRODUCT_FX: return "fx";
         case UMI_QUANT_PRODUCT_MONEY_MARKET: return "money-market";

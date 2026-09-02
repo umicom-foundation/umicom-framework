@@ -96,11 +96,19 @@ static const StudioCommandDefinition COMMANDS[] = {
 };
 
 
+/*
+ * Return the number of records represented by studio runtime command without changing
+ * their state.
+ */
 size_t umi_studio_runtime_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find studio runtime command id while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const char *umi_studio_runtime_command_id_at(size_t index)
 {
     return index < umi_studio_runtime_command_count()
@@ -108,6 +116,10 @@ const char *umi_studio_runtime_command_id_at(size_t index)
         : NULL;
 }
 
+/*
+ * Provide the focus layout manager operation used by this module and its client
+ * applications.
+ */
 static UmiStatus focus_layout_manager(
     UmiStudioRuntimeCommandService *service)
 {
@@ -116,12 +128,17 @@ static UmiStatus focus_layout_manager(
     UmiApplicationShellContribution contribution;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_application_shell_registry_find(
         bindings->shell_registry,
         "umicom.shell.layout-manager.manager",
         &contribution);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_application_shell_registry_set_state(
@@ -131,12 +148,14 @@ static UmiStatus focus_layout_manager(
         1,
         0,
         contribution.badge_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_application_shell_state_activate(
         bindings->shell_state,
         "",
         contribution.contribution_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_application_shell_state_focus(
@@ -144,6 +163,7 @@ static UmiStatus focus_layout_manager(
         contribution.contribution_id);
 }
 
+/* Provide the execute operation used by this module and its client applications. */
 static UmiStatus execute(
     void *user_data,
     const char *argument,
@@ -155,6 +175,10 @@ static UmiStatus execute(
     const StudioCommandDefinition *definition;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->owner == NULL ||
         binding->definition == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -163,6 +187,7 @@ static UmiStatus execute(
     service = binding->owner;
     definition = binding->definition;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (definition->kind) {
         case STUDIO_COMMAND_REFRESH:
             status = umi_studio_runtime_platform_refresh(service->platform);
@@ -194,6 +219,7 @@ static UmiStatus execute(
                     service->platform,
                     &restored)
                 : UMI_STATUS_INVALID_STATE;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK && !restored) {
                 status = UMI_STATUS_NOT_FOUND;
             }
@@ -210,8 +236,10 @@ static UmiStatus execute(
                 argument != NULL ? argument : "",
                 &results);
 
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK &&
                 out_message != NULL && message_capacity > 0U) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (results.count > 0U) {
                     (void)snprintf(
                         out_message,
@@ -221,7 +249,7 @@ static UmiStatus execute(
                         results.items[0].title,
                         results.items[0].command_id,
                         results.items[0].enabled ? "" : " (disabled)");
-                } else {
+                } /* Use this fallback path when the earlier condition does not apply. */ else {
                     (void)snprintf(
                         out_message,
                         message_capacity,
@@ -240,6 +268,7 @@ static UmiStatus execute(
             status = umi_studio_runtime_platform_snapshot(
                 service->platform,
                 &snapshot);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 status = umi_studio_close_guard_evaluate(
                     bindings->documents,
@@ -247,6 +276,7 @@ static UmiStatus execute(
                     &report);
             }
 
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK &&
                 out_message != NULL && message_capacity > 0U) {
                 (void)snprintf(
@@ -269,6 +299,7 @@ static UmiStatus execute(
                 bindings->commands,
                 &report);
 
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK &&
                 out_message != NULL && message_capacity > 0U) {
                 (void)snprintf(
@@ -288,6 +319,10 @@ static UmiStatus execute(
             break;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -300,16 +335,22 @@ static UmiStatus execute(
     return status;
 }
 
+/* Provide the enabled operation used by this module and its client applications. */
 static int enabled(void *user_data, const char *argument)
 {
     StudioCommandBinding *binding = (StudioCommandBinding *)user_data;
     (void)argument;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->owner == NULL ||
         binding->definition == NULL) {
         return 0;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((binding->definition->kind == STUDIO_COMMAND_LAYOUT_SAVE ||
          binding->definition->kind == STUDIO_COMMAND_LAYOUT_RESTORE) &&
         binding->owner->session == NULL) {
@@ -319,6 +360,10 @@ static int enabled(void *user_data, const char *argument)
     return 1;
 }
 
+/*
+ * Initialise studio runtime command service from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_studio_runtime_command_service_create(
     UmiStudioRuntimePlatform *platform,
     UmiStudioRuntimeSessionController *session,
@@ -326,6 +371,10 @@ UmiStatus umi_studio_runtime_command_service_create(
 {
     UmiStudioRuntimeCommandService *service;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || out_service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -334,6 +383,10 @@ UmiStatus umi_studio_runtime_command_service_create(
 
     service = (UmiStudioRuntimeCommandService *)calloc(
         1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     service->platform = platform;
@@ -342,6 +395,10 @@ UmiStatus umi_studio_runtime_command_service_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by studio runtime command service so the same storage can be
+ * reused safely.
+ */
 void umi_studio_runtime_command_service_destroy(
     UmiStudioRuntimeCommandService *service)
 {
@@ -349,32 +406,54 @@ void umi_studio_runtime_command_service_destroy(
 }
 
 
+/*
+ * Provide the studio runtime command service set session operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_studio_runtime_command_service_set_session(
     UmiStudioRuntimeCommandService *service,
     UmiStudioRuntimeSessionController *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     service->session = session;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Add studio runtime command service only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_studio_runtime_command_service_register(
     UmiStudioRuntimeCommandService *service)
 {
     UmiStudioRuntimeBindings *bindings;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     bindings = umi_studio_runtime_platform_bindings(service->platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || bindings->commands == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(COMMANDS) / sizeof(COMMANDS[0]); ++index) {
         UmiCommandDescriptor descriptor;
         UmiStatus status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_command_registry_contains(
                 bindings->commands,
                 COMMANDS[index].command_id)) {
@@ -405,6 +484,7 @@ UmiStatus umi_studio_runtime_command_service_register(
         status = umi_command_registry_register(
             bindings->commands,
             &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         service->registered_count += 1U;
@@ -413,6 +493,10 @@ UmiStatus umi_studio_runtime_command_service_register(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by studio runtime command service registered
+ * without changing their state.
+ */
 size_t umi_studio_runtime_command_service_registered_count(
     const UmiStudioRuntimeCommandService *service)
 {

@@ -44,11 +44,19 @@ static const UmiApplicationProductionControlCommand COMMANDS[] = {
       "Quality", "Show drift, gaps and launch blockers.", 0 }
 };
 
+/*
+ * Return the number of records represented by application production control command
+ * without changing their state.
+ */
 size_t umi_application_production_control_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find application production control command while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionControlCommand *
 umi_application_production_control_command_at(size_t index)
 {
@@ -56,14 +64,24 @@ umi_application_production_control_command_at(size_t index)
         ? &COMMANDS[index] : NULL;
 }
 
+/*
+ * Find application production control command while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionControlCommand *
 umi_application_production_control_command_find(const char *command_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_production_control_command_count();
          ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].command_id, command_id) == 0)
             return &COMMANDS[index];
     return NULL;

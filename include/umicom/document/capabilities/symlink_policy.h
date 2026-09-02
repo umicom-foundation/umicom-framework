@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_SYMLINK_POLICY "umicom.document.security.symlink_policy"
 
+/**
+ * Provide the document capability symlink policy operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_symlink_policy(void);
 

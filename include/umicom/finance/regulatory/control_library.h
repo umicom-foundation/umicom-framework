@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the control library data shared with callers of this public contract.
+ */
 typedef struct UmiControlLibrary { char control_ids[UMI_REG_MAX_RULES][UMI_REG_ID_CAPACITY]; size_t count; } UmiControlLibrary;
 /* Initialise an empty control library. */
 void umi_reg_control_library_init(UmiControlLibrary *library);

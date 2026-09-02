@@ -26,6 +26,10 @@
 #include <string.h>
 #include "umicom/test_platform/explorer_model.h"
 
+/*
+ * Exercise item and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformItemSnapshot item(const char *id, const char *parent,
                                         const char *name)
 {
@@ -44,6 +48,10 @@ static UmiTestPlatformItemSnapshot item(const char *id, const char *parent,
     return value;
 }
 
+/*
+ * Exercise result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformResultSnapshot result(const char *id, const char *item_id,
                                             int outcome, uint64_t sequence)
 {
@@ -58,6 +66,10 @@ static UmiTestPlatformResultSnapshot result(const char *id, const char *item_id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformItemRegistry *items = NULL;

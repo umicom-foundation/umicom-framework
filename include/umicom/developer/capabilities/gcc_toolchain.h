@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_GCC_TOOLCHAIN "umicom.developer.integration.gcc_toolchain"
 
+/**
+ * Provide the developer capability gcc toolchain operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_gcc_toolchain(void);
 

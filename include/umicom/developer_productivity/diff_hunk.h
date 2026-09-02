@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer diff hunk data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperDiffHunk {
     size_t first_row;
     size_t last_row;
@@ -29,11 +32,18 @@ typedef struct UmiDeveloperDiffHunk {
     size_t right_start;
 } UmiDeveloperDiffHunk;
 
+/**
+ * Represent the developer diff hunk list data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperDiffHunkList {
     UmiDeveloperDiffHunk hunks[UMI_DEVELOPER_DIFF_MAX_HUNKS];
     size_t count;
 } UmiDeveloperDiffHunkList;
 
+/**
+ * Provide the developer diff hunks build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_diff_hunks_build(
     const UmiDeveloperDiffDocument *document,
     size_t context_lines,

@@ -28,6 +28,9 @@ extern "C" {
 #define UMI_EDITOR_REFACTORING_COMMAND_LABEL_CAPACITY 128U
 #define UMI_EDITOR_REFACTORING_COMMAND_KEY_CAPACITY 48U
 
+/**
+ * List the named editor refactoring command kind values accepted by this public contract.
+ */
 typedef enum UmiEditorRefactoringCommandKind {
     UMI_EDITOR_REFACTORING_COMMAND_SHOW_CODE_ACTIONS = 1,
     UMI_EDITOR_REFACTORING_COMMAND_APPLY_PREFERRED = 2,
@@ -49,6 +52,10 @@ typedef enum UmiEditorRefactoringCommandKind {
     UMI_EDITOR_REFACTORING_COMMAND_CANCEL = 18
 } UmiEditorRefactoringCommandKind;
 
+/**
+ * Represent the editor refactoring command descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorRefactoringCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,11 +71,27 @@ typedef struct UmiEditorRefactoringCommandDescriptor {
     int modifies_documents;
 } UmiEditorRefactoringCommandDescriptor;
 
+/**
+ * Return the number of records represented by editor refactoring command without changing
+ * their state.
+ */
 size_t umi_editor_refactoring_command_count(void);
+/**
+ * Find editor refactoring command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorRefactoringCommandDescriptor *
 umi_editor_refactoring_command_at(size_t index);
+/**
+ * Find editor refactoring command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorRefactoringCommandDescriptor *
 umi_editor_refactoring_command_find(const char *id);
+/**
+ * Provide the editor refactoring command for kind operation used by this module and its
+ * client applications.
+ */
 const UmiEditorRefactoringCommandDescriptor *
 umi_editor_refactoring_command_for_kind(UmiEditorRefactoringCommandKind kind);
 

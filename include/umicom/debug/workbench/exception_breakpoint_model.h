@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench exception breakpoint model data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDebugWorkbenchExceptionBreakpointModel {
     UmiDebugWorkbenchEntry value;
     bool selected;
@@ -33,10 +37,30 @@ typedef struct UmiDebugWorkbenchExceptionBreakpointModel {
     uint64_t revision;
 } UmiDebugWorkbenchExceptionBreakpointModel;
 
+/**
+ * Initialise debug workbench exception breakpoint model from caller-provided values so
+ * later operations receive a known state.
+ */
 UmiStatus umi_debug_workbench_exception_breakpoint_model_init(UmiDebugWorkbenchExceptionBreakpointModel *model, const char *id, const char *label, const char *detail, const char *path, UmiDebugWorkbenchRange range);
+/**
+ * Provide the debug workbench exception breakpoint model set state operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_exception_breakpoint_model_set_state(UmiDebugWorkbenchExceptionBreakpointModel *model, uint32_t state, uint64_t value);
+/**
+ * Find debug workbench exception breakpoint model set while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_debug_workbench_exception_breakpoint_model_set_selected(UmiDebugWorkbenchExceptionBreakpointModel *model, bool selected);
+/**
+ * Provide the debug workbench exception breakpoint model set enabled operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_debug_workbench_exception_breakpoint_model_set_enabled(UmiDebugWorkbenchExceptionBreakpointModel *model, bool enabled);
+/**
+ * Check that debug workbench exception breakpoint model satisfies its contract before
+ * another service relies on it.
+ */
 int umi_debug_workbench_exception_breakpoint_model_valid(const UmiDebugWorkbenchExceptionBreakpointModel *model);
 
 #ifdef __cplusplus

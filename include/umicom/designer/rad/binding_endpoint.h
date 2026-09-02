@@ -18,12 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad binding endpoint data shared with callers of this public contract.
+ */
 typedef struct UmiRadBindingEndpoint {
     char node_id[UMI_RAD_ID_CAPACITY];
     char property_path[UMI_RAD_PATH_CAPACITY];
     bool output;
 } UmiRadBindingEndpoint;
+/**
+ * Initialise rad binding endpoint from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_binding_endpoint_init(UmiRadBindingEndpoint *item);
+/**
+ * Check that rad binding endpoint satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_binding_endpoint_is_valid(const UmiRadBindingEndpoint *item);
 #ifdef __cplusplus
 }

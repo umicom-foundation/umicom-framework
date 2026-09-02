@@ -24,6 +24,10 @@
 int umi_repository_inspection_audit_ready(
     const UmiRepositoryInspectionService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || service->last_status != UMI_STATUS_OK) {
         return 0;
     }

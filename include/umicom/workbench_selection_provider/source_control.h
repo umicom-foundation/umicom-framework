@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection provider from source control change operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_source_control_change(
     const UmiSourceControlChangeSnapshot *change,
     const char *application_id,
@@ -35,6 +39,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_change(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Provide the workbench selection provider from source control commit operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_source_control_commit(
     const UmiSourceControlCommitSnapshot *commit,
     const char *application_id,
@@ -43,6 +51,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_commit(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Provide the workbench selection provider from source control branch operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_source_control_branch(
     const UmiSourceControlBranchSnapshot *branch,
     const char *application_id,
@@ -51,6 +63,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_branch(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider source control change while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_source_control_change_find(
     const UmiSourceControlChangeRegistry *registry,
     const char *change_id,
@@ -62,6 +78,10 @@ UmiStatus umi_workbench_selection_provider_source_control_change_find(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider source control commit while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_source_control_commit_find(
     const UmiSourceControlCommitRegistry *registry,
     const char *commit_id,
@@ -71,6 +91,10 @@ UmiStatus umi_workbench_selection_provider_source_control_commit_find(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider source control branch while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_source_control_branch_find(
     const UmiSourceControlBranchRegistry *registry,
     const char *branch_id,

@@ -18,17 +18,37 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the path is safe relative operation used by this module and its client
+ * applications.
+ */
 static int path_is_safe_relative(const char *path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || path[0] == '\0' || path[0] == '/' || path[0] == '\\') return 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strlen(path) >= UMI_PATH_CAPACITY || strstr(path, "..") != NULL) return 0;
     return strchr(path, ':') == NULL;
 }
 
+/*
+ * Initialise plugin package from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_plugin_package_init(UmiPluginPackage *package,
                                   const UmiPluginManifest *manifest,
                                   const char *source_path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (package == NULL || manifest == NULL || source_path == NULL ||
         source_path[0] == '\0' || strlen(source_path) >= UMI_PATH_CAPACITY) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -40,18 +60,29 @@ UmiStatus umi_plugin_package_init(UmiPluginPackage *package,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the plugin package add file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_plugin_package_add_file(UmiPluginPackage *package,
                                       const char *relative_path)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (package == NULL || !path_is_safe_relative(relative_path)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < package->file_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(package->files[index], relative_path) == 0) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (package->file_count >= UMI_PLUGIN_PACKAGE_FILE_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -60,26 +91,35 @@ UmiStatus umi_plugin_package_add_file(UmiPluginPackage *package,
     return UMI_STATUS_OK;
 }
 
+/* Check that plugin package satisfies its contract before another service relies on it. */
 UmiStatus umi_plugin_package_validate(const UmiPluginPackage *package,
                                       char *out_reason,
                                       size_t reason_capacity)
 {
     char manifest_reason[256];
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (package == NULL || out_reason == NULL || reason_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_plugin_manifest_validate(&package->manifest,
                                      manifest_reason,
                                      sizeof(manifest_reason)) != UMI_STATUS_OK) {
         (void)snprintf(out_reason, reason_capacity, "manifest: %s", manifest_reason);
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (package->file_count == 0U) {
         (void)snprintf(out_reason, reason_capacity, "package contains no files");
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < package->file_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!path_is_safe_relative(package->files[index])) {
             (void)snprintf(out_reason, reason_capacity,
                            "unsafe package path: %s", package->files[index]);
@@ -90,8 +130,10 @@ UmiStatus umi_plugin_package_validate(const UmiPluginPackage *package,
     return UMI_STATUS_OK;
 }
 
+/* Provide the add step operation used by this module and its client applications. */
 static UmiStatus add_step(UmiPluginPackagePlan *plan, const char *text)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (plan->step_count >= UMI_PLUGIN_PACKAGE_STEP_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -100,6 +142,10 @@ static UmiStatus add_step(UmiPluginPackagePlan *plan, const char *text)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise plugin package plan from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_plugin_package_plan_create(UmiPluginPackageAction action,
                                          const UmiPluginPackage *package,
                                          UmiVersion installed_version,
@@ -107,10 +153,15 @@ UmiStatus umi_plugin_package_plan_create(UmiPluginPackageAction action,
                                          UmiPluginPackagePlan *out_plan)
 {
     char reason[256];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (package == NULL || install_root == NULL || install_root[0] == '\0' ||
         out_plan == NULL || strlen(install_root) >= UMI_PATH_CAPACITY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_package_validate(package, reason, sizeof(reason)) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -126,6 +177,7 @@ UmiStatus umi_plugin_package_plan_create(UmiPluginPackageAction action,
                    "%s", install_root);
     (void)snprintf(out_plan->staging_root, sizeof(out_plan->staging_root),
                    "%s/.staging/%s", install_root, package->manifest.plugin_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (add_step(out_plan, "validate package manifest and inventory") != UMI_STATUS_OK ||
         add_step(out_plan, "verify checksum and publisher trust") != UMI_STATUS_OK ||
         add_step(out_plan, "resolve dependencies and compatibility") != UMI_STATUS_OK ||
@@ -133,14 +185,17 @@ UmiStatus umi_plugin_package_plan_create(UmiPluginPackageAction action,
         add_step(out_plan, "create recoverable installation checkpoint") != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action != UMI_PLUGIN_PACKAGE_UNINSTALL) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (add_step(out_plan, "stage package files outside the live directory") != UMI_STATUS_OK ||
             add_step(out_plan, "atomically promote staged package") != UMI_STATUS_OK) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
-    } else if (add_step(out_plan, "move installed package to recoverable trash") != UMI_STATUS_OK) {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (add_step(out_plan, "move installed package to recoverable trash") != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (add_step(out_plan, "update extension registry and enablement state") != UMI_STATUS_OK ||
         add_step(out_plan, "record audit evidence and request host refresh") != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -148,8 +203,13 @@ UmiStatus umi_plugin_package_plan_create(UmiPluginPackageAction action,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the plugin package action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_plugin_package_action_text(UmiPluginPackageAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_PLUGIN_PACKAGE_INSTALL: return "install";
         case UMI_PLUGIN_PACKAGE_UPDATE: return "update";

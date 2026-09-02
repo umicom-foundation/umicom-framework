@@ -16,10 +16,22 @@
 #include <string.h>
 /* Initialise and validate represent a venue trade print with integer-normalised price and quantity.. */
 UmiStatus umi_trading_consolidated_trade_init(UmiTradingConsolidatedTrade *value,const UmiFinancialId * instrument_id, const UmiFinancialId * venue_id, UmiTradingPriceTicks price_ticks, UmiTradingQuantityLots quantity_lots, int64_t event_time_ms) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(instrument_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->instrument_id=*instrument_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(venue_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->venue_id=*venue_id;
     value->price_ticks=price_ticks;

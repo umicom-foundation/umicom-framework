@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer diagnostic parser ctest operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperDiagnosticParser *umi_developer_diagnostic_parser_ctest(void);
 
 #ifdef __cplusplus

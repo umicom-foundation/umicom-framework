@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode hover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_decode_hover(const char*json,UmiLanguageRuntimeHoverResult*out);
 #ifdef __cplusplus
 }

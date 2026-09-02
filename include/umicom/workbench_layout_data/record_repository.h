@@ -42,6 +42,10 @@ typedef UmiStatus (*UmiWorkbenchLayoutDataRecordPredicate)(
     void *context,
     bool *out_matches);
 
+/**
+ * Represent the workbench layout data record repository data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataRecordRepository {
     uint32_t structure_size;
     UmiDataServer *server;
@@ -51,6 +55,10 @@ typedef struct UmiWorkbenchLayoutDataRecordRepository {
     UmiWorkbenchLayoutDataRecordDecoder decode;
 } UmiWorkbenchLayoutDataRecordRepository;
 
+/**
+ * Represent the workbench layout data record page data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDataRecordPage {
     uint32_t structure_size;
     void *records;
@@ -61,6 +69,10 @@ typedef struct UmiWorkbenchLayoutDataRecordPage {
     bool truncated;
 } UmiWorkbenchLayoutDataRecordPage;
 
+/**
+ * Initialise workbench layout data record repository from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_init(
     UmiWorkbenchLayoutDataRecordRepository *repository,
     UmiDataServer *server,
@@ -69,6 +81,10 @@ UmiStatus umi_workbench_layout_data_record_repository_init(
     UmiWorkbenchLayoutDataRecordEncoder encode,
     UmiWorkbenchLayoutDataRecordDecoder decode);
 
+/**
+ * Write workbench layout data record repository in its stable representation and report
+ * capacity or input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_save(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -76,6 +92,10 @@ UmiStatus umi_workbench_layout_data_record_repository_save(
     uint64_t sequence,
     const void *record);
 
+/**
+ * Read workbench layout data record repository into validated module state and return a
+ * status when input cannot be used.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_load(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
@@ -83,12 +103,20 @@ UmiStatus umi_workbench_layout_data_record_repository_load(
     uint64_t sequence,
     void *out_record);
 
+/**
+ * Provide the workbench layout data record repository delete operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_delete(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,
     const char *record_id,
     uint64_t sequence);
 
+/**
+ * Provide the workbench layout data record repository list operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_record_repository_list(
     const UmiWorkbenchLayoutDataRecordRepository *repository,
     const char *aggregate_id,

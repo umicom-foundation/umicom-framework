@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/coverage_capture.h"
 
+/*
+ * Provide the developer capability coverage capture operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_coverage_capture(void)
 {

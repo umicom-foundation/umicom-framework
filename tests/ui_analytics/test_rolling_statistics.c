@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/rolling_statistics.h"
 
-int main(void){double v[]={1,3,5},o[3];if(umi_analytics_rolling_mean(v,3,2,o,3)!=0)return 1;return o[2]==4.0?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){double v[]={1,3,5},o[3];/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_rolling_mean(v,3,2,o,3)!=0)return 1;return o[2]==4.0?0:2;}

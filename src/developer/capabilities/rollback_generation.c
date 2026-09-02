@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/rollback_generation.h"
 
+/*
+ * Provide the developer capability rollback generation operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_rollback_generation(void)
 {

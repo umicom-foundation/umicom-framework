@@ -31,8 +31,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the terminal session data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalSession UmiTerminalSession;
 
+/**
+ * Represent the terminal session config data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalSessionConfig {
     const char *session_id;
     const char *title;
@@ -41,6 +47,10 @@ typedef struct UmiTerminalSessionConfig {
     UmiClock *clock;
 } UmiTerminalSessionConfig;
 
+/**
+ * Represent the terminal session snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTerminalSessionSnapshot {
     char session_id[UMI_TERMINAL_ID_CAPACITY];
     char title[UMI_TERMINAL_TITLE_CAPACITY];
@@ -51,20 +61,40 @@ typedef struct UmiTerminalSessionSnapshot {
     size_t transcript_lines;
 } UmiTerminalSessionSnapshot;
 
+/**
+ * Initialise terminal session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_terminal_session_create(
     const UmiTerminalSessionConfig *config,
     UmiTerminalSession **out_session
 );
+/**
+ * Release or reset state held by terminal session so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_session_destroy(UmiTerminalSession *session);
+/**
+ * Provide the terminal session set working directory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_terminal_session_set_working_directory(
     UmiTerminalSession *session,
     const char *working_directory
 );
+/**
+ * Perform terminal session through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
                                        const char *command_text,
                                        uint32_t timeout_ms,
                                        UmiCancellationToken *cancellation,
                                        int *out_exit_code);
+/**
+ * Provide the terminal session execute prepared operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_terminal_session_execute_prepared(
     UmiTerminalSession *session,
     const UmiTerminalCommand *command,
@@ -72,16 +102,32 @@ UmiStatus umi_terminal_session_execute_prepared(
     uint32_t timeout_ms,
     UmiCancellationToken *cancellation,
     int *out_exit_code);
+/**
+ * Provide the terminal session snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_session_snapshot(
     const UmiTerminalSession *session,
     UmiTerminalSessionSnapshot *out_snapshot
 );
+/**
+ * Provide the terminal session environment operation used by this module and its client
+ * applications.
+ */
 UmiTerminalEnvironment *umi_terminal_session_environment(
     UmiTerminalSession *session
 );
+/**
+ * Provide the terminal session transcript operation used by this module and its client
+ * applications.
+ */
 UmiTerminalTranscript *umi_terminal_session_transcript(
     UmiTerminalSession *session
 );
+/**
+ * Provide the terminal session close operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_session_close(UmiTerminalSession *session);
 
 #ifdef __cplusplus

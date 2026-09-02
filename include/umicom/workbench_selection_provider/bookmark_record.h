@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider bookmark record data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderBookmarkRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderBookmarkRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderBookmarkRecord;
 
+/**
+ * Initialise workbench selection provider bookmark record from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_bookmark_record_init(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider bookmark record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_validate(
     const UmiWorkbenchSelectionProviderBookmarkRecord *record);
+/**
+ * Provide the workbench selection provider bookmark record set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_set_provider(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider bookmark record set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_set_source(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider bookmark record set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_set_subject(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider bookmark record set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_set_related(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider bookmark record set group operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_set_group(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider bookmark record set description operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_bookmark_record_set_description(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider bookmark record hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_bookmark_record_hash(
     const UmiWorkbenchSelectionProviderBookmarkRecord *record);
+/**
+ * Provide the workbench selection provider bookmark record touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_bookmark_record_touch(
     UmiWorkbenchSelectionProviderBookmarkRecord *record,
     uint64_t sequence,

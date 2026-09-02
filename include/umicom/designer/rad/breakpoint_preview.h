@@ -18,13 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad breakpoint preview data shared with callers of this public contract.
+ */
 typedef struct UmiRadBreakpointPreview {
     char breakpoint_id[UMI_RAD_ID_CAPACITY];
     UmiRadSize viewport;
     uint32_t dpi;
     bool touch;
 } UmiRadBreakpointPreview;
+/**
+ * Initialise rad breakpoint preview from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_rad_breakpoint_preview_init(UmiRadBreakpointPreview *item);
+/**
+ * Check that rad breakpoint preview satisfies its contract before another service relies
+ * on it.
+ */
 int umi_rad_breakpoint_preview_is_valid(const UmiRadBreakpointPreview *item);
 #ifdef __cplusplus
 }

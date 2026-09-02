@@ -21,4 +21,8 @@
 #include <math.h>
 #include <string.h>
 
-UmiStatus umi_quant_fx_forward_pricer_value(double notional,double contracted_forward,double market_forward,double discount_factor,double *out_pv){if(out_pv==NULL||notional<0.0||contracted_forward<=0.0||market_forward<=0.0||discount_factor<0.0)return UMI_STATUS_INVALID_ARGUMENT;*out_pv=notional*(market_forward-contracted_forward)*discount_factor;return UMI_STATUS_OK;}
+/*
+ * Provide the quant fx forward pricer value operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_quant_fx_forward_pricer_value(double notional,double contracted_forward,double market_forward,double discount_factor,double *out_pv){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(out_pv==NULL||notional<0.0||contracted_forward<=0.0||market_forward<=0.0||discount_factor<0.0)return UMI_STATUS_INVALID_ARGUMENT;*out_pv=notional*(market_forward-contracted_forward)*discount_factor;return UMI_STATUS_OK;}

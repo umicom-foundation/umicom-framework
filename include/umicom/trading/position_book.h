@@ -27,8 +27,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the position book data shared with callers of this public contract.
+ */
 typedef struct UmiPositionBook { UmiPosition positions[UMI_TRADING_MAX_POSITIONS]; size_t count; } UmiPositionBook;
+/**
+ * Initialise position book from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_position_book_init(UmiPositionBook *book);
+/**
+ * Provide the position book get operation used by this module and its client applications.
+ */
 UmiStatus umi_position_book_get(UmiPositionBook *book, const UmiInstrument *instrument, int create_if_missing, UmiPosition **out_position);
 #ifdef __cplusplus
 }

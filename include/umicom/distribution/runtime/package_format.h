@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the dr package format supported operation used by this module and its client
+ * applications.
+ */
 bool umi_dr_package_format_supported(UmiDrPackageFormat format,UmiDrPlatform platform); bool umi_dr_package_format_installer(UmiDrPackageFormat format);
 
 #ifdef __cplusplus

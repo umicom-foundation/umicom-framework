@@ -24,6 +24,10 @@ extern "C" {
 
 #define UMI_STUDIO_LAYOUT_PRESET_SURFACE_CAPACITY 16U
 
+/**
+ * Represent the studio runtime layout preset definition data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiStudioRuntimeLayoutPresetDefinition {
     const char *preset_id;
     const char *title;
@@ -38,6 +42,10 @@ typedef struct UmiStudioRuntimeLayoutPresetDefinition {
     int zen_mode;
 } UmiStudioRuntimeLayoutPresetDefinition;
 
+/**
+ * Check that studio layout preset satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_studio_layout_preset_validate(
     const UmiStudioRuntimeLayoutPresetDefinition *preset);
 /* Report whether a preset explicitly shows one semantic Studio surface. */
@@ -45,6 +53,10 @@ int umi_studio_layout_preset_contains_surface(
     const UmiStudioRuntimeLayoutPresetDefinition *preset,
     UmiStudioRuntimeSurfaceKind kind);
 
+/**
+ * Perform studio layout preset through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_studio_layout_preset_apply(
     UmiStudioRuntimeBindings *bindings,
     const UmiStudioRuntimeLayoutPresetDefinition *preset);

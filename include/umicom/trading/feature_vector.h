@@ -26,8 +26,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the feature vector data shared with callers of this public contract.
+ */
 typedef struct UmiFeatureVector { UmiMarketFactor factors[UMI_TRADING_MAX_FACTORS]; size_t count; } UmiFeatureVector;
+/**
+ * Initialise feature vector from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_feature_vector_init(UmiFeatureVector *vector);
+/**
+ * Add feature vector only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_feature_vector_add(UmiFeatureVector *vector, const UmiMarketFactor *factor);
 #ifdef __cplusplus
 }

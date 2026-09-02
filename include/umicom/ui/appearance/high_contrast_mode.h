@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance high contrast mode data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceHighContrastMode {
     char mode_id[UMI_APPEARANCE_ID_CAPACITY];
     bool enabled;

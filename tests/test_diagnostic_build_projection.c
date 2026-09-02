@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostic_ui/build_projection.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticPipeline *pipeline = NULL;

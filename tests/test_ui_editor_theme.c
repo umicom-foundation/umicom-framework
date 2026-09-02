@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Exercise verify mode and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void verify_mode(UmiUiThemeMode mode,
                         const char *expected_scheme,
                         int reject_white_line)
@@ -35,6 +39,7 @@ static void verify_mode(UmiUiThemeMode mode,
     assert(umi_ui_editor_theme_validate(
                &theme, reason, sizeof(reason)) == UMI_STATUS_OK);
     assert(strcmp(theme.background, theme.current_line) != 0);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (reject_white_line) {
         assert(strcmp(theme.current_line, "#FFFFFF") != 0);
     }
@@ -46,6 +51,10 @@ static void verify_mode(UmiUiThemeMode mode,
            UMI_STATUS_NOT_FOUND);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     verify_mode(UMI_UI_THEME_MODE_DARK, "Adwaita-dark", 1);

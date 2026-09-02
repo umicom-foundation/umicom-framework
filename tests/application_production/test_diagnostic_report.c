@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "test_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProductApplicationAdoption adoption = umi_test_application_production_studio_adoption();
     UmiApplicationProductionRuntime *runtime = calloc(1U, sizeof(*runtime));

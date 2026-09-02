@@ -13,9 +13,15 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/banking/deposit_account.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiBankingDepositAccount v;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_banking_deposit_account_init(&v, "dep-1", "cust-1", "prod-1", "GBP", 10000, 8500, UMI_BANKING_ACCOUNT_OPEN)!=UMI_STATUS_OK) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if(umi_banking_deposit_account_reserved_minor(&v)!=1500) return 2;
     return 0;
 }

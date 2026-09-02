@@ -23,11 +23,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding materialize context operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_materialize_context(
     const UmiAiCodingTaskPlan *plan,
     const UmiAiCodingWorkspaceAdapter *workspace,
     UmiAiCodingMaterializedContext *out_context);
 
+/**
+ * Find ai coding materialized context while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_ai_coding_materialized_context_find(
     const UmiAiCodingMaterializedContext *context,
     const char *path,

@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_SYMBOL_RANKING_API_VERSION 1U
+/**
+ * Represent the language intelligence symbol ranking input data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceSymbolRankingInput {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,8 +40,20 @@ typedef struct UmiLanguageIntelligenceSymbolRankingInput {
     uint32_t penalty;
     int enabled;
 } UmiLanguageIntelligenceSymbolRankingInput;
+/**
+ * Initialise language intelligence symbol ranking input from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_symbol_ranking_input_init(UmiLanguageIntelligenceSymbolRankingInput *input);
+/**
+ * Provide the language intelligence symbol ranking score operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_language_intelligence_symbol_ranking_score(const UmiLanguageIntelligenceSymbolRankingInput *input);
+/**
+ * Provide the language intelligence symbol ranking prefer operation used by this module
+ * and its client applications.
+ */
 int umi_language_intelligence_symbol_ranking_prefer(
     const UmiLanguageIntelligenceSymbolRankingInput *left,
     const UmiLanguageIntelligenceSymbolRankingInput *right);

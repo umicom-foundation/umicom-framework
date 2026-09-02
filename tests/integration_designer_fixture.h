@@ -1,8 +1,28 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/integration_designer_fixture.h
+ *
+ * PURPOSE:
+ *   Verify the integration designer fixture behaviour and report a clear failure
+ *   when its contract changes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework Tests | Integration designer fixture | Sammy Hegab | Umicom Foundation | MIT */
 #ifndef UMICOM_TEST_INTEGRATION_DESIGNER_FIXTURE_H
 #define UMICOM_TEST_INTEGRATION_DESIGNER_FIXTURE_H
 #include <string.h>
 #include "umicom/integration/designer.h"
+/**
+ * Exercise test connection and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiIntegrationConnectionProfile umi_test_connection(void)
 {
     UmiIntegrationConnectionProfile profile = {0};
@@ -16,6 +36,10 @@ static inline UmiIntegrationConnectionProfile umi_test_connection(void)
     profile.enabled = true;
     return profile;
 }
+/**
+ * Exercise test workflow and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiIntegrationWorkflow umi_test_workflow(void)
 {
     UmiIntegrationWorkflow workflow;

@@ -22,6 +22,10 @@
 #include "umicom/trading/risk_decision.h"
 #include "umicom/trading/risk_limit.h"
 
+/*
+ * Provide the pretrade risk evaluate operation used by this module and its client
+ * applications.
+ */
 UmiRiskDecision umi_pretrade_risk_evaluate(const UmiOrderRequest *request,
                                             const UmiRiskLimit *limit,
                                             double current_position,
@@ -29,6 +33,10 @@ UmiRiskDecision umi_pretrade_risk_evaluate(const UmiOrderRequest *request,
 {
     UmiRiskDecision decision = {0};
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || !umi_risk_limit_valid(limit)) {
         umi_risk_decision_deny(&decision, "invalid risk input");
         return decision;
@@ -43,24 +51,28 @@ UmiRiskDecision umi_pretrade_risk_evaluate(const UmiOrderRequest *request,
     const double absolute_projected =
         projected < 0.0 ? -projected : projected;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (request->quantity > limit->max_order_quantity) {
         umi_risk_decision_deny(&decision,
                                "maximum order quantity exceeded");
         return decision;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (notional > limit->max_order_notional) {
         umi_risk_decision_deny(&decision,
                                "maximum order notional exceeded");
         return decision;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (absolute_projected > limit->max_position_quantity) {
         umi_risk_decision_deny(&decision,
                                "maximum position exceeded");
         return decision;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (daily_pnl < 0.0 && -daily_pnl > limit->max_daily_loss) {
         umi_risk_decision_deny(&decision,
                                "daily loss limit exceeded");

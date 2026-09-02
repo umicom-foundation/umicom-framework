@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that trade tick satisfies its contract before another service relies on it.
+ */
 int umi_trade_tick_valid(const UmiTradeTick *tick);
 #ifdef __cplusplus
 }

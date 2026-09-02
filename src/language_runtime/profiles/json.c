@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/profiles/json.h"
+/*
+ * Provide the language runtime profile json operation used by this module and its client
+ * applications.
+ */
 const UmiLanguageServerProfile *umi_language_runtime_profile_json(void){static const UmiLanguageServerProfile p={.id="language.server.json",.display_name="JSON Language Server",.executable="vscode-json-language-server",.arguments="--stdio",.language_ids="json,jsonc",.capabilities=UMI_LANGUAGE_CAP_COMPLETION | UMI_LANGUAGE_CAP_HOVER | UMI_LANGUAGE_CAP_SYMBOLS | UMI_LANGUAGE_CAP_FORMATTING | UMI_LANGUAGE_CAP_CODE_ACTION | UMI_LANGUAGE_CAP_FOLDING,.enabled=1,.autostart=1,.revision=1U};return &p;}

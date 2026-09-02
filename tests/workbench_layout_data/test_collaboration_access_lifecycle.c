@@ -16,6 +16,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make presence and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutPresence make_presence(
     const char *presence_id,
     const char *user_id,
@@ -43,6 +47,10 @@ static UmiWorkbenchLayoutPresence make_presence(
     return presence;
 }
 
+/*
+ * Exercise make conflict and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutConflict make_conflict(void)
 {
     UmiWorkbenchLayoutConflict conflict;
@@ -72,6 +80,10 @@ static UmiWorkbenchLayoutConflict make_conflict(void)
     return conflict;
 }
 
+/*
+ * Exercise test grant and lease authority and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_grant_and_lease_authority(
     UmiDataServer *server,
     UmiWorkbenchLayoutGrantStoreRepository *grants,
@@ -126,6 +138,10 @@ static int test_grant_and_lease_authority(
     return 0;
 }
 
+/*
+ * Exercise test presence and conflict lifecycle and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_presence_and_conflict_lifecycle(
     UmiWorkbenchLayoutPresenceStoreRepository *presence,
     UmiWorkbenchLayoutConflictStoreRepository *conflicts)
@@ -179,6 +195,10 @@ static int test_presence_and_conflict_lifecycle(
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDataServer *server = test_create_data_server();

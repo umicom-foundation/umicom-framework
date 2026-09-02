@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the cli command capabilities operation used by this module and its client
+ * applications.
+ */
 int umi_cli_command_capabilities(UmiCliContext *context, int argc, char **argv)
 {
     size_t index;
@@ -26,11 +30,16 @@ int umi_cli_command_capabilities(UmiCliContext *context, int argc, char **argv)
     (void)argv;
     (void)printf("Umicom Framework %s capability catalogue:\n",
                  UMICOM_FRAMEWORK_VERSION_STRING);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_framework_capability_catalogue_count();
          ++index) {
         const UmiFrameworkCapabilityDefinition *definition =
             umi_framework_capability_catalogue_at(index);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (definition != NULL) {
             (void)printf("  %-38s %-12s %s\n",
                          definition->capability_id,
@@ -41,6 +50,7 @@ int umi_cli_command_capabilities(UmiCliContext *context, int argc, char **argv)
     return 0;
 }
 
+/* Provide the cli command suite operation used by this module and its client applications. */
 int umi_cli_command_suite(UmiCliContext *context, int argc, char **argv)
 {
     UmiSuite suite;
@@ -49,6 +59,7 @@ int umi_cli_command_suite(UmiCliContext *context, int argc, char **argv)
     const char *path;
     (void)context;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (argc < 2 || strcmp(argv[0], "sample") != 0) {
         (void)fprintf(stderr, "Usage: umicom suite sample PATH\n");
         return 2;
@@ -81,6 +92,7 @@ int umi_cli_command_suite(UmiCliContext *context, int argc, char **argv)
     (void)umi_suite_add(&suite, &application);
 
     status = umi_suite_write_manifest(&suite, path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr,
                       "Suite manifest failed: %s\n",

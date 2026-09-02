@@ -18,4 +18,8 @@
  */
 #include <stdio.h>
 #include "reference_product.h"
-int main(void){UmiProductBootstrapResult r;const UmiProductProfile *p=umi_example_studio_profile();if(umi_product_bootstrap(p,&r)!=UMI_STATUS_OK)return 1;printf("Umicom Studio IDE | id=%s | required=%zu | frontends=%zu\n",r.product_id,r.required_capabilities,r.enabled_frontends);return r.ready?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiProductBootstrapResult r;const UmiProductProfile *p=umi_example_studio_profile();/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_product_bootstrap(p,&r)!=UMI_STATUS_OK)return 1;printf("Umicom Studio IDE | id=%s | required=%zu | frontends=%zu\n",r.product_id,r.required_capabilities,r.enabled_frontends);return r.ready?0:2;}

@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the market state transition allowed operation used by this module and its client
+ * applications.
+ */
 int umi_market_state_transition_allowed(UmiMarketState from, UmiMarketState to);
 #ifdef __cplusplus
 }

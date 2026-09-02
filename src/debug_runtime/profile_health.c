@@ -16,12 +16,20 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the debug runtime profile health probe operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_profile_health_probe(
     const UmiDebugAdapterProfile *profile,
     UmiDebugRuntimeProfileHealth *out_health)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || out_health == NULL ||
         profile->id[0] == '\0' || profile->executable[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;

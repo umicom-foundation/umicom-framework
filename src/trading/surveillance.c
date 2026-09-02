@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/surveillance.h"
+/*
+ * Provide the surveillance large order operation used by this module and its client
+ * applications.
+ */
 int umi_surveillance_large_order(const UmiOrderRequest *r,double threshold){return r!=NULL&&threshold>0.0&&r->quantity>=threshold;}

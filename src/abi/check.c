@@ -18,4 +18,8 @@
  */
 #include "umicom/abi/check.h"
 #include <stddef.h>
-UmiStatus umi_abi_check_run(const UmiAbiDescriptor *d,const UmiAbiBaseline *e,const UmiAbiBaseline *a,UmiAbiCheckResult *o){if(o==NULL||d==NULL||e==NULL||a==NULL)return UMI_STATUS_INVALID_ARGUMENT;o->descriptor_valid=umi_abi_descriptor_validate(d)==UMI_STATUS_OK;o->platform_valid=umi_abi_platform_validate(&d->platform)==UMI_STATUS_OK;o->baseline_valid=umi_abi_baseline_matches(e,a);o->passed=o->descriptor_valid&&o->platform_valid&&o->baseline_valid;return UMI_STATUS_OK;}
+/*
+ * Perform abi check through the module contract so client applications do not duplicate
+ * its policy.
+ */
+UmiStatus umi_abi_check_run(const UmiAbiDescriptor *d,const UmiAbiBaseline *e,const UmiAbiBaseline *a,UmiAbiCheckResult *o){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(o==NULL||d==NULL||e==NULL||a==NULL)return UMI_STATUS_INVALID_ARGUMENT;o->descriptor_valid=umi_abi_descriptor_validate(d)==UMI_STATUS_OK;o->platform_valid=umi_abi_platform_validate(&d->platform)==UMI_STATUS_OK;o->baseline_valid=umi_abi_baseline_matches(e,a);o->passed=o->descriptor_valid&&o->platform_valid&&o->baseline_valid;return UMI_STATUS_OK;}

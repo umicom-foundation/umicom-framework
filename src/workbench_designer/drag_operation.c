@@ -18,6 +18,10 @@
 #include "internal.h"
 
 
+/*
+ * Provide the workbench designer drag operation plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_drag_operation_plan(
     const UmiWorkbenchDesignerDragSession *drag,
     const UmiWorkbenchDesignerDropTarget *target,
@@ -27,6 +31,10 @@ UmiStatus umi_workbench_designer_drag_operation_plan(
     UmiWorkbenchDesignerDragOperationPlan *out_plan)
 {
     UmiWorkbenchDesignerCommandKind kind;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag == NULL || target == NULL || command_id == NULL ||
         actor_id == NULL || out_plan == NULL ||
         drag->phase != UMI_WORKBENCH_DESIGNER_DRAG_ACTIVE || !target->enabled ||
@@ -34,6 +42,7 @@ UmiStatus umi_workbench_designer_drag_operation_plan(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_plan, 0, sizeof(*out_plan));
+    /* Select the behaviour associated with the requested command or state value. */
     switch (target->zone) {
         case UMI_WORKBENCH_DESIGNER_DROP_LEFT:
         case UMI_WORKBENCH_DESIGNER_DROP_RIGHT:

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the regulatory service data shared with callers of this public contract.
+ */
 typedef struct UmiRegulatoryService { int taxonomy_ready; int governance_ready; int controls_ready; int submission_ready; size_t registered_authorities; size_t active_templates; } UmiRegulatoryService;
 /* Initialise conservative service state with all readiness gates closed. */
 void umi_reg_regulatory_service_init(UmiRegulatoryService *service);

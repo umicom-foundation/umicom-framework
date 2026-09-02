@@ -29,13 +29,21 @@ typedef struct VisitState {
     size_t name_count;
 } VisitState;
 
+/*
+ * Exercise visitor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus visitor(const UmiFileInfo *info, void *user_data)
 {
     VisitState *state = (VisitState *)user_data;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (info->kind == UMI_FILE_KIND_DIRECTORY) state->directories += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (info->kind == UMI_FILE_KIND_REGULAR) state->files += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state->name_count < 8U) {
         size_t length = strlen(info->name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= sizeof(state->names[0])) {
             length = sizeof(state->names[0]) - 1U;
         }
@@ -46,6 +54,10 @@ static UmiStatus visitor(const UmiFileInfo *info, void *user_data)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char temporary[UMI_PATH_CAPACITY];

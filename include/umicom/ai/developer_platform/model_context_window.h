@@ -29,11 +29,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev model context window data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevModelContextWindow { uint64_t limit; uint64_t reserved; uint64_t consumed; uint64_t revision; } UmiAiDevModelContextWindow;
+/**
+ * Initialise ai dev model context window from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_model_context_window_init(UmiAiDevModelContextWindow *budget, uint64_t limit);
+/**
+ * Provide the ai dev model context window reserve operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_context_window_reserve(UmiAiDevModelContextWindow *budget, uint64_t amount);
+/**
+ * Provide the ai dev model context window consume operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_context_window_consume(UmiAiDevModelContextWindow *budget, uint64_t amount);
+/**
+ * Provide the ai dev model context window remaining operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_ai_dev_model_context_window_remaining(const UmiAiDevModelContextWindow *budget);
+/**
+ * Provide the ai dev model context window utilisation operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_ai_dev_model_context_window_utilisation(const UmiAiDevModelContextWindow *budget);
 
 #ifdef __cplusplus

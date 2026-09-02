@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/order_instruction.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingOrderIdentity id;
@@ -20,6 +24,7 @@ int main(void) {
      UmiTradingOrderInstruction o;
     umi_trading_order_identity_init(&id,"c");
      umi_trading_core_id_assign(&inst.instrument_id,"i");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_order_instruction_init(&o,&id,&inst,UMI_SIDE_BUY,UMI_ORDER_LIMIT,UMI_TIF_DAY,10,100,0)!=UMI_STATUS_OK)return 1;
     return umi_trading_order_instruction_valid(&o)?0:2;
 }

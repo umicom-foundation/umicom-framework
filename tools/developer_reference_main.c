@@ -154,6 +154,7 @@ static void print_experience(const UmiApplicationExperienceDefinition *experienc
         size_t panel_index;
 
         (void)printf("- `%s`: ", layout->layout_id);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (panel_index = 0U; panel_index < layout->panel_count; ++panel_index) {
             /* Separate identifiers after the first while keeping one compact
              * line that remains easy to copy into a design discussion. */

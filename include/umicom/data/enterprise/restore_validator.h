@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data restore validation data shared with callers of this public contract.
+ */
 typedef struct UmiDataRestoreValidation { bool valid; bool schema_match; bool backup_complete; bool approval_required; size_t blockers; } UmiDataRestoreValidation;
 /* Validate a restore plan against backup evidence without performing the restore. */ UmiStatus umi_data_restore_validator_check(const UmiDataRestorePlan *plan,const UmiDataBackupManifest *manifest,UmiDataRestoreValidation *out_validation);
 

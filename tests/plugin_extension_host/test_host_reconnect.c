@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/host_reconnect.h"
-int main(void) { UmiPluginExtensionHostHostReconnect r; umi_plugin_extension_host_host_reconnect_init(&r); if(umi_plugin_extension_host_host_reconnect_failed(&r)!=UMI_STATUS_OK||umi_plugin_extension_host_host_reconnect_delay_ms(&r)!=250U) return 1; umi_plugin_extension_host_host_reconnect_failed(&r); if(umi_plugin_extension_host_host_reconnect_delay_ms(&r)!=500U) return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostHostReconnect r; umi_plugin_extension_host_host_reconnect_init(&r); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_host_reconnect_failed(&r)!=UMI_STATUS_OK||umi_plugin_extension_host_host_reconnect_delay_ms(&r)!=250U) return 1; umi_plugin_extension_host_host_reconnect_failed(&r); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_host_reconnect_delay_ms(&r)!=500U) return 2; return 0; }

@@ -44,6 +44,9 @@ extern "C" {
 #define UMI_DEBUG_INSTRUCTION_SYMBOL_CAPACITY 512U
 #define UMI_DEBUG_INSTRUCTION_SOURCE_URI_CAPACITY 1024U
 
+/**
+ * Represent the debug instruction data shared with callers of this public contract.
+ */
 typedef struct UmiDebugInstruction {
     uint32_t struct_size;
     uint32_t api_version;
@@ -69,6 +72,10 @@ typedef struct UmiDebugInstruction {
     int valid;
 } UmiDebugInstruction;
 
+/**
+ * Represent the debug disassembly snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugDisassemblySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -85,57 +92,132 @@ typedef struct UmiDebugDisassemblySnapshot {
     int has_current_instruction;
 } UmiDebugDisassemblySnapshot;
 
+/**
+ * Represent the debug disassembly view data shared with callers of this public contract.
+ */
 typedef struct UmiDebugDisassemblyView UmiDebugDisassemblyView;
 
+/**
+ * Initialise debug disassembly view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_disassembly_view_create(
     UmiDebugDisassemblyView **out_view);
+/**
+ * Release or reset state held by debug disassembly view so the same storage can be reused
+ * safely.
+ */
 void umi_debug_disassembly_view_destroy(UmiDebugDisassemblyView *view);
+/**
+ * Release or reset state held by debug disassembly view so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_debug_disassembly_view_clear(UmiDebugDisassemblyView *view);
+/**
+ * Read debug disassembly view into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_debug_disassembly_view_load(
     UmiDebugDisassemblyView *view,
     const UmiDebugInstruction *instructions,
     size_t instruction_count);
+/**
+ * Provide the debug disassembly view upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_disassembly_view_upsert(
     UmiDebugDisassemblyView *view,
     const UmiDebugInstruction *instruction);
+/**
+ * Remove debug disassembly view while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_debug_disassembly_view_remove(
     UmiDebugDisassemblyView *view,
     const char *instruction_id);
+/**
+ * Provide the debug disassembly view select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_disassembly_view_select(
     UmiDebugDisassemblyView *view,
     const char *instruction_id);
+/**
+ * Provide the debug disassembly view select address operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_disassembly_view_select_address(
     UmiDebugDisassemblyView *view,
     uint64_t address);
+/**
+ * Provide the debug disassembly view set current operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_disassembly_view_set_current(
     UmiDebugDisassemblyView *view,
     const char *instruction_id);
+/**
+ * Provide the debug disassembly view set breakpoint operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_disassembly_view_set_breakpoint(
     UmiDebugDisassemblyView *view,
     const char *instruction_id,
     int has_breakpoint);
+/**
+ * Find debug disassembly view while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_disassembly_view_find(
     const UmiDebugDisassemblyView *view,
     const char *instruction_id,
     UmiDebugInstruction *out_instruction);
+/**
+ * Provide the debug disassembly view find address operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_disassembly_view_find_address(
     const UmiDebugDisassemblyView *view,
     uint64_t address,
     UmiDebugInstruction *out_instruction);
+/**
+ * Find debug disassembly view while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_disassembly_view_at(
     const UmiDebugDisassemblyView *view,
     size_t index,
     UmiDebugInstruction *out_instruction);
+/**
+ * Find debug disassembly view while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_disassembly_view_selected(
     const UmiDebugDisassemblyView *view,
     UmiDebugInstruction *out_instruction);
+/**
+ * Provide the debug disassembly view current operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_disassembly_view_current(
     const UmiDebugDisassemblyView *view,
     UmiDebugInstruction *out_instruction);
+/**
+ * Provide the debug disassembly view snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_disassembly_view_snapshot(
     const UmiDebugDisassemblyView *view,
     UmiDebugDisassemblySnapshot *out_snapshot);
+/**
+ * Return the number of records represented by debug disassembly view without changing
+ * their state.
+ */
 size_t umi_debug_disassembly_view_count(const UmiDebugDisassemblyView *view);
+/**
+ * Provide the debug disassembly view revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_disassembly_view_revision(
     const UmiDebugDisassemblyView *view);
 

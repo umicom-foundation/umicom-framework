@@ -27,6 +27,9 @@ extern "C" {
 #define UMI_DEVELOPER_CAPABILITY_API_VERSION 1U
 #define UMI_DEVELOPER_CAPABILITY_MESSAGE_CAPACITY 512U
 
+/**
+ * List the named developer capability category values accepted by this public contract.
+ */
 typedef enum UmiDeveloperCapabilityCategory {
     UMI_DEVELOPER_CAPABILITY_CATEGORY_CONFIGURATION = 1,
     UMI_DEVELOPER_CAPABILITY_CATEGORY_BUILD = 2,
@@ -42,6 +45,9 @@ typedef enum UmiDeveloperCapabilityCategory {
     UMI_DEVELOPER_CAPABILITY_CATEGORY_PORTABILITY = 12
 } UmiDeveloperCapabilityCategory;
 
+/**
+ * List the named developer capability maturity values accepted by this public contract.
+ */
 typedef enum UmiDeveloperCapabilityMaturity {
     UMI_DEVELOPER_CAPABILITY_MATURITY_PLANNED = 0,
     UMI_DEVELOPER_CAPABILITY_MATURITY_EXPERIMENTAL = 1,
@@ -55,6 +61,10 @@ enum {
     UMI_DEVELOPER_CAPABILITY_FLAG_SECURITY_SENSITIVE = 1U << 3
 };
 
+/**
+ * Represent the developer capability descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperCapabilityDescriptor {
     size_t struct_size;
     uint32_t api_version;
@@ -68,15 +78,35 @@ typedef struct UmiDeveloperCapabilityDescriptor {
     int priority;
 } UmiDeveloperCapabilityDescriptor;
 
+/**
+ * Provide the developer capability category text operation used by this module and its
+ * client applications.
+ */
 const char *umi_developer_capability_category_text(
     UmiDeveloperCapabilityCategory category);
+/**
+ * Provide the developer capability maturity text operation used by this module and its
+ * client applications.
+ */
 const char *umi_developer_capability_maturity_text(
     UmiDeveloperCapabilityMaturity maturity);
+/**
+ * Check that developer capability descriptor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_capability_descriptor_validate(
     const UmiDeveloperCapabilityDescriptor *descriptor,
     char *out_message,
     size_t message_capacity);
+/**
+ * Return the number of records represented by developer capability builtin without
+ * changing their state.
+ */
 size_t umi_developer_capability_builtin_count(void);
+/**
+ * Find developer capability builtin while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_builtin_at(size_t index);
 

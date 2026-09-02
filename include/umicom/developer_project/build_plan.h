@@ -25,6 +25,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_PROJECT_BUILD_PLAN_COMMANDS 8U
 
+/**
+ * Represent the developer project build plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectBuildPlan {
     UmiDeveloperProjectBuildSystem build_system;
     UmiBuildCommand commands[UMI_DEVELOPER_PROJECT_BUILD_PLAN_COMMANDS];
@@ -36,10 +40,18 @@ typedef struct UmiDeveloperProjectBuildPlan {
     uint64_t revision;
 } UmiDeveloperProjectBuildPlan;
 
+/**
+ * Initialise developer project build plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_project_build_plan_init(
     UmiDeveloperProjectBuildPlan *plan,
     UmiDeveloperProjectBuildSystem build_system);
 
+/**
+ * Provide the developer project build plan cmake operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_build_plan_cmake(
     UmiDeveloperProjectBuildPlan *plan,
     const char *source_root,
@@ -49,17 +61,29 @@ UmiStatus umi_developer_project_build_plan_cmake(
     int include_test,
     int include_package);
 
+/**
+ * Provide the developer project build plan zig operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_build_plan_zig(
     UmiDeveloperProjectBuildPlan *plan,
     const char *source_root,
     int include_test);
 
+/**
+ * Provide the developer project build plan cargo operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_build_plan_cargo(
     UmiDeveloperProjectBuildPlan *plan,
     const char *source_root,
     int release,
     int include_test);
 
+/**
+ * Check that developer project build plan satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_project_build_plan_validate(
     const UmiDeveloperProjectBuildPlan *plan);
 

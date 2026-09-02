@@ -22,6 +22,10 @@
 
 #include "umicom/editor/breadcrumb_model.h"
 
+/*
+ * Exercise breadcrumb symbol and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiEditorIndexedSymbol breadcrumb_symbol(const char *id,
                                                  const char *parent,
                                                  const char *name,
@@ -50,6 +54,10 @@ static UmiEditorIndexedSymbol breadcrumb_symbol(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSymbolIndex *index = NULL;

@@ -22,6 +22,10 @@
 
 #include "umicom/diagnostics/diagnostics.h"
 
+/**
+ * Exercise test copy text and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline void test_copy_text(char *destination,
                            size_t capacity,
                            const char *source)
@@ -34,6 +38,10 @@ static inline void test_copy_text(char *destination,
     assert((size_t)written < capacity);
 }
 
+/**
+ * Exercise test diagnostic and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiDiagnosticSnapshot test_diagnostic(
     const char *id,
     UmiDiagnosticSeverity severity,
@@ -61,6 +69,10 @@ static inline UmiDiagnosticSnapshot test_diagnostic(
     return diagnostic;
 }
 
+/**
+ * Exercise test finding and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static inline UmiDiagnosticProviderFinding test_finding(
     const char *provider_id,
     const char *diagnostic_id,
@@ -87,6 +99,7 @@ static inline UmiDiagnosticProviderFinding test_finding(
                    "int value = unsafe();");
     finding.run_id = run_id;
     finding.source_revision = 7U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (fixable) {
         finding.has_fix = 1;
         test_copy_text(finding.fix_description,
@@ -105,6 +118,10 @@ static inline UmiDiagnosticProviderFinding test_finding(
     return finding;
 }
 
+/**
+ * Exercise test provider and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiDiagnosticProviderDescriptor test_provider(const char *id,
                                                      int32_t priority)
 {

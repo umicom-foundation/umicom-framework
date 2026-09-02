@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context source runtime data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextSourceRuntime {
     char source_id[UMI_WORKBENCH_CONTEXT_SOURCE_ID_CAPACITY];
     uint64_t last_content_hash;
@@ -35,6 +39,10 @@ typedef struct UmiWorkbenchContextSourceRuntime {
     uint64_t revision;
 } UmiWorkbenchContextSourceRuntime;
 
+/**
+ * Represent the workbench context source service metrics data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextSourceServiceMetrics {
     uint64_t registered_source_count;
     uint64_t submitted_sample_count;
@@ -48,6 +56,10 @@ typedef struct UmiWorkbenchContextSourceServiceMetrics {
     uint64_t revision;
 } UmiWorkbenchContextSourceServiceMetrics;
 
+/**
+ * Represent the workbench context source service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextSourceService {
     UmiWorkbenchContextEventService *events;
     UmiWorkbenchContextSourceRegistry registry;
@@ -60,28 +72,60 @@ typedef struct UmiWorkbenchContextSourceService {
     bool suspended;
 } UmiWorkbenchContextSourceService;
 
+/**
+ * Initialise workbench context source service from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_context_source_service_create(
     UmiWorkbenchContextEventService *events,
     UmiWorkbenchContextSourceService **out_service);
+/**
+ * Release or reset state held by workbench context source service so the same storage can
+ * be reused safely.
+ */
 void umi_workbench_context_source_service_destroy(
     UmiWorkbenchContextSourceService *service);
+/**
+ * Add workbench context source service only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_context_source_service_register(
     UmiWorkbenchContextSourceService *service,
     const UmiWorkbenchContextSourceDefinition *definition);
+/**
+ * Remove workbench context source service while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_workbench_context_source_service_unregister(
     UmiWorkbenchContextSourceService *service,
     const char *source_id);
+/**
+ * Provide the workbench context source service submit operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_source_service_submit(
     UmiWorkbenchContextSourceService *service,
     UmiWorkbenchContextSourceSample *sample);
+/**
+ * Find workbench context source service while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchContextSourceDefinition *
 umi_workbench_context_source_service_find(
     const UmiWorkbenchContextSourceService *service,
     const char *source_id);
+/**
+ * Provide the workbench context source service runtime operation used by this module and
+ * its client applications.
+ */
 const UmiWorkbenchContextSourceRuntime *
 umi_workbench_context_source_service_runtime(
     const UmiWorkbenchContextSourceService *service,
     const char *source_id);
+/**
+ * Provide the workbench context source service set suspended operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_source_service_set_suspended(
     UmiWorkbenchContextSourceService *service,
     bool suspended);

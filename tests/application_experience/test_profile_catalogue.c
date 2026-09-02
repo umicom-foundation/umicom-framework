@@ -18,10 +18,15 @@
 
 #include <assert.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   size_t index;
   assert(umi_application_experience_profile_catalogue_count() == 78U);
   assert(umi_application_experience_profile_catalogue_validate() == UMI_STATUS_OK);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_application_portfolio_count(); ++index) {
     const UmiApplicationDefinition *application = umi_application_portfolio_at(index);
     assert(application != NULL);

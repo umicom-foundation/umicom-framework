@@ -24,6 +24,9 @@ extern "C" {
 
 #define UMI_DESKTOP_MONITOR_AFFINITY_MAX UMI_DESKTOP_MAX_WINDOWS
 
+/**
+ * Represent the desktop monitor affinity data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopMonitorAffinity {
     uint32_t structure_size;
     char window_id[UMI_DESKTOP_ID_CAPACITY];
@@ -33,6 +36,10 @@ typedef struct UmiDesktopMonitorAffinity {
     uint64_t revision;
 } UmiDesktopMonitorAffinity;
 
+/**
+ * Represent the desktop monitor interaction snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesktopMonitorInteractionSnapshot {
     uint32_t structure_size;
     char focused_monitor_id[UMI_DESKTOP_ID_CAPACITY];
@@ -42,34 +49,78 @@ typedef struct UmiDesktopMonitorInteractionSnapshot {
     uint64_t revision;
 } UmiDesktopMonitorInteractionSnapshot;
 
+/**
+ * Represent the desktop monitor interaction data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopMonitorInteraction UmiDesktopMonitorInteraction;
 
+/**
+ * Initialise desktop monitor interaction from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_monitor_interaction_create(
     UmiDesktopRuntime *runtime,
     UmiDesktopMonitorInteraction **out_interaction);
+/**
+ * Release or reset state held by desktop monitor interaction so the same storage can be
+ * reused safely.
+ */
 void umi_desktop_monitor_interaction_destroy(
     UmiDesktopMonitorInteraction *interaction);
+/**
+ * Provide the desktop monitor interaction focus operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_focus(
     UmiDesktopMonitorInteraction *interaction,
     const char *monitor_id);
+/**
+ * Provide the desktop monitor interaction capture affinities operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_capture_affinities(
     UmiDesktopMonitorInteraction *interaction);
+/**
+ * Provide the desktop monitor interaction move window operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_move_window(
     UmiDesktopMonitorInteraction *interaction,
     const char *window_id,
     const char *monitor_id);
+/**
+ * Provide the desktop monitor interaction move window next operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_move_window_next(
     UmiDesktopMonitorInteraction *interaction,
     const char *window_id);
+/**
+ * Provide the desktop monitor interaction restore affinity operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_restore_affinity(
     UmiDesktopMonitorInteraction *interaction,
     const char *window_id);
+/**
+ * Provide the desktop monitor interaction reconcile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_reconcile(
     UmiDesktopMonitorInteraction *interaction);
+/**
+ * Find desktop monitor interaction affinity while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_desktop_monitor_interaction_affinity_at(
     const UmiDesktopMonitorInteraction *interaction,
     size_t index,
     UmiDesktopMonitorAffinity *out_affinity);
+/**
+ * Provide the desktop monitor interaction snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_snapshot(
     const UmiDesktopMonitorInteraction *interaction,
     UmiDesktopMonitorInteractionSnapshot *out_snapshot);

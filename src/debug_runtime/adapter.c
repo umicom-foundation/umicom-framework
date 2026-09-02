@@ -36,6 +36,7 @@ struct UmiDebugRuntimeAdapter {
     uint64_t revision;
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(
     char *destination,
     size_t capacity,
@@ -43,17 +44,26 @@ static UmiStatus copy_text(
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime adapter create with transport operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_runtime_adapter_create_with_transport(
     const char *adapter_id,
     UmiDebugRuntimeTransport *transport,
@@ -62,23 +72,33 @@ UmiStatus umi_debug_runtime_adapter_create_with_transport(
     UmiDebugRuntimeAdapter *adapter;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter_id == NULL || adapter_id[0] == '\0' ||
         transport == NULL || out_adapter == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_debug_runtime_transport_validate(transport);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     *out_adapter = NULL;
 
     adapter = (UmiDebugRuntimeAdapter *)calloc(1U, sizeof(*adapter));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = copy_text(
         adapter->adapter_id,
         sizeof(adapter->adapter_id),
         adapter_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(adapter);
         return status;
@@ -91,10 +111,12 @@ UmiStatus umi_debug_runtime_adapter_create_with_transport(
     umi_debug_runtime_pending_init(&adapter->pending);
 
     status = umi_debug_runtime_event_queue_create(&adapter->events);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_debug_runtime_response_queue_create(
             &adapter->responses);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_debug_runtime_event_queue_destroy(adapter->events);
         adapter->transport.destroy(adapter->transport.instance);
@@ -110,6 +132,10 @@ UmiStatus umi_debug_runtime_adapter_create_with_transport(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime adapter start process operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_adapter_start_process(
     const char *adapter_id,
     const char *program,
@@ -129,6 +155,7 @@ UmiStatus umi_debug_runtime_adapter_start_process(
         argument_count,
         working_directory,
         &transport);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_adapter_create_with_transport(
@@ -136,6 +163,7 @@ UmiStatus umi_debug_runtime_adapter_start_process(
         &transport,
         out_adapter);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK &&
         transport.instance != NULL &&
         transport.destroy != NULL) {
@@ -145,13 +173,25 @@ UmiStatus umi_debug_runtime_adapter_start_process(
     return status;
 }
 
+/*
+ * Release or reset state held by debug runtime adapter so the same storage can be reused
+ * safely.
+ */
 void umi_debug_runtime_adapter_destroy(UmiDebugRuntimeAdapter *adapter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return;
 
     umi_debug_runtime_response_queue_destroy(adapter->responses);
     umi_debug_runtime_event_queue_destroy(adapter->events);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter->transport.instance != NULL) {
         adapter->transport.destroy(adapter->transport.instance);
     }
@@ -159,6 +199,7 @@ void umi_debug_runtime_adapter_destroy(UmiDebugRuntimeAdapter *adapter)
     free(adapter);
 }
 
+/* Provide the send json operation used by this module and its client applications. */
 static UmiStatus send_json(
     UmiDebugRuntimeAdapter *adapter,
     const char *json)
@@ -172,6 +213,7 @@ static UmiStatus send_json(
         frame,
         sizeof(frame),
         &frame_length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = adapter->transport.write(
@@ -179,6 +221,7 @@ static UmiStatus send_json(
         frame,
         frame_length);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         adapter->messages_sent += 1U;
         adapter->bytes_sent += frame_length;
@@ -188,6 +231,10 @@ static UmiStatus send_json(
     return status;
 }
 
+/*
+ * Provide the debug runtime adapter send request operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_adapter_send_request(
     UmiDebugRuntimeAdapter *adapter,
     const char *command,
@@ -200,11 +247,16 @@ UmiStatus umi_debug_runtime_adapter_send_request(
     uint64_t sequence;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || command == NULL || command[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     sequence = adapter->next_sequence++;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (sequence == 0U) sequence = adapter->next_sequence++;
 
     status = umi_debug_runtime_build_request(
@@ -213,6 +265,7 @@ UmiStatus umi_debug_runtime_adapter_send_request(
         arguments_json,
         json,
         sizeof(json));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_debug_runtime_pending_add(
@@ -220,9 +273,11 @@ UmiStatus umi_debug_runtime_adapter_send_request(
         sequence,
         command,
         context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = send_json(adapter, json);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)umi_debug_runtime_pending_take(
             &adapter->pending,
@@ -231,10 +286,18 @@ UmiStatus umi_debug_runtime_adapter_send_request(
         return status;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_sequence != NULL) *out_sequence = sequence;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime adapter receive operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_adapter_receive(
     UmiDebugRuntimeAdapter *adapter,
     uint32_t timeout_ms,
@@ -246,10 +309,15 @@ UmiStatus umi_debug_runtime_adapter_receive(
     char json[UMI_DEBUG_RUNTIME_JSON_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || out_envelope == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_language_runtime_framer_has_message(&adapter->framer)) {
         status = adapter->transport.read(
             adapter->transport.instance,
@@ -257,6 +325,7 @@ UmiStatus umi_debug_runtime_adapter_receive(
             sizeof(bytes),
             timeout_ms,
             &read_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         adapter->bytes_received += read_count;
@@ -265,9 +334,11 @@ UmiStatus umi_debug_runtime_adapter_receive(
             &adapter->framer,
             bytes,
             read_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_language_runtime_framer_has_message(&adapter->framer)) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -277,6 +348,7 @@ UmiStatus umi_debug_runtime_adapter_receive(
         json,
         sizeof(json),
         &json_length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)json_length;
@@ -284,12 +356,15 @@ UmiStatus umi_debug_runtime_adapter_receive(
     status = umi_debug_runtime_message_parse(
         json,
         out_envelope);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_envelope->kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &&
         out_envelope->request_sequence != 0U) {
         UmiDebugRuntimePendingRequest pending;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_debug_runtime_pending_take(
                 &adapter->pending,
                 out_envelope->request_sequence,
@@ -308,6 +383,10 @@ UmiStatus umi_debug_runtime_adapter_receive(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime adapter wait response operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_adapter_wait_response(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t request_sequence,
@@ -317,11 +396,16 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
     uint32_t attempts = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || request_sequence == 0U ||
         out_response == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_debug_runtime_response_queue_take(
             adapter->responses,
             request_sequence,
@@ -331,6 +415,10 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
             : UMI_STATUS_UNAVAILABLE;
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (attempts < 256U) {
         UmiDebugRuntimeEnvelope envelope;
 
@@ -339,23 +427,29 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
             timeout_ms,
             &envelope);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_NOT_FOUND) {
             attempts += 1U;
             continue;
         }
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_EVENT) {
             status = umi_debug_runtime_event_queue_push(
                 adapter->events,
                 &envelope);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             attempts += 1U;
             continue;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (envelope.kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (envelope.request_sequence == request_sequence) {
                 *out_response = envelope;
                 return envelope.success
@@ -366,6 +460,7 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
             status = umi_debug_runtime_response_queue_push(
                 adapter->responses,
                 &envelope);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
 
@@ -375,6 +470,10 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
     return UMI_STATUS_TIMEOUT;
 }
 
+/*
+ * Provide the debug runtime adapter invoke operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_adapter_invoke(
     UmiDebugRuntimeAdapter *adapter,
     const char *command,
@@ -386,6 +485,10 @@ UmiStatus umi_debug_runtime_adapter_invoke(
     uint64_t request_sequence = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || command == NULL || out_response == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -396,6 +499,7 @@ UmiStatus umi_debug_runtime_adapter_invoke(
         arguments_json,
         context,
         &request_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_debug_runtime_adapter_wait_response(
@@ -405,18 +509,34 @@ UmiStatus umi_debug_runtime_adapter_invoke(
         out_response);
 }
 
+/*
+ * Provide the debug runtime adapter next event operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_adapter_next_event(
     UmiDebugRuntimeAdapter *adapter,
     UmiDebugRuntimeEnvelope *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_debug_runtime_event_queue_pop(adapter->events, out_event);
 }
 
+/*
+ * Provide the debug runtime adapter set state operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_adapter_set_state(
     UmiDebugRuntimeAdapter *adapter,
     UmiDebugRuntimeAdapterState state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL ||
         state < UMI_DEBUG_RUNTIME_ADAPTER_STOPPED ||
         state > UMI_DEBUG_RUNTIME_ADAPTER_FAILED) {
@@ -428,12 +548,20 @@ UmiStatus umi_debug_runtime_adapter_set_state(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime adapter stop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_adapter_stop(
     UmiDebugRuntimeAdapter *adapter,
     uint32_t timeout_ms)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     adapter->state = UMI_DEBUG_RUNTIME_ADAPTER_STOPPING;
@@ -451,6 +579,10 @@ UmiStatus umi_debug_runtime_adapter_stop(
     return status;
 }
 
+/*
+ * Provide the debug runtime adapter is running operation used by this module and its
+ * client applications.
+ */
 int umi_debug_runtime_adapter_is_running(
     UmiDebugRuntimeAdapter *adapter)
 {
@@ -459,10 +591,18 @@ int umi_debug_runtime_adapter_is_running(
         adapter->transport.is_running(adapter->transport.instance);
 }
 
+/*
+ * Provide the debug runtime adapter snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_adapter_snapshot(
     const UmiDebugRuntimeAdapter *adapter,
     UmiDebugRuntimeAdapterSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

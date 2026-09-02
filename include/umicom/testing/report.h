@@ -25,9 +25,17 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the test report summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_report_summary(const UmiTestRunSummary *summary,
                                   char *out_text,
                                   size_t capacity);
+/**
+ * Provide the test report results operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_report_results(const UmiTestResult *results,
                                   size_t result_count,
                                   char *out_text,

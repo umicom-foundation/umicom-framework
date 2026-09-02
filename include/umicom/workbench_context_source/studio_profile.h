@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context source studio profile data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextSourceStudioProfile {
     const char *application_id;
     const char *development_group_id;
@@ -28,8 +32,16 @@ typedef struct UmiWorkbenchContextSourceStudioProfile {
     const char *data_group_id;
 } UmiWorkbenchContextSourceStudioProfile;
 
+/**
+ * Provide the workbench context source studio profile default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchContextSourceStudioProfile
 umi_workbench_context_source_studio_profile_default(void);
+/**
+ * Provide the workbench context source register studio profile operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_register_studio_profile(
     UmiWorkbenchContextSourceService *service,
     const UmiWorkbenchContextSourceStudioProfile *profile);

@@ -16,6 +16,10 @@
 #include "umicom/ai_coding_tools/tools/source_control_commit.h"
 #include "../tool_support.h"
 
+/*
+ * Provide the ai coding tool source control commit descriptor operation used by this
+ * module and its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_source_control_commit_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -32,6 +36,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_source_control_commit_descri
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool source control commit invoke operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_ai_coding_tool_source_control_commit_invoke(
     const char *arguments_json,
     char *output,
@@ -46,16 +54,23 @@ UmiStatus umi_ai_coding_tool_source_control_commit_invoke(
     char commit_id[256];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->source_control == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
 
     status = umi_ai_coding_tool_json_parse_object(arguments_json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_required_string(
             &document, "message", message, sizeof(message));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (message[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_source_control_commit(
@@ -63,10 +78,12 @@ UmiStatus umi_ai_coding_tool_source_control_commit_invoke(
         message,
         commit_id,
         sizeof(commit_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"commitId\":");
     (void)umi_language_runtime_json_writer_string(&writer, commit_id);

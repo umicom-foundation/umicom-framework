@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityDescriptor {
     UmiCommodityId id;
     char name[UMI_COMMODITY_NAME_CAPACITY];

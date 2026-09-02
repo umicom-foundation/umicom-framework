@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link instrument bridge data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextLinkInstrumentBridge {
     uint32_t structure_size;
     char bridge_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkInstrumentBridge {
     uint64_t revision;
 } UmiWorkbenchContextLinkInstrumentBridge;
 
+/**
+ * Initialise workbench context link instrument bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_instrument_bridge_init(UmiWorkbenchContextLinkInstrumentBridge *record,
                                            const char *identity);
+/**
+ * Check that workbench context link instrument bridge satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_context_link_instrument_bridge_validate(
     const UmiWorkbenchContextLinkInstrumentBridge *record);
+/**
+ * Copy workbench context link instrument bridge into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_instrument_bridge_copy(
     UmiWorkbenchContextLinkInstrumentBridge *destination,
     const UmiWorkbenchContextLinkInstrumentBridge *source);
+/**
+ * Provide the workbench context link instrument bridge hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_link_instrument_bridge_hash(
     const UmiWorkbenchContextLinkInstrumentBridge *record);
+/**
+ * Provide the workbench context link instrument bridge set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_instrument_bridge_set_primary(
     UmiWorkbenchContextLinkInstrumentBridge *record,
     const char *value);
+/**
+ * Provide the workbench context link instrument bridge set secondary operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_instrument_bridge_set_secondary(
     UmiWorkbenchContextLinkInstrumentBridge *record,
     const char *value);
+/**
+ * Provide the workbench context link instrument bridge touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_link_instrument_bridge_touch(
     UmiWorkbenchContextLinkInstrumentBridge *record,
     uint64_t sequence,

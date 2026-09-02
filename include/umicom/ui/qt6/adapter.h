@@ -32,6 +32,9 @@ extern "C" {
 typedef void *UmiQt6WidgetHandle;
 typedef void *UmiQt6ActionHandle;
 
+/**
+ * List the named qt6 native kind values accepted by this public contract.
+ */
 typedef enum UmiQt6NativeKind {
     UMI_QT6_NATIVE_WIDGET = 1,
     UMI_QT6_NATIVE_MAIN_WINDOW = 2,
@@ -52,6 +55,9 @@ typedef enum UmiQt6NativeKind {
     UMI_QT6_NATIVE_TAB = 17
 } UmiQt6NativeKind;
 
+/**
+ * List the named qt6 surface capability values accepted by this public contract.
+ */
 typedef enum UmiQt6SurfaceCapability {
     UMI_QT6_CAP_FOCUS = UINT64_C(1) << 0,
     UMI_QT6_CAP_KEYBOARD = UINT64_C(1) << 1,
@@ -67,6 +73,9 @@ typedef enum UmiQt6SurfaceCapability {
     UMI_QT6_CAP_CANVAS = UINT64_C(1) << 11
 } UmiQt6SurfaceCapability;
 
+/**
+ * Represent the qt6 surface descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiQt6SurfaceDescriptor {
     uint32_t api_version;
     char surface_id[UMI_QT6_SURFACE_ID_CAPACITY];
@@ -76,6 +85,9 @@ typedef struct UmiQt6SurfaceDescriptor {
     uint64_t capability_flags;
 } UmiQt6SurfaceDescriptor;
 
+/**
+ * Represent the qt6 render request data shared with callers of this public contract.
+ */
 typedef struct UmiQt6RenderRequest {
     const void *model;
     const char *model_contract;
@@ -85,6 +97,9 @@ typedef struct UmiQt6RenderRequest {
     uint64_t flags;
 } UmiQt6RenderRequest;
 
+/**
+ * Represent the qt6 adapter info data shared with callers of this public contract.
+ */
 typedef struct UmiQt6AdapterInfo {
     uint32_t api_version;
     uint32_t minimum_qt_major;
@@ -93,12 +108,34 @@ typedef struct UmiQt6AdapterInfo {
     uint64_t capability_flags;
 } UmiQt6AdapterInfo;
 
+/**
+ * Provide the qt6 adapter descriptor operation used by this module and its client
+ * applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_adapter_descriptor(void);
+/**
+ * Provide the qt6 adapter info operation used by this module and its client applications.
+ */
 UmiQt6AdapterInfo umi_qt6_adapter_info(void);
+/**
+ * Check that qt6 surface descriptor satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_qt6_surface_descriptor_validate(const UmiQt6SurfaceDescriptor *descriptor);
+/**
+ * Provide the qt6 native kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_qt6_native_kind_text(UmiQt6NativeKind kind);
+/**
+ * Provide the qt6 create scaffold operation used by this module and its client
+ * applications.
+ */
 UmiQt6WidgetHandle umi_qt6_create_scaffold(const UmiQt6SurfaceDescriptor *descriptor,
                                             const UmiQt6RenderRequest *request);
+/**
+ * Release or reset state held by qt6 widget so the same storage can be reused safely.
+ */
 void umi_qt6_widget_destroy(UmiQt6WidgetHandle widget);
 
 #ifdef __cplusplus

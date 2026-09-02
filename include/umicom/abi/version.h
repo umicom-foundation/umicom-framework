@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the abi version compare operation used by this module and its client
+ * applications.
+ */
 int umi_abi_version_compare(UmiVersion left, UmiVersion right);
+/**
+ * Provide the abi version is compatible operation used by this module and its client
+ * applications.
+ */
 int umi_abi_version_is_compatible(UmiVersion required, UmiVersion available);
 #ifdef __cplusplus
 }

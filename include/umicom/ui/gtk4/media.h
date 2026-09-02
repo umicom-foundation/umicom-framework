@@ -23,6 +23,12 @@
 #define UMICOM_UI_GTK4_MEDIA_H
 #include <gtk/gtk.h>
 #include "umicom/ui/components/component.h"
+/**
+ * Provide the gtk4 picture new operation used by this module and its client applications.
+ */
 GtkWidget *umi_gtk4_picture_new(const UmiUiComponentSpec *spec);
+/**
+ * Provide the gtk4 video new operation used by this module and its client applications.
+ */
 GtkWidget *umi_gtk4_video_new(const UmiUiComponentSpec *spec);
 #endif

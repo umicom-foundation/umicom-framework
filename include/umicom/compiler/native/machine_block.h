@@ -21,8 +21,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native machine block data shared with callers of this public contract.
+ */
 typedef struct UmiNativeMachineBlock { uint32_t id; char label[UMI_NC_NAME_CAPACITY]; UmiNativeMachineInstruction instructions[UMI_NC_MAX_MACHINE_INSTRUCTIONS]; size_t instruction_count; } UmiNativeMachineBlock;
+/**
+ * Initialise nc machine block from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_nc_machine_block_init(UmiNativeMachineBlock *block,uint32_t id,const char *label);
+/**
+ * Add nc machine block only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_nc_machine_block_append(UmiNativeMachineBlock *block,const UmiNativeMachineInstruction *instruction);
 #ifdef __cplusplus
 }

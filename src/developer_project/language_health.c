@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the developer project language health probe operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_language_health_probe(
     const UmiDeveloperProjectLanguagePack *pack,
     UmiDeveloperProjectLanguageHealth *out_health)
@@ -24,11 +28,16 @@ UmiStatus umi_developer_project_language_health_probe(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pack == NULL || out_health == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_project_language_pack_validate(pack);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_health, 0, sizeof(*out_health));
@@ -40,6 +49,7 @@ UmiStatus umi_developer_project_language_health_probe(
 
     out_health->tool_count = pack->build_tool_count;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pack->build_tool_count; ++index) {
         UmiDeveloperProjectLanguageToolHealth *tool =
             &out_health->tools[index];
@@ -52,10 +62,11 @@ UmiStatus umi_developer_project_language_health_probe(
             tool->path,
             sizeof(tool->path));
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             tool->available = 1;
             out_health->available_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             out_health->missing_count += 1U;
         }
     }

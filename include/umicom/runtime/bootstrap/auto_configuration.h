@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap auto configuration from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_auto_configuration_init(
     UmiBootstrapAutoConfiguration *configuration,
     const char *configuration_id,

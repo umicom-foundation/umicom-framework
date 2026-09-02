@@ -17,11 +17,19 @@
 
 #include <string.h>
 
+/*
+ * Initialise repository workflow request from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_workflow_request_init(
     UmiRepositoryWorkflowRequest *request,
     UmiRepositoryWorkflowAction action,
     const char *repository_root)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) return;
     (void)memset(request, 0, sizeof(*request));
     request->action = action;

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric service descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricServiceDescriptor {
     char service_id[UMI_FABRIC_ID_CAPACITY];
     char name[UMI_FABRIC_TEXT_CAPACITY];
@@ -32,7 +36,15 @@ typedef struct UmiFabricServiceDescriptor {
     uint64_t capability_mask;
 } UmiFabricServiceDescriptor;
 
+/**
+ * Initialise fabric service descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_service_descriptor_init(UmiFabricServiceDescriptor *item, const char *service_id, const char *name, UmiFabricVersion version, uint64_t capability_mask);
+/**
+ * Check that fabric service descriptor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_fabric_service_descriptor_validate(const UmiFabricServiceDescriptor *item);
 
 #ifdef __cplusplus

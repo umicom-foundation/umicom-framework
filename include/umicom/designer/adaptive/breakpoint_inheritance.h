@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer breakpoint inheritance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerBreakpointInheritance {
     char variant_ids[UMI_DESIGNER_ADAPTIVE_MAX_VARIANTS][UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     size_t count;

@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include "umicom/web/workbench/collection.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWebWorkbenchCollection *collection = calloc(1U, sizeof(*collection));

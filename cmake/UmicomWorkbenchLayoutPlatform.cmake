@@ -24,10 +24,12 @@ include_guard(GLOBAL)
 set(UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_workbench_layout)
     return()
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET Umicom::base OR NOT TARGET Umicom::desktop)
     message(FATAL_ERROR
         "The workbench layout platform requires the established Framework "
@@ -88,9 +90,11 @@ target_link_libraries(umicom_workbench_layout
         Umicom::desktop
 )
 
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_workbench_layout)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_workbench_layout)
 endif()
@@ -103,8 +107,12 @@ if(TARGET umicom_framework)
     )
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add workbench layout test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_workbench_layout_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
@@ -118,9 +126,11 @@ if(BUILD_TESTING)
         target_link_libraries("${target}" PRIVATE
             Umicom::workbench_layout
         )
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

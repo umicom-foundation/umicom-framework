@@ -21,8 +21,13 @@ UmiStatus umi_adaptive_content_priority_init(UmiAdaptiveContentPriority *item,
                                              uint32_t priority,
                                              int essential)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL || content_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(item, 0, sizeof *item);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_adaptive_copy_text(item->content_id, sizeof item->content_id, content_id) != UMI_STATUS_OK)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     item->priority = priority;
@@ -34,8 +39,14 @@ UmiStatus umi_adaptive_content_priority_init(UmiAdaptiveContentPriority *item,
 int umi_adaptive_content_priority_compare(const UmiAdaptiveContentPriority *left,
                                           const UmiAdaptiveContentPriority *right)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->essential != right->essential) return left->essential ? -1 : 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->priority != right->priority) return left->priority > right->priority ? -1 : 1;
     return strcmp(left->content_id, right->content_id);
 }

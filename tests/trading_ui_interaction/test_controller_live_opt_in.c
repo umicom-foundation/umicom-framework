@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise test controller live opt in and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_controller_live_opt_in(void)
 {
     UmiTradingWorkspaceConfig workspace_config;

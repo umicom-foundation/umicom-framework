@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise risk cube data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseRiskCube { size_t scenario_count; size_t factor_count; double values[UMI_ENTERPRISE_MAX_SCENARIOS][UMI_ENTERPRISE_MAX_FACTORS]; } UmiEnterpriseRiskCube;
 /* Initialise a bounded risk cube with explicit dimensions. */
 UmiStatus umi_enterprise_risk_cube_init(UmiEnterpriseRiskCube *cube,size_t scenario_count,size_t factor_count);

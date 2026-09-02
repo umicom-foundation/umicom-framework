@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "umicom/ui/workspace_customisation.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiWorkspaceCustomisation *customisation;
@@ -27,6 +31,10 @@ int main(void)
     UmiUiThemeProfile theme;
     customisation = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*customisation));
     assert(customisation != NULL);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (customisation == NULL) return 1;
     umi_ui_workspace_customisation_init(customisation);
     assert(umi_ui_workspace_layout_init(&develop,"develop","Develop") == UMI_STATUS_OK);

@@ -19,6 +19,10 @@
 #include "umicom/ai_developer_experience/chat_persistence.h"
 #include "umicom/ai_developer_experience/task_persistence.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     /*

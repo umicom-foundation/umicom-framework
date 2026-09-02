@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix build observation data shared with callers of this public contract.
+ */
 typedef struct UmiHelixBuildObservation {
     uint32_t structure_size; uint32_t api_version; char id[UMI_HELIX_ID_CAPACITY]; char subject_id[UMI_HELIX_ID_CAPACITY];
     UmiHelixState state; UmiHelixSeverity severity; uint64_t sequence; uint32_t flags; size_t passed; size_t failed;

@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai/coding_assistant.h"
+/**
+ * Initialise ai developer context view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_context_view_create(
     const char *view_id,
     UmiAiCodingAssistantService *assistant,

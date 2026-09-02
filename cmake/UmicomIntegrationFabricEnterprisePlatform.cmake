@@ -17,6 +17,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_INTEGRATION_FABRIC_ENTERPRISE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_integration)
     message(FATAL_ERROR "UmicomIntegrationFabricEnterprisePlatform.cmake requires canonical umicom_integration")
 endif()
@@ -94,23 +95,31 @@ target_sources(umicom_integration PRIVATE
 if(TARGET umicom_resilience)
     target_link_libraries(umicom_integration PUBLIC Umicom::resilience)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_observability)
     target_link_libraries(umicom_integration PUBLIC Umicom::observability)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_web)
     target_link_libraries(umicom_integration PUBLIC Umicom::web)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add integration fabric test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_integration_fabric_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_INTEGRATION_FABRIC_ENTERPRISE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::integration)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

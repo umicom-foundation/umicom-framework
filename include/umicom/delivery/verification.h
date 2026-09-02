@@ -27,18 +27,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the verification check data shared with callers of this public contract.
+ */
 typedef struct UmiVerificationCheck {
     char check_id[UMI_DELIVERY_ID_CAPACITY];
     UmiEvidenceStatus status;
 } UmiVerificationCheck;
+/**
+ * Represent the verification report data shared with callers of this public contract.
+ */
 typedef struct UmiVerificationReport {
     UmiVerificationCheck checks[UMI_DELIVERY_MAX_CHECKS];
     size_t count;
 } UmiVerificationReport;
+/**
+ * Initialise verification report from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_verification_report_init(UmiVerificationReport *report);
+/**
+ * Add verification report only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_verification_report_add(UmiVerificationReport *report,
                                       const char *check_id,
                                       UmiEvidenceStatus status);
+/**
+ * Provide the verification report passed operation used by this module and its client
+ * applications.
+ */
 int umi_verification_report_passed(const UmiVerificationReport *report);
 
 #ifdef __cplusplus

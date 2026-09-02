@@ -18,6 +18,10 @@
 #include "umicom/ai/conversation_archive.h"
 #include "umicom/platform/filesystem.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiConversationArchive *archive = NULL;

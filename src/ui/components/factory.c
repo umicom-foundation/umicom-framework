@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/factory.h"
+/*
+ * Check that ui component factory satisfies its contract before another service relies on
+ * it.
+ */
 int umi_ui_component_factory_is_valid(const UmiUiComponentFactory*f){return f&&f->structure_size>=sizeof(*f)&&f->create&&f->destroy;}

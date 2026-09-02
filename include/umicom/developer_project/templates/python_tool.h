@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project template python tool operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_python_tool(void);
 
 #ifdef __cplusplus

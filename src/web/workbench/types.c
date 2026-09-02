@@ -16,23 +16,37 @@
 
 #include <string.h>
 
+/*
+ * Provide the web workbench copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_workbench_copy_text(
     char *destination,
     size_t capacity,
     const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the web workbench phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_phase_text(UmiWebWorkbenchPhase phase)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (phase) {
         case UMI_WEB_WORKBENCH_IDLE: return "idle";
         case UMI_WEB_WORKBENCH_PREPARING: return "preparing";
@@ -44,8 +58,13 @@ const char *umi_web_workbench_phase_text(UmiWebWorkbenchPhase phase)
     }
 }
 
+/*
+ * Provide the web workbench auth kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_auth_kind_text(UmiWebWorkbenchAuthKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_WEB_WORKBENCH_AUTH_NONE: return "none";
         case UMI_WEB_WORKBENCH_AUTH_BEARER: return "bearer";
@@ -57,8 +76,13 @@ const char *umi_web_workbench_auth_kind_text(UmiWebWorkbenchAuthKind kind)
     }
 }
 
+/*
+ * Provide the web workbench body kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_body_kind_text(UmiWebWorkbenchBodyKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_WEB_WORKBENCH_BODY_NONE: return "none";
         case UMI_WEB_WORKBENCH_BODY_TEXT: return "text";
@@ -70,8 +94,13 @@ const char *umi_web_workbench_body_kind_text(UmiWebWorkbenchBodyKind kind)
     }
 }
 
+/*
+ * Provide the web workbench stream kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_stream_kind_text(UmiWebWorkbenchStreamKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_WEB_WORKBENCH_STREAM_WEBSOCKET: return "websocket";
         case UMI_WEB_WORKBENCH_STREAM_SSE: return "sse";
@@ -79,9 +108,14 @@ const char *umi_web_workbench_stream_kind_text(UmiWebWorkbenchStreamKind kind)
     }
 }
 
+/*
+ * Provide the web workbench cloud provider text operation used by this module and its
+ * client applications.
+ */
 const char *umi_web_workbench_cloud_provider_text(
     UmiWebWorkbenchCloudProvider provider)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (provider) {
         case UMI_WEB_WORKBENCH_CLOUD_GENERIC: return "generic";
         case UMI_WEB_WORKBENCH_CLOUD_AWS: return "aws";

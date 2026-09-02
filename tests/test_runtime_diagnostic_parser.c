@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/runtime_parser.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiOutputRecord output;

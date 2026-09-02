@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise empty cursor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchLayoutSyncCursor empty_cursor(void)
 {
     UmiWorkbenchLayoutSyncCursor cursor;
@@ -26,6 +30,10 @@ static UmiWorkbenchLayoutSyncCursor empty_cursor(void)
     return cursor;
 }
 
+/*
+ * Exercise planning input and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutSyncPlanningInput planning_input(
     const UmiWorkbenchLayoutChange *local,
     size_t local_count,
@@ -49,6 +57,10 @@ static UmiWorkbenchLayoutSyncPlanningInput planning_input(
     return input;
 }
 
+/*
+ * Exercise test push only plan and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_push_only_plan(void)
 {
     UmiWorkbenchLayoutChange local[2];
@@ -80,6 +92,10 @@ static int test_push_only_plan(void)
     return 0;
 }
 
+/*
+ * Exercise test pull only plan and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_pull_only_plan(void)
 {
     UmiWorkbenchLayoutChange remote[2];
@@ -107,6 +123,10 @@ static int test_pull_only_plan(void)
     return 0;
 }
 
+/*
+ * Exercise test compatible lineage and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_compatible_lineage(void)
 {
     UmiWorkbenchLayoutChange local;
@@ -134,6 +154,10 @@ static int test_compatible_lineage(void)
     return 0;
 }
 
+/*
+ * Exercise test conflicting lineage and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_conflicting_lineage(void)
 {
     UmiWorkbenchLayoutChange local;
@@ -163,6 +187,10 @@ static int test_conflicting_lineage(void)
     return 0;
 }
 
+/*
+ * Exercise test cursor filtering and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_cursor_filtering(void)
 {
     UmiWorkbenchLayoutChange local[2];
@@ -188,6 +216,10 @@ static int test_cursor_filtering(void)
     return 0;
 }
 
+/*
+ * Exercise test duplicate item rejected and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_duplicate_item_rejected(void)
 {
     UmiWorkbenchLayoutSyncPlan plan;
@@ -210,6 +242,10 @@ static int test_duplicate_item_rejected(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_push_only_plan() == 0, "push plan");

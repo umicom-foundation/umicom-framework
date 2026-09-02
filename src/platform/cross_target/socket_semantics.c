@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/socket_semantics.h"
 
-UmiCtSupportLevel umi_ct_socket_semantics_support(const UmiCtSocketSemantics*s,bool v6,bool local,bool async){if(s==NULL||!s->ipv4||!s->nonblocking)return UMI_CT_SUPPORT_NONE;if((v6&&!s->ipv6)||(local&&!s->local_domain)||(async&&!(s->async_completion||s->readiness_polling)))return UMI_CT_SUPPORT_DEGRADED;return UMI_CT_SUPPORT_NATIVE;}
+/*
+ * Provide the ct socket semantics support operation used by this module and its client
+ * applications.
+ */
+UmiCtSupportLevel umi_ct_socket_semantics_support(const UmiCtSocketSemantics*s,bool v6,bool local,bool async){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||!s->ipv4||!s->nonblocking)return UMI_CT_SUPPORT_NONE;/* Protect caller-owned memory by checking that required state is available before it is used. */ if((v6&&!s->ipv6)||(local&&!s->local_domain)||(async&&!(s->async_completion||s->readiness_polling)))return UMI_CT_SUPPORT_DEGRADED;return UMI_CT_SUPPORT_NATIVE;}

@@ -31,6 +31,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named application entry kind values accepted by this public contract.
+ */
 typedef enum UmiApplicationEntryKind {
     UMI_APPLICATION_ENTRY_WORKBENCH = 1,
     UMI_APPLICATION_ENTRY_UTILITY = 2,
@@ -38,6 +41,9 @@ typedef enum UmiApplicationEntryKind {
     UMI_APPLICATION_ENTRY_SERVICE = 4
 } UmiApplicationEntryKind;
 
+/**
+ * Represent the application presentation data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationPresentation {
     uint32_t structure_size;
     const char *application_id;
@@ -49,13 +55,37 @@ typedef struct UmiApplicationPresentation {
     bool visible_when_unavailable;
 } UmiApplicationPresentation;
 
+/**
+ * Return the number of records represented by application presentation without changing
+ * their state.
+ */
 size_t umi_application_presentation_count(void);
+/**
+ * Find application presentation while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationPresentation *umi_application_presentation_at(size_t index);
+/**
+ * Find application presentation while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationPresentation *umi_application_presentation_find(
     const char *application_id);
+/**
+ * Check that application presentation satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_application_presentation_validate(
     const UmiApplicationPresentation *presentation);
+/**
+ * Check that application presentation catalogue satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_presentation_catalogue_validate(void);
+/**
+ * Provide the application entry kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_entry_kind_text(UmiApplicationEntryKind kind);
 
 #ifdef __cplusplus

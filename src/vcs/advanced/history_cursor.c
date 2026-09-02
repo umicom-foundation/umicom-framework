@@ -20,8 +20,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced history cursor from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_history_cursor_init(UmiVcsAdvancedHistoryCursor *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return;
     (void)memset(value, 0, sizeof(*value));
     value->struct_size = (uint32_t)sizeof(*value);
@@ -29,8 +37,16 @@ void umi_vcs_advanced_history_cursor_init(UmiVcsAdvancedHistoryCursor *value)
     value->limit = 100U;
 }
 
+/*
+ * Check that vcs advanced history cursor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_history_cursor_validate(const UmiVcsAdvancedHistoryCursor *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL ||
         value->struct_size < sizeof(*value) ||
         value->api_version != UMI_VCS_ADVANCED_API_VERSION ||
@@ -40,10 +56,18 @@ UmiStatus umi_vcs_advanced_history_cursor_validate(const UmiVcsAdvancedHistoryCu
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced history cursor advance operation used by this module and its
+ * client applications.
+ */
 void umi_vcs_advanced_history_cursor_advance(UmiVcsAdvancedHistoryCursor *value,
                                                 size_t returned,
                                                 int has_more)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return;
     value->returned = returned;
     value->offset += returned;

@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/component_layout.h"
 
-int main(void){UmiDesignComponentLayout l;if(umi_design_component_layout_init(&l,UMI_DESIGN_LAYOUT_GRID,4U,8.0,1)!=UMI_STATUS_OK)return 1;return l.columns==4U&&l.gap==8.0?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignComponentLayout l;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_component_layout_init(&l,UMI_DESIGN_LAYOUT_GRID,4U,8.0,1)!=UMI_STATUS_OK)return 1;return l.columns==4U&&l.gap==8.0?0:2;}

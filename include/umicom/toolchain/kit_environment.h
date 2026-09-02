@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the toolchain kit environment plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_environment_plan(
     const UmiToolchainKitSnapshot *kit,
     const UmiToolchainProfile *profile,

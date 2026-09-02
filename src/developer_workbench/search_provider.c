@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_workbench/search_provider.h"
 
+/*
+ * Check that developer workbench search provider satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_search_provider_validate(
     const UmiDeveloperWorkbenchSearchProvider *provider)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL ||
         provider->provider_id[0] == '\0' ||
         provider->title[0] == '\0' ||

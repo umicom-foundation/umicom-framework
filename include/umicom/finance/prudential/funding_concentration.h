@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential funding concentration data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialFundingConcentration { double numerator; double denominator; double ratio; } UmiPrudentialFundingConcentration;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_funding_concentration_calculate(UmiPrudentialFundingConcentration *result, double numerator, double denominator);

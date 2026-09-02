@@ -45,6 +45,9 @@ extern "C" {
 #define UMI_DESIGN_MAX_STATES 16U
 #define UMI_DESIGN_MAX_BREAKPOINTS 16U
 
+/**
+ * List the named design value kind values accepted by this public contract.
+ */
 typedef enum UmiDesignValueKind {
     UMI_DESIGN_VALUE_NONE = 0,
     UMI_DESIGN_VALUE_COLOR = 1,
@@ -55,6 +58,9 @@ typedef enum UmiDesignValueKind {
     UMI_DESIGN_VALUE_DURATION = 6
 } UmiDesignValueKind;
 
+/**
+ * List the named design unit values accepted by this public contract.
+ */
 typedef enum UmiDesignUnit {
     UMI_DESIGN_UNIT_NONE = 0,
     UMI_DESIGN_UNIT_PX = 1,
@@ -63,13 +69,22 @@ typedef enum UmiDesignUnit {
     UMI_DESIGN_UNIT_PERCENT = 4
 } UmiDesignUnit;
 
+/**
+ * List the named design theme mode values accepted by this public contract.
+ */
 typedef enum UmiDesignThemeMode {
     UMI_DESIGN_THEME_LIGHT = 1,
     UMI_DESIGN_THEME_DARK = 2,
     UMI_DESIGN_THEME_HIGH_CONTRAST = 3
 } UmiDesignThemeMode;
 
+/**
+ * Represent the design length data shared with callers of this public contract.
+ */
 typedef struct UmiDesignLength { double value; UmiDesignUnit unit; } UmiDesignLength;
+/**
+ * Represent the design rgba data shared with callers of this public contract.
+ */
 typedef struct UmiDesignRgba { double red; double green; double blue; double alpha; } UmiDesignRgba;
 
 /* Copy bounded design metadata and reject silent truncation. */

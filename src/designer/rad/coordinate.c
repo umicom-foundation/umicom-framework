@@ -13,5 +13,13 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/coordinate.h"
+/*
+ * Provide the rad coordinate make operation used by this module and its client
+ * applications.
+ */
 UmiRadCoordinate umi_rad_coordinate_make(int32_t x,int32_t y){UmiRadCoordinate p={x,y};return p;}
+/*
+ * Provide the rad coordinate translate operation used by this module and its client
+ * applications.
+ */
 UmiRadCoordinate umi_rad_coordinate_translate(UmiRadCoordinate p,int32_t dx,int32_t dy){p.x+=dx;p.y+=dy;return p;}

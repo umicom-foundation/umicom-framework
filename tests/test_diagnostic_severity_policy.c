@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "diagnostic_platform_test_support.h"
 
+/*
+ * Exercise rule and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDiagnosticSeverityRule rule(const char *id,
                                       const char *code_pattern,
                                       UmiDiagnosticSeverityAction action,
@@ -39,6 +43,10 @@ static UmiDiagnosticSeverityRule rule(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticSeverityPolicy *policy = NULL;

@@ -18,18 +18,33 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the treasury repo contract data shared with callers of this public contract.
+ */
 typedef struct UmiTreasuryRepoContract {
     char id[UMI_TREASURY_ID_CAPACITY];
     int64_t cash_principal_minor;
     int64_t collateral_value_minor;
     uint32_t repo_rate_bps;
 } UmiTreasuryRepoContract;
+/**
+ * Initialise treasury repo contract from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_treasury_repo_contract_init(UmiTreasuryRepoContract *value,
     const char *id,
     int64_t cash_principal_minor,
     int64_t collateral_value_minor,
     uint32_t repo_rate_bps);
+/**
+ * Check that treasury repo contract satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_treasury_repo_contract_valid(const UmiTreasuryRepoContract *value);
+/**
+ * Provide the treasury repo contract haircut minor operation used by this module and its
+ * client applications.
+ */
 int64_t umi_treasury_repo_contract_haircut_minor(const UmiTreasuryRepoContract *value);
 #ifdef __cplusplus
 }

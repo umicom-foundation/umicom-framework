@@ -21,6 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui ent cell style data shared with callers of this public contract.
+ */
 typedef struct UmiUiEntCellStyle {
     char semantic_role[UMI_UI_ENT_ID_CAPACITY];
     int bold;
@@ -28,7 +31,14 @@ typedef struct UmiUiEntCellStyle {
     int32_t alignment;
     int32_t indent;
 } UmiUiEntCellStyle;
+/**
+ * Initialise ui ent cell style from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ui_ent_cell_style_init(UmiUiEntCellStyle *value);
+/**
+ * Check that ui ent cell style satisfies its contract before another service relies on it.
+ */
 int umi_ui_ent_cell_style_validate(const UmiUiEntCellStyle *value);
 #ifdef __cplusplus
 }

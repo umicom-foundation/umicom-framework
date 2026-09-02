@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/file_stat.h"
 
+/*
+ * Provide the document capability file stat operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_file_stat(void)
 {

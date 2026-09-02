@@ -23,9 +23,14 @@
 
 #define UMI_TEXT_CASE(value, text) case value: return text
 
+/*
+ * Provide the workbench layout data record kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_record_kind_text(
     UmiWorkbenchLayoutDataRecordKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST,
                   "layout-manifest");
@@ -52,9 +57,14 @@ const char *umi_workbench_layout_data_record_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout data change kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_change_kind_text(
     UmiWorkbenchLayoutDataChangeKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CHANGE_CREATED, "created");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CHANGE_UPDATED, "updated");
@@ -73,9 +83,14 @@ const char *umi_workbench_layout_data_change_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout data permission text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_permission_text(
     UmiWorkbenchLayoutDataPermission permission)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (permission) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_PERMISSION_VIEW, "view");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_PERMISSION_EDIT, "edit");
@@ -88,9 +103,14 @@ const char *umi_workbench_layout_data_permission_text(
     }
 }
 
+/*
+ * Provide the workbench layout data lease state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_lease_state_text(
     UmiWorkbenchLayoutDataLeaseState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_LEASE_AVAILABLE, "available");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_LEASE_HELD, "held");
@@ -101,9 +121,14 @@ const char *umi_workbench_layout_data_lease_state_text(
     }
 }
 
+/*
+ * Provide the workbench layout data outbox state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_outbox_state_text(
     UmiWorkbenchLayoutDataOutboxState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_OUTBOX_PENDING, "pending");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_OUTBOX_LEASED, "leased");
@@ -115,9 +140,14 @@ const char *umi_workbench_layout_data_outbox_state_text(
     }
 }
 
+/*
+ * Provide the workbench layout data conflict kind text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_conflict_kind_text(
     UmiWorkbenchLayoutDataConflictKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_CONCURRENT_UPDATE,
                   "concurrent-update");
@@ -134,9 +164,14 @@ const char *umi_workbench_layout_data_conflict_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout data conflict state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_conflict_state_text(
     UmiWorkbenchLayoutDataConflictState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_OPEN, "open");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_RESOLVED_LOCAL,
@@ -150,9 +185,14 @@ const char *umi_workbench_layout_data_conflict_state_text(
     }
 }
 
+/*
+ * Provide the workbench layout data sync action text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_sync_action_text(
     UmiWorkbenchLayoutDataSyncAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_SYNC_NO_ACTION, "no-action");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_SYNC_CREATE_LOCAL,
@@ -173,9 +213,14 @@ const char *umi_workbench_layout_data_sync_action_text(
     }
 }
 
+/*
+ * Provide the workbench layout data operation state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_operation_state_text(
     UmiWorkbenchLayoutDataOperationState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_OPERATION_PENDING, "pending");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_OPERATION_CLAIMED, "claimed");
@@ -189,9 +234,14 @@ const char *umi_workbench_layout_data_operation_state_text(
     }
 }
 
+/*
+ * Provide the workbench layout data health state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_health_state_text(
     UmiWorkbenchLayoutDataHealthState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_HEALTH_HEALTHY, "healthy");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_HEALTH_DEGRADED, "degraded");
@@ -202,9 +252,14 @@ const char *umi_workbench_layout_data_health_state_text(
     }
 }
 
+/*
+ * Provide the workbench layout data controller state text operation used by this module
+ * and its client applications.
+ */
 const char *umi_workbench_layout_data_controller_state_text(
     UmiWorkbenchLayoutDataControllerState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CONTROLLER_CREATED, "created");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_CONTROLLER_INITIALISED,
@@ -218,6 +273,10 @@ const char *umi_workbench_layout_data_controller_state_text(
     }
 }
 
+/*
+ * Provide the workbench layout data hash bytes operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_layout_data_hash_bytes(
     const void *data,
     size_t size)
@@ -225,7 +284,12 @@ uint64_t umi_workbench_layout_data_hash_bytes(
     const unsigned char *bytes = (const unsigned char *)data;
     uint64_t hash = UMI_WORKBENCH_LAYOUT_DATA_FNV_OFFSET;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (data == NULL && size != 0U) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < size; ++index) {
         hash ^= (uint64_t)bytes[index];
         hash *= UMI_WORKBENCH_LAYOUT_DATA_FNV_PRIME;
@@ -233,13 +297,25 @@ uint64_t umi_workbench_layout_data_hash_bytes(
     return hash;
 }
 
+/*
+ * Provide the workbench layout data hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_workbench_layout_data_hash_text(
     const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0U;
     return umi_workbench_layout_data_hash_bytes(text, strlen(text));
 }
 
+/*
+ * Provide the workbench layout data copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_data_copy_text(
     char *destination,
     size_t capacity,
@@ -247,14 +323,20 @@ UmiStatus umi_workbench_layout_data_copy_text(
     bool allow_empty)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!allow_empty && source[0] == '\0') {
         destination[0] = '\0';
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         destination[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -263,6 +345,10 @@ UmiStatus umi_workbench_layout_data_copy_text(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout data text equal operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_text_equal(
     const char *left,
     const char *right)
@@ -270,16 +356,28 @@ bool umi_workbench_layout_data_text_equal(
     return left != NULL && right != NULL && strcmp(left, right) == 0;
 }
 
+/*
+ * Provide the workbench layout data text has prefix operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_text_has_prefix(
     const char *text,
     const char *prefix)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || prefix == NULL) return false;
     length = strlen(prefix);
     return strncmp(text, prefix, length) == 0;
 }
 
+/*
+ * Provide the workbench layout data time expired operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_time_expired(
     uint64_t expires_at_ms,
     uint64_t now_ms)

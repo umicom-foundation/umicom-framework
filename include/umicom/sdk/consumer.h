@@ -25,7 +25,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk consumer data shared with callers of this public contract.
+ */
 typedef struct UmiSdkConsumer { const char *application_id; UmiSdkRequirement requirement; const char *const *required_targets; size_t target_count; } UmiSdkConsumer;
+/**
+ * Check that sdk consumer satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_sdk_consumer_validate(const UmiSdkConsumer *consumer);
 #ifdef __cplusplus
 }

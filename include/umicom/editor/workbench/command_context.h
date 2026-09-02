@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb command context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbCommandContext { bool writable; bool has_selection; bool has_multiple_cursors; bool has_document; } UmiEditorWbCommandContext;
+/**
+ * Provide the editor wb command context can edit operation used by this module and its
+ * client applications.
+ */
 int umi_editor_wb_command_context_can_edit(const UmiEditorWbCommandContext *state); int umi_editor_wb_command_context_can_find(const UmiEditorWbCommandContext *state);
 
 #ifdef __cplusplus

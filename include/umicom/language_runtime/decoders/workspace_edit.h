@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode workspace edit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_workspace_edit(const char*json,UmiLanguageRuntimeWorkspaceEdit*out);
 #ifdef __cplusplus
 }

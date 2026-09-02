@@ -23,6 +23,10 @@
 /* Initialise fixed storage so specification snapshots are allocation-free. */
 UmiStatus umi_commodity_quality_specification_init(UmiCommodityQualitySpecification *value, const char *grade_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     return umi_commodity_copy_text(value->grade_id.value, sizeof value->grade_id.value, grade_id);
@@ -31,7 +35,12 @@ UmiStatus umi_commodity_quality_specification_init(UmiCommodityQualitySpecificat
 /* Add a measure only after validating its invariant bounds. */
 UmiStatus umi_commodity_quality_specification_add(UmiCommodityQualitySpecification *value, const UmiCommodityQualityMeasure *measure)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || measure == NULL || !umi_commodity_quality_measure_valid(measure)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value->count >= UMI_COMMODITY_MAX_QUALITY_MEASURES) return UMI_STATUS_CAPACITY_EXCEEDED;
     value->measures[value->count++] = *measure;
     return UMI_STATUS_OK;

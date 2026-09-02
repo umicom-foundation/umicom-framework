@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/ai/mcp/prompt_catalogue.h"
+/*
+ * Find test ai mcp catalogue prompt while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 int test_ai_mcp_catalogue_prompt_find(void){UmiAiMcpPromptCatalogue c;UmiAiMcpPromptDescriptor d={0};umi_ai_mcp_prompt_catalogue_init(&c);strcpy(d.name,"review");assert(umi_ai_mcp_prompt_catalogue_add(&c,&d)==UMI_STATUS_OK);assert(umi_ai_mcp_prompt_catalogue_find(&c,"review")!=NULL);assert(umi_ai_mcp_prompt_catalogue_find(&c,"missing")==NULL);return 0;}

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CONTINUOUS_TESTING "umicom.developer.testing.continuous_testing"
 
+/**
+ * Provide the developer capability continuous testing operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_continuous_testing(void);
 

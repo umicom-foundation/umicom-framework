@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/io_cancellation.h"
 
+/*
+ * Provide the document capability io cancellation operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_io_cancellation(void)
 {

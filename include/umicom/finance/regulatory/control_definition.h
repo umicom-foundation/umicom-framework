@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the control definition data shared with callers of this public contract.
+ */
 typedef struct UmiControlDefinition {
     char control_id[UMI_REG_ID_CAPACITY];
     char name[UMI_REG_NAME_CAPACITY];

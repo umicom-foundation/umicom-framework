@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request goto operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_goto(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,

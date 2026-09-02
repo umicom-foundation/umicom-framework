@@ -27,8 +27,17 @@ extern "C" {
 #define UMI_PAYMENTS_NAME_CAPACITY UMI_FINANCIAL_CORE_NAME_CAPACITY
 #define UMI_PAYMENTS_MAX_ITEMS 64U
 #define UMI_PAYMENTS_MAX_LINES 32U
+/**
+ * List the named payments status values accepted by this public contract.
+ */
 typedef enum UmiPaymentsStatus { UMI_PAYMENTS_CREATED=0, UMI_PAYMENTS_VALIDATED=1, UMI_PAYMENTS_APPROVED=2, UMI_PAYMENTS_RELEASED=3, UMI_PAYMENTS_CLEARED=4, UMI_PAYMENTS_SETTLED=5, UMI_PAYMENTS_RETURNED=6, UMI_PAYMENTS_REJECTED=7 } UmiPaymentsStatus;
+/**
+ * List the named payments rail kind values accepted by this public contract.
+ */
 typedef enum UmiPaymentsRailKind { UMI_PAYMENTS_RAIL_INTERNAL=0, UMI_PAYMENTS_RAIL_DOMESTIC=1, UMI_PAYMENTS_RAIL_HIGH_VALUE=2, UMI_PAYMENTS_RAIL_INSTANT=3, UMI_PAYMENTS_RAIL_CORRESPONDENT=4 } UmiPaymentsRailKind;
+/**
+ * List the named payments message direction values accepted by this public contract.
+ */
 typedef enum UmiPaymentsMessageDirection { UMI_PAYMENTS_MESSAGE_OUTBOUND=0, UMI_PAYMENTS_MESSAGE_INBOUND=1 } UmiPaymentsMessageDirection;
 /* Assign a canonical Framework financial identifier from text. */
 UmiStatus umi_payments_id_assign(UmiFinancialId *id,const char *text);

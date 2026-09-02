@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "diagnostic_platform_test_support.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticProviderRegistry *registry = NULL;

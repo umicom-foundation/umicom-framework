@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws floating window data shared with callers of this public contract.
+ */
 typedef struct UmiWsFloatingWindow {
     char window_id[UMI_UI_ID_CAPACITY];
     char surface_id[UMI_UI_ID_CAPACITY];
@@ -32,11 +35,23 @@ typedef struct UmiWsFloatingWindow {
     bool maximised;
 } UmiWsFloatingWindow;
 
+/**
+ * Initialise ws floating window from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_floating_window_init(UmiWsFloatingWindow *window,
                                       const char *window_id,
                                       const char *surface_id,
                                       UmiUiRect bounds);
+/**
+ * Provide the ws floating window assign monitor operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ws_floating_window_assign_monitor(UmiWsFloatingWindow *window, const char *monitor_id);
+/**
+ * Provide the ws floating window set maximised operation used by this module and its
+ * client applications.
+ */
 void umi_ws_floating_window_set_maximised(UmiWsFloatingWindow *window, bool maximised);
 
 #ifdef __cplusplus

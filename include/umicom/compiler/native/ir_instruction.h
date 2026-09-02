@@ -24,10 +24,29 @@
 extern "C" {
 #endif
 #define UMI_NC_MAX_IR_OPERANDS 4U
+/**
+ * Represent the native ir instruction data shared with callers of this public contract.
+ */
 typedef struct UmiNativeIrInstruction { uint32_t id; UmiNativeIrOpcode opcode; uint32_t result_id; UmiNativeIrType result_type; uint32_t operands[UMI_NC_MAX_IR_OPERANDS]; size_t operand_count; int64_t immediate; bool side_effect; } UmiNativeIrInstruction;
+/**
+ * Initialise nc ir instruction from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_nc_ir_instruction_init(UmiNativeIrInstruction *instruction,uint32_t id,UmiNativeIrOpcode opcode,uint32_t result_id,UmiNativeIrType result_type);
+/**
+ * Provide the nc ir instruction add operand operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ir_instruction_add_operand(UmiNativeIrInstruction *instruction,uint32_t value_id);
+/**
+ * Provide the nc ir instruction is terminator operation used by this module and its client
+ * applications.
+ */
 bool umi_nc_ir_instruction_is_terminator(const UmiNativeIrInstruction *instruction);
+/**
+ * Provide the nc ir instruction produces value operation used by this module and its
+ * client applications.
+ */
 bool umi_nc_ir_instruction_produces_value(const UmiNativeIrInstruction *instruction);
 #ifdef __cplusplus
 }

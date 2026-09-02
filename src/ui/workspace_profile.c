@@ -34,9 +34,12 @@ struct UmiUiWorkspaceProfileModel {
   UmiMutex *mutex;
 };
 
+/* Provide the find profile operation used by this module and its client applications. */
 static size_t find_profile(const UmiUiWorkspaceProfileModel *model, const char *profile_id) {
   size_t index;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < model->count; ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strcmp(model->items[index].profile_id, profile_id) == 0) {
       return index;
     }
@@ -44,8 +47,13 @@ static size_t find_profile(const UmiUiWorkspaceProfileModel *model, const char *
   return SIZE_MAX;
 }
 
+/* Check that profile satisfies its contract before another service relies on it. */
 static int profile_is_valid(const UmiUiWorkspaceProfileSnapshot *profile) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile == NULL || !umi_ui_id_is_valid(profile->profile_id) || profile->label[0] == '\0' ||
       profile->sidebar_size < 0 || profile->auxiliary_sidebar_size < 0 ||
       profile->bottom_panel_size < 0 || profile->editor_split_mode < UMI_UI_EDITOR_SPLIT_SINGLE ||
@@ -56,8 +64,10 @@ static int profile_is_valid(const UmiUiWorkspaceProfileSnapshot *profile) {
       profile->pane_count > UMI_UI_WORKSPACE_PROFILE_MAX_PANES) {
     return 0;
   }
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < profile->pane_count; ++index) {
     const UmiUiWorkspacePanePlacement *pane = &profile->panes[index];
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_ui_id_is_valid(pane->pane_id) ||
         (pane->placement != UMI_UI_PLACEMENT_LEFT && pane->placement != UMI_UI_PLACEMENT_RIGHT &&
          pane->placement != UMI_UI_PLACEMENT_BOTTOM && pane->placement != UMI_UI_PLACEMENT_TOP &&
@@ -77,30 +87,45 @@ static void store_profile(UmiUiWorkspaceProfileModel *model, size_t index,
   model->items[index].sidebar_visible = profile->sidebar_visible != 0;
   model->items[index].auxiliary_sidebar_visible = profile->auxiliary_sidebar_visible != 0;
   model->items[index].bottom_panel_visible = profile->bottom_panel_visible != 0;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (model->items[index].editor_split_ratio == 0) {
     model->items[index].editor_split_ratio = UMI_UI_EDITOR_SPLIT_RATIO_DEFAULT;
   }
   model->items[index].active = active != 0;
   model->items[index].built_in = profile->built_in != 0;
   model->items[index].locked = profile->built_in || profile->locked != 0;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (pane_index = 0U; pane_index < model->items[index].pane_count; ++pane_index) {
     model->items[index].panes[pane_index].visible =
         model->items[index].panes[pane_index].visible != 0;
   }
 }
 
+/*
+ * Initialise ui workspace profile model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ui_workspace_profile_model_create(UmiUiWorkspaceProfileModel **out_model) {
   UmiUiWorkspaceProfileModel *model;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (out_model == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   *out_model = NULL;
   model = (UmiUiWorkspaceProfileModel *)calloc(1U, sizeof(*model));
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL)
     return UMI_STATUS_OUT_OF_MEMORY;
 
   status = umi_mutex_create(&model->mutex);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK) {
     free(model);
     return status;
@@ -110,29 +135,47 @@ UmiStatus umi_ui_workspace_profile_model_create(UmiUiWorkspaceProfileModel **out
   return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ui workspace profile model so the same storage can be
+ * reused safely.
+ */
 void umi_ui_workspace_profile_model_destroy(UmiUiWorkspaceProfileModel *model) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL)
     return;
   umi_mutex_destroy(model->mutex);
   free(model);
 }
 
+/*
+ * Provide the ui workspace profile model upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_profile_model_upsert(UmiUiWorkspaceProfileModel *model,
                                                 const UmiUiWorkspaceProfileSnapshot *profile) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || !profile_is_valid(profile)) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
   index = find_profile(model, profile->profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == SIZE_MAX) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count >= UMI_UI_WORKSPACE_PROFILE_MAX) {
       (void)umi_mutex_unlock(model->mutex);
       return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     index = model->count++;
-  } else if (model->items[index].built_in || model->items[index].locked) {
+  } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (model->items[index].built_in || model->items[index].locked) {
     /* Protected layouts must be changed through explicit Framework
      * operations. A generic upsert must never overwrite a built-in or
      * user-locked profile by accident. */
@@ -145,25 +188,35 @@ UmiStatus umi_ui_workspace_profile_model_upsert(UmiUiWorkspaceProfileModel *mode
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workspace profile model install built in operation used by this module
+ * and its client applications.
+ */
 UmiStatus
 umi_ui_workspace_profile_model_install_built_in(UmiUiWorkspaceProfileModel *model,
                                                 const UmiUiWorkspaceProfileSnapshot *profile) {
   size_t index;
   int active;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || !profile_is_valid(profile) || !profile->built_in) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
   index = find_profile(model, profile->profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == SIZE_MAX) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count >= UMI_UI_WORKSPACE_PROFILE_MAX) {
       (void)umi_mutex_unlock(model->mutex);
       return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     index = model->count++;
     active = profile->active;
-  } else {
+  } /* Use this fallback path when the earlier condition does not apply. */ else {
     /* A Framework refresh may replace only a profile it already owns. */
     if (!model->items[index].built_in) {
       (void)umi_mutex_unlock(model->mutex);
@@ -177,27 +230,39 @@ umi_ui_workspace_profile_model_install_built_in(UmiUiWorkspaceProfileModel *mode
   return UMI_STATUS_OK;
 }
 
+/*
+ * Remove ui workspace profile model while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ui_workspace_profile_model_remove(UmiUiWorkspaceProfileModel *model,
                                                 const char *profile_id) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || profile_id == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
   index = find_profile(model, profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == SIZE_MAX) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_NOT_FOUND;
   }
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (model->items[index].built_in || model->items[index].locked) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_PERMISSION_DENIED;
   }
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (model->items[index].active) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_INVALID_STATE;
   }
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index + 1U < model->count) {
     (void)memmove(&model->items[index], &model->items[index + 1U],
                   (model->count - index - 1U) * sizeof(model->items[0]));
@@ -208,16 +273,25 @@ UmiStatus umi_ui_workspace_profile_model_remove(UmiUiWorkspaceProfileModel *mode
   return UMI_STATUS_OK;
 }
 
+/*
+ * Find ui workspace profile model while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ui_workspace_profile_model_find(const UmiUiWorkspaceProfileModel *model,
                                               const char *profile_id,
                                               UmiUiWorkspaceProfileSnapshot *out_profile) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || profile_id == NULL || out_profile == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
   index = find_profile(model, profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == SIZE_MAX) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_NOT_FOUND;
@@ -227,13 +301,22 @@ UmiStatus umi_ui_workspace_profile_model_find(const UmiUiWorkspaceProfileModel *
   return UMI_STATUS_OK;
 }
 
+/*
+ * Find ui workspace profile model while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ui_workspace_profile_model_at(const UmiUiWorkspaceProfileModel *model, size_t index,
                                             UmiUiWorkspaceProfileSnapshot *out_profile) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || out_profile == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index >= model->count) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_NOT_FOUND;
@@ -243,20 +326,30 @@ UmiStatus umi_ui_workspace_profile_model_at(const UmiUiWorkspaceProfileModel *mo
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workspace profile model set active operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_profile_model_set_active(UmiUiWorkspaceProfileModel *model,
                                                     const char *profile_id) {
   size_t index;
   size_t active_index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || profile_id == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
   active_index = find_profile(model, profile_id);
+  /* Apply this operation only while the related capability or state is available. */
   if (active_index == SIZE_MAX) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_NOT_FOUND;
   }
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < model->count; ++index) {
     model->items[index].active = index == active_index;
   }
@@ -265,6 +358,10 @@ UmiStatus umi_ui_workspace_profile_model_set_active(UmiUiWorkspaceProfileModel *
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workspace profile model rename operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_profile_model_rename(UmiUiWorkspaceProfileModel *model,
                                                 const char *profile_id, const char *label,
                                                 const char *description) {
@@ -272,22 +369,29 @@ UmiStatus umi_ui_workspace_profile_model_rename(UmiUiWorkspaceProfileModel *mode
   size_t label_length;
   size_t description_length;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || profile_id == NULL || label == NULL || description == NULL ||
       label[0] == '\0') {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   label_length = strlen(label);
   description_length = strlen(description);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (label_length >= UMI_UI_TEXT_CAPACITY || description_length >= UMI_UI_DESCRIPTION_CAPACITY) {
     return UMI_STATUS_CAPACITY_EXCEEDED;
   }
 
   (void)umi_mutex_lock(model->mutex);
   index = find_profile(model, profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == SIZE_MAX) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_NOT_FOUND;
   }
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (model->items[index].built_in || model->items[index].locked) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_PERMISSION_DENIED;
@@ -299,19 +403,29 @@ UmiStatus umi_ui_workspace_profile_model_rename(UmiUiWorkspaceProfileModel *mode
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui workspace profile model set locked operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_profile_model_set_locked(UmiUiWorkspaceProfileModel *model,
                                                     const char *profile_id, int locked) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL || profile_id == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
   (void)umi_mutex_lock(model->mutex);
   index = find_profile(model, profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index == SIZE_MAX) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_NOT_FOUND;
   }
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (model->items[index].built_in) {
     (void)umi_mutex_unlock(model->mutex);
     return UMI_STATUS_PERMISSION_DENIED;
@@ -322,8 +436,16 @@ UmiStatus umi_ui_workspace_profile_model_set_locked(UmiUiWorkspaceProfileModel *
   return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by ui workspace profile model without changing
+ * their state.
+ */
 size_t umi_ui_workspace_profile_model_count(const UmiUiWorkspaceProfileModel *model) {
   size_t count = 0U;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model != NULL) {
     (void)umi_mutex_lock(model->mutex);
     count = model->count;
@@ -332,8 +454,16 @@ size_t umi_ui_workspace_profile_model_count(const UmiUiWorkspaceProfileModel *mo
   return count;
 }
 
+/*
+ * Provide the ui workspace profile model revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_ui_workspace_profile_model_revision(const UmiUiWorkspaceProfileModel *model) {
   uint64_t revision = 0U;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model != NULL) {
     (void)umi_mutex_lock(model->mutex);
     revision = model->revision;

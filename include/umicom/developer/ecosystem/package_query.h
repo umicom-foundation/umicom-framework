@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ecosystem package query data shared with callers of this public contract.
+ */
 typedef struct UmiEcosystemPackageQuery {
     char text[UMI_ECOSYSTEM_NAME_CAPACITY];
     char source_id[UMI_ECOSYSTEM_ID_CAPACITY];
@@ -31,6 +34,10 @@ typedef struct UmiEcosystemPackageQuery {
     size_t result_limit;
 } UmiEcosystemPackageQuery;
 
+/**
+ * Represent the ecosystem package query result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEcosystemPackageQueryResult {
     size_t package_indexes[UMI_ECOSYSTEM_MAX_RESULTS];
     uint32_t scores[UMI_ECOSYSTEM_MAX_RESULTS];
@@ -40,12 +47,24 @@ typedef struct UmiEcosystemPackageQueryResult {
     uint64_t source_revision;
 } UmiEcosystemPackageQueryResult;
 
+/**
+ * Initialise ecosystem package query from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ecosystem_package_query_init(UmiEcosystemPackageQuery *query);
+/**
+ * Perform ecosystem package query through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_ecosystem_package_query_execute(
     const UmiEcosystemPackageCatalogue *catalogue,
     const UmiEcosystemSourceCatalogue *sources,
     const UmiEcosystemPackageQuery *query,
     UmiEcosystemPackageQueryResult *out_result);
+/**
+ * Find ecosystem package query result while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEcosystemPackageRecord *umi_ecosystem_package_query_result_at(
     const UmiEcosystemPackageCatalogue *catalogue,
     const UmiEcosystemPackageQueryResult *result,

@@ -24,8 +24,19 @@
 extern "C" {
 #endif
 typedef int (*UmiWebAuthoriseFn)(const char *principal,const char *permission,void *user_data);
+/**
+ * Represent the web security data shared with callers of this public contract.
+ */
 typedef struct UmiWebSecurity { UmiWebAuthoriseFn authorise; void *user_data; } UmiWebSecurity;
+/**
+ * Initialise web security from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_web_security_init(UmiWebSecurity *security,UmiWebAuthoriseFn authorise,void *user_data);
+/**
+ * Provide the web security require operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_security_require(const UmiWebSecurity *security,const char *principal,const char *permission);
 #ifdef __cplusplus
 }

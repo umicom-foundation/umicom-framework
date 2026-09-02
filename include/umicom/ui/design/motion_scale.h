@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 #define UMI_DESIGN_MOTION_SCALE_LEVELS 6U
+/**
+ * Represent the design motion scale data shared with callers of this public contract.
+ */
 typedef struct UmiDesignMotionScale { double milliseconds[6U]; } UmiDesignMotionScale;
 /* Initialise the canonical scale used as a stable design-system baseline. */
 UmiDesignMotionScale motion_scale_default(void);

@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the update plan data shared with callers of this public contract.
+ */
 typedef struct UmiUpdatePlan {
     uint64_t current_generation;
     uint64_t target_generation;
@@ -35,6 +38,10 @@ typedef struct UmiUpdatePlan {
     char reason[UMI_DELIVERY_TEXT_CAPACITY];
 } UmiUpdatePlan;
 
+/**
+ * Initialise update plan from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_update_plan_init(UmiUpdatePlan *plan,
                                uint64_t current_generation,
                                uint64_t target_generation,

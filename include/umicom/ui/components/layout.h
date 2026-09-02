@@ -23,6 +23,13 @@
 #define UMICOM_UI_COMPONENTS_LAYOUT_H
 #include <stdbool.h>
 #include <stdint.h>
+/**
+ * Represent the ui component layout data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentLayout { int32_t margin_start,margin_end,margin_top,margin_bottom; int32_t row,column,row_span,column_span; bool homogeneous; } UmiUiComponentLayout;
+/**
+ * Provide the ui component layout default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentLayout umi_ui_component_layout_default(void);
 #endif

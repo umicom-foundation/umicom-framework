@@ -16,6 +16,10 @@
 /* VCS provider v2 repository dispatch tests. Sammy Hegab, Umicom Foundation. MIT. */
 #include <assert.h>
 #include "vcs_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestVcsFixture fixture = {0}; UmiVcsProvider provider = test_vcs_provider(&fixture); UmiVcsRepository *repository = NULL;

@@ -15,4 +15,8 @@
 #include "umicom/ui/analytics/tooltip.h"
 
 #include <string.h>
-int main(void){UmiAnalyticsTooltip t;if(umi_analytics_tooltip_set(&t,"Point",1,2)!=0)return 1;return strstr(t.text,"y=2")!=NULL?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsTooltip t;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_analytics_tooltip_set(&t,"Point",1,2)!=0)return 1;return strstr(t.text,"y=2")!=NULL?0:2;}

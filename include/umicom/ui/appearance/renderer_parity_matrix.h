@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance renderer parity entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceRendererParityEntry { UmiAppearanceRendererKind renderer; bool theme; bool typography; bool scaling; bool accessibility; } UmiAppearanceRendererParityEntry;
+/**
+ * Represent the appearance renderer parity matrix data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceRendererParityMatrix { UmiAppearanceRendererParityEntry items[8]; size_t count; } UmiAppearanceRendererParityMatrix;
 /* Initialise an empty renderer parity matrix. */
 UmiStatus umi_appearance_renderer_parity_matrix_init(UmiAppearanceRendererParityMatrix *matrix);

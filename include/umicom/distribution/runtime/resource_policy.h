@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr resource policy data shared with callers of this public contract.
+ */
 typedef struct UmiDrResourcePolicy { char preferred_locale[32]; uint32_t preferred_scale; bool allow_locale_fallback; bool allow_scale_fallback; } UmiDrResourcePolicy;
+/**
+ * Initialise dr resource policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_resource_policy_init(UmiDrResourcePolicy *policy); bool umi_dr_resource_policy_accepts(const UmiDrResourcePolicy *policy,const char *locale,uint32_t scale);
 
 #ifdef __cplusplus

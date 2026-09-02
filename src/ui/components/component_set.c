@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/component_set.h"
-void umi_ui_component_set_init(UmiUiComponentSet*s){if(!s)return;umi_ui_component_registry_init(&s->registry);umi_ui_component_tree_init(&s->tree);}
+/*
+ * Initialise ui component set from caller-provided values so later operations receive a
+ * known state.
+ */
+void umi_ui_component_set_init(UmiUiComponentSet*s){/* Apply this branch only when its contract condition is satisfied. */ if(!s)return;umi_ui_component_registry_init(&s->registry);umi_ui_component_tree_init(&s->tree);}

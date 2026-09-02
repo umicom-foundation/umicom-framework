@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/cmake_provider.h"
 
+/*
+ * Provide the developer capability cmake provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cmake_provider(void)
 {

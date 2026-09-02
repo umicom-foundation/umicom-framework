@@ -21,11 +21,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer diff next change operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_diff_next_change(
     const UmiDeveloperDiffDocument *document,
     size_t after_row,
     size_t *out_row);
 
+/**
+ * Provide the developer diff previous change operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_diff_previous_change(
     const UmiDeveloperDiffDocument *document,
     size_t before_row,

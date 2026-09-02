@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 #include "umicom/repository/remediation_action_set.h"
+/**
+ * Represent the repository remediation plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryRemediationPlan { UmiRepositoryRemediationActionSet actions; size_t safe_count; size_t review_count; size_t destructive_count; uint64_t revision; } UmiRepositoryRemediationPlan;
 /* Initialise an empty plan. */
 void umi_repository_remediation_plan_init(UmiRepositoryRemediationPlan *plan);

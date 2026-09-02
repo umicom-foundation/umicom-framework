@@ -16,8 +16,16 @@
 #include <assert.h>
 #include "umicom/ide_integration/self_host_checker.h"
 #include "umicom/ide_integration/builtin_surfaces.h"
+/*
+ * Exercise all capabilities and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int all_capabilities(void *u,const char *id)
 {(void)u;(void)id;return 1;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIdeSurfaceRegistry *surfaces = NULL;

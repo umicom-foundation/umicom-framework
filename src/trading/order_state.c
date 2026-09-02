@@ -19,12 +19,18 @@
 
 #include "umicom/trading/order_state.h"
 
+/*
+ * Provide the order transition allowed operation used by this module and its client
+ * applications.
+ */
 int umi_order_transition_allowed(UmiOrderStatus from, UmiOrderStatus to)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (from == to) {
         return 1;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (from) {
     case UMI_ORDER_NEW:
         return to == UMI_ORDER_VALIDATED || to == UMI_ORDER_REJECTED;

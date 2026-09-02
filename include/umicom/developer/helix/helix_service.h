@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix service data shared with callers of this public contract.
+ */
 typedef struct UmiHelixService { UmiHelixSession sessions[UMI_HELIX_MAX_ITEMS]; size_t count; UmiHelixAutonomyMode autonomy_ceiling; bool repository_mutation_enabled; } UmiHelixService;
 /* Initialise the Framework-owned Helix control plane with supervised defaults. */
 void umi_helix_service_init(UmiHelixService *service);

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace application generator plan step data shared with callers
+ * of this public contract.
+ */
     typedef struct UmiProjectWorkspaceApplicationGeneratorPlanStep {
         char id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];
         char action[UMI_PROJECT_WORKSPACE_TEXT_CAPACITY];
@@ -25,6 +29,10 @@ extern "C" {
         bool completed;
     }
     UmiProjectWorkspaceApplicationGeneratorPlanStep;
+/**
+ * Represent the project workspace application generator plan data shared with callers of
+ * this public contract.
+ */
     typedef struct UmiProjectWorkspaceApplicationGeneratorPlan {
         UmiProjectWorkspaceApplicationGeneratorPlanStep steps[UMI_PROJECT_WORKSPACE_MEDIUM_CAPACITY];
         size_t count;

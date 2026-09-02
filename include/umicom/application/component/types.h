@@ -35,6 +35,9 @@ extern "C" {
 
 typedef uint32_t UmiApplicationComponentFrontendMask;
 
+/**
+ * List the named application component frontend values accepted by this public contract.
+ */
 typedef enum UmiApplicationComponentFrontend {
   UMI_APPLICATION_COMPONENT_FRONTEND_NONE = 0U,
   UMI_APPLICATION_COMPONENT_FRONTEND_HEADLESS = 1U << 0,
@@ -43,6 +46,9 @@ typedef enum UmiApplicationComponentFrontend {
   UMI_APPLICATION_COMPONENT_FRONTEND_WEB = 1U << 3
 } UmiApplicationComponentFrontend;
 
+/**
+ * List the named application component lifecycle values accepted by this public contract.
+ */
 typedef enum UmiApplicationComponentLifecycle {
   UMI_APPLICATION_COMPONENT_REGISTERED = 1,
   UMI_APPLICATION_COMPONENT_CREATED = 2,
@@ -52,6 +58,9 @@ typedef enum UmiApplicationComponentLifecycle {
   UMI_APPLICATION_COMPONENT_FAILED = 6
 } UmiApplicationComponentLifecycle;
 
+/**
+ * List the named application component region values accepted by this public contract.
+ */
 typedef enum UmiApplicationComponentRegion {
   UMI_APPLICATION_COMPONENT_REGION_PRIMARY = 1,
   UMI_APPLICATION_COMPONENT_REGION_LEFT = 2,
@@ -60,12 +69,20 @@ typedef enum UmiApplicationComponentRegion {
   UMI_APPLICATION_COMPONENT_REGION_FLOATING = 5
 } UmiApplicationComponentRegion;
 
+/**
+ * Represent the application component version data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationComponentVersion {
   uint16_t major;
   uint16_t minor;
   uint16_t patch;
 } UmiApplicationComponentVersion;
 
+/**
+ * Represent the application component contract data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationComponentContract {
   uint32_t struct_size;
   uint32_t api_version;
@@ -78,12 +95,28 @@ typedef struct UmiApplicationComponentContract {
   uint32_t minimum_height;
 } UmiApplicationComponentContract;
 
+/**
+ * Provide the application component frontend text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_component_frontend_text(
     UmiApplicationComponentFrontend frontend);
+/**
+ * Check that application component frontend satisfies its contract before another service
+ * relies on it.
+ */
 int umi_application_component_frontend_valid(
     UmiApplicationComponentFrontend frontend);
+/**
+ * Provide the application component lifecycle text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_component_lifecycle_text(
     UmiApplicationComponentLifecycle lifecycle);
+/**
+ * Provide the application component region text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_component_region_text(
     UmiApplicationComponentRegion region);
 

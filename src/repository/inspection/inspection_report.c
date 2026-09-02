@@ -38,15 +38,17 @@ static UmiStatus append_issue(
     }
     status = umi_repository_inspection_issue_set(
         &report->issues[report->count], kind, severity, summary, hint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     /* Aggregate canonical doctor severities for operation-level health views. */
     ++report->count;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (severity == UMI_REPOSITORY_INSPECTION_ERROR) {
         ++report->errors;
-    } else if (severity == UMI_REPOSITORY_INSPECTION_WARNING) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (severity == UMI_REPOSITORY_INSPECTION_WARNING) {
         ++report->warnings;
     }
     return UMI_STATUS_OK;
@@ -100,6 +102,7 @@ UmiStatus umi_repository_inspection_report_build(
             "Repository has no root .gitignore.",
             "Add a reviewed project ignore policy; inspection does not create it.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && policy->require_gitattributes &&
         !snapshot->has_gitattributes) {
         status = append_issue(

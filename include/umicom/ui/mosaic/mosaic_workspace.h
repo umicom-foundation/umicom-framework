@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic mosaic workspace data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicMosaicWorkspace {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char panel_id[UMI_UI_MOSAIC_ID_CAPACITY];

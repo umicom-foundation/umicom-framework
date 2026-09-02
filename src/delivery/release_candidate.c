@@ -19,14 +19,26 @@
 
 #include "umicom/delivery/release_candidate.h"
 #include <string.h>
+/*
+ * Initialise release candidate from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_release_candidate_init(UmiReleaseCandidate *candidate)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (candidate == NULL) return;
     (void)memset(candidate, 0, sizeof(*candidate));
     umi_build_evidence_init(&candidate->build);
     umi_artifact_set_init(&candidate->artifacts);
     umi_verification_report_init(&candidate->verification);
 }
+/*
+ * Provide the release candidate ready operation used by this module and its client
+ * applications.
+ */
 int umi_release_candidate_ready(const UmiReleaseCandidate *candidate)
 {
     return candidate != NULL &&

@@ -15,10 +15,18 @@
 
 #include "umicom/application_ui/health_view.h"
 
+/*
+ * Provide the application ui health row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_health_row(
     const UmiApplicationRuntimeHealth *health,
     UmiApplicationUiHealthRow *out_row)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (health == NULL || out_row == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     out_row->severity = umi_application_health_severity_text(health->severity);
     out_row->readiness_percent = health->readiness_percent;

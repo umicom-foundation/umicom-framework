@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/style_value.h"
 
-int main(void){UmiDesignToken t;UmiDesignStyleValue v;if(umi_design_token_number(&t,"space.2",8.0)!=UMI_STATUS_OK)return 1;if(umi_design_style_value_init(&v,"padding",&t)!=UMI_STATUS_OK)return 2;return v.value.number==8.0?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignToken t;UmiDesignStyleValue v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_number(&t,"space.2",8.0)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_style_value_init(&v,"padding",&t)!=UMI_STATUS_OK)return 2;return v.value.number==8.0?0:3;}

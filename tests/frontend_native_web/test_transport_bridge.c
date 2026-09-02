@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/transport_bridge.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFrontendTransportSnapshot s={0}; UmiNativeWebTransportState o; strcpy(s.id,"t1"); strcpy(s.kind,"sse"); strcpy(s.endpoint,"/_umi/events"); CHECK(umi_native_web_transport_bridge(&s,&o)==UMI_STATUS_OK); CHECK(o.kind==UMI_NATIVE_WEB_TRANSPORT_SSE);

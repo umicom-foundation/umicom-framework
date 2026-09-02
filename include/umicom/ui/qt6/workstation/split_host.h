@@ -23,7 +23,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the qt6 ws split host descriptor operation used by this module and its client
+ * applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_ws_split_host_descriptor(void);
+/**
+ * Initialise qt6 ws split host from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiQt6WidgetHandle umi_qt6_ws_split_host_create(const UmiWsSplitRegion *split, UmiQt6WidgetHandle first, UmiQt6WidgetHandle second);
 
 #ifdef __cplusplus

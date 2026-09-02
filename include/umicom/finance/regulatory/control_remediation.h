@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the control remediation data shared with callers of this public contract.
+ */
 typedef struct UmiControlRemediation {
     char remediation_id[UMI_REG_ID_CAPACITY];
     char exception_id[UMI_REG_ID_CAPACITY];

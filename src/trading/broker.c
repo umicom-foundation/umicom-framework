@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/broker.h"
+/* Check that broker contract satisfies its contract before another service relies on it. */
 int umi_broker_contract_valid(const UmiBroker *b){return b!=NULL&&b->instance!=NULL&&b->provider_name!=NULL&&b->connect!=NULL&&b->submit_order!=NULL&&b->cancel_order!=NULL&&b->destroy!=NULL;}

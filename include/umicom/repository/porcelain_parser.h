@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository porcelain status data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryPorcelainStatus {
     UmiRepositoryBranchStatus branch;
     UmiRepositoryWorktreeStatus worktree;

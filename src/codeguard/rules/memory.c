@@ -25,8 +25,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-MEM-002", "CWE-562", UMI_CODEGUARD_HIGH, UMI_CODEGUARD_CATEGORY_MEMORY, 92U, UMI_CODEGUARD_MATCH_CODE, "return &", "A function appears to return the address of local storage.", "Return owned heap/static storage or copy the value into caller-owned memory."}
 };
 
+/*
+ * Provide the codeguard rules memory operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_memory(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

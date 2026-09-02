@@ -22,5 +22,9 @@
 #ifndef UMICOM_UI_COMPONENTS_VALIDATION_H
 #define UMICOM_UI_COMPONENTS_VALIDATION_H
 #include "umicom/ui/components/component.h"
+/**
+ * Provide the ui component validate parent child operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_component_validate_parent_child(UmiUiComponentKind parent,UmiUiComponentKind child);
 #endif

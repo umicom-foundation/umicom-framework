@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad generation plan data shared with callers of this public contract.
+ */
 typedef struct UmiRadGenerationPlan {
     char application_id[UMI_RAD_ID_CAPACITY];
     char output_root[UMI_RAD_PATH_CAPACITY];
@@ -25,7 +28,15 @@ typedef struct UmiRadGenerationPlan {
     bool declarative_enabled;
     bool source_enabled;
 } UmiRadGenerationPlan;
+/**
+ * Initialise rad generation plan from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_generation_plan_init(UmiRadGenerationPlan *item);
+/**
+ * Check that rad generation plan satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_generation_plan_is_valid(const UmiRadGenerationPlan *item);
 #ifdef __cplusplus
 }

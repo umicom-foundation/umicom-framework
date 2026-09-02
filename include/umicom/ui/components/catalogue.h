@@ -23,7 +23,19 @@
 #define UMICOM_UI_COMPONENTS_CATALOGUE_H
 #include <stddef.h>
 #include "umicom/ui/components/component.h"
+/**
+ * Return the number of records represented by ui component catalogue without changing
+ * their state.
+ */
 size_t umi_ui_component_catalogue_count(void);
+/**
+ * Provide the ui component catalogue kind operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentKind umi_ui_component_catalogue_kind(size_t index);
+/**
+ * Provide the ui component catalogue contains operation used by this module and its client
+ * applications.
+ */
 int umi_ui_component_catalogue_contains(UmiUiComponentKind kind);
 #endif

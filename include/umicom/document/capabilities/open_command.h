@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_OPEN_COMMAND "umicom.document.command.open_command"
 
+/**
+ * Provide the document capability open command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_open_command(void);
 

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix repair ranking data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRepairRanking { UmiHelixRepairCandidate items[UMI_HELIX_MAX_ITEMS]; size_t count; } UmiHelixRepairRanking;
 /* Add one validated repair candidate. */
 UmiStatus umi_helix_repair_ranking_add(UmiHelixRepairRanking *ranking,const UmiHelixRepairCandidate *candidate);

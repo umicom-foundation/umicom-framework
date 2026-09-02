@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the sqlite report data shared with callers of this public contract.
+ */
 typedef struct UmiSqliteReport {
     int available;
     int open;
@@ -31,9 +34,22 @@ typedef struct UmiSqliteReport {
     const char *path;
 } UmiSqliteReport;
 
+/**
+ * Provide the sqlite report operation used by this module and its client applications.
+ */
 UmiSqliteReport umi_sqlite_report(const UmiDataServer *server);
+/**
+ * Provide the sqlite integrity check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_sqlite_integrity_check(UmiDataServer *server);
+/**
+ * Provide the sqlite checkpoint operation used by this module and its client applications.
+ */
 UmiStatus umi_sqlite_checkpoint(UmiDataServer *server);
+/**
+ * Provide the sqlite compact operation used by this module and its client applications.
+ */
 UmiStatus umi_sqlite_compact(UmiDataServer *server);
 
 #ifdef __cplusplus

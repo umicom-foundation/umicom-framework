@@ -18,6 +18,10 @@
 #include <string.h>
 #include "umicom/observability/observability_admin.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiOperationsResourceHistory resources = {0};

@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the fixing store data shared with callers of this public contract.
+ */
 typedef struct UmiFixingStore { UmiFixing items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiFixingStore;
 /* Reset collection. */ void umi_fixing_store_init(UmiFixingStore *c);
 /* Append valid item. */ UmiStatus umi_fixing_store_add(UmiFixingStore *c,const UmiFixing *item);

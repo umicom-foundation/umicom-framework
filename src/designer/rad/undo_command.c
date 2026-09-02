@@ -14,7 +14,15 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/undo_command.h"
 #include <string.h>
+/*
+ * Initialise rad undo command from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_undo_command_init(UmiRadUndoCommand *item){
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(item,0,sizeof *item);
     (void)umi_rad_copy_text(item->command_id, sizeof item->command_id, "undo_command");
@@ -23,4 +31,5 @@ UmiStatus umi_rad_undo_command_init(UmiRadUndoCommand *item){
     (void)umi_rad_copy_text(item->after_value, sizeof item->after_value, "undo_command");
     return UMI_STATUS_OK;
 }
-int umi_rad_undo_command_is_valid(const UmiRadUndoCommand *item){if(item==NULL)return 0;return umi_rad_id_valid(item->command_id) && umi_rad_id_valid(item->target_id);}
+/* Check that rad undo command satisfies its contract before another service relies on it. */
+int umi_rad_undo_command_is_valid(const UmiRadUndoCommand *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return umi_rad_id_valid(item->command_id) && umi_rad_id_valid(item->target_id);}

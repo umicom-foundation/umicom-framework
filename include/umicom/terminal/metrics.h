@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the terminal metrics data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalMetrics {
     size_t sessions;
     size_t ready_sessions;
@@ -35,6 +38,10 @@ typedef struct UmiTerminalMetrics {
     UmiTaskQueueStats tasks;
 } UmiTerminalMetrics;
 
+/**
+ * Provide the terminal metrics collect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_metrics_collect(UmiTerminalManager *manager,
                                        UmiProcessSupervisor *supervisor,
                                        UmiTaskQueue *task_queue,

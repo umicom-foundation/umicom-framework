@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/background_service.h"
-int main(void) { UmiTerminalRemoteBackgroundService v; umi_terminal_remote_background_service_init(&v,"svc"); if(umi_terminal_remote_background_service_converged(&v)) return 1; v.observed_state=UMI_TERMINAL_REMOTE_STATE_ACTIVE; return umi_terminal_remote_background_service_converged(&v)?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteBackgroundService v; umi_terminal_remote_background_service_init(&v,"svc"); /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_background_service_converged(&v)) return 1; v.observed_state=UMI_TERMINAL_REMOTE_STATE_ACTIVE; return umi_terminal_remote_background_service_converged(&v)?0:2; }

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the studio command alias view ai validation operation used by this module and
+ * its client applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_view_ai_validation(void);
 #ifdef __cplusplus

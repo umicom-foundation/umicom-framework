@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the decl component descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeclComponentDescriptor {
     char component_type[UMI_DECL_ID_CAPACITY];
     char display_name[UMI_DECL_NAME_CAPACITY];
@@ -37,8 +41,20 @@ typedef struct UmiDeclComponentDescriptor {
     size_t property_count;
 } UmiDeclComponentDescriptor;
 
+/**
+ * Initialise decl component descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_decl_component_descriptor_init(UmiDeclComponentDescriptor *descriptor, const char *component_type, const char *display_name, const char *category, int container);
+/**
+ * Provide the decl component add property operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_component_add_property(UmiDeclComponentDescriptor *descriptor, const UmiDeclPropertyDescriptor *property);
+/**
+ * Provide the decl component find property operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_component_find_property(const UmiDeclComponentDescriptor *descriptor, const char *name, UmiDeclPropertyDescriptor *out_property);
 
 #ifdef __cplusplus

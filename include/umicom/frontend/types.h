@@ -29,7 +29,14 @@ extern "C" {
 #define UMI_FRONTEND_MAX_ROUTES 128U
 #define UMI_FRONTEND_MAX_ASSETS 256U
 #define UMI_FRONTEND_MAX_PAGES 128U
+/**
+ * List the named frontend kind values accepted by this public contract.
+ */
 typedef enum UmiFrontendKind { UMI_FRONTEND_KIND_HEADLESS=1, UMI_FRONTEND_KIND_GTK4=2, UMI_FRONTEND_KIND_WEB=3, UMI_FRONTEND_KIND_QT=4, UMI_FRONTEND_KIND_WT=5, UMI_FRONTEND_KIND_MOBILE=6 } UmiFrontendKind;
+/**
+ * Provide the frontend kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_frontend_kind_text(UmiFrontendKind kind);
 #ifdef __cplusplus
 }

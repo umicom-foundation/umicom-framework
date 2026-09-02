@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc conformance report data shared with callers of this public contract.
+ */
 typedef struct UmiFcConformanceReport { UmiFcConformanceResult items[UMI_FC_MAX_ITEMS]; size_t count; size_t passed; size_t degraded; size_t failed; } UmiFcConformanceReport;
+/**
+ * Initialise fc conformance report from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_fc_conformance_report_init(UmiFcConformanceReport *report);
+/**
+ * Add fc conformance report only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_fc_conformance_report_add(UmiFcConformanceReport *report,const UmiFcConformanceResult *result);
+/**
+ * Provide the fc conformance report score operation used by this module and its client
+ * applications.
+ */
 double umi_fc_conformance_report_score(const UmiFcConformanceReport *report);
 
 #ifdef __cplusplus

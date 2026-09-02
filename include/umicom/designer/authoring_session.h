@@ -34,8 +34,16 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer authoring session data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAuthoringSession UmiDesignerAuthoringSession;
 
+/**
+ * Represent the designer authoring session snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesignerAuthoringSessionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -48,14 +56,50 @@ typedef struct UmiDesignerAuthoringSessionSnapshot {
     uint64_t revision;
 } UmiDesignerAuthoringSessionSnapshot;
 
+/**
+ * Initialise designer authoring session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_designer_authoring_session_create(UmiDesignerAuthoringSession **out_service);
+/**
+ * Release or reset state held by designer authoring session so the same storage can be
+ * reused safely.
+ */
 void umi_designer_authoring_session_destroy(UmiDesignerAuthoringSession *service);
+/**
+ * Provide the designer authoring session snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_designer_authoring_session_snapshot(const UmiDesignerAuthoringSession *service, UmiDesignerAuthoringSessionSnapshot *out_snapshot);
+/**
+ * Provide the designer authoring session signals operation used by this module and its
+ * client applications.
+ */
 UmiDesignerSignalBindingRegistry *umi_designer_authoring_session_signals(UmiDesignerAuthoringSession *service);
+/**
+ * Provide the designer authoring session actions operation used by this module and its
+ * client applications.
+ */
 UmiDesignerActionBindingRegistry *umi_designer_authoring_session_actions(UmiDesignerAuthoringSession *service);
+/**
+ * Provide the designer authoring session properties operation used by this module and its
+ * client applications.
+ */
 UmiDesignerPropertySchemaRegistry *umi_designer_authoring_session_properties(UmiDesignerAuthoringSession *service);
+/**
+ * Provide the designer authoring session alignments operation used by this module and its
+ * client applications.
+ */
 UmiDesignerAlignmentRegistry *umi_designer_authoring_session_alignments(UmiDesignerAuthoringSession *service);
+/**
+ * Provide the designer authoring session clipboard operation used by this module and its
+ * client applications.
+ */
 UmiDesignerClipboardItemRegistry *umi_designer_authoring_session_clipboard(UmiDesignerAuthoringSession *service);
+/**
+ * Provide the designer authoring session templates operation used by this module and its
+ * client applications.
+ */
 UmiDesignerTemplatePaletteRegistry *umi_designer_authoring_session_templates(UmiDesignerAuthoringSession *service);
 
 #ifdef __cplusplus

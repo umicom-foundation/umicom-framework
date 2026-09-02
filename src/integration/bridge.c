@@ -21,6 +21,10 @@
 
 #include "umicom/integration/bridge.h"
 
+/*
+ * Check that integration bridge satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_integration_bridge_valid(const UmiIntegrationBridge *bridge)
 {
     return bridge != NULL &&

@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer terminal profile powershell operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_powershell(void);
 
 #ifdef __cplusplus

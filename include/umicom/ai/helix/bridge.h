@@ -24,16 +24,30 @@ extern "C" {
 #endif
 
 struct UmiAiRuntime;
+/**
+ * Represent the ai runtime data shared with callers of this public contract.
+ */
 typedef struct UmiAiRuntime UmiAiRuntime;
 
+/**
+ * Represent the ai helix bridge data shared with callers of this public contract.
+ */
 typedef struct UmiAiHelixBridge {
     UmiAiRuntime *runtime;
     UmiAiHelixBridgeConfig config;
 } UmiAiHelixBridge;
 
+/**
+ * Initialise ai helix bridge from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_helix_bridge_init(UmiAiHelixBridge *bridge,
                                    UmiAiRuntime *runtime,
                                    const UmiAiHelixBridgeConfig *config);
+/**
+ * Perform ai helix bridge through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_helix_bridge_run(UmiAiHelixBridge *bridge,
                                   const UmiAiHelixAgentRequest *request,
                                   UmiAiHelixAgentResult *result);

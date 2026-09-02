@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant future contract data shared with callers of this public contract.
+ */
 typedef struct UmiQuantFutureContract {
     double quantity;
     double multiplier;

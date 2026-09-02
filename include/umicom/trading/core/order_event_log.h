@@ -20,6 +20,9 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/order_event.h"
+/**
+ * Represent the trading order event log data shared with callers of this public contract.
+ */
 typedef struct UmiTradingOrderEventLog { UmiTradingOrderEvent events[UMI_TRADING_CORE_MAX_EVENTS]; size_t count; uint64_t next_sequence; } UmiTradingOrderEventLog;
 /* Initialise an empty order event log. */
 void umi_trading_order_event_log_init(UmiTradingOrderEventLog *log);

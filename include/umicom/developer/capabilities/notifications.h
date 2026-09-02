@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_NOTIFICATIONS "umicom.developer.experience.notifications"
 
+/**
+ * Provide the developer capability notifications operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_notifications(void);
 

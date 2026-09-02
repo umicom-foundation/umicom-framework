@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DOCUMENT_AUDIT "umicom.document.security.document_audit"
 
+/**
+ * Provide the document capability document audit operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_audit(void);
 

@@ -16,7 +16,15 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer/language_support_matrix.h"
+/*
+ * Exercise available and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int available(const char *program, void *user_data){(void)user_data;return program!=NULL&&program[0]!='\0';}
+/*
+ * Exercise test language support assembly x86 and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_language_support_assembly_x86(void)
 {
     UmiLanguageProfileRegistry *profiles=NULL;

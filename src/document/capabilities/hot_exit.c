@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/hot_exit.h"
 
+/*
+ * Provide the document capability hot exit operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_hot_exit(void)
 {

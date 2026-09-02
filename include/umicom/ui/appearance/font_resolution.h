@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance font resolution data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceFontResolution {
     char stack_id[UMI_APPEARANCE_ID_CAPACITY];
     char resolved_family_id[UMI_APPEARANCE_ID_CAPACITY];

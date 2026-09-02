@@ -43,11 +43,19 @@ static const AliasFactory FACTORIES[] = {
     umi_studio_command_alias_layout_restore
 };
 
+/*
+ * Return the number of records represented by studio command alias without changing their
+ * state.
+ */
 size_t umi_studio_command_alias_count(void)
 {
     return sizeof(FACTORIES) / sizeof(FACTORIES[0]);
 }
 
+/*
+ * Find studio command alias while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_at(size_t index)
 {
@@ -56,16 +64,29 @@ umi_studio_command_alias_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find studio command alias while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_find(const char *alias_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (alias_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_studio_command_alias_count(); ++index) {
         const UmiStudioRuntimeCommandAliasDefinition *item = FACTORIES[index]();
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (item != NULL && strcmp(item->alias_id, alias_id) == 0) {
             return item;
         }

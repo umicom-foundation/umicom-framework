@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository git command result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryGitCommandResult {
     int exit_code;
     int launched;

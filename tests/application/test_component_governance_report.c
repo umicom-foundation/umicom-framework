@@ -19,6 +19,10 @@
 
 #include "umicom/application/application.h"
 
+/*
+ * Exercise verify format and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void verify_format(const UmiComponentInventory *inventory, UmiComponentReportFormat format,
                           const char *expected_text) {
   char small[32];
@@ -39,6 +43,10 @@ static void verify_format(const UmiComponentInventory *inventory, UmiComponentRe
   free(output);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   UmiComponentInventory inventory;
   UmiComponentQuery query;

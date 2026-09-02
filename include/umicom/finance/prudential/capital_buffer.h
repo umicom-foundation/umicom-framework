@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital buffer data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalBuffer { char buffer_id[UMI_PRU_ID_CAPACITY]; double required_ratio; double rwa; double required_amount; } UmiPrudentialCapitalBuffer;
 /* Calculate a named capital buffer amount from its required ratio and RWA. */
 UmiStatus umi_pru_capital_buffer_calculate(UmiPrudentialCapitalBuffer *result, const char *buffer_id, double required_ratio, double rwa);

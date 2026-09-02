@@ -69,6 +69,11 @@ Clear names and comments work together. A comment is not a reason to shorten a
 meaningful variable name, and a meaningful variable name is not a reason to
 hide an important safety or business rule.
 
+The repository-wide audit and repair commands are described in
+`REPOSITORY_SOURCE_DOCUMENTATION.md`. The audit covers Framework, every thin
+application, build scripts and project-owned vector or template source while
+leaving generated output and imported dependencies untouched.
+
 ## Comments used in the code reference
 
 Public structures, enumerations and functions use a structured comment that

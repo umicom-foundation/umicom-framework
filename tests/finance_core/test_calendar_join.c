@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/calendar_join.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiHolidayCalendar c; UmiCalendarJoin j; CHECK(umi_holiday_calendar_init(&c,"C")==UMI_STATUS_OK); umi_calendar_join_init(&j,UMI_CALENDAR_ALL_OPEN); CHECK(umi_calendar_join_add(&j,&c)==UMI_STATUS_OK);

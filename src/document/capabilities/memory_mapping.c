@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/memory_mapping.h"
 
+/*
+ * Provide the document capability memory mapping operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_memory_mapping(void)
 {

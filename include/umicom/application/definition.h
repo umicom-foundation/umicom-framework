@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named application family values accepted by this public contract.
+ */
 typedef enum UmiApplicationFamily {
     UMI_APPLICATION_FAMILY_PLATFORM = 1,
     UMI_APPLICATION_FAMILY_DEVELOPMENT = 2,
@@ -40,12 +43,18 @@ typedef enum UmiApplicationFamily {
     UMI_APPLICATION_FAMILY_EDUCATION = 10
 } UmiApplicationFamily;
 
+/**
+ * List the named application maturity values accepted by this public contract.
+ */
 typedef enum UmiApplicationMaturity {
     UMI_APPLICATION_AVAILABLE = 1,
     UMI_APPLICATION_FOUNDATION = 2,
     UMI_APPLICATION_ROADMAP = 3
 } UmiApplicationMaturity;
 
+/**
+ * List the named application flags values accepted by this public contract.
+ */
 typedef enum UmiApplicationFlags {
     UMI_APPLICATION_STANDALONE = 1U << 0,
     UMI_APPLICATION_FEDERATED = 1U << 1,
@@ -55,6 +64,9 @@ typedef enum UmiApplicationFlags {
     UMI_APPLICATION_SANDBOX_RECOMMENDED = 1U << 5
 } UmiApplicationFlags;
 
+/**
+ * Represent the application definition data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationDefinition {
     uint32_t structure_size;
     const char *application_id;
@@ -76,15 +88,35 @@ typedef struct UmiApplicationDefinition {
     size_t workspace_profile_count;
 } UmiApplicationDefinition;
 
+/**
+ * Check that application definition satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_application_definition_validate(
     const UmiApplicationDefinition *definition);
+/**
+ * Provide the application definition declares capability operation used by this module and
+ * its client applications.
+ */
 int umi_application_definition_declares_capability(
     const UmiApplicationDefinition *definition,
     const char *capability_id);
+/**
+ * Provide the application definition uses domain operation used by this module and its
+ * client applications.
+ */
 int umi_application_definition_uses_domain(
     const UmiApplicationDefinition *definition,
     const char *domain_id);
+/**
+ * Provide the application family text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_family_text(UmiApplicationFamily family);
+/**
+ * Provide the application maturity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_maturity_text(UmiApplicationMaturity maturity);
 
 #ifdef __cplusplus

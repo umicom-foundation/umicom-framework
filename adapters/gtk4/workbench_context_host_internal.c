@@ -14,8 +14,13 @@
  *---------------------------------------------------------------------------*/
 
 #include "workbench_context_host_internal.h"
+/*
+ * Provide the wch colour css class operation used by this module and its client
+ * applications.
+ */
 const char *umi_wch_colour_css_class(UmiContextChannelColour colour)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch(colour){
     case UMI_CONTEXT_COLOUR_RED:return "umicom-context-group-red";
     case UMI_CONTEXT_COLOUR_ORANGE:return "umicom-context-group-orange";
@@ -28,9 +33,17 @@ const char *umi_wch_colour_css_class(UmiContextChannelColour colour)
     default:return "umicom-context-group-none";
     }
 }
+/*
+ * Provide the wch clear children operation used by this module and its client
+ * applications.
+ */
 void umi_wch_clear_children(GtkWidget *widget)
 {
-    GtkWidget *child;if(!GTK_IS_BOX(widget))return;
+    GtkWidget *child;/* Apply this branch only when its contract condition is satisfied. */ if(!GTK_IS_BOX(widget))return;
     child=gtk_widget_get_first_child(widget);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while(child){GtkWidget *next=gtk_widget_get_next_sibling(child);gtk_box_remove(GTK_BOX(widget),child);child=next;}
 }

@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_MISSING_MONITOR_RECOVERY_API_VERSION 1U
 
+/**
+ * Represent the desktop missing monitor recovery snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesktopMissingMonitorRecoverySnapshot {
     uint32_t struct_size;
     uint32_t api_version;

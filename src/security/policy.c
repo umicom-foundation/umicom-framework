@@ -34,24 +34,39 @@ struct UmiPolicyEngine {
     size_t count;
 };
 
+/* Provide the policy match operation used by this module and its client applications. */
 static int umi_policy_match(const char *pattern, const char *value)
 {
     size_t pattern_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL || value == NULL) {
         return 0;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(pattern, "*") == 0) {
         return 1;
     }
     pattern_length = strlen(pattern);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (pattern_length > 0U && pattern[pattern_length - 1U] == '*') {
         return strncmp(pattern, value, pattern_length - 1U) == 0;
     }
     return strcmp(pattern, value) == 0;
 }
 
+/*
+ * Initialise policy engine from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_policy_engine_create(UmiPolicyEngine **out_engine)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_engine == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -61,23 +76,31 @@ UmiStatus umi_policy_engine_create(UmiPolicyEngine **out_engine)
         : UMI_STATUS_OUT_OF_MEMORY;
 }
 
+/* Release or reset state held by policy engine so the same storage can be reused safely. */
 void umi_policy_engine_destroy(UmiPolicyEngine *engine)
 {
     free(engine);
 }
 
+/* Add policy engine only after its inputs and available capacity have been checked. */
 UmiStatus umi_policy_engine_add(UmiPolicyEngine *engine,
                                 const UmiPolicyRule *rule)
 {
     UmiStoredPolicyRule *stored;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || rule == NULL || rule->principal == NULL ||
         rule->capability == NULL || rule->resource == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (engine->count >= UMI_POLICY_MAX_RULES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(rule->principal) >= UMI_POLICY_TEXT_CAPACITY ||
         strlen(rule->capability) >= UMI_POLICY_TEXT_CAPACITY ||
         strlen(rule->resource) >= UMI_PATH_CAPACITY) {
@@ -101,8 +124,13 @@ UmiStatus umi_policy_engine_add(UmiPolicyEngine *engine,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by policy engine so the same storage can be reused safely. */
 UmiStatus umi_policy_engine_clear(UmiPolicyEngine *engine)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -111,6 +139,10 @@ UmiStatus umi_policy_engine_clear(UmiPolicyEngine *engine)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the policy engine authorize operation used by this module and its client
+ * applications.
+ */
 UmiPolicyDecision umi_policy_engine_authorize(
     const UmiPolicyEngine *engine,
     const char *principal,
@@ -120,13 +152,19 @@ UmiPolicyDecision umi_policy_engine_authorize(
     UmiPolicyDecision decision = {UMI_POLICY_DENY, NULL, NULL, NULL};
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || principal == NULL || capability == NULL ||
         resource == NULL) {
         return decision;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = engine->count; index > 0U; --index) {
         const UmiStoredPolicyRule *rule = &engine->rules[index - 1U];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_policy_match(rule->principal, principal) &&
             umi_policy_match(rule->capability, capability) &&
             umi_policy_match(rule->resource, resource)) {
@@ -140,6 +178,7 @@ UmiPolicyDecision umi_policy_engine_authorize(
     return decision;
 }
 
+/* Return the number of records represented by policy engine without changing their state. */
 size_t umi_policy_engine_count(const UmiPolicyEngine *engine)
 {
     return engine != NULL ? engine->count : 0U;

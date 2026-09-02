@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider trading workbench data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderTradingWorkbench {
     UmiWorkbenchContextHostProfile trader;
     UmiWorkbenchContextHostProfile tms;
@@ -33,8 +37,16 @@ typedef struct UmiWorkbenchSelectionProviderTradingWorkbench {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderTradingWorkbench;
 
+/**
+ * Provide the workbench selection provider trading workbench build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_workbench_build(
     UmiWorkbenchSelectionProviderTradingWorkbench *out_profile);
+/**
+ * Check that workbench selection provider trading workbench satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_trading_workbench_validate(
     const UmiWorkbenchSelectionProviderTradingWorkbench *profile);
 

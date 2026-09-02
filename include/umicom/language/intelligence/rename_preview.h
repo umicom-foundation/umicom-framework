@@ -24,11 +24,19 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_RENAME_PREVIEW_API_VERSION 1U
+/**
+ * List the named language intelligence rename preview decision values accepted by this
+ * public contract.
+ */
 typedef enum UmiLanguageIntelligenceRenamePreviewDecision {
     UMI_LANGUAGE_INTELLIGENCE_RENAME_PREVIEW_DENY = 0,
     UMI_LANGUAGE_INTELLIGENCE_RENAME_PREVIEW_ALLOW = 1,
     UMI_LANGUAGE_INTELLIGENCE_RENAME_PREVIEW_ALLOW_WITH_REFRESH = 2
 } UmiLanguageIntelligenceRenamePreviewDecision;
+/**
+ * Represent the language intelligence rename preview input data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceRenamePreviewInput {
     UmiLanguageIntelligenceCapabilityFlags required_flags;
     UmiLanguageIntelligenceCapabilityFlags available_flags;
@@ -38,8 +46,16 @@ typedef struct UmiLanguageIntelligenceRenamePreviewInput {
     int hard_block;
     int explicit_override;
 } UmiLanguageIntelligenceRenamePreviewInput;
+/**
+ * Provide the language intelligence rename preview evaluate operation used by this module
+ * and its client applications.
+ */
 UmiLanguageIntelligenceRenamePreviewDecision umi_language_intelligence_rename_preview_evaluate(
     const UmiLanguageIntelligenceRenamePreviewInput *input);
+/**
+ * Provide the language intelligence rename preview capabilities satisfied operation used
+ * by this module and its client applications.
+ */
 int umi_language_intelligence_rename_preview_capabilities_satisfied(
     const UmiLanguageIntelligenceRenamePreviewInput *input);
 #ifdef __cplusplus

@@ -27,9 +27,22 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics result row data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsResultRow { char key[UMI_ANALYTICS_TEXT_CAPACITY]; double value; } UmiAnalyticsResultRow;
+/**
+ * Represent the analytics result data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsResult { UmiAnalyticsResultRow rows[UMI_ANALYTICS_MAX_ITEMS]; size_t count; uint64_t revision; } UmiAnalyticsResult;
+/**
+ * Initialise analytics result from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_analytics_result_init(UmiAnalyticsResult *result);
+/**
+ * Add analytics result only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_analytics_result_add(UmiAnalyticsResult *result,const char *key,double value);
 
 #ifdef __cplusplus

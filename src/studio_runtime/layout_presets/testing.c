@@ -18,6 +18,10 @@ static const UmiStudioRuntimeSurfaceKind VISIBLE[] = {
     UMI_STUDIO_SURFACE_TEST_EXPLORER, UMI_STUDIO_SURFACE_EDITOR, UMI_STUDIO_SURFACE_PROBLEMS, UMI_STUDIO_SURFACE_OUTPUT
 };
 
+/*
+ * Provide the studio layout preset testing operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeLayoutPresetDefinition *
 umi_studio_layout_preset_testing(void)
 {

@@ -15,7 +15,12 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/governance/types.h"
 
+/*
+ * Provide the component api status text operation used by this module and its client
+ * applications.
+ */
 const char *umi_component_api_status_text(UmiComponentApiStatus status) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (status) {
   case UMI_COMPONENT_API_PLANNED:
     return "planned";
@@ -32,7 +37,12 @@ const char *umi_component_api_status_text(UmiComponentApiStatus status) {
   }
 }
 
+/*
+ * Provide the component owner text operation used by this module and its client
+ * applications.
+ */
 const char *umi_component_owner_text(UmiComponentOwner owner) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (owner) {
   case UMI_COMPONENT_OWNER_FRAMEWORK:
     return "framework";
@@ -45,7 +55,12 @@ const char *umi_component_owner_text(UmiComponentOwner owner) {
   }
 }
 
+/*
+ * Provide the component evidence text operation used by this module and its client
+ * applications.
+ */
 const char *umi_component_evidence_text(uint32_t evidence) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (evidence) {
   case UMI_COMPONENT_EVIDENCE_CONTRACT:
     return "contract";
@@ -68,7 +83,12 @@ const char *umi_component_evidence_text(uint32_t evidence) {
   }
 }
 
+/*
+ * Provide the component frontend text operation used by this module and its client
+ * applications.
+ */
 const char *umi_component_frontend_text(uint32_t frontend) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (frontend) {
   case UMI_COMPONENT_FRONTEND_HEADLESS:
     return "headless";
@@ -83,18 +103,30 @@ const char *umi_component_frontend_text(uint32_t frontend) {
   }
 }
 
+/*
+ * Provide the component api status mask operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_component_api_status_mask(UmiComponentApiStatus status) {
   return status >= UMI_COMPONENT_API_PLANNED && status <= UMI_COMPONENT_API_DEPRECATED
              ? 1U << (uint32_t)status
              : 0U;
 }
 
+/*
+ * Provide the component role mask operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_component_role_mask(UmiApplicationComponentRole role) {
   return role >= UMI_APPLICATION_COMPONENT_VIEW && role <= UMI_APPLICATION_COMPONENT_SERVICE_SURFACE
              ? 1U << (uint32_t)role
              : 0U;
 }
 
+/*
+ * Provide the component maturity mask operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_component_maturity_mask(UmiCapabilityMaturity maturity) {
   return maturity >= UMI_CAPABILITY_IMPLEMENTED && maturity <= UMI_CAPABILITY_PLANNED
              ? 1U << (uint32_t)maturity

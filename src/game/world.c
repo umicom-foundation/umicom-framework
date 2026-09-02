@@ -44,6 +44,7 @@ static UmiGameEntity *find_mutable(
     size_t index;
     /* Zero is reserved as "no entity" and cannot match an active record. */
     if (world == NULL || entity_id == 0U) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < world->capacity; ++index) {
         /* Both active state and identity must match because slots are reused. */
         if (world->entities[index].active &&
@@ -88,6 +89,10 @@ UmiStatus umi_game_world_create(
 /* Release entity storage before the world owner; NULL destruction is safe. */
 void umi_game_world_destroy(UmiGameWorld *world)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (world == NULL) return;
     free(world->entities);
     free(world);
@@ -112,6 +117,7 @@ UmiStatus umi_game_world_spawn(
     if (world->count >= world->capacity || world->next_entity_id == UINT64_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < world->capacity; ++index) {
         UmiGameEntity *entity = &world->entities[index];
         /* Inactive slots are fully cleared before reuse to prevent stale state. */
@@ -143,6 +149,10 @@ UmiStatus umi_game_world_despawn(
     UmiGameEntityId entity_id)
 {
     UmiGameEntity *entity;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (world == NULL || entity_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     entity = find_mutable(world, entity_id);
     /* A missing identity is distinct from malformed input for editor feedback. */
@@ -167,6 +177,10 @@ UmiStatus umi_game_world_set_transform(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     entity = find_mutable(world, entity_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entity == NULL) return UMI_STATUS_NOT_FOUND;
     entity->transform = *transform;
     world->revision += 1U;
@@ -180,8 +194,16 @@ UmiStatus umi_game_world_set_tags(
     uint64_t tags)
 {
     UmiGameEntity *entity;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (world == NULL || entity_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     entity = find_mutable(world, entity_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entity == NULL) return UMI_STATUS_NOT_FOUND;
     entity->tags = tags;
     world->revision += 1U;
@@ -195,9 +217,14 @@ UmiStatus umi_game_world_find(
     UmiGameEntity *out_entity)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (world == NULL || entity_id == 0U || out_entity == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < world->capacity; ++index) {
         /* Ignore free slots because their former identity has been invalidated. */
         if (world->entities[index].active &&
@@ -217,11 +244,18 @@ UmiStatus umi_game_world_at(
 {
     size_t slot;
     size_t active_index = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (world == NULL || out_entity == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= world->count) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (slot = 0U; slot < world->capacity; ++slot) {
         /* Only active records contribute to the public enumeration index. */
         if (world->entities[slot].active) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (active_index == index) {
                 *out_entity = world->entities[slot];
                 return UMI_STATUS_OK;
@@ -238,6 +272,10 @@ UmiStatus umi_game_world_snapshot(
     const UmiGameWorld *world,
     UmiGameWorldSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (world == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Clearing the record prevents uninitialised padding or future fields leaking. */
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));

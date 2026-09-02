@@ -26,7 +26,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Return the number of records represented by trading profile capability without changing
+ * their state.
+ */
 size_t umi_trading_profile_capability_count(void);
+/**
+ * Find trading profile capability while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const char *umi_trading_profile_capability_at(size_t index);
 #ifdef __cplusplus
 }

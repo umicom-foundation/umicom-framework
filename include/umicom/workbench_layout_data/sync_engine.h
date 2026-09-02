@@ -29,6 +29,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout sync endpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncEndpoint {
     uint32_t structure_size;
     char replica_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -37,6 +41,10 @@ typedef struct UmiWorkbenchLayoutSyncEndpoint {
     size_t change_count;
 } UmiWorkbenchLayoutSyncEndpoint;
 
+/**
+ * Represent the workbench layout sync policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncPolicy {
     uint32_t structure_size;
     bool continue_after_conflict;
@@ -46,6 +54,10 @@ typedef struct UmiWorkbenchLayoutSyncPolicy {
     size_t maximum_operations;
 } UmiWorkbenchLayoutSyncPolicy;
 
+/**
+ * Represent the workbench layout sync result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -60,6 +72,10 @@ typedef struct UmiWorkbenchLayoutSyncResult {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutSyncResult;
 
+/**
+ * Represent the workbench layout sync engine data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncEngine {
     uint32_t structure_size;
     UmiWorkbenchLayoutConflictStoreRepository *conflicts;
@@ -68,15 +84,27 @@ typedef struct UmiWorkbenchLayoutSyncEngine {
     uint64_t revision;
 } UmiWorkbenchLayoutSyncEngine;
 
+/**
+ * Provide the workbench layout sync policy default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutSyncPolicy
 umi_workbench_layout_sync_policy_default(void);
 
+/**
+ * Initialise workbench layout sync engine from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_sync_engine_init(
     UmiWorkbenchLayoutSyncEngine *engine,
     UmiWorkbenchLayoutConflictStoreRepository *conflicts,
     UmiWorkbenchLayoutSyncCursorRepository *cursors,
     const UmiWorkbenchLayoutSyncPolicy *policy);
 
+/**
+ * Provide the workbench layout sync engine plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_sync_engine_plan(
     UmiWorkbenchLayoutSyncEngine *engine,
     const UmiWorkbenchLayoutSyncEndpoint *local,
@@ -86,6 +114,10 @@ UmiStatus umi_workbench_layout_sync_engine_plan(
     uint64_t created_at_ms,
     UmiWorkbenchLayoutSyncPlan *out_plan);
 
+/**
+ * Perform workbench layout sync engine through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_sync_engine_apply(
     UmiWorkbenchLayoutSyncEngine *engine,
     const UmiWorkbenchLayoutSyncPlan *plan,
@@ -95,6 +127,10 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
     uint64_t now_ms,
     UmiWorkbenchLayoutSyncResult *out_result);
 
+/**
+ * Provide the workbench layout sync engine synchronise operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_sync_engine_synchronise(
     UmiWorkbenchLayoutSyncEngine *engine,
     UmiWorkbenchLayoutSyncEndpoint *local,

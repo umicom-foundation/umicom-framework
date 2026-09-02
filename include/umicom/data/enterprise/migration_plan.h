@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data migration plan data shared with callers of this public contract.
+ */
 typedef struct UmiDataMigrationPlan { char step_ids[UMI_DATA_ENTERPRISE_MAX_ITEMS][UMI_DATA_ENTERPRISE_ID_CAPACITY]; size_t count; bool reversible; bool destructive; } UmiDataMigrationPlan;
 /* Build a topological migration plan or reject cyclic graphs. */ UmiStatus umi_data_migration_plan_build(const UmiDataMigrationGraph *graph,UmiDataMigrationPlan *out_plan);
 

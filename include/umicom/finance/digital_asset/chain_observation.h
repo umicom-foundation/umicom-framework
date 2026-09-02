@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital chain observation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalChainObservation {
     UmiDigitalAssetId network_id;
     uint64_t height;

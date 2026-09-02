@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced diff hunk data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedDiffHunk {
     uint32_t struct_size;
     uint32_t api_version;
@@ -38,12 +41,28 @@ typedef struct UmiVcsAdvancedDiffHunk {
     uint64_t fingerprint;
 } UmiVcsAdvancedDiffHunk;
 
+/**
+ * Initialise vcs advanced diff hunk from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_diff_hunk_init(UmiVcsAdvancedDiffHunk *value);
+/**
+ * Check that vcs advanced diff hunk satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_diff_hunk_validate(const UmiVcsAdvancedDiffHunk *value);
+/**
+ * Provide the vcs advanced diff hunk set counts operation used by this module and its
+ * client applications.
+ */
 void umi_vcs_advanced_diff_hunk_set_counts(UmiVcsAdvancedDiffHunk *value,
                                              size_t added,
                                              size_t deleted,
                                              size_t modified);
+/**
+ * Return the number of records represented by vcs advanced diff hunk change without
+ * changing their state.
+ */
 size_t umi_vcs_advanced_diff_hunk_change_count(const UmiVcsAdvancedDiffHunk *value);
 
 #ifdef __cplusplus

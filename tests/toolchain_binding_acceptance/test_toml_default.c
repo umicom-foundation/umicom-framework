@@ -18,6 +18,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test toolchain binding acceptance toml default and return a clear result when
+ * the behaviour no longer matches its contract.
+ */
 int test_toolchain_binding_acceptance_toml_default(void)
 {
     UmiDeveloperToolchainBindingRegistry *registry = NULL;

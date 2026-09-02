@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_STAGING_DIRECTORY "umicom.developer.delivery.staging_directory"
 
+/**
+ * Provide the developer capability staging directory operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_staging_directory(void);
 

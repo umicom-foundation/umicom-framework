@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/navigate_forward.h"
 
+/*
+ * Provide the studio command alias navigate forward operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_navigate_forward(void)
 {

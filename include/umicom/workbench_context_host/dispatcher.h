@@ -21,6 +21,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Perform workbench context host through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_workbench_context_host_dispatch(
     UmiWorkbenchContextHostEndpointRegistry *endpoints,
     UmiWorkbenchContextHostInboxRegistry *inboxes,

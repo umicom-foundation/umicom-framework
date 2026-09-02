@@ -18,6 +18,10 @@ static const UmiStudioRuntimeSurfaceKind VISIBLE[] = {
     UMI_STUDIO_SURFACE_DEBUG, UMI_STUDIO_SURFACE_EDITOR, UMI_STUDIO_SURFACE_PROBLEMS, UMI_STUDIO_SURFACE_OUTPUT, UMI_STUDIO_SURFACE_TERMINAL
 };
 
+/*
+ * Provide the studio layout preset debugging operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeLayoutPresetDefinition *
 umi_studio_layout_preset_debugging(void)
 {

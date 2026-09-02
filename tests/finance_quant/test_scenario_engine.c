@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/scenario_engine.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double r,s,v; CHECK(umi_quant_scenario_engine_apply(0.03,100.0,0.20,0.01,-0.10,0.05,&r,&s,&v)==UMI_STATUS_OK); CHECK(r>0.039&&r<0.041); CHECK(s>89.9&&s<90.1); CHECK(v>0.249&&v<0.251);

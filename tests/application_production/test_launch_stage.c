@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 #include "test_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     assert(strcmp(umi_application_production_launch_stage_text(UMI_APPLICATION_PRODUCTION_STAGE_START), "start") == 0);
     assert(strcmp(umi_application_production_state_text(UMI_APPLICATION_PRODUCTION_READY), "ready") == 0);

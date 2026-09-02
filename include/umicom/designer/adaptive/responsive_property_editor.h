@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer responsive property editor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesignerResponsivePropertyEditor {
     UmiDesignerAdaptiveProperty property;
     UmiDesignerAdaptiveOverride override_value;

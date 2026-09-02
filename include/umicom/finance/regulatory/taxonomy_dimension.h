@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the taxonomy dimension data shared with callers of this public contract.
+ */
 typedef struct UmiTaxonomyDimension {
     char dimension_id[UMI_REG_ID_CAPACITY];
     char taxonomy_id[UMI_REG_ID_CAPACITY];

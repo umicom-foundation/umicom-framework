@@ -29,6 +29,10 @@ extern "C" {
 
 #define UMI_EDITOR_INTEL_NAVIGATION_PROJECTION_API_VERSION 1U
 
+/**
+ * Represent the editor intel navigation projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorIntelNavigationProjection {
     uint32_t struct_size;
     uint32_t api_version;
@@ -41,16 +45,36 @@ typedef struct UmiEditorIntelNavigationProjection {
     uint64_t revision;
 } UmiEditorIntelNavigationProjection;
 
+/**
+ * Initialise editor intel navigation projection from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_navigation_projection_init(
     UmiEditorIntelNavigationProjection *projection);
+/**
+ * Provide the editor intel navigation projection refresh operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_intel_navigation_projection_refresh(
     UmiEditorIntelNavigationProjection *projection,
     UmiEditorNavigationInsights *insights);
+/**
+ * Find editor intel navigation projection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_navigation_projection_at(
     const UmiEditorIntelNavigationProjection *projection,
     size_t index);
+/**
+ * Return the number of records represented by editor intel navigation projection without
+ * changing their state.
+ */
 size_t umi_editor_intel_navigation_projection_count(
     const UmiEditorIntelNavigationProjection *projection);
+/**
+ * Check that editor intel navigation projection satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_navigation_projection_valid(
     const UmiEditorIntelNavigationProjection *projection);
 

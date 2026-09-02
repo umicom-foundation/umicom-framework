@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime execution order data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeExecutionOrder
 {
     uint32_t structure_size;
@@ -29,11 +33,35 @@ typedef struct UmiTestRuntimeExecutionOrder
     uint64_t revision;
     bool enabled;
     } UmiTestRuntimeExecutionOrder;
+/**
+ * Initialise test runtime execution order from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_runtime_execution_order_init(UmiTestRuntimeExecutionOrder *value,const char *id);
+/**
+ * Check that test runtime execution order satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_execution_order_validate(const UmiTestRuntimeExecutionOrder *value);
+/**
+ * Provide the test runtime execution order set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_execution_order_set_detail(UmiTestRuntimeExecutionOrder *value,const char *detail);
+/**
+ * Provide the test runtime execution order set position operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_execution_order_set_position(UmiTestRuntimeExecutionOrder *value,uint64_t number);
+/**
+ * Provide the test runtime execution order set total operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_execution_order_set_total(UmiTestRuntimeExecutionOrder *value,uint64_t number);
+/**
+ * Provide the test runtime execution order same identity operation used by this module and
+ * its client applications.
+ */
 bool umi_test_runtime_execution_order_same_identity(const UmiTestRuntimeExecutionOrder *left,const UmiTestRuntimeExecutionOrder *right);
 #ifdef __cplusplus
 }

@@ -64,6 +64,7 @@ UmiStatus umi_repository_inspection_text_format(
         service->report.count,
         service->report.warnings,
         service->report.errors);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0) {
         return UMI_STATUS_IO_ERROR;
     }

@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_finite_difference_init(UmiQuantFiniteDifference *record, double down_value, double base_value, double up_value, double bump)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(bump > 0.0 && umi_quant_number_valid(down_value) && umi_quant_number_valid(base_value) && umi_quant_number_valid(up_value))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->down_value = down_value;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_finite_difference_init(UmiQuantFiniteDifference *record, dou
 /* Return the central first derivative from symmetric bumps. */
 double umi_quant_finite_difference_first_derivative(const UmiQuantFiniteDifference *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return (record->up_value - record->down_value) / (2.0 * record->bump);
 }

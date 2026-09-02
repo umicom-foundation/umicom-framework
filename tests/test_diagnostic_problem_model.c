@@ -16,6 +16,10 @@
  *---------------------------------------------------------------------------*/
 #include "diagnostic_platform_test_support.h"
 
+/*
+ * Exercise problem from finding and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiDiagnosticProblem problem_from_finding(
     UmiDiagnosticProviderFinding finding,
     UmiDiagnosticBaselineState baseline,
@@ -34,6 +38,7 @@ static UmiDiagnosticProblem problem_from_finding(
     problem.last_seen_run_id = finding.run_id;
     problem.active = 1;
     problem.fixable = finding.has_fix;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (suppressed) {
         problem.suppression.struct_size =
             (uint32_t)sizeof(problem.suppression);
@@ -50,6 +55,10 @@ static UmiDiagnosticProblem problem_from_finding(
     return problem;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticProblemModel *model = NULL;

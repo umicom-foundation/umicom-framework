@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceContext {
   size_t selected_item_count;
   int online;
@@ -31,12 +35,24 @@ typedef struct UmiApplicationExperienceContext {
   int component_visible;
 } UmiApplicationExperienceContext;
 
+/**
+ * Represent the application experience enablement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceEnablement {
   UmiApplicationExperienceCommandAvailability availability;
   const char *reason;
 } UmiApplicationExperienceEnablement;
 
+/**
+ * Provide the application experience context default operation used by this module and its
+ * client applications.
+ */
 void umi_application_experience_context_default(UmiApplicationExperienceContext *context);
+/**
+ * Provide the application experience command enablement operation used by this module and
+ * its client applications.
+ */
 UmiApplicationExperienceEnablement umi_application_experience_command_enablement(
     const UmiApplicationExperienceCommand *command,
     const UmiApplicationExperiencePermissionSet *permissions,

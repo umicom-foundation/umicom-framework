@@ -15,9 +15,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/presentation/runtime_types.h"
 
+/*
+ * Provide the application presentation surface state text operation used by this module
+ * and its client applications.
+ */
 const char *umi_application_presentation_surface_state_text(
     UmiApplicationPresentationSurfaceState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_APPLICATION_PRESENTATION_STATE_DORMANT: return "dormant";
     case UMI_APPLICATION_PRESENTATION_STATE_LOADING: return "loading";
@@ -33,9 +38,14 @@ const char *umi_application_presentation_surface_state_text(
     }
 }
 
+/*
+ * Provide the application presentation surface event text operation used by this module
+ * and its client applications.
+ */
 const char *umi_application_presentation_surface_event_text(
     UmiApplicationPresentationSurfaceEvent event)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (event) {
     case UMI_APPLICATION_PRESENTATION_EVENT_MOUNT: return "mount";
     case UMI_APPLICATION_PRESENTATION_EVENT_UNMOUNT: return "unmount";

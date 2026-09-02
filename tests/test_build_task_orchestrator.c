@@ -17,6 +17,10 @@
 
 #include "umicom/build/task_orchestrator.h"
 
+/*
+ * Exercise add task and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_task(UmiBuildTaskRegistry *registry,
                      const char *id,
                      UmiBuildTaskKind kind,
@@ -25,6 +29,10 @@ static void add_task(UmiBuildTaskRegistry *registry,
     UmiBuildTaskSnapshot task;
     umi_build_task_init(&task, id, id, kind);
     assert(umi_build_task_set_command(&task, id, ".") == UMI_STATUS_OK);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dependency != NULL) {
         assert(umi_build_task_add_dependency(&task, dependency) ==
                UMI_STATUS_OK);
@@ -32,6 +40,10 @@ static void add_task(UmiBuildTaskRegistry *registry,
     assert(umi_build_task_registry_upsert(registry, &task) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildTaskRegistry *registry = NULL;
@@ -49,6 +61,10 @@ int main(void)
     assert(umi_build_task_orchestrator_plan(
                orchestrator, "verify.operation", "test") == UMI_STATUS_OK);
     assert(umi_build_task_orchestrator_begin(orchestrator) == UMI_STATUS_OK);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (umi_build_task_orchestrator_next_ready(
                orchestrator, &task) == UMI_STATUS_OK) {
         assert(umi_build_task_orchestrator_start(

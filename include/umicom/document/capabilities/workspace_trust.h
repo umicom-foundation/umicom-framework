@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_WORKSPACE_TRUST "umicom.document.security.workspace_trust"
 
+/**
+ * Provide the document capability workspace trust operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_workspace_trust(void);
 

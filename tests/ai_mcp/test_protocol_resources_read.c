@@ -18,6 +18,10 @@
 
 #include "umicom/ai/mcp/protocol.h"
 
+/*
+ * Read test ai mcp protocol resources into validated module state and return a status when
+ * input cannot be used.
+ */
 int test_ai_mcp_protocol_resources_read(void)
 {
     assert(strcmp(umi_ai_mcp_method_resources_read(), "resources/read") == 0);

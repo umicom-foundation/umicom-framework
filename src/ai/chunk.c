@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Copy ai chunk into module-owned storage so callers keep ownership of their input values. */
 UmiStatus umi_ai_chunk_set(UmiAiChunk *chunk,
                            const char *document_id,
                            size_t index,
@@ -31,19 +32,26 @@ UmiStatus umi_ai_chunk_set(UmiAiChunk *chunk,
 {
     int written;
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chunk == NULL || document_id == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(chunk->text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memset(chunk, 0, sizeof(*chunk));
     written = snprintf(chunk->document_id, sizeof(chunk->document_id), "%s", document_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(chunk->document_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     written = snprintf(chunk->chunk_id, sizeof(chunk->chunk_id), "%s:%zu", document_id, index);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(chunk->chunk_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

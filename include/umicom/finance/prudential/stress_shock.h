@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress shock data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialStressShock { double base_value; double shock_rate; double stressed_value; } UmiPrudentialStressShock;
 /* Apply a signed percentage shock to a finite base value. */
 UmiStatus umi_pru_stress_shock_apply(UmiPrudentialStressShock *result, double base_value, double shock_rate);

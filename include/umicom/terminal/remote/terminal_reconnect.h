@@ -22,9 +22,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote terminal reconnect data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTerminalRemoteTerminalReconnect { uint64_t initial_ms; uint64_t maximum_ms; uint32_t attempts; } UmiTerminalRemoteTerminalReconnect;
+/**
+ * Initialise terminal remote terminal reconnect from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_terminal_reconnect_init(UmiTerminalRemoteTerminalReconnect *value,uint64_t initial_ms,uint64_t maximum_ms);
+/**
+ * Provide the terminal remote terminal reconnect next delay operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_terminal_remote_terminal_reconnect_next_delay(UmiTerminalRemoteTerminalReconnect *value);
+/**
+ * Release or reset state held by terminal remote terminal reconnect so the same storage
+ * can be reused safely.
+ */
 void umi_terminal_remote_terminal_reconnect_reset(UmiTerminalRemoteTerminalReconnect *value);
 #ifdef __cplusplus
 }

@@ -22,9 +22,24 @@
 extern "C" {
 #endif
 #define UMI_NC_MAX_AST_CHILDREN 8U
+/**
+ * Represent the native ast node data shared with callers of this public contract.
+ */
 typedef struct UmiNativeAstNode { uint32_t id; UmiNativeAstKind kind; UmiNativeSourceSpan span; uint32_t child_ids[UMI_NC_MAX_AST_CHILDREN]; size_t child_count; uint32_t type_id; uint32_t symbol_id; int64_t integer_payload; char text[UMI_NC_NAME_CAPACITY]; } UmiNativeAstNode;
+/**
+ * Initialise nc ast node from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_nc_ast_node_init(UmiNativeAstNode *node,uint32_t id,UmiNativeAstKind kind,UmiNativeSourceSpan span,const char *text);
+/**
+ * Provide the nc ast node add child operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ast_node_add_child(UmiNativeAstNode *node,uint32_t child_id);
+/**
+ * Provide the nc ast node is expression operation used by this module and its client
+ * applications.
+ */
 bool umi_nc_ast_node_is_expression(const UmiNativeAstNode *node);
 #ifdef __cplusplus
 }

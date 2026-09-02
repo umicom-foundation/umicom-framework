@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test protocol action filesystem and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_protocol_action_filesystem(void){UmiHelixActionKind k=(UmiHelixActionKind)0;TEST_CHECK(umi_ai_helix_protocol_parse_action("filesystem",&k)==UMI_STATUS_OK);TEST_CHECK(k==UMI_HELIX_ACTION_FILESYSTEM);return 0;}

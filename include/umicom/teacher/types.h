@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_TEACHER_SMALL_CAPACITY 32U
 #define UMI_TEACHER_MEDIUM_CAPACITY 64U
 
+/**
+ * List the named teacher level values accepted by this public contract.
+ */
 typedef enum UmiTeacherLevel {
     UMI_TEACHER_LEVEL_FOUNDATION = 0,
     UMI_TEACHER_LEVEL_BEGINNER = 1,
@@ -43,6 +46,9 @@ typedef enum UmiTeacherLevel {
     UMI_TEACHER_LEVEL_EXPERT = 4
 } UmiTeacherLevel;
 
+/**
+ * List the named teacher language values accepted by this public contract.
+ */
 typedef enum UmiTeacherLanguage {
     UMI_TEACHER_LANGUAGE_GENERAL = 0,
     UMI_TEACHER_LANGUAGE_C23 = 1,
@@ -51,6 +57,9 @@ typedef enum UmiTeacherLanguage {
     UMI_TEACHER_LANGUAGE_CPYTHON = 4
 } UmiTeacherLanguage;
 
+/**
+ * List the named teacher state values accepted by this public contract.
+ */
 typedef enum UmiTeacherState {
     UMI_TEACHER_STATE_UNKNOWN = 0,
     UMI_TEACHER_STATE_LOCKED = 1,
@@ -61,6 +70,9 @@ typedef enum UmiTeacherState {
     UMI_TEACHER_STATE_COMPLETED = 6
 } UmiTeacherState;
 
+/**
+ * List the named teacher progress decision values accepted by this public contract.
+ */
 typedef enum UmiTeacherProgressDecision {
     UMI_TEACHER_PROGRESS_HOLD = 0,
     UMI_TEACHER_PROGRESS_REMEDIATE = 1,
@@ -68,10 +80,29 @@ typedef enum UmiTeacherProgressDecision {
     UMI_TEACHER_PROGRESS_ADVANCE = 3
 } UmiTeacherProgressDecision;
 
+/**
+ * Provide the teacher level text operation used by this module and its client
+ * applications.
+ */
 const char *umi_teacher_level_text(UmiTeacherLevel level);
+/**
+ * Provide the teacher language text operation used by this module and its client
+ * applications.
+ */
 const char *umi_teacher_language_text(UmiTeacherLanguage language);
+/**
+ * Provide the teacher state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_teacher_state_text(UmiTeacherState state);
+/**
+ * Provide the teacher percent operation used by this module and its client applications.
+ */
 uint32_t umi_teacher_percent(uint64_t value, uint64_t maximum);
+/**
+ * Provide the teacher clamp score operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_clamp_score(uint32_t score);
 
 #ifdef __cplusplus

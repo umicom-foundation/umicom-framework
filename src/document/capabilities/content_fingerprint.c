@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/content_fingerprint.h"
 
+/*
+ * Provide the document capability content fingerprint operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_content_fingerprint(void)
 {

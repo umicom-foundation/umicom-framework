@@ -25,11 +25,23 @@
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s\n", #expr); return 1; } } while (0)
 
+/*
+ * Exercise hit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus hit(const UmiIntegrationEnvelope *e, void *u) {
     int *count=(int*)u;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (e==NULL||count==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     ++*count; return UMI_STATUS_OK;
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiIntegrationDispatcher d; UmiIntegrationEnvelope e; int count=0;
     umi_integration_dispatcher_init(&d); umi_integration_envelope_init(&e);

@@ -18,17 +18,29 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise workbench selection service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_selection_service_create(
     UmiWorkbenchContextSourceService *sources,
     UmiWorkbenchSelectionService **out_service)
 {
     UmiWorkbenchSelectionService *service;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (sources == NULL || out_service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_service = NULL;
     service = (UmiWorkbenchSelectionService *)calloc(
         1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     service->sources = sources;
     service->sequence = 1U;
@@ -38,12 +50,20 @@ UmiStatus umi_workbench_selection_service_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench selection service so the same storage can be
+ * reused safely.
+ */
 void umi_workbench_selection_service_destroy(
     UmiWorkbenchSelectionService *service)
 {
     free(service);
 }
 
+/*
+ * Provide the workbench selection service submit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_service_submit(
     UmiWorkbenchSelectionService *service,
     UmiWorkbenchSelection *selection,
@@ -53,10 +73,15 @@ UmiStatus umi_workbench_selection_service_submit(
 {
     UmiWorkbenchContextSourceSample sample;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || selection == NULL || source_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     ++service->metrics.submitted_count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->suspended) {
         ++service->metrics.rejected_count;
         ++service->metrics.revision;
@@ -66,6 +91,7 @@ UmiStatus umi_workbench_selection_service_submit(
     selection->sequence = ++service->sequence;
     (void)umi_workbench_selection_refresh_hash(selection);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->last_hash != 0U &&
         service->last_hash == selection->content_hash) {
         ++service->metrics.duplicate_count;
@@ -79,6 +105,7 @@ UmiStatus umi_workbench_selection_service_submit(
         source_kind,
         trigger,
         &sample);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         ++service->metrics.rejected_count;
         ++service->metrics.revision;
@@ -88,6 +115,7 @@ UmiStatus umi_workbench_selection_service_submit(
 
     status = umi_workbench_context_source_service_submit(
         service->sources, &sample);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         ++service->metrics.rejected_count;
         ++service->metrics.revision;
@@ -103,10 +131,18 @@ UmiStatus umi_workbench_selection_service_submit(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection service set suspended operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_selection_service_set_suspended(
     UmiWorkbenchSelectionService *service,
     bool suspended)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     service->suspended = suspended;
     ++service->revision;

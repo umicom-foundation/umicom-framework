@@ -25,8 +25,12 @@
 UmiStatus umi_repository_fetch_state_probe_read(const UmiRepositoryInspectionContext *context, int *out_available)
 {
     const char *args[] = {"rev-parse", "--verify", "@{u}"}; UmiRepositoryGitCommandResult result; UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_available == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    status = umi_repository_git_command_execute(context, args, 3U, &result); if (status != UMI_STATUS_OK) return status;
+    status = umi_repository_git_command_execute(context, args, 3U, &result); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
     *out_available = result.exit_code == 0; return UMI_STATUS_OK;
 }
 

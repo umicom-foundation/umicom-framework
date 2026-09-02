@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_curve_node_init(UmiQuantCurveNode *record, int32_t tenor_days, double value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(tenor_days >= 0 && umi_quant_number_valid(value))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->tenor_days = tenor_days;
@@ -35,6 +40,10 @@ UmiStatus umi_quant_curve_node_init(UmiQuantCurveNode *record, int32_t tenor_day
 /* Return the node quote for generic curve consumers. */
 double umi_quant_curve_node_quoted_value(const UmiQuantCurveNode *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->value;
 }

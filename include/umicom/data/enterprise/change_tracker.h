@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data tracked change data shared with callers of this public contract.
+ */
 typedef struct UmiDataTrackedChange { char change_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char entity_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char key[UMI_DATA_ENTERPRISE_ID_CAPACITY]; UmiDataChangeKind kind; uint64_t revision; } UmiDataTrackedChange;
+/**
+ * Represent the data change tracker data shared with callers of this public contract.
+ */
 typedef struct UmiDataChangeTracker { UmiDataTrackedChange items[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; uint64_t revision; } UmiDataChangeTracker;
 /* Reset change evidence for a new unit of work. */ void umi_data_change_tracker_init(UmiDataChangeTracker *tracker);
 /* Track a logical entity change, merging compatible state transitions. */ UmiStatus umi_data_change_tracker_track(UmiDataChangeTracker *tracker,const char *change_id,const char *entity_id,const char *key,UmiDataChangeKind kind);

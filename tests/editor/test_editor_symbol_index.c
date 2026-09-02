@@ -22,6 +22,10 @@
 
 #include "umicom/editor/symbol_index.h"
 
+/*
+ * Exercise symbol and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorIndexedSymbol symbol(const char *id,
                                      const char *parent_id,
                                      const char *document_id,
@@ -56,6 +60,10 @@ static UmiEditorIndexedSymbol symbol(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSymbolIndex *index = NULL;

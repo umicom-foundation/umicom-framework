@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcSurfaceCatalogue c; UmiFcSurfaceRequirement r,o; umi_fc_surface_catalogue_init(&c); CHECK(umi_fc_surface_requirement_make("chart",1U,2U,true,&r)==UMI_STATUS_OK); CHECK(umi_fc_surface_catalogue_add(&c,&r)==UMI_STATUS_OK); CHECK(umi_fc_surface_catalogue_find(&c,"chart",&o)==UMI_STATUS_OK); CHECK(o.required==1U);
     return 0;

@@ -15,6 +15,10 @@
 
 #include "umicom/workbench_selection_provider/studio_profile.h"
 
+/*
+ * Provide the workbench selection provider studio profile default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchSelectionProviderStudioProfile
 umi_workbench_selection_provider_studio_profile_default(void)
 {
@@ -31,6 +35,10 @@ umi_workbench_selection_provider_studio_profile_default(void)
     return profile;
 }
 
+/*
+ * Provide the register descriptor operation used by this module and its client
+ * applications.
+ */
 static UmiStatus register_descriptor(
     UmiWorkbenchSelectionProviderService *service,
     const char *provider_id,
@@ -52,6 +60,7 @@ static UmiStatus register_descriptor(
         application_id,
         panel_id,
         display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     /*
@@ -63,6 +72,7 @@ static UmiStatus register_descriptor(
         &descriptor,
         source_id,
         "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     descriptor.kind = provider_kind;
@@ -75,16 +85,28 @@ static UmiStatus register_descriptor(
         service, &descriptor);
 }
 
+/*
+ * Provide the workbench selection provider register studio profile operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_register_studio_profile(
     UmiWorkbenchSelectionProviderService *service,
     const UmiWorkbenchSelectionProviderStudioProfile *profile)
 {
     UmiWorkbenchSelectionProviderStudioProfile effective;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     effective = profile != NULL
         ? *profile
         : umi_workbench_selection_provider_studio_profile_default();
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (effective.application_id == NULL ||
         effective.project_panel_id == NULL ||
         effective.problems_panel_id == NULL ||
@@ -103,6 +125,7 @@ UmiStatus umi_workbench_selection_provider_register_studio_profile(
         UMI_WORKBENCH_SELECTION_PROVIDER_PROJECT,
         UMI_WORKBENCH_SELECTION_PROJECT,
         UMI_CONTEXT_KIND_PROJECT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_descriptor(
@@ -115,6 +138,7 @@ UmiStatus umi_workbench_selection_provider_register_studio_profile(
         UMI_WORKBENCH_SELECTION_PROVIDER_PROBLEM,
         UMI_WORKBENCH_SELECTION_DIAGNOSTIC,
         UMI_CONTEXT_KIND_SOURCE_LOCATION);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_descriptor(
@@ -127,6 +151,7 @@ UmiStatus umi_workbench_selection_provider_register_studio_profile(
         UMI_WORKBENCH_SELECTION_PROVIDER_SOURCE_CONTROL_CHANGE,
         UMI_WORKBENCH_SELECTION_SOURCE_CONTROL_CHANGE,
         UMI_CONTEXT_KIND_PROJECT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return register_descriptor(

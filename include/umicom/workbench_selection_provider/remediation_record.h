@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider remediation record data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderRemediationRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderRemediationRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderRemediationRecord;
 
+/**
+ * Initialise workbench selection provider remediation record from caller-provided values
+ * so later operations receive a known state.
+ */
 void umi_workbench_selection_provider_remediation_record_init(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider remediation record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_validate(
     const UmiWorkbenchSelectionProviderRemediationRecord *record);
+/**
+ * Provide the workbench selection provider remediation record set provider operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_set_provider(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider remediation record set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_set_source(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider remediation record set subject operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_set_subject(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider remediation record set related operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_set_related(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider remediation record set group operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_set_group(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider remediation record set description operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_remediation_record_set_description(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider remediation record hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_remediation_record_hash(
     const UmiWorkbenchSelectionProviderRemediationRecord *record);
+/**
+ * Provide the workbench selection provider remediation record touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_remediation_record_touch(
     UmiWorkbenchSelectionProviderRemediationRecord *record,
     uint64_t sequence,

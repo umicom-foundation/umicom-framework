@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context source profile binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextSourceProfileBinding {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_SOURCE_ID_CAPACITY];
@@ -38,28 +42,64 @@ typedef struct UmiWorkbenchContextSourceProfileBinding {
     uint64_t revision;
 } UmiWorkbenchContextSourceProfileBinding;
 
+/**
+ * Initialise workbench context source profile binding from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_source_profile_binding_init(
     UmiWorkbenchContextSourceProfileBinding *record,
     const char *record_id);
+/**
+ * Check that workbench context source profile binding satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_context_source_profile_binding_validate(
     const UmiWorkbenchContextSourceProfileBinding *record);
+/**
+ * Provide the workbench context source profile binding set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_profile_binding_set_source(
     UmiWorkbenchContextSourceProfileBinding *record,
     const char *source_id);
+/**
+ * Provide the workbench context source profile binding set panel operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_profile_binding_set_panel(
     UmiWorkbenchContextSourceProfileBinding *record,
     const char *panel_id);
+/**
+ * Provide the workbench context source profile binding set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_profile_binding_set_subject(
     UmiWorkbenchContextSourceProfileBinding *record,
     const char *subject_id);
+/**
+ * Provide the workbench context source profile binding set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_profile_binding_set_group(
     UmiWorkbenchContextSourceProfileBinding *record,
     const char *group_id);
+/**
+ * Provide the workbench context source profile binding set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_profile_binding_set_label(
     UmiWorkbenchContextSourceProfileBinding *record,
     const char *label);
+/**
+ * Provide the workbench context source profile binding hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_source_profile_binding_hash(
     const UmiWorkbenchContextSourceProfileBinding *record);
+/**
+ * Provide the workbench context source profile binding touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_source_profile_binding_touch(
     UmiWorkbenchContextSourceProfileBinding *record,
     uint64_t sequence,

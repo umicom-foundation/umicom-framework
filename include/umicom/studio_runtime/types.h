@@ -40,6 +40,9 @@ extern "C" {
 #define UMI_STUDIO_RUNTIME_ACTIVATION_CAPACITY 64U
 #define UMI_STUDIO_RUNTIME_ROUTE_CAPACITY 32U
 
+/**
+ * List the named studio runtime surface kind values accepted by this public contract.
+ */
 typedef enum UmiStudioRuntimeSurfaceKind {
     UMI_STUDIO_SURFACE_EXPLORER = 1,
     UMI_STUDIO_SURFACE_EDITOR = 2,
@@ -63,6 +66,9 @@ typedef enum UmiStudioRuntimeSurfaceKind {
 /* Keep bounded surface loops aligned when a reusable Studio panel is added. */
 #define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON
 
+/**
+ * List the named studio runtime selection kind values accepted by this public contract.
+ */
 typedef enum UmiStudioRuntimeSelectionKind {
     UMI_STUDIO_SELECTION_NONE = 0,
     UMI_STUDIO_SELECTION_PROBLEM = 1,
@@ -76,6 +82,9 @@ typedef enum UmiStudioRuntimeSelectionKind {
     UMI_STUDIO_SELECTION_AI_PATCH_FILE = 9
 } UmiStudioRuntimeSelectionKind;
 
+/**
+ * List the named studio runtime status kind values accepted by this public contract.
+ */
 typedef enum UmiStudioRuntimeStatusKind {
     UMI_STUDIO_STATUS_WORKSPACE = 1,
     UMI_STUDIO_STATUS_BRANCH = 2,
@@ -89,6 +98,9 @@ typedef enum UmiStudioRuntimeStatusKind {
     UMI_STUDIO_STATUS_CURSOR = 10
 } UmiStudioRuntimeStatusKind;
 
+/**
+ * List the named studio runtime close decision values accepted by this public contract.
+ */
 typedef enum UmiStudioRuntimeCloseDecision {
     UMI_STUDIO_CLOSE_ALLOW = 0,
     UMI_STUDIO_CLOSE_CONFIRM_DIRTY = 1,
@@ -97,6 +109,9 @@ typedef enum UmiStudioRuntimeCloseDecision {
     UMI_STUDIO_CLOSE_BLOCKED = 4
 } UmiStudioRuntimeCloseDecision;
 
+/**
+ * Represent the studio runtime selection data shared with callers of this public contract.
+ */
 typedef struct UmiStudioRuntimeSelection {
     UmiStudioRuntimeSelectionKind kind;
     char subject_id[UMI_STUDIO_RUNTIME_ID_CAPACITY];
@@ -108,6 +123,10 @@ typedef struct UmiStudioRuntimeSelection {
     uint64_t revision;
 } UmiStudioRuntimeSelection;
 
+/**
+ * Represent the studio runtime status item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeStatusItem {
     UmiStudioRuntimeStatusKind kind;
     char item_id[UMI_STUDIO_RUNTIME_ID_CAPACITY];
@@ -119,6 +138,10 @@ typedef struct UmiStudioRuntimeStatusItem {
     uint64_t revision;
 } UmiStudioRuntimeStatusItem;
 
+/**
+ * Represent the studio runtime window title data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeWindowTitle {
     char application_name[128];
     char workspace_name[256];
@@ -128,15 +151,31 @@ typedef struct UmiStudioRuntimeWindowTitle {
     uint64_t revision;
 } UmiStudioRuntimeWindowTitle;
 
+/**
+ * Provide the studio runtime surface kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_studio_runtime_surface_kind_text(
     UmiStudioRuntimeSurfaceKind kind);
 
+/**
+ * Provide the studio runtime selection kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_studio_runtime_selection_kind_text(
     UmiStudioRuntimeSelectionKind kind);
 
+/**
+ * Provide the studio runtime status kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_studio_runtime_status_kind_text(
     UmiStudioRuntimeStatusKind kind);
 
+/**
+ * Provide the studio runtime close decision text operation used by this module and its
+ * client applications.
+ */
 const char *umi_studio_runtime_close_decision_text(
     UmiStudioRuntimeCloseDecision decision);
 

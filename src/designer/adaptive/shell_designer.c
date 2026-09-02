@@ -19,6 +19,10 @@
 UmiStatus umi_designer_shell_designer_init(UmiDesignerShellDesigner *designer,
                                            const UmiAdaptiveShellProfile *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(designer==NULL||profile==NULL||!umi_adaptive_shell_profile_valid(profile))return UMI_STATUS_INVALID_ARGUMENT;
     memset(designer,0,sizeof *designer); designer->profile=*profile; return UMI_STATUS_OK;
 }
@@ -26,8 +30,17 @@ UmiStatus umi_designer_shell_designer_init(UmiDesignerShellDesigner *designer,
 UmiStatus umi_designer_shell_designer_select_region(UmiDesignerShellDesigner *designer,
                                                     const char *region_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(designer==NULL||region_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(umi_adaptive_shell_layout_find(&designer->profile.layout,region_id)==NULL)return UMI_STATUS_NOT_FOUND;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_designer_adaptive_copy_text(designer->selected_region_id,sizeof designer->selected_region_id,region_id)!=UMI_STATUS_OK)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     ++designer->revision; designer->dirty=1; return UMI_STATUS_OK;

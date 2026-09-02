@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository workflow request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryWorkflowRequest {
     UmiRepositoryWorkflowAction action;
     const char *repository_root;
@@ -38,6 +42,10 @@ typedef struct UmiRepositoryWorkflowRequest {
     int dry_run;
 } UmiRepositoryWorkflowRequest;
 
+/**
+ * Initialise repository workflow request from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_workflow_request_init(
     UmiRepositoryWorkflowRequest *request,
     UmiRepositoryWorkflowAction action,

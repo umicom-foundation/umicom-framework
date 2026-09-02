@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_SESSION "umicom.developer.terminal.terminal_session"
 
+/**
+ * Provide the developer capability terminal session operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_session(void);
 

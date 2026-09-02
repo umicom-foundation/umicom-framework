@@ -29,6 +29,10 @@ extern "C" {
 #define UMI_DEVELOPER_WORKFLOW_API_VERSION 1U
 #define UMI_DEVELOPER_WORKFLOW_MAX_TASKS 16U
 
+/**
+ * Represent the developer workflow request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkflowRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -43,6 +47,10 @@ typedef struct UmiDeveloperWorkflowRequest {
     int debug_mode;
 } UmiDeveloperWorkflowRequest;
 
+/**
+ * Represent the developer workflow snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkflowSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -52,6 +60,10 @@ typedef struct UmiDeveloperWorkflowSnapshot {
     size_t dependency_count;
 } UmiDeveloperWorkflowSnapshot;
 
+/**
+ * Provide the developer workflow submit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_workflow_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperWorkflowRequest *request,

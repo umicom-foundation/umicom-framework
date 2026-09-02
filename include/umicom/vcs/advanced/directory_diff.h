@@ -22,11 +22,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced directory diff data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedDirectoryDiff {
     uint32_t struct_size; uint32_t api_version;
     char relative_path[UMI_VCS_ADVANCED_PATH_CAPACITY]; UmiVcsDirectoryState state;
     UmiVcsAdvancedDirectoryEntry left,right; int has_left,has_right;
 } UmiVcsAdvancedDirectoryDiff;
+/**
+ * Provide the vcs advanced directory diff compare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_directory_diff_compare(const UmiVcsAdvancedDirectoryEntry *left,
                                                     const UmiVcsAdvancedDirectoryEntry *right,
                                                     UmiVcsAdvancedDirectoryDiff *out_diff);

@@ -44,6 +44,9 @@ extern "C" {
 #define UMI_DEBUG_INSPECTION_ADAPTER_ID_CAPACITY 128U
 #define UMI_DEBUG_INSPECTION_MESSAGE_CAPACITY 512U
 
+/**
+ * List the named debug inspection state values accepted by this public contract.
+ */
 typedef enum UmiDebugInspectionState {
     UMI_DEBUG_INSPECTION_UNBOUND = 0,
     UMI_DEBUG_INSPECTION_READY = 1,
@@ -54,6 +57,10 @@ typedef enum UmiDebugInspectionState {
     UMI_DEBUG_INSPECTION_FAILED = 6
 } UmiDebugInspectionState;
 
+/**
+ * Represent the debug inspection session snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugInspectionSessionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -85,56 +92,131 @@ typedef struct UmiDebugInspectionSessionSnapshot {
     char last_message[UMI_DEBUG_INSPECTION_MESSAGE_CAPACITY];
 } UmiDebugInspectionSessionSnapshot;
 
+/**
+ * Represent the debug inspection session data shared with callers of this public contract.
+ */
 typedef struct UmiDebugInspectionSession UmiDebugInspectionSession;
 
+/**
+ * Initialise debug inspection session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_inspection_session_create(
     UmiDebugService *service,
     UmiDebugAdapterRegistry *adapters,
     UmiDebugInspectionSession **out_session);
+/**
+ * Release or reset state held by debug inspection session so the same storage can be
+ * reused safely.
+ */
 void umi_debug_inspection_session_destroy(UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session bind operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_inspection_session_bind(
     UmiDebugInspectionSession *session,
     const char *debug_session_id,
     const char *adapter_id,
     uint64_t advertised_capabilities);
+/**
+ * Provide the debug inspection session unbind operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_inspection_session_unbind(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session set state operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_inspection_session_set_state(
     UmiDebugInspectionSession *session,
     UmiDebugInspectionState state);
+/**
+ * Provide the debug inspection session refresh threads operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_inspection_session_refresh_threads(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session invoke operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_inspection_session_invoke(
     UmiDebugInspectionSession *session,
     const UmiDebugAdapterRequest *request,
     const UmiDebugAdapterCancellation *cancellation,
     UmiDebugAdapterResponse *out_response);
+/**
+ * Provide the debug inspection session cancel active operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_inspection_session_cancel_active(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session write memory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_inspection_session_write_memory(
     UmiDebugInspectionSession *session,
     const UmiDebugMemoryWritePlan *plan,
     const UmiDebugAdapterCancellation *cancellation,
     UmiDebugAdapterResponse *out_response);
+/**
+ * Provide the debug inspection session command enabled operation used by this module and
+ * its client applications.
+ */
 int umi_debug_inspection_session_command_enabled(
     const UmiDebugInspectionSession *session,
     UmiDebugCommandKind command_kind);
+/**
+ * Provide the debug inspection session threads operation used by this module and its
+ * client applications.
+ */
 UmiDebugThreadInspector *umi_debug_inspection_session_threads(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session registers operation used by this module and its
+ * client applications.
+ */
 UmiDebugRegisterBank *umi_debug_inspection_session_registers(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session memory operation used by this module and its client
+ * applications.
+ */
 UmiDebugMemoryView *umi_debug_inspection_session_memory(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session disassembly operation used by this module and its
+ * client applications.
+ */
 UmiDebugDisassemblyView *umi_debug_inspection_session_disassembly(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session advanced breakpoints operation used by this module
+ * and its client applications.
+ */
 UmiDebugAdvancedBreakpointRegistry *
 umi_debug_inspection_session_advanced_breakpoints(
     UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session capabilities operation used by this module and its
+ * client applications.
+ */
 const UmiDebugCapabilitySet *umi_debug_inspection_session_capabilities(
     const UmiDebugInspectionSession *session);
+/**
+ * Provide the debug inspection session snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_inspection_session_snapshot(
     const UmiDebugInspectionSession *session,
     UmiDebugInspectionSessionSnapshot *out_snapshot);
+/**
+ * Provide the debug inspection session revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_debug_inspection_session_revision(
     const UmiDebugInspectionSession *session);
 

@@ -32,7 +32,14 @@ extern "C" {
 
 typedef uint64_t UmiCtKernelCapability;
 enum { UMI_CT_CAP_MEMORY=UINT64_C(1)<<0, UMI_CT_CAP_PROCESS=UINT64_C(1)<<1, UMI_CT_CAP_FILESYSTEM=UINT64_C(1)<<2, UMI_CT_CAP_NETWORK=UINT64_C(1)<<3, UMI_CT_CAP_DEVICE=UINT64_C(1)<<4, UMI_CT_CAP_DEBUG=UINT64_C(1)<<5, UMI_CT_CAP_ADMIN=UINT64_C(1)<<6 };
+/**
+ * Represent the ct capability boundary data shared with callers of this public contract.
+ */
 typedef struct UmiCtCapabilityBoundary { char boundary_id[UMI_CT_ID_CAPACITY]; UmiCtKernelCapability required; UmiCtKernelCapability denied; } UmiCtCapabilityBoundary;
+/**
+ * Provide the ct capability boundary allows operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_capability_boundary_allows(const UmiCtCapabilityBoundary *boundary,UmiCtKernelCapability granted);
 
 #ifdef __cplusplus

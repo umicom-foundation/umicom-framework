@@ -16,6 +16,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise create service and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutDataService *create_service(
     UmiDataServer *server,
     const char *replica_id,
@@ -26,10 +30,12 @@ static UmiWorkbenchLayoutDataService *create_service(
     UmiWorkbenchLayoutDataService *service = NULL;
     test_copy_text(config.replica_id, sizeof(config.replica_id), replica_id);
     test_copy_text(config.actor_id, sizeof(config.actor_id), "developer");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_service_create(
             server, &config, &service) != UMI_STATUS_OK) {
         return NULL;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_service_start(service, now_ms) !=
         UMI_STATUS_OK) {
         umi_workbench_layout_data_service_destroy(service);
@@ -38,6 +44,10 @@ static UmiWorkbenchLayoutDataService *create_service(
     return service;
 }
 
+/*
+ * Exercise test restart preserves layout and session and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_restart_preserves_layout_and_session(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -87,6 +97,10 @@ static int test_restart_preserves_layout_and_session(void)
     return 0;
 }
 
+/*
+ * Exercise test stale write is rejected without mutation and return a clear result when
+ * the behaviour no longer matches its contract.
+ */
 static int test_stale_write_is_rejected_without_mutation(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -134,6 +148,10 @@ static int test_stale_write_is_rejected_without_mutation(void)
     return 0;
 }
 
+/*
+ * Exercise test cross replica recovery and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_cross_replica_recovery(void)
 {
     UmiDataServer *source_server = test_create_data_server();
@@ -195,6 +213,10 @@ static int test_cross_replica_recovery(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_restart_preserves_layout_and_session() == 0,

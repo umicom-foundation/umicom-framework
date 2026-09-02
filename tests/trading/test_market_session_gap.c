@@ -19,4 +19,8 @@
 
 #include <assert.h>
 #include "umicom/trading/trading.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){assert(umi_market_session_contains(100,200,150));assert(!umi_market_session_contains(100,200,200));assert(umi_market_event_gap_ms(100,150)==50);assert(umi_research_window_contains(100,150,100));return 0;}

@@ -15,6 +15,10 @@
 
 #include "umicom/workbench_context_source/trading_profile.h"
 
+/*
+ * Provide the workbench context source trading profile default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchContextSourceTradingProfile
 umi_workbench_context_source_trading_profile_default(void)
 {
@@ -26,6 +30,7 @@ umi_workbench_context_source_trading_profile_default(void)
     return profile;
 }
 
+/* Provide the register source operation used by this module and its client applications. */
 static UmiStatus register_source(
     UmiWorkbenchContextSourceService *service,
     const char *application_id,
@@ -48,10 +53,16 @@ static UmiStatus register_source(
         application_id,
         panel_id,
         display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferred_group != NULL && preferred_group[0] != '\0') {
         status = umi_workbench_context_source_definition_set_group(
             &definition, preferred_group);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     definition.source_kind = source_kind;
@@ -66,17 +77,29 @@ static UmiStatus register_source(
         service, &definition);
 }
 
+/*
+ * Provide the workbench context source register trading profile operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_register_trading_profile(
     UmiWorkbenchContextSourceService *service,
     const UmiWorkbenchContextSourceTradingProfile *profile)
 {
     UmiWorkbenchContextSourceTradingProfile effective;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     effective = profile != NULL
         ? *profile
         : umi_workbench_context_source_trading_profile_default();
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (effective.trader_application_id == NULL ||
         effective.tms_application_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -93,6 +116,7 @@ UmiStatus umi_workbench_context_source_register_trading_profile(
         effective.trading_group_id,
         25U,
         5U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -106,6 +130,7 @@ UmiStatus umi_workbench_context_source_register_trading_profile(
         effective.trading_group_id,
         25U,
         5U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -119,6 +144,7 @@ UmiStatus umi_workbench_context_source_register_trading_profile(
         effective.trading_group_id,
         25U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = register_source(
@@ -132,6 +158,7 @@ UmiStatus umi_workbench_context_source_register_trading_profile(
         effective.operations_group_id,
         25U,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return register_source(

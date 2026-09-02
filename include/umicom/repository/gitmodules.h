@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Read repository gitmodules into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_repository_gitmodules_parse(
     const char *text,
     UmiRepositoryInventory *out_inventory);

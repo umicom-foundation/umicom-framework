@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/product_class.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     CHECK(umi_quant_product_class_is_derivative(UMI_QUANT_PRODUCT_OPTION));

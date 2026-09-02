@@ -23,8 +23,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the abi hash bytes operation used by this module and its client applications.
+ */
 uint64_t umi_abi_hash_bytes(const void *data, size_t size);
+/**
+ * Provide the abi hash text operation used by this module and its client applications.
+ */
 uint64_t umi_abi_hash_text(const char *text);
+/**
+ * Provide the abi hash combine operation used by this module and its client applications.
+ */
 uint64_t umi_abi_hash_combine(uint64_t left, uint64_t right);
 #ifdef __cplusplus
 }

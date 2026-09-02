@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data server catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiDataServerCatalogue {
     UmiDataServerProfile items[UMI_DATA_ENTERPRISE_MAX_ITEMS];
     size_t count;

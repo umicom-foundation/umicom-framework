@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the market session contains operation used by this module and its client
+ * applications.
+ */
 int umi_market_session_contains(int64_t open_ms, int64_t close_ms, int64_t value_ms);
 #ifdef __cplusplus
 }

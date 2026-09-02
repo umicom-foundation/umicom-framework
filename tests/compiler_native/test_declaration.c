@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/declaration.h"
-int main(void){ UmiNativeDeclaration d;if(umi_nc_declaration_init(&d,1U,UMI_NC_DECL_FUNCTION,"main",2U)!=UMI_STATUS_OK)return 1;d.definition=true;d.external_linkage=true;if(umi_nc_declaration_validate(&d)!=UMI_STATUS_OK)return 2;return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiNativeDeclaration d;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_declaration_init(&d,1U,UMI_NC_DECL_FUNCTION,"main",2U)!=UMI_STATUS_OK)return 1;d.definition=true;d.external_linkage=true;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_declaration_validate(&d)!=UMI_STATUS_OK)return 2;return 0; }

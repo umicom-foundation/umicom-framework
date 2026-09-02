@@ -23,36 +23,61 @@ struct UmiAiCodingEventQueue {
     size_t count;
 };
 
+/*
+ * Initialise ai coding event queue from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ai_coding_event_queue_create(
     UmiAiCodingEventQueue **out_queue)
 {
     UmiAiCodingEventQueue *queue;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_queue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_queue = NULL;
 
     queue = (UmiAiCodingEventQueue *)calloc(1U, sizeof(*queue));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     *out_queue = queue;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ai coding event queue so the same storage can be reused
+ * safely.
+ */
 void umi_ai_coding_event_queue_destroy(UmiAiCodingEventQueue *queue)
 {
     free(queue);
 }
 
+/*
+ * Provide the ai coding event queue push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_event_queue_push(
     UmiAiCodingEventQueue *queue,
     const UmiAiCodingEvent *event)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL || event == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (queue->count >= UMI_AI_CODING_RUNTIME_EVENT_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -65,14 +90,23 @@ UmiStatus umi_ai_coding_event_queue_push(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding event queue pop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_event_queue_pop(
     UmiAiCodingEventQueue *queue,
     UmiAiCodingEvent *out_event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (queue == NULL || out_event == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (queue->count == 0U) return UMI_STATUS_NOT_FOUND;
 
     *out_event = queue->items[queue->head];
@@ -83,6 +117,10 @@ UmiStatus umi_ai_coding_event_queue_pop(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by ai coding event queue without changing their
+ * state.
+ */
 size_t umi_ai_coding_event_queue_count(
     const UmiAiCodingEventQueue *queue)
 {

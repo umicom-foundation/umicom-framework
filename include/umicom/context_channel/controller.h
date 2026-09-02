@@ -33,14 +33,30 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_CONTROLLER_NAME "controller"
+/**
+ * Represent the context controller runtime state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiContextControllerRuntimeState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextControllerRuntimeState;
+/**
+ * Initialise context controller state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_context_controller_state_init(UmiContextControllerRuntimeState *state);
+/**
+ * Provide the context controller state record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_controller_state_record(UmiContextControllerRuntimeState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context controller operation without
+ * changing their state.
+ */
 uint64_t umi_context_controller_operation_count(const UmiContextControllerRuntimeState *state);
 #ifdef __cplusplus
 }

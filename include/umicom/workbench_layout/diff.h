@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout diff entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDiffEntry {
     uint32_t structure_size;
     UmiWorkbenchLayoutDiffKind kind;
@@ -33,6 +37,9 @@ typedef struct UmiWorkbenchLayoutDiffEntry {
     size_t after_index;
 } UmiWorkbenchLayoutDiffEntry;
 
+/**
+ * Represent the workbench layout diff data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutDiff {
     uint32_t structure_size;
     UmiWorkbenchLayoutDiffEntry
@@ -46,6 +53,10 @@ typedef struct UmiWorkbenchLayoutDiff {
     bool truncated;
 } UmiWorkbenchLayoutDiff;
 
+/**
+ * Represent the workbench layout diff options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDiffOptions {
     uint32_t structure_size;
     bool include_metadata;
@@ -55,18 +66,34 @@ typedef struct UmiWorkbenchLayoutDiffOptions {
     bool include_unchanged_nodes;
 } UmiWorkbenchLayoutDiffOptions;
 
+/**
+ * Provide the workbench layout diff options default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutDiffOptions
 umi_workbench_layout_diff_options_default(void);
 
+/**
+ * Initialise workbench layout diff from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_workbench_layout_diff_init(
     UmiWorkbenchLayoutDiff *diff);
 
+/**
+ * Provide the workbench layout compare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_compare(
     const UmiWorkbenchLayoutDocument *before,
     const UmiWorkbenchLayoutDocument *after,
     const UmiWorkbenchLayoutDiffOptions *options,
     UmiWorkbenchLayoutDiff *out_diff);
 
+/**
+ * Add workbench layout diff only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_workbench_layout_diff_add(
     UmiWorkbenchLayoutDiff *diff,
     UmiWorkbenchLayoutDiffKind kind,
@@ -77,14 +104,26 @@ UmiStatus umi_workbench_layout_diff_add(
     size_t before_index,
     size_t after_index);
 
+/**
+ * Find workbench layout diff while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiWorkbenchLayoutDiffEntry *
 umi_workbench_layout_diff_at(
     const UmiWorkbenchLayoutDiff *diff,
     size_t index);
 
+/**
+ * Provide the workbench layout diff is empty operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_diff_is_empty(
     const UmiWorkbenchLayoutDiff *diff);
 
+/**
+ * Provide the workbench layout diff format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_diff_format(
     const UmiWorkbenchLayoutDiff *diff,
     char *buffer,

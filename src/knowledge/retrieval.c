@@ -14,15 +14,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise knowledge query from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_knowledge_query_init(UmiKnowledgeQuery *query,
                                    const char *text)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (query == NULL || text == NULL || text[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(query, 0, sizeof(*query));
     written = snprintf(query->text, sizeof(query->text), "%s", text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(query->text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -32,6 +41,10 @@ UmiStatus umi_knowledge_query_init(UmiKnowledgeQuery *query,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the knowledge retrieve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_retrieve(
     const UmiKnowledgeCatalogue *catalogue,
     const UmiKnowledgeVectorIndex *index,
@@ -46,23 +59,32 @@ UmiStatus umi_knowledge_retrieve(
     size_t read_position;
     size_t write_position = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || index == NULL || provider == NULL ||
         query == NULL || query->text[0] == '\0' || matches == NULL ||
         capacity == 0U || out_count == NULL || query->limit == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = provider->embed_text(provider->instance, query->text, &embedding);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_knowledge_vector_index_search(
         index, &embedding, &query->filter, query->limit, matches, capacity,
         &count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (read_position = 0U; read_position < count; ++read_position) {
         UmiKnowledgeSource source;
         UmiKnowledgeMatch match = matches[read_position];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (match.score < query->minimum_score) continue;
         status = umi_knowledge_catalogue_find(
             catalogue, match.chunk.source_id, &source);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         (void)snprintf(match.citation.source_id,
                        sizeof(match.citation.source_id), "%s",

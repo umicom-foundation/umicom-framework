@@ -24,11 +24,19 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_CAPABILITY_NEGOTIATION_API_VERSION 1U
+/**
+ * List the named language intelligence capability negotiation decision values accepted by
+ * this public contract.
+ */
 typedef enum UmiLanguageIntelligenceCapabilityNegotiationDecision {
     UMI_LANGUAGE_INTELLIGENCE_CAPABILITY_NEGOTIATION_DENY = 0,
     UMI_LANGUAGE_INTELLIGENCE_CAPABILITY_NEGOTIATION_ALLOW = 1,
     UMI_LANGUAGE_INTELLIGENCE_CAPABILITY_NEGOTIATION_ALLOW_WITH_REFRESH = 2
 } UmiLanguageIntelligenceCapabilityNegotiationDecision;
+/**
+ * Represent the language intelligence capability negotiation input data shared with
+ * callers of this public contract.
+ */
 typedef struct UmiLanguageIntelligenceCapabilityNegotiationInput {
     UmiLanguageIntelligenceCapabilityFlags required_flags;
     UmiLanguageIntelligenceCapabilityFlags available_flags;
@@ -38,8 +46,16 @@ typedef struct UmiLanguageIntelligenceCapabilityNegotiationInput {
     int hard_block;
     int explicit_override;
 } UmiLanguageIntelligenceCapabilityNegotiationInput;
+/**
+ * Provide the language intelligence capability negotiation evaluate operation used by this
+ * module and its client applications.
+ */
 UmiLanguageIntelligenceCapabilityNegotiationDecision umi_language_intelligence_capability_negotiation_evaluate(
     const UmiLanguageIntelligenceCapabilityNegotiationInput *input);
+/**
+ * Provide the language intelligence capability negotiation capabilities satisfied
+ * operation used by this module and its client applications.
+ */
 int umi_language_intelligence_capability_negotiation_capabilities_satisfied(
     const UmiLanguageIntelligenceCapabilityNegotiationInput *input);
 #ifdef __cplusplus

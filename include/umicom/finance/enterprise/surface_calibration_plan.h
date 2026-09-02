@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise surface calibration plan data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEnterpriseSurfaceCalibrationPlan { char surface_id[UMI_ENTERPRISE_ID_CAPACITY]; size_t point_count; double tolerance; size_t max_iterations; } UmiEnterpriseSurfaceCalibrationPlan;
 /* Initialise a numerically valid volatility-surface calibration plan. */
 UmiStatus umi_enterprise_surface_calibration_plan_init(UmiEnterpriseSurfaceCalibrationPlan *plan,const char *surface_id,size_t point_count,double tolerance,size_t max_iterations);

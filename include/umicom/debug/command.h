@@ -27,6 +27,9 @@ extern "C" {
 
 #define UMI_DEBUG_COMMAND_API_VERSION 1U
 
+/**
+ * List the named debug command kind values accepted by this public contract.
+ */
 typedef enum UmiDebugCommandKind {
     UMI_DEBUG_COMMAND_START = 1,
     UMI_DEBUG_COMMAND_START_WITHOUT_DEBUGGING = 2,
@@ -80,6 +83,9 @@ typedef enum UmiDebugCommandKind {
     UMI_DEBUG_COMMAND_COPY_MEMORY_ADDRESS = 50
 } UmiDebugCommandKind;
 
+/**
+ * Represent the debug command descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiDebugCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -92,9 +98,22 @@ typedef struct UmiDebugCommandDescriptor {
     int requires_paused_session;
 } UmiDebugCommandDescriptor;
 
+/**
+ * Return the number of records represented by debug command without changing their state.
+ */
 size_t umi_debug_command_count(void);
+/**
+ * Find debug command while leaving the underlying catalogue or model owned by this module.
+ */
 const UmiDebugCommandDescriptor *umi_debug_command_at(size_t index);
+/**
+ * Find debug command while leaving the underlying catalogue or model owned by this module.
+ */
 const UmiDebugCommandDescriptor *umi_debug_command_find(const char *command_id);
+/**
+ * Provide the debug command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiDebugCommandDescriptor *umi_debug_command_for_kind(
     UmiDebugCommandKind kind);
 

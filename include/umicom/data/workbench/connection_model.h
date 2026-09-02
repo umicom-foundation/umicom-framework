@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data workbench connection model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataWorkbenchConnectionModel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,17 +39,37 @@ typedef struct UmiDataWorkbenchConnectionModel {
     uint64_t revision;
 } UmiDataWorkbenchConnectionModel;
 
+/**
+ * Initialise data workbench connection model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_data_workbench_connection_model_init(
     UmiDataWorkbenchConnectionModel *model,
     UmiDatabaseConnectionRegistry *registry);
+/**
+ * Provide the data workbench connection model refresh operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_data_workbench_connection_model_refresh(
     UmiDataWorkbenchConnectionModel *model);
+/**
+ * Provide the data workbench connection model set filter operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_data_workbench_connection_model_set_filter(
     UmiDataWorkbenchConnectionModel *model,
     const char *filter);
+/**
+ * Provide the data workbench connection model activate operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_data_workbench_connection_model_activate(
     UmiDataWorkbenchConnectionModel *model,
     const char *connection_id);
+/**
+ * Find data workbench connection model visible while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiDatabaseConnectionProfile *
 umi_data_workbench_connection_model_visible_at(
     const UmiDataWorkbenchConnectionModel *model,

@@ -21,7 +21,9 @@
 /* Encode lifecycle policy once in Framework rather than in each commodity product. */
 bool umi_commodity_delivery_status_can_transition(UmiCommodityDeliveryState from, UmiCommodityDeliveryState to)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (from == to) return true;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (from) {
         case UMI_COMMODITY_DELIVERY_PLANNED:
             return to == UMI_COMMODITY_DELIVERY_NOMINATED || to == UMI_COMMODITY_DELIVERY_CANCELLED;

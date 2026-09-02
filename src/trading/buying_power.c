@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/buying_power.h"
+/* Provide the buying power operation used by this module and its client applications. */
 double umi_buying_power(double cash_value,double leverage){return cash_value>0.0&&leverage>0.0?cash_value*leverage:0.0;}

@@ -23,9 +23,15 @@
 /* Initialise the record without allocating memory or retaining caller buffers. */
 UmiStatus umi_digital_asset_token_balance_init(UmiDigitalTokenBalance *value, const char *account_id, const char *asset_id, int64_t available_units, int64_t reserved_units, int32_t scale)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || available_units < 0 || reserved_units < 0 || reserved_units > available_units || scale < 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_digital_asset_copy_text(value->account_id.value, sizeof value->account_id.value, account_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_digital_asset_copy_text(value->asset_id.value, sizeof value->asset_id.value, asset_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
     value->available_units = available_units;
     value->reserved_units = reserved_units;

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_profiles/debug.h"
 
+/*
+ * Provide the studio surface profile debug operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_debug(void)
 {
     static const UmiStudioRuntimeSurfaceBinding binding = {

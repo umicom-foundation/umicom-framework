@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace workspace multi root data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceWorkspaceMultiRoot {
         char roots[UMI_PROJECT_WORKSPACE_SMALL_CAPACITY][UMI_PROJECT_WORKSPACE_PATH_CAPACITY];
         size_t count;

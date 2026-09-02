@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk runtime package generation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiSdkRuntimePackageGeneration
 {
     uint32_t structure_size;
@@ -28,13 +32,45 @@ typedef struct UmiSdkRuntimePackageGeneration
     uint64_t generation;
     uint64_t source_revision;
     uint64_t revision;UmiSdkRuntimeState state;bool enabled;} UmiSdkRuntimePackageGeneration;
+/**
+ * Initialise sdk runtime package generation from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_sdk_runtime_package_generation_init(UmiSdkRuntimePackageGeneration *value,const char *id);
+/**
+ * Check that sdk runtime package generation satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_sdk_runtime_package_generation_validate(const UmiSdkRuntimePackageGeneration *value);
+/**
+ * Provide the sdk runtime package generation set path operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_package_generation_set_path(UmiSdkRuntimePackageGeneration *value,const char *path);
+/**
+ * Provide the sdk runtime package generation set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_package_generation_set_detail(UmiSdkRuntimePackageGeneration *value,const char *detail);
+/**
+ * Provide the sdk runtime package generation set generation operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_sdk_runtime_package_generation_set_generation(UmiSdkRuntimePackageGeneration *value,uint64_t number);
+/**
+ * Provide the sdk runtime package generation set source revision operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_sdk_runtime_package_generation_set_source_revision(UmiSdkRuntimePackageGeneration *value,uint64_t number);
+/**
+ * Provide the sdk runtime package generation set state operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_package_generation_set_state(UmiSdkRuntimePackageGeneration *value,UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime package generation same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_sdk_runtime_package_generation_same_identity(const UmiSdkRuntimePackageGeneration *left,const UmiSdkRuntimePackageGeneration *right);
 #ifdef __cplusplus
 }

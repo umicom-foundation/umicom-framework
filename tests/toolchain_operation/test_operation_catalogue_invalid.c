@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/toolchain/operation_catalogue.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiToolchainOperationProfile p; assert(umi_toolchain_operation_catalogue_profile(UMI_TOOLCHAIN_OPERATION_UNKNOWN,&p)==UMI_STATUS_NOT_FOUND); return 0; }

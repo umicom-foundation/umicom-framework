@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital custody account data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalCustodyAccount {
     UmiDigitalAssetId id;
     UmiFinancialId owner_party_id;

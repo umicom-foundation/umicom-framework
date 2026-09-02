@@ -24,21 +24,41 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai developer command registry bridge data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAiDeveloperCommandRegistryBridge
     UmiAiDeveloperCommandRegistryBridge;
 
+/**
+ * Initialise ai developer command registry bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_ai_developer_command_registry_bridge_create(
     UmiCommandRegistry *registry,
     UmiAiDeveloperExperiencePlatform *platform,
     UmiAiDeveloperCommandRegistryBridge **out_bridge);
 
+/**
+ * Release or reset state held by ai developer command registry bridge so the same storage
+ * can be reused safely.
+ */
 void umi_ai_developer_command_registry_bridge_destroy(
     UmiAiDeveloperCommandRegistryBridge *bridge);
 
+/**
+ * Provide the ai developer command registry bridge set context operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_ai_developer_command_registry_bridge_set_context(
     UmiAiDeveloperCommandRegistryBridge *bridge,
     const UmiAiDeveloperCommandContext *context);
 
+/**
+ * Add ai developer command registry bridge only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_ai_developer_command_registry_bridge_register(
     UmiAiDeveloperCommandRegistryBridge *bridge);
 

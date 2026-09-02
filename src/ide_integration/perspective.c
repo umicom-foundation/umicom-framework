@@ -34,6 +34,10 @@ static const char *const SURFACES[] = {
     "umicom.ai-developer.validation"
 };
 
+/*
+ * Provide the ide integrated development perspective operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *
 umi_ide_integrated_development_perspective(void)
 {

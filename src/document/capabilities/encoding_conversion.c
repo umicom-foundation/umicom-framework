@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/encoding_conversion.h"
 
+/*
+ * Provide the document capability encoding conversion operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_encoding_conversion(void)
 {

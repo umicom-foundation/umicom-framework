@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ct boot phase values accepted by this public contract.
+ */
 typedef enum UmiCtBootPhase { UMI_CT_BOOT_RESET=0, UMI_CT_BOOT_EARLY=1, UMI_CT_BOOT_MEMORY=2, UMI_CT_BOOT_INTERRUPTS=3, UMI_CT_BOOT_DEVICES=4, UMI_CT_BOOT_SERVICES=5, UMI_CT_BOOT_USERSPACE=6, UMI_CT_BOOT_READY=7 } UmiCtBootPhase;
+/**
+ * Provide the ct boot phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ct_boot_phase_text(UmiCtBootPhase phase);
+/**
+ * Check that ct boot phase transition satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_ct_boot_phase_transition_valid(UmiCtBootPhase from,UmiCtBootPhase to);
 
 #ifdef __cplusplus

@@ -16,6 +16,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise test simulation step and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void test_simulation_step(void)
 {
     UmiTradingUiTestFixture fixture;

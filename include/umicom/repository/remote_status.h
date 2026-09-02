@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository remote status data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryRemoteStatus {
     size_t remote_count;
     int has_origin;
@@ -31,7 +34,15 @@ typedef struct UmiRepositoryRemoteStatus {
     int fetch_available;
 } UmiRepositoryRemoteStatus;
 
+/**
+ * Initialise repository remote status from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_remote_status_init(UmiRepositoryRemoteStatus *status);
+/**
+ * Check that repository remote status satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_repository_remote_status_validate(const UmiRepositoryRemoteStatus *status);
 
 #ifdef __cplusplus

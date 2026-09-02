@@ -18,11 +18,21 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad pan state data shared with callers of this public contract.
+ */
 typedef struct UmiRadPanState {
     UmiRadPoint offset;
     bool active;
 } UmiRadPanState;
+/**
+ * Initialise rad pan from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_rad_pan_init(UmiRadPanState *item);
+/**
+ * Check that rad pan satisfies its contract before another service relies on it.
+ */
 int umi_rad_pan_is_valid(const UmiRadPanState *item);
 #ifdef __cplusplus
 }

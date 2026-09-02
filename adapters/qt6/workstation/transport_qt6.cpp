@@ -3,6 +3,22 @@
  * File: adapters/qt6/workstation/transport_qt6.cpp
  *
  * PURPOSE:
+ *   Implement the transport qt6 behaviour used by its public contract and client
+ *   applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/qt6/workstation/transport_qt6.cpp
+ *
+ * PURPOSE:
  *   Render media/replay transport state and playback controls.
  *
  * Created by: Sammy Hegab
@@ -47,9 +63,17 @@ static const UmiQt6SurfaceDescriptor UMI_QT6_WS_DESCRIPTOR = {
     UMI_QT6_CAP_FOCUS | UMI_QT6_CAP_KEYBOARD | UMI_QT6_CAP_ACCESSIBILITY | UMI_QT6_CAP_DENSITY | UMI_QT6_CAP_THEME | UMI_QT6_CAP_MEDIA
 };
 
+/*
+ * Provide the qt6 ws transport descriptor operation used by this module and its client
+ * applications.
+ */
 extern "C" const UmiQt6SurfaceDescriptor *umi_qt6_ws_transport_descriptor(void) { return &UMI_QT6_WS_DESCRIPTOR; }
 
 
+/*
+ * Initialise qt6 ws transport from caller-provided values so later operations receive a
+ * known state.
+ */
 extern "C" UmiQt6WidgetHandle umi_qt6_ws_transport_create(const UmiWsTransportModel *transport) {
 #if defined(UMICOM_QT6_NATIVE) && UMICOM_QT6_NATIVE
     auto *root = new QWidget();
@@ -59,6 +83,10 @@ extern "C" UmiQt6WidgetHandle umi_qt6_ws_transport_create(const UmiWsTransportMo
     auto *forward = new QPushButton(QStringLiteral(">|"), root);
     auto *slider = new QSlider(Qt::Horizontal, root);
     slider->setRange(0, 1000);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transport != nullptr && transport->duration_ms > 0) {
         const double fraction = static_cast<double>(transport->position_ms) / static_cast<double>(transport->duration_ms);
         slider->setValue(static_cast<int>(std::clamp(fraction * 1000.0, 0.0, 1000.0)));

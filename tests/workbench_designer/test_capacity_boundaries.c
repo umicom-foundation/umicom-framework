@@ -17,6 +17,10 @@
 #include "test_fixture.h"
 
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchDesignerSelection selection;
@@ -26,6 +30,7 @@ int main(void)
     char identifier[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
 
     umi_workbench_designer_selection_init(&selection);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_WORKBENCH_DESIGNER_MAX_SELECTIONS; ++index) {
         (void)snprintf(identifier, sizeof(identifier), "node.%zu", index);
         TEST_REQUIRE_STATUS(umi_workbench_designer_selection_add(
@@ -41,6 +46,7 @@ int main(void)
     item.node_kind = UMI_WORKBENCH_LAYOUT_NODE_PANEL;
     item.default_dock = UMI_WORKBENCH_LAYOUT_DOCK_LEFT;
     item.enabled = true;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_WORKBENCH_DESIGNER_MAX_PALETTE_ITEMS; ++index) {
         (void)snprintf(item.item_id, sizeof(item.item_id), "item.%zu", index);
         (void)snprintf(

@@ -25,6 +25,9 @@ extern "C" {
 
 #define UMI_EDITOR_COMPLETION_COMMAND_API_VERSION 1U
 
+/**
+ * List the named editor completion command kind values accepted by this public contract.
+ */
 typedef enum UmiEditorCompletionCommandKind {
     UMI_EDITOR_COMPLETION_COMMAND_TRIGGER = 1,
     UMI_EDITOR_COMPLETION_COMMAND_TRIGGER_SUGGEST = 2,
@@ -52,6 +55,10 @@ typedef enum UmiEditorCompletionCommandKind {
     UMI_EDITOR_COMPLETION_COMMAND_AI_DISABLE = 24
 } UmiEditorCompletionCommandKind;
 
+/**
+ * Represent the editor completion command descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCompletionCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -66,11 +73,27 @@ typedef struct UmiEditorCompletionCommandDescriptor {
     int requires_confirmation;
 } UmiEditorCompletionCommandDescriptor;
 
+/**
+ * Return the number of records represented by editor completion command without changing
+ * their state.
+ */
 size_t umi_editor_completion_command_count(void);
+/**
+ * Find editor completion command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorCompletionCommandDescriptor *
 umi_editor_completion_command_at(size_t position);
+/**
+ * Find editor completion command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorCompletionCommandDescriptor *
 umi_editor_completion_command_find(const char *command_id);
+/**
+ * Provide the editor completion command for kind operation used by this module and its
+ * client applications.
+ */
 const UmiEditorCompletionCommandDescriptor *
 umi_editor_completion_command_for_kind(UmiEditorCompletionCommandKind kind);
 

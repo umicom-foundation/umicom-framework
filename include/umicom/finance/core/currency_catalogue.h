@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the currency catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiCurrencyCatalogue { UmiCurrencyDescriptor items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiCurrencyCatalogue;
 /* Reset the bounded registry. */ void umi_currency_catalogue_init(UmiCurrencyCatalogue *registry);
 /* Add a unique item. */ UmiStatus umi_currency_catalogue_add(UmiCurrencyCatalogue *registry,const UmiCurrencyDescriptor *item);

@@ -20,11 +20,19 @@
 #include <string.h>
 
 
+/*
+ * Exercise create view and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus create_view(const char *view_id, void *user_data, UmiUiViewModel **out_view)
 {
     (void)user_data;
     return umi_ui_view_model_create(view_id, "test.view", UMI_UI_ROLE_GENERIC, out_view);
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiViewFactoryRegistry *registry = NULL;

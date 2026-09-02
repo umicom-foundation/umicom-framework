@@ -26,6 +26,10 @@
 #include <string.h>
 #include "umicom/test_platform/rerun_policy.h"
 
+/*
+ * Exercise make item and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformItemSnapshot make_item(const char *id)
 {
     UmiTestPlatformItemSnapshot value;
@@ -38,6 +42,10 @@ static UmiTestPlatformItemSnapshot make_item(const char *id)
     return value;
 }
 
+/*
+ * Exercise make result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformResultSnapshot make_result(const char *id,
     const char *item_id, int outcome, uint64_t sequence, int flaky)
 {
@@ -54,6 +62,10 @@ static UmiTestPlatformResultSnapshot make_result(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformItemRegistry *items = NULL;

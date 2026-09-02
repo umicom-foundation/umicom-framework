@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the append token operation used by this module and its client applications. */
 static int append_token(char *buffer,
                         size_t capacity,
                         size_t *length,
@@ -35,6 +36,10 @@ static int append_token(char *buffer,
 {
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL || length == NULL || token == NULL || *length >= capacity) {
         return 0;
     }
@@ -45,6 +50,7 @@ static int append_token(char *buffer,
                        "%s%s",
                        *length > 0U ? "+" : "",
                        token);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity - *length) {
         return 0;
     }
@@ -52,6 +58,7 @@ static int append_token(char *buffer,
     return 1;
 }
 
+/* Provide the append key name operation used by this module and its client applications. */
 static int append_key_name(char *buffer,
                            size_t capacity,
                            size_t *length,
@@ -63,15 +70,21 @@ static int append_key_name(char *buffer,
     size_t name_length;
 
     name = gdk_keyval_name(keyval);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (name == NULL || name[0] == '\0') {
         return 0;
     }
 
     name_length = strlen(name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (name_length >= sizeof(normalised)) {
         return 0;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < name_length; ++index) {
         unsigned char ch = (unsigned char)name[index];
         normalised[index] = name_length == 1U
@@ -82,6 +95,7 @@ static int append_key_name(char *buffer,
     return append_token(buffer, capacity, length, normalised);
 }
 
+/* Provide the chord from event operation used by this module and its client applications. */
 static int chord_from_event(guint keyval,
                             GdkModifierType state,
                             char *out_chord,
@@ -90,24 +104,32 @@ static int chord_from_event(guint keyval,
     size_t length = 0U;
     GdkModifierType modifiers;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_chord == NULL || capacity == 0U) {
         return 0;
     }
     out_chord[0] = '\0';
 
     modifiers = state & gtk_accelerator_get_default_mod_mask();
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((modifiers & GDK_CONTROL_MASK) != 0 &&
         !append_token(out_chord, capacity, &length, "Ctrl")) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((modifiers & GDK_ALT_MASK) != 0 &&
         !append_token(out_chord, capacity, &length, "Alt")) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((modifiers & GDK_SHIFT_MASK) != 0 &&
         !append_token(out_chord, capacity, &length, "Shift")) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((modifiers & GDK_SUPER_MASK) != 0 &&
         !append_token(out_chord, capacity, &length, "Super")) {
         return 0;
@@ -116,6 +138,7 @@ static int chord_from_event(guint keyval,
     return append_key_name(out_chord, capacity, &length, keyval);
 }
 
+/* Provide the on key pressed operation used by this module and its client applications. */
 static gboolean on_key_pressed(GtkEventControllerKey *controller,
                                guint keyval,
                                guint keycode,
@@ -132,9 +155,14 @@ static gboolean on_key_pressed(GtkEventControllerKey *controller,
     (void)controller;
     (void)keycode;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) {
         return FALSE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!chord_from_event(keyval, state, chord, sizeof(chord))) {
         return FALSE;
     }
@@ -143,6 +171,7 @@ static gboolean on_key_pressed(GtkEventControllerKey *controller,
     status = umi_ui_workbench_resolve_keybinding(workbench,
                                                  chord,
                                                  &resolution);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return FALSE;
     }
@@ -154,6 +183,7 @@ static gboolean on_key_pressed(GtkEventControllerKey *controller,
         message,
         sizeof(message));
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (message[0] == '\0') {
         (void)g_snprintf(message,
                          sizeof(message),
@@ -163,6 +193,7 @@ static gboolean on_key_pressed(GtkEventControllerKey *controller,
     }
     gtk_label_set_text(GTK_LABEL(adapter->status_label), message);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_gtk4_refresh_workbench(adapter);
         return TRUE;
@@ -170,15 +201,27 @@ static gboolean on_key_pressed(GtkEventControllerKey *controller,
     return FALSE;
 }
 
+/*
+ * Provide the gtk4 install keybindings operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_install_keybindings(UmiGtk4Adapter *adapter)
 {
     GtkEventController *controller;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->window == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     controller = gtk_event_controller_key_new();
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }

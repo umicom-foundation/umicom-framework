@@ -23,6 +23,10 @@
 
 #include "umicom/ui/view_presentation.h"
 
+/*
+ * Provide the headless render pane view operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_headless_render_pane_view(UmiUiHeadlessAdapter *adapter,
                                         UmiUiWorkbench *workbench,
                                         const UmiUiPaneSnapshot *pane)
@@ -31,6 +35,10 @@ UmiStatus umi_headless_render_pane_view(UmiUiHeadlessAdapter *adapter,
     UmiStatus status;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL || pane == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -43,6 +51,7 @@ UmiStatus umi_headless_render_pane_view(UmiUiHeadlessAdapter *adapter,
 
     /* A missing factory is legal during incremental migration. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_headless_append(adapter,
@@ -50,6 +59,7 @@ UmiStatus umi_headless_render_pane_view(UmiUiHeadlessAdapter *adapter,
                                  pane->pane_id,
                                  presentation.view.view_type);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < presentation.property_count;
          ++index) {
@@ -59,6 +69,7 @@ UmiStatus umi_headless_render_pane_view(UmiUiHeadlessAdapter *adapter,
 
         status = umi_ui_view_presentation_value_text(
             &property->value, value, sizeof(value));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_headless_append(adapter, "%s=%s\n",
                                          property->key, value);

@@ -15,4 +15,8 @@
 
 #include <assert.h>
 #include "umicom/ai/mcp/server_registry.h"
+/*
+ * Exercise test ai mcp server registry remove missing and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_ai_mcp_server_registry_remove_missing(void){UmiAiMcpServerRegistry r;umi_ai_mcp_server_registry_init(&r);assert(umi_ai_mcp_server_registry_remove(&r,"missing")==UMI_STATUS_NOT_FOUND);return 0;}

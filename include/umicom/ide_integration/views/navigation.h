@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise ide navigation view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_navigation_view_create(
     const char *view_id,
     UmiIdeIntegrationPlatform *platform,

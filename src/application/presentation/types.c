@@ -15,9 +15,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/presentation/types.h"
 
+/*
+ * Provide the application presentation surface kind text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_surface_kind_text(
     UmiApplicationPresentationSurfaceKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_APPLICATION_PRESENTATION_SURFACE_VIEW: return "view";
         case UMI_APPLICATION_PRESENTATION_SURFACE_EDITOR: return "editor";
@@ -29,9 +34,14 @@ const char *umi_application_presentation_surface_kind_text(
     }
 }
 
+/*
+ * Provide the application presentation chrome text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_presentation_chrome_text(
     UmiApplicationPresentationChrome chrome)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (chrome) {
         case UMI_APPLICATION_PRESENTATION_CHROME_STANDARD: return "standard";
         case UMI_APPLICATION_PRESENTATION_CHROME_DOCUMENT: return "document";
@@ -43,9 +53,14 @@ const char *umi_application_presentation_chrome_text(
     }
 }
 
+/*
+ * Provide the application presentation empty action text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_empty_action_text(
     UmiApplicationPresentationEmptyAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_APPLICATION_PRESENTATION_EMPTY_NONE: return "none";
         case UMI_APPLICATION_PRESENTATION_EMPTY_CREATE: return "create";
@@ -57,9 +72,14 @@ const char *umi_application_presentation_empty_action_text(
     }
 }
 
+/*
+ * Provide the application presentation density text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_presentation_density_text(
     UmiApplicationPresentationDensity density)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (density) {
         case UMI_APPLICATION_PRESENTATION_DENSITY_COMFORTABLE: return "comfortable";
         case UMI_APPLICATION_PRESENTATION_DENSITY_BALANCED: return "balanced";
@@ -68,9 +88,14 @@ const char *umi_application_presentation_density_text(
     }
 }
 
+/*
+ * Provide the application presentation navigation text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_navigation_text(
     UmiApplicationPresentationNavigation navigation)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (navigation) {
         case UMI_APPLICATION_PRESENTATION_NAVIGATION_EXPANDED: return "expanded";
         case UMI_APPLICATION_PRESENTATION_NAVIGATION_RAIL: return "rail";

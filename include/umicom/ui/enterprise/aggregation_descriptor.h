@@ -21,12 +21,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui ent aggregation descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiEntAggregationDescriptor {
     char aggregation_id[UMI_UI_ENT_ID_CAPACITY];
     char column_id[UMI_UI_ENT_ID_CAPACITY];
     UmiUiEntAggregateKind kind;
 } UmiUiEntAggregationDescriptor;
+/**
+ * Initialise ui ent aggregation descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ui_ent_aggregation_descriptor_init(UmiUiEntAggregationDescriptor *value);
+/**
+ * Check that ui ent aggregation descriptor satisfies its contract before another service
+ * relies on it.
+ */
 int umi_ui_ent_aggregation_descriptor_validate(const UmiUiEntAggregationDescriptor *value);
 #ifdef __cplusplus
 }

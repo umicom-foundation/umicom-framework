@@ -25,6 +25,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_WORKBENCH_START_RECENT_CAPACITY 32U
 
+/**
+ * Represent the developer workbench start centre snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperWorkbenchStartCentreSnapshot {
     UmiRecentItemSnapshot
         recent[UMI_DEVELOPER_WORKBENCH_START_RECENT_CAPACITY];
@@ -35,6 +39,10 @@ typedef struct UmiDeveloperWorkbenchStartCentreSnapshot {
     uint64_t revision;
 } UmiDeveloperWorkbenchStartCentreSnapshot;
 
+/**
+ * Provide the developer workbench start centre snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_workbench_start_centre_snapshot(
     const UmiRecentItemRegistry *recent_items,
     UmiDeveloperWorkbenchStartCentreSnapshot *out_snapshot);

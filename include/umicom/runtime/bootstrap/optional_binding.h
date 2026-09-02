@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap optional binding choose operation used by this module and its
+ * client applications.
+ */
 void *umi_bootstrap_optional_binding_choose(void *resolved_instance,
                                             void *fallback_instance);
 

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TEST_EXPLORER "umicom.developer.experience.test_explorer"
 
+/**
+ * Provide the developer capability test explorer operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_test_explorer(void);
 

@@ -20,6 +20,10 @@ static const char *const SURFACES[] = {
     "umicom.development.explorer"
 };
 
+/*
+ * Provide the developer workbench perspective source control operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *umi_developer_workbench_perspective_source_control(void)
 {
     static const UmiDeveloperWorkbenchPerspectiveDefinition perspective = {

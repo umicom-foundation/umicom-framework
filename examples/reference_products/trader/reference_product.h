@@ -19,5 +19,9 @@
 #ifndef UMICOM_REFERENCE_TRADER_H
 #define UMICOM_REFERENCE_TRADER_H
 #include "umicom/product/product.h"
+/**
+ * Provide the example trader profile operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_example_trader_profile(void);
 #endif

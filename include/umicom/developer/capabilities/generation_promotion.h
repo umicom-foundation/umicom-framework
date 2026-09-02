@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_GENERATION_PROMOTION "umicom.developer.delivery.generation_promotion"
 
+/**
+ * Provide the developer capability generation promotion operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_generation_promotion(void);
 

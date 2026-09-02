@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance component state projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceComponentStateProjection {
     char component_id[UMI_APPEARANCE_ID_CAPACITY];
     char state_id[UMI_APPEARANCE_ID_CAPACITY];

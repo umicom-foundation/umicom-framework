@@ -20,6 +20,14 @@
 #define UMI_WCH_DATA_GROUP "umicom-workbench-context-group"
 #define UMI_WCH_DATA_ENDPOINT "umicom-workbench-context-endpoint"
 #define UMI_WCH_DATA_STATUS "umicom-workbench-context-status"
+/**
+ * Provide the wch colour css class operation used by this module and its client
+ * applications.
+ */
 const char *umi_wch_colour_css_class(UmiContextChannelColour colour);
+/**
+ * Provide the wch clear children operation used by this module and its client
+ * applications.
+ */
 void umi_wch_clear_children(GtkWidget *widget);
 #endif

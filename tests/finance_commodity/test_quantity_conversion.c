@@ -18,6 +18,10 @@
 
 #include "umicom/finance/commodity/quantity_conversion.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommodityQuantityConversion conversion;

@@ -36,6 +36,10 @@ static const UmiEditorFeatureDescriptor FEATURE = {
     .revision = 1U
 };
 
+/*
+ * Provide the editor feature extension points operation used by this module and its client
+ * applications.
+ */
 const UmiEditorFeatureDescriptor *umi_editor_feature_extension_points(void)
 {
     return &FEATURE;

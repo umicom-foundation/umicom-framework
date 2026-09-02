@@ -22,6 +22,7 @@
 #include "umicom/designer/preview.h"
 #include "umicom/declarative/renderer.h"
 
+/* Provide the designer preview operation used by this module and its client applications. */
 UmiStatus umi_designer_preview(
     const UmiDesignerDocument *document,
     const UmiDeclSchema *schema,
@@ -32,6 +33,10 @@ UmiStatus umi_designer_preview(
     UmiDeclApplicationPlan plan;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || schema == NULL ||
         out_text == NULL || diagnostics == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -43,6 +48,7 @@ UmiStatus umi_designer_preview(
         &plan,
         diagnostics
     );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -52,8 +58,16 @@ UmiStatus umi_designer_preview(
     return status;
 }
 
+/*
+ * Initialise designer preview viewport from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_designer_preview_viewport_init(UmiDesignerPreviewViewport *viewport)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL) {
         return;
     }
@@ -65,6 +79,10 @@ void umi_designer_preview_viewport_init(UmiDesignerPreviewViewport *viewport)
     viewport->rect.height = 900;
 }
 
+/*
+ * Provide the designer preview apply profile operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_preview_apply_profile(
     UmiDesignerPreviewViewport *viewport,
     UmiDesignerPreviewProfile profile)
@@ -72,10 +90,15 @@ UmiStatus umi_designer_preview_apply_profile(
     int width;
     int height;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || profile == UMI_DESIGNER_PREVIEW_CUSTOM) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (profile) {
         case UMI_DESIGNER_PREVIEW_DESKTOP:
             width = 1440; height = 900; break;
@@ -101,11 +124,19 @@ UmiStatus umi_designer_preview_apply_profile(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the designer preview set custom operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_preview_set_custom(
     UmiDesignerPreviewViewport *viewport,
     int width,
     int height)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (viewport == NULL || width <= 0 || height <= 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

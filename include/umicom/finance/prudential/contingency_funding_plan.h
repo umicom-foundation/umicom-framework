@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential contingency funding plan item data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPrudentialContingencyFundingPlanItem { char action_id[UMI_PRU_ID_CAPACITY]; int32_t period; double amount; } UmiPrudentialContingencyFundingPlanItem;
+/**
+ * Represent the prudential contingency funding plan data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPrudentialContingencyFundingPlan { UmiPrudentialContingencyFundingPlanItem items[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialContingencyFundingPlan;
 /* Add a period-tagged action to a bounded prudential plan. */
 UmiStatus umi_pru_contingency_funding_plan_add(UmiPrudentialContingencyFundingPlan *plan, const char *action_id, int32_t period, double amount);

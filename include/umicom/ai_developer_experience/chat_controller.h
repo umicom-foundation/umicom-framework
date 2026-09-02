@@ -22,12 +22,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer chat open operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_chat_open(
     UmiAiDeveloperExperiencePlatform *platform,
     const char *session_id,
     const char *provider_id,
     const char *model_id);
 
+/**
+ * Perform ai developer chat through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_developer_chat_run(
     UmiAiDeveloperExperiencePlatform *platform,
     const char *session_id,

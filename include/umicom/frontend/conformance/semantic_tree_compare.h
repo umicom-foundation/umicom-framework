@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc semantic tree comparison data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFcSemanticTreeComparison { double count_score; double shape_score; double interactive_score; double total_score; } UmiFcSemanticTreeComparison;
+/**
+ * Perform fc semantic tree compare through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_fc_semantic_tree_compare_run(const UmiFcSemanticTree *expected,const UmiFcSemanticTree *actual,UmiFcSemanticTreeComparison *out_comparison);
 
 #ifdef __cplusplus

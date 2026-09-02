@@ -21,6 +21,10 @@
 void umi_product_adoption_registry_init(
     UmiProductAdoptionRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry != NULL) (void)memset(registry, 0, sizeof(*registry));
 }
 
@@ -32,7 +36,9 @@ const UmiProductApplicationAdoption *umi_product_adoption_registry_find(
     size_t index;
     /* Missing input cannot identify a contribution and is reported as absent. */
     if (registry == NULL || application_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->entries[index]->application_id,
                    application_id) == 0)
             return registry->entries[index];
@@ -51,11 +57,15 @@ UmiStatus umi_product_adoption_registry_register(
     /* Validate before duplicate checks so malformed pointers are never stored. */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_product_application_adoption_validate(adoption);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_product_adoption_registry_find(
             registry, adoption->application_id) != NULL)
         return UMI_STATUS_ALREADY_EXISTS;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->entries[index]->module_id,
                    adoption->module_id) == 0)
             return UMI_STATUS_ALREADY_EXISTS;
@@ -83,10 +93,15 @@ UmiStatus umi_product_adoption_registry_report(
     UmiProductAdoptionRegistryReport *out_report)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_report == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_report, 0, sizeof(*out_report));
     out_report->contribution_count = registry->count;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         UmiProductApplicationAdoptionSnapshot snapshot;
         const UmiStatus status = umi_product_application_adoption_snapshot(
@@ -97,15 +112,21 @@ UmiStatus umi_product_adoption_registry_report(
             out_report->invalid_count += 1U;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (snapshot.canonical_experience_available)
             out_report->canonical_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (snapshot.runnable) out_report->runnable_count += 1U;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (snapshot.module_status.tests_available)
             out_report->tested_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (snapshot.layout_projection_complete)
             out_report->layout_ready_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (snapshot.surface_complete)
             out_report->surface_complete_count += 1U;
+        /* Apply this operation only while the related capability or state is available. */
         if (snapshot.acceptance_ready)
             out_report->accepted_count += 1U;
     }

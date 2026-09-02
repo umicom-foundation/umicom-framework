@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ide workflow profile autonomous ai operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_workflow_profile_autonomous_ai(
     UmiIdeWorkflowPolicy *out_policy);
 #ifdef __cplusplus

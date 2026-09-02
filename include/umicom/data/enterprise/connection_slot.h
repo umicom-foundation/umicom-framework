@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data connection slot data shared with callers of this public contract.
+ */
 typedef struct UmiDataConnectionSlot {
     char slot_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     uint64_t connection_token;

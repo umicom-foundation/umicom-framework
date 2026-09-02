@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_DATA_WORKBENCH_MAX_RELATIONS 256U
 #define UMI_DATA_WORKBENCH_MAX_EDITS 256U
 
+/**
+ * List the named data workbench phase values accepted by this public contract.
+ */
 typedef enum UmiDataWorkbenchPhase {
     UMI_DATA_WORKBENCH_IDLE = 0,
     UMI_DATA_WORKBENCH_BROWSING = 1,
@@ -49,6 +52,9 @@ typedef enum UmiDataWorkbenchPhase {
     UMI_DATA_WORKBENCH_FAILED = 10
 } UmiDataWorkbenchPhase;
 
+/**
+ * List the named data navigator node kind values accepted by this public contract.
+ */
 typedef enum UmiDataNavigatorNodeKind {
     UMI_DATA_NAVIGATOR_CONNECTION = 1,
     UMI_DATA_NAVIGATOR_SCHEMA = 2,
@@ -57,6 +63,9 @@ typedef enum UmiDataNavigatorNodeKind {
     UMI_DATA_NAVIGATOR_COLUMN = 5
 } UmiDataNavigatorNodeKind;
 
+/**
+ * List the named data schema change kind values accepted by this public contract.
+ */
 typedef enum UmiDataSchemaChangeKind {
     UMI_DATA_SCHEMA_UNCHANGED = 0,
     UMI_DATA_SCHEMA_ADDED = 1,
@@ -64,12 +73,18 @@ typedef enum UmiDataSchemaChangeKind {
     UMI_DATA_SCHEMA_CHANGED = 3
 } UmiDataSchemaChangeKind;
 
+/**
+ * List the named data edit operation values accepted by this public contract.
+ */
 typedef enum UmiDataEditOperation {
     UMI_DATA_EDIT_INSERT = 1,
     UMI_DATA_EDIT_UPDATE = 2,
     UMI_DATA_EDIT_DELETE = 3
 } UmiDataEditOperation;
 
+/**
+ * List the named data edit state values accepted by this public contract.
+ */
 typedef enum UmiDataEditState {
     UMI_DATA_EDIT_PENDING = 0,
     UMI_DATA_EDIT_VALID = 1,
@@ -77,8 +92,20 @@ typedef enum UmiDataEditState {
     UMI_DATA_EDIT_APPLIED = 3
 } UmiDataEditState;
 
+/**
+ * Provide the data workbench phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_data_workbench_phase_text(UmiDataWorkbenchPhase phase);
+/**
+ * Provide the data schema change kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_data_schema_change_kind_text(UmiDataSchemaChangeKind kind);
+/**
+ * Provide the data workbench copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_workbench_copy_text(
     char *destination,
     size_t capacity,

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric endpoint descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricEndpointDescriptor {
     char endpoint_id[UMI_FABRIC_ID_CAPACITY];
     char uri[UMI_FABRIC_URI_CAPACITY];
@@ -33,7 +37,15 @@ typedef struct UmiFabricEndpointDescriptor {
     uint32_t weight;
 } UmiFabricEndpointDescriptor;
 
+/**
+ * Initialise fabric endpoint descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_endpoint_descriptor_init(UmiFabricEndpointDescriptor *item, const char *endpoint_id, const char *uri, UmiFabricProtocol protocol, bool secure, uint32_t weight);
+/**
+ * Check that fabric endpoint descriptor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_fabric_endpoint_descriptor_validate(const UmiFabricEndpointDescriptor *item);
 
 #ifdef __cplusplus

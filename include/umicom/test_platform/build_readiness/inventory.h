@@ -23,25 +23,45 @@ extern "C" {
 
 #define UMI_TEST_PLATFORM_BUILD_INVENTORY_CAPACITY 128U
 
+/**
+ * Represent the test platform build observation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformBuildObservation {
     const UmiTestPlatformBuildArtifact *artifact;
     UmiTestPlatformBuildReadinessState state;
     char message[256];
 } UmiTestPlatformBuildObservation;
 
+/**
+ * Represent the test platform build inventory data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformBuildInventory {
     UmiTestPlatformBuildObservation
         items[UMI_TEST_PLATFORM_BUILD_INVENTORY_CAPACITY];
     size_t count;
 } UmiTestPlatformBuildInventory;
 
+/**
+ * Initialise test platform build inventory from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_platform_build_inventory_init(
     UmiTestPlatformBuildInventory *inventory);
+/**
+ * Provide the test platform build inventory record operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_build_inventory_record(
     UmiTestPlatformBuildInventory *inventory,
     const UmiTestPlatformBuildArtifact *artifact,
     UmiTestPlatformBuildReadinessState state,
     const char *message);
+/**
+ * Provide the test platform build inventory find test operation used by this module and
+ * its client applications.
+ */
 const UmiTestPlatformBuildObservation *
 umi_test_platform_build_inventory_find_test(
     const UmiTestPlatformBuildInventory *inventory,

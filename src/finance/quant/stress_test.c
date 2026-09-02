@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_stress_test_init(UmiQuantStressTest *record, double baseline_pv, double stressed_pv, double limit_loss)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(limit_loss >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->baseline_pv = baseline_pv;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_stress_test_init(UmiQuantStressTest *record, double baseline
 /* Return positive valuation loss under stress. */
 double umi_quant_stress_test_loss(const UmiQuantStressTest *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return fmax(record->baseline_pv - record->stressed_pv, 0.0);
 }

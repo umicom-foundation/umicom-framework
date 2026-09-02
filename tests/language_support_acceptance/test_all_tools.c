@@ -15,11 +15,19 @@
 
 #include <assert.h>
 #include "umicom/developer/language_support_matrix.h"
+/*
+ * Exercise available and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int available(const char *program, void *user_data)
 {
     (void)user_data;
     return program != NULL && program[0] != '\0';
 }
+/*
+ * Exercise test language support all tools and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_language_support_all_tools(void)
 {
     UmiLanguageProfileRegistry *profiles = NULL;

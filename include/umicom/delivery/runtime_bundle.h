@@ -27,13 +27,27 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the runtime bundle data shared with callers of this public contract.
+ */
 typedef struct UmiRuntimeBundle {
     char files[UMI_DELIVERY_MAX_ARTIFACTS][UMI_DELIVERY_PATH_CAPACITY];
     size_t count;
 } UmiRuntimeBundle;
+/**
+ * Initialise runtime bundle from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_runtime_bundle_init(UmiRuntimeBundle *bundle);
+/**
+ * Add runtime bundle only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_runtime_bundle_add(UmiRuntimeBundle *bundle,
                                  const char *path);
+/**
+ * Provide the runtime bundle contains operation used by this module and its client
+ * applications.
+ */
 int umi_runtime_bundle_contains(const UmiRuntimeBundle *bundle,
                                 const char *path);
 

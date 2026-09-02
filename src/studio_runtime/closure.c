@@ -25,6 +25,7 @@
 #include "umicom/studio_runtime/runtime_commands.h"
 #include "umicom/studio_runtime/surface_catalogue.h"
 
+/* Provide the add missing operation used by this module and its client applications. */
 static UmiStatus add_missing(
     char items[UMI_STUDIO_RUNTIME_MISSING_CAPACITY]
               [UMI_STUDIO_RUNTIME_ID_CAPACITY],
@@ -33,11 +34,13 @@ static UmiStatus add_missing(
 {
     size_t length;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*count >= UMI_STUDIO_RUNTIME_MISSING_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     length = strlen(value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= UMI_STUDIO_RUNTIME_ID_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -47,18 +50,24 @@ static UmiStatus add_missing(
     return UMI_STATUS_OK;
 }
 
+/* Provide the check surfaces operation used by this module and its client applications. */
 static UmiStatus check_surfaces(
     UmiApplicationShellRegistry *shell,
     UmiStudioRuntimeClosureReport *report)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_studio_surface_catalogue_count(); ++index) {
         const UmiStudioRuntimeSurfaceBinding *binding =
             umi_studio_surface_catalogue_at(index);
         UmiApplicationShellContribution contribution;
         UmiStatus status;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (binding == NULL) continue;
 
         status = umi_studio_runtime_surface_resolve(
@@ -66,15 +75,17 @@ static UmiStatus check_surfaces(
             binding,
             &contribution);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             report->installed_surface_count += 1U;
-        } else if (status == UMI_STATUS_NOT_FOUND) {
+        } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_NOT_FOUND) {
             status = add_missing(
                 report->missing_surfaces,
                 &report->missing_surface_count,
                 binding->ide_surface_id);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             return status;
         }
     }
@@ -82,11 +93,13 @@ static UmiStatus check_surfaces(
     return UMI_STATUS_OK;
 }
 
+/* Provide the check command id operation used by this module and its client applications. */
 static UmiStatus check_command_id(
     const UmiCommandRegistry *commands,
     const char *command_id,
     UmiStudioRuntimeClosureReport *report)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (umi_command_registry_contains(commands, command_id)) {
         return UMI_STATUS_OK;
     }
@@ -97,6 +110,7 @@ static UmiStatus check_command_id(
         command_id);
 }
 
+/* Provide the check commands operation used by this module and its client applications. */
 static UmiStatus check_commands(
     const UmiCommandRegistry *commands,
     UmiStudioRuntimeClosureReport *report)
@@ -104,6 +118,7 @@ static UmiStatus check_commands(
     size_t index;
     UmiStatus status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ide_command_count(); ++index) {
         const UmiIdeCommandDescriptor *command = umi_ide_command_at(index);
 
@@ -111,13 +126,16 @@ static UmiStatus check_commands(
             commands,
             command->command_id,
             report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_command_registry_contains(commands, command->command_id)) {
             report->registered_ide_command_count += 1U;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ai_developer_command_count(); ++index) {
         const UmiAiDeveloperCommandDescriptor *command =
             umi_ai_developer_command_at(index);
@@ -126,13 +144,16 @@ static UmiStatus check_commands(
             commands,
             command->command_id,
             report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_command_registry_contains(commands, command->command_id)) {
             report->registered_ai_command_count += 1U;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_studio_command_alias_count(); ++index) {
         const UmiStudioRuntimeCommandAliasDefinition *alias =
             umi_studio_command_alias_at(index);
@@ -141,21 +162,30 @@ static UmiStatus check_commands(
             commands,
             alias->alias_id,
             report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_command_registry_contains(commands, alias->alias_id)) {
             report->registered_alias_count += 1U;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_studio_runtime_command_count(); ++index) {
         const char *command_id = umi_studio_runtime_command_id_at(index);
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (command_id == NULL) return UMI_STATUS_INTERNAL_ERROR;
 
         status = check_command_id(commands, command_id, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_command_registry_contains(commands, command_id)) {
             report->registered_studio_command_count += 1U;
         }
@@ -164,6 +194,10 @@ static UmiStatus check_commands(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio runtime closure check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_closure_check(
     const UmiStudioRuntimeContract *contract,
     UmiApplicationShellRegistry *shell,
@@ -173,12 +207,17 @@ UmiStatus umi_studio_runtime_closure_check(
     const UmiDeveloperWorkbenchPerspectiveDefinition *perspective;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (contract == NULL || shell == NULL ||
         commands == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_studio_runtime_contract_validate(contract);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_report, 0, sizeof(*out_report));
@@ -199,9 +238,11 @@ UmiStatus umi_studio_runtime_closure_check(
     out_report->layout_count = umi_studio_layout_catalogue_count();
 
     status = check_surfaces(shell, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = check_commands(commands, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_report->ready =

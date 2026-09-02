@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PRIVILEGE_BOUNDARY "umicom.developer.security.privilege_boundary"
 
+/**
+ * Provide the developer capability privilege boundary operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_privilege_boundary(void);
 

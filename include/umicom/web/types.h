@@ -42,6 +42,9 @@ extern "C" {
 #define UMI_WEB_MAX_ORIGINS 64U
 #define UMI_WEB_MAX_ENDPOINTS 128U
 
+/**
+ * List the named http method values accepted by this public contract.
+ */
 typedef enum UmiHttpMethod {
     UMI_HTTP_METHOD_UNKNOWN = 0,
     UMI_HTTP_METHOD_GET = 1,
@@ -53,6 +56,9 @@ typedef enum UmiHttpMethod {
     UMI_HTTP_METHOD_HEAD = 7
 } UmiHttpMethod;
 
+/**
+ * List the named http status values accepted by this public contract.
+ */
 typedef enum UmiHttpStatus {
     UMI_HTTP_STATUS_OK = 200,
     UMI_HTTP_STATUS_CREATED = 201,
@@ -68,6 +74,9 @@ typedef enum UmiHttpStatus {
     UMI_HTTP_STATUS_SERVICE_UNAVAILABLE = 503
 } UmiHttpStatus;
 
+/**
+ * List the named web server phase values accepted by this public contract.
+ */
 typedef enum UmiWebServerPhase {
     UMI_WEB_SERVER_STOPPED = 0,
     UMI_WEB_SERVER_STARTING = 1,
@@ -76,9 +85,23 @@ typedef enum UmiWebServerPhase {
     UMI_WEB_SERVER_FAILED = 4
 } UmiWebServerPhase;
 
+/**
+ * Provide the http method from text operation used by this module and its client
+ * applications.
+ */
 UmiHttpMethod umi_http_method_from_text(const char *text);
+/**
+ * Provide the http method text operation used by this module and its client applications.
+ */
 const char *umi_http_method_text(UmiHttpMethod method);
+/**
+ * Provide the http status reason operation used by this module and its client
+ * applications.
+ */
 const char *umi_http_status_reason(int status);
+/**
+ * Provide the web copy text operation used by this module and its client applications.
+ */
 UmiStatus umi_web_copy_text(char *destination, size_t capacity, const char *source);
 
 #ifdef __cplusplus

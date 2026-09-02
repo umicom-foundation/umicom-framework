@@ -25,10 +25,18 @@ extern "C" {
 
 #define UMI_UI_WORKSPACE_PROFILE_TEXT_CAPACITY 2048U
 
+/**
+ * Write ui workspace profile in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ui_workspace_profile_encode(
     const UmiUiWorkspaceProfileSnapshot *profile,
     char *out_text,
     size_t capacity);
+/**
+ * Read ui workspace profile into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_ui_workspace_profile_decode(
     const char *text,
     UmiUiWorkspaceProfileSnapshot *out_profile);

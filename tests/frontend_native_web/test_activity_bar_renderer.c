@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/activity_bar_renderer.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebRenderContext c; UmiNativeWebSurface s={0}; UmiNativeWebRenderResult r; UmiNativeWebRendererDescriptor d; CHECK(umi_native_web_render_context_init(&c,"s","/")==UMI_STATUS_OK); strcpy(s.surface_id,"x"); strcpy(s.semantic_contract,"Umicom.Ui.ActivityBar"); strcpy(s.title,"Title"); umi_native_web_render_result_init(&r,1U); CHECK(umi_native_web_activity_bar_render(&c,&s,&r)==UMI_STATUS_OK); CHECK(strstr(r.markup.data,"umicom-activity-bar")!=NULL); d=umi_native_web_activity_bar_renderer_descriptor(); CHECK(umi_native_web_renderer_descriptor_validate(&d)==UMI_STATUS_OK);

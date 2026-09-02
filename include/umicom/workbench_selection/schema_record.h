@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection schema record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchSelectionSchemaRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -39,28 +43,64 @@ typedef struct UmiWorkbenchSelectionSchemaRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionSchemaRecord;
 
+/**
+ * Initialise workbench selection schema record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_schema_record_init(
     UmiWorkbenchSelectionSchemaRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection schema record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_schema_record_validate(
     const UmiWorkbenchSelectionSchemaRecord *record);
+/**
+ * Provide the workbench selection schema record set source operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_schema_record_set_source(
     UmiWorkbenchSelectionSchemaRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection schema record set subject operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_schema_record_set_subject(
     UmiWorkbenchSelectionSchemaRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection schema record set related operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_schema_record_set_related(
     UmiWorkbenchSelectionSchemaRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection schema record set group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_schema_record_set_group(
     UmiWorkbenchSelectionSchemaRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection schema record set description operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_schema_record_set_description(
     UmiWorkbenchSelectionSchemaRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection schema record hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_selection_schema_record_hash(
     const UmiWorkbenchSelectionSchemaRecord *record);
+/**
+ * Provide the workbench selection schema record touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_selection_schema_record_touch(
     UmiWorkbenchSelectionSchemaRecord *record,
     uint64_t sequence,

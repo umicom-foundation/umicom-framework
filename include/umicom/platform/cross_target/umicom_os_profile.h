@@ -33,8 +33,19 @@ extern "C" {
 #include "umicom/platform/cross_target/riscv_profile.h"
 #include "umicom/platform/cross_target/riscv_privilege.h"
 #include "umicom/platform/cross_target/riscv_memory_model.h"
+/**
+ * Represent the ct umicom os profile data shared with callers of this public contract.
+ */
 typedef struct UmiCtUmicomOsProfile { UmiCtTarget target; UmiCtRiscvProfile cpu_profile; UmiCtPrivilegeMask privileges; UmiCtRiscvMemoryModel memory_model; uint32_t kernel_stack_size; bool smp; bool userspace; } UmiCtUmicomOsProfile;
+/**
+ * Provide the ct umicom os profile default operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_umicom_os_profile_default(UmiCtUmicomOsProfile *out_profile);
+/**
+ * Check that ct umicom os profile satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ct_umicom_os_profile_validate(const UmiCtUmicomOsProfile *profile);
 
 #ifdef __cplusplus

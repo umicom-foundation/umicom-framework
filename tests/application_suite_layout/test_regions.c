@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/application/suite_layout/suite_layout.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiApplicationSuiteLayoutRect l=umi_application_suite_layout_region_rect(UMI_UI_PLACEMENT_LEFT);
     UmiApplicationSuiteLayoutRect c=umi_application_suite_layout_region_rect(UMI_UI_PLACEMENT_CENTRE);

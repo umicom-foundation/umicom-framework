@@ -18,8 +18,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/maintenance_types.h"
 
+/*
+ * Provide the repository maintenance state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_repository_maintenance_state_text(UmiRepositoryMaintenanceState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_REPOSITORY_MAINTENANCE_CLEAN: return "clean";
         case UMI_REPOSITORY_MAINTENANCE_DIRTY: return "dirty";
@@ -30,8 +35,13 @@ const char *umi_repository_maintenance_state_text(UmiRepositoryMaintenanceState 
     }
 }
 
+/*
+ * Provide the repository doctor severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_repository_doctor_severity_text(UmiRepositoryDoctorSeverity severity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
         case UMI_REPOSITORY_DOCTOR_INFO: return "info";
         case UMI_REPOSITORY_DOCTOR_WARNING: return "warning";

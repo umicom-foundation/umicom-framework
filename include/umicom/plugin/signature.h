@@ -23,8 +23,19 @@ extern "C" {
 #endif
 #define UMI_PLUGIN_SIGNER_CAPACITY 160U
 #define UMI_PLUGIN_SIGNATURE_CAPACITY 256U
+/**
+ * Represent the plugin signature data shared with callers of this public contract.
+ */
 typedef struct UmiPluginSignature { char signer[UMI_PLUGIN_SIGNER_CAPACITY]; char algorithm[64]; char value[UMI_PLUGIN_SIGNATURE_CAPACITY]; } UmiPluginSignature;
+/**
+ * Represent the plugin signature decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPluginSignatureDecision { int verified; char reason[256]; } UmiPluginSignatureDecision;
+/**
+ * Provide the plugin signature verify checksum operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_plugin_signature_verify_checksum(const UmiPluginSignature *signature,
                                                uint64_t checksum,
                                                UmiPluginSignatureDecision *out_decision);

@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that order request satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_order_request_validate(const UmiOrderRequest *request);
 #ifdef __cplusplus
 }

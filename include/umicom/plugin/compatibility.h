@@ -22,7 +22,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the plugin compatibility data shared with callers of this public contract.
+ */
 typedef struct UmiPluginCompatibility { int compatible; char reason[256]; } UmiPluginCompatibility;
+/**
+ * Provide the plugin compatibility check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_plugin_compatibility_check(const UmiPluginManifest *manifest,
                                          uint32_t framework_abi,
                                          UmiVersion framework_version,

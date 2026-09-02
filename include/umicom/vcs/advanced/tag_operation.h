@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced tag operation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedTagOperation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -38,8 +42,20 @@ typedef struct UmiVcsAdvancedTagOperation {
     int verify;
 } UmiVcsAdvancedTagOperation;
 
+/**
+ * Initialise vcs advanced tag operation from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_tag_operation_init(UmiVcsAdvancedTagOperation *value);
+/**
+ * Check that vcs advanced tag operation satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_tag_operation_validate(const UmiVcsAdvancedTagOperation *value);
+/**
+ * Initialise vcs advanced tag operation from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_vcs_advanced_tag_operation_create(UmiVcsAdvancedTagOperation *value,
                                                   const char *tag_name,
                                                   const char *target,

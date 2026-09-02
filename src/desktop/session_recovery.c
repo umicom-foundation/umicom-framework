@@ -39,30 +39,39 @@ struct UmiDesktopSessionRecovery {
     uint64_t revision;
 };
 
+/* Provide the safe text operation used by this module and its client applications. */
 static bool safe_text(const char *text)
 {
     return text != NULL && text[0] != '\0' && strchr(text, '|') == NULL &&
         strchr(text, '\n') == NULL && strchr(text, '\r') == NULL;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(
     char *destination,
     size_t capacity,
     const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || !safe_text(source))
         return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the checksum text operation used by this module and its client applications. */
 static uint64_t checksum_text(const char *text, size_t length)
 {
     uint64_t value = UINT64_C(1469598103934665603);
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < length; ++index) {
         value ^= (unsigned char)text[index];
         value *= UINT64_C(1099511628211);
@@ -70,28 +79,47 @@ static uint64_t checksum_text(const char *text, size_t length)
     return value;
 }
 
+/* Provide the find checkpoint operation used by this module and its client applications. */
 static size_t find_checkpoint(
     const UmiDesktopSessionRecovery *recovery,
     const char *checkpoint_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL || checkpoint_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < recovery->checkpoint_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(recovery->checkpoints[index].snapshot.checkpoint_id,
                    checkpoint_id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/*
+ * Initialise desktop session recovery from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_session_recovery_create(
     UmiDesktopRuntime *runtime,
     UmiDesktopSessionRecovery **out_recovery)
 {
     UmiDesktopSessionRecovery *recovery;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || out_recovery == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     *out_recovery = NULL;
     recovery = (UmiDesktopSessionRecovery *)calloc(1U, sizeof(*recovery));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     recovery->runtime = runtime;
     recovery->state = UMI_DESKTOP_SESSION_RECOVERY_IDLE;
@@ -101,28 +129,44 @@ UmiStatus umi_desktop_session_recovery_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by desktop session recovery so the same storage can be
+ * reused safely.
+ */
 void umi_desktop_session_recovery_destroy(
     UmiDesktopSessionRecovery *recovery)
 {
     free(recovery);
 }
 
+/*
+ * Provide the desktop session recovery begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_session_recovery_begin(
     UmiDesktopSessionRecovery *recovery,
     const char *session_id,
     const char *application_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recovery->state == UMI_DESKTOP_SESSION_RECOVERY_RUNNING)
         return UMI_STATUS_INVALID_STATE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recovery->state == UMI_DESKTOP_SESSION_RECOVERY_AVAILABLE)
         return UMI_STATUS_BUSY;
     status = copy_text(recovery->session_id,
                        sizeof(recovery->session_id), session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(recovery->application_id,
                            sizeof(recovery->application_id), application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(recovery->checkpoints, 0, sizeof(recovery->checkpoints));
     recovery->checkpoint_count = 0U;
@@ -133,6 +177,10 @@ UmiStatus umi_desktop_session_recovery_begin(
         recovery, "session-start", "Session startup baseline");
 }
 
+/*
+ * Provide the desktop session recovery checkpoint operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_session_recovery_checkpoint(
     UmiDesktopSessionRecovery *recovery,
     const char *checkpoint_id,
@@ -141,13 +189,20 @@ UmiStatus umi_desktop_session_recovery_checkpoint(
     UmiDesktopRecoveryCheckpoint *checkpoint;
     size_t length = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL || !safe_text(checkpoint_id) || !safe_text(reason))
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recovery->state != UMI_DESKTOP_SESSION_RECOVERY_RUNNING &&
         recovery->state != UMI_DESKTOP_SESSION_RECOVERY_RECOVERED)
         return UMI_STATUS_INVALID_STATE;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (find_checkpoint(recovery, checkpoint_id) != SIZE_MAX)
         return UMI_STATUS_ALREADY_EXISTS;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recovery->checkpoint_count == UMI_DESKTOP_RECOVERY_CHECKPOINT_MAX) {
         (void)memmove(&recovery->checkpoints[0], &recovery->checkpoints[1],
                       (UMI_DESKTOP_RECOVERY_CHECKPOINT_MAX - 1U) *
@@ -159,13 +214,16 @@ UmiStatus umi_desktop_session_recovery_checkpoint(
     status = umi_desktop_persistence_encode(
         recovery->runtime, checkpoint->text, sizeof(checkpoint->text),
         &length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(checkpoint->snapshot.checkpoint_id,
                            sizeof(checkpoint->snapshot.checkpoint_id),
                            checkpoint_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(checkpoint->snapshot.reason,
                            sizeof(checkpoint->snapshot.reason), reason);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)memset(checkpoint, 0, sizeof(*checkpoint));
         return status;
@@ -182,16 +240,26 @@ UmiStatus umi_desktop_session_recovery_checkpoint(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop session recovery mark clean operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_session_recovery_mark_clean(
     UmiDesktopSessionRecovery *recovery)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recovery->state != UMI_DESKTOP_SESSION_RECOVERY_RUNNING &&
         recovery->state != UMI_DESKTOP_SESSION_RECOVERY_RECOVERED)
         return UMI_STATUS_INVALID_STATE;
     status = umi_desktop_session_recovery_checkpoint(
         recovery, "clean-shutdown", "Clean session shutdown");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK && status != UMI_STATUS_ALREADY_EXISTS)
         return status;
     recovery->clean_shutdown = true;
@@ -200,6 +268,10 @@ UmiStatus umi_desktop_session_recovery_mark_clean(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop session recovery restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_session_recovery_restore(
     UmiDesktopSessionRecovery *recovery,
     const char *checkpoint_id)
@@ -207,19 +279,27 @@ UmiStatus umi_desktop_session_recovery_restore(
     size_t index;
     UmiDesktopRecoveryCheckpoint *checkpoint;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (recovery->checkpoint_count == 0U) return UMI_STATUS_NOT_FOUND;
     index = checkpoint_id != NULL && checkpoint_id[0] != '\0'
         ? find_checkpoint(recovery, checkpoint_id)
         : recovery->checkpoint_count - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     checkpoint = &recovery->checkpoints[index];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (checksum_text(checkpoint->text,
                       checkpoint->snapshot.encoded_length) !=
         checkpoint->snapshot.checksum)
         return UMI_STATUS_PARSE_ERROR;
     status = umi_desktop_persistence_decode_transactional(
         recovery->runtime, checkpoint->text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         checkpoint->snapshot.revision += 1U;
         recovery->state = UMI_DESKTOP_SESSION_RECOVERY_RECOVERED;
@@ -229,6 +309,10 @@ UmiStatus umi_desktop_session_recovery_restore(
     return status;
 }
 
+/*
+ * Provide the desktop session recovery export latest operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_session_recovery_export_latest(
     const UmiDesktopSessionRecovery *recovery,
     char *out_text,
@@ -239,6 +323,10 @@ UmiStatus umi_desktop_session_recovery_export_latest(
     int written;
     size_t header_length;
     size_t total_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL || out_text == NULL || capacity == 0U ||
         out_length == NULL || recovery->checkpoint_count == 0U ||
         recovery->session_id[0] == '\0' ||
@@ -253,10 +341,12 @@ UmiStatus umi_desktop_session_recovery_export_latest(
         recovery->clean_shutdown ? 1 : 0, checkpoint->snapshot.sequence,
         checkpoint->snapshot.checkpoint_id, checkpoint->snapshot.reason,
         checkpoint->snapshot.encoded_length, checkpoint->snapshot.checksum);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_IO_ERROR;
     header_length = (size_t)written;
     total_length = header_length + checkpoint->snapshot.encoded_length +
         strlen("RECOVERY-END\n");
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (header_length >= capacity || total_length >= capacity)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(out_text + header_length, checkpoint->text,
@@ -267,15 +357,26 @@ UmiStatus umi_desktop_session_recovery_export_latest(
     return UMI_STATUS_OK;
 }
 
+/* Provide the split fields operation used by this module and its client applications. */
 static size_t split_fields(char *line, char **fields, size_t capacity)
 {
     size_t count = 0U;
     char *cursor = line;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (line == NULL || fields == NULL || capacity == 0U) return 0U;
     fields[count++] = cursor;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '|') {
             *cursor = '\0';
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (count >= capacity) return capacity + 1U;
             fields[count++] = cursor + 1;
         }
@@ -284,6 +385,10 @@ static size_t split_fields(char *line, char **fields, size_t capacity)
     return count;
 }
 
+/*
+ * Provide the parse uint64 value operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parse_uint64_value(
     const char *text,
     int base,
@@ -291,15 +396,24 @@ static UmiStatus parse_uint64_value(
 {
     char *end = NULL;
     unsigned long long value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     errno = 0;
     value = strtoull(text, &end, base);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (errno != 0 || end == text || *end != '\0')
         return UMI_STATUS_PARSE_ERROR;
     *out_value = (uint64_t)value;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop session recovery import operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_session_recovery_import(
     UmiDesktopSessionRecovery *recovery,
     const char *text)
@@ -319,32 +433,47 @@ UmiStatus umi_desktop_session_recovery_import(
     uint64_t checksum;
     UmiDesktopRecoveryCheckpoint imported;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL || text == NULL ||
         strncmp(text, header, strlen(header)) != 0)
         return UMI_STATUS_PARSE_ERROR;
     metadata_start = text + strlen(header);
     metadata_end = strchr(metadata_start, '\n');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (metadata_end == NULL) return UMI_STATUS_PARSE_ERROR;
     metadata_length = (size_t)(metadata_end - metadata_start);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (metadata_length == 0U || metadata_length >= sizeof(metadata))
         return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(metadata, metadata_start, metadata_length);
     metadata[metadata_length] = '\0';
     count = split_fields(metadata, fields,
                          sizeof(fields) / sizeof(fields[0]));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count != 9U || strcmp(fields[0], "SESSION") != 0)
         return UMI_STATUS_PARSE_ERROR;
     status = parse_uint64_value(fields[3], 10, &clean);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = parse_uint64_value(fields[4], 10, &sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = parse_uint64_value(fields[7], 10, &encoded_length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = parse_uint64_value(fields[8], 16, &checksum);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || clean > 1U || encoded_length == 0U ||
         encoded_length >= UMI_DESKTOP_PERSISTENCE_TEXT_CAPACITY)
         return UMI_STATUS_PARSE_ERROR;
     payload = metadata_end + 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (strlen(payload) != (size_t)encoded_length + strlen(footer) ||
         memcmp(payload + encoded_length, footer, strlen(footer)) != 0 ||
         checksum_text(payload, (size_t)encoded_length) != checksum)
@@ -354,15 +483,19 @@ UmiStatus umi_desktop_session_recovery_import(
         (uint32_t)sizeof(imported.snapshot);
     status = copy_text(recovery->session_id,
                        sizeof(recovery->session_id), fields[1]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(recovery->application_id,
                            sizeof(recovery->application_id), fields[2]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(imported.snapshot.checkpoint_id,
                            sizeof(imported.snapshot.checkpoint_id), fields[5]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(imported.snapshot.reason,
                            sizeof(imported.snapshot.reason), fields[6]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     imported.snapshot.sequence = sequence;
     imported.snapshot.encoded_length = (size_t)encoded_length;
@@ -382,22 +515,39 @@ UmiStatus umi_desktop_session_recovery_import(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find desktop session recovery checkpoint while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_desktop_session_recovery_checkpoint_at(
     const UmiDesktopSessionRecovery *recovery,
     size_t index,
     UmiDesktopRecoveryCheckpointSnapshot *out_checkpoint)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL || out_checkpoint == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= recovery->checkpoint_count) return UMI_STATUS_NOT_FOUND;
     *out_checkpoint = recovery->checkpoints[index].snapshot;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop session recovery snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_session_recovery_snapshot(
     const UmiDesktopSessionRecovery *recovery,
     UmiDesktopSessionRecoverySnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recovery == NULL || out_snapshot == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
@@ -406,6 +556,7 @@ UmiStatus umi_desktop_session_recovery_snapshot(
                  sizeof(out_snapshot->session_id));
     (void)memcpy(out_snapshot->application_id, recovery->application_id,
                  sizeof(out_snapshot->application_id));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recovery->checkpoint_count > 0U) {
         (void)memcpy(
             out_snapshot->latest_checkpoint_id,

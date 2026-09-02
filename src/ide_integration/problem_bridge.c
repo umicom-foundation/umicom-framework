@@ -18,14 +18,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the size to u32 operation used by this module and its client applications. */
 static UmiStatus size_to_u32(size_t value, uint32_t *out_value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (value > UINT32_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     *out_value = (uint32_t)value;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide problem target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_problem_target(
     const UmiDeveloperProblemStore *problems,
     size_t index,
@@ -34,6 +44,10 @@ UmiStatus umi_ide_problem_target(
     UmiDeveloperProblem problem;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (problems == NULL || out_target == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -42,6 +56,7 @@ UmiStatus umi_ide_problem_target(
         problems,
         index,
         &problem);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_target, 0, sizeof(*out_target));
@@ -61,14 +76,17 @@ UmiStatus umi_ide_problem_target(
 
     umi_ide_location_init(&out_target->location);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (problem.location.uri[0] != '\0') {
         uint32_t line = 0U;
         uint32_t column = 0U;
 
         status = size_to_u32(problem.location.line, &line);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = size_to_u32(problem.location.column, &column);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_ide_location_set_uri(
@@ -76,8 +94,10 @@ UmiStatus umi_ide_problem_target(
             problem.location.uri,
             line,
             column);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (size_to_u32(
                 problem.location.end_line,
                 &out_target->location.end_line) != UMI_STATUS_OK ||
@@ -91,6 +111,10 @@ UmiStatus umi_ide_problem_target(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide problem ai summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_problem_ai_summary(
     const UmiDeveloperProblemStore *problems,
     size_t index,
@@ -101,6 +125,10 @@ UmiStatus umi_ide_problem_ai_summary(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (problems == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -109,6 +137,7 @@ UmiStatus umi_ide_problem_ai_summary(
         problems,
         index,
         &problem);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(

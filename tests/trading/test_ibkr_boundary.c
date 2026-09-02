@@ -20,6 +20,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/trading/trading.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiIbkrConnectionSettings s={0};(void)snprintf(s.host,sizeof(s.host),"%s","127.0.0.1");s.port=7497U;s.client_id=17;s.environment=UMI_TRADING_PAPER;assert(umi_ibkr_settings_valid(&s));return 0;
 }

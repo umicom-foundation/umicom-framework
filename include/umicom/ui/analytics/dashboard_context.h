@@ -27,8 +27,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics dashboard context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsDashboardContext { char context_group[UMI_ANALYTICS_ID_CAPACITY]; char entity_id[UMI_ANALYTICS_ID_CAPACITY]; int64_t start_ns; int64_t end_ns; } UmiAnalyticsDashboardContext;
+/**
+ * Initialise analytics dashboard context from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_dashboard_context_init(UmiAnalyticsDashboardContext *item);
+/**
+ * Check that analytics dashboard context satisfies its contract before another service
+ * relies on it.
+ */
 int umi_analytics_dashboard_context_valid(const UmiAnalyticsDashboardContext *item);
 
 #ifdef __cplusplus

@@ -17,7 +17,10 @@ include_guard(GLOBAL)
 
 set(UMICOM_APPLICATION_SUITE_GTK4_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Define the application suite attach gtk4 build helper so parent and application projects
+# apply one consistent rule.
 function(umicom_application_suite_attach_gtk4)
+    # Load the dependency only when the parent build has not already provided its target.
     if(NOT TARGET umicom_ui_gtk4)
         return()
     endif()
@@ -25,6 +28,7 @@ function(umicom_application_suite_attach_gtk4)
         _umicom_suite_gtk4_attached
         umicom_ui_gtk4
         UMICOM_APPLICATION_SUITE_GTK4_ATTACHED)
+    # Apply this branch only when its contract condition is satisfied.
     if(_umicom_suite_gtk4_attached)
         return()
     endif()
@@ -32,6 +36,7 @@ function(umicom_application_suite_attach_gtk4)
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/workstation/workspace_layout_host_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/workstation/view_model_panel_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_suite_workstation_gtk4.c"
+        "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_product_workstation_gtk4.c"
     )
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::application)
     set_property(
@@ -40,6 +45,7 @@ function(umicom_application_suite_attach_gtk4)
 endfunction()
 
 umicom_application_suite_attach_gtk4()
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ui_gtk4 AND COMMAND cmake_language)
     cmake_language(DEFER CALL umicom_application_suite_attach_gtk4)
 endif()

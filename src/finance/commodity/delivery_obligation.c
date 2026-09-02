@@ -24,13 +24,20 @@
 UmiStatus umi_commodity_delivery_obligation_init(UmiCommodityDeliveryObligation *value, const char *id, const char *contract_id, int64_t units, int32_t scale, const char *unit_code, int64_t due_time_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || units <= 0 || scale < 0 || due_time_ms < 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_commodity_copy_text(value->id.value, sizeof value->id.value, id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_commodity_copy_text(value->contract_id.value, sizeof value->contract_id.value, contract_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_commodity_copy_text(value->quantity.unit_code, sizeof value->quantity.unit_code, unit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->quantity.units = units;
     value->quantity.scale = scale;

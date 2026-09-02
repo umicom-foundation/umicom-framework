@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace profile candidate data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceProfileCandidate {
         char id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];
         uint64_t capabilities;

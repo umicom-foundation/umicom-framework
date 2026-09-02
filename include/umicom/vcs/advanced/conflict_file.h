@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced conflict file data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedConflictFile {
     uint32_t struct_size;
     uint32_t api_version;
@@ -37,8 +41,20 @@ typedef struct UmiVcsAdvancedConflictFile {
     UmiVcsAdvancedState state;
 } UmiVcsAdvancedConflictFile;
 
+/**
+ * Initialise vcs advanced conflict file from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_conflict_file_init(UmiVcsAdvancedConflictFile *value);
+/**
+ * Check that vcs advanced conflict file satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_conflict_file_validate(const UmiVcsAdvancedConflictFile *value);
+/**
+ * Copy vcs advanced conflict file into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_conflict_file_set(UmiVcsAdvancedConflictFile *value,
                                                const char *path,
                                                int has_base,

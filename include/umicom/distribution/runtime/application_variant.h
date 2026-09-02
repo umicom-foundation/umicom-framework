@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr application variant data shared with callers of this public contract.
+ */
 typedef struct UmiDrApplicationVariant { char id[UMI_DR_ID_CAPACITY]; UmiDrPlatform platform; UmiDrArchitecture architecture; UmiDrPackageFormat preferred_format; char entrypoint[UMI_DR_PATH_CAPACITY]; } UmiDrApplicationVariant;
+/**
+ * Initialise dr application variant from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_dr_application_variant_init(UmiDrApplicationVariant *value);
+/**
+ * Check that dr application variant satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_dr_application_variant_valid(const UmiDrApplicationVariant *value);
+/**
+ * Provide the dr application variant fingerprint operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_dr_application_variant_fingerprint(const UmiDrApplicationVariant *value);
 
 #ifdef __cplusplus

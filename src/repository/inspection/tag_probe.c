@@ -29,8 +29,14 @@ UmiStatus umi_repository_tag_probe_read(const UmiRepositoryInspectionContext *co
     const char *arguments[] = {"describe", "--tags", "--exact-match", "HEAD"};
     UmiRepositoryGitCommandResult result;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_value == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_repository_git_command_execute(context, arguments, sizeof(arguments)/sizeof(arguments[0]), &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-    if (result.exit_code != 0) { if (capacity > 0U) out_value[0] = '\0'; return UMI_STATUS_NOT_FOUND; } (void)umi_repository_git_output_trim(result.output); return umi_repository_inspection_copy_text(out_value, capacity, result.output);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (result.exit_code != 0) { /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (capacity > 0U) out_value[0] = '\0'; return UMI_STATUS_NOT_FOUND; } (void)umi_repository_git_output_trim(result.output); return umi_repository_inspection_copy_text(out_value, capacity, result.output);
 }

@@ -15,6 +15,10 @@
 #include <assert.h>
 #include "umicom/ai_coding_runtime/validation_profiles/zig.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiCodingValidationPlan plan;

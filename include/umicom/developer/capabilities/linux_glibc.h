@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_LINUX_GLIBC "umicom.developer.portability.linux_glibc"
 
+/**
+ * Provide the developer capability linux glibc operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_linux_glibc(void);
 

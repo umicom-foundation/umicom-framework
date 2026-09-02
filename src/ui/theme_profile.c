@@ -26,10 +26,15 @@
 static UmiStatus copy_colour(char *destination, size_t capacity, const char *source) {
   int written;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (destination == NULL || capacity == 0U || source == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   written = snprintf(destination, capacity, "%s", source);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (written < 0 || (size_t)written >= capacity) {
     return UMI_STATUS_CAPACITY_EXCEEDED;
   }
@@ -40,6 +45,7 @@ static UmiStatus copy_colour(char *destination, size_t capacity, const char *sou
  * operating-system preference. This preserves the established Framework
  * behaviour while still letting the frontend switch to the dark palette. */
 static UmiUiBrandSurface surface_for_mode(UmiUiThemeMode mode) {
+  /* Select the behaviour associated with the requested command or state value. */
   switch (mode) {
   case UMI_UI_THEME_MODE_LIGHT:
   case UMI_UI_THEME_MODE_SYSTEM:
@@ -58,10 +64,15 @@ static UmiStatus apply_palette(UmiUiThemeProfile *theme) {
   const UmiUiBrandPalette *palette;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (theme == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   palette = umi_ui_brand_palette_get(surface_for_mode(theme->mode));
   status = umi_ui_brand_palette_validate(palette);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
 
@@ -102,6 +113,7 @@ UmiStatus umi_ui_theme_profile_init(UmiUiThemeProfile *theme, const char *theme_
   (void)memset(theme, 0, sizeof(*theme));
   id_length = snprintf(theme->theme_id, sizeof(theme->theme_id), "%s", theme_id);
   name_length = snprintf(theme->name, sizeof(theme->name), "%s", name);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (id_length < 0 || name_length < 0 || (size_t)id_length >= sizeof(theme->theme_id) ||
       (size_t)name_length >= sizeof(theme->name)) {
     return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -119,6 +131,7 @@ UmiStatus umi_ui_theme_profile_init(UmiUiThemeProfile *theme, const char *theme_
 static UmiStatus write_reason(char *out_reason, size_t capacity, const char *reason,
                               UmiStatus result) {
   int written = snprintf(out_reason, capacity, "%s", reason);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (written < 0 || (size_t)written >= capacity) {
     return UMI_STATUS_CAPACITY_EXCEEDED;
   }
@@ -128,6 +141,10 @@ static UmiStatus write_reason(char *out_reason, size_t capacity, const char *rea
 /* Validate user-adjustable theme values and return a readable explanation. */
 UmiStatus umi_ui_theme_profile_validate(const UmiUiThemeProfile *theme, char *out_reason,
                                         size_t capacity) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (theme == NULL || out_reason == NULL || capacity == 0U) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }

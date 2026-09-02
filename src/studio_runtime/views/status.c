@@ -16,6 +16,10 @@
 
 #include <stdio.h>
 
+/*
+ * Initialise studio status view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_studio_status_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,
@@ -25,9 +29,17 @@ UmiStatus umi_studio_status_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     model = umi_studio_runtime_platform_status(platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_studio_view_create_base(
@@ -36,11 +48,13 @@ UmiStatus umi_studio_status_view_create(
         "Studio Status",
         "Workspace, VCS, diagnostics, tests, workflow, debug, AI and editor status.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_view_set_integer(
         *out_view, "studio.status.count", (int64_t)model->item_count);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < model->item_count;
          ++index) {

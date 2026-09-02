@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design font role values accepted by this public contract.
+ */
 typedef enum UmiDesignFontRole {
     UMI_DESIGN_FONT_BODY = 1,
     UMI_DESIGN_FONT_CAPTION = 2,

@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher compiler result data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherCompilerResult {
     UmiTeacherState state;
     uint32_t score;
@@ -39,10 +42,30 @@ typedef struct UmiTeacherCompilerResult {
     uint64_t revision;
 } UmiTeacherCompilerResult;
 
+/**
+ * Initialise teacher compiler result from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_teacher_compiler_result_init(UmiTeacherCompilerResult *value);
+/**
+ * Provide the teacher compiler result record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_compiler_result_record(UmiTeacherCompilerResult *value, uint32_t score, int passed);
+/**
+ * Provide the teacher compiler result set units operation used by this module and its
+ * client applications.
+ */
 void umi_teacher_compiler_result_set_units(UmiTeacherCompilerResult *value, uint32_t completed_units, uint32_t total_units);
+/**
+ * Provide the teacher compiler result completion operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_teacher_compiler_result_completion(const UmiTeacherCompilerResult *value);
+/**
+ * Provide the teacher compiler result complete operation used by this module and its
+ * client applications.
+ */
 int umi_teacher_compiler_result_complete(const UmiTeacherCompilerResult *value);
 
 #ifdef __cplusplus

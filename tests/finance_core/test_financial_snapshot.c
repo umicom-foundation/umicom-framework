@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/financial_snapshot.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFinancialSnapshot x; CHECK(umi_financial_snapshot_init(&x,"ID","Name","CODE",1U)==UMI_STATUS_OK); CHECK(umi_financial_snapshot_is_valid(&x));

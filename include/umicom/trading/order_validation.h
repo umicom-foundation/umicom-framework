@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the order validate for market operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_order_validate_for_market(const UmiOrderRequest *request, UmiMarketState state);
 #ifdef __cplusplus
 }

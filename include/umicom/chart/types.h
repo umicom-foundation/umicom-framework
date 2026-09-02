@@ -28,8 +28,17 @@ extern "C" {
 #define UMI_CHART_NAME_CAPACITY 128U
 #define UMI_CHART_MAX_POINTS 4096U
 #define UMI_CHART_MAX_SERIES 32U
+/**
+ * List the named chart series kind values accepted by this public contract.
+ */
 typedef enum UmiChartSeriesKind { UMI_CHART_LINE=1, UMI_CHART_CANDLE=2, UMI_CHART_HISTOGRAM=3 } UmiChartSeriesKind;
+/**
+ * Represent the chart point data shared with callers of this public contract.
+ */
 typedef struct UmiChartPoint { int64_t time_ms; double value; } UmiChartPoint;
+/**
+ * Represent the chart candle data shared with callers of this public contract.
+ */
 typedef struct UmiChartCandle { int64_t time_ms; double open,high,low,close,volume; } UmiChartCandle;
 #ifdef __cplusplus
 }

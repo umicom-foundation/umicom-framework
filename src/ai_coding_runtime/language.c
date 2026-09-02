@@ -41,41 +41,69 @@ static const LanguageExtension EXTENSIONS[] = {
     {".lua", "lua"}, {".rb", "ruby"}, {".r", "r"}
 };
 
+/* Provide the basename of operation used by this module and its client applications. */
 static const char *basename_of(const char *path)
 {
     const char *base = path;
     const char *cursor;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (cursor = path; *cursor != '\0'; ++cursor) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '/' || *cursor == '\\') base = cursor + 1;
     }
 
     return base;
 }
 
+/*
+ * Provide the ai coding runtime language for path operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_coding_runtime_language_for_path(const char *path)
 {
     const char *extension;
     const char *base;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL) return "plaintext";
 
     base = basename_of(path);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (base != NULL) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(base, "CMakeLists.txt") == 0) return "cmake";
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(base, "Makefile") == 0 ||
             strcmp(base, "GNUmakefile") == 0) return "makefile";
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(base, "Dockerfile") == 0) return "dockerfile";
     }
 
     extension = umi_ai_coding_runtime_path_extension(path);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (extension == NULL) return "plaintext";
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(EXTENSIONS) / sizeof(EXTENSIONS[0]);
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(extension, EXTENSIONS[index].extension) == 0) {
             return EXTENSIONS[index].language;
         }
@@ -84,6 +112,10 @@ const char *umi_ai_coding_runtime_language_for_path(const char *path)
     return "plaintext";
 }
 
+/*
+ * Provide the ai coding runtime path is text source operation used by this module and its
+ * client applications.
+ */
 int umi_ai_coding_runtime_path_is_text_source(const char *path)
 {
     const char *language = umi_ai_coding_runtime_language_for_path(path);

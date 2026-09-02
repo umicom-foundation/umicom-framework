@@ -27,7 +27,14 @@ extern "C" {
 
 #include "umicom/frontend/native_web/element_tree.h"
 
+/**
+ * Represent the native web element index entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebElementIndexEntry { char element_id[UMI_NATIVE_WEB_ID_CAPACITY]; size_t index; } UmiNativeWebElementIndexEntry;
+/**
+ * Represent the native web element index data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebElementIndex { UmiNativeWebElementIndexEntry entries[UMI_NATIVE_WEB_MAX_ELEMENTS]; size_t count; uint64_t source_revision; } UmiNativeWebElementIndex;
 /* Rebuild a deterministic ID index from the current element tree. */
 UmiStatus umi_native_web_element_index_build(UmiNativeWebElementIndex *index, const UmiNativeWebElementTree *tree);

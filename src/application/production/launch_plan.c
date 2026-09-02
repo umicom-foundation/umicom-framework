@@ -38,9 +38,17 @@ static const UmiApplicationProductionLaunchStep DEFAULT_STEPS[] = {
       UMI_APPLICATION_PRODUCTION_GATE_ACCEPTANCE, 1, 0 }
 };
 
+/*
+ * Provide the application production launch plan build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_production_launch_plan_build(
     UmiApplicationProductionLaunchPlan *out_plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_plan, 0, sizeof(*out_plan));
     out_plan->count = sizeof(DEFAULT_STEPS) / sizeof(DEFAULT_STEPS[0]);
@@ -48,25 +56,40 @@ UmiStatus umi_application_production_launch_plan_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application production launch plan apply gate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_launch_plan_apply_gate(
     UmiApplicationProductionLaunchPlan *plan,
     const UmiApplicationProductionLifecycleGate *gate)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || gate == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     plan->completed_count = 0U;
     plan->blocked_count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (plan->steps[index].gate == gate->gate)
             plan->steps[index].complete = gate->passed;
         plan->completed_count += (size_t)plan->steps[index].complete;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (plan->steps[index].required && !plan->steps[index].complete)
             plan->blocked_count += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application production launch plan ready operation used by this module and
+ * its client applications.
+ */
 int umi_application_production_launch_plan_ready(
     const UmiApplicationProductionLaunchPlan *plan)
 {

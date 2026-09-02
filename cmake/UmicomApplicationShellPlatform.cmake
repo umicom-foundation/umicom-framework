@@ -17,6 +17,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application)
     message(FATAL_ERROR
         "Application Shell requires the canonical umicom_application target")
@@ -66,8 +67,12 @@ target_sources(umicom_application PRIVATE
     "src/application_shell/profiles/application_launcher.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add application shell test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_application_shell_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
@@ -78,10 +83,12 @@ if(BUILD_TESTING)
         )
         target_link_libraries("${target}" PRIVATE Umicom::Framework)
 
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
 
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

@@ -23,5 +23,5 @@
 /* Verify this module remains callable through its public Framework contract. */
 int main(void)
 {
-    const char *x="# branch.head main\n# branch.upstream origin/main\n# branch.ab +2 -1\n? new.c\n"; UmiRepositoryPorcelainStatus s; if(umi_repository_porcelain_parse(x,&s)!=UMI_STATUS_OK)return 1; return s.branch.ahead==2U && s.branch.behind==1U && s.worktree.untracked==1U ? 0:1;
+    const char *x="# branch.head main\n# branch.upstream origin/main\n# branch.ab +2 -1\n? new.c\n"; UmiRepositoryPorcelainStatus s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_repository_porcelain_parse(x,&s)!=UMI_STATUS_OK)return 1; return s.branch.ahead==2U && s.branch.behind==1U && s.worktree.untracked==1U ? 0:1;
 }

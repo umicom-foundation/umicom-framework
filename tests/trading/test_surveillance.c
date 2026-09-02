@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiOrderRequest a=test_order_request(),b=test_order_request();b.side=UMI_SIDE_SELL;(void)snprintf(b.client_order_id.value,sizeof(b.client_order_id.value),"%s","ORDER-2");
     assert(umi_self_trade_risk(&a,&b));assert(umi_surveillance_large_order(&a,1));assert(umi_price_within_band(101,100,0.02));return 0;

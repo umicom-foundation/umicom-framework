@@ -22,16 +22,39 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test duration model data shared with callers of this public contract.
+ */
 typedef struct UmiTestDurationModel {
     UmiTestWorkbenchEntry value;
     uint64_t generation;
     uint32_t item_count;
     bool active;
 } UmiTestDurationModel;
+/**
+ * Initialise test duration model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_duration_model_init(UmiTestDurationModel *model,const char *id,const char *label);
+/**
+ * Exercise test duration model set active and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_duration_model_set_active(UmiTestDurationModel *model,bool active);
+/**
+ * Return the number of records represented by test duration model set without changing
+ * their state.
+ */
 UmiStatus umi_test_duration_model_set_count(UmiTestDurationModel *model,uint32_t item_count);
+/**
+ * Exercise test duration model set state and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_duration_model_set_state(UmiTestDurationModel *model,UmiTestWorkbenchState state);
+/**
+ * Check that test duration model satisfies its contract before another service relies on
+ * it.
+ */
 int umi_test_duration_model_valid(const UmiTestDurationModel *model);
 #ifdef __cplusplus
 }

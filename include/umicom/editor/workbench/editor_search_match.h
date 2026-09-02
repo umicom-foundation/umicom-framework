@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor search match data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbEditorSearchMatch { UmiEditorWbRange range; bool selected; } UmiEditorWbEditorSearchMatch;
+/**
+ * Initialise editor wb editor search match from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_editor_search_match_init(UmiEditorWbEditorSearchMatch *match,UmiEditorWbRange range,bool selected);
 
 #ifdef __cplusplus

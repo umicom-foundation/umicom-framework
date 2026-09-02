@@ -16,6 +16,10 @@
 #include "umicom/ai/helix/protocol.h"
 #include <string.h>
 
+/*
+ * Provide the ai helix protocol specification operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_helix_protocol_specification(void)
 {
     return
@@ -26,8 +30,13 @@ const char *umi_ai_helix_protocol_specification(void)
         "rationale=<reason>.";
 }
 
+/*
+ * Provide the ai helix protocol action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_helix_protocol_action_text(UmiHelixActionKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_HELIX_ACTION_READ: return "read";
         case UMI_HELIX_ACTION_FILESYSTEM: return "filesystem";
@@ -39,49 +48,67 @@ const char *umi_ai_helix_protocol_action_text(UmiHelixActionKind kind)
     }
 }
 
+/*
+ * Provide the ai helix protocol parse disposition operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_helix_protocol_parse_disposition(
     const char *text,
     UmiAiHelixDisposition *out_disposition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_disposition == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "propose_action") == 0) {
         *out_disposition = UMI_AI_HELIX_DISPOSITION_PROPOSE_ACTION;
-    } else if (strcmp(text, "complete") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "complete") == 0) {
         *out_disposition = UMI_AI_HELIX_DISPOSITION_COMPLETE;
-    } else if (strcmp(text, "needs_context") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "needs_context") == 0) {
         *out_disposition = UMI_AI_HELIX_DISPOSITION_NEEDS_CONTEXT;
-    } else if (strcmp(text, "defer") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "defer") == 0) {
         *out_disposition = UMI_AI_HELIX_DISPOSITION_DEFER;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_PARSE_ERROR;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai helix protocol parse action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_helix_protocol_parse_action(
     const char *text,
     UmiHelixActionKind *out_kind)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_kind == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "none") == 0) {
         *out_kind = (UmiHelixActionKind)0;
-    } else if (strcmp(text, "read") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "read") == 0) {
         *out_kind = UMI_HELIX_ACTION_READ;
-    } else if (strcmp(text, "filesystem") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "filesystem") == 0) {
         *out_kind = UMI_HELIX_ACTION_FILESYSTEM;
-    } else if (strcmp(text, "build") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "build") == 0) {
         *out_kind = UMI_HELIX_ACTION_BUILD;
-    } else if (strcmp(text, "test") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "test") == 0) {
         *out_kind = UMI_HELIX_ACTION_TEST;
-    } else if (strcmp(text, "review") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "review") == 0) {
         *out_kind = UMI_HELIX_ACTION_REVIEW;
-    } else if (strcmp(text, "source_control") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "source_control") == 0) {
         *out_kind = UMI_HELIX_ACTION_SOURCE_CONTROL;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_PARSE_ERROR;
     }
     return UMI_STATUS_OK;

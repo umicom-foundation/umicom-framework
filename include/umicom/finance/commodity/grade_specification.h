@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity grade specification data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityGradeSpecification {
     UmiCommodityId id;
     UmiCommodityId commodity_id;

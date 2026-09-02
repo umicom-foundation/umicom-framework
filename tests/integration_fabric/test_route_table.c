@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricRouteTable r; UmiFabricRouteRule item, found; umi_fabric_route_table_init(&r);
     CHECK(umi_fabric_route_rule_init(&item,"r1","*","trade.*","risk",10U)==UMI_STATUS_OK);

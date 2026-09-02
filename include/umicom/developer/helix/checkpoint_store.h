@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix checkpoint store data shared with callers of this public contract.
+ */
 typedef struct UmiHelixCheckpointStore { UmiHelixCheckpoint items[UMI_HELIX_MAX_ITEMS]; size_t count; } UmiHelixCheckpointStore;
 /* Add a validated checkpoint and reject duplicate identifiers. */
 UmiStatus umi_helix_checkpoint_store_add(UmiHelixCheckpointStore *store,const UmiHelixCheckpoint *checkpoint);

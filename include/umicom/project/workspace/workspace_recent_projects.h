@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace workspace recent projects data shared with callers of
+ * this public contract.
+ */
     typedef struct UmiProjectWorkspaceWorkspaceRecentProjects {
         char items[UMI_PROJECT_WORKSPACE_MEDIUM_CAPACITY][UMI_PROJECT_WORKSPACE_TEXT_CAPACITY];
         size_t count;

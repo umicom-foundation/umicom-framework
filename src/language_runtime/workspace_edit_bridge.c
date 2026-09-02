@@ -25,6 +25,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the language runtime workspace edit to editor operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_runtime_workspace_edit_to_editor(
     const UmiLanguageRuntimeWorkspaceEdit *runtime_edit,
     UmiEditorWorkspaceEditSet **out_edit_set)
@@ -33,14 +37,20 @@ UmiStatus umi_language_runtime_workspace_edit_to_editor(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime_edit == NULL || out_edit_set == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_edit_set = NULL;
     status = umi_editor_workspace_edit_set_create(&edit_set);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < runtime_edit->count; ++index) {
         const UmiLanguageRuntimeWorkspaceEditItem *source =
             &runtime_edit->items[index];
@@ -49,6 +59,7 @@ UmiStatus umi_language_runtime_workspace_edit_to_editor(
 
         (void)memset(&target, 0, sizeof(target));
         replacement_length = strlen(source->edit.new_text);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (replacement_length >= sizeof(target.replacement_text)) {
             status = UMI_STATUS_CAPACITY_EXCEEDED;
             goto failure;
@@ -64,6 +75,7 @@ UmiStatus umi_language_runtime_workspace_edit_to_editor(
             source->uri,
             source->edit.range.start.line,
             source->edit.range.start.character);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
 
         target.location.kind = UMI_EDITOR_SOURCE_LOCATION_EDIT;
@@ -85,10 +97,12 @@ UmiStatus umi_language_runtime_workspace_edit_to_editor(
         status = umi_editor_workspace_edit_set_upsert_unresolved(
             edit_set,
             &target);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto failure;
     }
 
     status = umi_editor_workspace_edit_set_finalize(edit_set);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto failure;
 
     *out_edit_set = edit_set;

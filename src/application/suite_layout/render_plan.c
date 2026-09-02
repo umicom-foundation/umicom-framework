@@ -172,7 +172,7 @@ UmiStatus umi_application_suite_layout_render_plan_build(
             stack->rect.width = window->width;
             stack->rect.height = window->height;
         /* Windows in one tab stack must share the same visible geometry. */
-        } else if (!rect_matches(window, stack->rect)) {
+        } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (!rect_matches(window, stack->rect)) {
             return UMI_STATUS_INVALID_STATE;
         }
         /* Refuse another tab before writing beyond the index array. */

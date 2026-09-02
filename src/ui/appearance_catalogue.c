@@ -25,6 +25,10 @@
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source) {
   int written;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (destination == NULL || capacity == 0U || source == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
@@ -48,6 +52,10 @@ static UmiStatus set_colours(UmiUiAppearanceProfile *profile, const char *backgr
       return field_status;                                                                         \
   } while (0)
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   COPY_COLOUR(background, background);
@@ -74,10 +82,15 @@ static UmiStatus make_profile(size_t index, UmiUiAppearanceProfile *out_profile)
   UmiUiAppearanceProfile profile;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (out_profile == NULL || index >= UMI_UI_APPEARANCE_STANDARD_COUNT) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
 
+  /* Select the behaviour associated with the requested command or state value. */
   switch (index) {
   case 0U:
     status = umi_ui_appearance_profile_init(&profile, "umicom-dark", "Dark", UMI_UI_THEME_MODE_DARK,
@@ -95,11 +108,13 @@ static UmiStatus make_profile(size_t index, UmiUiAppearanceProfile *out_profile)
   case 3U:
     status = umi_ui_appearance_profile_init(&profile, "umicom-retro", "Retro",
                                             UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
       status = set_colours(&profile, "#11150F", "#192016", "#242D20", "#303B2A", "#0D110C",
                            "#DDE8B8", "#9EAD7F", "#405036", "#60734D", "#D39B38", "#493514",
                            "#75B86B", "#E2B64F", "#D76C5D");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
       status =
           copy_text(profile.interface_font, sizeof(profile.interface_font), "Consolas, Monospace");
@@ -108,6 +123,7 @@ static UmiStatus make_profile(size_t index, UmiUiAppearanceProfile *out_profile)
   case 4U:
     status = umi_ui_appearance_profile_init(&profile, "umicom-neo", "Neo", UMI_UI_THEME_MODE_DARK,
                                             UMI_UI_DENSITY_COMPACT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
       status = set_colours(&profile, "#0E1020", "#171A2E", "#202642", "#2A3152", "#0B0D18",
                            "#EDF2FF", "#A4AEC8", "#303956", "#4B5A82", "#6FD3FF", "#153C55",
@@ -121,6 +137,7 @@ static UmiStatus make_profile(size_t index, UmiUiAppearanceProfile *out_profile)
   default:
     return UMI_STATUS_NOT_FOUND;
   }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
 
@@ -129,12 +146,14 @@ static UmiStatus make_profile(size_t index, UmiUiAppearanceProfile *out_profile)
   status = copy_text(profile.logo_resource, sizeof(profile.logo_resource),
                      profile.mode == UMI_UI_THEME_MODE_LIGHT ? "branding/umicom-logo.svg"
                                                              : "branding/umicom-logo-on-dark.svg");
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     status =
         copy_text(profile.icon_resource, sizeof(profile.icon_resource),
                   profile.mode == UMI_UI_THEME_MODE_LIGHT ? "branding/umicom-icon.svg"
                                                           : "branding/umicom-icon-on-dark.svg");
   }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
 
@@ -150,6 +169,7 @@ static UmiStatus make_profile(size_t index, UmiUiAppearanceProfile *out_profile)
           : (index == 4U ? "Cool high-clarity accents for dense analytical workspaces."
                          : (index == 5U ? "A user-owned profile for colours, fonts and sizing."
                                         : "A balanced Umicom application appearance.")));
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   *out_profile = profile;
@@ -161,6 +181,7 @@ size_t umi_ui_appearance_catalogue_count(void) { return UMI_UI_APPEARANCE_STANDA
 
 /* Materialise one profile on demand so callers receive independent values. */
 UmiStatus umi_ui_appearance_catalogue_at(size_t index, UmiUiAppearanceProfile *out_profile) {
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index >= UMI_UI_APPEARANCE_STANDARD_COUNT) {
     return UMI_STATUS_NOT_FOUND;
   }
@@ -174,13 +195,20 @@ UmiStatus umi_ui_appearance_catalogue_find(const char *profile_id,
   UmiUiAppearanceProfile profile;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile_id == NULL || out_profile == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < UMI_UI_APPEARANCE_STANDARD_COUNT; ++index) {
     status = make_profile(index, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
       return status;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(profile.profile_id, profile_id) == 0) {
       *out_profile = profile;
       return UMI_STATUS_OK;
@@ -195,13 +223,20 @@ UmiStatus umi_ui_appearance_catalogue_populate(UmiUiAppearanceModel *model) {
   UmiUiAppearanceProfile profile;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (model == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < UMI_UI_APPEARANCE_STANDARD_COUNT; ++index) {
     status = make_profile(index, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
       return status;
     status = umi_ui_appearance_model_upsert(model, &profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
       return status;
   }

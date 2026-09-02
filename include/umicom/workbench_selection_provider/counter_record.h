@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider counter record data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderCounterRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderCounterRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderCounterRecord;
 
+/**
+ * Initialise workbench selection provider counter record from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_counter_record_init(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider counter record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_validate(
     const UmiWorkbenchSelectionProviderCounterRecord *record);
+/**
+ * Provide the workbench selection provider counter record set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_set_provider(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider counter record set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_set_source(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider counter record set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_set_subject(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider counter record set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_set_related(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider counter record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_set_group(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider counter record set description operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_counter_record_set_description(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider counter record hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_counter_record_hash(
     const UmiWorkbenchSelectionProviderCounterRecord *record);
+/**
+ * Provide the workbench selection provider counter record touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_counter_record_touch(
     UmiWorkbenchSelectionProviderCounterRecord *record,
     uint64_t sequence,

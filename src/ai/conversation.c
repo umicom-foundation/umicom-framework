@@ -23,10 +23,22 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise ai conversation from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ai_conversation_init(UmiAiConversation *conversation, const char *id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (conversation != NULL) {
         (void)memset(conversation, 0, sizeof(*conversation));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (id != NULL) {
             (void)snprintf(conversation->conversation_id,
                            sizeof(conversation->conversation_id),
@@ -35,12 +47,18 @@ void umi_ai_conversation_init(UmiAiConversation *conversation, const char *id)
     }
 }
 
+/* Add ai conversation only after its inputs and available capacity have been checked. */
 UmiStatus umi_ai_conversation_add(UmiAiConversation *conversation,
                                   const UmiAiMessage *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (conversation == NULL || message == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (conversation->message_count >= UMI_AI_MAX_MESSAGES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

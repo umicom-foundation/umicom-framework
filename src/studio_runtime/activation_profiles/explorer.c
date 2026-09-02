@@ -21,6 +21,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "workspace.", .surface = UMI_STUDIO_SURFACE_EXPLORER, .prefix_match = 1, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile explorer operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_explorer(void)
 {

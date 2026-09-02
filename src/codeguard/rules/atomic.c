@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-ATOM-001", "CWE-362", UMI_CODEGUARD_LOW, UMI_CODEGUARD_CATEGORY_CONCURRENCY, 55U, UMI_CODEGUARD_MATCH_CODE, "volatile ", "volatile is not a substitute for atomic synchronisation between threads.", "Use C atomics or Framework synchronisation primitives for inter-thread state."}
 };
 
+/*
+ * Provide the codeguard rules atomic operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_atomic(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

@@ -22,6 +22,10 @@
 
 #include "terminal_fixture.h"
 
+/*
+ * Exercise assert kind and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void assert_kind(UmiUiViewModel *view, const char *expected)
 {
     UmiUiValue value;
@@ -32,6 +36,10 @@ static void assert_kind(UmiUiViewModel *view, const char *expected)
     assert(strcmp(value.string_value, expected) == 0);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTerminalTestFixture fixture;

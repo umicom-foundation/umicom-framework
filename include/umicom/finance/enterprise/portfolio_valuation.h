@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise portfolio valuation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePortfolioValuation { char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; int64_t as_of_ms; double present_value; double previous_present_value; double pnl; } UmiEnterprisePortfolioValuation;
 /* Initialise portfolio valuation evidence and derive period P&L. */
 UmiStatus umi_enterprise_portfolio_valuation_init(UmiEnterprisePortfolioValuation *valuation,const char *portfolio_id,int64_t as_of_ms,double present_value,double previous_present_value);

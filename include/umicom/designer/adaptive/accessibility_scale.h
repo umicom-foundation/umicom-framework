@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer accessibility scale data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAccessibilityScale {
     double text_scale;
     double target_scale;

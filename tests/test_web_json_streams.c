@@ -20,4 +20,8 @@
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){char json[256],sse[512];size_t n=0U;UmiWebSseEvent e={7U,"update","ready"};assert(umi_web_json_object1("state","ready",json,sizeof(json))==UMI_STATUS_OK);assert(strstr(json,"ready")!=NULL);assert(umi_web_sse_format(&e,sse,sizeof(sse),&n)==UMI_STATUS_OK);assert(n>0U&&strstr(sse,"event: update")!=NULL);return 0;}

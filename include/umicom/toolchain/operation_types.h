@@ -26,6 +26,9 @@ extern "C" {
 #define UMI_TOOLCHAIN_OPERATION_ID_CAPACITY 64U
 #define UMI_TOOLCHAIN_OPERATION_TEXT_CAPACITY 256U
 
+/**
+ * List the named toolchain operation kind values accepted by this public contract.
+ */
 typedef enum UmiToolchainOperationKind {
     UMI_TOOLCHAIN_OPERATION_UNKNOWN = 0,
     UMI_TOOLCHAIN_OPERATION_REPOSITORY_READ = 1,
@@ -43,7 +46,15 @@ typedef enum UmiToolchainOperationKind {
     UMI_TOOLCHAIN_OPERATION_PACKAGE = 13
 } UmiToolchainOperationKind;
 
+/**
+ * Provide the toolchain operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_toolchain_operation_kind_text(UmiToolchainOperationKind kind);
+/**
+ * Provide the toolchain operation is repository operation used by this module and its
+ * client applications.
+ */
 int umi_toolchain_operation_is_repository(UmiToolchainOperationKind kind);
 
 #ifdef __cplusplus

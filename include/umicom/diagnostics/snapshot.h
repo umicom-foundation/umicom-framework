@@ -26,7 +26,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the observability snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiObservabilitySnapshot { size_t metrics; size_t spans; size_t audit_records; size_t readiness_checks; size_t operational_events; int ready; } UmiObservabilitySnapshot;
+/**
+ * Provide the observability snapshot capture operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_observability_snapshot_capture(const UmiMetricsRegistry *metrics,
                                               const UmiTraceStore *traces,
                                               const UmiAuditLog *audit,

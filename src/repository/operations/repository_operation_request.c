@@ -21,4 +21,4 @@
 #include "umicom/repository/repository_operation_request.h"
 #include <string.h>
 /* Initialise one portable operation request with no implicit mutations. */
-void umi_repository_operation_request_init(UmiRepositoryOperationRequest *request,UmiRepositoryOperationKind kind,const char *repository_root){if(!request)return;(void)memset(request,0,sizeof(*request));request->kind=kind;request->repository_root=(repository_root&&repository_root[0])?repository_root:".";}
+void umi_repository_operation_request_init(UmiRepositoryOperationRequest *request,UmiRepositoryOperationKind kind,const char *repository_root){/* Apply this branch only when its contract condition is satisfied. */ if(!request)return;(void)memset(request,0,sizeof(*request));request->kind=kind;request->repository_root=(repository_root&&repository_root[0])?repository_root:".";}

@@ -28,6 +28,9 @@ extern "C" {
 #include "umicom/frontend/native_web/markup_buffer.h"
 #include "umicom/frontend/native_web/css_buffer.h"
 
+/**
+ * Represent the native web render result data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebRenderResult { UmiNativeWebMarkupBuffer markup; UmiNativeWebCssBuffer css; uint64_t revision; size_t rendered_elements; } UmiNativeWebRenderResult;
 /* Initialise empty HTML/CSS output for one render operation. */
 void umi_native_web_render_result_init(UmiNativeWebRenderResult *result, uint64_t revision);

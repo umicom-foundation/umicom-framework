@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics kpi model data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsKpiModel { double baseline; double target; double current; int higher_is_better; } UmiAnalyticsKpiModel;
+/**
+ * Initialise analytics kpi model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_analytics_kpi_model_init(UmiAnalyticsKpiModel *k,double baseline,double target,double current,int higher_is_better);
+/**
+ * Provide the analytics kpi model progress operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_kpi_model_progress(const UmiAnalyticsKpiModel *k,double *out_progress);
 
 #ifdef __cplusplus

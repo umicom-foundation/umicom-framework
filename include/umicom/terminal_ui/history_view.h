@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise terminal ui history view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_terminal_ui_history_view_create(const char *view_id,
                                               UmiTerminalController *controller,
                                               UmiUiViewModel **out_view);

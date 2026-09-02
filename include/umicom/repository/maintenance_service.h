@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository maintenance service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryMaintenanceService {
     UmiRepositoryStatusSummary summary;
     UmiRepositoryDoctorPolicy policy;
@@ -32,7 +36,15 @@ typedef struct UmiRepositoryMaintenanceService {
     uint64_t revision;
 } UmiRepositoryMaintenanceService;
 
+/**
+ * Initialise repository maintenance service from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_repository_maintenance_service_init(UmiRepositoryMaintenanceService *service);
+/**
+ * Provide the repository maintenance service evaluate operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_repository_maintenance_service_evaluate(UmiRepositoryMaintenanceService *service);
 
 #ifdef __cplusplus

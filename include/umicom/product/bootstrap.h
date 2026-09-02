@@ -24,7 +24,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product bootstrap result data shared with callers of this public contract.
+ */
 typedef struct UmiProductBootstrapResult { const char *product_id; size_t required_capabilities; size_t enabled_frontends; int ready; } UmiProductBootstrapResult;
+/**
+ * Provide the product bootstrap operation used by this module and its client applications.
+ */
 UmiStatus umi_product_bootstrap(const UmiProductProfile *profile,UmiProductBootstrapResult *out_result);
 #ifdef __cplusplus
 }

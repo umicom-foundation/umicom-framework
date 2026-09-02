@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime request shutdown operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_request_shutdown(UmiLanguageRuntimeServer*s,uint64_t*out_id);
 #ifdef __cplusplus
 }

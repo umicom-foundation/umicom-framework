@@ -17,6 +17,10 @@
 
 /* Initialise the dependency node contract to deterministic zero/default state. */
 void umi_ui_reactive_dependency_node_init(UmiUiReactiveDependencyNode *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item != NULL) memset(item, 0, sizeof *item);
 }
 

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/fixing_store.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFixingStore s; umi_fixing_store_init(&s); CHECK(umi_fixing_store_count(&s)==0U);

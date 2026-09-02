@@ -32,9 +32,17 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer workbench command service data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperWorkbenchCommandService
     UmiDeveloperWorkbenchCommandService;
 
+/**
+ * Initialise developer workbench command service from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_workbench_command_service_create(
     UmiCommandRegistry *commands,
     UmiDeveloperWorkbenchLifecycle *lifecycle,
@@ -43,21 +51,41 @@ UmiStatus umi_developer_workbench_command_service_create(
     UmiDeveloperWorkbenchActionRegistry *actions,
     UmiDeveloperWorkbenchCommandService **out_service);
 
+/**
+ * Release or reset state held by developer workbench command service so the same storage
+ * can be reused safely.
+ */
 void umi_developer_workbench_command_service_destroy(
     UmiDeveloperWorkbenchCommandService *service);
 
+/**
+ * Provide the developer workbench command service register all operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_workbench_command_service_register_all(
     UmiDeveloperWorkbenchCommandService *service);
 
+/**
+ * Provide the developer workbench command service set workspace trust operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_developer_workbench_command_service_set_workspace_trust(
     UmiDeveloperWorkbenchCommandService *service,
     const UmiWorkspaceTrustStore *trust_store);
 
+/**
+ * Provide the developer workbench command service is enabled operation used by this module
+ * and its client applications.
+ */
 int umi_developer_workbench_command_service_is_enabled(
     UmiDeveloperWorkbenchCommandService *service,
     const char *command_id,
     const char *argument);
 
+/**
+ * Perform developer workbench command service through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_developer_workbench_command_service_execute(
     UmiDeveloperWorkbenchCommandService *service,
     const char *command_id,

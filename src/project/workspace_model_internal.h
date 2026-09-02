@@ -1,4 +1,20 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/project/workspace_model_internal.h
+ *
+ * PURPOSE:
+ *   Declare the workspace model internal contract shared by Framework services
+ *   and thin applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework - private Batch 34 workspace-model storage.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
  *---------------------------------------------------------------------------*/
@@ -26,14 +42,34 @@ struct UmiProjectWorkspaceModel {
     uint64_t revision;
 };
 
+/**
+ * Provide the project workspace model copy text operation used by this module and its
+ * client applications.
+ */
 void umi_project_workspace_model_copy_text(
     char *destination, size_t capacity, const char *source);
+/**
+ * Provide the project workspace model find root index operation used by this module and
+ * its client applications.
+ */
 size_t umi_project_workspace_model_find_root_index(
     const UmiProjectWorkspaceModel *model, const char *root_id);
+/**
+ * Provide the project workspace model find member index operation used by this module and
+ * its client applications.
+ */
 size_t umi_project_workspace_model_find_member_index(
     const UmiProjectWorkspaceModel *model, const char *member_id);
+/**
+ * Provide the project workspace model find group index operation used by this module and
+ * its client applications.
+ */
 size_t umi_project_workspace_model_find_group_index(
     const UmiProjectWorkspaceModel *model, const char *group_id);
+/**
+ * Provide the project workspace model member is selectable operation used by this module
+ * and its client applications.
+ */
 int umi_project_workspace_model_member_is_selectable(
     const UmiProjectWorkspaceModel *model,
     const UmiProjectWorkspaceMemberSnapshot *member);

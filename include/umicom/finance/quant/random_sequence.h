@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant random sequence data shared with callers of this public contract.
+ */
 typedef struct UmiQuantRandomSequence { uint64_t state; } UmiQuantRandomSequence;
 /* Seed a deterministic xorshift sequence. */
 UmiStatus umi_quant_random_sequence_init(UmiQuantRandomSequence *sequence, uint64_t seed);

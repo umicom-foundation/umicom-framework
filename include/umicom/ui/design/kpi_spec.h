@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design kpi spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignKpiSpec {
     char label[UMI_DESIGN_TEXT_CAPACITY];
     double value;

@@ -17,6 +17,18 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/terminal_heartbeat.h"
-void umi_terminal_remote_terminal_heartbeat_init(UmiTerminalRemoteTerminalHeartbeat *value,uint64_t now_ms,uint64_t warning_after_ms,uint64_t critical_after_ms) { if(value) { value->last_seen_ms=now_ms; value->warning_after_ms=warning_after_ms; value->critical_after_ms=critical_after_ms>=warning_after_ms?critical_after_ms:warning_after_ms; value->revision=1U; } }
-void umi_terminal_remote_terminal_heartbeat_observe(UmiTerminalRemoteTerminalHeartbeat *value,uint64_t now_ms) { if(value) { value->last_seen_ms=now_ms; value->revision++; } }
-UmiTerminalRemoteHealth umi_terminal_remote_terminal_heartbeat_health(const UmiTerminalRemoteTerminalHeartbeat *value,uint64_t now_ms) { uint64_t age; if(!value||now_ms<value->last_seen_ms) return UMI_TERMINAL_REMOTE_HEALTH_UNKNOWN; age=now_ms-value->last_seen_ms; if(age>=value->critical_after_ms) return UMI_TERMINAL_REMOTE_HEALTH_CRITICAL; if(age>=value->warning_after_ms) return UMI_TERMINAL_REMOTE_HEALTH_WARNING; return UMI_TERMINAL_REMOTE_HEALTH_HEALTHY; }
+/*
+ * Initialise terminal remote terminal heartbeat from caller-provided values so later
+ * operations receive a known state.
+ */
+void umi_terminal_remote_terminal_heartbeat_init(UmiTerminalRemoteTerminalHeartbeat *value,uint64_t now_ms,uint64_t warning_after_ms,uint64_t critical_after_ms) { /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(value) { value->last_seen_ms=now_ms; value->warning_after_ms=warning_after_ms; value->critical_after_ms=critical_after_ms>=warning_after_ms?critical_after_ms:warning_after_ms; value->revision=1U; } }
+/*
+ * Provide the terminal remote terminal heartbeat observe operation used by this module and
+ * its client applications.
+ */
+void umi_terminal_remote_terminal_heartbeat_observe(UmiTerminalRemoteTerminalHeartbeat *value,uint64_t now_ms) { /* Apply this branch only when its contract condition is satisfied. */ if(value) { value->last_seen_ms=now_ms; value->revision++; } }
+/*
+ * Provide the terminal remote terminal heartbeat health operation used by this module and
+ * its client applications.
+ */
+UmiTerminalRemoteHealth umi_terminal_remote_terminal_heartbeat_health(const UmiTerminalRemoteTerminalHeartbeat *value,uint64_t now_ms) { uint64_t age; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!value||now_ms<value->last_seen_ms) return UMI_TERMINAL_REMOTE_HEALTH_UNKNOWN; age=now_ms-value->last_seen_ms; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(age>=value->critical_after_ms) return UMI_TERMINAL_REMOTE_HEALTH_CRITICAL; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(age>=value->warning_after_ms) return UMI_TERMINAL_REMOTE_HEALTH_WARNING; return UMI_TERMINAL_REMOTE_HEALTH_HEALTHY; }

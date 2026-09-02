@@ -25,6 +25,9 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/types.h"
 
+/**
+ * Represent the integration application data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationApplication {
     char id[UMI_INTEGRATION_ID_CAPACITY];
     char name[UMI_INTEGRATION_NAME_CAPACITY];
@@ -38,14 +41,30 @@ typedef struct UmiIntegrationApplication {
     size_t capability_count;
 } UmiIntegrationApplication;
 
+/**
+ * Initialise integration application from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_integration_application_init(UmiIntegrationApplication *application);
+/**
+ * Provide the integration application set identity operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_application_set_identity(
     UmiIntegrationApplication *application,
     const char *id,
     const char *name);
+/**
+ * Provide the integration application add capability operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_application_add_capability(
     UmiIntegrationApplication *application,
     const char *capability_id);
+/**
+ * Provide the integration application has capability operation used by this module and its
+ * client applications.
+ */
 bool umi_integration_application_has_capability(
     const UmiIntegrationApplication *application,
     const char *capability_id);

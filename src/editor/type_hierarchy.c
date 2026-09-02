@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/type_hierarchy.h"
 
+/*
+ * Provide the editor type hierarchy build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_type_hierarchy_build(
     UmiEditorSymbolHierarchy *hierarchy,
     const UmiEditorSymbolIndex *symbol_index,
@@ -26,6 +30,7 @@ UmiStatus umi_editor_type_hierarchy_build(
     UmiEditorSymbolHierarchyRule rules[2] = {0};
     UmiEditorSymbolHierarchyNodeKind node_kind;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (direction != UMI_EDITOR_TYPE_HIERARCHY_SUPERTYPES &&
         direction != UMI_EDITOR_TYPE_HIERARCHY_SUBTYPES) {
         return UMI_STATUS_INVALID_ARGUMENT;

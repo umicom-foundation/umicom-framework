@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/ai_assistant_open.h"
 
+/*
+ * Provide the studio command alias ai assistant open operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_ai_assistant_open(void)
 {

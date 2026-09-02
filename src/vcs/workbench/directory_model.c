@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+/* Provide the entry visible operation used by this module and its client applications. */
 static int entry_visible(
     const UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryDiff *entry)
@@ -26,6 +27,7 @@ static int entry_visible(
     const char *slash;
     int hidden;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!model->show_equal && entry->state == UMI_VCS_DIRECTORY_EQUAL) {
         return 0;
     }
@@ -36,26 +38,38 @@ static int entry_visible(
         sample->directory, hidden, 0);
 }
 
+/* Provide the rebuild visible operation used by this module and its client applications. */
 static void rebuild_visible(UmiVcsWorkbenchDirectoryModel *model)
 {
     size_t index;
 
     model->visible_count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (entry_visible(model, &model->entries[index])) {
             model->visible_indices[model->visible_count++] = index;
         }
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (model->visible_count == 0U) {
         model->selected_visible_index = 0U;
-    } else if (model->selected_visible_index >= model->visible_count) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (model->selected_visible_index >= model->visible_count) {
         model->selected_visible_index = model->visible_count - 1U;
     }
 }
 
+/*
+ * Initialise vcs workbench directory model from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_workbench_directory_model_init(
     UmiVcsWorkbenchDirectoryModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return;
     (void)memset(model, 0, sizeof(*model));
     model->struct_size = (uint32_t)sizeof(*model);
@@ -66,6 +80,10 @@ void umi_vcs_workbench_directory_model_init(
     umi_vcs_advanced_directory_filter_init(&model->filter);
 }
 
+/*
+ * Add vcs workbench directory model only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_vcs_workbench_directory_model_add(
     UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryEntry *left,
@@ -74,15 +92,22 @@ UmiStatus umi_vcs_workbench_directory_model_add(
     UmiVcsAdvancedDirectoryDiff *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || !model->ready) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count >= UMI_VCS_WORKBENCH_MAX_DIRECTORY_ENTRIES) {
         model->truncated = 1;
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     entry = &model->entries[model->count];
     status = umi_vcs_advanced_directory_diff_compare(left, right, entry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     model->count += 1U;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (entry->state) {
         case UMI_VCS_DIRECTORY_EQUAL: model->equal_count += 1U; break;
         case UMI_VCS_DIRECTORY_LEFT_ONLY: model->left_only_count += 1U; break;
@@ -98,11 +123,19 @@ UmiStatus umi_vcs_workbench_directory_model_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs workbench directory model set filter operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_directory_model_set_filter(
     UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryFilter *filter,
     int show_equal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL ||
         umi_vcs_advanced_directory_filter_validate(filter) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -114,17 +147,30 @@ UmiStatus umi_vcs_workbench_directory_model_set_filter(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs workbench directory model select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_directory_model_select(
     UmiVcsWorkbenchDirectoryModel *model,
     size_t visible_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (visible_index >= model->visible_count) return UMI_STATUS_NOT_FOUND;
     model->selected_visible_index = visible_index;
     model->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find vcs workbench directory model visible while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiVcsAdvancedDirectoryDiff *
 umi_vcs_workbench_directory_model_visible_at(
     const UmiVcsWorkbenchDirectoryModel *model,

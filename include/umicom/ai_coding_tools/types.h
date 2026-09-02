@@ -45,6 +45,9 @@ extern "C" {
 #define UMI_AI_CODING_TOOL_MAX_FILE_RESULTS 256U
 #define UMI_AI_CODING_TOOL_MAX_OUTPUT_BYTES 32768U
 
+/**
+ * List the named ai coding tool risk values accepted by this public contract.
+ */
 typedef enum UmiAiCodingToolRisk {
     UMI_AI_CODING_TOOL_RISK_READ_ONLY = 0,
     UMI_AI_CODING_TOOL_RISK_LOCAL_MUTATION = 1,
@@ -54,6 +57,9 @@ typedef enum UmiAiCodingToolRisk {
     UMI_AI_CODING_TOOL_RISK_DEBUG_CONTROL = 5
 } UmiAiCodingToolRisk;
 
+/**
+ * List the named ai coding tool capability values accepted by this public contract.
+ */
 typedef enum UmiAiCodingToolCapability {
     UMI_AI_CODING_TOOL_CAP_WORKSPACE_READ = UINT64_C(1) << 0,
     UMI_AI_CODING_TOOL_CAP_WORKSPACE_SEARCH = UINT64_C(1) << 1,
@@ -70,6 +76,9 @@ typedef enum UmiAiCodingToolCapability {
     UMI_AI_CODING_TOOL_CAP_NETWORK = UINT64_C(1) << 12
 } UmiAiCodingToolCapability;
 
+/**
+ * List the named ai coding tool call state values accepted by this public contract.
+ */
 typedef enum UmiAiCodingToolCallState {
     UMI_AI_CODING_TOOL_CALL_PENDING = 0,
     UMI_AI_CODING_TOOL_CALL_APPROVAL_REQUIRED = 1,
@@ -80,6 +89,10 @@ typedef enum UmiAiCodingToolCallState {
     UMI_AI_CODING_TOOL_CALL_CANCELLED = 6
 } UmiAiCodingToolCallState;
 
+/**
+ * Represent the ai coding tool descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingToolDescriptor {
     char tool_id[UMI_AI_CODING_TOOL_ID_CAPACITY];
     char label[256];
@@ -92,6 +105,9 @@ typedef struct UmiAiCodingToolDescriptor {
     uint64_t revision;
 } UmiAiCodingToolDescriptor;
 
+/**
+ * Represent the ai coding tool call data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingToolCall {
     uint64_t call_id;
     char tool_id[UMI_AI_CODING_TOOL_ID_CAPACITY];
@@ -102,6 +118,9 @@ typedef struct UmiAiCodingToolCall {
     int approved;
 } UmiAiCodingToolCall;
 
+/**
+ * Represent the ai coding tool result data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingToolResult {
     uint64_t call_id;
     char tool_id[UMI_AI_CODING_TOOL_ID_CAPACITY];
@@ -113,6 +132,9 @@ typedef struct UmiAiCodingToolResult {
     int output_truncated;
 } UmiAiCodingToolResult;
 
+/**
+ * Represent the ai coding tool plan step data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingToolPlanStep {
     char step_id[UMI_AI_CODING_TOOL_ID_CAPACITY];
     UmiAiCodingToolCall call;
@@ -122,6 +144,9 @@ typedef struct UmiAiCodingToolPlanStep {
     int continue_on_failure;
 } UmiAiCodingToolPlanStep;
 
+/**
+ * Represent the ai coding tool plan data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingToolPlan {
     char plan_id[UMI_AI_CODING_TOOL_ID_CAPACITY];
     char title[256];
@@ -131,6 +156,10 @@ typedef struct UmiAiCodingToolPlan {
     uint64_t revision;
 } UmiAiCodingToolPlan;
 
+/**
+ * Represent the ai coding tool plan result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingToolPlanResult {
     char plan_id[UMI_AI_CODING_TOOL_ID_CAPACITY];
     UmiAiCodingToolResult results[UMI_AI_CODING_TOOL_PLAN_CAPACITY];
@@ -143,7 +172,15 @@ typedef struct UmiAiCodingToolPlanResult {
     int succeeded;
 } UmiAiCodingToolPlanResult;
 
+/**
+ * Provide the ai coding tool risk text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_tool_risk_text(UmiAiCodingToolRisk risk);
+/**
+ * Provide the ai coding tool call state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_tool_call_state_text(UmiAiCodingToolCallState state);
 
 #ifdef __cplusplus

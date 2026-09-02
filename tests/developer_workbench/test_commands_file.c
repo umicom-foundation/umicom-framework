@@ -18,6 +18,10 @@
 
 #include "umicom/developer_workbench/commands/file.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiDeveloperWorkbenchCommandDefinition *items =
@@ -29,10 +33,12 @@ int main(void)
     assert(items != NULL);
     assert(count == 7U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         assert(umi_developer_workbench_command_definition_validate(
             &items[index]) == UMI_STATUS_OK);
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U; other < count; ++other) {
             assert(strcmp(items[index].command_id,
                           items[other].command_id) != 0);

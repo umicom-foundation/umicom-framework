@@ -15,12 +15,20 @@
 
 #include <assert.h>
 #include "umicom/developer/language_support_matrix.h"
+/*
+ * Exercise unavailable and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int unavailable(const char *program, void *user_data)
 {
     (void)program;
     (void)user_data;
     return 0;
 }
+/*
+ * Exercise test language support no tools and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_language_support_no_tools(void)
 {
     UmiLanguageProfileRegistry *profiles = NULL;

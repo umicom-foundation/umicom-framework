@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/form_validation.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiUiFormValidation a=umi_ui_form_validation_ok();UmiUiFormValidation b=umi_ui_form_validation_error("required");return a.valid&&!b.valid?0:1;}

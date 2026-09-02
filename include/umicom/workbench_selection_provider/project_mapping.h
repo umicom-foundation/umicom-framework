@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider project mapping data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderProjectMapping {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderProjectMapping {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderProjectMapping;
 
+/**
+ * Initialise workbench selection provider project mapping from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_project_mapping_init(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider project mapping satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_validate(
     const UmiWorkbenchSelectionProviderProjectMapping *record);
+/**
+ * Provide the workbench selection provider project mapping set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_set_provider(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider project mapping set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_set_source(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider project mapping set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_set_subject(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider project mapping set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_set_related(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider project mapping set group operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_set_group(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider project mapping set description operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_project_mapping_set_description(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     const char *description);
+/**
+ * Provide the workbench selection provider project mapping hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_project_mapping_hash(
     const UmiWorkbenchSelectionProviderProjectMapping *record);
+/**
+ * Provide the workbench selection provider project mapping touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_project_mapping_touch(
     UmiWorkbenchSelectionProviderProjectMapping *record,
     uint64_t sequence,

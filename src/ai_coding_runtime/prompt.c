@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the add message operation used by this module and its client applications. */
 static UmiStatus add_message(
     UmiAiRequest *request,
     UmiAiRole role,
@@ -28,11 +29,13 @@ static UmiStatus add_message(
     UmiStatus status;
 
     status = umi_ai_message_set(&message, role, name, text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_request_add_message(request, &message);
 }
 
+/* Provide the add chunked operation used by this module and its client applications. */
 static UmiStatus add_chunked(
     UmiAiRequest *request,
     const char *name,
@@ -42,6 +45,10 @@ static UmiStatus add_chunked(
     size_t offset = 0U;
     const size_t chunk_capacity = UMI_AI_TEXT_CAPACITY - 1U;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (offset < length) {
         char chunk[UMI_AI_TEXT_CAPACITY];
         const size_t remaining = length - offset;
@@ -57,11 +64,13 @@ static UmiStatus add_chunked(
             UMI_AI_ROLE_USER,
             name,
             chunk);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         offset += count;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U) {
         return add_message(
             request,
@@ -73,6 +82,7 @@ static UmiStatus add_chunked(
     return UMI_STATUS_OK;
 }
 
+/* Provide the add context file operation used by this module and its client applications. */
 static UmiStatus add_context_file(
     UmiAiRequest *request,
     const UmiAiCodingMaterializedFile *file)
@@ -89,6 +99,10 @@ static UmiStatus add_context_file(
         file->length);
 }
 
+/*
+ * Provide the add active selection operation used by this module and its client
+ * applications.
+ */
 static UmiStatus add_active_selection(
     UmiAiRequest *request,
     const UmiAiCodingTaskPlan *plan,
@@ -99,6 +113,7 @@ static UmiStatus add_active_selection(
     size_t length = 0U;
     UmiStatus status;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (plan->request.active_path[0] == '\0' ||
         plan->request.selection_start_line == 0U ||
         plan->request.selection_end_line <
@@ -110,7 +125,9 @@ static UmiStatus add_active_selection(
         context,
         plan->request.active_path,
         &file);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_extract_selection(
@@ -121,10 +138,12 @@ static UmiStatus add_active_selection(
         sizeof(selection),
         &length);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND ||
         status == UMI_STATUS_CAPACITY_EXCEEDED) {
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return add_chunked(
@@ -134,6 +153,10 @@ static UmiStatus add_active_selection(
         length);
 }
 
+/*
+ * Provide the ai coding build provider request operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_build_provider_request(
     const UmiAiCodingTaskPlan *plan,
     const UmiAiCodingMaterializedContext *context,
@@ -145,6 +168,10 @@ UmiStatus umi_ai_coding_build_provider_request(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || context == NULL ||
         config == NULL || out_request == NULL ||
         !plan->ready) {
@@ -152,9 +179,14 @@ UmiStatus umi_ai_coding_build_provider_request(
     }
 
     status = umi_ai_coding_runtime_config_validate(config);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     system_prompt = umi_ai_coding_prompt_system(plan->request.task);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (system_prompt == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     umi_ai_request_init(out_request);
@@ -178,14 +210,17 @@ UmiStatus umi_ai_coding_build_provider_request(
         UMI_AI_ROLE_SYSTEM,
         "umicom-coding-policy",
         system_prompt);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_coding_prompt_task_may_modify(plan->request.task)) {
         status = add_message(
             out_request,
             UMI_AI_ROLE_SYSTEM,
             "umicom-response-protocol",
             umi_ai_coding_prompt_response_protocol());
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -194,16 +229,24 @@ UmiStatus umi_ai_coding_build_provider_request(
         UMI_AI_ROLE_USER,
         "instruction",
         plan->request.instruction);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_active_selection(out_request, plan, context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < context->file_count; ++index) {
         status = add_context_file(out_request, &context->files[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (validation_feedback != NULL &&
         validation_feedback[0] != '\0') {
         status = add_chunked(
@@ -211,6 +254,7 @@ UmiStatus umi_ai_coding_build_provider_request(
             "validation-feedback",
             validation_feedback,
             strlen(validation_feedback));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

@@ -13,6 +13,10 @@
 #include "umicom/language/intelligence/compilation_database_bridge.h"
 #define CHECK(expression) do { if (!(expression)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiLanguageIntelligenceCompilationDatabaseBridge mapping;

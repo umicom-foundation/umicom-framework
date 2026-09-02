@@ -28,6 +28,10 @@
 
 #include "umicom/editor/parameter_information.h"
 
+/*
+ * Exercise parameter and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorParameterInformationItem parameter(const char *signature_id,
                                                    const char *label,
                                                    size_t ordinal)
@@ -48,6 +52,10 @@ static UmiEditorParameterInformationItem parameter(const char *signature_id,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorParameterInformation *information = NULL;

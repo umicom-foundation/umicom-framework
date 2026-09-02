@@ -20,6 +20,15 @@
 
 #include "umicom/platform/cross_target/cpu_feature_set.h"
 
-void umi_ct_cpu_feature_set_add(UmiCtCpuFeatureSet*s,UmiCtCpuFeature f){if(s!=NULL)s->bits|=umi_ct_cpu_feature_bit(f);}
+/* Add ct cpu feature set only after its inputs and available capacity have been checked. */
+void umi_ct_cpu_feature_set_add(UmiCtCpuFeatureSet*s,UmiCtCpuFeature f){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=NULL)s->bits|=umi_ct_cpu_feature_bit(f);}
+/*
+ * Provide the ct cpu feature set has operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_cpu_feature_set_has(const UmiCtCpuFeatureSet*s,UmiCtCpuFeature f){uint64_t b=umi_ct_cpu_feature_bit(f);return s!=NULL&&b!=0U&&(s->bits&b)==b;}
-uint64_t umi_ct_cpu_feature_set_missing(const UmiCtCpuFeatureSet*a,const UmiCtCpuFeatureSet*r){if(a==NULL||r==NULL)return UINT64_MAX;return r->bits&~a->bits;}
+/*
+ * Provide the ct cpu feature set missing operation used by this module and its client
+ * applications.
+ */
+uint64_t umi_ct_cpu_feature_set_missing(const UmiCtCpuFeatureSet*a,const UmiCtCpuFeatureSet*r){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(a==NULL||r==NULL)return UINT64_MAX;return r->bits&~a->bits;}

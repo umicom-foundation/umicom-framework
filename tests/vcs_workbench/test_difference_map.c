@@ -16,6 +16,10 @@
 
 #include "umicom/vcs/workbench/difference_map.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiVcsWorkbenchCompareModel model;

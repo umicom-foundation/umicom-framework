@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/valuation_task.h"
+/**
+ * Represent the enterprise valuation batch data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationBatch { char batch_id[UMI_ENTERPRISE_ID_CAPACITY]; UmiEnterpriseValuationTask tasks[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiEnterpriseValuationBatch;
 /* Initialise an empty valuation batch. */
 UmiStatus umi_enterprise_valuation_batch_init(UmiEnterpriseValuationBatch *batch,const char *batch_id);

@@ -26,6 +26,10 @@
 #include <string.h>
 #include "umicom/test_platform/benchmark_analysis.h"
 
+/*
+ * Exercise sample and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformBenchmarkSnapshot sample(const char *id, double value)
 {
     UmiTestPlatformBenchmarkSnapshot item;
@@ -40,6 +44,10 @@ static UmiTestPlatformBenchmarkSnapshot sample(const char *id, double value)
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformBenchmarkRegistry *registry = NULL;

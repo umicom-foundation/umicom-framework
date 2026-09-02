@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_reconnect.h"
-int main(void) { UmiTerminalRemoteRemoteReconnect v; umi_terminal_remote_remote_reconnect_init(&v,100U,350U); if(umi_terminal_remote_remote_reconnect_next_delay(&v)!=100U) return 1; if(umi_terminal_remote_remote_reconnect_next_delay(&v)!=200U) return 2; if(umi_terminal_remote_remote_reconnect_next_delay(&v)!=350U) return 3; umi_terminal_remote_remote_reconnect_reset(&v); return umi_terminal_remote_remote_reconnect_next_delay(&v)==100U?0:4; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteRemoteReconnect v; umi_terminal_remote_remote_reconnect_init(&v,100U,350U); /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_remote_reconnect_next_delay(&v)!=100U) return 1; /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_remote_reconnect_next_delay(&v)!=200U) return 2; /* Apply this branch only when its contract condition is satisfied. */ if(umi_terminal_remote_remote_reconnect_next_delay(&v)!=350U) return 3; umi_terminal_remote_remote_reconnect_reset(&v); return umi_terminal_remote_remote_reconnect_next_delay(&v)==100U?0:4; }

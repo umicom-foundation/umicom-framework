@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/thread_semantics.h"
 
-UmiCtSupportLevel umi_ct_thread_semantics_support(const UmiCtThreadSemantics*s,bool a,bool p){if(s==NULL||!s->threads||!s->tls)return UMI_CT_SUPPORT_NONE;if((a&&!s->affinity)||(p&&!s->priority))return UMI_CT_SUPPORT_DEGRADED;return UMI_CT_SUPPORT_NATIVE;}
+/*
+ * Provide the ct thread semantics support operation used by this module and its client
+ * applications.
+ */
+UmiCtSupportLevel umi_ct_thread_semantics_support(const UmiCtThreadSemantics*s,bool a,bool p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||!s->threads||!s->tls)return UMI_CT_SUPPORT_NONE;/* Protect caller-owned memory by checking that required state is available before it is used. */ if((a&&!s->affinity)||(p&&!s->priority))return UMI_CT_SUPPORT_DEGRADED;return UMI_CT_SUPPORT_NATIVE;}

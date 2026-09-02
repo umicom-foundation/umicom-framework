@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital asset descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalAssetDescriptor {
     UmiDigitalAssetId id;
     char symbol[UMI_DIGITAL_ASSET_SYMBOL_CAPACITY];

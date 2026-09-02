@@ -20,4 +20,4 @@
 
 #include "umicom/repository/repository_operation.h"
 /* Translate an operation kind without coupling the model to a CLI parser. */
-const char *umi_repository_operation_text(UmiRepositoryOperationKind kind){switch(kind){case UMI_REPOSITORY_OPERATION_STATUS:return "status";case UMI_REPOSITORY_OPERATION_DOCTOR:return "doctor";case UMI_REPOSITORY_OPERATION_AUDIT:return "audit";case UMI_REPOSITORY_OPERATION_GRAPH:return "graph";case UMI_REPOSITORY_OPERATION_PLAN:return "plan";default:return "unknown";}}
+const char *umi_repository_operation_text(UmiRepositoryOperationKind kind){/* Select the behaviour associated with the requested command or state value. */ switch(kind){case UMI_REPOSITORY_OPERATION_STATUS:return "status";case UMI_REPOSITORY_OPERATION_DOCTOR:return "doctor";case UMI_REPOSITORY_OPERATION_AUDIT:return "audit";case UMI_REPOSITORY_OPERATION_GRAPH:return "graph";case UMI_REPOSITORY_OPERATION_PLAN:return "plan";default:return "unknown";}}

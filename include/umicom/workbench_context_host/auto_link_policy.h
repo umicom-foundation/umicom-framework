@@ -19,12 +19,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host auto link decision data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextHostAutoLinkDecision {
     char group_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
     UmiWorkbenchContextLinkMode mode;
     int confidence;
     bool found;
 } UmiWorkbenchContextHostAutoLinkDecision;
+/**
+ * Provide the workbench context host auto link decide operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_host_auto_link_decide(
     const UmiWorkbenchContextHostProfile *profile,
     UmiWorkbenchContextHostPanelRole role,

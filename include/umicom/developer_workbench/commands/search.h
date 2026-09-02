@@ -22,9 +22,17 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer workbench search commands operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchCommandDefinition *
 umi_developer_workbench_search_commands(void);
 
+/**
+ * Return the number of records represented by developer workbench search command without
+ * changing their state.
+ */
 size_t umi_developer_workbench_search_command_count(void);
 
 #ifdef __cplusplus

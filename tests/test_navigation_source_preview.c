@@ -41,6 +41,10 @@ typedef struct FakePreviewProvider {
     size_t calls;
 } FakePreviewProvider;
 
+/*
+ * Exercise fake preview and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_preview(
     void *instance,
     const UmiEditorNavigationPreviewRequest *request,
@@ -71,6 +75,10 @@ static UmiStatus fake_preview(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;

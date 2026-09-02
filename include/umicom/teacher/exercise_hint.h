@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher exercise hint data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherExerciseHint {
     char id[UMI_TEACHER_ID_CAPACITY];
     char title[UMI_TEACHER_TEXT_CAPACITY];
@@ -41,9 +44,25 @@ typedef struct UmiTeacherExerciseHint {
     int enabled;
 } UmiTeacherExerciseHint;
 
+/**
+ * Initialise teacher exercise hint from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_teacher_exercise_hint_init(UmiTeacherExerciseHint *value);
+/**
+ * Provide the teacher exercise hint configure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_exercise_hint_configure(UmiTeacherExerciseHint *value, const char *id, const char *title, UmiTeacherLanguage language, UmiTeacherLevel level, uint32_t weight, uint32_t required_score);
+/**
+ * Check that teacher exercise hint satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_teacher_exercise_hint_validate(const UmiTeacherExerciseHint *value);
+/**
+ * Provide the teacher exercise hint priority operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_exercise_hint_priority(const UmiTeacherExerciseHint *value, uint32_t relevance);
 
 #ifdef __cplusplus

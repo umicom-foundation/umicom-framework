@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel code action snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorIntelCodeActionSnapshot { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelCodeActionSnapshot;
+/**
+ * Initialise editor intel code action snapshot from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_code_action_snapshot_init(UmiEditorIntelCodeActionSnapshot *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel code action snapshot set score operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_code_action_snapshot_set_score(UmiEditorIntelCodeActionSnapshot *model,uint32_t score);
+/**
+ * Find editor intel code action snapshot set while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_intel_code_action_snapshot_set_selected(UmiEditorIntelCodeActionSnapshot *model,bool selected);
+/**
+ * Check that editor intel code action snapshot satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_code_action_snapshot_valid(const UmiEditorIntelCodeActionSnapshot *model);
 
 #ifdef __cplusplus

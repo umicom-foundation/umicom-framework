@@ -19,6 +19,10 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/inspector_model.h"
 
+/**
+ * Initialise gtk4 ws inspector from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_inspector_create(const UmiWsInspectorModel *model);
 
 #endif

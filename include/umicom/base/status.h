@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named status values accepted by this public contract.
+ */
 typedef enum UmiStatus {
     UMI_STATUS_OK = 0,
     UMI_STATUS_INVALID_ARGUMENT = 1,
@@ -39,6 +42,9 @@ typedef enum UmiStatus {
     UMI_STATUS_BUSY = 15
 } UmiStatus;
 
+/**
+ * Provide the status text operation used by this module and its client applications.
+ */
 const char *umi_status_text(UmiStatus status);
 
 #ifdef __cplusplus

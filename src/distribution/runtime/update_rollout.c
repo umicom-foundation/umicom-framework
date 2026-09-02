@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/distribution/runtime/update_rollout.h"
 
-uint32_t umi_dr_update_rollout_bucket(const char*id){return id==NULL?100U:(uint32_t)(umi_dr_hash_text(id)%100U);}bool umi_dr_update_rollout_selected(const char*id,uint32_t p){if(p>100U)p=100U;return umi_dr_update_rollout_bucket(id)<p;}
+/*
+ * Provide the dr update rollout bucket operation used by this module and its client
+ * applications.
+ */
+uint32_t umi_dr_update_rollout_bucket(const char*id){return id==NULL?100U:(uint32_t)(umi_dr_hash_text(id)%100U);}bool umi_dr_update_rollout_selected(const char*id,uint32_t p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p>100U)p=100U;return umi_dr_update_rollout_bucket(id)<p;}

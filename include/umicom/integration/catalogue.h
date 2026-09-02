@@ -24,7 +24,15 @@
 
 #include <stddef.h>
 
+/**
+ * Return the number of records represented by integration catalogue without changing their
+ * state.
+ */
 size_t umi_integration_catalogue_count(void);
+/**
+ * Find integration catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const char *umi_integration_catalogue_at(size_t index);
 
 #endif

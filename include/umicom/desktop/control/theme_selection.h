@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_THEME_SELECTION_API_VERSION 1U
 
+/**
+ * Represent the desktop theme selection snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopThemeSelectionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

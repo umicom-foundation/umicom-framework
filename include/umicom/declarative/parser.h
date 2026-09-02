@@ -29,7 +29,13 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the decl parse text operation used by this module and its client applications.
+ */
 UmiStatus umi_decl_parse_text(const char *text, UmiDeclDocument **out_document, UmiDeclDiagnosticList *diagnostics);
+/**
+ * Provide the decl parse file operation used by this module and its client applications.
+ */
 UmiStatus umi_decl_parse_file(const char *path, UmiDeclDocument **out_document, UmiDeclDiagnosticList *diagnostics);
 
 #ifdef __cplusplus

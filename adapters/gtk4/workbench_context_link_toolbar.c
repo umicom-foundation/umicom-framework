@@ -15,6 +15,10 @@
 
 #include "umicom/workbench_context_link/gtk4.h"
 
+/*
+ * Provide the workbench context link gtk4 toolbar new operation used by this module and
+ * its client applications.
+ */
 GtkWidget *umi_workbench_context_link_gtk4_toolbar_new(
     const UmiWorkbenchContextLinkService *service)
 {

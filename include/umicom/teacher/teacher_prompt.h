@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher teacher prompt data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherTeacherPrompt {
     char id[UMI_TEACHER_ID_CAPACITY];
     char title[UMI_TEACHER_TEXT_CAPACITY];
@@ -41,9 +44,25 @@ typedef struct UmiTeacherTeacherPrompt {
     int enabled;
 } UmiTeacherTeacherPrompt;
 
+/**
+ * Initialise teacher teacher prompt from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_teacher_teacher_prompt_init(UmiTeacherTeacherPrompt *value);
+/**
+ * Provide the teacher teacher prompt configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_teacher_teacher_prompt_configure(UmiTeacherTeacherPrompt *value, const char *id, const char *title, UmiTeacherLanguage language, UmiTeacherLevel level, uint32_t weight, uint32_t required_score);
+/**
+ * Check that teacher teacher prompt satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_teacher_teacher_prompt_validate(const UmiTeacherTeacherPrompt *value);
+/**
+ * Provide the teacher teacher prompt priority operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_teacher_prompt_priority(const UmiTeacherTeacherPrompt *value, uint32_t relevance);
 
 #ifdef __cplusplus

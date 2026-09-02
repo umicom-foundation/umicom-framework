@@ -19,11 +19,16 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     size_t started = 0U;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_component_recipe_catalogue_count();
          ++index) {

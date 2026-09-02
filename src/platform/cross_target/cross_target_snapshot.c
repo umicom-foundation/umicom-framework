@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/cross_target_snapshot.h"
 
-UmiStatus umi_ct_cross_target_snapshot_validate(const UmiCtCrossTargetSnapshot*s){if(s==NULL||s->target.architecture==UMI_CT_ARCH_UNKNOWN||s->abi[0]=='\0'||s->cpu_count==0U||s->page_size==0U||s->fingerprint==0U)return UMI_STATUS_INVALID_ARGUMENT;if(s->health.health==UMI_CT_HEALTH_BLOCKED)return UMI_STATUS_UNAVAILABLE;return UMI_STATUS_OK;}
+/*
+ * Check that ct cross target snapshot satisfies its contract before another service relies
+ * on it.
+ */
+UmiStatus umi_ct_cross_target_snapshot_validate(const UmiCtCrossTargetSnapshot*s){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||s->target.architecture==UMI_CT_ARCH_UNKNOWN||s->abi[0]=='\0'||s->cpu_count==0U||s->page_size==0U||s->fingerprint==0U)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s->health.health==UMI_CT_HEALTH_BLOCKED)return UMI_STATUS_UNAVAILABLE;return UMI_STATUS_OK;}

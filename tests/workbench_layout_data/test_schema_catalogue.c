@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test seeded catalogue and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_seeded_catalogue(void)
 {
     UmiWorkbenchLayoutDataSchemaCatalogue catalogue;
@@ -37,6 +41,10 @@ static int test_seeded_catalogue(void)
     return 0;
 }
 
+/*
+ * Exercise test custom collection and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_custom_collection(void)
 {
     UmiWorkbenchLayoutDataSchemaCatalogue catalogue;
@@ -69,6 +77,10 @@ static int test_custom_collection(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid collection and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_invalid_collection(void)
 {
     UmiWorkbenchLayoutDataSchemaCatalogue catalogue;
@@ -90,6 +102,10 @@ static int test_invalid_collection(void)
     return 0;
 }
 
+/*
+ * Exercise test tampered catalogue and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_tampered_catalogue(void)
 {
     UmiWorkbenchLayoutDataSchemaCatalogue catalogue;
@@ -103,6 +119,10 @@ static int test_tampered_catalogue(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_seeded_catalogue() == 0,

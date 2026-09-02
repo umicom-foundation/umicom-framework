@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_auth_method.h"
-int main(void) { if(!(umi_terminal_remote_remote_auth_method_risk(UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_AGENT,false)<umi_terminal_remote_remote_auth_method_risk(UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_PASSWORD,false))) return 1; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { /* Apply this branch only when its contract condition is satisfied. */ if(!(umi_terminal_remote_remote_auth_method_risk(UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_AGENT,false)<umi_terminal_remote_remote_auth_method_risk(UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_PASSWORD,false))) return 1; return 0; }

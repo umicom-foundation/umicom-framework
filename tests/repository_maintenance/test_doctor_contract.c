@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/repository/doctor.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiRepositoryStatusSummary s; UmiRepositoryDoctorPolicy p; UmiRepositoryDoctorReport r; umi_repository_status_summary_init(&s); umi_repository_doctor_policy_default(&p); assert(umi_repository_doctor_evaluate(&s,&p,&r)==UMI_STATUS_OK); assert(r.healthy); return 0; }

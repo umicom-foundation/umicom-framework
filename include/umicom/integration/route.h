@@ -24,6 +24,9 @@
 
 #include "umicom/integration/types.h"
 
+/**
+ * Represent the integration route data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationRoute {
     char source_application[UMI_INTEGRATION_ID_CAPACITY];
     char target_application[UMI_INTEGRATION_ID_CAPACITY];
@@ -32,6 +35,10 @@ typedef struct UmiIntegrationRoute {
     bool target_required;
 } UmiIntegrationRoute;
 
+/**
+ * Provide the integration route matches operation used by this module and its client
+ * applications.
+ */
 bool umi_integration_route_matches(
     const UmiIntegrationRoute *route,
     const char *source_application,

@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev model descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevModelDescriptor {
     char id[UMI_AI_DEV_ID_CAPACITY];
     char label[UMI_AI_DEV_TEXT_CAPACITY];
@@ -38,9 +41,25 @@ typedef struct UmiAiDevModelDescriptor {
     int enabled;
 } UmiAiDevModelDescriptor;
 
+/**
+ * Initialise ai dev model descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_model_descriptor_init(UmiAiDevModelDescriptor *value);
+/**
+ * Provide the ai dev model descriptor configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_descriptor_configure(UmiAiDevModelDescriptor *value, const char *id, const char *label, uint32_t priority, uint64_t flags);
+/**
+ * Check that ai dev model descriptor satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ai_dev_model_descriptor_validate(const UmiAiDevModelDescriptor *value);
+/**
+ * Provide the ai dev model descriptor evidence score operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_dev_model_descriptor_evidence_score(const UmiAiDevModelDescriptor *value, uint32_t relevance);
 
 #ifdef __cplusplus

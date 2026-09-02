@@ -15,13 +15,23 @@
 
 #include "umicom/workbench_context_host/command.h"
 #include <string.h>
+/*
+ * Initialise workbench context host command from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_host_command_init(
     UmiWorkbenchContextHostCommand *command,UmiWorkbenchContextHostCommandKind kind)
-{if(command){memset(command,0,sizeof(*command));command->structure_size=(uint32_t)sizeof(*command);command->kind=kind;command->mode=UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL;}}
+{/* Apply this branch only when its contract condition is satisfied. */ if(command){memset(command,0,sizeof(*command));command->structure_size=(uint32_t)sizeof(*command);command->kind=kind;command->mode=UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL;}}
+/*
+ * Perform workbench context host command through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_context_host_command_execute(
     UmiWorkbenchContextHost *host,const UmiWorkbenchContextHostCommand *command)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(!host||!command||command->structure_size!=sizeof(*command))return UMI_STATUS_INVALID_ARGUMENT;
+    /* Select the behaviour associated with the requested command or state value. */
     switch(command->kind){
     case UMI_WORKBENCH_CONTEXT_HOST_COMMAND_SET_ACTIVE_GROUP:
         return umi_workbench_context_host_set_active_group(host,command->group_id);
@@ -30,6 +40,7 @@ UmiStatus umi_workbench_context_host_command_execute(
     case UMI_WORKBENCH_CONTEXT_HOST_COMMAND_UNASSIGN_PANEL: {
         UmiWorkbenchContextHostEndpoint *endpoint =
             umi_workbench_context_host_endpoint_registry_find(&host->endpoints, command->endpoint_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (!endpoint) return UMI_STATUS_NOT_FOUND;
         endpoint->group_id[0] = '\0';
         endpoint->mode = UMI_WORKBENCH_CONTEXT_LINK_MODE_NONE;

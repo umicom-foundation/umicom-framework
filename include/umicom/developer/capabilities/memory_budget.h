@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_MEMORY_BUDGET "umicom.developer.performance.memory_budget"
 
+/**
+ * Provide the developer capability memory budget operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_memory_budget(void);
 

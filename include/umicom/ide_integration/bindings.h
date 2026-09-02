@@ -32,6 +32,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide integration bindings data shared with callers of this public contract.
+ */
 typedef struct UmiIdeIntegrationBindings {
     UmiDocumentCoordinator *documents;
     UmiDeveloperProblemStore *problems;
@@ -44,37 +47,73 @@ typedef struct UmiIdeIntegrationBindings {
     uint64_t revision;
 } UmiIdeIntegrationBindings;
 
+/**
+ * Initialise ide integration bindings from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ide_integration_bindings_init(
     UmiIdeIntegrationBindings *bindings);
 
+/**
+ * Provide the ide integration bind documents operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_integration_bind_documents(
     UmiIdeIntegrationBindings *bindings,
     UmiDocumentCoordinator *documents);
 
+/**
+ * Provide the ide integration bind problems operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_integration_bind_problems(
     UmiIdeIntegrationBindings *bindings,
     UmiDeveloperProblemStore *problems);
 
+/**
+ * Provide the ide integration bind tests operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_integration_bind_tests(
     UmiIdeIntegrationBindings *bindings,
     UmiTestPlatformService *tests);
 
+/**
+ * Provide the ide integration bind source control operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_integration_bind_source_control(
     UmiIdeIntegrationBindings *bindings,
     UmiDeveloperSourceControl *source_control);
 
+/**
+ * Provide the ide integration bind debug operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_integration_bind_debug(
     UmiIdeIntegrationBindings *bindings,
     UmiDebugRuntimePlatform *debug_runtime);
 
+/**
+ * Provide the ide integration bind language operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_integration_bind_language(
     UmiIdeIntegrationBindings *bindings,
     UmiLanguageService *language);
 
+/**
+ * Provide the ide integration bind navigation operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_integration_bind_navigation(
     UmiIdeIntegrationBindings *bindings,
     UmiDeveloperNavigationService *navigation);
 
+/**
+ * Provide the ide integration bind ai developer operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_integration_bind_ai_developer(
     UmiIdeIntegrationBindings *bindings,
     UmiAiDeveloperExperiencePlatform *ai_developer);

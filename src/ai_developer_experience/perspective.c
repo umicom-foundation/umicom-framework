@@ -30,6 +30,10 @@ static const char *const SURFACES[] = {
     "umicom.ai-developer.checkpoints"
 };
 
+/*
+ * Provide the ai developer perspective definition operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *
 umi_ai_developer_perspective_definition(void)
 {

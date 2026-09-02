@@ -20,6 +20,10 @@
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/finance/finance.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiFinancialId id={0};(void)snprintf(id.value,sizeof(id.value),"%s","A-1");assert(umi_financial_id_valid(&id));
     UmiCurrency usd={{'U','S','D','\0'}};assert(umi_currency_valid(&usd));

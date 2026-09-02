@@ -29,9 +29,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host host process policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostHostProcessPolicy { uint32_t maximum_crashes; uint32_t maximum_restarts; uint32_t isolation_risk_threshold; int require_isolation_for_untrusted; } UmiPluginExtensionHostHostProcessPolicy;
+/**
+ * Initialise plugin extension host host process policy from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_plugin_extension_host_host_process_policy_init(UmiPluginExtensionHostHostProcessPolicy *policy);
+/**
+ * Provide the plugin extension host host process policy isolation operation used by this
+ * module and its client applications.
+ */
 UmiPluginExtensionHostIsolation umi_plugin_extension_host_host_process_policy_isolation(const UmiPluginExtensionHostHostProcessPolicy *policy, UmiPluginExtensionHostTrust trust, uint32_t risk);
+/**
+ * Provide the plugin extension host host process policy may restart operation used by this
+ * module and its client applications.
+ */
 int umi_plugin_extension_host_host_process_policy_may_restart(const UmiPluginExtensionHostHostProcessPolicy *policy, uint32_t crash_count, uint32_t restart_count);
 
 #ifdef __cplusplus

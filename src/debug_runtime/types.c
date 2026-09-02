@@ -14,9 +14,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/types.h"
 
+/*
+ * Provide the debug runtime message kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_debug_runtime_message_kind_text(
     UmiDebugRuntimeMessageKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEBUG_RUNTIME_MESSAGE_REQUEST: return "request";
         case UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE: return "response";
@@ -26,9 +31,14 @@ const char *umi_debug_runtime_message_kind_text(
     }
 }
 
+/*
+ * Provide the debug runtime adapter state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_debug_runtime_adapter_state_text(
     UmiDebugRuntimeAdapterState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_DEBUG_RUNTIME_ADAPTER_STOPPED: return "stopped";
         case UMI_DEBUG_RUNTIME_ADAPTER_STARTING: return "starting";

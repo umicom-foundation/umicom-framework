@@ -21,11 +21,16 @@
 #include <stdio.h>
 #include "umicom/repository/inventory.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryInventory *i = calloc(1U, sizeof(*i));
     UmiRepositorySubmodule s; size_t n;
     assert(i != NULL); umi_repository_inventory_init(i);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (n = 0U; n < UMI_REPOSITORY_CONTROL_ITEM_CAPACITY; ++n) {{
         char name[64], path[64];
         (void)snprintf(name, sizeof(name), "m%zu", n);

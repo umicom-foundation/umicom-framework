@@ -44,17 +44,21 @@ UmiStatus umi_repository_gitlink_probe_read(
 
     /* Read the staged index once and reject command failures explicitly. */
     status = umi_repository_git_command_execute(context, args, 2U, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result.exit_code != 0) {
         return UMI_STATUS_INVALID_STATE;
     }
 
     /* Count only valid stage-zero gitlink records using the established parser. */
     count = umi_repository_git_output_line_count(result.output);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiRepositoryGitlink gitlink;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_repository_git_output_line_at(
                 result.output, index, line, sizeof(line)) == UMI_STATUS_OK &&
             umi_repository_gitlink_parse(line, &gitlink) == UMI_STATUS_OK &&

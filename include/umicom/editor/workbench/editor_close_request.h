@@ -24,8 +24,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor close request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbEditorCloseRequest { char resource[UMI_EDITOR_WB_PATH_CAPACITY]; char group_id[UMI_EDITOR_WB_ID_CAPACITY]; UmiEditorWbOpenMode mode; bool force; } UmiEditorWbEditorCloseRequest;
+/**
+ * Initialise editor wb editor close request from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_wb_editor_close_request_init(UmiEditorWbEditorCloseRequest *state,const char *resource,const char *group_id);
+/**
+ * Check that editor wb editor close request satisfies its contract before another service
+ * relies on it.
+ */
 int umi_editor_wb_editor_close_request_valid(const UmiEditorWbEditorCloseRequest *state);
 
 #ifdef __cplusplus

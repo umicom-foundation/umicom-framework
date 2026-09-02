@@ -28,39 +28,63 @@ extern "C" {
 #define UMI_FINANCE_ID_CAPACITY 48U
 #define UMI_FINANCE_NAME_CAPACITY 96U
 
+/**
+ * Represent the financial id data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialId {
     char value[UMI_FINANCE_ID_CAPACITY];
 } UmiFinancialId;
 
+/**
+ * Represent the currency data shared with callers of this public contract.
+ */
 typedef struct UmiCurrency {
     char code[4];
 } UmiCurrency;
 
+/**
+ * Represent the money data shared with callers of this public contract.
+ */
 typedef struct UmiMoney {
     int64_t minor_units;
     uint8_t scale;
     UmiCurrency currency;
 } UmiMoney;
 
+/**
+ * Represent the quantity data shared with callers of this public contract.
+ */
 typedef struct UmiQuantity {
     double value;
 } UmiQuantity;
 
+/**
+ * Represent the financial account data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialAccount {
     UmiFinancialId account_id;
     UmiFinancialId party_id;
     UmiCurrency currency;
 } UmiFinancialAccount;
 
+/**
+ * Represent the financial party data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialParty {
     UmiFinancialId party_id;
     char display_name[UMI_FINANCE_NAME_CAPACITY];
 } UmiFinancialParty;
 
+/**
+ * Represent the business time data shared with callers of this public contract.
+ */
 typedef struct UmiBusinessTime {
     int64_t epoch_millis;
 } UmiBusinessTime;
 
+/**
+ * Represent the decimal data shared with callers of this public contract.
+ */
 typedef struct UmiDecimal {
     int64_t coefficient;
     uint8_t scale;

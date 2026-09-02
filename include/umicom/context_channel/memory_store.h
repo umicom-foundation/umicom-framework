@@ -33,14 +33,30 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_MEMORY_STORE_NAME "memory-store"
+/**
+ * Represent the context memory store state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiContextMemoryStoreState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextMemoryStoreState;
+/**
+ * Initialise context memory store state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_context_memory_store_state_init(UmiContextMemoryStoreState *state);
+/**
+ * Provide the context memory store state record operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_context_memory_store_state_record(UmiContextMemoryStoreState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context memory store operation without
+ * changing their state.
+ */
 uint64_t umi_context_memory_store_operation_count(const UmiContextMemoryStoreState *state);
 #ifdef __cplusplus
 }

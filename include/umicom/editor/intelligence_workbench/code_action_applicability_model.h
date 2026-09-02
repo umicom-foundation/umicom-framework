@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel code action applicability model data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorIntelCodeActionApplicabilityModel { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelCodeActionApplicabilityModel;
+/**
+ * Initialise editor intel code action applicability model from caller-provided values so
+ * later operations receive a known state.
+ */
 UmiStatus umi_editor_intel_code_action_applicability_model_init(UmiEditorIntelCodeActionApplicabilityModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel code action applicability model set score operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_editor_intel_code_action_applicability_model_set_score(UmiEditorIntelCodeActionApplicabilityModel *model,uint32_t score);
+/**
+ * Find editor intel code action applicability model set while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_editor_intel_code_action_applicability_model_set_selected(UmiEditorIntelCodeActionApplicabilityModel *model,bool selected);
+/**
+ * Check that editor intel code action applicability model satisfies its contract before
+ * another service relies on it.
+ */
 int umi_editor_intel_code_action_applicability_model_valid(const UmiEditorIntelCodeActionApplicabilityModel *model);
 
 #ifdef __cplusplus

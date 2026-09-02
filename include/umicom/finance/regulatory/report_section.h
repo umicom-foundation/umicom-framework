@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the report section data shared with callers of this public contract.
+ */
 typedef struct UmiReportSection {
     char section_id[UMI_REG_ID_CAPACITY];
     char template_id[UMI_REG_ID_CAPACITY];

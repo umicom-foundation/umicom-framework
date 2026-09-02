@@ -21,8 +21,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced reset plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_reset_plan_init(UmiVcsAdvancedResetPlan *plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) {
         return;
     }
@@ -34,11 +42,19 @@ void umi_vcs_advanced_reset_plan_init(UmiVcsAdvancedResetPlan *plan)
     plan->require_checkpoint = 1;
 }
 
+/*
+ * Copy vcs advanced reset plan into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_reset_plan_set(UmiVcsAdvancedResetPlan *plan,
                                            UmiVcsAdvancedResetMode mode,
                                            const char *target)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || mode > UMI_VCS_RESET_HARD ||
         !umi_vcs_advanced_text_present(target)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -46,6 +62,7 @@ UmiStatus umi_vcs_advanced_reset_plan_set(UmiVcsAdvancedResetPlan *plan,
     plan->mode = mode;
     status = umi_vcs_advanced_copy_text(
         plan->target, sizeof(plan->target), target);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -55,6 +72,10 @@ UmiStatus umi_vcs_advanced_reset_plan_set(UmiVcsAdvancedResetPlan *plan,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced reset plan destructive operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_reset_plan_destructive(const UmiVcsAdvancedResetPlan *plan)
 {
     return plan != NULL &&

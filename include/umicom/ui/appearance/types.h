@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_APPEARANCE_MAX_ICONS 128U
 #define UMI_APPEARANCE_MAX_FOCUS_ITEMS 128U
 
+/**
+ * List the named appearance scope values accepted by this public contract.
+ */
 typedef enum UmiAppearanceScope {
     UMI_APPEARANCE_SCOPE_SYSTEM = 1,
     UMI_APPEARANCE_SCOPE_APPLICATION = 2,
@@ -45,6 +48,9 @@ typedef enum UmiAppearanceScope {
     UMI_APPEARANCE_SCOPE_COMPONENT = 4
 } UmiAppearanceScope;
 
+/**
+ * List the named appearance renderer kind values accepted by this public contract.
+ */
 typedef enum UmiAppearanceRendererKind {
     UMI_APPEARANCE_RENDERER_GTK4 = 1,
     UMI_APPEARANCE_RENDERER_QT6 = 2,
@@ -52,6 +58,9 @@ typedef enum UmiAppearanceRendererKind {
     UMI_APPEARANCE_RENDERER_HEADLESS = 4
 } UmiAppearanceRendererKind;
 
+/**
+ * List the named appearance input modality values accepted by this public contract.
+ */
 typedef enum UmiAppearanceInputModality {
     UMI_APPEARANCE_INPUT_POINTER = 1,
     UMI_APPEARANCE_INPUT_TOUCH = 2,

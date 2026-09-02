@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the trading health ready operation used by this module and its client
+ * applications.
+ */
 int umi_trading_health_ready(int market_data_ready, int broker_ready, int risk_ready, UmiTradingEnvironment environment);
 #ifdef __cplusplus
 }

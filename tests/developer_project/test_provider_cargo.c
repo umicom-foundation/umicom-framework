@@ -16,6 +16,10 @@
 
 #include "umicom/developer_project/providers/cargo.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiDeveloperProjectLanguageProvider *provider = umi_developer_project_provider_cargo();

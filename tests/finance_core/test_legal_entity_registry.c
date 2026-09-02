@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/legal_entity_registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiLegalEntityRegistry r; UmiLegalEntity x; umi_legal_entity_registry_init(&r); CHECK(umi_legal_entity_init(&x,"LE","Entity","GB")==UMI_STATUS_OK); CHECK(umi_legal_entity_registry_add(&r,&x)==UMI_STATUS_OK);

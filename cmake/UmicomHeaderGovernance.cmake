@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 
 function(umicom_register_header_governance_test test_name header_root owner)
+    # Create this optional product surface only when its build option is enabled.
     if(NOT BUILD_TESTING)
         return()
     endif()
@@ -28,11 +29,15 @@ function(umicom_register_header_governance_test test_name header_root owner)
         LABELS "headers;sdk;contracts;include-guards;documentation")
 endfunction()
 
+# Define the register header portfolio governance test build helper so parent and
+# application projects apply one consistent rule.
 function(umicom_register_header_portfolio_governance_test test_name owner)
+    # Create this optional product surface only when its build option is enabled.
     if(NOT BUILD_TESTING)
         return()
     endif()
     set(UMICOM_HEADER_ROOTS ${ARGN})
+    # Apply this branch only when its contract condition is satisfied.
     if(NOT UMICOM_HEADER_ROOTS)
         message(FATAL_ERROR
             "${test_name} requires at least one public include directory.")
@@ -48,11 +53,15 @@ function(umicom_register_header_portfolio_governance_test test_name owner)
         LABELS "headers;sdk;contracts;include-guards;documentation;portfolio")
 endfunction()
 
+# Define the register source comment governance test build helper so parent and
+# application projects apply one consistent rule.
 function(umicom_register_source_comment_governance_test test_name owner)
+    # Create this optional product surface only when its build option is enabled.
     if(NOT BUILD_TESTING)
         return()
     endif()
     set(UMICOM_SOURCE_ROOTS ${ARGN})
+    # Apply this branch only when its contract condition is satisfied.
     if(NOT UMICOM_SOURCE_ROOTS)
         message(FATAL_ERROR
             "${test_name} requires at least one implementation directory.")
@@ -68,11 +77,15 @@ function(umicom_register_source_comment_governance_test test_name owner)
         LABELS "source;documentation;licence;governance")
 endfunction()
 
+# Define the register declaration dependency audit test build helper so parent and
+# application projects apply one consistent rule.
 function(umicom_register_declaration_dependency_audit_test test_name)
+    # Create this optional product surface only when its build option is enabled.
     if(NOT BUILD_TESTING)
         return()
     endif()
     set(UMICOM_DECLARATION_ROOTS ${ARGN})
+    # Apply this branch only when its contract condition is satisfied.
     if(NOT UMICOM_DECLARATION_ROOTS)
         message(FATAL_ERROR
             "${test_name} requires at least one C source directory.")

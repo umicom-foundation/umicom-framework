@@ -29,7 +29,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host contribution activation data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiPluginExtensionHostContributionActivation { int plugin_enabled; int dependency_ready; int permission_ready; int extension_point_ready; int quarantined; uint32_t risk; } UmiPluginExtensionHostContributionActivation;
+/**
+ * Provide the plugin extension host contribution activation evaluate operation used by
+ * this module and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_contribution_activation_evaluate(const UmiPluginExtensionHostContributionActivation *value);
 
 #ifdef __cplusplus

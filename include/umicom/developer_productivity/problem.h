@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer problem data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperProblem {
     uint64_t problem_id;
     char source[UMI_DEVELOPER_PRODUCTIVITY_ID_CAPACITY];
@@ -34,6 +37,9 @@ typedef struct UmiDeveloperProblem {
     uint64_t revision;
 } UmiDeveloperProblem;
 
+/**
+ * Check that developer problem satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_developer_problem_validate(
     const UmiDeveloperProblem *problem);
 

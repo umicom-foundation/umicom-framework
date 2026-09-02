@@ -23,16 +23,28 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding tool json parse object operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_json_parse_object(
     const char *json,
     UmiLanguageRuntimeJsonDocument *out_document);
 
+/**
+ * Provide the ai coding tool json required string operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_json_required_string(
     const UmiLanguageRuntimeJsonDocument *document,
     const char *key,
     char *out_text,
     size_t capacity);
 
+/**
+ * Provide the ai coding tool json optional string operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_json_optional_string(
     const UmiLanguageRuntimeJsonDocument *document,
     const char *key,
@@ -40,18 +52,30 @@ UmiStatus umi_ai_coding_tool_json_optional_string(
     char *out_text,
     size_t capacity);
 
+/**
+ * Provide the ai coding tool json optional bool operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_json_optional_bool(
     const UmiLanguageRuntimeJsonDocument *document,
     const char *key,
     int default_value,
     int *out_value);
 
+/**
+ * Provide the ai coding tool json optional uint64 operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_json_optional_uint64(
     const UmiLanguageRuntimeJsonDocument *document,
     const char *key,
     uint64_t default_value,
     uint64_t *out_value);
 
+/**
+ * Provide the ai coding tool json status operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_json_status(
     char *output,
     size_t capacity,

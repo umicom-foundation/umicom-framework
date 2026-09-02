@@ -26,6 +26,10 @@ typedef UmiStatus (*UmiAiMcpJsonObjectVisitor)(
     const char *object_json,
     void *user_data);
 
+/**
+ * Provide the ai mcp json array visit objects operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_json_array_visit_objects(
     const char *json,
     const char *array_key,

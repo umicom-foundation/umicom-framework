@@ -28,24 +28,47 @@ struct UmiUiWorkbenchPlatform {
     UmiUiCommandSurfaceRegistry *commands; UmiUiUndoStack *undo; uint64_t revision;
 };
 
+/*
+ * Initialise ui workbench platform from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ui_workbench_platform_create(UmiUiWorkbenchPlatform **out_platform)
 {
     UmiUiWorkbenchPlatform *p; UmiStatus s = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_platform = NULL;
     p = (UmiUiWorkbenchPlatform *)calloc(1U, sizeof(*p));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (p == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     p->revision = 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_list_model_registry_create(&p->lists);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_tree_model_registry_create(&p->trees);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_selection_model_registry_create(&p->selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_dock_model_registry_create(&p->docks);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_tab_model_registry_create(&p->tabs);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_panel_model_registry_create(&p->panels);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_context_menu_registry_create(&p->context_menus);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_property_inspector_registry_create(&p->inspector);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_command_surface_registry_create(&p->commands);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s == UMI_STATUS_OK) s = umi_ui_undo_stack_create(&p->undo);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK) {
         umi_ui_workbench_platform_destroy(p);
         return s;
@@ -54,8 +77,16 @@ UmiStatus umi_ui_workbench_platform_create(UmiUiWorkbenchPlatform **out_platform
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ui workbench platform so the same storage can be reused
+ * safely.
+ */
 void umi_ui_workbench_platform_destroy(UmiUiWorkbenchPlatform *p)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (p == NULL) return;
     umi_ui_undo_stack_destroy(p->undo);
     umi_ui_command_surface_registry_destroy(p->commands);
@@ -70,8 +101,16 @@ void umi_ui_workbench_platform_destroy(UmiUiWorkbenchPlatform *p)
     free(p);
 }
 
+/*
+ * Provide the ui workbench platform snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_workbench_platform_snapshot(const UmiUiWorkbenchPlatform *p, UmiUiWorkbenchPlatformSnapshot *o)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (p == NULL || o == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(o, 0, sizeof(*o));
     o->struct_size = (uint32_t)sizeof(*o);

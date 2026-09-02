@@ -23,7 +23,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the frontend generate html operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_frontend_generate_html(const UmiFrontendPlan *plan,char *out_text,size_t capacity);
+/**
+ * Provide the frontend generate manifest operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_frontend_generate_manifest(const UmiFrontendPlan *plan,char *out_text,size_t capacity);
 #ifdef __cplusplus
 }

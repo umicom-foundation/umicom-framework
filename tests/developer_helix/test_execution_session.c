@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/execution_session.h"
-int main(void){ UmiHelixExecutionSession s; if(umi_helix_execution_session_start(&s,2)!=UMI_STATUS_OK){ return 1; } if(umi_helix_execution_session_complete_step(&s,true)!=UMI_STATUS_OK||s.completed!=1U){ return 2; } if(umi_helix_execution_session_complete_step(&s,true)!=UMI_STATUS_OK||s.state!=UMI_HELIX_SUCCEEDED){ return 3; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixExecutionSession s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_execution_session_start(&s,2)!=UMI_STATUS_OK){ return 1; } /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_execution_session_complete_step(&s,true)!=UMI_STATUS_OK||s.completed!=1U){ return 2; } /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_execution_session_complete_step(&s,true)!=UMI_STATUS_OK||s.state!=UMI_HELIX_SUCCEEDED){ return 3; } return 0; }

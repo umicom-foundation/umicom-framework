@@ -21,4 +21,8 @@
 #include "umicom/platform/cross_target/toolchain_requirement.h"
 
 #include <string.h>
-bool umi_ct_toolchain_requirement_satisfied(const UmiCtToolchainRequirement*r,const UmiCtToolchainEvidence*e){if(r==NULL||e==NULL||strcmp(r->family,e->family)!=0)return false;if(e->major<r->minimum_major||(e->major==r->minimum_major&&e->minor<r->minimum_minor))return false;if(r->compiler&&!e->compiler)return false;if(r->assembler&&!e->assembler)return false;if(r->linker&&!e->linker)return false;if(r->debugger&&!e->debugger)return false;return true;}
+/*
+ * Provide the ct toolchain requirement satisfied operation used by this module and its
+ * client applications.
+ */
+bool umi_ct_toolchain_requirement_satisfied(const UmiCtToolchainRequirement*r,const UmiCtToolchainEvidence*e){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||e==NULL||strcmp(r->family,e->family)!=0)return false;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(e->major<r->minimum_major||(e->major==r->minimum_major&&e->minor<r->minimum_minor))return false;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->compiler&&!e->compiler)return false;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->assembler&&!e->assembler)return false;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->linker&&!e->linker)return false;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->debugger&&!e->debugger)return false;return true;}

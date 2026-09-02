@@ -20,6 +20,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "test.", .surface = UMI_STUDIO_SURFACE_TEST_EXPLORER, .prefix_match = 1, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile test explorer operation used by this module and
+ * its client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_test_explorer(void)
 {

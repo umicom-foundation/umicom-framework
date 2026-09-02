@@ -26,7 +26,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that instrument satisfies its contract before another service relies on it.
+ */
 int umi_instrument_valid(const UmiInstrument *instrument);
+/**
+ * Provide the instrument same operation used by this module and its client applications.
+ */
 int umi_instrument_same(const UmiInstrument *left, const UmiInstrument *right);
 #ifdef __cplusplus
 }

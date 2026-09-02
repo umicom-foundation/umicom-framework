@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/security/identity.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiIdentityRegistry *r = NULL; UmiIdentityRecord in = {0}, out;
     (void)strcpy(in.identity_id, "user.sammy"); (void)strcpy(in.display_name, "Sammy Hegab"); in.kind = UMI_IDENTITY_HUMAN; in.enabled = 1;

@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the market replay in window operation used by this module and its client
+ * applications.
+ */
 int umi_market_replay_in_window(const UmiReplayEvent *event, int64_t start_ms, int64_t end_ms);
 #ifdef __cplusplus
 }

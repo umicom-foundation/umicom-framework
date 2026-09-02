@@ -23,11 +23,22 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the loaded plugin data shared with callers of this public contract.
+ */
 typedef struct UmiLoadedPlugin { UmiPluginManifest manifest; UmiPluginLibrary *library; const UmiModuleDescriptor *descriptor; } UmiLoadedPlugin;
+/**
+ * Read plugin loader into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_plugin_loader_load(const UmiPluginManifest *manifest,
                                  UmiLoadedPlugin *out_plugin,
                                  char *out_reason,
                                  size_t reason_capacity);
+/**
+ * Provide the plugin loader unload operation used by this module and its client
+ * applications.
+ */
 void umi_plugin_loader_unload(UmiLoadedPlugin *plugin);
 #ifdef __cplusplus
 }

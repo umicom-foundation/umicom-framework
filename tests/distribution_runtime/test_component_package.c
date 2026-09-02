@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrComponentPackage value; umi_dr_component_package_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"component")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.component_id,sizeof(value.component_id),"ai")==UMI_STATUS_OK); CHECK(umi_dr_component_package_valid(&value)); CHECK(umi_dr_component_package_fingerprint(&value) != 0U);
     return 0;

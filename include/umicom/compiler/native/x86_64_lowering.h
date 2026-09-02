@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the nc x86 64 mnemonic operation used by this module and its client
+ * applications.
+ */
 const char *umi_nc_x86_64_mnemonic(UmiNativeMachineOpcode opcode);
 #ifdef __cplusplus
 }

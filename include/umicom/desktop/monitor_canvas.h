@@ -19,6 +19,9 @@
 
 #include "umicom/desktop/window_manager.h"
 
+/**
+ * Represent the desktop canvas rect data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopCanvasRect {
     double x;
     double y;
@@ -26,6 +29,9 @@ typedef struct UmiDesktopCanvasRect {
     double height;
 } UmiDesktopCanvasRect;
 
+/**
+ * Represent the desktop monitor canvas data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopMonitorCanvas {
     UmiDesktopRect desktop_bounds;
     UmiDesktopCanvasRect viewport;
@@ -35,6 +41,9 @@ typedef struct UmiDesktopMonitorCanvas {
     double padding;
 } UmiDesktopMonitorCanvas;
 
+/**
+ * Represent the desktop canvas monitor data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopCanvasMonitor {
     char monitor_id[UMI_DESKTOP_ID_CAPACITY];
     char name[UMI_DESKTOP_TITLE_CAPACITY];
@@ -44,6 +53,9 @@ typedef struct UmiDesktopCanvasMonitor {
     bool enabled;
 } UmiDesktopCanvasMonitor;
 
+/**
+ * Represent the desktop canvas window data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopCanvasWindow {
     char window_id[UMI_DESKTOP_ID_CAPACITY];
     char title[UMI_DESKTOP_TITLE_CAPACITY];
@@ -57,28 +69,48 @@ typedef struct UmiDesktopCanvasWindow {
     bool locked;
 } UmiDesktopCanvasWindow;
 
+/**
+ * Provide the desktop monitor canvas build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_monitor_canvas_build(
     const UmiDesktopMonitorTopology *topology,
     double viewport_width,
     double viewport_height,
     double padding,
     UmiDesktopMonitorCanvas *out_canvas);
+/**
+ * Provide the desktop monitor canvas project monitor operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_canvas_project_monitor(
     const UmiDesktopMonitorCanvas *canvas,
     const UmiDesktopMonitor *monitor,
     UmiDesktopCanvasMonitor *out_monitor);
+/**
+ * Provide the desktop monitor canvas project window operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_canvas_project_window(
     const UmiDesktopMonitorCanvas *canvas,
     const UmiDesktopWindow *window,
     bool selected,
     bool locked,
     UmiDesktopCanvasWindow *out_window);
+/**
+ * Provide the desktop monitor canvas delta to desktop operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_desktop_monitor_canvas_delta_to_desktop(
     const UmiDesktopMonitorCanvas *canvas,
     double canvas_delta_x,
     double canvas_delta_y,
     int32_t *out_desktop_delta_x,
     int32_t *out_desktop_delta_y);
+/**
+ * Provide the desktop canvas rect contains operation used by this module and its client
+ * applications.
+ */
 bool umi_desktop_canvas_rect_contains(
     UmiDesktopCanvasRect rect,
     double x,

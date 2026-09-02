@@ -15,5 +15,13 @@
 #include "umicom/ui/analytics/linear_gauge.h"
 
 #include <string.h>
-UmiStatus umi_analytics_linear_gauge_init(UmiAnalyticsLinearGauge *item){if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(item,0,sizeof *item);item->orientation=UMI_ANALYTICS_HORIZONTAL;return UMI_STATUS_OK;}
-int umi_analytics_linear_gauge_valid(const UmiAnalyticsLinearGauge *item){if(item==NULL)return 0;return (item->orientation==UMI_ANALYTICS_HORIZONTAL||item->orientation==UMI_ANALYTICS_VERTICAL)?1:0;}
+/*
+ * Initialise analytics linear gauge from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_analytics_linear_gauge_init(UmiAnalyticsLinearGauge *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(item,0,sizeof *item);item->orientation=UMI_ANALYTICS_HORIZONTAL;return UMI_STATUS_OK;}
+/*
+ * Check that analytics linear gauge satisfies its contract before another service relies
+ * on it.
+ */
+int umi_analytics_linear_gauge_valid(const UmiAnalyticsLinearGauge *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return (item->orientation==UMI_ANALYTICS_HORIZONTAL||item->orientation==UMI_ANALYTICS_VERTICAL)?1:0;}

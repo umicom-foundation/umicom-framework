@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap graph order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_graph_order(const UmiBootstrapServiceGraph *graph,
                                     UmiBootstrapIdList *out_order);
 

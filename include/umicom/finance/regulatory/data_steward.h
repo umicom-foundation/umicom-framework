@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data steward data shared with callers of this public contract.
+ */
 typedef struct UmiDataSteward {
     char steward_id[UMI_REG_ID_CAPACITY];
     char domain_id[UMI_REG_ID_CAPACITY];

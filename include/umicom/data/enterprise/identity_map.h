@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data identity entry data shared with callers of this public contract.
+ */
 typedef struct UmiDataIdentityEntry { char entity_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char key[UMI_DATA_ENTERPRISE_ID_CAPACITY]; uint64_t object_token; } UmiDataIdentityEntry;
+/**
+ * Represent the data identity map data shared with callers of this public contract.
+ */
 typedef struct UmiDataIdentityMap { UmiDataIdentityEntry items[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiDataIdentityMap;
 /* Reset the identity map for a new unit of work. */
 void umi_data_identity_map_init(UmiDataIdentityMap *map);

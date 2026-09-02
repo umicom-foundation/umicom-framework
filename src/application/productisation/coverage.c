@@ -20,9 +20,11 @@
 
 #include "umicom/application/experience_catalogue.h"
 
+/* Provide the feature fallback operation used by this module and its client applications. */
 static UmiProductisationEvidenceState feature_fallback(
     UmiExperienceFeatureState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_EXPERIENCE_FEATURE_FOUNDATION:
         return UMI_PRODUCTISATION_EVIDENCE_FOUNDATION;
@@ -36,8 +38,10 @@ static UmiProductisationEvidenceState feature_fallback(
     }
 }
 
+/* Provide the evidence weight operation used by this module and its client applications. */
 static unsigned evidence_weight(UmiProductisationEvidenceState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_PRODUCTISATION_EVIDENCE_FOUNDATION: return 30U;
     case UMI_PRODUCTISATION_EVIDENCE_IMPLEMENTED: return 55U;
@@ -50,39 +54,56 @@ static unsigned evidence_weight(UmiProductisationEvidenceState state)
     }
 }
 
+/* Provide the add state operation used by this module and its client applications. */
 static void add_state(UmiProductApplicationCoverage *coverage,
                       UmiProductisationEvidenceState state,
                       uint64_t *weighted_total)
 {
     coverage->asset_count += 1U;
     *weighted_total += evidence_weight(state);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state == UMI_PRODUCTISATION_EVIDENCE_BLOCKED) {
         coverage->blocked_count += 1U;
         return;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state == UMI_PRODUCTISATION_EVIDENCE_DECLARED)
         coverage->unevidenced_count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state >= UMI_PRODUCTISATION_EVIDENCE_FOUNDATION)
         coverage->foundation_count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state >= UMI_PRODUCTISATION_EVIDENCE_IMPLEMENTED)
         coverage->implemented_count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state >= UMI_PRODUCTISATION_EVIDENCE_ADOPTED)
         coverage->adopted_count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state >= UMI_PRODUCTISATION_EVIDENCE_TESTED)
         coverage->tested_count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state >= UMI_PRODUCTISATION_EVIDENCE_ACCEPTED)
         coverage->accepted_count += 1U;
 }
 
+/*
+ * Provide the product portfolio coverage build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_product_portfolio_coverage_build(
     const UmiProductisationEvidenceLedger *ledger,
     UmiProductPortfolioCoverage *out_coverage)
 {
     size_t application_index;
     uint64_t portfolio_weight = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_coverage == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_coverage, 0, sizeof(*out_coverage));
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (application_index = 0U;
          application_index < umi_application_experience_catalogue_count();
          ++application_index) {
@@ -91,6 +112,10 @@ UmiStatus umi_product_portfolio_coverage_build(
         UmiProductApplicationCoverage *coverage;
         uint64_t application_weight = 0U;
         size_t index;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (definition == NULL ||
             out_coverage->application_count >=
                 UMI_PRODUCTISATION_MAX_APPLICATIONS)
@@ -101,6 +126,7 @@ UmiStatus umi_product_portfolio_coverage_build(
                        sizeof(coverage->application_id), "%s",
                        definition->application_id);
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < definition->feature_count; ++index) {
             const UmiExperienceFeatureDefinition *feature =
                 &definition->features[index];
@@ -111,6 +137,7 @@ UmiStatus umi_product_portfolio_coverage_build(
                     feature_fallback(feature->state)),
                 &application_weight);
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < definition->panel_count; ++index) {
             add_state(coverage,
                 umi_productisation_evidence_effective_state(
@@ -120,6 +147,7 @@ UmiStatus umi_product_portfolio_coverage_build(
                     UMI_PRODUCTISATION_EVIDENCE_DECLARED),
                 &application_weight);
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < definition->layout_count; ++index) {
             add_state(coverage,
                 umi_productisation_evidence_effective_state(
@@ -129,6 +157,7 @@ UmiStatus umi_product_portfolio_coverage_build(
                     UMI_PRODUCTISATION_EVIDENCE_DECLARED),
                 &application_weight);
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (coverage->asset_count > 0U)
             coverage->coverage_percent = (unsigned)(
                 application_weight / (uint64_t)coverage->asset_count);
@@ -137,19 +166,30 @@ UmiStatus umi_product_portfolio_coverage_build(
         out_coverage->accepted_count += coverage->accepted_count;
         out_coverage->blocked_count += coverage->blocked_count;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_coverage->asset_count > 0U)
         out_coverage->coverage_percent = (unsigned)(
             portfolio_weight / (uint64_t)out_coverage->asset_count);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find product portfolio coverage while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiProductApplicationCoverage *umi_product_portfolio_coverage_find(
     const UmiProductPortfolioCoverage *coverage,
     const char *application_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (coverage == NULL || application_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < coverage->application_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(coverage->applications[index].application_id,
                    application_id) == 0)
             return &coverage->applications[index];

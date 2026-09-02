@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience ui state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceUiState {
   UmiApplicationExperienceUiStateKind kind;
   char title[UMI_APPLICATION_EXPERIENCE_TITLE_CAPACITY];
@@ -33,14 +37,30 @@ typedef struct UmiApplicationExperienceUiState {
   int announce;
 } UmiApplicationExperienceUiState;
 
+/**
+ * Initialise application experience ui state from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_experience_ui_state_init(UmiApplicationExperienceUiState *state,
                                                    UmiApplicationExperienceUiStateKind kind,
                                                    const char *title, const char *message,
                                                    const char *action_command_id);
+/**
+ * Provide the application experience ui state progress operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_experience_ui_state_progress(UmiApplicationExperienceUiState *state,
                                                        uint32_t progress_percent);
+/**
+ * Check that application experience ui state satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus
 umi_application_experience_ui_state_validate(const UmiApplicationExperienceUiState *state);
+/**
+ * Provide the application experience ui state interactive operation used by this module
+ * and its client applications.
+ */
 int umi_application_experience_ui_state_interactive(const UmiApplicationExperienceUiState *state);
 
 #ifdef __cplusplus

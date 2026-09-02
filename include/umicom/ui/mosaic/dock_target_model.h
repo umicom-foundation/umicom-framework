@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic dock target model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicDockTargetModel {
     char source_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char target_id[UMI_UI_MOSAIC_ID_CAPACITY];

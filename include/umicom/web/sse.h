@@ -25,7 +25,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web sse event data shared with callers of this public contract.
+ */
 typedef struct UmiWebSseEvent { uint64_t id; char event[64]; char data[2048]; } UmiWebSseEvent;
+/**
+ * Provide the web sse format operation used by this module and its client applications.
+ */
 UmiStatus umi_web_sse_format(const UmiWebSseEvent *event,char *out_text,size_t capacity,size_t *out_length);
 #ifdef __cplusplus
 }

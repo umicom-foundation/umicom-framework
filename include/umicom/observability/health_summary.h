@@ -17,6 +17,14 @@
 #include "umicom/observability/operations_contract.h"
 #include "umicom/runtime/health.h"
 #include "umicom/diagnostics/readiness.h"
+/**
+ * Represent the operations health summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiOperationsHealthSummary { size_t components; size_t ready_components; size_t degraded_components; size_t failed_components; size_t readiness_checks; size_t failed_readiness_checks; UmiOperationsHealth overall; } UmiOperationsHealthSummary;
+/**
+ * Provide the operations health summarise operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_operations_health_summarise(const UmiHealthRegistry *health,const UmiReadinessRegistry *readiness,UmiOperationsHealthSummary *out_summary);
 #endif

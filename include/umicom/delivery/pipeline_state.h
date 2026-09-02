@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the pipeline state data shared with callers of this public contract.
+ */
 typedef struct UmiPipelineState {
     UmiDeliveryStage stage;
     UmiEvidenceStatus status;
@@ -35,10 +38,22 @@ typedef struct UmiPipelineState {
     char message[UMI_DELIVERY_TEXT_CAPACITY];
 } UmiPipelineState;
 
+/**
+ * Initialise pipeline state from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_pipeline_state_init(UmiPipelineState *state);
+/**
+ * Provide the pipeline state begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_pipeline_state_begin(UmiPipelineState *state,
                                    UmiDeliveryStage stage,
                                    uint64_t started_epoch_ms);
+/**
+ * Provide the pipeline state finish operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_pipeline_state_finish(UmiPipelineState *state,
                                     UmiEvidenceStatus status,
                                     uint64_t finished_epoch_ms,

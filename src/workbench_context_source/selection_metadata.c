@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench context source selection metadata from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_context_source_selection_metadata_init(
     UmiWorkbenchContextSourceSelectionMetadata *record,
     const char *record_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     memset(record, 0, sizeof(*record));
     record->structure_size = (uint32_t)sizeof(*record);
@@ -29,15 +37,27 @@ void umi_workbench_context_source_selection_metadata_init(
     record->state = UMI_WORKBENCH_CONTEXT_SOURCE_STATE_CREATED;
     record->context_kind = UMI_CONTEXT_KIND_SELECTION;
     record->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record_id != NULL) {
         (void)umi_workbench_context_source_copy_text(
             record->record_id, sizeof(record->record_id), record_id);
     }
 }
 
+/*
+ * Check that workbench context source selection metadata satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_context_source_selection_metadata_validate(
     const UmiWorkbenchContextSourceSelectionMetadata *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || record->structure_size != sizeof(*record) ||
         record->record_id[0] == '\0' ||
         record->source_kind < UMI_WORKBENCH_CONTEXT_SOURCE_GENERIC ||
@@ -77,10 +97,18 @@ UMI_CONTEXT_SOURCE_SETTER(
 
 #undef UMI_CONTEXT_SOURCE_SETTER
 
+/*
+ * Provide the workbench context source selection metadata hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_context_source_selection_metadata_hash(
     const UmiWorkbenchContextSourceSelectionMetadata *record)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0U;
     hash = umi_workbench_context_source_hash_text(
         hash, record->record_id, sizeof(record->record_id));
@@ -103,11 +131,19 @@ uint64_t umi_workbench_context_source_selection_metadata_hash(
     return hash;
 }
 
+/*
+ * Provide the workbench context source selection metadata touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_context_source_selection_metadata_touch(
     UmiWorkbenchContextSourceSelectionMetadata *record,
     uint64_t sequence,
     uint64_t timestamp_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;

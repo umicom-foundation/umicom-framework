@@ -13,6 +13,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the ecosystem provenance policy default operation used by this module and its
+ * client applications.
+ */
 UmiEcosystemProvenancePolicy umi_ecosystem_provenance_policy_default(void)
 {
     UmiEcosystemProvenancePolicy policy;
@@ -25,12 +29,24 @@ UmiEcosystemProvenancePolicy umi_ecosystem_provenance_policy_default(void)
     return policy;
 }
 
+/*
+ * Initialise ecosystem provenance review from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ecosystem_provenance_review_init(
     UmiEcosystemProvenanceReview *review,
     const char *package_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (review == NULL) return;
     (void)memset(review, 0, sizeof(*review));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (package_id != NULL) {
         (void)umi_ecosystem_copy_text(
             review->package_id, sizeof(review->package_id), package_id);
@@ -38,6 +54,7 @@ void umi_ecosystem_provenance_review_init(
     review->decision = UMI_ECOSYSTEM_EVIDENCE_UNKNOWN;
 }
 
+/* Provide the evaluate item operation used by this module and its client applications. */
 static void evaluate_item(
     bool present,
     bool required,
@@ -46,20 +63,30 @@ static void evaluate_item(
     uint32_t *risk_score,
     uint32_t weight)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (present) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (required) {
         (*blockers)++;
         *risk_score += weight;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         (*warnings)++;
         *risk_score += weight / 2U;
     }
 }
 
+/*
+ * Provide the ecosystem provenance review evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ecosystem_provenance_review_evaluate(
     UmiEcosystemProvenanceReview *review,
     const UmiEcosystemProvenancePolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (review == NULL || policy == NULL || review->package_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -78,17 +105,23 @@ UmiStatus umi_ecosystem_provenance_review_evaluate(
         &review->blocker_count, &review->warning_count, &review->risk_score, 5U);
     evaluate_item(review->source_trusted, policy->require_trusted_source,
         &review->blocker_count, &review->warning_count, &review->risk_score, 15U);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (review->risk_score > 100U) review->risk_score = 100U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (review->blocker_count > 0U) {
         review->decision = UMI_ECOSYSTEM_EVIDENCE_REJECTED;
-    } else if (review->warning_count > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (review->warning_count > 0U) {
         review->decision = UMI_ECOSYSTEM_EVIDENCE_WARNING;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         review->decision = UMI_ECOSYSTEM_EVIDENCE_VERIFIED;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ecosystem provenance review acceptable operation used by this module and its
+ * client applications.
+ */
 bool umi_ecosystem_provenance_review_acceptable(
     const UmiEcosystemProvenanceReview *review)
 {

@@ -29,10 +29,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host dependency resolution data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiPluginExtensionHostDependencyResolution { uint32_t required; uint32_t satisfied; uint32_t incompatible; uint32_t optional_missing; } UmiPluginExtensionHostDependencyResolution;
+/**
+ * Initialise plugin extension host dependency resolution from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_plugin_extension_host_dependency_resolution_init(UmiPluginExtensionHostDependencyResolution *result);
+/**
+ * Provide the plugin extension host dependency resolution record operation used by this
+ * module and its client applications.
+ */
 void umi_plugin_extension_host_dependency_resolution_record(UmiPluginExtensionHostDependencyResolution *result, int required, int present, int compatible);
+/**
+ * Provide the plugin extension host dependency resolution ready operation used by this
+ * module and its client applications.
+ */
 int umi_plugin_extension_host_dependency_resolution_ready(const UmiPluginExtensionHostDependencyResolution *result);
+/**
+ * Provide the plugin extension host dependency resolution missing required operation used
+ * by this module and its client applications.
+ */
 uint32_t umi_plugin_extension_host_dependency_resolution_missing_required(const UmiPluginExtensionHostDependencyResolution *result);
 
 #ifdef __cplusplus

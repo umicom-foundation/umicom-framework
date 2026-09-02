@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application ui session row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationUiSessionRow {
     const char *application_id;
     const char *layout_id;
@@ -30,6 +34,10 @@ typedef struct UmiApplicationUiSessionRow {
     uint64_t revision;
 } UmiApplicationUiSessionRow;
 
+/**
+ * Provide the application ui session row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_session_row(
     const UmiApplicationSession *session,
     UmiApplicationUiSessionRow *out_row);

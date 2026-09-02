@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the performance trace filter data shared with callers of this public contract.
+ */
 typedef struct UmiPerformanceTraceFilter {
     uint32_t structure_size;
     uint32_t api_version;

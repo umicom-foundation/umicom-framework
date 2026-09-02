@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ENVIRONMENT_PROBE "umicom.developer.configuration.environment_probe"
 
+/**
+ * Provide the developer capability environment probe operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_environment_probe(void);
 

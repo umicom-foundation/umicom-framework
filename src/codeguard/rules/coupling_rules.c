@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-ARCH-COUPLING-001", "", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_ARCHITECTURE, 65U, UMI_CODEGUARD_MATCH_INCLUDE, "../", "Relative parent include creates fragile source-layout coupling.", "Use a public target include path and a stable module contract instead."}
 };
 
+/*
+ * Provide the codeguard rules coupling rules operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_coupling_rules(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

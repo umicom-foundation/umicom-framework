@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/execution_fill.h"
+/**
+ * Represent the trading execution aggregation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingExecutionAggregation { UmiTradingQuantityLots total_lots; UmiTradingPriceTicks average_price_ticks; uint64_t fill_count; } UmiTradingExecutionAggregation;
 /* Initialise an empty execution aggregate. */
 void umi_trading_execution_aggregation_init(UmiTradingExecutionAggregation *aggregate);

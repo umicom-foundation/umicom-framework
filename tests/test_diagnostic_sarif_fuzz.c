@@ -20,12 +20,20 @@
 
 #include "umicom/diagnostics/sarif.h"
 
+/*
+ * Exercise next random and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static uint32_t next_random(uint32_t *state)
 {
     *state = *state * UINT32_C(1664525) + UINT32_C(1013904223);
     return *state;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     static const char valid[] =
@@ -39,6 +47,7 @@ int main(void)
     assert(umi_diagnostic_sarif_validate(valid, sizeof(valid) - 1U,
                                          message, sizeof(message)) ==
            UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (iteration = 0U; iteration < 5000U; ++iteration) {
         size_t size = sizeof(valid) - 1U;
         char *mutated = (char *)malloc(size);
@@ -48,10 +57,12 @@ int main(void)
         assert(mutated != NULL);
         (void)memcpy(mutated, valid, size);
         changes = 1U + (size_t)(next_random(&state) % UINT32_C(6));
+        /* Visit each bounded item once so every record receives the same rule. */
         for (change = 0U; change < changes; ++change) {
             size_t position = (size_t)(next_random(&state) % (uint32_t)size);
             mutated[position] = (char)(next_random(&state) & UINT32_C(0x7f));
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((next_random(&state) & UINT32_C(3)) == 0U) {
             size = (size_t)(next_random(&state) % (uint32_t)size);
         }

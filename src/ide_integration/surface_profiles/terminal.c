@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/terminal.h"
 
+/*
+ * Provide the ide surface profile terminal operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_terminal(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant credit default swap data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantCreditDefaultSwap {
     double notional;
     double default_probability;

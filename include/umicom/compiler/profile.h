@@ -17,6 +17,9 @@
 #include "umicom/compiler/linker_profile.h"
 #include "umicom/compiler/policy.h"
 #include "umicom/compiler/registry.h"
+/**
+ * Represent the compiler profile data shared with callers of this public contract.
+ */
 typedef struct UmiCompilerProfile {
     char profile_id[UMI_COMPILER_ID_CAPACITY];
     char display_name[UMI_COMPILER_NAME_CAPACITY];
@@ -29,6 +32,13 @@ typedef struct UmiCompilerProfile {
     bool enabled;
     uint64_t revision;
 } UmiCompilerProfile;
+/**
+ * Initialise compiler profile from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_compiler_profile_init(UmiCompilerProfile *profile,const char *profile_id,const char *display_name,const char *provider_id,UmiCompilerLanguage language,const UmiCompilerTarget *target);
+/**
+ * Check that compiler profile satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_compiler_profile_validate(const UmiCompilerProfile *profile,const UmiCompilerRegistry *registry,char *out_reason,size_t capacity);
 #endif

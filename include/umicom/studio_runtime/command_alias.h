@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime command alias definition data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiStudioRuntimeCommandAliasDefinition {
     const char *alias_id;
     const char *title;
@@ -39,6 +43,10 @@ typedef struct UmiStudioRuntimeCommandAliasDefinition {
     int mutates_state;
 } UmiStudioRuntimeCommandAliasDefinition;
 
+/**
+ * Check that studio command alias satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_studio_command_alias_validate(
     const UmiStudioRuntimeCommandAliasDefinition *definition);
 

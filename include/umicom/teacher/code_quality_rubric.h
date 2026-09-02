@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher code quality rubric data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTeacherCodeQualityRubric {
     uint32_t correctness_weight;
     uint32_t quality_weight;
@@ -37,9 +41,25 @@ typedef struct UmiTeacherCodeQualityRubric {
     uint32_t minimum_score;
 } UmiTeacherCodeQualityRubric;
 
+/**
+ * Initialise teacher code quality rubric from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_teacher_code_quality_rubric_init(UmiTeacherCodeQualityRubric *rubric);
+/**
+ * Provide the teacher code quality rubric configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_teacher_code_quality_rubric_configure(UmiTeacherCodeQualityRubric *rubric, uint32_t correctness_weight, uint32_t quality_weight, uint32_t efficiency_weight, uint32_t minimum_score);
+/**
+ * Provide the teacher code quality rubric compute operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_teacher_code_quality_rubric_compute(const UmiTeacherCodeQualityRubric *rubric, uint32_t correctness, uint32_t quality, uint32_t efficiency);
+/**
+ * Provide the teacher code quality rubric passes operation used by this module and its
+ * client applications.
+ */
 int umi_teacher_code_quality_rubric_passes(const UmiTeacherCodeQualityRubric *rubric, uint32_t score);
 
 #ifdef __cplusplus

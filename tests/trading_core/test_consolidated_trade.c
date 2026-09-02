@@ -13,12 +13,18 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/consolidated_trade.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFinancialId iid,vid;
     umi_trading_core_id_assign(&iid,"i");
     umi_trading_core_id_assign(&vid,"v");
      UmiTradingConsolidatedTrade v;
+     /* Preserve the original failure result so the caller can respond to the correct cause. */
      if(umi_trading_consolidated_trade_init(&v,&iid,&vid,100,5,1000)!=UMI_STATUS_OK) return 1;
+     /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_consolidated_trade_valid(&v)) return 2;
      return 0;
 }

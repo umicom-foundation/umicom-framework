@@ -11,6 +11,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/kit_environment.h"
 
+/* Provide the set if present operation used by this module and its client applications. */
 static UmiStatus set_if_present(UmiEnvironmentPlan *plan,
                                 const char *name,
                                 const char *value)
@@ -20,17 +21,30 @@ static UmiStatus set_if_present(UmiEnvironmentPlan *plan,
         : UMI_STATUS_OK;
 }
 
+/*
+ * Provide the toolchain kit environment plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_environment_plan(
     const UmiToolchainKitSnapshot *kit,
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *out_plan)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (kit == NULL || out_plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile != NULL) {
         status = umi_environment_plan_from_toolchain(profile, out_plan);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         umi_environment_plan_init(out_plan);
     }
 #define SET(name, value)                                                          \

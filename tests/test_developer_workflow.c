@@ -20,6 +20,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise add task and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_task(UmiDeveloperRuntime *runtime, const char *id, const char *command)
 {
     UmiProjectTaskSnapshot task = {0};
@@ -36,6 +40,10 @@ static void add_task(UmiDeveloperRuntime *runtime, const char *id, const char *c
         == UMI_STATUS_OK);
 }
 
+/*
+ * Exercise test named workflow and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_named_workflow(void)
 {
     UmiDeveloperRuntime *runtime = NULL;
@@ -86,6 +94,10 @@ static void test_named_workflow(void)
     umi_developer_runtime_destroy(runtime);
 }
 
+/*
+ * Exercise test project bootstrap and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_project_bootstrap(void)
 {
     UmiDeveloperRuntime *runtime = NULL;
@@ -140,6 +152,10 @@ static void test_project_bootstrap(void)
     assert(umi_fs_remove_tree(root) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     test_named_workflow();

@@ -22,12 +22,18 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     const size_t length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -35,6 +41,10 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui component spec default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentSpec umi_ui_component_spec_default(UmiUiComponentKind kind)
 {
     UmiUiComponentSpec spec;
@@ -49,6 +59,10 @@ UmiUiComponentSpec umi_ui_component_spec_default(UmiUiComponentKind kind)
     return spec;
 }
 
+/*
+ * Provide the ui component spec set id operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_component_spec_set_id(UmiUiComponentSpec *spec, const char *id)
 {
     return spec != NULL
@@ -56,6 +70,10 @@ UmiStatus umi_ui_component_spec_set_id(UmiUiComponentSpec *spec, const char *id)
                : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Provide the ui component spec set text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_component_spec_set_text(UmiUiComponentSpec *spec,
                                          const char *text)
 {
@@ -64,11 +82,17 @@ UmiStatus umi_ui_component_spec_set_text(UmiUiComponentSpec *spec,
                : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/* Check that ui component spec satisfies its contract before another service relies on it. */
 UmiStatus umi_ui_component_spec_validate(const UmiUiComponentSpec *spec)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec == NULL || spec->structure_size < sizeof(*spec)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (spec->kind < UMI_UI_COMPONENT_WINDOW ||
         spec->kind > UMI_UI_COMPONENT_CUSTOM || spec->id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -76,8 +100,13 @@ UmiStatus umi_ui_component_spec_validate(const UmiUiComponentSpec *spec)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui component kind name operation used by this module and its client
+ * applications.
+ */
 const char *umi_ui_component_kind_name(UmiUiComponentKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_UI_COMPONENT_WINDOW: return "window";
         case UMI_UI_COMPONENT_HEADER_BAR: return "header-bar";

@@ -22,15 +22,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the terminal ui link navigation operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_ui_link_navigation(const UmiTerminalLink *link,
                                           UmiUiNavigationEntrySnapshot *out_entry)
 {
     size_t target_length;
     size_t label_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (link == NULL || out_entry == NULL || link->target[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     target_length = strlen(link->target);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (target_length + 1U > sizeof(out_entry->uri)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

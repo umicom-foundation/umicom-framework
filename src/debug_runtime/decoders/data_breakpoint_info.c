@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the debug runtime decode data breakpoint info operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_decode_data_breakpoint_info(
     const char *json,
     UmiDebugRuntimeDataBreakpointInfo *out_result)
@@ -29,11 +33,17 @@ UmiStatus umi_debug_runtime_decode_data_breakpoint_info(
     UmiLanguageRuntimeJsonWriter writer;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || out_result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_result, 0, sizeof(*out_result));
     status = umi_language_runtime_json_parse(json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     body = umi_debug_runtime_decoder_body_token(&document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (body < 0) return UMI_STATUS_PARSE_ERROR;
 
     (void)umi_debug_runtime_decoder_optional_string(
@@ -47,6 +57,7 @@ UmiStatus umi_debug_runtime_decode_data_breakpoint_info(
 
     access_token = umi_language_runtime_json_object_get(
         &document, body, "accessTypes");
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (access_token >= 0) {
         umi_language_runtime_json_writer_init(
             &writer,
@@ -54,23 +65,27 @@ UmiStatus umi_debug_runtime_decode_data_breakpoint_info(
             sizeof(out_result->access_types));
         count = umi_language_runtime_json_array_count(&document, access_token);
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < count; ++index) {
             int token = umi_language_runtime_json_array_at(
                 &document, access_token, index);
             char value[64];
 
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (token < 0 ||
                 umi_language_runtime_json_string(
                     &document, token, value, sizeof(value)) != UMI_STATUS_OK) {
                 continue;
             }
 
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index > 0U) {
                 (void)umi_language_runtime_json_writer_raw(&writer, ",");
             }
             (void)umi_language_runtime_json_writer_raw(&writer, value);
         }
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (writer.status != UMI_STATUS_OK) return writer.status;
     }
 

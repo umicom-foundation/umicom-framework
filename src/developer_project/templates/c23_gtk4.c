@@ -55,6 +55,10 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
     }
 };
 
+/*
+ * Provide the developer project template c23 gtk4 operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_c23_gtk4(void)
 {
     static const UmiDeveloperProjectTemplate project_template = {

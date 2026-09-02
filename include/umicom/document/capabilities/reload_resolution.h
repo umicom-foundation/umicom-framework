@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_RELOAD_RESOLUTION "umicom.document.conflict.reload_resolution"
 
+/**
+ * Provide the document capability reload resolution operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_reload_resolution(void);
 

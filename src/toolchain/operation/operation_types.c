@@ -18,8 +18,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/operation_types.h"
 
+/*
+ * Provide the toolchain operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_toolchain_operation_kind_text(UmiToolchainOperationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_TOOLCHAIN_OPERATION_REPOSITORY_READ: return "repository-read";
         case UMI_TOOLCHAIN_OPERATION_REPOSITORY_WRITE: return "repository-write";
@@ -38,6 +43,10 @@ const char *umi_toolchain_operation_kind_text(UmiToolchainOperationKind kind)
     }
 }
 
+/*
+ * Provide the toolchain operation is repository operation used by this module and its
+ * client applications.
+ */
 int umi_toolchain_operation_is_repository(UmiToolchainOperationKind kind)
 {
     return kind == UMI_TOOLCHAIN_OPERATION_REPOSITORY_READ ||

@@ -39,6 +39,9 @@
 #define UMI_INTEGRATION_MAX_MEMBERS 64U
 #define UMI_INTEGRATION_MAX_EDGES 256U
 
+/**
+ * List the named integration application state values accepted by this public contract.
+ */
 typedef enum UmiIntegrationApplicationState {
     UMI_INTEGRATION_APP_UNKNOWN = 0,
     UMI_INTEGRATION_APP_DISCOVERED,
@@ -50,11 +53,17 @@ typedef enum UmiIntegrationApplicationState {
     UMI_INTEGRATION_APP_FAILED
 } UmiIntegrationApplicationState;
 
+/**
+ * List the named integration dependency kind values accepted by this public contract.
+ */
 typedef enum UmiIntegrationDependencyKind {
     UMI_INTEGRATION_DEPENDENCY_REQUIRED = 0,
     UMI_INTEGRATION_DEPENDENCY_OPTIONAL = 1
 } UmiIntegrationDependencyKind;
 
+/**
+ * List the named integration message kind values accepted by this public contract.
+ */
 typedef enum UmiIntegrationMessageKind {
     UMI_INTEGRATION_MESSAGE_COMMAND = 0,
     UMI_INTEGRATION_MESSAGE_EVENT,
@@ -62,6 +71,9 @@ typedef enum UmiIntegrationMessageKind {
     UMI_INTEGRATION_MESSAGE_RESPONSE
 } UmiIntegrationMessageKind;
 
+/**
+ * List the named integration transport values accepted by this public contract.
+ */
 typedef enum UmiIntegrationTransport {
     UMI_INTEGRATION_TRANSPORT_IN_PROCESS = 0,
     UMI_INTEGRATION_TRANSPORT_LOCAL_IPC,
@@ -70,8 +82,16 @@ typedef enum UmiIntegrationTransport {
     UMI_INTEGRATION_TRANSPORT_HTTP
 } UmiIntegrationTransport;
 
+/**
+ * Provide the integration application state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_integration_application_state_text(
     UmiIntegrationApplicationState state);
+/**
+ * Provide the integration message kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_integration_message_kind_text(UmiIntegrationMessageKind kind);
 
 #endif

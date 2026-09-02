@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode semantic tokens operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_runtime_decode_semantic_tokens(const char*json,UmiLanguageRuntimeSemanticTokens*out);
 #ifdef __cplusplus
 }

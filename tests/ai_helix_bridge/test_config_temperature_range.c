@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test config temperature range and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_config_temperature_range(void){UmiAiHelixBridgeConfig c;TEST_CHECK(umi_ai_helix_bridge_config_init(&c,"p","m")==UMI_STATUS_OK);c.temperature=2.1;TEST_CHECK(umi_ai_helix_bridge_config_validate(&c)==UMI_STATUS_INVALID_ARGUMENT);return 0;}

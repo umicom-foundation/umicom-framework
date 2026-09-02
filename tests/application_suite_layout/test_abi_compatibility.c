@@ -48,6 +48,10 @@ typedef UmiStatus (*ResolvedWorkbenchRegister)(
     UmiApplicationSuiteLayoutPaneResolver,
     void *);
 
+/*
+ * Exercise resolve pane and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static const char *resolve_pane(
     const UmiExperiencePanelDefinition *panel,
     void *user_data)
@@ -55,13 +59,22 @@ static const char *resolve_pane(
     static char pane_id[UMI_UI_ID_CAPACITY];
     const char *prefix = (const char *)user_data;
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (panel == NULL || panel->panel_id == NULL || prefix == NULL) return NULL;
     written = snprintf(pane_id, sizeof(pane_id), "%s%s", prefix,
                        panel->panel_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(pane_id)) return NULL;
     return pane_id;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     LegacyProfileProject legacy_profile =

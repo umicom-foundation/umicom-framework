@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced compare bookmark data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedCompareBookmark {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,8 +39,20 @@ typedef struct UmiVcsAdvancedCompareBookmark {
     uint64_t fingerprint;
 } UmiVcsAdvancedCompareBookmark;
 
+/**
+ * Initialise vcs advanced compare bookmark from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_compare_bookmark_init(UmiVcsAdvancedCompareBookmark *value);
+/**
+ * Check that vcs advanced compare bookmark satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_compare_bookmark_validate(const UmiVcsAdvancedCompareBookmark *value);
+/**
+ * Copy vcs advanced compare bookmark into module-owned storage so callers keep ownership
+ * of their input values.
+ */
 UmiStatus umi_vcs_advanced_compare_bookmark_set(UmiVcsAdvancedCompareBookmark *value,
                                                   const char *path,
                                                   const char *label,

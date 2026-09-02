@@ -28,14 +28,28 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the update feed data shared with callers of this public contract.
+ */
 typedef struct UmiUpdateFeed {
     UmiRelease releases[UMI_DELIVERY_MAX_RELEASES];
     size_t count;
 } UmiUpdateFeed;
 
+/**
+ * Initialise update feed from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_update_feed_init(UmiUpdateFeed *feed);
+/**
+ * Add update feed only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_update_feed_add(UmiUpdateFeed *feed,
                               const UmiRelease *release);
+/**
+ * Provide the update feed latest operation used by this module and its client
+ * applications.
+ */
 const UmiRelease *umi_update_feed_latest(const UmiUpdateFeed *feed,
                                          UmiReleaseChannel channel);
 

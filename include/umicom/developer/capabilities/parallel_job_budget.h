@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PARALLEL_JOB_BUDGET "umicom.developer.performance.parallel_job_budget"
 
+/**
+ * Provide the developer capability parallel job budget operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_parallel_job_budget(void);
 

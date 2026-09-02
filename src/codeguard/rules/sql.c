@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-SQL-001", "CWE-89", UMI_CODEGUARD_HIGH, UMI_CODEGUARD_CATEGORY_DATABASE, 85U, UMI_CODEGUARD_MATCH_CODE, "sqlite3_exec(", "Direct SQL execution needs strict ownership and parameterisation.", "Keep SQL inside the Data Server adapter and parameterise external values."}
 };
 
+/*
+ * Provide the codeguard rules sql operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_sql(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

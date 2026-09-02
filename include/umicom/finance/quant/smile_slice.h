@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant smile slice data shared with callers of this public contract.
+ */
 typedef struct UmiQuantSmileSlice {
     double lower_strike;
     double lower_vol;

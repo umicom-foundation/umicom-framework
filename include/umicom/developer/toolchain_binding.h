@@ -30,6 +30,10 @@ extern "C" {
 #define UMI_DEVELOPER_TOOLCHAIN_BINDING_CAPACITY 128U
 #define UMI_DEVELOPER_TOOLCHAIN_COMMAND_CAPACITY 256U
 
+/**
+ * Represent the developer toolchain binding snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperToolchainBindingSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -52,6 +56,10 @@ typedef struct UmiDeveloperToolchainBindingSnapshot {
     uint64_t revision;
 } UmiDeveloperToolchainBindingSnapshot;
 
+/**
+ * Represent the developer toolchain binding registry snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDeveloperToolchainBindingRegistrySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,25 +72,57 @@ typedef struct UmiDeveloperToolchainBindingRegistrySnapshot {
     uint64_t revision;
 } UmiDeveloperToolchainBindingRegistrySnapshot;
 
+/**
+ * Represent the developer toolchain binding registry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperToolchainBindingRegistry
     UmiDeveloperToolchainBindingRegistry;
 
+/**
+ * Initialise developer toolchain binding from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_toolchain_binding_init(
     UmiDeveloperToolchainBindingSnapshot *binding);
+/**
+ * Initialise developer toolchain binding registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_create(
     UmiDeveloperToolchainBindingRegistry **out_registry);
+/**
+ * Release or reset state held by developer toolchain binding registry so the same storage
+ * can be reused safely.
+ */
 void umi_developer_toolchain_binding_registry_destroy(
     UmiDeveloperToolchainBindingRegistry *registry);
+/**
+ * Provide the developer toolchain binding registry upsert operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_upsert(
     UmiDeveloperToolchainBindingRegistry *registry,
     const UmiDeveloperToolchainBindingSnapshot *binding);
+/**
+ * Remove developer toolchain binding registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_remove(
     UmiDeveloperToolchainBindingRegistry *registry,
     const char *binding_id);
+/**
+ * Find developer toolchain binding registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_find(
     const UmiDeveloperToolchainBindingRegistry *registry,
     const char *binding_id,
     UmiDeveloperToolchainBindingSnapshot *out_binding);
+/**
+ * Provide the developer toolchain binding registry resolve operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_resolve(
     const UmiDeveloperToolchainBindingRegistry *registry,
     const char *language_id,
@@ -90,15 +130,31 @@ UmiStatus umi_developer_toolchain_binding_registry_resolve(
     const char *architecture,
     UmiLanguageCapabilityFlags required_capabilities,
     UmiDeveloperToolchainBindingSnapshot *out_binding);
+/**
+ * Find developer toolchain binding registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_at(
     const UmiDeveloperToolchainBindingRegistry *registry,
     size_t index,
     UmiDeveloperToolchainBindingSnapshot *out_binding);
+/**
+ * Provide the developer toolchain binding registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_snapshot(
     const UmiDeveloperToolchainBindingRegistry *registry,
     UmiDeveloperToolchainBindingRegistrySnapshot *out_snapshot);
+/**
+ * Provide the developer toolchain binding register builtins operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_register_builtins(
     UmiDeveloperToolchainBindingRegistry *registry);
+/**
+ * Return the number of records represented by developer toolchain binding builtin without
+ * changing their state.
+ */
 size_t umi_developer_toolchain_binding_builtin_count(void);
 
 #ifdef __cplusplus

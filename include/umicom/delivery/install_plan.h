@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named install operation kind values accepted by this public contract.
+ */
 typedef enum UmiInstallOperationKind {
     UMI_INSTALL_CREATE_DIRECTORY = 1,
     UMI_INSTALL_COPY_FILE = 2,
@@ -34,18 +37,31 @@ typedef enum UmiInstallOperationKind {
     UMI_INSTALL_SWITCH_GENERATION = 4
 } UmiInstallOperationKind;
 
+/**
+ * Represent the install operation data shared with callers of this public contract.
+ */
 typedef struct UmiInstallOperation {
     UmiInstallOperationKind kind;
     char source[UMI_DELIVERY_PATH_CAPACITY];
     char destination[UMI_DELIVERY_PATH_CAPACITY];
 } UmiInstallOperation;
 
+/**
+ * Represent the install plan data shared with callers of this public contract.
+ */
 typedef struct UmiInstallPlan {
     UmiInstallOperation operations[UMI_DELIVERY_MAX_OPERATIONS];
     size_t count;
 } UmiInstallPlan;
 
+/**
+ * Initialise install plan from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_install_plan_init(UmiInstallPlan *plan);
+/**
+ * Add install plan only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_install_plan_add(UmiInstallPlan *plan,
                                UmiInstallOperationKind kind,
                                const char *source,

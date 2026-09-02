@@ -18,12 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad canvas viewport data shared with callers of this public contract.
+ */
 typedef struct UmiRadCanvasViewport {
     UmiRadPoint origin;
     UmiRadSize extent;
     double zoom;
 } UmiRadCanvasViewport;
+/**
+ * Initialise rad canvas viewport from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_canvas_viewport_init(UmiRadCanvasViewport *item);
+/**
+ * Check that rad canvas viewport satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_canvas_viewport_is_valid(const UmiRadCanvasViewport *item);
 #ifdef __cplusplus
 }

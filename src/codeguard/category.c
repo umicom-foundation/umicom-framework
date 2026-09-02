@@ -20,6 +20,10 @@
  */
 
 #include "umicom/codeguard/category.h"
+/*
+ * Provide the codeguard category text operation used by this module and its client
+ * applications.
+ */
 const char *umi_codeguard_category_text(UmiCodeGuardCategory category)
 {
     static const char *const names[] = {

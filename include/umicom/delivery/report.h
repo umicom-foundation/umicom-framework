@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the delivery report data shared with callers of this public contract.
+ */
 typedef struct UmiDeliveryReport {
     size_t artifacts;
     size_t gates;
@@ -37,7 +40,15 @@ typedef struct UmiDeliveryReport {
     int ready;
 } UmiDeliveryReport;
 
+/**
+ * Initialise delivery report from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_delivery_report_init(UmiDeliveryReport *report);
+/**
+ * Provide the delivery report format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_delivery_report_format(const UmiDeliveryReport *report,
                                      char *buffer,
                                      size_t capacity);

@@ -19,6 +19,7 @@
 
 #include "umicom/application/experience_catalogue.h"
 
+/* Provide the evidence accepted operation used by this module and its client applications. */
 static int evidence_accepted(
     const UmiProductisationEvidenceLedger *ledger,
     const char *application_id,
@@ -30,6 +31,10 @@ static int evidence_accepted(
         UMI_PRODUCTISATION_EVIDENCE_ACCEPTED;
 }
 
+/*
+ * Provide the productisation release gate evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_productisation_release_gate_evaluate(
     const UmiProductPortfolioInventory *inventory,
     const UmiProductPortfolioCoverage *coverage,
@@ -38,6 +43,10 @@ UmiStatus umi_productisation_release_gate_evaluate(
     const UmiProductisationEvidenceLedger *ledger,
     UmiProductisationReleaseGate *out_gate)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (inventory == NULL || coverage == NULL || gaps == NULL ||
         plan == NULL || out_gate == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;

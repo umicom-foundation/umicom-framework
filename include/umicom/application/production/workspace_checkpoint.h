@@ -25,6 +25,10 @@ extern "C" {
 #include "umicom/application/runtime/session_snapshot.h"
 #include "umicom/application/runtime/workspace_runtime.h"
 
+/**
+ * Represent the application production workspace checkpoint data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionWorkspaceCheckpoint {
     uint64_t sequence;
     UmiApplicationSessionSnapshot session;
@@ -32,10 +36,18 @@ typedef struct UmiApplicationProductionWorkspaceCheckpoint {
     int clean_shutdown;
 } UmiApplicationProductionWorkspaceCheckpoint;
 
+/**
+ * Provide the application production workspace checkpoint capture operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_workspace_checkpoint_capture(
     const UmiApplicationWorkspaceRuntime *runtime, uint64_t sequence,
     const char *reason, int clean_shutdown,
     UmiApplicationProductionWorkspaceCheckpoint *out_checkpoint);
+/**
+ * Check that application production workspace checkpoint satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_application_production_workspace_checkpoint_validate(
     const UmiApplicationProductionWorkspaceCheckpoint *checkpoint);
 

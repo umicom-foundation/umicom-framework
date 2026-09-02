@@ -21,16 +21,20 @@
 
 #include "internal.h"
 
+/* Provide the text seen operation used by this module and its client applications. */
 static bool text_seen(
     char values[][UMI_WORKBENCH_LAYOUT_ID_CAPACITY],
     size_t count,
     const char *value)
 {
     size_t index;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_text_present(value)) {
         return true;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(values[index], value) == 0) {
             return true;
         }
@@ -38,12 +42,17 @@ static bool text_seen(
     return false;
 }
 
+/* Provide the node offscreen operation used by this module and its client applications. */
 static bool node_offscreen(
     const UmiWorkbenchLayoutNode *node,
     const UmiWorkbenchMonitorTopology *topology)
 {
     const UmiWorkbenchMonitor *monitor;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL || topology == NULL ||
         (node->kind != UMI_WORKBENCH_LAYOUT_NODE_WINDOW &&
          node->kind !=
@@ -60,6 +69,10 @@ static bool node_offscreen(
                &node->bounds, &monitor->work_area);
 }
 
+/*
+ * Provide the workbench layout diagnose operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_diagnose(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchMonitorTopology *topology,
@@ -78,6 +91,10 @@ UmiStatus umi_workbench_layout_diagnose(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || out_health == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -92,6 +109,7 @@ UmiStatus umi_workbench_layout_diagnose(
     options.validate_hash = true;
     status = umi_workbench_layout_validate(
         document, &options, &validation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -118,27 +136,33 @@ UmiStatus umi_workbench_layout_diagnose(
     out_health->error_count = validation.error_count;
     out_health->content_hash = document->content_hash;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < document->node_count; ++index) {
         const UmiWorkbenchLayoutNode *node =
             &document->nodes[index];
         size_t depth = umi_workbench_layout_node_depth(
             document, node->node_id);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_workbench_layout_node_is_container(node)) {
             out_health->container_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node->kind == UMI_WORKBENCH_LAYOUT_NODE_PANEL ||
             node->kind ==
                 UMI_WORKBENCH_LAYOUT_NODE_EDITOR_GROUP) {
             out_health->panel_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node->kind ==
             UMI_WORKBENCH_LAYOUT_NODE_FLOATING_WINDOW) {
             out_health->floating_window_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (depth > out_health->maximum_depth) {
             out_health->maximum_depth = depth;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_workbench_layout_text_present(
                 node->owner_application_id) &&
             !text_seen(
@@ -153,6 +177,7 @@ UmiStatus umi_workbench_layout_diagnose(
                 false);
             owner_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!text_seen(
                 contexts,
                 context_count,
@@ -165,6 +190,10 @@ UmiStatus umi_workbench_layout_diagnose(
                 false);
             context_count += 1U;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (topology != NULL &&
             node_offscreen(node, topology)) {
             out_health->offscreen_window_count += 1U;
@@ -185,12 +214,20 @@ UmiStatus umi_workbench_layout_diagnose(
         out_health->error_count,
         out_health->warning_count);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_validation != NULL) {
         *out_validation = validation;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout health format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_health_format(
     const UmiWorkbenchLayoutHealth *health,
     char *buffer,
@@ -199,6 +236,10 @@ UmiStatus umi_workbench_layout_health_format(
 {
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (health == NULL || out_required == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -226,12 +267,21 @@ UmiStatus umi_workbench_layout_health_format(
         health->error_count,
         health->maximum_depth,
         health->content_hash);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
 
     *out_required = (size_t)written + 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL || capacity < *out_required) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (buffer != NULL && capacity > 0U) {
             buffer[capacity - 1U] = '\0';
         }

@@ -96,6 +96,9 @@ enum {
     UMI_EDITOR_NAVIGATION_REQUEST_ALL_FLAGS = (1U << 6) - 1U
 };
 
+/**
+ * List the named editor navigation hierarchy kind values accepted by this public contract.
+ */
 typedef enum UmiEditorNavigationHierarchyKind {
     UMI_EDITOR_NAVIGATION_HIERARCHY_CALL_INCOMING = 1,
     UMI_EDITOR_NAVIGATION_HIERARCHY_CALL_OUTGOING = 2,
@@ -103,6 +106,10 @@ typedef enum UmiEditorNavigationHierarchyKind {
     UMI_EDITOR_NAVIGATION_HIERARCHY_TYPE_SUBTYPES = 4
 } UmiEditorNavigationHierarchyKind;
 
+/**
+ * Represent the editor navigation cancellation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorNavigationCancellation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -110,6 +117,10 @@ typedef struct UmiEditorNavigationCancellation {
     void *user_data;
 } UmiEditorNavigationCancellation;
 
+/**
+ * Represent the editor navigation request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorNavigationRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -126,6 +137,10 @@ typedef struct UmiEditorNavigationRequest {
     UmiEditorNavigationRequestFlags flags;
 } UmiEditorNavigationRequest;
 
+/**
+ * Represent the editor navigation hierarchy request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorNavigationHierarchyRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -139,6 +154,10 @@ typedef struct UmiEditorNavigationHierarchyRequest {
     int include_indirect;
 } UmiEditorNavigationHierarchyRequest;
 
+/**
+ * Represent the editor navigation hierarchy node data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorNavigationHierarchyNode {
     uint32_t struct_size;
     uint32_t api_version;
@@ -156,6 +175,10 @@ typedef struct UmiEditorNavigationHierarchyNode {
     int cycle;
 } UmiEditorNavigationHierarchyNode;
 
+/**
+ * Represent the editor navigation preview request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorNavigationPreviewRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -168,6 +191,10 @@ typedef struct UmiEditorNavigationPreviewRequest {
     size_t maximum_bytes;
 } UmiEditorNavigationPreviewRequest;
 
+/**
+ * Represent the editor navigation source preview data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorNavigationSourcePreview {
     uint32_t struct_size;
     uint32_t api_version;
@@ -184,6 +211,10 @@ typedef struct UmiEditorNavigationSourcePreview {
     char content[UMI_EDITOR_NAVIGATION_PREVIEW_CONTENT_CAPACITY];
 } UmiEditorNavigationSourcePreview;
 
+/**
+ * Represent the editor navigation provider report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorNavigationProviderReport {
     uint32_t struct_size;
     uint32_t api_version;
@@ -206,6 +237,10 @@ typedef UmiStatus (*UmiEditorNavigationHierarchySink)(
     const UmiEditorNavigationHierarchyNode *node,
     void *user_data);
 
+/**
+ * Represent the editor navigation provider functions data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorNavigationProviderFunctions {
     uint32_t struct_size;
     uint32_t api_version;
@@ -238,6 +273,10 @@ typedef struct UmiEditorNavigationProviderFunctions {
     UmiStatus (*cancel)(void *instance, uint64_t request_id);
 } UmiEditorNavigationProviderFunctions;
 
+/**
+ * Represent the editor navigation provider descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorNavigationProviderDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -249,6 +288,10 @@ typedef struct UmiEditorNavigationProviderDescriptor {
     UmiEditorNavigationProviderFlags flags;
 } UmiEditorNavigationProviderDescriptor;
 
+/**
+ * Represent the editor navigation provider registration data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorNavigationProviderRegistration {
     uint32_t struct_size;
     uint32_t api_version;
@@ -257,6 +300,10 @@ typedef struct UmiEditorNavigationProviderRegistration {
     void *instance;
 } UmiEditorNavigationProviderRegistration;
 
+/**
+ * Represent the editor navigation provider registry snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorNavigationProviderRegistrySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -267,9 +314,17 @@ typedef struct UmiEditorNavigationProviderRegistrySnapshot {
     uint64_t revision;
 } UmiEditorNavigationProviderRegistrySnapshot;
 
+/**
+ * Represent the editor navigation provider registry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorNavigationProviderRegistry
     UmiEditorNavigationProviderRegistry;
 
+/**
+ * Initialise editor navigation provider descriptor from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_navigation_provider_descriptor_initialize(
     UmiEditorNavigationProviderDescriptor *descriptor,
     const char *provider_id,
@@ -277,18 +332,30 @@ UmiStatus umi_editor_navigation_provider_descriptor_initialize(
     const char *language_selector,
     UmiEditorNavigationProviderCapabilities capabilities,
     int32_t priority);
+/**
+ * Initialise editor navigation request from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_navigation_request_initialize(
     UmiEditorNavigationRequest *request,
     uint64_t request_id,
     UmiEditorNavigationQueryKind query_kind,
     const UmiEditorSourceLocation *origin,
     const char *language_id);
+/**
+ * Initialise editor navigation hierarchy request from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_navigation_hierarchy_request_initialize(
     UmiEditorNavigationHierarchyRequest *request,
     uint64_t request_id,
     UmiEditorNavigationHierarchyKind kind,
     const char *root_symbol_id,
     const char *language_id);
+/**
+ * Initialise editor navigation preview request from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_navigation_preview_request_initialize(
     UmiEditorNavigationPreviewRequest *request,
     uint64_t request_id,
@@ -298,46 +365,106 @@ UmiStatus umi_editor_navigation_preview_request_initialize(
     uint64_t start_line,
     uint64_t end_line);
 
+/**
+ * Initialise editor navigation provider registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_navigation_provider_registry_create(
     UmiEditorNavigationProviderRegistry **out_registry);
+/**
+ * Release or reset state held by editor navigation provider registry so the same storage
+ * can be reused safely.
+ */
 void umi_editor_navigation_provider_registry_destroy(
     UmiEditorNavigationProviderRegistry *registry);
+/**
+ * Release or reset state held by editor navigation provider registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_navigation_provider_registry_clear(
     UmiEditorNavigationProviderRegistry *registry);
+/**
+ * Provide the editor navigation provider registry upsert operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_navigation_provider_registry_upsert(
     UmiEditorNavigationProviderRegistry *registry,
     const UmiEditorNavigationProviderRegistration *registration);
+/**
+ * Remove editor navigation provider registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_editor_navigation_provider_registry_remove(
     UmiEditorNavigationProviderRegistry *registry,
     const char *provider_id);
+/**
+ * Find editor navigation provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_navigation_provider_registry_find(
     const UmiEditorNavigationProviderRegistry *registry,
     const char *provider_id,
     UmiEditorNavigationProviderRegistration *out_registration);
+/**
+ * Find editor navigation provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_navigation_provider_registry_at(
     const UmiEditorNavigationProviderRegistry *registry,
     size_t position,
     UmiEditorNavigationProviderRegistration *out_registration);
+/**
+ * Provide the editor navigation provider registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_navigation_provider_registry_snapshot(
     const UmiEditorNavigationProviderRegistry *registry,
     UmiEditorNavigationProviderRegistrySnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor navigation provider registry without
+ * changing their state.
+ */
 size_t umi_editor_navigation_provider_registry_count(
     const UmiEditorNavigationProviderRegistry *registry);
+/**
+ * Provide the editor navigation provider registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_navigation_provider_registry_revision(
     const UmiEditorNavigationProviderRegistry *registry);
 
+/**
+ * Provide the editor navigation capability for query kind operation used by this module
+ * and its client applications.
+ */
 UmiEditorNavigationProviderCapabilities
 umi_editor_navigation_capability_for_query_kind(
     UmiEditorNavigationQueryKind query_kind);
+/**
+ * Provide the editor navigation provider language matches operation used by this module
+ * and its client applications.
+ */
 int umi_editor_navigation_provider_language_matches(
     const UmiEditorNavigationProviderDescriptor *descriptor,
     const char *language_id);
+/**
+ * Provide the editor navigation provider supports request operation used by this module
+ * and its client applications.
+ */
 int umi_editor_navigation_provider_supports_request(
     const UmiEditorNavigationProviderRegistration *registration,
     const UmiEditorNavigationRequest *request);
+/**
+ * Provide the editor navigation provider supports hierarchy operation used by this module
+ * and its client applications.
+ */
 int umi_editor_navigation_provider_supports_hierarchy(
     const UmiEditorNavigationProviderRegistration *registration,
     const UmiEditorNavigationHierarchyRequest *request);
+/**
+ * Provide the editor navigation provider supports preview operation used by this module
+ * and its client applications.
+ */
 int umi_editor_navigation_provider_supports_preview(
     const UmiEditorNavigationProviderRegistration *registration,
     const UmiEditorNavigationPreviewRequest *request);

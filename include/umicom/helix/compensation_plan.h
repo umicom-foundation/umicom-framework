@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named helix compensation state values accepted by this public contract.
+ */
 typedef enum UmiHelixCompensationState {
     UMI_HELIX_ROLLBACK_EMPTY = 1,
     UMI_HELIX_ROLLBACK_READY = 2,
@@ -30,6 +33,9 @@ typedef enum UmiHelixCompensationState {
     UMI_HELIX_ROLLBACK_FAILED = 5
 } UmiHelixCompensationState;
 
+/**
+ * Represent the helix compensation plan data shared with callers of this public contract.
+ */
 typedef struct UmiHelixCompensationPlan {
     UmiHelixAction compensations[UMI_HELIX_RUNTIME_MAX_COMPENSATIONS];
     size_t count;
@@ -37,13 +43,33 @@ typedef struct UmiHelixCompensationPlan {
     UmiHelixCompensationState state;
 } UmiHelixCompensationPlan;
 
+/**
+ * Initialise helix compensation plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_helix_compensation_plan_init(UmiHelixCompensationPlan *plan);
+/**
+ * Add helix compensation plan only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_helix_compensation_plan_add(UmiHelixCompensationPlan *plan,
                                    const UmiHelixAction *compensation);
+/**
+ * Provide the helix compensation plan begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_compensation_plan_begin(UmiHelixCompensationPlan *plan,
                                      int approved);
+/**
+ * Provide the helix compensation plan next operation used by this module and its client
+ * applications.
+ */
 const UmiHelixAction *umi_helix_compensation_plan_next(
     UmiHelixCompensationPlan *plan);
+/**
+ * Provide the helix compensation plan record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_compensation_plan_record(UmiHelixCompensationPlan *plan,
                                       UmiStatus result);
 

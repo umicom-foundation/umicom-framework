@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/application_binding.h"
 
+/**
+ * Represent the application production layout binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionLayoutBinding {
     const UmiExperienceLayoutDefinition *layout;
     size_t projected_window_count;
@@ -31,6 +35,10 @@ typedef struct UmiApplicationProductionLayoutBinding {
     int projection_ready;
 } UmiApplicationProductionLayoutBinding;
 
+/**
+ * Represent the application production layout bindings data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionLayoutBindings {
     UmiApplicationProductionLayoutBinding
         entries[UMI_APPLICATION_PRODUCTION_MAX_LAYOUTS];
@@ -39,9 +47,17 @@ typedef struct UmiApplicationProductionLayoutBindings {
     size_t missing_projection_count;
 } UmiApplicationProductionLayoutBindings;
 
+/**
+ * Provide the application production layout bindings build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_layout_bindings_build(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionLayoutBindings *out_bindings);
+/**
+ * Find application production layout bindings while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionLayoutBinding *
 umi_application_production_layout_bindings_find(
     const UmiApplicationProductionLayoutBindings *bindings,

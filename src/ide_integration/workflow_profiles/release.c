@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/workflow_profiles/release.h"
 
+/*
+ * Release or reset state held by ide workflow profile so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_ide_workflow_profile_release(
     UmiIdeWorkflowPolicy *out_policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_policy == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_ide_workflow_policy_init(out_policy);
     out_policy->require_document = 0;

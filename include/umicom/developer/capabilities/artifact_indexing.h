@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ARTIFACT_INDEXING "umicom.developer.build.artifact_indexing"
 
+/**
+ * Provide the developer capability artifact indexing operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_artifact_indexing(void);
 

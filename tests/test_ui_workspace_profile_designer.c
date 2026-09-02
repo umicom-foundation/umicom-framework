@@ -21,6 +21,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Exercise pane and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiUiPaneSnapshot pane(const char *id,
                               const char *title,
                               UmiUiPlacement placement,
@@ -38,6 +42,10 @@ static UmiUiPaneSnapshot pane(const char *id,
     return result;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommandRegistry *commands = NULL;

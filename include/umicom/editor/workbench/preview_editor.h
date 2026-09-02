@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb preview editor data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbPreviewEditor { char item_id[UMI_EDITOR_WB_ID_CAPACITY]; bool enabled; bool promoted; uint64_t revision; } UmiEditorWbPreviewEditor;
+/**
+ * Initialise editor wb preview editor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_preview_editor_init(UmiEditorWbPreviewEditor *state,const char *item_id,bool enabled);
+/**
+ * Copy editor wb preview editor into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_editor_wb_preview_editor_set(UmiEditorWbPreviewEditor *state,bool enabled);
+/**
+ * Check that editor wb preview editor satisfies its contract before another service relies
+ * on it.
+ */
 int umi_editor_wb_preview_editor_valid(const UmiEditorWbPreviewEditor *state);
 
 #ifdef __cplusplus

@@ -56,6 +56,7 @@ UmiStatus umi_repository_inspection_service_refresh(
 
     /* Collect Git evidence once and hand canonical status to MaintenanceService. */
     status = umi_repository_snapshot_collect(context, &service->snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         service->maintenance.summary = service->snapshot.maintenance;
         status = umi_repository_maintenance_service_evaluate(
@@ -70,6 +71,7 @@ UmiStatus umi_repository_inspection_service_refresh(
 
     /* Preserve operation status and publish revisions only for complete refreshes. */
     service->last_status = status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         ++service->revision;
     }

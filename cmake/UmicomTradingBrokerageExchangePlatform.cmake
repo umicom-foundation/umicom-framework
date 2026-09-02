@@ -21,6 +21,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_TRADING_CORE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_trading)
     message(FATAL_ERROR "UmicomTradingBrokerageExchangePlatform.cmake requires canonical umicom_trading")
 endif()
@@ -95,16 +96,22 @@ target_sources(umicom_trading PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/trading/core/wash_trade_detector.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add trading core test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_trading_core_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_TRADING_CORE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::trading)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

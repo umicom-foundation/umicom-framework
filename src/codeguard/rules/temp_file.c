@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-TMP-001", "CWE-377", UMI_CODEGUARD_HIGH, UMI_CODEGUARD_CATEGORY_FILESYSTEM, 95U, UMI_CODEGUARD_MATCH_CODE, "tmpnam(", "tmpnam can create predictable temporary-file races.", "Use a secure exclusive temporary-file API with restrictive permissions."}
 };
 
+/*
+ * Provide the codeguard rules temp file operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_temp_file(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

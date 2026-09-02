@@ -15,29 +15,49 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Provide the find setting index operation used by this module and its client
+ * applications.
+ */
 static size_t find_setting_index(const UmiProjectWorkspaceModel *model,
                                  const char *setting_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || setting_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->setting_count; ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(model->settings[index].id, setting_id) == 0) return index;
     return SIZE_MAX;
 }
 
+/*
+ * Provide the project workspace model upsert setting operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_model_upsert_setting(
     UmiProjectWorkspaceModel *model,
     const UmiProjectWorkspaceSettingSnapshot *setting)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || setting == NULL || setting->id[0] == '\0' ||
         setting->key[0] == '\0' ||
         setting->scope < UMI_PROJECT_WORKSPACE_SETTING_WORKSPACE ||
         setting->scope > UMI_PROJECT_WORKSPACE_SETTING_PROJECT)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (setting->scope != UMI_PROJECT_WORKSPACE_SETTING_WORKSPACE &&
         setting->owner_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     index = find_setting_index(model, setting->id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index != SIZE_MAX &&
         strcmp(model->settings[index].owner_id, setting->owner_id) == 0 &&
         strcmp(model->settings[index].key, setting->key) == 0 &&
@@ -45,7 +65,9 @@ UmiStatus umi_project_workspace_model_upsert_setting(
         model->settings[index].scope == setting->scope &&
         model->settings[index].secret == setting->secret)
         return UMI_STATUS_OK;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (model->setting_count >= UMI_PROJECT_WORKSPACE_SETTING_CAPACITY)
             return UMI_STATUS_CAPACITY_EXCEEDED;
         index = model->setting_count++;
@@ -61,21 +83,35 @@ UmiStatus umi_project_workspace_model_upsert_setting(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by project workspace model setting without
+ * changing their state.
+ */
 size_t umi_project_workspace_model_setting_count(const UmiProjectWorkspaceModel *model)
 {
     return model != NULL ? model->setting_count : 0U;
 }
 
+/*
+ * Find project workspace model setting while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_project_workspace_model_setting_at(
     const UmiProjectWorkspaceModel *model, size_t index,
     UmiProjectWorkspaceSettingSnapshot *out_setting)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_setting == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= model->setting_count) return UMI_STATUS_NOT_FOUND;
     *out_setting = model->settings[index];
     return UMI_STATUS_OK;
 }
 
+/* Provide the write resolved operation used by this module and its client applications. */
 static void write_resolved(
     const UmiProjectWorkspaceSettingSnapshot *setting,
     UmiProjectWorkspaceResolvedSetting *out_setting)
@@ -93,6 +129,10 @@ static void write_resolved(
     out_setting->secret = setting->secret;
 }
 
+/*
+ * Provide the find scoped setting operation used by this module and its client
+ * applications.
+ */
 static const UmiProjectWorkspaceSettingSnapshot *find_scoped_setting(
     const UmiProjectWorkspaceModel *model,
     UmiProjectWorkspaceSettingScope scope,
@@ -101,17 +141,28 @@ static const UmiProjectWorkspaceSettingSnapshot *find_scoped_setting(
 {
     size_t index;
     const UmiProjectWorkspaceSettingSnapshot *best = NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->setting_count; ++index) {
         const UmiProjectWorkspaceSettingSnapshot *candidate = &model->settings[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (candidate->scope != scope || strcmp(candidate->key, key) != 0)
             continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (scope != UMI_PROJECT_WORKSPACE_SETTING_WORKSPACE &&
             strcmp(candidate->owner_id, owner_id) != 0) continue;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (best == NULL || candidate->revision > best->revision) best = candidate;
     }
     return best;
 }
 
+/*
+ * Provide the project workspace model resolve setting operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_project_workspace_model_resolve_setting(
     const UmiProjectWorkspaceModel *model,
     const char *project_id,
@@ -120,24 +171,45 @@ UmiStatus umi_project_workspace_model_resolve_setting(
 {
     UmiProjectWorkspaceMemberSnapshot member;
     const UmiProjectWorkspaceSettingSnapshot *setting;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || project_id == NULL || key == NULL || out_setting == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_project_workspace_model_find_project_member(
             model, project_id, &member) != UMI_STATUS_OK)
         return UMI_STATUS_NOT_FOUND;
     setting = find_scoped_setting(model, UMI_PROJECT_WORKSPACE_SETTING_PROJECT,
                                   project_id, key);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (setting == NULL && member.group_id[0] != '\0')
         setting = find_scoped_setting(model, UMI_PROJECT_WORKSPACE_SETTING_GROUP,
                                       member.group_id, key);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (setting == NULL)
         setting = find_scoped_setting(model, UMI_PROJECT_WORKSPACE_SETTING_WORKSPACE,
                                       "", key);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (setting == NULL) return UMI_STATUS_NOT_FOUND;
     write_resolved(setting, out_setting);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the project workspace model resolve variable operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_project_workspace_model_resolve_variable(
     const UmiProjectWorkspaceModel *model,
     const char *project_id,
@@ -148,20 +220,28 @@ UmiStatus umi_project_workspace_model_resolve_variable(
     UmiProjectVariableSnapshot candidate;
     UmiProjectVariableSnapshot best;
     int have_best = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || project_id == NULL || name == NULL || out_setting == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_project_variable_registry_count(
              umi_project_workspace_variable(model->projects));
          ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_project_variable_registry_at(
                 umi_project_workspace_variable(model->projects),
                 index, &candidate) != UMI_STATUS_OK ||
             strcmp(candidate.name, name) != 0) continue;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (candidate.project_id[0] == '\0' ||
             strcmp(candidate.project_id, project_id) == 0) {
             int candidate_is_project = candidate.project_id[0] != '\0';
             int best_is_project = have_best && best.project_id[0] != '\0';
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!have_best ||
                 (candidate_is_project && !best_is_project) ||
                 (candidate_is_project == best_is_project &&
@@ -171,6 +251,7 @@ UmiStatus umi_project_workspace_model_resolve_variable(
             }
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!have_best) return UMI_STATUS_NOT_FOUND;
     memset(out_setting, 0, sizeof(*out_setting));
     out_setting->struct_size = (uint32_t)sizeof(*out_setting);

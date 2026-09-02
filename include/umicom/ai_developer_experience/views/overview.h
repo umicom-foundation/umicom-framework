@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise ai developer overview view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_overview_view_create(
     const char *view_id,
     const UmiAiCodingRuntimePlatformSnapshot *coding,

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/preview_session.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiRadPreviewTarget t;UmiRadPreviewSession s;CHECK(umi_rad_preview_target_init(&t)==UMI_STATUS_OK);CHECK(umi_rad_preview_session_init(&s,"preview",&t)==UMI_STATUS_OK);CHECK(umi_rad_preview_session_start(&s,3U)==UMI_STATUS_OK);CHECK(umi_rad_preview_session_rendered(&s,3U)==UMI_STATUS_OK);return 0;}

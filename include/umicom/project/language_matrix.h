@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_PROJECT_LANGUAGE_ID_CAPACITY 64U
 #define UMI_PROJECT_LANGUAGE_PATHS_CAPACITY 1024U
 
+/**
+ * List the named project language interop policy values accepted by this public contract.
+ */
 typedef enum UmiProjectLanguageInteropPolicy {
     UMI_PROJECT_LANGUAGE_INTEROP_NONE = 0,
     UMI_PROJECT_LANGUAGE_INTEROP_C_ABI = 1,
@@ -39,6 +42,10 @@ typedef enum UmiProjectLanguageInteropPolicy {
     UMI_PROJECT_LANGUAGE_INTEROP_DATA_EXCHANGE = 4
 } UmiProjectLanguageInteropPolicy;
 
+/**
+ * Represent the project language entry snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectLanguageEntrySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -52,6 +59,10 @@ typedef struct UmiProjectLanguageEntrySnapshot {
     uint64_t revision;
 } UmiProjectLanguageEntrySnapshot;
 
+/**
+ * Represent the project language matrix snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectLanguageMatrixSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,6 +75,10 @@ typedef struct UmiProjectLanguageMatrixSnapshot {
     uint64_t revision;
 } UmiProjectLanguageMatrixSnapshot;
 
+/**
+ * Represent the project language validation report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectLanguageValidationReport {
     uint32_t struct_size;
     uint32_t api_version;
@@ -75,38 +90,89 @@ typedef struct UmiProjectLanguageValidationReport {
     char summary[512];
 } UmiProjectLanguageValidationReport;
 
+/**
+ * Represent the project language matrix data shared with callers of this public contract.
+ */
 typedef struct UmiProjectLanguageMatrix UmiProjectLanguageMatrix;
 
+/**
+ * Initialise project language entry from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_project_language_entry_init(UmiProjectLanguageEntrySnapshot *entry);
+/**
+ * Initialise project language matrix from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_project_language_matrix_create(
     const char *project_id,
     UmiProjectLanguageMatrix **out_matrix);
+/**
+ * Release or reset state held by project language matrix so the same storage can be reused
+ * safely.
+ */
 void umi_project_language_matrix_destroy(UmiProjectLanguageMatrix *matrix);
+/**
+ * Provide the project language matrix set primary operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_language_matrix_set_primary(
     UmiProjectLanguageMatrix *matrix,
     const char *language_id);
+/**
+ * Provide the project language matrix upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_project_language_matrix_upsert(
     UmiProjectLanguageMatrix *matrix,
     const UmiProjectLanguageEntrySnapshot *entry);
+/**
+ * Remove project language matrix while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_project_language_matrix_remove(
     UmiProjectLanguageMatrix *matrix,
     const char *language_id);
+/**
+ * Find project language matrix while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_project_language_matrix_find(
     const UmiProjectLanguageMatrix *matrix,
     const char *language_id,
     UmiProjectLanguageEntrySnapshot *out_entry);
+/**
+ * Find project language matrix while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_project_language_matrix_at(
     const UmiProjectLanguageMatrix *matrix,
     size_t index,
     UmiProjectLanguageEntrySnapshot *out_entry);
+/**
+ * Provide the project language matrix snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_language_matrix_snapshot(
     const UmiProjectLanguageMatrix *matrix,
     UmiProjectLanguageMatrixSnapshot *out_snapshot);
+/**
+ * Check that project language matrix satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_project_language_matrix_validate(
     const UmiProjectLanguageMatrix *matrix,
     UmiProjectLanguageValidationReport *out_report);
+/**
+ * Return the number of records represented by project language matrix without changing
+ * their state.
+ */
 size_t umi_project_language_matrix_count(
     const UmiProjectLanguageMatrix *matrix);
+/**
+ * Provide the project language interop policy text operation used by this module and its
+ * client applications.
+ */
 const char *umi_project_language_interop_policy_text(
     UmiProjectLanguageInteropPolicy policy);
 

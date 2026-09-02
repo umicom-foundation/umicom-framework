@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance surface style projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceSurfaceStyleProjection {
     char surface_id[UMI_APPEARANCE_ID_CAPACITY];
     char background_token[UMI_APPEARANCE_TOKEN_CAPACITY];

@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the gtk4 adapter data shared with callers of this public contract.
+ */
 typedef struct UmiGtk4Adapter UmiGtk4Adapter;
 
 /*
@@ -104,27 +107,70 @@ enum {
         UMI_GTK4_CHROME_DESKTOP_LAYOUT
 };
 
+/**
+ * Initialise gtk4 adapter from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_gtk4_adapter_create(void *native_gtk_application,
                                   UmiGtk4Adapter **out_adapter);
+/**
+ * Release or reset state held by gtk4 adapter so the same storage can be reused safely.
+ */
 void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter);
+/**
+ * Provide the gtk4 adapter interface operation used by this module and its client
+ * applications.
+ */
 UmiUiAdapter umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter);
+/**
+ * Provide the gtk4 adapter present operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_adapter_present(UmiGtk4Adapter *adapter,
                                    UmiUiApplicationShell *shell);
+/**
+ * Provide the gtk4 adapter bind desktop shell operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_adapter_bind_desktop_shell(
     UmiGtk4Adapter *adapter,
     UmiDesktopShellModel *desktop_shell);
+/**
+ * Provide the gtk4 adapter bind context interactions operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_adapter_bind_context_interactions(
     UmiGtk4Adapter *adapter,
     const UmiGtk4ContextInteractionSink *sink);
+/**
+ * Provide the gtk4 adapter unbind context interactions operation used by this module and
+ * its client applications.
+ */
 void umi_gtk4_adapter_unbind_context_interactions(
     UmiGtk4Adapter *adapter);
+/**
+ * Provide the gtk4 adapter refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_adapter_refresh(UmiGtk4Adapter *adapter);
+/**
+ * Provide the gtk4 adapter native window operation used by this module and its client
+ * applications.
+ */
 void *umi_gtk4_adapter_native_window(UmiGtk4Adapter *adapter);
 
+/**
+ * Provide the gtk4 adapter set chrome visibility operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_adapter_set_chrome_visibility(
     UmiGtk4Adapter *adapter,
     UmiGtk4ChromeFlags visible_chrome);
 
+/**
+ * Provide the gtk4 adapter chrome visibility operation used by this module and its client
+ * applications.
+ */
 UmiGtk4ChromeFlags umi_gtk4_adapter_chrome_visibility(
     const UmiGtk4Adapter *adapter);
 

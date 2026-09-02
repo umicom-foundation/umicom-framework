@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital block reference data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalBlockReference {
     UmiDigitalAssetId network_id;
     uint64_t height;

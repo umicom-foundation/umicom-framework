@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/diagnostics/readiness.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiReadinessRegistry *r = NULL;
     assert(umi_readiness_registry_create(&r) == UMI_STATUS_OK);

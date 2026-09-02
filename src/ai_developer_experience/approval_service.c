@@ -18,9 +18,17 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise ai developer approval service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_approval_service_init(
     UmiAiDeveloperApprovalService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     (void)memset(service, 0, sizeof(*service));
@@ -28,15 +36,27 @@ UmiStatus umi_ai_developer_approval_service_init(
     return umi_ai_developer_approval_queue_create(&service->queue);
 }
 
+/*
+ * Provide the ai developer approval service deinit operation used by this module and its
+ * client applications.
+ */
 void umi_ai_developer_approval_service_deinit(
     UmiAiDeveloperApprovalService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
 
     umi_ai_developer_approval_queue_destroy(service->queue);
     (void)memset(service, 0, sizeof(*service));
 }
 
+/*
+ * Provide the ai developer approval request tool operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_approval_request_tool(
     UmiAiDeveloperApprovalService *service,
     const UmiAiCodingToolDescriptor *descriptor,
@@ -48,6 +68,10 @@ UmiStatus umi_ai_developer_approval_request_tool(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || service->queue == NULL ||
         descriptor == NULL || call == NULL ||
         out_approval_id == NULL || capacity == 0U) {
@@ -61,6 +85,7 @@ UmiStatus umi_ai_developer_approval_request_tool(
         sizeof(request.approval_id),
         "approval.tool.%llu",
         (unsigned long long)service->sequence++);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0 ||
         (size_t)written >= sizeof(request.approval_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -102,8 +127,10 @@ UmiStatus umi_ai_developer_approval_request_tool(
 
     status = umi_ai_developer_approval_queue_add(
         service->queue, &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(request.approval_id) >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -112,6 +139,10 @@ UmiStatus umi_ai_developer_approval_request_tool(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer approval request patch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_approval_request_patch(
     UmiAiDeveloperApprovalService *service,
     const UmiAiCodingPatch *patch,
@@ -122,6 +153,10 @@ UmiStatus umi_ai_developer_approval_request_patch(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || service->queue == NULL ||
         patch == NULL || out_approval_id == NULL ||
         capacity == 0U || patch->patch_id[0] == '\0') {
@@ -135,6 +170,7 @@ UmiStatus umi_ai_developer_approval_request_patch(
         sizeof(request.approval_id),
         "approval.patch.%llu",
         (unsigned long long)service->sequence++);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0 ||
         (size_t)written >= sizeof(request.approval_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -169,8 +205,10 @@ UmiStatus umi_ai_developer_approval_request_patch(
 
     status = umi_ai_developer_approval_queue_add(
         service->queue, &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(request.approval_id) >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -179,10 +217,18 @@ UmiStatus umi_ai_developer_approval_request_patch(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer approval approve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_approval_approve(
     UmiAiDeveloperApprovalService *service,
     const char *approval_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || service->queue == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -193,10 +239,18 @@ UmiStatus umi_ai_developer_approval_approve(
         UMI_AI_DEVELOPER_APPROVAL_APPROVED);
 }
 
+/*
+ * Provide the ai developer approval reject operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_approval_reject(
     UmiAiDeveloperApprovalService *service,
     const char *approval_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || service->queue == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -207,6 +261,10 @@ UmiStatus umi_ai_developer_approval_reject(
         UMI_AI_DEVELOPER_APPROVAL_REJECTED);
 }
 
+/*
+ * Provide the ai developer tool approval callback operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_tool_approval_callback(
     void *user_data,
     const UmiAiCodingToolDescriptor *descriptor,
@@ -218,6 +276,10 @@ UmiStatus umi_ai_developer_tool_approval_callback(
     char approval_id[UMI_AI_DEVELOPER_ID_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_approved == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     /*

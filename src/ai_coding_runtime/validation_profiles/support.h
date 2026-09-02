@@ -15,6 +15,10 @@
 #ifndef UMICOM_AI_CODING_RUNTIME_VALIDATION_PROFILE_SUPPORT_H
 #define UMICOM_AI_CODING_RUNTIME_VALIDATION_PROFILE_SUPPORT_H
 #include "umicom/ai_coding_runtime/validation_plan.h"
+/**
+ * Add ai coding validation profile only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_coding_validation_profile_add(
     UmiAiCodingValidationPlan *plan,
     const char *id,

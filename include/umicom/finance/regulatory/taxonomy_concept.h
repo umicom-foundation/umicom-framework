@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the taxonomy concept data shared with callers of this public contract.
+ */
 typedef struct UmiTaxonomyConcept {
     char concept_id[UMI_REG_ID_CAPACITY];
     char taxonomy_id[UMI_REG_ID_CAPACITY];

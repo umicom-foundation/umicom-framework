@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the lineage graph edge data shared with callers of this public contract.
+ */
 typedef struct UmiLineageGraphEdge { size_t from_index; size_t to_index; } UmiLineageGraphEdge;
+/**
+ * Represent the lineage graph data shared with callers of this public contract.
+ */
 typedef struct UmiLineageGraph { char node_ids[UMI_REG_MAX_NODES][UMI_REG_ID_CAPACITY]; size_t node_count; UmiLineageGraphEdge edges[UMI_REG_MAX_EDGES]; size_t edge_count; } UmiLineageGraph;
 /* Initialise an empty lineage graph. */
 void umi_reg_lineage_graph_init(UmiLineageGraph *graph);

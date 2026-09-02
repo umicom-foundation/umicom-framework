@@ -17,6 +17,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise handle refresh and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus handle_refresh(const UmiApplicationExperienceInvocation *invocation,
                                 UmiApplicationExperienceCommandResult *result, void *user_data) {
   int *calls = user_data;
@@ -28,6 +32,10 @@ static UmiStatus handle_refresh(const UmiApplicationExperienceInvocation *invoca
   return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   const UmiApplicationExperienceCommand command = {sizeof(UmiApplicationExperienceCommand),
                                                    UMI_APPLICATION_EXPERIENCE_API_VERSION,

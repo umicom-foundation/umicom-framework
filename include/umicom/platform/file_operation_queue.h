@@ -31,6 +31,9 @@ extern "C" {
 
 #define UMI_PLATFORM_FILE_OPERATION_QUEUE_CAPACITY 512U
 
+/**
+ * Represent the file operation snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiFileOperationSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -47,21 +50,60 @@ typedef struct UmiFileOperationSnapshot {
     uint64_t revision;
 } UmiFileOperationSnapshot;
 
+/**
+ * Represent the file operation registry data shared with callers of this public contract.
+ */
 typedef struct UmiFileOperationRegistry UmiFileOperationRegistry;
 
+/**
+ * Initialise platform file operation queue registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_platform_file_operation_queue_registry_create(UmiFileOperationRegistry **out_registry);
+/**
+ * Release or reset state held by platform file operation queue registry so the same
+ * storage can be reused safely.
+ */
 void umi_platform_file_operation_queue_registry_destroy(UmiFileOperationRegistry *registry);
+/**
+ * Provide the platform file operation queue registry upsert operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_platform_file_operation_queue_registry_upsert(UmiFileOperationRegistry *registry, const UmiFileOperationSnapshot *item);
+/**
+ * Remove platform file operation queue registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_platform_file_operation_queue_registry_remove(UmiFileOperationRegistry *registry, const char *id);
+/**
+ * Find platform file operation queue registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_platform_file_operation_queue_registry_find(const UmiFileOperationRegistry *registry, const char *id, UmiFileOperationSnapshot *out_item);
+/**
+ * Find platform file operation queue registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_platform_file_operation_queue_registry_at(const UmiFileOperationRegistry *registry, size_t index, UmiFileOperationSnapshot *out_item);
+/**
+ * Provide the platform file operation queue registry update progress operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_platform_file_operation_queue_registry_update_progress(
     UmiFileOperationRegistry *registry,
     const char *id,
     uint64_t bytes_done,
     int state,
     const char *error_text);
+/**
+ * Return the number of records represented by platform file operation queue registry
+ * without changing their state.
+ */
 size_t umi_platform_file_operation_queue_registry_count(const UmiFileOperationRegistry *registry);
+/**
+ * Provide the platform file operation queue registry revision operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_platform_file_operation_queue_registry_revision(const UmiFileOperationRegistry *registry);
 
 #ifdef __cplusplus

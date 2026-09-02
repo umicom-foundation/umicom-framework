@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named code guard severity values accepted by this public contract.
+ */
 typedef enum UmiCodeGuardSeverity {
     UMI_CODEGUARD_INFO = 0,
     UMI_CODEGUARD_LOW = 1,
@@ -30,6 +33,10 @@ typedef enum UmiCodeGuardSeverity {
     UMI_CODEGUARD_HIGH = 3,
     UMI_CODEGUARD_CRITICAL = 4
 } UmiCodeGuardSeverity;
+/**
+ * Provide the codeguard severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_codeguard_severity_text(UmiCodeGuardSeverity severity);
 #ifdef __cplusplus
 }

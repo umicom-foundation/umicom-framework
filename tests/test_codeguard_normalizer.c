@@ -19,6 +19,10 @@
 
 #include "umicom/codeguard/normalizer.h"
 
+/*
+ * Exercise write text and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void write_text(const char *path, const char *text)
 {
     FILE *file = fopen(path, "wb");
@@ -28,6 +32,10 @@ static void write_text(const char *path, const char *text)
     assert(fclose(file) == 0);
 }
 
+/*
+ * Exercise normalized hash and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static uint64_t normalized_hash(const char *path)
 {
     uint64_t raw_hash = 0U;
@@ -41,6 +49,10 @@ static uint64_t normalized_hash(const char *path)
     return source_hash;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     uint64_t first_hash;

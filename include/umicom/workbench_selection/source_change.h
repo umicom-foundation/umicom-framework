@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection source change data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchSelectionSourceChange {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -40,28 +44,64 @@ typedef struct UmiWorkbenchSelectionSourceChange {
     uint64_t revision;
 } UmiWorkbenchSelectionSourceChange;
 
+/**
+ * Initialise workbench selection source change from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_source_change_init(
     UmiWorkbenchSelectionSourceChange *record,
     const char *record_id);
+/**
+ * Check that workbench selection source change satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_source_change_validate(
     const UmiWorkbenchSelectionSourceChange *record);
+/**
+ * Provide the workbench selection source change set source operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_source_change_set_source(
     UmiWorkbenchSelectionSourceChange *record,
     const char *source_id);
+/**
+ * Provide the workbench selection source change set subject operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_source_change_set_subject(
     UmiWorkbenchSelectionSourceChange *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection source change set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_source_change_set_secondary(
     UmiWorkbenchSelectionSourceChange *record,
     const char *secondary_id);
+/**
+ * Provide the workbench selection source change set group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_source_change_set_group(
     UmiWorkbenchSelectionSourceChange *record,
     const char *group_id);
+/**
+ * Provide the workbench selection source change set label operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_source_change_set_label(
     UmiWorkbenchSelectionSourceChange *record,
     const char *label);
+/**
+ * Provide the workbench selection source change hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_selection_source_change_hash(
     const UmiWorkbenchSelectionSourceChange *record);
+/**
+ * Provide the workbench selection source change touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_selection_source_change_touch(
     UmiWorkbenchSelectionSourceChange *record,
     uint64_t sequence,

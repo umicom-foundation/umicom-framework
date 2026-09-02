@@ -37,6 +37,7 @@ UmiStatus umi_repository_branch_probe_read(
 
     /* Delegate Git execution and parsing to the shared status probe. */
     status = umi_repository_status_probe_read(context, &parsed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

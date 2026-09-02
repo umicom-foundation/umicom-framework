@@ -29,6 +29,10 @@ extern "C" {
 
 #define UMI_EDITOR_WORKSPACE_SEARCH_COMMAND_API_VERSION 1U
 
+/**
+ * List the named editor workspace search command kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorWorkspaceSearchCommandKind {
     UMI_EDITOR_WORKSPACE_SEARCH_COMMAND_OPEN = 1,
     UMI_EDITOR_WORKSPACE_SEARCH_COMMAND_EXECUTE = 2,
@@ -54,6 +58,10 @@ typedef enum UmiEditorWorkspaceSearchCommandKind {
     UMI_EDITOR_WORKSPACE_SEARCH_COMMAND_CANCEL_REPLACE = 22
 } UmiEditorWorkspaceSearchCommandKind;
 
+/**
+ * Represent the editor workspace search command descriptor data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -68,11 +76,27 @@ typedef struct UmiEditorWorkspaceSearchCommandDescriptor {
     int mutates_workspace;
 } UmiEditorWorkspaceSearchCommandDescriptor;
 
+/**
+ * Return the number of records represented by editor workspace search command without
+ * changing their state.
+ */
 size_t umi_editor_workspace_search_command_count(void);
+/**
+ * Find editor workspace search command while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorWorkspaceSearchCommandDescriptor *
 umi_editor_workspace_search_command_at(size_t position);
+/**
+ * Find editor workspace search command while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorWorkspaceSearchCommandDescriptor *
 umi_editor_workspace_search_command_find(const char *command_id);
+/**
+ * Provide the editor workspace search command for kind operation used by this module and
+ * its client applications.
+ */
 const UmiEditorWorkspaceSearchCommandDescriptor *
 umi_editor_workspace_search_command_for_kind(
     UmiEditorWorkspaceSearchCommandKind kind);

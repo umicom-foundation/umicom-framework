@@ -30,7 +30,15 @@
 extern "C" {
 #endif
 
+/**
+ * Read ct environment into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_ct_environment_parse(const char *text, UmiCtEnvironment *out_environment);
+/**
+ * Provide the ct environment text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ct_environment_text(UmiCtEnvironment environment);
 
 #ifdef __cplusplus

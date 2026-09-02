@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer review data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerReview {
     UmiWorkbenchLayoutDocument baseline;
     UmiWorkbenchLayoutDiff diff;
@@ -36,6 +40,10 @@ typedef struct UmiWorkbenchDesignerReview {
     uint64_t current_revision;
 } UmiWorkbenchDesignerReview;
 
+/**
+ * Provide the workbench designer review build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_review_build(UmiWorkbenchDesignerReview *review, const UmiWorkbenchLayoutDocument *baseline, const UmiWorkbenchLayoutDocument *current);
 
 #ifdef __cplusplus

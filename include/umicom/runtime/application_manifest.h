@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_MANIFEST_MAX_ALIASES 16U
 #define UMI_MANIFEST_MAX_CAPABILITIES 64U
 
+/**
+ * List the named application frontend values accepted by this public contract.
+ */
 typedef enum UmiApplicationFrontend {
     UMI_FRONTEND_NONE = 0U,
     UMI_FRONTEND_CONSOLE = 1U << 0,
@@ -39,6 +42,9 @@ typedef enum UmiApplicationFrontend {
     UMI_FRONTEND_MOBILE = 1U << 5
 } UmiApplicationFrontend;
 
+/**
+ * Represent the application manifest data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationManifest {
     char schema[UMI_MANIFEST_TEXT_CAPACITY];
     char id[UMI_MANIFEST_TEXT_CAPACITY];
@@ -55,20 +61,40 @@ typedef struct UmiApplicationManifest {
     size_t capability_count;
 } UmiApplicationManifest;
 
+/**
+ * Initialise application manifest from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_application_manifest_init(UmiApplicationManifest *manifest);
+/**
+ * Read application manifest into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_application_manifest_load(
     const char *path,
     UmiApplicationManifest *out_manifest
 );
+/**
+ * Check that application manifest satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_application_manifest_validate(
     const UmiApplicationManifest *manifest,
     char *out_message,
     size_t capacity
 );
+/**
+ * Provide the application manifest has capability operation used by this module and its
+ * client applications.
+ */
 int umi_application_manifest_has_capability(
     const UmiApplicationManifest *manifest,
     const char *capability
 );
+/**
+ * Provide the application frontend text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_frontend_text(unsigned frontend_flag);
 
 #ifdef __cplusplus

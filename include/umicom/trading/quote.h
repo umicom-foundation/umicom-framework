@@ -26,8 +26,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that quote satisfies its contract before another service relies on it.
+ */
 int umi_quote_valid(const UmiQuote *quote);
+/**
+ * Provide the quote mid operation used by this module and its client applications.
+ */
 double umi_quote_mid(const UmiQuote *quote);
+/**
+ * Provide the quote spread operation used by this module and its client applications.
+ */
 double umi_quote_spread(const UmiQuote *quote);
 #ifdef __cplusplus
 }

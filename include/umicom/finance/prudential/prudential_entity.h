@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential entity data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialEntity {
     char entity_id[UMI_PRU_ID_CAPACITY];
     char name[UMI_PRU_NAME_CAPACITY];

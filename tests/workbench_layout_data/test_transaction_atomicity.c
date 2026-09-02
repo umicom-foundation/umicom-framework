@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test layout and session rollback and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 static int test_layout_and_session_rollback(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -50,6 +54,10 @@ static int test_layout_and_session_rollback(void)
     return 0;
 }
 
+/*
+ * Exercise test layout and session commit and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_layout_and_session_commit(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -87,6 +95,10 @@ static int test_layout_and_session_commit(void)
     return 0;
 }
 
+/*
+ * Exercise test nested begin rejected and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_nested_begin_rejected(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -99,6 +111,10 @@ static int test_nested_begin_rejected(void)
     return 0;
 }
 
+/*
+ * Exercise test commit without transaction rejected and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_commit_without_transaction_rejected(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -113,6 +129,10 @@ static int test_commit_without_transaction_rejected(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_layout_and_session_rollback() == 0,

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace generation input data shared with callers of this public
+ * contract.
+ */
     typedef struct UmiProjectWorkspaceGenerationInput {
         const char*application_id;
         const char*template_id;

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     verify_journey("studio.visual-designer-round-trip", "org.umicom.studio", "development");

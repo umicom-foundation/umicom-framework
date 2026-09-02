@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the banking loan account data shared with callers of this public contract.
+ */
 typedef struct UmiBankingLoanAccount {
     UmiFinancialId id;
     UmiFinancialId customer_id;
@@ -27,6 +30,10 @@ typedef struct UmiBankingLoanAccount {
     int32_t annual_rate_bps;
     UmiBankingLoanStatus status;
 } UmiBankingLoanAccount;
+/**
+ * Initialise banking loan account from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_banking_loan_account_init(UmiBankingLoanAccount *value,
     const char *id,
     const char *customer_id,
@@ -35,7 +42,15 @@ UmiStatus umi_banking_loan_account_init(UmiBankingLoanAccount *value,
     int64_t outstanding_minor,
     int32_t annual_rate_bps,
     UmiBankingLoanStatus status);
+/**
+ * Check that banking loan account satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_banking_loan_account_valid(const UmiBankingLoanAccount *value);
+/**
+ * Provide the banking loan account repaid minor operation used by this module and its
+ * client applications.
+ */
 int64_t umi_banking_loan_account_repaid_minor(const UmiBankingLoanAccount *value);
 #ifdef __cplusplus
 }

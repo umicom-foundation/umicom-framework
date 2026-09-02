@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/trailing_whitespace_policy.h"
 
+/*
+ * Provide the document capability trailing whitespace policy operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_trailing_whitespace_policy(void)
 {

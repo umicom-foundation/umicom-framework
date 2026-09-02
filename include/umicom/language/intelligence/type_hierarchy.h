@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_TYPE_HIERARCHY_API_VERSION 1U
+/**
+ * Represent the language intelligence type hierarchy edge data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceTypeHierarchyEdge {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,14 +37,30 @@ typedef struct UmiLanguageIntelligenceTypeHierarchyEdge {
     uint32_t weight;
     int enabled;
 } UmiLanguageIntelligenceTypeHierarchyEdge;
+/**
+ * Initialise language intelligence type hierarchy edge from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_type_hierarchy_edge_init(UmiLanguageIntelligenceTypeHierarchyEdge *edge);
+/**
+ * Copy language intelligence type hierarchy edge into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_language_intelligence_type_hierarchy_edge_set(
     UmiLanguageIntelligenceTypeHierarchyEdge *edge,
     const char *source_id,
     const char *target_id,
     const char *relation,
     uint32_t weight);
+/**
+ * Check that language intelligence type hierarchy edge satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_language_intelligence_type_hierarchy_edge_validate(const UmiLanguageIntelligenceTypeHierarchyEdge *edge);
+/**
+ * Provide the language intelligence type hierarchy edge matches source operation used by
+ * this module and its client applications.
+ */
 int umi_language_intelligence_type_hierarchy_edge_matches_source(
     const UmiLanguageIntelligenceTypeHierarchyEdge *edge,
     const char *source_id);

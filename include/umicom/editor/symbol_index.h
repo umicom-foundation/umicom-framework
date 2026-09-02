@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_EDITOR_SYMBOL_DOCUMENT_CAPACITY 128U
 #define UMI_EDITOR_SYMBOL_LANGUAGE_CAPACITY 64U
 
+/**
+ * List the named editor indexed symbol kind values accepted by this public contract.
+ */
 typedef enum UmiEditorIndexedSymbolKind {
     UMI_EDITOR_INDEXED_SYMBOL_UNKNOWN = 0,
     UMI_EDITOR_INDEXED_SYMBOL_FILE = 1,
@@ -69,6 +72,9 @@ typedef enum UmiEditorIndexedSymbolKind {
     UMI_EDITOR_INDEXED_SYMBOL_LABEL = 28
 } UmiEditorIndexedSymbolKind;
 
+/**
+ * List the named editor indexed symbol flags values accepted by this public contract.
+ */
 typedef enum UmiEditorIndexedSymbolFlags {
     UMI_EDITOR_INDEXED_SYMBOL_FLAG_NONE = 0,
     UMI_EDITOR_INDEXED_SYMBOL_FLAG_DEFINITION = 1U << 0,
@@ -80,6 +86,9 @@ typedef enum UmiEditorIndexedSymbolFlags {
     UMI_EDITOR_INDEXED_SYMBOL_FLAG_TEST = 1U << 6
 } UmiEditorIndexedSymbolFlags;
 
+/**
+ * Represent the editor indexed symbol data shared with callers of this public contract.
+ */
 typedef struct UmiEditorIndexedSymbol {
     uint32_t struct_size;
     uint32_t api_version;
@@ -102,6 +111,9 @@ typedef struct UmiEditorIndexedSymbol {
     uint64_t revision;
 } UmiEditorIndexedSymbol;
 
+/**
+ * Represent the editor symbol query data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSymbolQuery {
     uint32_t struct_size;
     uint32_t api_version;
@@ -116,6 +128,9 @@ typedef struct UmiEditorSymbolQuery {
     int include_external;
 } UmiEditorSymbolQuery;
 
+/**
+ * Represent the editor symbol match data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSymbolMatch {
     uint32_t struct_size;
     uint32_t api_version;
@@ -124,34 +139,77 @@ typedef struct UmiEditorSymbolMatch {
     size_t matched_character_count;
 } UmiEditorSymbolMatch;
 
+/**
+ * Represent the editor symbol index data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSymbolIndex UmiEditorSymbolIndex;
 
+/**
+ * Initialise editor symbol index from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_editor_symbol_index_create(size_t initial_capacity,
                                           UmiEditorSymbolIndex **out_index);
+/**
+ * Release or reset state held by editor symbol index so the same storage can be reused
+ * safely.
+ */
 void umi_editor_symbol_index_destroy(UmiEditorSymbolIndex *index);
+/**
+ * Provide the editor symbol index upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_symbol_index_upsert(UmiEditorSymbolIndex *index,
                                           const UmiEditorIndexedSymbol *symbol);
+/**
+ * Remove editor symbol index while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_symbol_index_remove(UmiEditorSymbolIndex *index,
                                           const char *symbol_id);
+/**
+ * Provide the editor symbol index remove document operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_symbol_index_remove_document(UmiEditorSymbolIndex *index,
                                                    const char *document_id,
                                                    size_t *out_removed_count);
+/**
+ * Find editor symbol index while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_editor_symbol_index_find(const UmiEditorSymbolIndex *index,
                                         const char *symbol_id,
                                         UmiEditorIndexedSymbol *out_symbol);
+/**
+ * Find editor symbol index while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_editor_symbol_index_at(const UmiEditorSymbolIndex *index,
                                       size_t position,
                                       UmiEditorIndexedSymbol *out_symbol);
+/**
+ * Provide the editor symbol index find enclosing operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_symbol_index_find_enclosing(
     const UmiEditorSymbolIndex *index,
     const UmiEditorSourceLocation *location,
     UmiEditorIndexedSymbol *out_symbol);
+/**
+ * Provide the editor symbol index search operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_symbol_index_search(
     const UmiEditorSymbolIndex *index,
     const UmiEditorSymbolQuery *query,
     UmiEditorSymbolMatch *out_matches,
     size_t match_capacity,
     size_t *out_match_count);
+/**
+ * Provide the editor symbol index children operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_symbol_index_children(
     const UmiEditorSymbolIndex *index,
     const char *parent_id,
@@ -159,9 +217,25 @@ UmiStatus umi_editor_symbol_index_children(
     UmiEditorIndexedSymbol *out_symbols,
     size_t symbol_capacity,
     size_t *out_symbol_count);
+/**
+ * Return the number of records represented by editor symbol index without changing their
+ * state.
+ */
 size_t umi_editor_symbol_index_count(const UmiEditorSymbolIndex *index);
+/**
+ * Provide the editor symbol index revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_editor_symbol_index_revision(const UmiEditorSymbolIndex *index);
+/**
+ * Provide the editor indexed symbol kind name operation used by this module and its client
+ * applications.
+ */
 const char *umi_editor_indexed_symbol_kind_name(UmiEditorIndexedSymbolKind kind);
+/**
+ * Provide the editor indexed symbol kind from name operation used by this module and its
+ * client applications.
+ */
 UmiEditorIndexedSymbolKind umi_editor_indexed_symbol_kind_from_name(
     const char *name);
 

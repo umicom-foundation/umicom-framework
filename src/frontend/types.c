@@ -18,4 +18,8 @@
  */
 
 #include "umicom/frontend/types.h"
-const char *umi_frontend_kind_text(UmiFrontendKind k){switch(k){case UMI_FRONTEND_KIND_HEADLESS:return "headless";case UMI_FRONTEND_KIND_GTK4:return "gtk4";case UMI_FRONTEND_KIND_WEB:return "web";case UMI_FRONTEND_KIND_QT:return "qt";case UMI_FRONTEND_KIND_WT:return "wt";case UMI_FRONTEND_KIND_MOBILE:return "mobile";default:return "unknown";}}
+/*
+ * Provide the frontend kind text operation used by this module and its client
+ * applications.
+ */
+const char *umi_frontend_kind_text(UmiFrontendKind k){/* Select the behaviour associated with the requested command or state value. */ switch(k){case UMI_FRONTEND_KIND_HEADLESS:return "headless";case UMI_FRONTEND_KIND_GTK4:return "gtk4";case UMI_FRONTEND_KIND_WEB:return "web";case UMI_FRONTEND_KIND_QT:return "qt";case UMI_FRONTEND_KIND_WT:return "wt";case UMI_FRONTEND_KIND_MOBILE:return "mobile";default:return "unknown";}}

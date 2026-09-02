@@ -17,15 +17,24 @@
 
 /* Initialisation centralises bounded text handling and defaults. */
 UmiStatus umi_data_connection_slot_init(UmiDataConnectionSlot *item, const char *slot_id, uint64_t connection_token) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(item, 0, sizeof(*item));
-    UmiStatus s=umi_data_enterprise_copy_text(item->slot_id,sizeof(item->slot_id),slot_id);if(s!=UMI_STATUS_OK)return s;item->connection_token=connection_token;item->healthy=true;item->leased=false;
+    UmiStatus s=umi_data_enterprise_copy_text(item->slot_id,sizeof(item->slot_id),slot_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->connection_token=connection_token;item->healthy=true;item->leased=false;
     return umi_data_connection_slot_validate(item);
 }
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_connection_slot_validate(const UmiDataConnectionSlot *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(item->slot_id[0] != '\0' && item->connection_token != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }

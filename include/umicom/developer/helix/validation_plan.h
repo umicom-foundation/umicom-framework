@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix validation plan data shared with callers of this public contract.
+ */
 typedef struct UmiHelixValidationPlan { UmiHelixValidationGate gates[UMI_HELIX_MAX_ITEMS]; bool completed[UMI_HELIX_MAX_ITEMS]; bool passed[UMI_HELIX_MAX_ITEMS]; size_t count; } UmiHelixValidationPlan;
 /* Add a validation gate. */
 UmiStatus umi_helix_validation_plan_add(UmiHelixValidationPlan *plan,const UmiHelixValidationGate *gate);

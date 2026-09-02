@@ -42,6 +42,9 @@ extern "C" {
 #define UMI_KNOWLEDGE_COLLECTION_MAX 32U
 #define UMI_KNOWLEDGE_QUERY_RESULT_MAX 64U
 
+/**
+ * List the named knowledge source kind values accepted by this public contract.
+ */
 typedef enum UmiKnowledgeSourceKind {
     UMI_KNOWLEDGE_SOURCE_DOCUMENT = 1,
     UMI_KNOWLEDGE_SOURCE_CODE = 2,
@@ -50,17 +53,26 @@ typedef enum UmiKnowledgeSourceKind {
     UMI_KNOWLEDGE_SOURCE_GENERATED = 5
 } UmiKnowledgeSourceKind;
 
+/**
+ * List the named knowledge distance metric values accepted by this public contract.
+ */
 typedef enum UmiKnowledgeDistanceMetric {
     UMI_KNOWLEDGE_DISTANCE_COSINE = 1,
     UMI_KNOWLEDGE_DISTANCE_DOT = 2
 } UmiKnowledgeDistanceMetric;
 
+/**
+ * List the named knowledge refresh decision values accepted by this public contract.
+ */
 typedef enum UmiKnowledgeRefreshDecision {
     UMI_KNOWLEDGE_REFRESH_NEW = 1,
     UMI_KNOWLEDGE_REFRESH_UNCHANGED = 2,
     UMI_KNOWLEDGE_REFRESH_REPLACE = 3
 } UmiKnowledgeRefreshDecision;
 
+/**
+ * Represent the knowledge source data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeSource {
     char source_id[UMI_KNOWLEDGE_ID_CAPACITY];
     char collection_id[UMI_KNOWLEDGE_ID_CAPACITY];
@@ -77,6 +89,9 @@ typedef struct UmiKnowledgeSource {
     int active;
 } UmiKnowledgeSource;
 
+/**
+ * Represent the knowledge chunk data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeChunk {
     char chunk_id[UMI_KNOWLEDGE_ID_CAPACITY];
     char source_id[UMI_KNOWLEDGE_ID_CAPACITY];
@@ -94,11 +109,17 @@ typedef struct UmiKnowledgeChunk {
     char text[UMI_KNOWLEDGE_TEXT_CAPACITY];
 } UmiKnowledgeChunk;
 
+/**
+ * Represent the knowledge embedding data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeEmbedding {
     float values[UMI_KNOWLEDGE_EMBEDDING_MAX];
     size_t dimension;
 } UmiKnowledgeEmbedding;
 
+/**
+ * Represent the knowledge filter data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeFilter {
     char collection_id[UMI_KNOWLEDGE_ID_CAPACITY];
     char language[UMI_KNOWLEDGE_LANGUAGE_CAPACITY];
@@ -107,6 +128,9 @@ typedef struct UmiKnowledgeFilter {
     UmiAiDataClassification maximum_classification;
 } UmiKnowledgeFilter;
 
+/**
+ * Represent the knowledge citation data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeCitation {
     char source_id[UMI_KNOWLEDGE_ID_CAPACITY];
     char title[UMI_KNOWLEDGE_NAME_CAPACITY];
@@ -118,14 +142,29 @@ typedef struct UmiKnowledgeCitation {
     uint64_t source_revision;
 } UmiKnowledgeCitation;
 
+/**
+ * Represent the knowledge match data shared with callers of this public contract.
+ */
 typedef struct UmiKnowledgeMatch {
     UmiKnowledgeChunk chunk;
     UmiKnowledgeCitation citation;
     double score;
 } UmiKnowledgeMatch;
 
+/**
+ * Provide the knowledge hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_knowledge_hash_text(const char *text);
+/**
+ * Provide the knowledge source kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_knowledge_source_kind_text(UmiKnowledgeSourceKind kind);
+/**
+ * Provide the knowledge filter matches operation used by this module and its client
+ * applications.
+ */
 int umi_knowledge_filter_matches(const UmiKnowledgeFilter *filter,
                                  const UmiKnowledgeChunk *chunk);
 

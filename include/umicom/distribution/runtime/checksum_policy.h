@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr checksum policy data shared with callers of this public contract.
+ */
 typedef struct UmiDrChecksumPolicy { char algorithm[32]; bool digest_required; bool match_required; } UmiDrChecksumPolicy;
+/**
+ * Initialise dr checksum policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_checksum_policy_init(UmiDrChecksumPolicy *policy); bool umi_dr_checksum_policy_accept(const UmiDrChecksumPolicy *policy,const char *expected,const char *actual);
 
 #ifdef __cplusplus

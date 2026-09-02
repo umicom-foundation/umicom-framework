@@ -17,6 +17,10 @@
 
 #include "umicom/ai/authorengine_service.h"
 
+/*
+ * Exercise runtime descriptor and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiAiRuntimeDescriptor runtime_descriptor(void)
 {
     UmiAiRuntimeDescriptor descriptor = {0};
@@ -35,6 +39,10 @@ static UmiAiRuntimeDescriptor runtime_descriptor(void)
     return descriptor;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiRuntime runtime;

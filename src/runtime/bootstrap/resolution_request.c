@@ -25,11 +25,19 @@
 
 
 #include <string.h>
+/*
+ * Initialise bootstrap resolution request from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_resolution_request_init(
     UmiBootstrapResolutionRequest *request,
     const UmiBootstrapServiceKey *key,
     UmiBootstrapScopeKind scope,
     bool required) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || key == NULL || !umi_bootstrap_id_valid(key->service_id) ||
         umi_bootstrap_scope_kind_rank(scope) == 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(request, 0, sizeof(*request));

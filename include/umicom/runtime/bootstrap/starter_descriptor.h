@@ -22,11 +22,19 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap starter descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_starter_descriptor_init(
     UmiBootstrapStarterDescriptor *starter,
     const char *starter_id,
     const char *feature_pack_id,
     int32_t priority);
+/**
+ * Provide the bootstrap starter descriptor add auto configuration operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_bootstrap_starter_descriptor_add_auto_configuration(
     UmiBootstrapStarterDescriptor *starter,
     const char *configuration_id);

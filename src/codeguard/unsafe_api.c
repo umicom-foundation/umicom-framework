@@ -25,22 +25,45 @@ static const UmiCodeGuardUnsafeApiRule RULES[] = {
     {"tmpnam(","UNSAFE-TMPNAM","Use a secure exclusive temporary-file provider",UMI_CODEGUARD_EVIDENCE_FAIL},
     {"system(","UNSAFE-SYSTEM","Use the governed process service with separated arguments",UMI_CODEGUARD_EVIDENCE_WARNING}
 };
+/*
+ * Return the number of records represented by codeguard unsafe api rule without changing
+ * their state.
+ */
 size_t umi_codeguard_unsafe_api_rule_count(void) { return sizeof(RULES) / sizeof(RULES[0]); }
+/*
+ * Find codeguard unsafe api rule while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiCodeGuardUnsafeApiRule *umi_codeguard_unsafe_api_rule_at(size_t index) { return index < umi_codeguard_unsafe_api_rule_count() ? &RULES[index] : NULL; }
+/*
+ * Provide the codeguard unsafe api scan line operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_unsafe_api_scan_line(const char *path,size_t line_number,const char *line,UmiCodeGuardEvidenceStore *evidence)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || line == NULL || evidence == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_codeguard_unsafe_api_rule_count(); ++index) {
         const UmiCodeGuardUnsafeApiRule *rule = &RULES[index];
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (strstr(line,rule->token) != NULL) {
             UmiCodeGuardEvidence item = {0};
             int length = snprintf(item.id,sizeof(item.id),"%s-%zu",rule->rule_id,line_number);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (length < 0 || (size_t)length >= sizeof(item.id)) return UMI_STATUS_CAPACITY_EXCEEDED;
             item.kind = UMI_CODEGUARD_EVIDENCE_RULE; item.state = rule->state; item.observed = 1U; item.line = line_number;
             (void)umi_codeguard_quality_copy(item.path,sizeof(item.path),path);
             (void)umi_codeguard_quality_copy(item.summary,sizeof(item.summary),"Unsafe or weakly governed C API usage detected");
             (void)umi_codeguard_quality_copy(item.remediation,sizeof(item.remediation),rule->replacement);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (umi_codeguard_evidence_add(evidence,&item) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
         }
     }

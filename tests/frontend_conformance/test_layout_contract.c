@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcLayoutContract a={3U,1U,1U,0U,3U},b={3U,2U,1U,0U,3U}; CHECK(umi_fc_layout_contract_satisfied(&a,&b)); CHECK(umi_fc_layout_contract_score(&a,&b)==1.0);
     return 0;

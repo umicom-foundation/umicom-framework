@@ -36,6 +36,9 @@ extern "C" {
 #define UMI_COMMODITY_MAX_ITEMS 64U
 #define UMI_COMMODITY_MAX_LEGS 16U
 
+/**
+ * List the named commodity kind values accepted by this public contract.
+ */
 typedef enum UmiCommodityKind {
     UMI_COMMODITY_KIND_UNKNOWN = 0,
     UMI_COMMODITY_KIND_ENERGY = 1,
@@ -45,6 +48,9 @@ typedef enum UmiCommodityKind {
     UMI_COMMODITY_KIND_OTHER = 5
 } UmiCommodityKind;
 
+/**
+ * List the named commodity delivery state values accepted by this public contract.
+ */
 typedef enum UmiCommodityDeliveryState {
     UMI_COMMODITY_DELIVERY_PLANNED = 0,
     UMI_COMMODITY_DELIVERY_NOMINATED = 1,
@@ -54,6 +60,9 @@ typedef enum UmiCommodityDeliveryState {
     UMI_COMMODITY_DELIVERY_CANCELLED = 5
 } UmiCommodityDeliveryState;
 
+/**
+ * List the named commodity shipment state values accepted by this public contract.
+ */
 typedef enum UmiCommodityShipmentState {
     UMI_COMMODITY_SHIPMENT_PLANNED = 0,
     UMI_COMMODITY_SHIPMENT_LOADING = 1,
@@ -63,10 +72,16 @@ typedef enum UmiCommodityShipmentState {
     UMI_COMMODITY_SHIPMENT_CANCELLED = 5
 } UmiCommodityShipmentState;
 
+/**
+ * Represent the commodity id data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityId {
     char value[UMI_COMMODITY_ID_CAPACITY];
 } UmiCommodityId;
 
+/**
+ * Represent the commodity quantity data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityQuantity {
     int64_t units;
     int32_t scale;

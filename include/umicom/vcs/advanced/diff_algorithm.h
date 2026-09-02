@@ -22,13 +22,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named vcs advanced diff algorithm values accepted by this public contract.
+ */
 typedef enum UmiVcsAdvancedDiffAlgorithm {
     UMI_VCS_DIFF_ALGORITHM_MYERS=0, UMI_VCS_DIFF_ALGORITHM_PATIENCE=1,
     UMI_VCS_DIFF_ALGORITHM_HISTOGRAM=2, UMI_VCS_DIFF_ALGORITHM_SEMANTIC=3,
     UMI_VCS_DIFF_ALGORITHM_BINARY=4
 } UmiVcsAdvancedDiffAlgorithm;
+/**
+ * Provide the vcs advanced diff algorithm select operation used by this module and its
+ * client applications.
+ */
 UmiVcsAdvancedDiffAlgorithm umi_vcs_advanced_diff_algorithm_select(size_t left_lines,size_t right_lines,
                                                                     int binary,int semantic,int many_duplicates);
+/**
+ * Provide the vcs advanced diff algorithm text operation used by this module and its
+ * client applications.
+ */
 const char *umi_vcs_advanced_diff_algorithm_text(UmiVcsAdvancedDiffAlgorithm algorithm);
 #ifdef __cplusplus
 }

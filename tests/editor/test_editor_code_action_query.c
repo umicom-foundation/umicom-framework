@@ -28,6 +28,10 @@
 
 #include "umicom/editor/code_action_query.h"
 
+/*
+ * Exercise action and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorRankedCodeAction action(const char *id, const char *title,
                                         int preferred, int score)
 {
@@ -52,6 +56,10 @@ static UmiEditorRankedCodeAction action(const char *id, const char *title,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorCodeActionProviderRegistry *providers = NULL;

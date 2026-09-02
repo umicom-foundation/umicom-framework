@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai rag append results operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_rag_append_results(UmiAiPrompt *prompt,
                                     const UmiAiRetrievalResult *results,
                                     size_t count);

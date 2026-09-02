@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_profiles/outline.h"
 
+/*
+ * Provide the studio surface profile outline operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_outline(void)
 {
     static const UmiStudioRuntimeSurfaceBinding binding = {

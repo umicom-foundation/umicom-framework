@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named appearance dpi class values accepted by this public contract.
+ */
 typedef enum UmiAppearanceDpiClass { UMI_APPEARANCE_DPI_STANDARD=1, UMI_APPEARANCE_DPI_HIGH=2, UMI_APPEARANCE_DPI_VERY_HIGH=3, UMI_APPEARANCE_DPI_ULTRA=4 } UmiAppearanceDpiClass;
 /* Classify a positive display DPI into a stable appearance density class. */
 UmiStatus umi_appearance_dpi_class_from_dpi(uint32_t dpi,UmiAppearanceDpiClass *out_class);

@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/diagnostics/trace.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiTraceStore *s = NULL; UmiTraceSpan span; uint64_t id;
     assert(umi_trace_store_create(&s) == UMI_STATUS_OK);

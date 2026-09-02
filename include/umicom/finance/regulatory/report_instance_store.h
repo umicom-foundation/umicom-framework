@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 #include "umicom/finance/regulatory/report_instance.h"
+/**
+ * Represent the report instance store data shared with callers of this public contract.
+ */
 typedef struct UmiReportInstanceStore {
     UmiReportInstance items[UMI_REG_MAX_ITEMS];
     size_t count;

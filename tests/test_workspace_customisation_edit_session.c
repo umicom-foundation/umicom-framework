@@ -20,6 +20,10 @@
 
 #include "umicom/ui/workspace_customisation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiWorkspaceCustomisation *customisation =
@@ -34,6 +38,10 @@ int main(void)
     char second_window[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
 
     assert(customisation != NULL);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (customisation == NULL) return 1;
     umi_ui_workspace_customisation_init(customisation);
     assert(umi_ui_window_catalogue_register(

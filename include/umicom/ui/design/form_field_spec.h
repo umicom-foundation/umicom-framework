@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design form field spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignFormFieldSpec {
     char label[UMI_DESIGN_TEXT_CAPACITY];
     char help_text[UMI_DESIGN_TEXT_CAPACITY];

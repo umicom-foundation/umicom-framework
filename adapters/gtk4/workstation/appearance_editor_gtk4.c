@@ -72,6 +72,10 @@ static const char *COLOUR_LABELS[UMI_GTK4_APPEARANCE_COLOUR_COUNT] = {
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source) {
   int written;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (destination == NULL || capacity == 0U || source == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
@@ -81,8 +85,13 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
 
 /* Return a writable semantic colour field selected by the editor row. */
 static char *profile_colour(UmiUiAppearanceProfile *profile, UmiGtk4AppearanceColourField field) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile == NULL)
     return NULL;
+  /* Select the behaviour associated with the requested command or state value. */
   switch (field) {
   case UMI_GTK4_COLOUR_BACKGROUND:
     return profile->background;
@@ -124,6 +133,10 @@ static char *profile_css(const UmiUiAppearanceProfile *profile) {
   int control_height;
   int spacing;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile == NULL)
     return NULL;
   interface_size = profile->interface_font_size * profile->font_scale;
@@ -193,21 +206,35 @@ static UmiStatus apply_active_style(UmiGtk4AppearanceEditor *editor) {
   char *css;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || editor->provider == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   status = umi_ui_appearance_model_active(editor->model, &profile);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   status = umi_ui_appearance_profile_validate(&profile, reason, sizeof(reason));
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   css = profile_css(&profile);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (css == NULL)
     return UMI_STATUS_OUT_OF_MEMORY;
   gtk_css_provider_load_from_string(editor->provider, css);
   g_free(css);
   settings = gtk_settings_get_for_display(editor->display);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (settings != NULL) {
     g_object_set(settings, "gtk-application-prefer-dark-theme",
                  profile.mode == UMI_UI_THEME_MODE_DARK ||
@@ -228,9 +255,15 @@ static size_t profile_index(const UmiGtk4AppearanceEditor *editor, const char *p
   size_t index;
   UmiUiAppearanceProfile profile;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || profile_id == NULL)
     return SIZE_MAX;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_ui_appearance_model_count(editor->model); ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (umi_ui_appearance_model_at(editor->model, index, &profile) == UMI_STATUS_OK &&
         strcmp(profile.profile_id, profile_id) == 0) {
       return index;
@@ -244,6 +277,10 @@ static void refresh_controls(UmiGtk4AppearanceEditor *editor) {
   UmiUiAppearanceProfile profile;
   size_t index;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || umi_ui_appearance_model_active(editor->model, &profile) != UMI_STATUS_OK) {
     return;
   }
@@ -253,11 +290,13 @@ static void refresh_controls(UmiGtk4AppearanceEditor *editor) {
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(editor->font_scale), profile.font_scale);
   gtk_drop_down_set_selected(GTK_DROP_DOWN(editor->density_dropdown),
                              (guint)(profile.density - UMI_UI_DENSITY_COMPACT));
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < UMI_GTK4_APPEARANCE_COLOUR_COUNT; ++index) {
     gtk_editable_set_text(GTK_EDITABLE(editor->colour_entries[index]),
                           profile_colour(&profile, (UmiGtk4AppearanceColourField)index));
   }
   index = profile_index(editor, profile.profile_id);
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index != SIZE_MAX) {
     gtk_drop_down_set_selected(GTK_DROP_DOWN(editor->profile_dropdown), (guint)index);
   }
@@ -266,6 +305,10 @@ static void refresh_controls(UmiGtk4AppearanceEditor *editor) {
 
 /* Build the per-application settings file path under the user's config area. */
 static char *appearance_settings_path(const char *application_id) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (application_id == NULL || !umi_ui_id_is_valid(application_id)) {
     return NULL;
   }
@@ -283,20 +326,33 @@ static void save_preferences(UmiGtk4AppearanceEditor *editor) {
   char *data;
   gsize length;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || editor->settings_path == NULL)
     return;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (umi_ui_appearance_model_active(editor->model, &active) != UMI_STATUS_OK ||
       umi_ui_appearance_model_find(editor->model, "umicom-custom", &custom) != UMI_STATUS_OK ||
       umi_ui_appearance_profile_encode(&custom, encoded, sizeof(encoded)) != UMI_STATUS_OK) {
     return;
   }
   settings = g_key_file_new();
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (settings == NULL)
     return;
   g_key_file_set_string(settings, "Appearance", "ActiveProfile", active.profile_id);
   g_key_file_set_string(settings, "Appearance", "CustomProfile", encoded);
   data = g_key_file_to_data(settings, &length, NULL);
   directory = g_path_get_dirname(editor->settings_path);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (data != NULL && directory != NULL && g_mkdir_with_parents(directory, 0700) == 0) {
     /* Preferences contain presentation values only. They never contain
      * account credentials, API keys or trading data. */
@@ -314,18 +370,34 @@ static void load_preferences(UmiGtk4AppearanceEditor *editor) {
   char *encoded;
   UmiUiAppearanceProfile profile;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || editor->settings_path == NULL ||
       !g_file_test(editor->settings_path, G_FILE_TEST_IS_REGULAR)) {
     return;
   }
   settings = g_key_file_new();
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (settings == NULL ||
       !g_key_file_load_from_file(settings, editor->settings_path, G_KEY_FILE_NONE, NULL)) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (settings != NULL)
       g_key_file_unref(settings);
     return;
   }
   encoded = g_key_file_get_string(settings, "Appearance", "CustomProfile", NULL);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (encoded != NULL && umi_ui_appearance_profile_decode(encoded, &profile) == UMI_STATUS_OK &&
       strcmp(profile.profile_id, "umicom-custom") == 0) {
     profile.active = 0;
@@ -334,6 +406,10 @@ static void load_preferences(UmiGtk4AppearanceEditor *editor) {
     (void)umi_ui_appearance_model_upsert(editor->model, &profile);
   }
   active_id = g_key_file_get_string(settings, "Appearance", "ActiveProfile", NULL);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (active_id != NULL) {
     (void)umi_ui_appearance_model_set_active(editor->model, active_id);
   }
@@ -349,9 +425,14 @@ static void on_profile_selected(GObject *object, GParamSpec *property, gpointer 
   guint selected;
 
   (void)property;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || editor->changing_controls)
     return;
   selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (umi_ui_appearance_model_at(editor->model, (size_t)selected, &profile) == UMI_STATUS_OK) {
     (void)umi_gtk4_appearance_editor_select(editor, profile.profile_id);
   }
@@ -366,14 +447,20 @@ static void on_apply_custom(GtkButton *button, gpointer user_data) {
   UmiStatus status;
 
   (void)button;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL)
     return;
   status = umi_ui_appearance_model_find(editor->model, "umicom-custom", &profile);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return;
 
   text = gtk_editable_get_text(GTK_EDITABLE(editor->interface_font));
   status = copy_text(profile.interface_font, sizeof(profile.interface_font), text);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     text = gtk_editable_get_text(GTK_EDITABLE(editor->editor_font));
     status = copy_text(profile.editor_font, sizeof(profile.editor_font), text);
@@ -382,6 +469,7 @@ static void on_apply_custom(GtkButton *button, gpointer user_data) {
   profile.density =
       (UmiUiDensity)(UMI_UI_DENSITY_COMPACT +
                      gtk_drop_down_get_selected(GTK_DROP_DOWN(editor->density_dropdown)));
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; status == UMI_STATUS_OK && index < UMI_GTK4_APPEARANCE_COLOUR_COUNT; ++index) {
     text = gtk_editable_get_text(GTK_EDITABLE(editor->colour_entries[index]));
     status = copy_text(profile_colour(&profile, (UmiGtk4AppearanceColourField)index),
@@ -391,6 +479,7 @@ static void on_apply_custom(GtkButton *button, gpointer user_data) {
   profile.built_in = 0;
   profile.locked = 0;
   profile.revision += 1U;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     status = umi_gtk4_appearance_editor_apply_custom(editor, &profile);
   }
@@ -406,11 +495,19 @@ static GtkWidget *build_colour_entry(UmiGtk4AppearanceEditor *editor, GtkGrid *g
   int column;
   int row;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || grid == NULL || index >= UMI_GTK4_APPEARANCE_COLOUR_COUNT) {
     return NULL;
   }
   label = gtk_label_new(COLOUR_LABELS[index]);
   entry = gtk_entry_new();
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (label == NULL || entry == NULL) {
     /* Widgets are still unparented on this error path, so explicitly
      * consume their floating references before reporting the failure. */
@@ -418,6 +515,10 @@ static GtkWidget *build_colour_entry(UmiGtk4AppearanceEditor *editor, GtkGrid *g
       g_object_ref_sink(label);
       g_object_unref(label);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entry != NULL) {
       g_object_ref_sink(entry);
       g_object_unref(entry);
@@ -451,13 +552,23 @@ static GtkWidget *build_editor_popover(UmiGtk4AppearanceEditor *editor) {
   UmiUiAppearanceProfile profile;
   size_t index;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (popover == NULL || root == NULL || title == NULL || fonts == NULL || advanced == NULL ||
       colours == NULL || apply == NULL || profiles == NULL) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profiles != NULL)
       g_object_unref(profiles);
     return popover;
   }
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_ui_appearance_model_count(editor->model); ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (umi_ui_appearance_model_at(editor->model, index, &profile) == UMI_STATUS_OK) {
       gtk_string_list_append(profiles, profile.label);
     }
@@ -507,7 +618,12 @@ static GtkWidget *build_editor_popover(UmiGtk4AppearanceEditor *editor) {
 
   gtk_grid_set_row_spacing(GTK_GRID(colours), 6U);
   gtk_grid_set_column_spacing(GTK_GRID(colours), 8U);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < UMI_GTK4_APPEARANCE_COLOUR_COUNT; ++index) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (build_colour_entry(editor, GTK_GRID(colours), index) == NULL) {
       g_object_ref_sink(popover);
       g_object_unref(popover);
@@ -546,23 +662,37 @@ UmiStatus umi_gtk4_appearance_editor_create(GtkWidget *scope_root,
   GtkWidget *popover;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (scope_root == NULL || config == NULL || out_editor == NULL ||
       config->application_id == NULL || !umi_ui_id_is_valid(config->application_id)) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   *out_editor = NULL;
   editor = calloc(1U, sizeof(*editor));
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL)
     return UMI_STATUS_OUT_OF_MEMORY;
   editor->scope_root = scope_root;
   editor->settings_path = appearance_settings_path(config->application_id);
   editor->revision = 1U;
   status = umi_ui_appearance_model_create(&editor->model);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     goto fail;
   status = umi_ui_appearance_catalogue_populate(editor->model);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     goto fail;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (config->initial_profile_id != NULL) {
     (void)umi_ui_appearance_model_set_active(editor->model, config->initial_profile_id);
   }
@@ -571,6 +701,10 @@ UmiStatus umi_gtk4_appearance_editor_create(GtkWidget *scope_root,
   editor->display = gtk_widget_get_display(scope_root);
   editor->provider = gtk_css_provider_new();
   editor->button = gtk_menu_button_new();
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor->display == NULL || editor->provider == NULL || editor->button == NULL) {
     status = UMI_STATUS_OUT_OF_MEMORY;
     goto fail;
@@ -584,6 +718,10 @@ UmiStatus umi_gtk4_appearance_editor_create(GtkWidget *scope_root,
   gtk_widget_set_tooltip_text(editor->button,
                               "Change theme, fonts, text size, density and colours");
   popover = build_editor_popover(editor);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (popover == NULL) {
     status = UMI_STATUS_OUT_OF_MEMORY;
     goto fail;
@@ -593,6 +731,7 @@ UmiStatus umi_gtk4_appearance_editor_create(GtkWidget *scope_root,
                                              GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 10U);
   refresh_controls(editor);
   status = apply_active_style(editor);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     goto fail;
   *out_editor = editor;
@@ -605,8 +744,16 @@ fail:
 
 /* Detach the global provider before releasing model and path ownership. */
 void umi_gtk4_appearance_editor_destroy(UmiGtk4AppearanceEditor *editor) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL)
     return;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor->display != NULL && editor->provider != NULL) {
     gtk_style_context_remove_provider_for_display(editor->display,
                                                   GTK_STYLE_PROVIDER(editor->provider));
@@ -634,15 +781,24 @@ UmiStatus umi_gtk4_appearance_editor_set_changed_handler(
   UmiUiAppearanceProfile profile;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   editor->changed_handler = handler;
   editor->changed_user_data = handler != NULL ? user_data : NULL;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (handler == NULL) {
     return UMI_STATUS_OK;
   }
   status = umi_ui_appearance_model_active(editor->model, &profile);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     handler(&profile, user_data);
   }
@@ -654,12 +810,18 @@ UmiStatus umi_gtk4_appearance_editor_select(UmiGtk4AppearanceEditor *editor,
                                             const char *profile_id) {
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || profile_id == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   status = umi_ui_appearance_model_set_active(editor->model, profile_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = apply_active_style(editor);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     refresh_controls(editor);
     save_preferences(editor);
@@ -673,6 +835,10 @@ UmiStatus umi_gtk4_appearance_editor_apply_custom(UmiGtk4AppearanceEditor *edito
   UmiUiAppearanceProfile candidate;
   UmiStatus status;
 
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || profile == NULL || strcmp(profile->profile_id, "umicom-custom") != 0) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
@@ -681,11 +847,14 @@ UmiStatus umi_gtk4_appearance_editor_apply_custom(UmiGtk4AppearanceEditor *edito
   candidate.built_in = 0;
   candidate.locked = 0;
   status = umi_ui_appearance_model_upsert(editor->model, &candidate);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     status = umi_ui_appearance_model_set_active(editor->model, candidate.profile_id);
   }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = apply_active_style(editor);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK) {
     refresh_controls(editor);
     save_preferences(editor);
@@ -696,6 +865,10 @@ UmiStatus umi_gtk4_appearance_editor_apply_custom(UmiGtk4AppearanceEditor *edito
 /* Forward a value snapshot from the editor-owned appearance model. */
 UmiStatus umi_gtk4_appearance_editor_active(const UmiGtk4AppearanceEditor *editor,
                                             UmiUiAppearanceProfile *out_profile) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL || out_profile == NULL) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
@@ -709,9 +882,14 @@ umi_gtk4_appearance_editor_snapshot(const UmiGtk4AppearanceEditor *editor) {
   UmiUiAppearanceProfile profile;
 
   (void)memset(&snapshot, 0, sizeof(snapshot));
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (editor == NULL)
     return snapshot;
   snapshot.profile_count = umi_ui_appearance_model_count(editor->model);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (umi_ui_appearance_model_active(editor->model, &profile) == UMI_STATUS_OK) {
     (void)copy_text(snapshot.active_profile_id, sizeof(snapshot.active_profile_id),
                     profile.profile_id);

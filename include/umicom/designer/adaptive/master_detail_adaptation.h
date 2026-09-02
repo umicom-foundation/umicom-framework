@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named designer master detail mode values accepted by this public contract.
+ */
 typedef enum UmiDesignerMasterDetailMode {
     UMI_DESIGNER_MASTER_DETAIL_STACKED = 1,
     UMI_DESIGNER_MASTER_DETAIL_SPLIT = 2,

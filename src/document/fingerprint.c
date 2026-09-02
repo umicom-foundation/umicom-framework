@@ -22,8 +22,16 @@
 
 #define UMI_DOCUMENT_FNV1A_OFFSET UINT64_C(14695981039346656037)
 
+/*
+ * Provide the document hash bytes operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_document_hash_bytes(const void *bytes, size_t byte_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bytes == NULL && byte_count > 0U) return 0U;
 #if defined(UMICOM_DOCUMENT_HASH_X86_64_ASM) || \
     defined(UMICOM_DOCUMENT_HASH_AARCH64_ASM) || \
@@ -38,6 +46,10 @@ uint64_t umi_document_hash_bytes(const void *bytes, size_t byte_count)
 #endif
 }
 
+/*
+ * Provide the document fingerprint file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_fingerprint_file(const char *path,
                                         UmiDocumentFingerprint *out_fingerprint)
 {
@@ -45,9 +57,14 @@ UmiStatus umi_document_fingerprint_file(const char *path,
     size_t size = 0U;
     struct stat information;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || out_fingerprint == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_fingerprint = (UmiDocumentFingerprint){0};
     status = umi_fs_read_bytes(path, &bytes, &size);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_fingerprint->content_hash = umi_document_hash_bytes(bytes, size);
     out_fingerprint->byte_count = size;
@@ -58,6 +75,10 @@ UmiStatus umi_document_fingerprint_file(const char *path,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the document fingerprint equal operation used by this module and its client
+ * applications.
+ */
 int umi_document_fingerprint_equal(const UmiDocumentFingerprint *left,
                                    const UmiDocumentFingerprint *right)
 {
@@ -66,6 +87,10 @@ int umi_document_fingerprint_equal(const UmiDocumentFingerprint *left,
            left->byte_count == right->byte_count;
 }
 
+/*
+ * Provide the document fingerprint backend operation used by this module and its client
+ * applications.
+ */
 const char *umi_document_fingerprint_backend(void)
 {
 #if defined(UMICOM_DOCUMENT_HASH_X86_64_ASM)

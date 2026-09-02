@@ -18,6 +18,10 @@
 
 #include "umicom/ai/mcp/protocol.h"
 
+/*
+ * Exercise test ai mcp protocol prompts get and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_ai_mcp_protocol_prompts_get(void)
 {
     assert(strcmp(umi_ai_mcp_method_prompts_get(), "prompts/get") == 0);

@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcConformanceCase c; CHECK(umi_fc_conformance_case_make("focus",3U,1U,true,&c)==UMI_STATUS_OK); CHECK(umi_fc_conformance_case_missing(&c)==2U);
     return 0;

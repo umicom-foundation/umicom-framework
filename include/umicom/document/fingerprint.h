@@ -23,14 +23,34 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the document hash bytes operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_document_hash_bytes(const void *bytes, size_t byte_count);
+/**
+ * Provide the document hash bytes portable operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_document_hash_bytes_portable(const void *bytes,
                                           size_t byte_count,
                                           uint64_t initial_hash);
+/**
+ * Provide the document fingerprint file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_fingerprint_file(const char *path,
                                         UmiDocumentFingerprint *out_fingerprint);
+/**
+ * Provide the document fingerprint equal operation used by this module and its client
+ * applications.
+ */
 int umi_document_fingerprint_equal(const UmiDocumentFingerprint *left,
                                    const UmiDocumentFingerprint *right);
+/**
+ * Provide the document fingerprint backend operation used by this module and its client
+ * applications.
+ */
 const char *umi_document_fingerprint_backend(void);
 
 #ifdef __cplusplus

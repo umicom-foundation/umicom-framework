@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/feature_option_matrix.h"
 
+/*
+ * Provide the developer capability feature option matrix operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_feature_option_matrix(void)
 {

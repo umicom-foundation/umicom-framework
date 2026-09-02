@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider snapshot item data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderSnapshotItem {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderSnapshotItem {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderSnapshotItem;
 
+/**
+ * Initialise workbench selection provider snapshot item from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_snapshot_item_init(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider snapshot item satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_validate(
     const UmiWorkbenchSelectionProviderSnapshotItem *record);
+/**
+ * Provide the workbench selection provider snapshot item set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_set_provider(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider snapshot item set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_set_source(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider snapshot item set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_set_subject(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider snapshot item set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_set_related(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider snapshot item set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_set_group(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider snapshot item set description operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_item_set_description(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     const char *description);
+/**
+ * Provide the workbench selection provider snapshot item hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_snapshot_item_hash(
     const UmiWorkbenchSelectionProviderSnapshotItem *record);
+/**
+ * Provide the workbench selection provider snapshot item touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_snapshot_item_touch(
     UmiWorkbenchSelectionProviderSnapshotItem *record,
     uint64_t sequence,

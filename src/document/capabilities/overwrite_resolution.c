@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/overwrite_resolution.h"
 
+/*
+ * Provide the document capability overwrite resolution operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_overwrite_resolution(void)
 {

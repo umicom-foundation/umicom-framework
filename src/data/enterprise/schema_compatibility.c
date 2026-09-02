@@ -17,6 +17,10 @@
 
 /* Defaults favour bounded, reviewable behaviour over aggressive execution. */
 void umi_data_schema_compatibility_default(UmiDataSchemaCompatibilityPolicy *policy) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return;
     (void)memset(policy, 0, sizeof(*policy));
     policy->allow_additive = true;
@@ -26,6 +30,10 @@ void umi_data_schema_compatibility_default(UmiDataSchemaCompatibilityPolicy *pol
 
 /* Evaluation is side-effect free so callers can preview decisions. */
 UmiStatus umi_data_schema_compatibility_evaluate(const UmiDataSchemaCompatibilityPolicy *policy, UmiDataCompatibility compatibility, bool *out_allowed) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL || out_allowed == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_allowed = compatibility == UMI_DATA_COMPATIBLE || (compatibility == UMI_DATA_COMPATIBLE_WITH_REBUILD && policy->allow_rebuild) || (compatibility == UMI_DATA_BREAKING && policy->allow_breaking);
     return UMI_STATUS_OK;

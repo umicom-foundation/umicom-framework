@@ -26,7 +26,14 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric health summary data shared with callers of this public contract.
+ */
 typedef struct UmiFabricHealthSummary { UmiFabricState service_state; UmiFabricState connector_state; UmiFabricState routing_state; UmiFabricState workflow_state; UmiFabricState overall_state; size_t blockers; } UmiFabricHealthSummary;
+/**
+ * Provide the fabric health evaluate operation used by this module and its client
+ * applications.
+ */
 void umi_fabric_health_evaluate(UmiFabricHealthSummary *summary);
 
 #ifdef __cplusplus

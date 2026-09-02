@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher teacher question policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTeacherTeacherQuestionPolicy {
     uint32_t minimum_mastery;
     uint32_t minimum_attempts;
@@ -39,9 +43,25 @@ typedef struct UmiTeacherTeacherQuestionPolicy {
     int enabled;
 } UmiTeacherTeacherQuestionPolicy;
 
+/**
+ * Initialise teacher teacher question policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_teacher_teacher_question_policy_init(UmiTeacherTeacherQuestionPolicy *policy);
+/**
+ * Provide the teacher teacher question policy configure operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_teacher_teacher_question_policy_configure(UmiTeacherTeacherQuestionPolicy *policy, uint32_t minimum_mastery, uint32_t minimum_attempts, uint32_t maximum_failures, UmiTeacherLevel maximum_level, uint32_t language_mask);
+/**
+ * Provide the teacher teacher question policy allows operation used by this module and its
+ * client applications.
+ */
 int umi_teacher_teacher_question_policy_allows(const UmiTeacherTeacherQuestionPolicy *policy, uint32_t mastery, uint32_t attempts, uint32_t failures, UmiTeacherLevel level, UmiTeacherLanguage language);
+/**
+ * Provide the teacher teacher question policy deficit operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_teacher_teacher_question_policy_deficit(const UmiTeacherTeacherQuestionPolicy *policy, uint32_t mastery);
 
 #ifdef __cplusplus

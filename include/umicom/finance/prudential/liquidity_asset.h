@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential liquidity asset data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLiquidityAsset { char asset_id[UMI_PRU_ID_CAPACITY]; UmiHqlaLevel level; double market_value; double haircut; double eligible_value; UmiCurrency currency; } UmiPrudentialLiquidityAsset;
 /* Initialise a liquidity asset and derive post-haircut eligible value. */
 UmiStatus umi_pru_liquidity_asset_init(UmiPrudentialLiquidityAsset *asset, const char *asset_id, UmiHqlaLevel level, double market_value, double haircut, UmiCurrency currency);

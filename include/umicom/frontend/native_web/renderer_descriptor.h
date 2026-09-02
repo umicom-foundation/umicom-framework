@@ -28,8 +28,15 @@ extern "C" {
 #include "umicom/frontend/native_web/render_context.h"
 #include "umicom/frontend/native_web/render_result.h"
 
+/**
+ * Represent the native web surface data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebSurface { char surface_id[UMI_NATIVE_WEB_ID_CAPACITY]; char semantic_contract[UMI_NATIVE_WEB_ID_CAPACITY]; char title[UMI_NATIVE_WEB_TEXT_CAPACITY]; char content[UMI_NATIVE_WEB_VALUE_CAPACITY]; uint64_t flags; } UmiNativeWebSurface;
 typedef UmiStatus (*UmiNativeWebRenderFn)(const UmiNativeWebRenderContext *context, const UmiNativeWebSurface *surface, UmiNativeWebRenderResult *result);
+/**
+ * Represent the native web renderer descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebRendererDescriptor { char renderer_id[UMI_NATIVE_WEB_ID_CAPACITY]; char semantic_contract[UMI_NATIVE_WEB_ID_CAPACITY]; UmiNativeWebRenderFn render; uint64_t capability_flags; } UmiNativeWebRendererDescriptor;
 /* Validate a renderer descriptor before registry insertion. */
 UmiStatus umi_native_web_renderer_descriptor_validate(const UmiNativeWebRendererDescriptor *descriptor);

@@ -1,9 +1,26 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: resources/themes/workbench-context-link.css
+ *
+ * PURPOSE:
+ *   Implement the workbench context link behaviour used by its public contract
+ *   and client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework GTK4 Context Link presentation rules.
  * Created by: Sammy Hegab
  * Organisation: Umicom Foundation
  * Licence: MIT
  *---------------------------------------------------------------------------*/
+/* The link badge remains compact enough for panel titles and dense toolbars. */
 .umicom-context-link-badge {
     border-radius: 999px;
     padding: 2px 8px;

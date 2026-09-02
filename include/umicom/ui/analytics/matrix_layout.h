@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics matrix rect data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsMatrixRect { double x,y,width,height; } UmiAnalyticsMatrixRect;
+/**
+ * Provide the analytics matrix layout cell operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_matrix_layout_cell(uint16_t rows,uint16_t columns,uint16_t row,uint16_t column,double width,double height,double gap,UmiAnalyticsMatrixRect *out_rect);
 
 #ifdef __cplusplus

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital stress result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalStressResult { double stressed_ratio; double minimum_ratio; double headroom; int passed; } UmiPrudentialCapitalStressResult;
 /* Evaluate a post-stress prudential ratio and retain explicit headroom. */
 UmiStatus umi_pru_capital_stress_result_evaluate(UmiPrudentialCapitalStressResult *result, double stressed_ratio, double minimum_ratio);

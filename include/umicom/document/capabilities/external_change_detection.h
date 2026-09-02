@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_EXTERNAL_CHANGE_DETECTION "umicom.document.conflict.external_change_detection"
 
+/**
+ * Provide the document capability external change detection operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_external_change_detection(void);
 

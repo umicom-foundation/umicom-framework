@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link metric data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextLinkMetric {
     uint32_t structure_size;
     char metric_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkMetric {
     uint64_t revision;
 } UmiWorkbenchContextLinkMetric;
 
+/**
+ * Initialise workbench context link metric from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_context_link_metric_init(UmiWorkbenchContextLinkMetric *record,
                                            const char *identity);
+/**
+ * Check that workbench context link metric satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_context_link_metric_validate(
     const UmiWorkbenchContextLinkMetric *record);
+/**
+ * Copy workbench context link metric into module-owned storage so callers keep ownership
+ * of their input values.
+ */
 UmiStatus umi_workbench_context_link_metric_copy(
     UmiWorkbenchContextLinkMetric *destination,
     const UmiWorkbenchContextLinkMetric *source);
+/**
+ * Provide the workbench context link metric hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_link_metric_hash(
     const UmiWorkbenchContextLinkMetric *record);
+/**
+ * Provide the workbench context link metric set primary operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_link_metric_set_primary(
     UmiWorkbenchContextLinkMetric *record,
     const char *value);
+/**
+ * Provide the workbench context link metric set secondary operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_link_metric_set_secondary(
     UmiWorkbenchContextLinkMetric *record,
     const char *value);
+/**
+ * Provide the workbench context link metric touch operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_context_link_metric_touch(
     UmiWorkbenchContextLinkMetric *record,
     uint64_t sequence,

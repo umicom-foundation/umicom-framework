@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/document_test_fixture.h"
 
+/*
+ * Provide the document capability document test fixture operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_test_fixture(void)
 {

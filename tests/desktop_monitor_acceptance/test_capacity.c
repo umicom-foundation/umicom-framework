@@ -19,6 +19,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test desktop monitor capacity and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_desktop_monitor_capacity(void)
 {
     UmiDesktopMonitorTopology topology;
@@ -26,6 +30,7 @@ int test_desktop_monitor_capacity(void)
 
     umi_desktop_monitor_topology_init(&topology);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_DESKTOP_MAX_MONITORS;
          ++index) {

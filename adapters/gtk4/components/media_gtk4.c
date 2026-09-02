@@ -19,5 +19,7 @@
  * the matching source file.
  */
 #include "umicom/ui/gtk4/media.h"
+/* Provide the gtk4 picture new operation used by this module and its client applications. */
 GtkWidget *umi_gtk4_picture_new(const UmiUiComponentSpec*s){return s&&s->text[0]?gtk_picture_new_for_filename(s->text):gtk_picture_new();}
+/* Provide the gtk4 video new operation used by this module and its client applications. */
 GtkWidget *umi_gtk4_video_new(const UmiUiComponentSpec*s){return s&&s->text[0]?gtk_video_new_for_filename(s->text):gtk_video_new();}

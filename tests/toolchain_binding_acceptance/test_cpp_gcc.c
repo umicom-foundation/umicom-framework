@@ -18,6 +18,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test toolchain binding acceptance cpp gcc and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_toolchain_binding_acceptance_cpp_gcc(void)
 {
     UmiDeveloperToolchainBindingRegistry *registry = NULL;

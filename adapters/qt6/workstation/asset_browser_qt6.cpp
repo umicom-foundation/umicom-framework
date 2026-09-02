@@ -3,6 +3,22 @@
  * File: adapters/qt6/workstation/asset_browser_qt6.cpp
  *
  * PURPOSE:
+ *   Implement the asset browser qt6 behaviour used by its public contract and
+ *   client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/qt6/workstation/asset_browser_qt6.cpp
+ *
+ * PURPOSE:
  *   Render reusable image/video/audio/model/material/project asset browsing.
  *
  * Created by: Sammy Hegab
@@ -47,15 +63,28 @@ static const UmiQt6SurfaceDescriptor UMI_QT6_WS_DESCRIPTOR = {
     UMI_QT6_CAP_FOCUS | UMI_QT6_CAP_KEYBOARD | UMI_QT6_CAP_ACCESSIBILITY | UMI_QT6_CAP_DENSITY | UMI_QT6_CAP_THEME | UMI_QT6_CAP_MEDIA
 };
 
+/*
+ * Provide the qt6 ws asset browser descriptor operation used by this module and its client
+ * applications.
+ */
 extern "C" const UmiQt6SurfaceDescriptor *umi_qt6_ws_asset_browser_descriptor(void) { return &UMI_QT6_WS_DESCRIPTOR; }
 
 
+/*
+ * Initialise qt6 ws asset browser from caller-provided values so later operations receive
+ * a known state.
+ */
 extern "C" UmiQt6WidgetHandle umi_qt6_ws_asset_browser_create(const UmiWsAssetBrowserModel *model) {
 #if defined(UMICOM_QT6_NATIVE) && UMICOM_QT6_NATIVE
     auto *list = new QListWidget();
     list->setViewMode(QListView::IconMode);
     list->setResizeMode(QListView::Adjust);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model != nullptr) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (size_t i = 0U; i < model->count; ++i) {
             auto *item = new QListWidgetItem(QString::fromUtf8(model->assets[i].label), list);
             item->setData(Qt::UserRole, QString::fromUtf8(model->assets[i].uri));

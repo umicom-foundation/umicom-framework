@@ -19,4 +19,8 @@
 #include "umicom/finance/enterprise/risk_report.h"
 
 #include <string.h>
-UmiStatus umi_enterprise_risk_report_init(UmiEnterpriseRiskReport *r,const char *id,int64_t asof,double var,double es,double stress,double pnl){UmiStatus s;if(r==NULL||asof<0||!umi_quant_number_valid(var)||!umi_quant_number_valid(es)||!umi_quant_number_valid(stress)||!umi_quant_number_valid(pnl)||var<0.0||es<var||stress<0.0)return UMI_STATUS_INVALID_ARGUMENT;memset(r,0,sizeof *r);s=umi_quant_copy_text(r->portfolio_id,sizeof r->portfolio_id,id);if(s!=UMI_STATUS_OK)return s;r->as_of_ms=asof;r->var=var;r->expected_shortfall=es;r->stress_loss=stress;r->pnl=pnl;return UMI_STATUS_OK;}
+/*
+ * Initialise enterprise risk report from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_enterprise_risk_report_init(UmiEnterpriseRiskReport *r,const char *id,int64_t asof,double var,double es,double stress,double pnl){UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||asof<0||!umi_quant_number_valid(var)||!umi_quant_number_valid(es)||!umi_quant_number_valid(stress)||!umi_quant_number_valid(pnl)||var<0.0||es<var||stress<0.0)return UMI_STATUS_INVALID_ARGUMENT;memset(r,0,sizeof *r);s=umi_quant_copy_text(r->portfolio_id,sizeof r->portfolio_id,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;r->as_of_ms=asof;r->var=var;r->expected_shortfall=es;r->stress_loss=stress;r->pnl=pnl;return UMI_STATUS_OK;}

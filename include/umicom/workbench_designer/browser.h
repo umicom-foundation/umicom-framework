@@ -25,6 +25,9 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer browser sort values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerBrowserSort {
     UMI_WORKBENCH_DESIGNER_BROWSER_SORT_NAME = 1,
     UMI_WORKBENCH_DESIGNER_BROWSER_SORT_RECENT = 2,
@@ -32,6 +35,10 @@ typedef enum UmiWorkbenchDesignerBrowserSort {
     UMI_WORKBENCH_DESIGNER_BROWSER_SORT_OWNER = 4
 } UmiWorkbenchDesignerBrowserSort;
 
+/**
+ * Represent the workbench designer browser item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerBrowserItem {
     char layout_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char name[UMI_WORKBENCH_DESIGNER_LABEL_CAPACITY];
@@ -51,6 +58,10 @@ typedef struct UmiWorkbenchDesignerBrowserItem {
     bool selected;
 } UmiWorkbenchDesignerBrowserItem;
 
+/**
+ * Represent the workbench designer browser data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerBrowser {
     UmiWorkbenchDesignerBrowserItem items[UMI_WORKBENCH_DESIGNER_MAX_BROWSER_ITEMS];
     size_t count;
@@ -63,12 +74,40 @@ typedef struct UmiWorkbenchDesignerBrowser {
     uint64_t revision;
 } UmiWorkbenchDesignerBrowser;
 
+/**
+ * Initialise workbench designer browser from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_browser_init(UmiWorkbenchDesignerBrowser *browser);
+/**
+ * Provide the workbench designer browser add summary operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_add_summary(UmiWorkbenchDesignerBrowser *browser, const UmiWorkbenchLayoutRecordSummary *summary, const char *description, const char *tags, bool active);
+/**
+ * Provide the workbench designer browser set query operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_set_query(UmiWorkbenchDesignerBrowser *browser, const UmiWorkbenchDesignerBrowserQuery *query);
+/**
+ * Provide the workbench designer browser set sort operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_set_sort(UmiWorkbenchDesignerBrowser *browser, UmiWorkbenchDesignerBrowserSort sort, bool descending);
+/**
+ * Provide the workbench designer browser select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_select(UmiWorkbenchDesignerBrowser *browser, const char *layout_id);
+/**
+ * Find workbench designer browser visible while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerBrowserItem *umi_workbench_designer_browser_visible_at(const UmiWorkbenchDesignerBrowser *browser, size_t index);
+/**
+ * Find workbench designer browser while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchDesignerBrowserItem *umi_workbench_designer_browser_selected(const UmiWorkbenchDesignerBrowser *browser);
 
 #ifdef __cplusplus

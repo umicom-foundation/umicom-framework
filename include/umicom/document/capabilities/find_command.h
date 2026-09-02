@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_FIND_COMMAND "umicom.document.navigation.find_command"
 
+/**
+ * Provide the document capability find command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_find_command(void);
 

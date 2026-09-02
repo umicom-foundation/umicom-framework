@@ -23,7 +23,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the vcs git cli provider operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_git_cli_provider(UmiVcsProvider *out_provider);
+/**
+ * Provide the vcs git cli is repository operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_git_cli_is_repository(const char *root, int *out_is_repo);
 
 #ifdef __cplusplus

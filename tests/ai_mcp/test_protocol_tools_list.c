@@ -18,6 +18,10 @@
 
 #include "umicom/ai/mcp/protocol.h"
 
+/*
+ * Exercise test ai mcp protocol tools list and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_ai_mcp_protocol_tools_list(void)
 {
     assert(strcmp(umi_ai_mcp_method_tools_list(), "tools/list") == 0);

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading fee schedule data shared with callers of this public contract.
+ */
 typedef struct UmiTradingFeeSchedule { int64_t maker_minor_per_lot; int64_t taker_minor_per_lot; int64_t regulatory_minor_per_lot; } UmiTradingFeeSchedule;
 /* Initialise and validate define maker/taker exchange fees in minor units per lot. */
 UmiStatus umi_trading_fee_schedule_init(UmiTradingFeeSchedule *value,int64_t maker_minor_per_lot, int64_t taker_minor_per_lot, int64_t regulatory_minor_per_lot);

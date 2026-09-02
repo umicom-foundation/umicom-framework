@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Connection profiles | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "integration_designer_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIntegrationConnectionCatalogue catalogue = {0};

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential liquidity buffer data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLiquidityBuffer { double available; double minimum_required; double usable_amount; } UmiPrudentialLiquidityBuffer;
 /* Calculate usable liquidity above a protected minimum buffer. */
 UmiStatus umi_pru_liquidity_buffer_calculate(UmiPrudentialLiquidityBuffer *result, double available, double minimum_required);

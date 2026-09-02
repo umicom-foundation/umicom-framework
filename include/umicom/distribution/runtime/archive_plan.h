@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr archive plan data shared with callers of this public contract.
+ */
 typedef struct UmiDrArchivePlan { char id[UMI_DR_ID_CAPACITY]; uint32_t required_steps; uint32_t completed_steps; bool deterministic; bool privileged; } UmiDrArchivePlan;
+/**
+ * Initialise dr archive plan from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_archive_plan_init(UmiDrArchivePlan *plan); UmiStatus umi_dr_archive_plan_complete_step(UmiDrArchivePlan *plan); bool umi_dr_archive_plan_ready(const UmiDrArchivePlan *plan);
 
 #ifdef __cplusplus

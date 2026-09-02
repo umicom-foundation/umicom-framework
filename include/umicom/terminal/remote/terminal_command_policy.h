@@ -22,8 +22,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote terminal command policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTerminalRemoteTerminalCommandPolicy { bool require_trust; bool allow_write; bool allow_interactive; } UmiTerminalRemoteTerminalCommandPolicy;
+/**
+ * Initialise terminal remote terminal command policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_terminal_command_policy_init(UmiTerminalRemoteTerminalCommandPolicy *value);
+/**
+ * Provide the terminal remote terminal command policy allows operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_terminal_command_policy_allows(const UmiTerminalRemoteTerminalCommandPolicy *value,bool trusted,bool write_request,bool interactive_request);
 #ifdef __cplusplus
 }

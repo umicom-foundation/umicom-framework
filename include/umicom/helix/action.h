@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix action data shared with callers of this public contract.
+ */
 typedef struct UmiHelixAction {
     char action_id[UMI_HELIX_ID_CAPACITY];
     UmiHelixActionKind kind;
@@ -32,12 +35,20 @@ typedef struct UmiHelixAction {
     int mutating;
 } UmiHelixAction;
 
+/**
+ * Initialise helix action from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_helix_action_init(UmiHelixAction *action,
                                    const char *action_id,
                                    UmiHelixActionKind kind,
                                    const char *summary,
                                    const char *target,
                                    uint32_t maximum_attempts);
+/**
+ * Provide the helix action requires approval operation used by this module and its client
+ * applications.
+ */
 int umi_helix_action_requires_approval(const UmiHelixAction *action);
 
 #ifdef __cplusplus

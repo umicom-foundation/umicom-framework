@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/provenance_chain.h"
-int main(void) { UmiPluginExtensionHostProvenanceChain c; umi_plugin_extension_host_provenance_chain_init(&c); if(umi_plugin_extension_host_provenance_chain_append(&c,11U)!=UMI_STATUS_OK||umi_plugin_extension_host_provenance_chain_append(&c,22U)!=UMI_STATUS_OK) return 1; if(!umi_plugin_extension_host_provenance_chain_verify(&c)||umi_plugin_extension_host_provenance_chain_head(&c)==0U) return 2; c.entries[1].evidence=23U; if(umi_plugin_extension_host_provenance_chain_verify(&c)) return 3; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostProvenanceChain c; umi_plugin_extension_host_provenance_chain_init(&c); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_provenance_chain_append(&c,11U)!=UMI_STATUS_OK||umi_plugin_extension_host_provenance_chain_append(&c,22U)!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_plugin_extension_host_provenance_chain_verify(&c)||umi_plugin_extension_host_provenance_chain_head(&c)==0U) return 2; c.entries[1].evidence=23U; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_provenance_chain_verify(&c)) return 3; return 0; }

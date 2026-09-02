@@ -33,6 +33,7 @@
 #include "umicom/application/presentation/headless_surface_host.h"
 #include "umicom/application/presentation/surface_runtime.h"
 #include "umicom/application/presentation/product_surface.h"
+#include "umicom/application/presentation/product_panel_projection.h"
 #include "umicom/application/presentation/surface_behavior.h"
 #include "umicom/application/presentation/surface_behavior_catalogue.h"
 #include "umicom/application/presentation/workspace_runtime_policy.h"

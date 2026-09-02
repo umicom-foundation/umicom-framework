@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrApplicationManifest value; umi_dr_application_manifest_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"studio") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.name,sizeof(value.name),"Umicom Studio") == UMI_STATUS_OK); CHECK(umi_dr_application_manifest_valid(&value)); CHECK(umi_dr_application_manifest_fingerprint(&value) != 0U);
     return 0;

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/provider_extension_point.h"
 
+/*
+ * Provide the document capability provider extension point operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_provider_extension_point(void)
 {

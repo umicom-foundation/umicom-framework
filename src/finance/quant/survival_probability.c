@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_survival_probability_init(UmiQuantSurvivalProbability *record, double hazard_rate, double years)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(hazard_rate >= 0.0 && years >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->hazard_rate = hazard_rate;
@@ -35,6 +40,10 @@ UmiStatus umi_quant_survival_probability_init(UmiQuantSurvivalProbability *recor
 /* Return exponential survival probability. */
 double umi_quant_survival_probability_probability(const UmiQuantSurvivalProbability *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return exp(-record->hazard_rate * record->years);
 }

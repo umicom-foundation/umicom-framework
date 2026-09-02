@@ -24,18 +24,31 @@
 
 #include "umicom/platform/filesystem.h"
 
+/* Provide the build message operation used by this module and its client applications. */
 static void umi_build_message(char *out_message,
                               size_t capacity,
                               const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message == NULL || capacity == 0U) {
         return;
     }
     (void)snprintf(out_message, capacity, "%s", text != NULL ? text : "");
 }
 
+/*
+ * Initialise build request from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_build_request_init(UmiBuildRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) {
         return;
     }
@@ -45,8 +58,16 @@ void umi_build_request_init(UmiBuildRequest *request)
     request->window_mode = UMI_PROCESS_WINDOW_HIDDEN;
 }
 
+/*
+ * Initialise build report from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_build_report_init(UmiBuildReport *report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL) {
         return;
     }
@@ -62,8 +83,10 @@ void umi_build_report_init(UmiBuildReport *report)
     report->last_status = UMI_STATUS_OK;
 }
 
+/* Provide the build action text operation used by this module and its client applications. */
 const char *umi_build_action_text(UmiBuildAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_BUILD_CONFIGURE: return "configure";
         case UMI_BUILD_COMPILE: return "build";
@@ -79,11 +102,13 @@ const char *umi_build_action_text(UmiBuildAction action)
     }
 }
 
+/* Provide the build has text operation used by this module and its client applications. */
 static int umi_build_has_text(const char *text)
 {
     return text != NULL && text[0] != '\0';
 }
 
+/* Check that build request satisfies its contract before another service relies on it. */
 UmiStatus umi_build_request_validate(UmiBuildAction action,
                                      const UmiBuildRequest *request,
                                      char *out_message,
@@ -92,32 +117,41 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
     const int uses_preset =
         request != NULL && umi_build_has_text(request->preset);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) {
         umi_build_message(out_message, message_capacity,
                           "Build request is required.");
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_build_has_text(request->source_root)) {
         umi_build_message(out_message, message_capacity,
                           "Source root is required.");
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->jobs < 0) {
         umi_build_message(out_message, message_capacity,
                           "Parallel job count cannot be negative.");
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->run_argument_count > UMI_PROCESS_MAX_ARGUMENTS) {
         umi_build_message(out_message, message_capacity,
                           "Run argument count exceeds the process limit.");
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_BUILD_CONFIGURE:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!uses_preset &&
                 !umi_build_has_text(request->build_directory)) {
                 umi_build_message(
@@ -131,6 +165,7 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
         case UMI_BUILD_COMPILE:
         case UMI_BUILD_TEST:
         case UMI_BUILD_PACKAGE:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!uses_preset &&
                 !umi_build_has_text(request->build_directory)) {
                 umi_build_message(
@@ -143,6 +178,7 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
 
         case UMI_BUILD_RUN:
         case UMI_BUILD_COMMAND:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!umi_build_has_text(request->executable)) {
                 umi_build_message(out_message, message_capacity,
                                   "Run requires an executable.");
@@ -152,6 +188,7 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
 
         case UMI_BUILD_CLEAN:
         case UMI_BUILD_INSTALL:
+            /* Create this optional product surface only when its build option is enabled. */
             if (!umi_build_has_text(request->build_directory)) {
                 umi_build_message(
                     out_message,
@@ -162,6 +199,7 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
             break;
 
         case UMI_BUILD_MAKE:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!uses_preset &&
                 !umi_build_has_text(request->build_directory)) {
                 umi_build_message(
@@ -197,10 +235,18 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the build accumulate result operation used by this module and its client
+ * applications.
+ */
 static void umi_build_accumulate_result(UmiBuildReport *report,
                                         UmiBuildAction action,
                                         const UmiProcessResult *result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || result == NULL) {
         return;
     }
@@ -211,9 +257,10 @@ static void umi_build_accumulate_result(UmiBuildReport *report,
     report->output_truncated =
         report->output_truncated || result->output_truncated;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (UINT64_MAX - report->duration_ms < result->duration_ms) {
         report->duration_ms = UINT64_MAX;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         report->duration_ms += result->duration_ms;
     }
 
@@ -223,18 +270,29 @@ static void umi_build_accumulate_result(UmiBuildReport *report,
                    result->output);
 }
 
+/*
+ * Provide the build process status operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_process_status(const UmiProcessResult *result,
                                           UmiStatus transport_status)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (transport_status != UMI_STATUS_OK) {
         return transport_status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result->cancelled) {
         return UMI_STATUS_CANCELLED;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result->timed_out) {
         return UMI_STATUS_TIMEOUT;
     }
@@ -265,7 +323,15 @@ static UmiStatus umi_build_run_process(
     UmiStatus transport_status;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool == NULL || tool->state != UMI_TOOL_VALIDATED) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (report != NULL) {
             report->last_action = action;
             report->last_status = UMI_STATUS_NOT_FOUND;
@@ -301,6 +367,10 @@ static UmiStatus umi_build_run_process(
 
     transport_status = umi_process_execute(&process_request, &result);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_exit_code != NULL) {
         *out_exit_code = result.exit_code;
     }
@@ -308,6 +378,10 @@ static UmiStatus umi_build_run_process(
     umi_build_accumulate_result(report, action, &result);
     status = umi_build_process_status(&result, transport_status);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report != NULL) {
         report->last_status = status;
     }
@@ -315,21 +389,34 @@ static UmiStatus umi_build_run_process(
     return status;
 }
 
+/*
+ * Provide the build clean internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
                                           UmiBuildReport *report)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL ||
         !umi_build_has_text(request->build_directory)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_fs_remove_tree(request->build_directory);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         status = UMI_STATUS_OK;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report != NULL) {
         report->last_action = UMI_BUILD_CLEAN;
         report->last_status = status;
@@ -345,6 +432,10 @@ static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
     return status;
 }
 
+/*
+ * Provide the build configure internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_configure_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -356,10 +447,11 @@ static UmiStatus umi_build_configure_internal(
     const char *arguments[12];
     size_t count = 0U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->preset)) {
         arguments[count++] = "--preset";
         arguments[count++] = request->preset;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         arguments[count++] = "-S";
         arguments[count++] = request->source_root;
         arguments[count++] = "-B";
@@ -382,6 +474,10 @@ static UmiStatus umi_build_configure_internal(
         report);
 }
 
+/*
+ * Provide the build compile internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_compile_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -396,18 +492,21 @@ static UmiStatus umi_build_compile_internal(
 
     arguments[count++] = "--build";
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->preset)) {
         arguments[count++] = "--preset";
         arguments[count++] = request->preset;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         arguments[count++] = request->build_directory;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->target)) {
         arguments[count++] = "--target";
         arguments[count++] = request->target;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->jobs > 0) {
         (void)snprintf(jobs, sizeof(jobs), "%d", request->jobs);
         arguments[count++] = "--parallel";
@@ -426,6 +525,10 @@ static UmiStatus umi_build_compile_internal(
         report);
 }
 
+/*
+ * Provide the build test internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_test_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -437,15 +540,17 @@ static UmiStatus umi_build_test_internal(
     const char *arguments[8];
     size_t count = 0U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->preset)) {
         arguments[count++] = "--preset";
         arguments[count++] = request->preset;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         arguments[count++] = "--test-dir";
         arguments[count++] = request->build_directory;
         arguments[count++] = "--output-on-failure";
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->configuration)) {
         arguments[count++] = "-C";
         arguments[count++] = request->configuration;
@@ -463,6 +568,10 @@ static UmiStatus umi_build_test_internal(
         report);
 }
 
+/*
+ * Provide the build install internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_install_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -477,11 +586,13 @@ static UmiStatus umi_build_install_internal(
     arguments[count++] = "--install";
     arguments[count++] = request->build_directory;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->configuration)) {
         arguments[count++] = "--config";
         arguments[count++] = request->configuration;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->install_prefix)) {
         arguments[count++] = "--prefix";
         arguments[count++] = request->install_prefix;
@@ -499,6 +610,10 @@ static UmiStatus umi_build_install_internal(
         report);
 }
 
+/*
+ * Provide the build package internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_package_internal(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -517,16 +632,18 @@ static UmiStatus umi_build_package_internal(
 
     arguments[count++] = "--build";
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_build_has_text(request->preset)) {
         arguments[count++] = "--preset";
         arguments[count++] = request->preset;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         arguments[count++] = request->build_directory;
     }
 
     arguments[count++] = "--target";
     arguments[count++] = package_target;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->jobs > 0) {
         (void)snprintf(jobs, sizeof(jobs), "%d", request->jobs);
         arguments[count++] = "--parallel";
@@ -545,6 +662,10 @@ static UmiStatus umi_build_package_internal(
         report);
 }
 
+/*
+ * Provide the build run internal operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_build_run_internal(
     UmiEnvironmentPlan *environment,
     const UmiBuildRequest *request,
@@ -556,6 +677,7 @@ static UmiStatus umi_build_run_internal(
     UmiStatus transport_status;
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_build_has_text(request->executable)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -590,6 +712,10 @@ static UmiStatus umi_build_run_internal(
     return status;
 }
 
+/*
+ * Perform build through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_build_execute(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -602,6 +728,10 @@ UmiStatus umi_build_execute(
         out_report != NULL ? out_report : &local_report;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -610,71 +740,86 @@ UmiStatus umi_build_execute(
 
     status = umi_build_request_validate(
         action, request, NULL, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         report->last_action = action;
         report->last_status = status;
         return status;
     }
 
+    /* Create this optional product surface only when its build option is enabled. */
     if (request->clean && action != UMI_BUILD_CLEAN) {
         status = umi_build_clean_internal(request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Create this optional product surface only when its build option is enabled. */
     if (action == UMI_BUILD_CLEAN) {
         return umi_build_clean_internal(request, report);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_BUILD_CONFIGURE ||
         action == UMI_BUILD_MAKE ||
         action == UMI_BUILD_DELIVER) {
         status = umi_build_configure_internal(
             profile, environment, request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_BUILD_COMPILE ||
         action == UMI_BUILD_MAKE ||
         action == UMI_BUILD_DELIVER) {
         status = umi_build_compile_internal(
             profile, environment, request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_BUILD_TEST ||
         action == UMI_BUILD_MAKE ||
         action == UMI_BUILD_DELIVER) {
         status = umi_build_test_internal(
             profile, environment, request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_BUILD_INSTALL ||
         action == UMI_BUILD_DELIVER) {
         status = umi_build_install_internal(
             profile, environment, request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_BUILD_PACKAGE ||
         action == UMI_BUILD_DELIVER) {
         status = umi_build_package_internal(
             profile, environment, request, report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Create this optional product surface only when its build option is enabled. */
     if (action == UMI_BUILD_RUN || action == UMI_BUILD_COMMAND) {
         return umi_build_run_internal(
             environment, request, action, report);
@@ -684,6 +829,10 @@ UmiStatus umi_build_execute(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the build repair cache operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_build_repair_cache(
     const UmiToolchainProfile *profile,
     const char *build_directory,
@@ -701,6 +850,10 @@ UmiStatus umi_build_repair_cache(
     struct tm *time_info;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || build_directory == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -710,6 +863,7 @@ UmiStatus umi_build_repair_cache(
         sizeof(cache_path),
         build_directory,
         "CMakeCache.txt");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || !umi_fs_is_file(cache_path)) {
         return UMI_STATUS_OK;
     }
@@ -720,6 +874,10 @@ UmiStatus umi_build_repair_cache(
      * here made a healthy GCC cache look stale.
      */
     compiler = umi_toolchain_profile_c_compiler(profile);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (compiler == NULL ||
         compiler->state != UMI_TOOL_VALIDATED ||
         compiler->path[0] == '\0') {
@@ -727,6 +885,7 @@ UmiStatus umi_build_repair_cache(
     }
 
     status = umi_fs_read_text(cache_path, &cache, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -737,6 +896,10 @@ UmiStatus umi_build_repair_cache(
         "CMAKE_C_COMPILER:FILEPATH=%s",
         compiler->path);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strstr(cache, marker) != NULL) {
         umi_fs_free_text(cache);
         return UMI_STATUS_OK;
@@ -746,6 +909,10 @@ UmiStatus umi_build_repair_cache(
 
     now = time(NULL);
     time_info = localtime(&now);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (time_info == NULL ||
         strftime(timestamp,
                  sizeof(timestamp),
@@ -762,6 +929,10 @@ UmiStatus umi_build_repair_cache(
                    build_directory,
                    timestamp);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_recovery_path != NULL && capacity > 0U) {
         (void)snprintf(out_recovery_path,
                        capacity,
@@ -773,6 +944,10 @@ UmiStatus umi_build_repair_cache(
         : umi_fs_rename(build_directory, recovery);
 }
 
+/*
+ * Provide the build write user presets operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_build_write_user_presets(
     const UmiToolchainProfile *profile,
     const char *project_root,
@@ -784,6 +959,10 @@ UmiStatus umi_build_write_user_presets(
     char text[16384];
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || project_root == NULL || path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -798,6 +977,10 @@ UmiStatus umi_build_write_user_presets(
     pkg_config =
         umi_toolchain_profile_tool(profile, UMI_TOOL_PKG_CONFIG);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (compiler == NULL ||
         compiler->state != UMI_TOOL_VALIDATED ||
         ninja == NULL ||
@@ -845,6 +1028,7 @@ UmiStatus umi_build_write_user_presets(
 
     (void)project_root;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -852,6 +1036,7 @@ UmiStatus umi_build_write_user_presets(
     return umi_fs_write_text(path, text);
 }
 
+/* Provide the build open shell operation used by this module and its client applications. */
 UmiStatus umi_build_open_shell(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -864,17 +1049,33 @@ UmiStatus umi_build_open_shell(
 
     (void)profile;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
 #ifdef _WIN32
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (program == NULL || program[0] == '\0') {
         program = "powershell.exe";
     }
 #else
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (program == NULL || program[0] == '\0') {
         program = getenv("SHELL");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (program == NULL || program[0] == '\0') {
             program = "/bin/sh";
         }

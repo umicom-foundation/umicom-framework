@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Workspace trust policy v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/security/workspace_policy.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSecurityPermissionDescriptor permission = {0};

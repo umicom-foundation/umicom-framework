@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reconciliation rule data shared with callers of this public contract.
+ */
 typedef struct UmiReconciliationRule {
     char rule_id[UMI_REG_ID_CAPACITY];
     char left_source[UMI_REG_ID_CAPACITY];

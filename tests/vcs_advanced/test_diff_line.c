@@ -18,10 +18,15 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/diff_line.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiVcsAdvancedDiffLine value;
     umi_vcs_advanced_diff_line_init(&value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_diff_line_set(&value, UMI_VCS_DIFF_ADDED, 0U, 2U, "new") != UMI_STATUS_OK) return 2;
     return 0;
 }

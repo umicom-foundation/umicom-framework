@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtCrossTargetSnapshot s={0};s.target.architecture=UMI_CT_ARCH_RISCV64;CHECK(umi_ct_copy(s.abi,sizeof(s.abi),"lp64d")==UMI_STATUS_OK);s.cpu_count=4U;s.page_size=4096U;s.fingerprint=1U;s.health.health=UMI_CT_HEALTH_READY;CHECK(umi_ct_cross_target_snapshot_validate(&s)==UMI_STATUS_OK);s.health.health=UMI_CT_HEALTH_BLOCKED;CHECK(umi_ct_cross_target_snapshot_validate(&s)==UMI_STATUS_UNAVAILABLE);return 0;}

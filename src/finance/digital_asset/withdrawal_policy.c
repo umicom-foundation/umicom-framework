@@ -24,9 +24,14 @@
 UmiStatus umi_digital_asset_withdrawal_policy_init(UmiDigitalWithdrawalPolicy *value, const char *account_id, int64_t daily_limit_units, int64_t approval_threshold_units, int32_t scale, bool address_verification_required)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || daily_limit_units < 0 || approval_threshold_units < 0 || approval_threshold_units > daily_limit_units || scale < 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_digital_asset_copy_text(value->account_id.value, sizeof value->account_id.value, account_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->daily_limit_units = daily_limit_units;
     value->approval_threshold_units = approval_threshold_units;

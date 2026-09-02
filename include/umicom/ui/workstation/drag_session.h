@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws drag session data shared with callers of this public contract.
+ */
 typedef struct UmiWsDragSession {
     char surface_id[UMI_UI_ID_CAPACITY];
     UmiUiPoint start;
@@ -32,10 +35,30 @@ typedef struct UmiWsDragSession {
     bool committed;
 } UmiWsDragSession;
 
+/**
+ * Provide the ws drag session begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_drag_session_begin(UmiWsDragSession *session, const char *surface_id, UmiUiPoint start);
+/**
+ * Provide the ws drag session move operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_drag_session_move(UmiWsDragSession *session, UmiUiPoint current, UmiWsDockRegion proposed_region);
+/**
+ * Provide the ws drag session commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_drag_session_commit(UmiWsDragSession *session);
+/**
+ * Provide the ws drag session cancel operation used by this module and its client
+ * applications.
+ */
 void umi_ws_drag_session_cancel(UmiWsDragSession *session);
+/**
+ * Provide the ws drag session distance operation used by this module and its client
+ * applications.
+ */
 int32_t umi_ws_drag_session_distance(const UmiWsDragSession *session);
 
 #ifdef __cplusplus

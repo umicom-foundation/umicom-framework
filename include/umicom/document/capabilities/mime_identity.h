@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_MIME_IDENTITY "umicom.document.identity.mime_identity"
 
+/**
+ * Provide the document capability mime identity operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_mime_identity(void);
 

@@ -40,6 +40,7 @@ typedef struct ParsedFile {
     int active;
 } ParsedFile;
 
+/* Provide the append line operation used by this module and its client applications. */
 static UmiStatus append_line(
     char *buffer,
     size_t capacity,
@@ -47,10 +48,12 @@ static UmiStatus append_line(
     const char *line,
     size_t line_length)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*length + line_length + 2U > capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (line_length > 0U) {
         (void)memcpy(buffer + *length, line, line_length);
         *length += line_length;
@@ -61,6 +64,7 @@ static UmiStatus append_line(
     return UMI_STATUS_OK;
 }
 
+/* Provide the line equals operation used by this module and its client applications. */
 static int line_equals(
     const char *line,
     size_t length,
@@ -71,6 +75,7 @@ static int line_equals(
         strncmp(line, expected, length) == 0;
 }
 
+/* Provide the parse file begin operation used by this module and its client applications. */
 static UmiStatus parse_file_begin(
     const char *line,
     size_t length,
@@ -83,6 +88,7 @@ static UmiStatus parse_file_begin(
     size_t operation_length;
     size_t path_length;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length <= prefix_length ||
         strncmp(line, PREFIX, prefix_length) != 0) {
         return UMI_STATUS_PARSE_ERROR;
@@ -90,26 +96,32 @@ static UmiStatus parse_file_begin(
 
     operation = line + prefix_length;
     separator = memchr(operation, '|', length - prefix_length);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (separator == NULL) return UMI_STATUS_PARSE_ERROR;
 
     operation_length = (size_t)(separator - operation);
     path_length =
         length - prefix_length - operation_length - 1U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (path_length == 0U || path_length >= sizeof(file->path)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation_length == 6U &&
         strncmp(operation, "CREATE", 6U) == 0) {
         file->operation = UMI_AI_CODING_PATCH_CREATE;
-    } else if (operation_length == 6U &&
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (operation_length == 6U &&
                strncmp(operation, "MODIFY", 6U) == 0) {
         file->operation = UMI_AI_CODING_PATCH_MODIFY;
-    } else if (operation_length == 6U &&
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (operation_length == 6U &&
                strncmp(operation, "DELETE", 6U) == 0) {
         file->operation = UMI_AI_CODING_PATCH_DELETE;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_PARSE_ERROR;
     }
 
@@ -119,6 +131,7 @@ static UmiStatus parse_file_begin(
     return UMI_STATUS_OK;
 }
 
+/* Provide the add parsed file operation used by this module and its client applications. */
 static UmiStatus add_parsed_file(
     UmiAiCodingPatch *patch,
     ParsedFile *file,
@@ -134,15 +147,19 @@ static UmiStatus add_parsed_file(
         file->path,
         normalized,
         sizeof(normalized));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = workspace->exists(
         workspace->user_data,
         normalized,
         &exists);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (file->operation == UMI_AI_CODING_PATCH_CREATE) {
+        /* Use the optional file only when it is present in this checkout. */
         if (exists) return UMI_STATUS_ALREADY_EXISTS;
 
         return umi_ai_coding_patch_add_file(
@@ -153,6 +170,7 @@ static UmiStatus add_parsed_file(
             file->content);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!exists) return UMI_STATUS_NOT_FOUND;
 
     status = workspace->read(
@@ -161,10 +179,12 @@ static UmiStatus add_parsed_file(
         before,
         sizeof(before),
         &before_length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)before_length;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (file->operation == UMI_AI_CODING_PATCH_DELETE) {
         return umi_ai_coding_patch_add_file(
             patch,
@@ -182,18 +202,31 @@ static UmiStatus add_parsed_file(
         file->content);
 }
 
+/*
+ * Provide the strip trailing newline operation used by this module and its client
+ * applications.
+ */
 static void strip_trailing_newline(char *text)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return;
 
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U && text[length - 1U] == '\n') {
         text[length - 1U] = '\0';
     }
 }
 
+/*
+ * Provide the ai coding parse response operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_parse_response(
     const UmiAiResponse *response,
     const UmiAiCodingTaskPlan *plan,
@@ -212,12 +245,17 @@ UmiStatus umi_ai_coding_parse_response(
     char patch_id[UMI_AI_ID_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (response == NULL || plan == NULL ||
         workspace == NULL || out_response == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_ai_coding_workspace_adapter_validate(workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_response, 0, sizeof(*out_response));
@@ -225,12 +263,14 @@ UmiStatus umi_ai_coding_parse_response(
     title[0] = '\0';
     rationale[0] = '\0';
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(
             response->text,
             RESPONSE_HEADER,
             strlen(RESPONSE_HEADER)) != 0) {
         const size_t length = strlen(response->text);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= sizeof(out_response->summary)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -258,100 +298,124 @@ UmiStatus umi_ai_coding_parse_response(
         plan->request.request_id,
         "AI coding change",
         "Generated by the governed Umicom coding runtime.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     cursor = response->text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         const char *end = strchr(cursor, '\n');
         size_t length =
             end != NULL ? (size_t)(end - cursor) : strlen(cursor);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U && cursor[length - 1U] == '\r') --length;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (mode == PARSE_SUMMARY) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (line_equals(cursor, length, "SUMMARY-END")) {
                 mode = PARSE_NORMAL;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = append_line(
                     out_response->summary,
                     sizeof(out_response->summary),
                     &summary_length,
                     cursor,
                     length);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
-        } else if (mode == PARSE_RATIONALE) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (mode == PARSE_RATIONALE) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (line_equals(cursor, length, "RATIONALE-END")) {
                 mode = PARSE_NORMAL;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = append_line(
                     rationale,
                     sizeof(rationale),
                     &rationale_length,
                     cursor,
                     length);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
-        } else if (mode == PARSE_CONTENT) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (mode == PARSE_CONTENT) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (line_equals(cursor, length, "CONTENT-END")) {
                 mode = PARSE_NORMAL;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = append_line(
                     file.content,
                     sizeof(file.content),
                     &file.content_length,
                     cursor,
                     length);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
-        } else if (line_equals(cursor, length, "SUMMARY-BEGIN")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "SUMMARY-BEGIN")) {
             mode = PARSE_SUMMARY;
-        } else if (line_equals(cursor, length, "PATCH-BEGIN")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "PATCH-BEGIN")) {
             patch_started = 1;
-        } else if (line_equals(cursor, length, "PATCH-END")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "PATCH-END")) {
             patch_finished = 1;
-        } else if (length > 6U &&
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (length > 6U &&
                    strncmp(cursor, "TITLE|", 6U) == 0) {
             const size_t title_length = length - 6U;
 
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (title_length >= sizeof(title)) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
             }
 
             (void)memcpy(title, cursor + 6U, title_length);
             title[title_length] = '\0';
-        } else if (line_equals(cursor, length, "RATIONALE-BEGIN")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "RATIONALE-BEGIN")) {
             mode = PARSE_RATIONALE;
-        } else if (length > 11U &&
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (length > 11U &&
                    strncmp(cursor, "FILE-BEGIN|", 11U) == 0) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (file.active) return UMI_STATUS_PARSE_ERROR;
             (void)memset(&file, 0, sizeof(file));
 
             status = parse_file_begin(cursor, length, &file);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
-        } else if (line_equals(cursor, length, "CONTENT-BEGIN")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "CONTENT-BEGIN")) {
+            /* Apply this operation only while the related capability or state is available. */
             if (!file.active ||
                 file.operation == UMI_AI_CODING_PATCH_DELETE) {
                 return UMI_STATUS_PARSE_ERROR;
             }
             mode = PARSE_CONTENT;
-        } else if (line_equals(cursor, length, "FILE-END")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "FILE-END")) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (!file.active) return UMI_STATUS_PARSE_ERROR;
 
             status = add_parsed_file(
                 &out_response->patch,
                 &file,
                 workspace);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
             (void)memset(&file, 0, sizeof(file));
         }
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (end == NULL) break;
         cursor = end + 1;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (mode != PARSE_NORMAL || file.active) {
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -359,6 +423,7 @@ UmiStatus umi_ai_coding_parse_response(
     strip_trailing_newline(out_response->summary);
     strip_trailing_newline(rationale);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (title[0] != '\0') {
         (void)snprintf(
             out_response->patch.title,
@@ -366,6 +431,7 @@ UmiStatus umi_ai_coding_parse_response(
             "%s",
             title);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (rationale[0] != '\0') {
         (void)snprintf(
             out_response->patch.rationale,
@@ -374,6 +440,7 @@ UmiStatus umi_ai_coding_parse_response(
             rationale);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (patch_started != patch_finished) {
         return UMI_STATUS_PARSE_ERROR;
     }

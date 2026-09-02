@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress result store data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressResultStore { UmiPrudentialStressResult results[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialStressResultStore;
 /* Append one stress result to the bounded store. */
 UmiStatus umi_pru_stress_result_store_add(UmiPrudentialStressResultStore *store, const UmiPrudentialStressResult *result);

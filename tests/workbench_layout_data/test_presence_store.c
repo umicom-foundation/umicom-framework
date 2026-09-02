@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise make presence and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiWorkbenchLayoutPresence make_presence(
     const char *presence_id,
     const char *layout_id,
@@ -43,6 +47,10 @@ static UmiWorkbenchLayoutPresence make_presence(
     return presence;
 }
 
+/*
+ * Exercise test presence codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_presence_codec(void)
 {
     UmiWorkbenchLayoutPresence source = make_presence(
@@ -65,6 +73,10 @@ static int test_presence_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test heartbeat and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int test_heartbeat(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -94,6 +106,10 @@ static int test_heartbeat(void)
     return 0;
 }
 
+/*
+ * Exercise test active count and expiry and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_active_count_and_expiry(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -130,6 +146,10 @@ static int test_active_count_and_expiry(void)
     return 0;
 }
 
+/*
+ * Exercise test presence listing and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_presence_listing(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -159,6 +179,10 @@ static int test_presence_listing(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_presence_codec() == 0, "presence codec");

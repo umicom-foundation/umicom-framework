@@ -19,4 +19,8 @@
 
 #include "umicom/trading/volatility_proxy.h"
 #include "umicom/trading/bar.h"
-double umi_bar_volatility_proxy(const UmiBar *b){if(!umi_bar_valid(b)||b->close<=0.0)return 0.0;return umi_bar_range(b)/b->close;}
+/*
+ * Provide the bar volatility proxy operation used by this module and its client
+ * applications.
+ */
+double umi_bar_volatility_proxy(const UmiBar *b){/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!umi_bar_valid(b)||b->close<=0.0)return 0.0;return umi_bar_range(b)/b->close;}

@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout data key parts data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDataKeyParts {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataRecordKind kind;
@@ -35,6 +39,10 @@ typedef struct UmiWorkbenchLayoutDataKeyParts {
     size_t chunk_index;
 } UmiWorkbenchLayoutDataKeyParts;
 
+/**
+ * Provide the workbench layout data key build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_data_key_build(
     UmiWorkbenchLayoutDataRecordKind kind,
     const char *aggregate_id,
@@ -44,19 +52,35 @@ UmiStatus umi_workbench_layout_data_key_build(
     char *buffer,
     size_t capacity);
 
+/**
+ * Read workbench layout data key into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_data_key_parse(
     const char *key,
     UmiWorkbenchLayoutDataKeyParts *out_parts);
 
+/**
+ * Provide the workbench layout data key prefix operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_key_prefix(
     UmiWorkbenchLayoutDataRecordKind kind,
     const char *aggregate_id,
     char *buffer,
     size_t capacity);
 
+/**
+ * Provide the workbench layout data key is owned operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_key_is_owned(
     const char *key);
 
+/**
+ * Provide the workbench layout data key matches prefix operation used by this module and
+ * its client applications.
+ */
 bool umi_workbench_layout_data_key_matches_prefix(
     const char *key,
     const char *prefix);

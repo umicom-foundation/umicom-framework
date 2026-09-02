@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the update channel data shared with callers of this public contract.
+ */
 typedef struct UmiUpdateChannel {
     char channel_id[UMI_DELIVERY_ID_CAPACITY];
     char feed_url[UMI_DELIVERY_PATH_CAPACITY];
@@ -31,12 +34,23 @@ typedef struct UmiUpdateChannel {
     int require_signature;
 } UmiUpdateChannel;
 
+/**
+ * Initialise update channel from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_update_channel_init(UmiUpdateChannel *channel,
                                       const char *channel_id,
                                       const char *feed_url,
                                       UmiReleaseChannel release_channel,
                                       unsigned rollout_percentage);
+/**
+ * Check that update channel satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_update_channel_validate(const UmiUpdateChannel *channel);
+/**
+ * Provide the update channel offers operation used by this module and its client
+ * applications.
+ */
 int umi_update_channel_offers(const UmiUpdateChannel *channel,
                                  UmiReleaseChannel release_channel,
                                  unsigned cohort);

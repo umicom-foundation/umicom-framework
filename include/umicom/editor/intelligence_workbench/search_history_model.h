@@ -24,11 +24,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel search history model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorIntelSearchHistoryModel { UmiEditorIntelEntry items[UMI_EDITOR_INTEL_MAX_ITEMS]; size_t count; uint64_t revision; } UmiEditorIntelSearchHistoryModel;
+/**
+ * Initialise editor intel search history model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_search_history_model_init(UmiEditorIntelSearchHistoryModel *model);
+/**
+ * Add editor intel search history model only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_editor_intel_search_history_model_add(UmiEditorIntelSearchHistoryModel *model,const UmiEditorIntelEntry *entry);
+/**
+ * Find editor intel search history model while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_search_history_model_find(const UmiEditorIntelSearchHistoryModel *model,const char *id);
+/**
+ * Release or reset state held by editor intel search history model so the same storage can
+ * be reused safely.
+ */
 UmiStatus umi_editor_intel_search_history_model_clear(UmiEditorIntelSearchHistoryModel *model);
+/**
+ * Check that editor intel search history model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_search_history_model_valid(const UmiEditorIntelSearchHistoryModel *model);
 
 #ifdef __cplusplus

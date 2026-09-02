@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain operation context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainOperationContext {
     UmiToolchainOperationProfile operation;
     UmiToolchainScopedDiscoveryReport discovery;
@@ -32,6 +36,10 @@ typedef struct UmiToolchainOperationContext {
     int ready;
 } UmiToolchainOperationContext;
 
+/**
+ * Provide the toolchain operation context prepare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_operation_context_prepare(
     UmiToolchainOperationKind kind,
     const char *explicit_toolchain_root,

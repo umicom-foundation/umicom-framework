@@ -32,6 +32,9 @@ extern "C" {
 #include "umicom/ui/design/style_value.h"
 #include "umicom/ui/design/semantic_role.h"
 #include "umicom/ui/design/interaction_state.h"
+/**
+ * Represent the design style rule data shared with callers of this public contract.
+ */
 typedef struct UmiDesignStyleRule { UmiUiComponentKind component_kind; UmiDesignSemanticRole role; UmiDesignInteractionState state; UmiDesignStyleValue values[UMI_DESIGN_MAX_VALUES]; size_t count; } UmiDesignStyleRule;
 /* Add or replace a style property inside a semantic component rule. */
 UmiStatus umi_design_style_rule_upsert(UmiDesignStyleRule *rule, const UmiDesignStyleValue *value);

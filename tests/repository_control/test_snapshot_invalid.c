@@ -19,6 +19,10 @@
 #include <assert.h>
 #include "umicom/repository/snapshot.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_repository_snapshot_from_plan(UMI_REPOSITORY_CONTROL_IDLE,

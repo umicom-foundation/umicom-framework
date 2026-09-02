@@ -33,14 +33,30 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_FILTER_ENGINE_NAME "filter-engine"
+/**
+ * Represent the context filter engine state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiContextFilterEngineState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextFilterEngineState;
+/**
+ * Initialise context filter engine state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_context_filter_engine_state_init(UmiContextFilterEngineState *state);
+/**
+ * Provide the context filter engine state record operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_context_filter_engine_state_record(UmiContextFilterEngineState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context filter engine operation without
+ * changing their state.
+ */
 uint64_t umi_context_filter_engine_operation_count(const UmiContextFilterEngineState *state);
 #ifdef __cplusplus
 }

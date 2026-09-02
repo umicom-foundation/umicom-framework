@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/currency_pair.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCurrency a={{'E','U','R','\0'}},b={{'U','S','D','\0'}}; UmiCurrencyPair p,q; CHECK(umi_currency_pair_init(&p,a,b)==UMI_STATUS_OK); CHECK(umi_currency_pair_invert(&p,&q)==UMI_STATUS_OK); CHECK(strcmp(q.symbol,"USDEUR")==0);

@@ -1,4 +1,21 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: resources/themes/context-channels.css
+ *
+ * PURPOSE:
+ *   Implement the context channels behaviour used by its public contract and
+ *   client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework semantic context-channel presentation tokens. */
+/* Each named colour marks panels that share one live application context. */
 .umicom-context-red { border-color: #d14b52; }
 .umicom-context-orange { border-color: #d9822b; }
 .umicom-context-yellow { border-color: #c6a700; }
@@ -7,6 +24,8 @@
 .umicom-context-blue { border-color: #3e78c5; }
 .umicom-context-purple { border-color: #7954b3; }
 .umicom-context-magenta { border-color: #b44893; }
+/* Shared geometry keeps every coloured context surface equally prominent. */
 .umicom-context-surface { border-width: 1px; border-style: solid; padding: 4px; }
+/* Titles carry the relationship name while details remain visually secondary. */
 .umicom-context-title { font-weight: 600; }
 .umicom-context-detail { opacity: 0.78; }

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote process lifecycle transition allowed operation used by this
+ * module and its client applications.
+ */
 bool umi_terminal_remote_process_lifecycle_transition_allowed(UmiTerminalRemoteState from,UmiTerminalRemoteState to);
 #ifdef __cplusplus
 }

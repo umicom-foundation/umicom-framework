@@ -21,4 +21,8 @@
  */
 #include <assert.h>
 #include "umicom/codeguard/codeguard.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCodeGuardLifetimeTracker t;UmiCodeGuardResult *r=NULL;assert(umi_codeguard_result_create(8U,&r)==UMI_STATUS_OK);umi_codeguard_lifetime_init(&t);umi_codeguard_lifetime_scan(&t,"x.c",1U,"free(worker);",r);umi_codeguard_lifetime_scan(&t,"x.c",2U,"worker->state = 1;",r);assert(umi_codeguard_result_count(r)==1U);assert(umi_codeguard_result_at(r,0U)->severity==UMI_CODEGUARD_HIGH);umi_codeguard_result_destroy(r);return 0;}

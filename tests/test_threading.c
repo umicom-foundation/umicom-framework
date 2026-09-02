@@ -25,6 +25,10 @@ typedef struct ThreadFixture {
     uint64_t worker_id;
 } ThreadFixture;
 
+/*
+ * Exercise worker entry and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int worker_entry(void *user_data)
 {
     ThreadFixture *fixture = (ThreadFixture *)user_data;
@@ -36,6 +40,10 @@ static int worker_entry(void *user_data)
     return 42;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     ThreadFixture fixture = {0};
@@ -47,6 +55,10 @@ int main(void)
     assert(umi_thread_start(worker_entry, &fixture, &thread) == UMI_STATUS_OK);
 
     assert(umi_mutex_lock(fixture.mutex) == UMI_STATUS_OK);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (!fixture.ready) {
         assert(umi_condition_wait_for(fixture.condition,
                                       fixture.mutex,

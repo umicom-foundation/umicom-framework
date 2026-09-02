@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the book registry data shared with callers of this public contract.
+ */
 typedef struct UmiBookRegistry { UmiFinancialBook items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiBookRegistry;
 /* Reset the bounded registry. */ void umi_book_registry_init(UmiBookRegistry *registry);
 /* Add a unique item. */ UmiStatus umi_book_registry_add(UmiBookRegistry *registry,const UmiFinancialBook *item);

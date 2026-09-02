@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the directory package provider operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_directory_package_provider(UmiPackageProvider *provider);
 
 #ifdef __cplusplus

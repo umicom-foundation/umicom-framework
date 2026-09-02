@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer view create base operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_create_base(
     const char *view_id,
     const char *kind,
@@ -30,21 +34,37 @@ UmiStatus umi_ai_developer_view_create_base(
     const char *summary,
     UmiUiViewModel **out_view);
 
+/**
+ * Provide the ai developer view set string operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_string(
     UmiUiViewModel *view,
     const char *key,
     const char *text);
 
+/**
+ * Provide the ai developer view set integer operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_integer(
     UmiUiViewModel *view,
     const char *key,
     int64_t value);
 
+/**
+ * Provide the ai developer view set boolean operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_boolean(
     UmiUiViewModel *view,
     const char *key,
     int value);
 
+/**
+ * Provide the ai developer view set action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_action(
     UmiUiViewModel *view,
     size_t index,

@@ -25,6 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the observability exporter data shared with callers of this public contract.
+ */
 typedef struct UmiObservabilityExporter {
     uint32_t structure_size;
     uint32_t abi_version;
@@ -35,10 +38,30 @@ typedef struct UmiObservabilityExporter {
     UmiStatus (*flush)(void *instance);
     void (*destroy)(void *instance);
 } UmiObservabilityExporter;
+/**
+ * Provide the observability export metric operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_observability_export_metric(const UmiObservabilityExporter *exporter, const UmiMetricSnapshot *metric);
+/**
+ * Provide the observability export span operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_observability_export_span(const UmiObservabilityExporter *exporter, const UmiTraceSpan *span);
+/**
+ * Provide the observability export audit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_observability_export_audit(const UmiObservabilityExporter *exporter, const UmiAuditRecord *record);
+/**
+ * Provide the observability export flush operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_observability_export_flush(const UmiObservabilityExporter *exporter);
+/**
+ * Release or reset state held by observability exporter so the same storage can be reused
+ * safely.
+ */
 void umi_observability_exporter_dispose(UmiObservabilityExporter *exporter);
 #ifdef __cplusplus
 }

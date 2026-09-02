@@ -18,13 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad canvas data shared with callers of this public contract.
+ */
 typedef struct UmiRadCanvas {
     char document_id[UMI_RAD_ID_CAPACITY];
     char root_component_id[UMI_RAD_ID_CAPACITY];
     uint64_t revision;
     bool dirty;
 } UmiRadCanvas;
+/**
+ * Initialise rad canvas from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_rad_canvas_init(UmiRadCanvas *item);
+/**
+ * Check that rad canvas satisfies its contract before another service relies on it.
+ */
 int umi_rad_canvas_is_valid(const UmiRadCanvas *item);
 #ifdef __cplusplus
 }

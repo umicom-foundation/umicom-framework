@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application shell profile test explorer operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_test_explorer(void);
 
 #ifdef __cplusplus

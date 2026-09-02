@@ -27,13 +27,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the retention policy data shared with callers of this public contract.
+ */
 typedef struct UmiRetentionPolicy {
     size_t keep_generations;
     size_t keep_packages;
     uint32_t keep_days;
 } UmiRetentionPolicy;
 
+/**
+ * Provide the retention policy default operation used by this module and its client
+ * applications.
+ */
 UmiRetentionPolicy umi_retention_policy_default(void);
+/**
+ * Provide the retention should keep generation operation used by this module and its
+ * client applications.
+ */
 int umi_retention_should_keep_generation(const UmiRetentionPolicy *policy,
                                          size_t newest_index);
 

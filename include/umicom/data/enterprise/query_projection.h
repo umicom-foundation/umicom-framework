@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query projection data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryProjection {
     char projection_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char field[UMI_DATA_ENTERPRISE_ID_CAPACITY];

@@ -41,6 +41,9 @@ extern "C" {
 #define UMI_VCS_ADVANCED_PATCH_CAPACITY 16384U
 #define UMI_VCS_ADVANCED_MERGE_TEXT_CAPACITY 8192U
 
+/**
+ * List the named vcs advanced state values accepted by this public contract.
+ */
 typedef enum UmiVcsAdvancedState {
     UMI_VCS_ADVANCED_STATE_UNKNOWN = 0,
     UMI_VCS_ADVANCED_STATE_READY = 1,
@@ -51,6 +54,9 @@ typedef enum UmiVcsAdvancedState {
     UMI_VCS_ADVANCED_STATE_FAILED = 6
 } UmiVcsAdvancedState;
 
+/**
+ * List the named vcs advanced operation kind values accepted by this public contract.
+ */
 typedef enum UmiVcsAdvancedOperationKind {
     UMI_VCS_ADVANCED_OPERATION_NONE = 0,
     UMI_VCS_ADVANCED_OPERATION_STAGE = 1,
@@ -66,6 +72,9 @@ typedef enum UmiVcsAdvancedOperationKind {
     UMI_VCS_ADVANCED_OPERATION_PATCH = 11
 } UmiVcsAdvancedOperationKind;
 
+/**
+ * List the named vcs compare mode values accepted by this public contract.
+ */
 typedef enum UmiVcsCompareMode {
     UMI_VCS_COMPARE_TWO_WAY = 0,
     UMI_VCS_COMPARE_THREE_WAY = 1,
@@ -74,6 +83,9 @@ typedef enum UmiVcsCompareMode {
     UMI_VCS_COMPARE_BINARY = 4
 } UmiVcsCompareMode;
 
+/**
+ * List the named vcs diff kind values accepted by this public contract.
+ */
 typedef enum UmiVcsDiffKind {
     UMI_VCS_DIFF_CONTEXT = 0,
     UMI_VCS_DIFF_ADDED = 1,
@@ -82,6 +94,9 @@ typedef enum UmiVcsDiffKind {
     UMI_VCS_DIFF_MOVED = 4
 } UmiVcsDiffKind;
 
+/**
+ * List the named vcs conflict choice values accepted by this public contract.
+ */
 typedef enum UmiVcsConflictChoice {
     UMI_VCS_CONFLICT_UNRESOLVED = 0,
     UMI_VCS_CONFLICT_USE_BASE = 1,
@@ -91,6 +106,9 @@ typedef enum UmiVcsConflictChoice {
     UMI_VCS_CONFLICT_MANUAL = 5
 } UmiVcsConflictChoice;
 
+/**
+ * List the named vcs whitespace mode values accepted by this public contract.
+ */
 typedef enum UmiVcsWhitespaceMode {
     UMI_VCS_WHITESPACE_EXACT = 0,
     UMI_VCS_WHITESPACE_IGNORE_TRAILING = 1,
@@ -98,12 +116,18 @@ typedef enum UmiVcsWhitespaceMode {
     UMI_VCS_WHITESPACE_IGNORE_ALL = 3
 } UmiVcsWhitespaceMode;
 
+/**
+ * List the named vcs safety level values accepted by this public contract.
+ */
 typedef enum UmiVcsSafetyLevel {
     UMI_VCS_SAFETY_SAFE = 0,
     UMI_VCS_SAFETY_REVIEW = 1,
     UMI_VCS_SAFETY_DESTRUCTIVE = 2
 } UmiVcsSafetyLevel;
 
+/**
+ * List the named vcs directory state values accepted by this public contract.
+ */
 typedef enum UmiVcsDirectoryState {
     UMI_VCS_DIRECTORY_EQUAL = 0,
     UMI_VCS_DIRECTORY_LEFT_ONLY = 1,
@@ -112,16 +136,52 @@ typedef enum UmiVcsDirectoryState {
     UMI_VCS_DIRECTORY_TYPE_CHANGED = 4
 } UmiVcsDirectoryState;
 
+/**
+ * Provide the vcs advanced copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_advanced_copy_text(char *destination,
                                      size_t capacity,
                                      const char *source);
+/**
+ * Provide the vcs advanced hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_vcs_advanced_hash_text(const char *text);
+/**
+ * Provide the vcs advanced text present operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_text_present(const char *text);
+/**
+ * Provide the vcs advanced text equal operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_text_equal(const char *left, const char *right);
+/**
+ * Provide the vcs advanced state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_advanced_state_text(UmiVcsAdvancedState state);
+/**
+ * Provide the vcs advanced operation text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_advanced_operation_text(UmiVcsAdvancedOperationKind kind);
+/**
+ * Provide the vcs compare mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_compare_mode_text(UmiVcsCompareMode mode);
+/**
+ * Provide the vcs diff kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_diff_kind_text(UmiVcsDiffKind kind);
+/**
+ * Provide the vcs conflict choice text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_conflict_choice_text(UmiVcsConflictChoice choice);
 
 #ifdef __cplusplus

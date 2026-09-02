@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/currency_descriptor.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCurrencyDescriptor d; CHECK(umi_currency_descriptor_init(&d,"gbp","Pound Sterling",2U)==UMI_STATUS_OK); CHECK(umi_currency_descriptor_matches(&d,"GBP"));

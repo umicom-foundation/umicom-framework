@@ -24,15 +24,26 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain requirement data shared with callers of this public contract.
+ */
 typedef struct UmiToolchainRequirement {
     UmiToolKind kind;
     int required;
     int validate_version;
 } UmiToolchainRequirement;
 
+/**
+ * Initialise toolchain requirement from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_toolchain_requirement_init(UmiToolchainRequirement *requirement,
                                     UmiToolKind kind,
                                     int required);
+/**
+ * Check that toolchain requirement satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_toolchain_requirement_validate(const UmiToolchainRequirement *requirement);
 
 #ifdef __cplusplus

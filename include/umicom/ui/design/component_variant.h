@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/semantic_role.h"
+/**
+ * Represent the design component variant data shared with callers of this public contract.
+ */
 typedef struct UmiDesignComponentVariant { char id[UMI_DESIGN_ID_CAPACITY]; UmiDesignSemanticRole role; int outlined; int subtle; } UmiDesignComponentVariant;
 /* Initialise a named semantic component variant. */
 UmiStatus umi_design_component_variant_init(UmiDesignComponentVariant *variant, const char *id, UmiDesignSemanticRole role, int outlined, int subtle);

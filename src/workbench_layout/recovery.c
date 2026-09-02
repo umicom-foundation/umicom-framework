@@ -20,6 +20,7 @@
 
 #include "internal.h"
 
+/* Provide the prepare entry operation used by this module and its client applications. */
 static UmiStatus prepare_entry(
     UmiWorkbenchRecoveryJournal *journal,
     UmiWorkbenchRecoveryEntry *entry,
@@ -32,6 +33,10 @@ static UmiStatus prepare_entry(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || entry == NULL ||
         !umi_workbench_layout_text_present(entry_id) ||
         !umi_workbench_layout_text_present(session_id) ||
@@ -51,6 +56,7 @@ static UmiStatus prepare_entry(
         sizeof(entry->entry_id),
         entry_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             entry->session_id,
@@ -58,6 +64,7 @@ static UmiStatus prepare_entry(
             session_id,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             entry->layout_id,
@@ -65,6 +72,7 @@ static UmiStatus prepare_entry(
             layout_id != NULL ? layout_id : "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             entry->correlation_id,
@@ -75,9 +83,17 @@ static UmiStatus prepare_entry(
     return status;
 }
 
+/*
+ * Initialise workbench recovery journal from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_recovery_journal_init(
     UmiWorkbenchRecoveryJournal *journal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) {
         return;
     }
@@ -87,12 +103,20 @@ void umi_workbench_recovery_journal_init(
     journal->revision = 1U;
 }
 
+/*
+ * Add workbench recovery journal only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_workbench_recovery_journal_append(
     UmiWorkbenchRecoveryJournal *journal,
     const UmiWorkbenchRecoveryEntry *entry)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || entry == NULL ||
         entry->structure_size < sizeof(*entry) ||
         !umi_workbench_layout_text_present(entry->entry_id) ||
@@ -100,8 +124,10 @@ UmiStatus umi_workbench_recovery_journal_append(
         entry->kind > UMI_WORKBENCH_RECOVERY_FAILURE_MARKER) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (journal->count >=
         UMI_WORKBENCH_LAYOUT_MAX_RECOVERY_ENTRIES) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 1U; index < journal->count; ++index) {
             journal->entries[index - 1U] =
                 journal->entries[index];
@@ -113,6 +139,7 @@ UmiStatus umi_workbench_recovery_journal_append(
     journal->entries[journal->count].structure_size =
         sizeof(journal->entries[journal->count]);
     journal->count += 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (entry->sequence >= journal->next_sequence) {
         journal->next_sequence = entry->sequence + 1U;
     }
@@ -120,6 +147,10 @@ UmiStatus umi_workbench_recovery_journal_append(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench recovery journal checkpoint layout operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_recovery_journal_checkpoint_layout(
     UmiWorkbenchRecoveryJournal *journal,
     const char *entry_id,
@@ -131,6 +162,10 @@ UmiStatus umi_workbench_recovery_journal_checkpoint_layout(
     UmiWorkbenchRecoveryEntry entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -144,6 +179,7 @@ UmiStatus umi_workbench_recovery_journal_checkpoint_layout(
         document->identity.layout_id,
         correlation_id,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -154,6 +190,10 @@ UmiStatus umi_workbench_recovery_journal_checkpoint_layout(
         journal, &entry);
 }
 
+/*
+ * Provide the workbench recovery journal checkpoint session operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_recovery_journal_checkpoint_session(
     UmiWorkbenchRecoveryJournal *journal,
     const char *entry_id,
@@ -165,6 +205,10 @@ UmiStatus umi_workbench_recovery_journal_checkpoint_session(
     UmiWorkbenchRecoveryEntry entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -180,6 +224,7 @@ UmiStatus umi_workbench_recovery_journal_checkpoint_session(
             : session->active_layout_id,
         correlation_id,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -189,6 +234,10 @@ UmiStatus umi_workbench_recovery_journal_checkpoint_session(
         journal, &entry);
 }
 
+/*
+ * Provide the workbench recovery journal mark clean shutdown operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_recovery_journal_mark_clean_shutdown(
     UmiWorkbenchRecoveryJournal *journal,
     const char *entry_id,
@@ -207,6 +256,7 @@ UmiStatus umi_workbench_recovery_journal_mark_clean_shutdown(
         "",
         "",
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -214,6 +264,10 @@ UmiStatus umi_workbench_recovery_journal_mark_clean_shutdown(
         journal, &entry);
 }
 
+/*
+ * Provide the workbench recovery plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_recovery_plan_build(
     const UmiWorkbenchRecoveryJournal *journal,
     const char *session_id,
@@ -224,6 +278,10 @@ UmiStatus umi_workbench_recovery_plan_build(
     const UmiWorkbenchRecoveryEntry *last_session = NULL;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || out_plan == NULL ||
         !umi_workbench_layout_text_present(session_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -237,25 +295,32 @@ UmiStatus umi_workbench_recovery_plan_build(
         session_id,
         false);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < journal->count; ++index) {
         const UmiWorkbenchRecoveryEntry *entry =
             &journal->entries[index];
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(entry->session_id, session_id) != 0) {
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (entry->kind ==
             UMI_WORKBENCH_RECOVERY_CLEAN_SHUTDOWN) {
             last_clean = entry;
-        } else if (entry->kind ==
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (entry->kind ==
                    UMI_WORKBENCH_RECOVERY_LAYOUT_CHECKPOINT) {
             last_layout = entry;
-        } else if (entry->kind ==
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (entry->kind ==
                    UMI_WORKBENCH_RECOVERY_SESSION_CHECKPOINT) {
             last_session = entry;
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (last_layout != NULL) {
         (void)umi_workbench_layout_copy_text(
             out_plan->layout_id,
@@ -267,9 +332,14 @@ UmiStatus umi_workbench_recovery_plan_build(
         out_plan->last_safe_sequence =
             last_layout->sequence;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (last_session != NULL) {
         out_plan->last_session_revision =
             last_session->session_revision;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (last_session->sequence >
             out_plan->last_safe_sequence) {
             out_plan->last_safe_sequence =
@@ -277,6 +347,10 @@ UmiStatus umi_workbench_recovery_plan_build(
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if ((last_layout != NULL || last_session != NULL) &&
         (last_clean == NULL ||
          last_clean->sequence <
@@ -287,7 +361,7 @@ UmiStatus umi_workbench_recovery_plan_build(
             sizeof(out_plan->reason),
             "A durable checkpoint exists after the last clean shutdown marker.",
             false);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_plan->recovery_required = false;
         (void)umi_workbench_layout_copy_text(
             out_plan->reason,
@@ -296,9 +370,11 @@ UmiStatus umi_workbench_recovery_plan_build(
             false);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < journal->count; ++index) {
         const UmiWorkbenchRecoveryEntry *entry =
             &journal->entries[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(entry->session_id, session_id) == 0 &&
             entry->sequence > out_plan->last_safe_sequence &&
             entry->kind !=
@@ -309,20 +385,33 @@ UmiStatus umi_workbench_recovery_plan_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench recovery journal while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchRecoveryEntry *
 umi_workbench_recovery_journal_at(
     const UmiWorkbenchRecoveryJournal *journal,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || index >= journal->count) {
         return NULL;
     }
     return &journal->entries[index];
 }
 
+/*
+ * Provide the workbench recovery entry kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_recovery_entry_kind_text(
     UmiWorkbenchRecoveryEntryKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_RECOVERY_LAYOUT_CHECKPOINT:
         return "layout-checkpoint";

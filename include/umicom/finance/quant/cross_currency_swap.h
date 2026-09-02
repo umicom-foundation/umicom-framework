@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant cross currency swap data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantCrossCurrencySwap {
     double domestic_principal;
     double foreign_principal;

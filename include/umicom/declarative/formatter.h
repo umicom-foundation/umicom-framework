@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the decl format text operation used by this module and its client applications.
+ */
 UmiStatus umi_decl_format_text(const char *source, char *out_text, size_t capacity, UmiDeclDiagnosticList *diagnostics);
 
 #ifdef __cplusplus

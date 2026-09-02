@@ -22,9 +22,17 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap lifetime should create eagerly operation used by this module and
+ * its client applications.
+ */
 bool umi_bootstrap_lifetime_should_create_eagerly(
     UmiBootstrapLifetimeKind lifetime,
     bool explicitly_required);
+/**
+ * Provide the bootstrap lifetime framework owns operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_lifetime_framework_owns(
     UmiBootstrapLifetimeKind lifetime);
 

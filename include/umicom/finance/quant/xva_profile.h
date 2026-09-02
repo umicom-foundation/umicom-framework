@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant xva profile data shared with callers of this public contract.
+ */
 typedef struct UmiQuantXvaProfile { double cva; double dva; double fva; double mva; } UmiQuantXvaProfile;
 /* Initialise a signed XVA profile. */
 UmiStatus umi_quant_xva_profile_init(UmiQuantXvaProfile *profile, double cva, double dva, double fva, double mva);

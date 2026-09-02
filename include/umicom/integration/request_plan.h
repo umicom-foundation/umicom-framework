@@ -16,6 +16,9 @@
 #define UMICOM_INTEGRATION_REQUEST_PLAN_H
 #include "umicom/integration/connection_profile.h"
 #include "umicom/integration/api_contract.h"
+/**
+ * Represent the integration request plan data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationRequestPlan {
     char profile_id[UMI_INTEGRATION_DESIGNER_ID_CAPACITY];
     UmiIntegrationDesignerTransport transport;
@@ -27,5 +30,9 @@ typedef struct UmiIntegrationRequestPlan {
     unsigned timeout_ms;
     bool streaming;
 } UmiIntegrationRequestPlan;
+/**
+ * Provide the integration request plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_integration_request_plan_build(const UmiIntegrationConnectionProfile *profile,const UmiIntegrationApiOperation *operation,const char *payload,const char *correlation_id,UmiIntegrationRequestPlan *out_plan);
 #endif

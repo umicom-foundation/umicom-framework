@@ -29,11 +29,19 @@ struct UmiWorkbenchLayoutPersistenceService {
     uint64_t checkpoint_sequence;
 };
 
+/*
+ * Initialise persistence result from caller-provided values so later operations receive a
+ * known state.
+ */
 static void persistence_result_init(
     UmiWorkbenchLayoutPersistenceResult *result,
     UmiStatus status,
     const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) {
         return;
     }
@@ -49,6 +57,7 @@ static void persistence_result_init(
         true);
 }
 
+/* Provide the update audit operation used by this module and its client applications. */
 static UmiStatus update_audit(
     UmiWorkbenchLayoutPersistenceService *service,
     UmiWorkbenchLayoutDocument *document,
@@ -58,9 +67,11 @@ static UmiStatus update_audit(
 {
     UmiStatus status = UMI_STATUS_OK;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!service->config.update_modified_audit) {
         return UMI_STATUS_OK;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_workbench_layout_text_present(actor_id) ||
         timestamp_ms == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -71,6 +82,7 @@ static UmiStatus update_audit(
         sizeof(document->audit.modified_by),
         actor_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             document->audit.correlation_id,
@@ -78,11 +90,13 @@ static UmiStatus update_audit(
             correlation_id != NULL ? correlation_id : "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     document->audit.modified_at_ms = timestamp_ms;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (document->audit.created_at_ms == 0U) {
         document->audit.created_at_ms = timestamp_ms;
         (void)umi_workbench_layout_copy_text(
@@ -94,6 +108,7 @@ static UmiStatus update_audit(
     return UMI_STATUS_OK;
 }
 
+/* Provide the validate document operation used by this module and its client applications. */
 static UmiStatus validate_document(
     UmiWorkbenchLayoutPersistenceService *service,
     const UmiWorkbenchLayoutDocument *document,
@@ -101,6 +116,7 @@ static UmiStatus validate_document(
 {
     UmiWorkbenchLayoutValidationOptions options;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!service->config.validate_before_save) {
         umi_workbench_layout_validation_report_init(out_report);
         out_report->valid = true;
@@ -114,11 +130,16 @@ static UmiStatus validate_document(
         document, &options, out_report);
 }
 
+/*
+ * Provide the begin if supported operation used by this module and its client
+ * applications.
+ */
 static UmiStatus begin_if_supported(
     UmiWorkbenchLayoutPersistenceService *service,
     bool *out_started)
 {
     *out_started = false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_store_supports_transactions(
             &service->adapter)) {
         return UMI_STATUS_OK;
@@ -128,6 +149,7 @@ static UmiStatus begin_if_supported(
         UmiStatus status =
             service->adapter.begin_transaction(
                 service->adapter.context);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             *out_started = true;
         }
@@ -135,16 +157,22 @@ static UmiStatus begin_if_supported(
     }
 }
 
+/*
+ * Provide the rollback if started operation used by this module and its client
+ * applications.
+ */
 static void rollback_if_started(
     UmiWorkbenchLayoutPersistenceService *service,
     bool started)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (started) {
         (void)service->adapter.rollback_transaction(
             service->adapter.context);
     }
 }
 
+/* Provide the commit if started operation used by this module and its client applications. */
 static UmiStatus commit_if_started(
     UmiWorkbenchLayoutPersistenceService *service,
     bool started)
@@ -155,6 +183,10 @@ static UmiStatus commit_if_started(
         : UMI_STATUS_OK;
 }
 
+/*
+ * Provide the checkpoint layout recovery operation used by this module and its client
+ * applications.
+ */
 static UmiStatus checkpoint_layout_recovery(
     UmiWorkbenchLayoutPersistenceService *service,
     const UmiWorkbenchLayoutDocument *document,
@@ -165,6 +197,10 @@ static UmiStatus checkpoint_layout_recovery(
     char entry_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service->recovery_journal == NULL) {
         return UMI_STATUS_OK;
     }
@@ -175,6 +211,7 @@ static UmiStatus checkpoint_layout_recovery(
         sizeof(entry_id),
         "layout-checkpoint-%" PRIu64,
         service->checkpoint_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -189,6 +226,10 @@ static UmiStatus checkpoint_layout_recovery(
         timestamp_ms);
 }
 
+/*
+ * Provide the checkpoint session recovery operation used by this module and its client
+ * applications.
+ */
 static UmiStatus checkpoint_session_recovery(
     UmiWorkbenchLayoutPersistenceService *service,
     const UmiWorkbenchLayoutSession *session,
@@ -199,6 +240,10 @@ static UmiStatus checkpoint_session_recovery(
     char entry_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service->recovery_journal == NULL) {
         return UMI_STATUS_OK;
     }
@@ -209,6 +254,7 @@ static UmiStatus checkpoint_session_recovery(
         sizeof(entry_id),
         "session-checkpoint-%" PRIu64,
         service->checkpoint_sequence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -221,6 +267,10 @@ static UmiStatus checkpoint_session_recovery(
         timestamp_ms);
 }
 
+/*
+ * Provide the workbench layout persistence config default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutPersistenceConfig
 umi_workbench_layout_persistence_config_default(void)
 {
@@ -235,6 +285,10 @@ umi_workbench_layout_persistence_config_default(void)
     return config;
 }
 
+/*
+ * Initialise workbench layout persistence from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_persistence_create(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutPersistenceConfig *config,
@@ -244,17 +298,26 @@ UmiStatus umi_workbench_layout_persistence_create(
     UmiWorkbenchLayoutPersistenceService *service;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || out_service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_service = NULL;
     status = umi_workbench_layout_store_adapter_validate(adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     service = (UmiWorkbenchLayoutPersistenceService *)
         calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -269,12 +332,20 @@ UmiStatus umi_workbench_layout_persistence_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench layout persistence so the same storage can be
+ * reused safely.
+ */
 void umi_workbench_layout_persistence_destroy(
     UmiWorkbenchLayoutPersistenceService *service)
 {
     free(service);
 }
 
+/*
+ * Provide the workbench layout persistence save layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_persistence_save_layout(
     UmiWorkbenchLayoutPersistenceService *service,
     UmiWorkbenchLayoutDocument *document,
@@ -291,6 +362,10 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
     bool transaction_started = false;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -300,11 +375,19 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
     working_document =
         (UmiWorkbenchLayoutDocument *)malloc(
             sizeof(*working_document));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (working_document == NULL) {
         persistence_result_init(
             out_result,
             UMI_STATUS_OUT_OF_MEMORY,
             "Layout persistence could not allocate a working snapshot.");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_result != NULL) {
             out_result->previous_revision = previous_revision;
         }
@@ -321,23 +404,31 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
         actor_id,
         correlation_id,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         service->config.refresh_content_hash) {
         umi_workbench_layout_document_refresh_hash(
             working_document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = validate_document(
             service, working_document, &validation);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && !validation.valid) {
         status = UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         persistence_result_init(
             out_result,
             status,
             "Layout validation failed before persistence.");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_result != NULL) {
             out_result->previous_revision = previous_revision;
             out_result->validation = validation;
@@ -348,6 +439,7 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
 
     status = begin_if_supported(
         service, &transaction_started);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_store_save(
             &service->adapter,
@@ -355,9 +447,11 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
             expected_revision,
             &stored_revision);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         working_document->version.revision =
             stored_revision;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (service->config.refresh_content_hash) {
             umi_workbench_layout_document_refresh_hash(
                 working_document);
@@ -369,18 +463,21 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
             correlation_id,
             timestamp_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = commit_if_started(
             service, transaction_started);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             rollback_if_started(
                 service, transaction_started);
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         rollback_if_started(
             service, transaction_started);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *document = *working_document;
     }
@@ -391,6 +488,10 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
         status == UMI_STATUS_OK
             ? "The semantic layout was persisted."
             : "The semantic layout could not be persisted.");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) {
         out_result->previous_revision = previous_revision;
         out_result->resulting_revision =
@@ -409,6 +510,10 @@ UmiStatus umi_workbench_layout_persistence_save_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout persistence load layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_persistence_load_layout(
     UmiWorkbenchLayoutPersistenceService *service,
     const char *layout_id,
@@ -418,6 +523,10 @@ UmiStatus umi_workbench_layout_persistence_load_layout(
     UmiWorkbenchLayoutValidationReport validation;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_document == NULL ||
         !umi_workbench_layout_text_present(layout_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -426,10 +535,12 @@ UmiStatus umi_workbench_layout_persistence_load_layout(
     umi_workbench_layout_validation_report_init(&validation);
     status = umi_workbench_layout_store_load(
         &service->adapter, layout_id, out_document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = validate_document(
             service, out_document, &validation);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && !validation.valid) {
         status = UMI_STATUS_INVALID_STATE;
     }
@@ -440,6 +551,10 @@ UmiStatus umi_workbench_layout_persistence_load_layout(
         status == UMI_STATUS_OK
             ? "The semantic layout was loaded."
             : "The semantic layout could not be loaded.");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) {
         out_result->resulting_revision =
             status == UMI_STATUS_OK
@@ -450,6 +565,10 @@ UmiStatus umi_workbench_layout_persistence_load_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout persistence delete layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_persistence_delete_layout(
     UmiWorkbenchLayoutPersistenceService *service,
     const char *layout_id,
@@ -458,6 +577,10 @@ UmiStatus umi_workbench_layout_persistence_delete_layout(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL ||
         !umi_workbench_layout_text_present(layout_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -470,12 +593,20 @@ UmiStatus umi_workbench_layout_persistence_delete_layout(
         status == UMI_STATUS_OK
             ? "The semantic layout was deleted."
             : "The semantic layout could not be deleted.");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) {
         out_result->previous_revision = expected_revision;
     }
     return status;
 }
 
+/*
+ * Provide the workbench layout persistence checkpoint session operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_layout_persistence_checkpoint_session(
     UmiWorkbenchLayoutPersistenceService *service,
     UmiWorkbenchLayoutDocument *document,
@@ -495,10 +626,15 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
     bool transaction_started = false;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || document == NULL ||
         session == NULL || timestamp_ms == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->config.require_transactions_for_session_checkpoint &&
         !umi_workbench_layout_store_supports_transactions(
             &service->adapter)) {
@@ -511,11 +647,19 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
     working_document =
         (UmiWorkbenchLayoutDocument *)malloc(
             sizeof(*working_document));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (working_document == NULL) {
         persistence_result_init(
             out_result,
             UMI_STATUS_OUT_OF_MEMORY,
             "The workbench checkpoint could not allocate a working snapshot.");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_result != NULL) {
             out_result->previous_revision = layout_previous;
         }
@@ -533,26 +677,32 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
         actor_id,
         correlation_id,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         service->config.refresh_content_hash) {
         umi_workbench_layout_document_refresh_hash(
             working_document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = validate_document(
             service, working_document, &validation);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && !validation.valid) {
         status = UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_session_validate(
             &working_session);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = begin_if_supported(
             service, &transaction_started);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_store_save(
             &service->adapter,
@@ -560,12 +710,14 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
             layout_previous,
             &layout_revision);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_store_save_session(
             &service->adapter,
             &working_session,
             session_previous,
             &session_revision);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_NOT_FOUND) {
             status = umi_workbench_layout_store_save_session(
                 &service->adapter,
@@ -574,12 +726,14 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
                 &session_revision);
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         working_document->version.revision = layout_revision;
         working_session.revision = session_revision;
         status = umi_workbench_layout_session_mark_checkpoint(
             &working_session, timestamp_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = checkpoint_layout_recovery(
             service,
@@ -588,6 +742,7 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
             correlation_id,
             timestamp_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = checkpoint_session_recovery(
             service,
@@ -596,17 +751,20 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
             correlation_id,
             timestamp_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = commit_if_started(
             service, transaction_started);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             rollback_if_started(
                 service, transaction_started);
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         rollback_if_started(service, transaction_started);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *document = *working_document;
         *session = working_session;
@@ -618,6 +776,10 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
         status == UMI_STATUS_OK
             ? "The workbench layout and session checkpoint committed."
             : "The workbench checkpoint was rolled back.");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) {
         out_result->previous_revision = layout_previous;
         out_result->resulting_revision =
@@ -636,6 +798,10 @@ UmiStatus umi_workbench_layout_persistence_checkpoint_session(
     return status;
 }
 
+/*
+ * Provide the workbench layout persistence restore session operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_persistence_restore_session(
     UmiWorkbenchLayoutPersistenceService *service,
     const char *session_id,
@@ -645,6 +811,10 @@ UmiStatus umi_workbench_layout_persistence_restore_session(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_session == NULL ||
         out_document == NULL ||
         !umi_workbench_layout_text_present(session_id)) {
@@ -653,6 +823,7 @@ UmiStatus umi_workbench_layout_persistence_restore_session(
 
     status = umi_workbench_layout_store_load_session(
         &service->adapter, session_id, out_session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_store_load(
             &service->adapter,
@@ -666,6 +837,10 @@ UmiStatus umi_workbench_layout_persistence_restore_session(
         status == UMI_STATUS_OK
             ? "The workbench session and active layout were restored."
             : "The workbench session could not be restored.");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL && status == UMI_STATUS_OK) {
         out_result->resulting_revision =
             out_document->version.revision;
@@ -673,6 +848,10 @@ UmiStatus umi_workbench_layout_persistence_restore_session(
     return status;
 }
 
+/*
+ * Provide the workbench layout persistence adapter operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchLayoutStoreAdapter *
 umi_workbench_layout_persistence_adapter(
     const UmiWorkbenchLayoutPersistenceService *service)

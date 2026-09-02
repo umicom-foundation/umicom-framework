@@ -15,5 +15,9 @@
 
 #include "umicom/workbench_context_host/query.h"
 #include <string.h>
+/*
+ * Initialise workbench context host query from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_context_host_query_init(UmiWorkbenchContextHostQuery *query,UmiWorkbenchContextHostQueryKind kind)
-{if(query){memset(query,0,sizeof(*query));query->structure_size=(uint32_t)sizeof(*query);query->kind=kind;}}
+{/* Apply this branch only when its contract condition is satisfied. */ if(query){memset(query,0,sizeof(*query));query->structure_size=(uint32_t)sizeof(*query);query->kind=kind;}}

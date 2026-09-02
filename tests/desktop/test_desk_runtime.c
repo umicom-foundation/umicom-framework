@@ -30,6 +30,10 @@ typedef struct FakeLaunch {
     uint64_t next_process;
 } FakeLaunch;
 
+/*
+ * Exercise start application and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiStatus start_application(
     void *context,
     const UmiApplicationLaunchPlan *plan,
@@ -42,6 +46,10 @@ static UmiStatus start_application(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeskRuntime *runtime = NULL;

@@ -43,6 +43,9 @@ extern "C" {
 #define UMI_AI_DEVELOPER_REVIEW_FILE_CAPACITY UMI_AI_CODING_PATCH_FILE_MAX
 #define UMI_AI_DEVELOPER_VISIBLE_ROW_CAPACITY 64U
 
+/**
+ * List the named ai developer pane kind values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperPaneKind {
     UMI_AI_DEVELOPER_PANE_OVERVIEW = 1,
     UMI_AI_DEVELOPER_PANE_CHAT = 2,
@@ -58,6 +61,9 @@ typedef enum UmiAiDeveloperPaneKind {
     UMI_AI_DEVELOPER_PANE_CHECKPOINTS = 12
 } UmiAiDeveloperPaneKind;
 
+/**
+ * List the named ai developer approval kind values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperApprovalKind {
     UMI_AI_DEVELOPER_APPROVAL_TOOL_CALL = 1,
     UMI_AI_DEVELOPER_APPROVAL_PATCH = 2,
@@ -66,6 +72,9 @@ typedef enum UmiAiDeveloperApprovalKind {
     UMI_AI_DEVELOPER_APPROVAL_DEBUG_CONTROL = 5
 } UmiAiDeveloperApprovalKind;
 
+/**
+ * List the named ai developer approval state values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperApprovalState {
     UMI_AI_DEVELOPER_APPROVAL_PENDING = 0,
     UMI_AI_DEVELOPER_APPROVAL_APPROVED = 1,
@@ -74,6 +83,9 @@ typedef enum UmiAiDeveloperApprovalState {
     UMI_AI_DEVELOPER_APPROVAL_FAILED = 4
 } UmiAiDeveloperApprovalState;
 
+/**
+ * List the named ai developer task state values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperTaskState {
     UMI_AI_DEVELOPER_TASK_QUEUED = 0,
     UMI_AI_DEVELOPER_TASK_RUNNING = 1,
@@ -84,12 +96,19 @@ typedef enum UmiAiDeveloperTaskState {
     UMI_AI_DEVELOPER_TASK_CANCELLED = 6
 } UmiAiDeveloperTaskState;
 
+/**
+ * List the named ai developer diff line kind values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperDiffLineKind {
     UMI_AI_DEVELOPER_DIFF_CONTEXT = 0,
     UMI_AI_DEVELOPER_DIFF_ADD = 1,
     UMI_AI_DEVELOPER_DIFF_REMOVE = 2
 } UmiAiDeveloperDiffLineKind;
 
+/**
+ * Represent the ai developer approval request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperApprovalRequest {
     char approval_id[UMI_AI_DEVELOPER_ID_CAPACITY];
     UmiAiDeveloperApprovalKind kind;
@@ -105,6 +124,9 @@ typedef struct UmiAiDeveloperApprovalRequest {
     int executable;
 } UmiAiDeveloperApprovalRequest;
 
+/**
+ * Represent the ai developer task entry data shared with callers of this public contract.
+ */
 typedef struct UmiAiDeveloperTaskEntry {
     char task_id[UMI_AI_DEVELOPER_ID_CAPACITY];
     char request_id[UMI_AI_ID_CAPACITY];
@@ -119,6 +141,10 @@ typedef struct UmiAiDeveloperTaskEntry {
     uint64_t updated_sequence;
 } UmiAiDeveloperTaskEntry;
 
+/**
+ * Represent the ai developer timeline event data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperTimelineEvent {
     uint64_t sequence;
     char task_id[UMI_AI_DEVELOPER_ID_CAPACITY];
@@ -129,6 +155,10 @@ typedef struct UmiAiDeveloperTimelineEvent {
     int important;
 } UmiAiDeveloperTimelineEvent;
 
+/**
+ * Represent the ai developer presentation state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperPresentationState {
     UmiAiDeveloperPaneKind active_pane;
     char active_chat_id[UMI_AI_DEVELOPER_ID_CAPACITY];
@@ -143,10 +173,30 @@ typedef struct UmiAiDeveloperPresentationState {
     uint64_t revision;
 } UmiAiDeveloperPresentationState;
 
+/**
+ * Provide the ai developer pane text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_pane_text(UmiAiDeveloperPaneKind kind);
+/**
+ * Provide the ai developer approval kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_approval_kind_text(UmiAiDeveloperApprovalKind kind);
+/**
+ * Provide the ai developer approval state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_developer_approval_state_text(UmiAiDeveloperApprovalState state);
+/**
+ * Provide the ai developer task state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_task_state_text(UmiAiDeveloperTaskState state);
+/**
+ * Provide the ai developer diff line kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_developer_diff_line_kind_text(UmiAiDeveloperDiffLineKind kind);
 
 #ifdef __cplusplus

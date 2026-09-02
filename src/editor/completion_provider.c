@@ -31,31 +31,52 @@ struct UmiEditorCompletionProviderRegistry {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/*
+ * Provide the validate descriptor operation used by this module and its client
+ * applications.
+ */
 static UmiStatus validate_descriptor(
     const UmiEditorCompletionProviderDescriptor *descriptor)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (descriptor == NULL ||
         descriptor->struct_size != (uint32_t)sizeof(*descriptor) ||
         descriptor->api_version != UMI_EDITOR_COMPLETION_PROVIDER_API_VERSION ||
@@ -75,9 +96,17 @@ static UmiStatus validate_descriptor(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the validate callbacks operation used by this module and its client
+ * applications.
+ */
 static UmiStatus validate_callbacks(
     const UmiEditorCompletionProviderCallbacks *callbacks)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (callbacks == NULL ||
         callbacks->struct_size != (uint32_t)sizeof(*callbacks) ||
         callbacks->api_version != UMI_EDITOR_COMPLETION_PROVIDER_API_VERSION ||
@@ -87,36 +116,55 @@ static UmiStatus validate_callbacks(
     return UMI_STATUS_OK;
 }
 
+/* Provide the reserve entries operation used by this module and its client applications. */
 static UmiStatus reserve_entries(UmiEditorCompletionProviderRegistry *registry,
                                  size_t required)
 {
     size_t capacity;
     CompletionProviderEntry *replacement;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= registry->capacity) return UMI_STATUS_OK;
     capacity = registry->capacity > 0U ? registry->capacity : 8U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (CompletionProviderEntry *)realloc(
         registry->entries, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->entries = replacement;
     registry->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the find entry operation used by this module and its client applications. */
 static size_t find_entry(const UmiEditorCompletionProviderRegistry *registry,
                          const char *provider_id)
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < registry->count; ++position) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(registry->entries[position].descriptor.id, provider_id) == 0) {
             return position;
         }
@@ -124,6 +172,10 @@ static size_t find_entry(const UmiEditorCompletionProviderRegistry *registry,
     return SIZE_MAX;
 }
 
+/*
+ * Provide the editor completion request default operation used by this module and its
+ * client applications.
+ */
 UmiEditorCompletionRequest umi_editor_completion_request_default(
     const char *document_id,
     const char *language_id,
@@ -147,9 +199,17 @@ UmiEditorCompletionRequest umi_editor_completion_request_default(
     return request;
 }
 
+/*
+ * Check that editor completion request satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_editor_completion_request_validate(
     const UmiEditorCompletionRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL ||
         request->struct_size != (uint32_t)sizeof(*request) ||
         request->api_version != UMI_EDITOR_COMPLETION_PROVIDER_API_VERSION ||
@@ -168,6 +228,7 @@ UmiStatus umi_editor_completion_request_validate(
         request->maximum_candidates == 0U || request->request_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->trigger_kind == UMI_EDITOR_COMPLETION_TRIGGER_CHARACTER &&
         request->trigger_character[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -175,6 +236,10 @@ UmiStatus umi_editor_completion_request_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor completion request is cancelled operation used by this module and its
+ * client applications.
+ */
 int umi_editor_completion_request_is_cancelled(
     const UmiEditorCompletionRequest *request)
 {
@@ -182,39 +247,71 @@ int umi_editor_completion_request_is_cancelled(
            request->cancellation_probe(request->cancellation_user_data) != 0;
 }
 
+/*
+ * Initialise editor completion provider registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_completion_provider_registry_create(
     UmiEditorCompletionProviderRegistry **out_registry)
 {
     UmiEditorCompletionProviderRegistry *registry;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiEditorCompletionProviderRegistry *)calloc(
         1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->revision = 1U;
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor completion provider registry so the same storage
+ * can be reused safely.
+ */
 void umi_editor_completion_provider_registry_destroy(
     UmiEditorCompletionProviderRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
     free(registry->entries);
     registry->entries = NULL;
     free(registry);
 }
 
+/*
+ * Release or reset state held by editor completion provider registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_completion_provider_registry_clear(
     UmiEditorCompletionProviderRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     registry->count = 0U;
     registry->revision = next_revision(registry->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Add editor completion provider registry only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_editor_completion_provider_registry_register(
     UmiEditorCompletionProviderRegistry *registry,
     const UmiEditorCompletionProviderDescriptor *descriptor,
@@ -225,14 +322,20 @@ UmiStatus umi_editor_completion_provider_registry_register(
     size_t position;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         validate_descriptor(descriptor) != UMI_STATUS_OK ||
         validate_callbacks(callbacks) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_entry(registry, descriptor->id);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position == SIZE_MAX) {
         status = reserve_entries(registry, registry->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         position = registry->count++;
     }
@@ -262,17 +365,27 @@ UmiStatus umi_editor_completion_provider_registry_register(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove editor completion provider registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_editor_completion_provider_registry_unregister(
     UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id)
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || provider_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_entry(registry, provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position + 1U < registry->count) {
         (void)memmove(&registry->entries[position],
                       &registry->entries[position + 1U],
@@ -284,6 +397,10 @@ UmiStatus umi_editor_completion_provider_registry_unregister(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor completion provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_completion_provider_registry_find(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
@@ -291,32 +408,51 @@ UmiStatus umi_editor_completion_provider_registry_find(
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || out_descriptor == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_entry(registry, provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_descriptor = registry->entries[position].descriptor;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor completion provider registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_completion_provider_registry_at(
     const UmiEditorCompletionProviderRegistry *registry,
     size_t position,
     UmiEditorCompletionProviderDescriptor *out_descriptor)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_descriptor == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= registry->count) return UMI_STATUS_NOT_FOUND;
     *out_descriptor = registry->entries[position].descriptor;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor completion provider supports request operation used by this module
+ * and its client applications.
+ */
 int umi_editor_completion_provider_supports_request(
     const UmiEditorCompletionProviderDescriptor *descriptor,
     const UmiEditorCompletionRequest *request)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (validate_descriptor(descriptor) != UMI_STATUS_OK ||
         umi_editor_completion_request_validate(request) != UMI_STATUS_OK ||
         !descriptor->enabled ||
@@ -324,6 +460,7 @@ int umi_editor_completion_provider_supports_request(
          strcmp(descriptor->language_id, request->language_id) != 0)) {
         return 0;
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (request->trigger_kind) {
         case UMI_EDITOR_COMPLETION_TRIGGER_INVOKED:
             return descriptor->supports_manual_invocation;
@@ -341,6 +478,10 @@ int umi_editor_completion_provider_supports_request(
     }
 }
 
+/*
+ * Provide the editor completion provider registry invoke operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_invoke(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
@@ -351,17 +492,24 @@ UmiStatus umi_editor_completion_provider_registry_invoke(
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || sink == NULL ||
         out_response == NULL ||
         umi_editor_completion_request_validate(request) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_entry(registry, provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_editor_completion_provider_supports_request(
             &registry->entries[position].descriptor, request)) {
         return UMI_STATUS_UNAVAILABLE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_completion_request_is_cancelled(request)) {
         return UMI_STATUS_CANCELLED;
     }
@@ -376,6 +524,10 @@ UmiStatus umi_editor_completion_provider_registry_invoke(
         registry->entries[position].user_data);
 }
 
+/*
+ * Provide the editor completion provider registry resolve operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_resolve(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
@@ -384,6 +536,10 @@ UmiStatus umi_editor_completion_provider_registry_resolve(
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || in_out_candidate == NULL ||
         umi_editor_completion_request_validate(request) != UMI_STATUS_OK ||
         umi_editor_completion_candidate_validate(in_out_candidate) !=
@@ -391,11 +547,14 @@ UmiStatus umi_editor_completion_provider_registry_resolve(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_entry(registry, provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!registry->entries[position].descriptor.supports_resolution ||
         registry->entries[position].callbacks.resolve == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_completion_request_is_cancelled(request)) {
         return UMI_STATUS_CANCELLED;
     }
@@ -405,6 +564,10 @@ UmiStatus umi_editor_completion_provider_registry_resolve(
         registry->entries[position].user_data);
 }
 
+/*
+ * Provide the editor completion provider registry cancel operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_cancel(
     const UmiEditorCompletionProviderRegistry *registry,
     const char *provider_id,
@@ -412,12 +575,21 @@ UmiStatus umi_editor_completion_provider_registry_cancel(
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL || provider_id[0] == '\0' ||
         request_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_entry(registry, provider_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry->entries[position].callbacks.cancel == NULL) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
@@ -425,6 +597,10 @@ UmiStatus umi_editor_completion_provider_registry_cancel(
         request_id, registry->entries[position].user_data);
 }
 
+/*
+ * Provide the editor completion provider registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_completion_provider_registry_snapshot(
     const UmiEditorCompletionProviderRegistry *registry,
     UmiEditorCompletionProviderRegistrySnapshot *out_snapshot)
@@ -432,6 +608,10 @@ UmiStatus umi_editor_completion_provider_registry_snapshot(
     size_t position;
     size_t comparison;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -440,21 +620,28 @@ UmiStatus umi_editor_completion_provider_registry_snapshot(
     out_snapshot->api_version = UMI_EDITOR_COMPLETION_PROVIDER_API_VERSION;
     out_snapshot->provider_count = registry->count;
     out_snapshot->revision = registry->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < registry->count; ++position) {
         const UmiEditorCompletionProviderDescriptor *descriptor =
             &registry->entries[position].descriptor;
         int first_language = 1;
+        /* Apply this operation only while the related capability or state is available. */
         if (descriptor->enabled) ++out_snapshot->enabled_provider_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (descriptor->source == UMI_EDITOR_COMPLETION_SOURCE_AI) {
             ++out_snapshot->ai_provider_count;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (descriptor->requires_network) {
             ++out_snapshot->remote_provider_count;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (descriptor->supports_resolution) {
             ++out_snapshot->resolving_provider_count;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = 0U; comparison < position; ++comparison) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(descriptor->language_id,
                        registry->entries[comparison].descriptor.language_id) ==
                 0) {
@@ -462,17 +649,26 @@ UmiStatus umi_editor_completion_provider_registry_snapshot(
                 break;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (first_language) ++out_snapshot->language_count;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by editor completion provider registry without
+ * changing their state.
+ */
 size_t umi_editor_completion_provider_registry_count(
     const UmiEditorCompletionProviderRegistry *registry)
 {
     return registry != NULL ? registry->count : 0U;
 }
 
+/*
+ * Provide the editor completion provider registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_completion_provider_registry_revision(
     const UmiEditorCompletionProviderRegistry *registry)
 {

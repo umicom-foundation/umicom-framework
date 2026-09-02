@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/data_model.h"
 
-UmiStatus umi_ct_data_model_widths(UmiCtDataModel m,UmiCtTypeWidths*w){if(w==NULL)return UMI_STATUS_INVALID_ARGUMENT;w->short_bits=16U;w->int_bits=32U;w->long_long_bits=64U;if(m==UMI_CT_DATA_ILP32){w->long_bits=32U;w->pointer_bits=32U;w->size_t_bits=32U;}else if(m==UMI_CT_DATA_LP64){w->long_bits=64U;w->pointer_bits=64U;w->size_t_bits=64U;}else if(m==UMI_CT_DATA_LLP64){w->long_bits=32U;w->pointer_bits=64U;w->size_t_bits=64U;}else return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/*
+ * Provide the ct data model widths operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_ct_data_model_widths(UmiCtDataModel m,UmiCtTypeWidths*w){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(w==NULL)return UMI_STATUS_INVALID_ARGUMENT;w->short_bits=16U;w->int_bits=32U;w->long_long_bits=64U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==UMI_CT_DATA_ILP32){w->long_bits=32U;w->pointer_bits=32U;w->size_t_bits=32U;}else /* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==UMI_CT_DATA_LP64){w->long_bits=64U;w->pointer_bits=64U;w->size_t_bits=64U;}else /* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==UMI_CT_DATA_LLP64){w->long_bits=32U;w->pointer_bits=64U;w->size_t_bits=64U;}/* Use this fallback path when the earlier condition does not apply. */ else return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

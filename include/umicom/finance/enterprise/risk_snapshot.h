@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/risk_report.h"
+/**
+ * Represent the enterprise risk snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseRiskSnapshot { int64_t as_of_ms; UmiEnterpriseRiskReport reports[64U]; size_t count; } UmiEnterpriseRiskSnapshot;
 /* Initialise an empty risk snapshot. */
 UmiStatus umi_enterprise_risk_snapshot_init(UmiEnterpriseRiskSnapshot *snapshot,int64_t as_of_ms);

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CACHE_CONTROL "umicom.developer.configuration.cache_control"
 
+/**
+ * Provide the developer capability cache control operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cache_control(void);
 

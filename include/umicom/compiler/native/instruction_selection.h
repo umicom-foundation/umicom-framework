@@ -21,7 +21,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native selection report data shared with callers of this public contract.
+ */
 typedef struct UmiNativeSelectionReport { size_t lowered; size_t unsupported; size_t blocks; } UmiNativeSelectionReport;
+/**
+ * Provide the nc instruction select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_instruction_select(const UmiNativeIrFunction *ir,UmiNativeMachineArch architecture,UmiNativeMachineFunction *out_machine,UmiNativeSelectionReport *out_report);
 #ifdef __cplusplus
 }

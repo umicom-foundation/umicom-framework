@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_application)
     message(FATAL_ERROR
         "Productisation execution requires canonical umicom_application")
@@ -47,10 +48,12 @@ target_sources(umicom_application PRIVATE
 if(TARGET Umicom::ai)
     target_link_libraries(umicom_application PUBLIC Umicom::ai)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET Umicom::helix)
     target_link_libraries(umicom_application PUBLIC Umicom::helix)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-application-productisation-execution-tests)
     add_executable(umicom-application-productisation-execution-tests
         "${UMICOM_PRODUCT_EXECUTION_ROOT}/tests/application_productisation_execution/test_main.c"
@@ -107,9 +110,11 @@ if(BUILD_TESTING AND NOT TARGET umicom-application-productisation-execution-test
         target_link_options(umicom-application-productisation-execution-tests
             PRIVATE "-Wl,--stack,16777216")
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-application-productisation-execution-tests)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-application-productisation-execution-tests)
     endif()
@@ -118,6 +123,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-application-productisation-execution-test
         COMMAND umicom-application-productisation-execution-tests)
     set_tests_properties(framework.application_productisation.execution PROPERTIES
         LABELS "framework;application;productisation;execution;helix;acceptance")
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(
             umicom-application-productisation-execution-tests)

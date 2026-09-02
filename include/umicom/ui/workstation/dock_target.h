@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws dock target data shared with callers of this public contract.
+ */
 typedef struct UmiWsDockTarget {
     char target_id[UMI_UI_ID_CAPACITY];
     UmiWsDockRegion region;
@@ -30,11 +33,23 @@ typedef struct UmiWsDockTarget {
     int32_t priority;
 } UmiWsDockTarget;
 
+/**
+ * Initialise ws dock target from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_dock_target_init(UmiWsDockTarget *target,
                                   const char *target_id,
                                   UmiWsDockRegion region,
                                   UmiUiRect bounds);
+/**
+ * Provide the ws dock target score operation used by this module and its client
+ * applications.
+ */
 int32_t umi_ws_dock_target_score(const UmiWsDockTarget *target, UmiUiPoint pointer);
+/**
+ * Provide the ws dock target contains operation used by this module and its client
+ * applications.
+ */
 bool umi_ws_dock_target_contains(const UmiWsDockTarget *target, UmiUiPoint pointer);
 
 #ifdef __cplusplus

@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise flow stage and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus flow_stage(const UmiMessageEnvelope *input,
                             UmiOwnedMessage *output,
                             void *user_data)
@@ -25,22 +29,38 @@ static UmiStatus flow_stage(const UmiMessageEnvelope *input,
     next.name = (const char *)user_data;
     return umi_message_copy(&next, output);
 }
+/*
+ * Exercise workflow ok and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus workflow_ok(void *context, void *user_data)
 {
     int *value = (int *)context;
     *value += *(const int *)user_data;
     return UMI_STATUS_OK;
 }
+/*
+ * Exercise workflow fail and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus workflow_fail(void *context, void *user_data)
 {
     (void)context; (void)user_data;
     return UMI_STATUS_INTERNAL_ERROR;
 }
+/*
+ * Exercise workflow compensate and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void workflow_compensate(void *context, void *user_data)
 {
     int *value = (int *)context;
     *value -= *(const int *)user_data;
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFlow *flow = NULL;

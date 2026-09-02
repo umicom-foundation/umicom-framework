@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_PRU_MAX_SCENARIOS 64U
 #define UMI_PRU_MAX_PERIODS 64U
 
+/**
+ * List the named prudential severity values accepted by this public contract.
+ */
 typedef enum UmiPrudentialSeverity {
     UMI_PRU_SEVERITY_INFO = 0,
     UMI_PRU_SEVERITY_WARNING = 1,
@@ -42,23 +45,35 @@ typedef enum UmiPrudentialSeverity {
     UMI_PRU_SEVERITY_CRITICAL = 3
 } UmiPrudentialSeverity;
 
+/**
+ * List the named capital tier kind values accepted by this public contract.
+ */
 typedef enum UmiCapitalTierKind {
     UMI_PRU_CAPITAL_CET1 = 0,
     UMI_PRU_CAPITAL_AT1 = 1,
     UMI_PRU_CAPITAL_TIER2 = 2
 } UmiCapitalTierKind;
 
+/**
+ * List the named hqla level values accepted by this public contract.
+ */
 typedef enum UmiHqlaLevel {
     UMI_PRU_HQLA_LEVEL1 = 0,
     UMI_PRU_HQLA_LEVEL2A = 1,
     UMI_PRU_HQLA_LEVEL2B = 2
 } UmiHqlaLevel;
 
+/**
+ * List the named stress direction values accepted by this public contract.
+ */
 typedef enum UmiStressDirection {
     UMI_PRU_STRESS_DECREASE = -1,
     UMI_PRU_STRESS_INCREASE = 1
 } UmiStressDirection;
 
+/**
+ * List the named stress run state values accepted by this public contract.
+ */
 typedef enum UmiStressRunState {
     UMI_PRU_STRESS_DRAFT = 0,
     UMI_PRU_STRESS_READY = 1,
@@ -67,6 +82,9 @@ typedef enum UmiStressRunState {
     UMI_PRU_STRESS_FAILED = 4
 } UmiStressRunState;
 
+/**
+ * Represent the prudential named metric data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialNamedMetric {
     char name[UMI_PRU_NAME_CAPACITY];
     double value;

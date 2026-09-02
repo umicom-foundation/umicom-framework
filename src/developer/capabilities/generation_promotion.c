@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/generation_promotion.h"
 
+/*
+ * Provide the developer capability generation promotion operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_generation_promotion(void)
 {

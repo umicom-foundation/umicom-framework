@@ -24,10 +24,29 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb bookmark panel data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbBookmarkPanel { char ids[UMI_EDITOR_WB_MAX_ITEMS][UMI_EDITOR_WB_ID_CAPACITY]; size_t count; uint64_t revision; } UmiEditorWbBookmarkPanel;
+/**
+ * Initialise editor wb bookmark panel from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_bookmark_panel_init(UmiEditorWbBookmarkPanel *state);
+/**
+ * Add editor wb bookmark panel only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_editor_wb_bookmark_panel_add(UmiEditorWbBookmarkPanel *state,const char *id);
+/**
+ * Provide the editor wb bookmark panel contains operation used by this module and its
+ * client applications.
+ */
 int umi_editor_wb_bookmark_panel_contains(const UmiEditorWbBookmarkPanel *state,const char *id);
+/**
+ * Remove editor wb bookmark panel while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_wb_bookmark_panel_remove(UmiEditorWbBookmarkPanel *state,const char *id);
 
 #ifdef __cplusplus

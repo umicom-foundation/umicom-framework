@@ -26,6 +26,10 @@ extern "C" {
 
 #include "umicom/distribution/runtime/runtime_profile.h"
 #include "umicom/distribution/runtime/runtime_probe.h"
+/**
+ * Provide the dr runtime selector choose operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dr_runtime_selector_choose(const UmiDrRuntimeProfile *profiles, size_t count, const UmiDrRuntimeProbe *probe, size_t *out_index);
 
 #ifdef __cplusplus

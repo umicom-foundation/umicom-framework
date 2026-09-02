@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics alert rule data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsAlertRule { char id[UMI_ANALYTICS_ID_CAPACITY]; UmiAnalyticsCompare comparison; double threshold; UmiAnalyticsSeverity severity; } UmiAnalyticsAlertRule;
+/**
+ * Initialise analytics alert rule from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_analytics_alert_rule_init(UmiAnalyticsAlertRule *r,const char *id,UmiAnalyticsCompare comparison,double threshold,UmiAnalyticsSeverity severity);
+/**
+ * Provide the analytics alert rule triggered operation used by this module and its client
+ * applications.
+ */
 int umi_analytics_alert_rule_triggered(const UmiAnalyticsAlertRule *r,double value);
 
 #ifdef __cplusplus

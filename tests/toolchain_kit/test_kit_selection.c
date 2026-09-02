@@ -18,6 +18,10 @@
 #include <string.h>
 #include "umicom/toolchain/kit_selection.h"
 
+/*
+ * Exercise make kit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiToolchainKitSnapshot make_kit(const char *id, uint32_t priority)
 {
     UmiToolchainKitSnapshot kit;
@@ -32,6 +36,10 @@ static UmiToolchainKitSnapshot make_kit(const char *id, uint32_t priority)
     return kit;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiToolchainKitCatalogue *catalogue = NULL;

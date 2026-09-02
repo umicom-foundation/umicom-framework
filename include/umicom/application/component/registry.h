@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application component registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationComponentRegistry {
   UmiApplicationComponentContract
       items[UMI_APPLICATION_COMPONENT_REGISTRY_CAPACITY];
@@ -29,20 +33,48 @@ typedef struct UmiApplicationComponentRegistry {
   uint64_t revision;
 } UmiApplicationComponentRegistry;
 
+/**
+ * Initialise application component registry from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_component_registry_init(
     UmiApplicationComponentRegistry *registry);
+/**
+ * Add application component registry only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_application_component_registry_register(
     UmiApplicationComponentRegistry *registry,
     const UmiApplicationComponentContract *contract);
+/**
+ * Provide the application component registry seed catalogue operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_component_registry_seed_catalogue(
     UmiApplicationComponentRegistry *registry);
+/**
+ * Find application component registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationComponentContract *umi_application_component_registry_find(
     const UmiApplicationComponentRegistry *registry,
     const char *component_id);
+/**
+ * Find application component registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationComponentContract *umi_application_component_registry_at(
     const UmiApplicationComponentRegistry *registry, size_t index);
+/**
+ * Return the number of records represented by application component registry without
+ * changing their state.
+ */
 size_t umi_application_component_registry_count(
     const UmiApplicationComponentRegistry *registry);
+/**
+ * Provide the application component registry revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_application_component_registry_revision(
     const UmiApplicationComponentRegistry *registry);
 

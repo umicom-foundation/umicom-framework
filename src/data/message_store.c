@@ -27,6 +27,7 @@ struct UmiMessageStore {
     size_t count;
 };
 
+/* Provide the metadata key operation used by this module and its client applications. */
 static UmiStatus metadata_key(const UmiMessageStore *store,
                               const char *name,
                               char *out_key,
@@ -35,33 +36,39 @@ static UmiStatus metadata_key(const UmiMessageStore *store,
     return umi_data_key(out_key, capacity, store->prefix, name);
 }
 
+/* Return the number of records represented by load message without changing their state. */
 static void load_message_count(UmiMessageStore *store)
 {
     char key[320];
     char value[64];
     char *end = NULL;
     unsigned long long parsed;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (metadata_key(store, "meta.count", key, sizeof(key)) != UMI_STATUS_OK ||
         umi_store_get(&store->store, key, value, sizeof(value)) != UMI_STATUS_OK) {
         return;
     }
     parsed = strtoull(value, &end, 10);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (end != value && *end == '\0') {
         store->count = (size_t)parsed;
         store->next_sequence = (uint64_t)store->count + 1U;
     }
 }
 
+/* Return the number of records represented by save message without changing their state. */
 static UmiStatus save_message_count(UmiMessageStore *store)
 {
     char key[320];
     char value[64];
     UmiStatus status = metadata_key(store, "meta.count", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(value, sizeof(value), "%zu", store->count);
     return umi_store_set(&store->store, key, value);
 }
 
+/* Provide the message key operation used by this module and its client applications. */
 static UmiStatus message_key(const UmiMessageStore *store,
                              uint64_t sequence,
                              char *out_key,
@@ -73,23 +80,36 @@ static UmiStatus message_key(const UmiMessageStore *store,
     return umi_data_key(out_key, capacity, store->prefix, suffix);
 }
 
+/*
+ * Initialise message store from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_message_store_create(const UmiStore *store,
                                    const char *namespace_name,
                                    UmiMessageStore **out_message_store)
 {
     UmiMessageStore *message_store;
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || namespace_name == NULL || out_message_store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_message_store = NULL;
     message_store = (UmiMessageStore *)calloc(1U, sizeof(*message_store));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message_store == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     message_store->store = *store;
     written = snprintf(message_store->prefix,
                        sizeof(message_store->prefix),
                        "message.%s.",
                        namespace_name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(message_store->prefix)) {
         free(message_store);
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -100,11 +120,13 @@ UmiStatus umi_message_store_create(const UmiStore *store,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by message store so the same storage can be reused safely. */
 void umi_message_store_destroy(UmiMessageStore *message_store)
 {
     free(message_store);
 }
 
+/* Add message store only after its inputs and available capacity have been checked. */
 UmiStatus umi_message_store_append(UmiMessageStore *message_store,
                                    const UmiMessageEnvelope *message,
                                    uint64_t *out_sequence)
@@ -118,22 +140,37 @@ UmiStatus umi_message_store_append(UmiMessageStore *message_store,
     UmiStatus status;
     const void *payload_data;
     size_t payload_size;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message_store == NULL || message == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_message_validate(message);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     sequence = message_store->next_sequence++;
     status = message_key(message_store, sequence, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     payload_data = message->payload_data != NULL
         ? message->payload_data : (const void *)message->payload;
     payload_size = message->payload_size;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (payload_size == 0U && message->payload != NULL) {
         payload_size = strlen(message->payload);
     }
     status = umi_hex_encode(payload_data, payload_size, &payload_hex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     text_capacity = strlen(payload_hex) + 2048U;
     text = (char *)malloc(text_capacity);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) {
         free(payload_hex);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -155,15 +192,21 @@ UmiStatus umi_message_store_append(UmiMessageStore *message_store,
                        message->destination != NULL ? message->destination : "",
                        message->partition_key != NULL ? message->partition_key : "",
                        payload_hex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= text_capacity) {
         free(payload_hex);
         free(text);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     status = umi_store_set(&message_store->store, key, text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         message_store->count++;
         status = save_message_count(message_store);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (status == UMI_STATUS_OK && out_sequence != NULL) {
             *out_sequence = sequence;
         }
@@ -173,6 +216,7 @@ UmiStatus umi_message_store_append(UmiMessageStore *message_store,
     return status;
 }
 
+/* Provide the parse message operation used by this module and its client applications. */
 static UmiStatus parse_message(char *text,
                                uint64_t sequence,
                                UmiOwnedMessage *out_message)
@@ -184,15 +228,28 @@ static UmiStatus parse_message(char *text,
     unsigned char *payload = NULL;
     size_t payload_size = 0U;
     UmiStatus status;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (count < 14U) {
         char *separator;
         fields[count++] = cursor;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (count == 14U) break;
         separator = strchr(cursor, '\t');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (separator == NULL) return UMI_STATUS_PARSE_ERROR;
         *separator = '\0';
         cursor = separator + 1;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (strchr(fields[13], '\t') != NULL) return UMI_STATUS_PARSE_ERROR;
     (void)memset(&message, 0, sizeof(message));
     message.structure_size = (uint32_t)sizeof(message);
@@ -211,6 +268,7 @@ static UmiStatus parse_message(char *text,
     message.partition_key = fields[12];
     message.sequence = sequence;
     status = umi_hex_decode(fields[13], &payload, &payload_size);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     message.payload_data = payload;
     message.payload_size = payload_size;
@@ -220,6 +278,10 @@ static UmiStatus parse_message(char *text,
     return status;
 }
 
+/*
+ * Read message store into validated module state and return a status when input cannot be
+ * used.
+ */
 UmiStatus umi_message_store_read(const UmiMessageStore *message_store,
                                  size_t index,
                                  UmiOwnedMessage *out_message)
@@ -228,16 +290,26 @@ UmiStatus umi_message_store_read(const UmiMessageStore *message_store,
     char *text;
     UmiStatus status;
     uint64_t sequence;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message_store == NULL || out_message == NULL ||
         index >= message_store->count) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     sequence = (uint64_t)index + 1U;
     status = message_key(message_store, sequence, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     text = (char *)malloc(16384U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_store_get(&message_store->store, key, text, 16384U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = parse_message(text, sequence, out_message);
     }
@@ -245,16 +317,19 @@ UmiStatus umi_message_store_read(const UmiMessageStore *message_store,
     return status;
 }
 
+/* Return the number of records represented by message store without changing their state. */
 size_t umi_message_store_count(const UmiMessageStore *message_store)
 {
     return message_store != NULL ? message_store->count : 0U;
 }
 
+/* Return the number of records represented by replay without changing their state. */
 static size_t replay_count(void *instance)
 {
     return umi_message_store_count((UmiMessageStore *)instance);
 }
 
+/* Read replay into validated module state and return a status when input cannot be used. */
 static UmiStatus replay_read(void *instance,
                              size_t index,
                              UmiOwnedMessage *out_message)
@@ -264,6 +339,10 @@ static UmiStatus replay_read(void *instance,
                                   out_message);
 }
 
+/*
+ * Provide the message store replay source operation used by this module and its client
+ * applications.
+ */
 UmiReplaySource umi_message_store_replay_source(UmiMessageStore *message_store)
 {
     UmiReplaySource source;

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_ASYNCHRONOUS_SAVE "umicom.document.performance.asynchronous_save"
 
+/**
+ * Write document capability asynchronous in its stable representation and report capacity
+ * or input failures to the caller.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_asynchronous_save(void);
 

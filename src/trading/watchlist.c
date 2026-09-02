@@ -20,27 +20,43 @@
 #include "umicom/trading/watchlist.h"
 #include "umicom/trading/instrument.h"
 
+/*
+ * Initialise watchlist from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_watchlist_init(UmiWatchlist *watchlist)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (watchlist != NULL) {
         watchlist->count = 0U;
     }
 }
 
+/* Add watchlist only after its inputs and available capacity have been checked. */
 UmiStatus umi_watchlist_add(UmiWatchlist *watchlist,
                             const UmiInstrument *instrument)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (watchlist == NULL || !umi_instrument_valid(instrument)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < watchlist->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_instrument_same(&watchlist->instruments[index],
                                 instrument)) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (watchlist->count >= UMI_TRADING_MAX_WATCHLIST) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

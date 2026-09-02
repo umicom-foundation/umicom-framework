@@ -33,6 +33,10 @@ extern "C" {
 #define UMI_DIAGNOSTIC_SARIF_AUTOMATION_ID_CAPACITY 256U
 #define UMI_DIAGNOSTIC_SARIF_URI_CAPACITY 1024U
 
+/**
+ * Represent the diagnostic sarif run descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSarifRunDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -47,6 +51,10 @@ typedef struct UmiDiagnosticSarifRunDescriptor {
     int successful;
 } UmiDiagnosticSarifRunDescriptor;
 
+/**
+ * Represent the diagnostic sarif export options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSarifExportOptions {
     int pretty;
     int include_suppressed;
@@ -56,6 +64,10 @@ typedef struct UmiDiagnosticSarifExportOptions {
     size_t maximum_results;
 } UmiDiagnosticSarifExportOptions;
 
+/**
+ * Represent the diagnostic sarif import summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSarifImportSummary {
     uint32_t struct_size;
     uint32_t api_version;
@@ -67,15 +79,31 @@ typedef struct UmiDiagnosticSarifImportSummary {
     uint64_t run_id;
 } UmiDiagnosticSarifImportSummary;
 
+/**
+ * Provide the diagnostic sarif run default operation used by this module and its client
+ * applications.
+ */
 UmiDiagnosticSarifRunDescriptor umi_diagnostic_sarif_run_default(
     const char *tool_name);
+/**
+ * Provide the diagnostic sarif export options default operation used by this module and
+ * its client applications.
+ */
 UmiDiagnosticSarifExportOptions umi_diagnostic_sarif_export_options_default(void);
+/**
+ * Provide the diagnostic sarif export operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_sarif_export(
     const UmiDiagnosticProblemModel *model,
     const UmiDiagnosticSarifRunDescriptor *run,
     const UmiDiagnosticSarifExportOptions *options,
     char **out_json,
     size_t *out_size);
+/**
+ * Provide the diagnostic sarif import operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_sarif_import(
     const char *json,
     size_t json_size,
@@ -83,11 +111,18 @@ UmiStatus umi_diagnostic_sarif_import(
     UmiDiagnosticProviderDescriptor *out_provider,
     UmiDiagnosticProviderBatch *out_batch,
     UmiDiagnosticSarifImportSummary *out_summary);
+/**
+ * Check that diagnostic sarif satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_diagnostic_sarif_validate(
     const char *json,
     size_t json_size,
     char *out_message,
     size_t message_capacity);
+/**
+ * Provide the diagnostic sarif free operation used by this module and its client
+ * applications.
+ */
 void umi_diagnostic_sarif_free(void *memory);
 
 #ifdef __cplusplus

@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai dev repository fingerprint bytes operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_ai_dev_repository_fingerprint_bytes(const void *data,size_t size);
+/**
+ * Provide the ai dev repository fingerprint text operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_ai_dev_repository_fingerprint_text(const char *text);
+/**
+ * Provide the ai dev repository fingerprint same operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_repository_fingerprint_same(const char *left,const char *right);
 
 #ifdef __cplusplus

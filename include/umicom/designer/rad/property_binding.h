@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad property binding data shared with callers of this public contract.
+ */
 typedef struct UmiRadPropertyBinding {
     char binding_id[UMI_RAD_ID_CAPACITY];
     char source_path[UMI_RAD_PATH_CAPACITY];
@@ -25,7 +28,15 @@ typedef struct UmiRadPropertyBinding {
     bool two_way;
     bool enabled;
 } UmiRadPropertyBinding;
+/**
+ * Initialise rad property binding from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_property_binding_init(UmiRadPropertyBinding *item);
+/**
+ * Check that rad property binding satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_property_binding_is_valid(const UmiRadPropertyBinding *item);
 #ifdef __cplusplus
 }

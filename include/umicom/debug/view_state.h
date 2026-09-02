@@ -19,7 +19,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the debug view state data shared with callers of this public contract.
+ */
 typedef struct UmiDebugViewState{char state[64];size_t configurations;size_t breakpoints;size_t sessions;size_t threads;size_t frames;size_t scopes;size_t variables;size_t watches;size_t console_entries;size_t modules;size_t sources;size_t exceptions;size_t events;int active_thread_id;int active_frame_id;uint64_t revision;}UmiDebugViewState;
+/**
+ * Provide the debug view state build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_view_state_build(const UmiDebugService *service,const UmiDebugController *controller,UmiDebugViewState *out_state);
 #ifdef __cplusplus
 }

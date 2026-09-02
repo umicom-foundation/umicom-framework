@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai document data shared with callers of this public contract.
+ */
 typedef struct UmiAiDocument {
     char document_id[UMI_AI_ID_CAPACITY];
     char title[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -36,6 +39,10 @@ typedef struct UmiAiDocument {
     uint64_t revision;
 } UmiAiDocument;
 
+/**
+ * Initialise ai document from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_document_init(UmiAiDocument *value);
 
 #ifdef __cplusplus

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/market_data_snapshot.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMarketDataSnapshot s; CHECK(umi_market_data_snapshot_init(&s,"S")==UMI_STATUS_OK); CHECK(umi_market_data_snapshot_is_valid(&s));

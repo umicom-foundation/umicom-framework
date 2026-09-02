@@ -17,12 +17,17 @@
 
 #include "umicom/application/feature_pack.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
 
     assert(umi_application_feature_pack_catalogue_count() >= 8U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_feature_pack_catalogue_count();
          ++index) {

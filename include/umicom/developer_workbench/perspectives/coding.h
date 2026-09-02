@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer workbench perspective coding operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *umi_developer_workbench_perspective_coding(void);
 
 #ifdef __cplusplus

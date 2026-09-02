@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test activation plan and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_activation_plan(void){ UmiApplicationActivationPlan p; assert(umi_application_activation_plan_build(test_trader_experience(),NULL,test_capability_probe,NULL,&p)==UMI_STATUS_OK); assert(p.entry_count>0U); return 0; }

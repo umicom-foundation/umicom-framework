@@ -36,12 +36,18 @@ extern "C" {
 #define UMI_PLUGIN_EXTENSION_HOST_MEDIUM_CAPACITY 64U
 #define UMI_PLUGIN_EXTENSION_HOST_LARGE_CAPACITY 128U
 
+/**
+ * List the named plugin extension host decision values accepted by this public contract.
+ */
 typedef enum UmiPluginExtensionHostDecision {
     UMI_PLUGIN_EXTENSION_HOST_DENY = 0,
     UMI_PLUGIN_EXTENSION_HOST_REQUIRE_APPROVAL = 1,
     UMI_PLUGIN_EXTENSION_HOST_ALLOW = 2
 } UmiPluginExtensionHostDecision;
 
+/**
+ * List the named plugin extension host trust values accepted by this public contract.
+ */
 typedef enum UmiPluginExtensionHostTrust {
     UMI_PLUGIN_EXTENSION_HOST_TRUST_UNTRUSTED = 0,
     UMI_PLUGIN_EXTENSION_HOST_TRUST_UNKNOWN = 1,
@@ -49,12 +55,19 @@ typedef enum UmiPluginExtensionHostTrust {
     UMI_PLUGIN_EXTENSION_HOST_TRUST_SYSTEM = 3
 } UmiPluginExtensionHostTrust;
 
+/**
+ * List the named plugin extension host isolation values accepted by this public contract.
+ */
 typedef enum UmiPluginExtensionHostIsolation {
     UMI_PLUGIN_EXTENSION_HOST_ISOLATION_IN_PROCESS = 0,
     UMI_PLUGIN_EXTENSION_HOST_ISOLATION_PROCESS = 1,
     UMI_PLUGIN_EXTENSION_HOST_ISOLATION_RESTRICTED_PROCESS = 2
 } UmiPluginExtensionHostIsolation;
 
+/**
+ * List the named plugin extension host health state values accepted by this public
+ * contract.
+ */
 typedef enum UmiPluginExtensionHostHealthState {
     UMI_PLUGIN_EXTENSION_HOST_HEALTH_UNKNOWN = 0,
     UMI_PLUGIN_EXTENSION_HOST_HEALTH_HEALTHY = 1,
@@ -62,6 +75,9 @@ typedef enum UmiPluginExtensionHostHealthState {
     UMI_PLUGIN_EXTENSION_HOST_HEALTH_UNHEALTHY = 3
 } UmiPluginExtensionHostHealthState;
 
+/**
+ * List the named plugin extension host lifecycle values accepted by this public contract.
+ */
 typedef enum UmiPluginExtensionHostLifecycle {
     UMI_PLUGIN_EXTENSION_HOST_LIFECYCLE_DISCOVERED = 0,
     UMI_PLUGIN_EXTENSION_HOST_LIFECYCLE_VERIFIED = 1,
@@ -75,6 +91,10 @@ typedef enum UmiPluginExtensionHostLifecycle {
     UMI_PLUGIN_EXTENSION_HOST_LIFECYCLE_QUARANTINED = 9
 } UmiPluginExtensionHostLifecycle;
 
+/**
+ * List the named plugin extension host supervision action values accepted by this public
+ * contract.
+ */
 typedef enum UmiPluginExtensionHostSupervisionAction {
     UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_NONE = 0,
     UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_RESTART = 1,
@@ -84,9 +104,25 @@ typedef enum UmiPluginExtensionHostSupervisionAction {
 
 typedef uint64_t UmiPluginExtensionHostCapabilityFlags;
 
+/**
+ * Provide the plugin extension host hash bytes operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_plugin_extension_host_hash_bytes(const void *data, size_t size);
+/**
+ * Provide the plugin extension host hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_plugin_extension_host_hash_text(const char *text);
+/**
+ * Check that plugin extension host text satisfies its contract before another service
+ * relies on it.
+ */
 int umi_plugin_extension_host_text_valid(const char *text, size_t capacity);
+/**
+ * Provide the plugin extension host decision text operation used by this module and its
+ * client applications.
+ */
 const char *umi_plugin_extension_host_decision_text(UmiPluginExtensionHostDecision decision);
 
 #ifdef __cplusplus

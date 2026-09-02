@@ -32,27 +32,45 @@ struct UmiEventBus {
     uint64_t sequence;
 };
 
+/*
+ * Initialise event bus from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_event_bus_create(UmiEventBus **out_bus)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_bus == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_bus = (UmiEventBus *)calloc(1U, sizeof(UmiEventBus));
     return *out_bus != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }
 
+/* Release or reset state held by event bus so the same storage can be reused safely. */
 void umi_event_bus_destroy(UmiEventBus *bus)
 {
     free(bus);
 }
 
+/*
+ * Provide the event bus subscribe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_event_bus_subscribe(UmiEventBus *bus,
                                   const char *topic,
                                   UmiEventHandler handler,
                                   void *user_data)
 {
     UmiEventSubscription *subscription;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bus == NULL || topic == NULL || topic[0] == '\0' || handler == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (bus->count >= UMI_EVENT_MAX_SUBSCRIPTIONS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -66,6 +84,7 @@ UmiStatus umi_event_bus_subscribe(UmiEventBus *bus,
     return UMI_STATUS_OK;
 }
 
+/* Provide the event bus publish operation used by this module and its client applications. */
 UmiStatus umi_event_bus_publish(UmiEventBus *bus,
                                 const char *topic,
                                 const char *payload,
@@ -73,6 +92,10 @@ UmiStatus umi_event_bus_publish(UmiEventBus *bus,
 {
     UmiMessageEnvelope event;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bus == NULL || topic == NULL || topic[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -85,7 +108,9 @@ UmiStatus umi_event_bus_publish(UmiEventBus *bus,
     event.correlation_id = correlation_id;
     event.schema_id = topic;
     event.source = "umicom.event-bus";
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < bus->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(bus->subscriptions[index].topic, topic) == 0) {
             bus->subscriptions[index].handler(
                 &event,
@@ -95,6 +120,10 @@ UmiStatus umi_event_bus_publish(UmiEventBus *bus,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the event bus last sequence operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_event_bus_last_sequence(const UmiEventBus *bus)
 {
     return bus != NULL ? bus->sequence : 0U;

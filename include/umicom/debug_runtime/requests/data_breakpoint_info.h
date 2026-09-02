@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request data breakpoint info operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_request_data_breakpoint_info(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t variables_reference,

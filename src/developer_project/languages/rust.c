@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "cargo", "rustc"
 };
 
+/*
+ * Provide the developer project language rust operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_rust(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/cfg_analysis.h"
-int main(void){UmiNativeIrFunction f;UmiNativeIrType t=umi_nc_ir_type_make(UMI_NC_IR_VOID,0U,1U);if(umi_nc_ir_function_init(&f,"f",t)!=UMI_STATUS_OK)return 1;uint32_t a=0U,b=0U;if(umi_nc_ir_function_add_block(&f,"a",&a)!=UMI_STATUS_OK||umi_nc_ir_function_add_block(&f,"b",&b)!=UMI_STATUS_OK)return 2;if(umi_nc_ir_block_add_successor(&f.blocks[0],b)!=UMI_STATUS_OK)return 3;UmiNativeCfgAnalysis x;if(umi_nc_cfg_analyze(&f,&x)!=UMI_STATUS_OK||x.reachable_count!=2U||x.edge_count!=1U)return 4;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeIrFunction f;UmiNativeIrType t=umi_nc_ir_type_make(UMI_NC_IR_VOID,0U,1U);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_ir_function_init(&f,"f",t)!=UMI_STATUS_OK)return 1;uint32_t a=0U,b=0U;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_ir_function_add_block(&f,"a",&a)!=UMI_STATUS_OK||umi_nc_ir_function_add_block(&f,"b",&b)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_ir_block_add_successor(&f.blocks[0],b)!=UMI_STATUS_OK)return 3;UmiNativeCfgAnalysis x;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_cfg_analyze(&f,&x)!=UMI_STATUS_OK||x.reachable_count!=2U||x.edge_count!=1U)return 4;return 0;}

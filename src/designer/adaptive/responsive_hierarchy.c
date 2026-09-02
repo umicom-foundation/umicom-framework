@@ -21,9 +21,18 @@ UmiStatus umi_designer_responsive_hierarchy_node_init(UmiDesignerResponsiveHiera
                                                       const char *parent_id,
                                                       uint16_t variant_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(node==NULL||node_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(node,0,sizeof *node);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_designer_adaptive_copy_text(node->node_id,sizeof node->node_id,node_id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(parent_id!=NULL&&parent_id[0]!='\0'&&umi_designer_adaptive_copy_text(node->parent_id,sizeof node->parent_id,parent_id)!=UMI_STATUS_OK)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     node->variant_count=variant_count; node->responsive=variant_count>0U; return UMI_STATUS_OK;

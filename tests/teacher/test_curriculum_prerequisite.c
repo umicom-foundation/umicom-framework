@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/curriculum_prerequisite.h"
-int main(void) { UmiTeacherCurriculumPrerequisite p; if (umi_teacher_curriculum_prerequisite_configure(&p,70U,1U,2U,UMI_TEACHER_LEVEL_ADVANCED,UINT32_MAX)!=UMI_STATUS_OK) return 1; if (!umi_teacher_curriculum_prerequisite_allows(&p,80U,1U,0U,UMI_TEACHER_LEVEL_BEGINNER,UMI_TEACHER_LANGUAGE_C23)) return 2; if (umi_teacher_curriculum_prerequisite_allows(&p,50U,1U,0U,UMI_TEACHER_LEVEL_BEGINNER,UMI_TEACHER_LANGUAGE_C23)) return 3; if (umi_teacher_curriculum_prerequisite_deficit(&p,50U)!=20U) return 4; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTeacherCurriculumPrerequisite p; /* Preserve the original failure result so the caller can respond to the correct cause. */ if (umi_teacher_curriculum_prerequisite_configure(&p,70U,1U,2U,UMI_TEACHER_LEVEL_ADVANCED,UINT32_MAX)!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if (!umi_teacher_curriculum_prerequisite_allows(&p,80U,1U,0U,UMI_TEACHER_LEVEL_BEGINNER,UMI_TEACHER_LANGUAGE_C23)) return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if (umi_teacher_curriculum_prerequisite_allows(&p,50U,1U,0U,UMI_TEACHER_LEVEL_BEGINNER,UMI_TEACHER_LANGUAGE_C23)) return 3; /* Preserve the original failure result so the caller can respond to the correct cause. */ if (umi_teacher_curriculum_prerequisite_deficit(&p,50U)!=20U) return 4; return 0; }

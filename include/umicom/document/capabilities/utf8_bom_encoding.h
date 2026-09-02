@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_UTF8_BOM_ENCODING "umicom.document.encoding.utf8_bom_encoding"
 
+/**
+ * Provide the document capability utf8 bom encoding operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_utf8_bom_encoding(void);
 

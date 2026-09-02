@@ -19,33 +19,41 @@
 
 #include "umicom/base/text.h"
 
+/* Provide the valid region operation used by this module and its client applications. */
 static int valid_region(UmiApplicationComponentRegion region) {
   return region >= UMI_APPLICATION_COMPONENT_REGION_PRIMARY &&
          region <= UMI_APPLICATION_COMPONENT_REGION_FLOATING;
 }
 
+/* Provide the refresh order operation used by this module and its client applications. */
 static void refresh_order(UmiApplicationComponentWorkspaceDraft *draft) {
   size_t index;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < draft->slot_count; ++index)
     draft->slots[index].order = (uint32_t)index;
 }
 
+/* Provide the changed operation used by this module and its client applications. */
 static void changed(UmiApplicationComponentWorkspaceDraft *draft) {
   draft->revision += 1U;
   draft->dirty = 1;
 }
 
+/* Provide the copy slot operation used by this module and its client applications. */
 static UmiStatus copy_slot(UmiApplicationComponentDraftSlot *target,
                            const UmiApplicationComponentRecipeSlot *source, size_t order) {
   UmiStatus status;
+  /* Configure the optional target only when its feature has created it. */
   if (target == NULL || source == NULL || source->component_id == NULL ||
       source->instance_id == NULL || source->component_id[0] == '\0' ||
       source->instance_id[0] == '\0' || source->weight == 0U || !valid_region(source->region))
     return UMI_STATUS_INVALID_ARGUMENT;
   (void)memset(target, 0, sizeof(*target));
   status = umi_text_copy(target->component_id, sizeof(target->component_id), source->component_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(target->instance_id, sizeof(target->instance_id), source->instance_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK)
     return status;
   target->region = source->region;
@@ -56,11 +64,19 @@ static UmiStatus copy_slot(UmiApplicationComponentDraftSlot *target,
   return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise application component workspace draft from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus
 umi_application_component_workspace_draft_init(UmiApplicationComponentWorkspaceDraft *draft,
                                                const UmiApplicationComponentRecipe *recipe) {
   size_t index;
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || recipe == NULL || recipe->recipe_id == NULL ||
       recipe->application_id == NULL || recipe->title == NULL || recipe->description == NULL ||
       recipe->experience_profile_id == NULL || recipe->experience_profile_id[0] == '\0' ||
@@ -69,19 +85,25 @@ umi_application_component_workspace_draft_init(UmiApplicationComponentWorkspaceD
     return UMI_STATUS_INVALID_ARGUMENT;
   (void)memset(draft, 0, sizeof(*draft));
   status = umi_text_copy(draft->recipe_id, sizeof(draft->recipe_id), recipe->recipe_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status =
         umi_text_copy(draft->application_id, sizeof(draft->application_id), recipe->application_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(draft->experience_profile_id, sizeof(draft->experience_profile_id),
                            recipe->experience_profile_id);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(draft->title, sizeof(draft->title), recipe->title);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     status = umi_text_copy(draft->description, sizeof(draft->description), recipe->description);
   draft->audience = recipe->audience;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; status == UMI_STATUS_OK && index < recipe->slot_count; ++index)
     status = copy_slot(&draft->slots[index], &recipe->slots[index], index);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status != UMI_STATUS_OK) {
     (void)memset(draft, 0, sizeof(*draft));
     return status;
@@ -91,15 +113,29 @@ umi_application_component_workspace_draft_init(UmiApplicationComponentWorkspaceD
   return UMI_STATUS_OK;
 }
 
+/*
+ * Find application component workspace draft while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationComponentDraftSlot *
 umi_application_component_workspace_draft_find(const UmiApplicationComponentWorkspaceDraft *draft,
                                                const char *instance_id, size_t *out_index) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || instance_id == NULL ||
       draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return NULL;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < draft->slot_count; ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strcmp(draft->slots[index].instance_id, instance_id) == 0) {
+      /*
+       * Protect caller-owned memory by checking that required state is available before it is
+       * used.
+       */
       if (out_index != NULL)
         *out_index = index;
       return &draft->slots[index];
@@ -108,19 +144,33 @@ umi_application_component_workspace_draft_find(const UmiApplicationComponentWork
   return NULL;
 }
 
+/*
+ * Add application component workspace draft only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus
 umi_application_component_workspace_draft_insert(UmiApplicationComponentWorkspaceDraft *draft,
                                                  size_t index,
                                                  const UmiApplicationComponentDraftSlot *slot) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || slot == NULL || index > draft->slot_count ||
       draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY ||
       slot->component_id[0] == '\0' || slot->instance_id[0] == '\0' || slot->weight == 0U ||
       !valid_region(slot->region))
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slot_count >= UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return UMI_STATUS_CAPACITY_EXCEEDED;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (umi_application_component_workspace_draft_find(draft, slot->instance_id, NULL) != NULL)
     return UMI_STATUS_ALREADY_EXISTS;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index < draft->slot_count)
     (void)memmove(&draft->slots[index + 1U], &draft->slots[index],
                   (draft->slot_count - index) * sizeof(draft->slots[0]));
@@ -131,17 +181,31 @@ umi_application_component_workspace_draft_insert(UmiApplicationComponentWorkspac
   return UMI_STATUS_OK;
 }
 
+/*
+ * Remove application component workspace draft while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus
 umi_application_component_workspace_draft_remove(UmiApplicationComponentWorkspaceDraft *draft,
                                                  size_t index,
                                                  UmiApplicationComponentDraftSlot *out_removed) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || index >= draft->slot_count ||
       draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].locked)
     return UMI_STATUS_UNAVAILABLE;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (out_removed != NULL)
     *out_removed = draft->slots[index];
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (index + 1U < draft->slot_count)
     (void)memmove(&draft->slots[index], &draft->slots[index + 1U],
                   (draft->slot_count - index - 1U) * sizeof(draft->slots[0]));
@@ -152,21 +216,33 @@ umi_application_component_workspace_draft_remove(UmiApplicationComponentWorkspac
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application component workspace draft move operation used by this module and
+ * its client applications.
+ */
 UmiStatus
 umi_application_component_workspace_draft_move(UmiApplicationComponentWorkspaceDraft *draft,
                                                size_t from_index, size_t to_index) {
   UmiApplicationComponentDraftSlot moving;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || from_index >= draft->slot_count || to_index >= draft->slot_count ||
       draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (draft->slots[from_index].locked)
     return UMI_STATUS_UNAVAILABLE;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (from_index == to_index)
     return UMI_STATUS_OK;
   moving = draft->slots[from_index];
+  /* Apply this branch only when its contract condition is satisfied. */
   if (from_index < to_index)
     (void)memmove(&draft->slots[from_index], &draft->slots[from_index + 1U],
                   (to_index - from_index) * sizeof(draft->slots[0]));
+  /* Use this fallback path when the earlier condition does not apply. */
   else
     (void)memmove(&draft->slots[to_index + 1U], &draft->slots[to_index],
                   (from_index - to_index) * sizeof(draft->slots[0]));
@@ -176,13 +252,23 @@ umi_application_component_workspace_draft_move(UmiApplicationComponentWorkspaceD
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application component workspace draft set visible operation used by this
+ * module and its client applications.
+ */
 UmiStatus
 umi_application_component_workspace_draft_set_visible(UmiApplicationComponentWorkspaceDraft *draft,
                                                       size_t index, int visible) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || index >= draft->slot_count)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].locked)
     return UMI_STATUS_UNAVAILABLE;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].visible != (visible != 0)) {
     draft->slots[index].visible = visible != 0;
     changed(draft);
@@ -190,14 +276,24 @@ umi_application_component_workspace_draft_set_visible(UmiApplicationComponentWor
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application component workspace draft set region operation used by this
+ * module and its client applications.
+ */
 UmiStatus
 umi_application_component_workspace_draft_set_region(UmiApplicationComponentWorkspaceDraft *draft,
                                                      size_t index,
                                                      UmiApplicationComponentRegion region) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || index >= draft->slot_count || !valid_region(region))
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].locked)
     return UMI_STATUS_UNAVAILABLE;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].region != region) {
     draft->slots[index].region = region;
     changed(draft);
@@ -205,13 +301,23 @@ umi_application_component_workspace_draft_set_region(UmiApplicationComponentWork
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application component workspace draft set weight operation used by this
+ * module and its client applications.
+ */
 UmiStatus
 umi_application_component_workspace_draft_set_weight(UmiApplicationComponentWorkspaceDraft *draft,
                                                      size_t index, uint32_t weight) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || index >= draft->slot_count || weight == 0U)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].locked)
     return UMI_STATUS_UNAVAILABLE;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (draft->slots[index].weight != weight) {
     draft->slots[index].weight = weight;
     changed(draft);
@@ -219,40 +325,68 @@ umi_application_component_workspace_draft_set_weight(UmiApplicationComponentWork
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application component workspace draft set title operation used by this
+ * module and its client applications.
+ */
 UmiStatus
 umi_application_component_workspace_draft_set_title(UmiApplicationComponentWorkspaceDraft *draft,
                                                     const char *title) {
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || title == NULL || title[0] == '\0')
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Use the stable identifier comparison to choose the matching record or policy. */
   if (strcmp(draft->title, title) == 0)
     return UMI_STATUS_OK;
   status = umi_text_copy(draft->title, sizeof(draft->title), title);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (status == UMI_STATUS_OK)
     changed(draft);
   return status;
 }
 
+/*
+ * Provide the application component workspace draft project operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_component_workspace_draft_project(
     const UmiApplicationComponentWorkspaceDraft *draft, UmiApplicationComponentLayout *out_layout) {
   size_t index;
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft == NULL || out_layout == NULL || draft->slot_count == 0U ||
       draft->slot_count > UMI_APPLICATION_COMPONENT_LAYOUT_CAPACITY)
     return UMI_STATUS_INVALID_ARGUMENT;
   status = umi_application_component_layout_init(out_layout, draft->recipe_id, draft->title);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; status == UMI_STATUS_OK && index < draft->slot_count; ++index) {
     const UmiApplicationComponentDraftSlot *slot = &draft->slots[index];
     status = umi_application_component_layout_add(out_layout, slot->component_id, slot->instance_id,
                                                   slot->region, slot->weight);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
       out_layout->slots[index].visible = slot->visible;
   }
   return status;
 }
 
+/*
+ * Provide the application component workspace draft mark saved operation used by this
+ * module and its client applications.
+ */
 void umi_application_component_workspace_draft_mark_saved(
     UmiApplicationComponentWorkspaceDraft *draft) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (draft != NULL)
     draft->dirty = 0;
 }

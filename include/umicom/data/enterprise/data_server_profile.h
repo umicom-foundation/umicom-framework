@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data server profile data shared with callers of this public contract.
+ */
 typedef struct UmiDataServerProfile {
     char profile_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     size_t minimum_pool_size;

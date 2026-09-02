@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Check that ai helix proposal satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ai_helix_proposal_validate(
     const UmiAiHelixBridgeConfig *config,
     UmiHelixAgentRole role,

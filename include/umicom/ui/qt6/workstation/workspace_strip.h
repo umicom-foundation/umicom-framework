@@ -23,7 +23,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the qt6 ws workspace strip descriptor operation used by this module and its
+ * client applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_ws_workspace_strip_descriptor(void);
+/**
+ * Initialise qt6 ws workspace strip from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiQt6WidgetHandle umi_qt6_ws_workspace_strip_create(const UmiWsWorkspaceStrip *strip);
 
 #ifdef __cplusplus

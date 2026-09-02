@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link audit record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextLinkAuditRecord {
     uint32_t structure_size;
     char audit_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkAuditRecord {
     uint64_t revision;
 } UmiWorkbenchContextLinkAuditRecord;
 
+/**
+ * Initialise workbench context link audit record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_audit_record_init(UmiWorkbenchContextLinkAuditRecord *record,
                                            const char *identity);
+/**
+ * Check that workbench context link audit record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_audit_record_validate(
     const UmiWorkbenchContextLinkAuditRecord *record);
+/**
+ * Copy workbench context link audit record into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_audit_record_copy(
     UmiWorkbenchContextLinkAuditRecord *destination,
     const UmiWorkbenchContextLinkAuditRecord *source);
+/**
+ * Provide the workbench context link audit record hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_link_audit_record_hash(
     const UmiWorkbenchContextLinkAuditRecord *record);
+/**
+ * Provide the workbench context link audit record set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_audit_record_set_primary(
     UmiWorkbenchContextLinkAuditRecord *record,
     const char *value);
+/**
+ * Provide the workbench context link audit record set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_audit_record_set_secondary(
     UmiWorkbenchContextLinkAuditRecord *record,
     const char *value);
+/**
+ * Provide the workbench context link audit record touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_link_audit_record_touch(
     UmiWorkbenchContextLinkAuditRecord *record,
     uint64_t sequence,

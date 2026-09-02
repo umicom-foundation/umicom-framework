@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_EDITOR_SOURCE_SYMBOL_ID_CAPACITY 128U
 #define UMI_EDITOR_SOURCE_PREVIEW_CAPACITY 512U
 
+/**
+ * List the named editor source location kind values accepted by this public contract.
+ */
 typedef enum UmiEditorSourceLocationKind {
     UMI_EDITOR_SOURCE_LOCATION_UNKNOWN = 0,
     UMI_EDITOR_SOURCE_LOCATION_FILE = 1,
@@ -44,6 +47,9 @@ typedef enum UmiEditorSourceLocationKind {
     UMI_EDITOR_SOURCE_LOCATION_DIAGNOSTIC = 9
 } UmiEditorSourceLocationKind;
 
+/**
+ * Represent the editor source location data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSourceLocation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -62,19 +68,39 @@ typedef struct UmiEditorSourceLocation {
     char preview[UMI_EDITOR_SOURCE_PREVIEW_CAPACITY];
 } UmiEditorSourceLocation;
 
+/**
+ * Initialise editor source location from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_source_location_initialize(
     UmiEditorSourceLocation *location,
     const char *uri,
     uint64_t line,
     uint64_t column);
+/**
+ * Check that editor source location satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_editor_source_location_validate(
     const UmiEditorSourceLocation *location);
+/**
+ * Provide the editor source location same position operation used by this module and its
+ * client applications.
+ */
 int umi_editor_source_location_same_position(
     const UmiEditorSourceLocation *left,
     const UmiEditorSourceLocation *right);
+/**
+ * Provide the editor source location compare operation used by this module and its client
+ * applications.
+ */
 int umi_editor_source_location_compare(
     const UmiEditorSourceLocation *left,
     const UmiEditorSourceLocation *right);
+/**
+ * Provide the editor source location format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_source_location_format(
     const UmiEditorSourceLocation *location,
     char *out_text,

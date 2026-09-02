@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named developer workbench search kind values accepted by this public contract.
+ */
 typedef enum UmiDeveloperWorkbenchSearchKind {
     UMI_DEVELOPER_WORKBENCH_SEARCH_COMMAND = 1,
     UMI_DEVELOPER_WORKBENCH_SEARCH_FILE = 2,
@@ -31,6 +34,10 @@ typedef enum UmiDeveloperWorkbenchSearchKind {
     UMI_DEVELOPER_WORKBENCH_SEARCH_SOURCE_CONTROL = 6
 } UmiDeveloperWorkbenchSearchKind;
 
+/**
+ * Represent the developer workbench search result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkbenchSearchResult {
     UmiDeveloperWorkbenchSearchKind kind;
     char provider_id[UMI_DEVELOPER_WORKBENCH_ID_CAPACITY];
@@ -44,9 +51,17 @@ typedef struct UmiDeveloperWorkbenchSearchResult {
     uint64_t revision;
 } UmiDeveloperWorkbenchSearchResult;
 
+/**
+ * Provide the developer workbench search kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_developer_workbench_search_kind_text(
     UmiDeveloperWorkbenchSearchKind kind);
 
+/**
+ * Provide the developer workbench search score operation used by this module and its
+ * client applications.
+ */
 int32_t umi_developer_workbench_search_score(
     const char *query,
     const char *primary,

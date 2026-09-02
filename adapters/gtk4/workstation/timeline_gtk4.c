@@ -16,13 +16,22 @@
 #include <stdio.h>
 #include "umicom/ui/gtk4/workstation/timeline.h"
 
+/*
+ * Initialise gtk4 ws timeline from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_timeline_create(const UmiWsTimelineModel *timeline) {
     GtkWidget *scroller = gtk_scrolled_window_new();
     GtkWidget *tracks = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     size_t i;
     gtk_widget_add_css_class(tracks, "umicom-timeline");
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), tracks);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (timeline == NULL) return scroller;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 0U; i < timeline->track_count; ++i) {
         GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
         GtkWidget *label = gtk_label_new(timeline->tracks[i].label);

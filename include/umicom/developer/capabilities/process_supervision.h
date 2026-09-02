@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PROCESS_SUPERVISION "umicom.developer.execution.process_supervision"
 
+/**
+ * Provide the developer capability process supervision operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_process_supervision(void);
 

@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named message kind values accepted by this public contract.
+ */
 typedef enum UmiMessageKind {
     UMI_MESSAGE_COMMAND = 1,
     UMI_MESSAGE_EVENT = 2,
@@ -34,6 +37,9 @@ typedef enum UmiMessageKind {
     UMI_MESSAGE_WORKFLOW = 7
 } UmiMessageKind;
 
+/**
+ * List the named message flags values accepted by this public contract.
+ */
 typedef enum UmiMessageFlags {
     UMI_MESSAGE_FLAG_NONE = 0U,
     UMI_MESSAGE_FLAG_DURABLE = 1U << 0U,
@@ -45,6 +51,9 @@ typedef enum UmiMessageFlags {
     UMI_MESSAGE_FLAG_LIVE = 1U << 6U
 } UmiMessageFlags;
 
+/**
+ * Represent the message envelope data shared with callers of this public contract.
+ */
 typedef struct UmiMessageEnvelope {
     uint32_t structure_size;
     uint32_t schema_version;
@@ -68,6 +77,9 @@ typedef struct UmiMessageEnvelope {
     size_t payload_size;
 } UmiMessageEnvelope;
 
+/**
+ * Represent the owned message data shared with callers of this public contract.
+ */
 typedef struct UmiOwnedMessage {
     UmiMessageEnvelope envelope;
     char *name_storage;
@@ -79,15 +91,34 @@ typedef struct UmiOwnedMessage {
     unsigned char *payload_bytes;
 } UmiOwnedMessage;
 
+/**
+ * Initialise message envelope from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_message_envelope_init(UmiMessageEnvelope *message,
                                UmiMessageKind kind,
                                const char *name,
                                const char *payload);
+/**
+ * Provide the message next id operation used by this module and its client applications.
+ */
 uint64_t umi_message_next_id(void);
+/**
+ * Provide the message kind text operation used by this module and its client applications.
+ */
 const char *umi_message_kind_text(UmiMessageKind kind);
+/**
+ * Check that message satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_message_validate(const UmiMessageEnvelope *message);
+/**
+ * Copy message into module-owned storage so callers keep ownership of their input values.
+ */
 UmiStatus umi_message_copy(const UmiMessageEnvelope *source,
                            UmiOwnedMessage *destination);
+/**
+ * Release or reset state held by message so the same storage can be reused safely.
+ */
 void umi_message_dispose(UmiOwnedMessage *message);
 
 #ifdef __cplusplus

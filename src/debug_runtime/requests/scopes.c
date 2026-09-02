@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/scopes.h"
 
+/*
+ * Provide the debug runtime request scopes operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_scopes(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t frame_id,

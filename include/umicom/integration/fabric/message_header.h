@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric message header data shared with callers of this public contract.
+ */
 typedef struct UmiFabricMessageHeader {
     char message_id[UMI_FABRIC_ID_CAPACITY];
     char correlation_id[UMI_FABRIC_ID_CAPACITY];
@@ -34,7 +37,15 @@ typedef struct UmiFabricMessageHeader {
     uint64_t created_ms;
 } UmiFabricMessageHeader;
 
+/**
+ * Initialise fabric message header from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_fabric_message_header_init(UmiFabricMessageHeader *item, const char *message_id, const char *correlation_id, const char *tenant_id, const char *content_type, uint64_t created_ms);
+/**
+ * Check that fabric message header satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_fabric_message_header_validate(const UmiFabricMessageHeader *item);
 
 #ifdef __cplusplus

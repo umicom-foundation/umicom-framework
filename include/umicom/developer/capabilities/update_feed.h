@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_UPDATE_FEED "umicom.developer.delivery.update_feed"
 
+/**
+ * Provide the developer capability update feed operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_update_feed(void);
 

@@ -91,6 +91,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience education operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_education(void)
 {
     return &DEFINITION;

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application panel projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationPanelProjection {
     const char *panel_id;
     const char *title;
@@ -30,6 +34,10 @@ typedef struct UmiApplicationPanelProjection {
     uint32_t flags;
 } UmiApplicationPanelProjection;
 
+/**
+ * Represent the application layout projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationLayoutProjection {
     const char *layout_id;
     const char *title;
@@ -37,6 +45,10 @@ typedef struct UmiApplicationLayoutProjection {
     uint32_t flags;
 } UmiApplicationLayoutProjection;
 
+/**
+ * Represent the application feature projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationFeatureProjection {
     const char *feature_id;
     const char *title;
@@ -45,14 +57,26 @@ typedef struct UmiApplicationFeatureProjection {
     UmiExperienceOwnership owner;
 } UmiApplicationFeatureProjection;
 
+/**
+ * Find application panel projection while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_panel_projection_at(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,
     UmiApplicationPanelProjection *out_projection);
+/**
+ * Find application layout projection while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_layout_projection_at(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,
     UmiApplicationLayoutProjection *out_projection);
+/**
+ * Find application feature projection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_application_feature_projection_at(
     const UmiApplicationExperienceDefinition *experience,
     size_t index,

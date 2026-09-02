@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_SSH_PROVIDER "umicom.document.provider.ssh_provider"
 
+/**
+ * Provide the document capability ssh provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_ssh_provider(void);
 

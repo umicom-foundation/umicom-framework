@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi symbol data shared with callers of this public contract.
+ */
 typedef struct UmiAbiSymbol { const char *name; uint32_t since_abi; int required; } UmiAbiSymbol;
+/**
+ * Check that abi symbol satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_abi_symbol_validate(const UmiAbiSymbol *symbol);
 #ifdef __cplusplus
 }

@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/tree_spec.h"
 
-int main(void){UmiDesignTreeSpec s;if(umi_design_tree_spec_init(&s,16U,1,1,1)!=UMI_STATUS_OK)return 1;return s.checkboxes?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignTreeSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_tree_spec_init(&s,16U,1,1,1)!=UMI_STATUS_OK)return 1;return s.checkboxes?0:2;}

@@ -16,28 +16,46 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *out, size_t capacity, const char *text)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(out, text, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise ide editor selection from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ide_editor_selection_init(UmiIdeEditorSelection *selection)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selection != NULL) {
         (void)memset(selection, 0, sizeof(*selection));
     }
 }
 
+/*
+ * Copy ide editor selection into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_ide_editor_selection_set(
     UmiIdeEditorSelection *selection,
     const char *document_id,
@@ -53,6 +71,10 @@ UmiStatus umi_ide_editor_selection_set(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selection == NULL || document_id == NULL ||
         path == NULL || language_id == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -64,24 +86,28 @@ UmiStatus umi_ide_editor_selection_set(
         selection->document_id,
         sizeof(selection->document_id),
         document_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             selection->path,
             sizeof(selection->path),
             path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             selection->language_id,
             sizeof(selection->language_id),
             language_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             selection->text,
             sizeof(selection->text),
             text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     selection->start_line = start_line;
@@ -94,9 +120,17 @@ UmiStatus umi_ide_editor_selection_set(
     return umi_ide_editor_selection_validate(selection);
 }
 
+/*
+ * Check that ide editor selection satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ide_editor_selection_validate(
     const UmiIdeEditorSelection *selection)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selection == NULL ||
         selection->document_id[0] == '\0' ||
         selection->path[0] == '\0' ||

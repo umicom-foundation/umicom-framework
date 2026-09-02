@@ -15,6 +15,10 @@
 #include <assert.h>
 #include "umicom/debug_runtime/profiles/cppvsdbg.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiDebugAdapterProfile *profile = umi_debug_runtime_profile_cppvsdbg();

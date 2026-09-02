@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection filter record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchSelectionFilterRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
@@ -40,28 +44,64 @@ typedef struct UmiWorkbenchSelectionFilterRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionFilterRecord;
 
+/**
+ * Initialise workbench selection filter record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_selection_filter_record_init(
     UmiWorkbenchSelectionFilterRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection filter record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_selection_filter_record_validate(
     const UmiWorkbenchSelectionFilterRecord *record);
+/**
+ * Provide the workbench selection filter record set source operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_filter_record_set_source(
     UmiWorkbenchSelectionFilterRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection filter record set subject operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_filter_record_set_subject(
     UmiWorkbenchSelectionFilterRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection filter record set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_filter_record_set_secondary(
     UmiWorkbenchSelectionFilterRecord *record,
     const char *secondary_id);
+/**
+ * Provide the workbench selection filter record set group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_filter_record_set_group(
     UmiWorkbenchSelectionFilterRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection filter record set label operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_filter_record_set_label(
     UmiWorkbenchSelectionFilterRecord *record,
     const char *label);
+/**
+ * Provide the workbench selection filter record hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_selection_filter_record_hash(
     const UmiWorkbenchSelectionFilterRecord *record);
+/**
+ * Provide the workbench selection filter record touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_selection_filter_record_touch(
     UmiWorkbenchSelectionFilterRecord *record,
     uint64_t sequence,

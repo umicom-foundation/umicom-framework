@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider panel binding data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderPanelBinding {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderPanelBinding {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderPanelBinding;
 
+/**
+ * Initialise workbench selection provider panel binding from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_panel_binding_init(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider panel binding satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_validate(
     const UmiWorkbenchSelectionProviderPanelBinding *record);
+/**
+ * Provide the workbench selection provider panel binding set provider operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_set_provider(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider panel binding set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_set_source(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider panel binding set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_set_subject(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider panel binding set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_set_related(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider panel binding set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_set_group(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider panel binding set description operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_panel_binding_set_description(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     const char *description);
+/**
+ * Provide the workbench selection provider panel binding hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_panel_binding_hash(
     const UmiWorkbenchSelectionProviderPanelBinding *record);
+/**
+ * Provide the workbench selection provider panel binding touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_panel_binding_touch(
     UmiWorkbenchSelectionProviderPanelBinding *record,
     uint64_t sequence,

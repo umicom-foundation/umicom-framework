@@ -36,6 +36,7 @@ static UmiStatus add_action(
     UmiStatus planner_status,
     const UmiRepositoryRemediationAction *action)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (planner_status != UMI_STATUS_OK) {
         return planner_status;
     }
@@ -49,19 +50,24 @@ static UmiStatus add_doctor_action(
 {
     UmiRepositoryRemediationAction action;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(issue->code, "repository.dirty") == 0) {
         return add_action(plan, umi_repository_remediation_worktree_plan(&action), &action);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(issue->code, "repository.remote.origin") == 0) {
         return add_action(plan, umi_repository_remediation_remote_plan(&action), &action);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(issue->code, "repository.branch.upstream") == 0) {
         return add_action(plan, umi_repository_remediation_upstream_plan(&action), &action);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(issue->code, "repository.submodule.missing") == 0 ||
         strcmp(issue->code, "repository.submodule.head") == 0) {
         return add_action(plan, umi_repository_remediation_submodule_plan(&action), &action);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(issue->code, "repository.branch.diverged") == 0) {
         return add_action(plan, umi_repository_remediation_branch_plan(&action), &action);
     }
@@ -75,6 +81,7 @@ static UmiStatus add_structural_action(
 {
     UmiRepositoryRemediationAction action;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (issue->kind) {
     case UMI_REPOSITORY_INSPECTION_FETCH_UNAVAILABLE:
         return add_action(plan, umi_repository_remediation_remote_plan(&action), &action);
@@ -98,6 +105,10 @@ UmiStatus umi_repository_remediation_builder_build(
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (doctor_report == NULL || inspection_report == NULL || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

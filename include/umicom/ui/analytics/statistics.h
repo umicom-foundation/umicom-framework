@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics statistics data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsStatistics { size_t count; double minimum; double maximum; double sum; double mean; double variance; double standard_deviation; } UmiAnalyticsStatistics;
+/**
+ * Provide the analytics statistics compute operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_statistics_compute(const double *values,size_t count,UmiAnalyticsStatistics *out_stats);
 
 #ifdef __cplusplus

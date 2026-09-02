@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai mcp call tool operation used by this module and its client applications.
+ */
 UmiStatus umi_ai_mcp_call_tool(
     UmiAiMcpSession *session,
     const char *tool_name,
@@ -29,12 +32,19 @@ UmiStatus umi_ai_mcp_call_tool(
     char *out_result_json,
     size_t result_capacity);
 
+/**
+ * Provide the ai mcp read resource operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_read_resource(
     UmiAiMcpSession *session,
     const char *uri,
     char *out_result_json,
     size_t result_capacity);
 
+/**
+ * Provide the ai mcp get prompt operation used by this module and its client applications.
+ */
 UmiStatus umi_ai_mcp_get_prompt(
     UmiAiMcpSession *session,
     const char *prompt_name,

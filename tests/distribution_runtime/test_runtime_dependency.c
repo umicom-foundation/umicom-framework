@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrRuntimeDependency value; umi_dr_runtime_dependency_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"libc")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.soname,sizeof(value.soname),"libc.so.6")==UMI_STATUS_OK); value.system_provided=true; CHECK(umi_dr_runtime_dependency_valid(&value)); CHECK(umi_dr_runtime_dependency_fingerprint(&value) != 0U);
     return 0;

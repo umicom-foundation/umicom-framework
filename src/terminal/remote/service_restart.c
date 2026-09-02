@@ -17,6 +17,18 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/service_restart.h"
-void umi_terminal_remote_service_restart_init(UmiTerminalRemoteServiceRestart *value,uint32_t max_attempts) { if(value) { value->max_attempts=max_attempts; value->attempts=0U; } }
-bool umi_terminal_remote_service_restart_claim_attempt(UmiTerminalRemoteServiceRestart *value) { if(!value||value->attempts>=value->max_attempts) return false; value->attempts++; return true; }
-void umi_terminal_remote_service_restart_reset(UmiTerminalRemoteServiceRestart *value) { if(value) value->attempts=0U; }
+/*
+ * Initialise terminal remote service restart from caller-provided values so later
+ * operations receive a known state.
+ */
+void umi_terminal_remote_service_restart_init(UmiTerminalRemoteServiceRestart *value,uint32_t max_attempts) { /* Apply this branch only when its contract condition is satisfied. */ if(value) { value->max_attempts=max_attempts; value->attempts=0U; } }
+/*
+ * Provide the terminal remote service restart claim attempt operation used by this module
+ * and its client applications.
+ */
+bool umi_terminal_remote_service_restart_claim_attempt(UmiTerminalRemoteServiceRestart *value) { /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!value||value->attempts>=value->max_attempts) return false; value->attempts++; return true; }
+/*
+ * Release or reset state held by terminal remote service restart so the same storage can
+ * be reused safely.
+ */
+void umi_terminal_remote_service_restart_reset(UmiTerminalRemoteServiceRestart *value) { /* Apply this branch only when its contract condition is satisfied. */ if(value) value->attempts=0U; }

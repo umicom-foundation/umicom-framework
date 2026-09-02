@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the parse uint operation used by this module and its client applications. */
 static UmiStatus parse_uint(
     const UmiLanguageRuntimeJsonDocument *document,
     int object_token,
@@ -28,8 +29,10 @@ static UmiStatus parse_uint(
 
     token = umi_language_runtime_json_object_get(
         document, object_token, key);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (token < 0) return UMI_STATUS_NOT_FOUND;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_language_runtime_json_int64(
             document, token, &value) != UMI_STATUS_OK ||
         value < 0) {
@@ -40,6 +43,7 @@ static UmiStatus parse_uint(
     return UMI_STATUS_OK;
 }
 
+/* Provide the optional string operation used by this module and its client applications. */
 static UmiStatus optional_string(
     const UmiLanguageRuntimeJsonDocument *document,
     int object_token,
@@ -50,12 +54,17 @@ static UmiStatus optional_string(
     const int token = umi_language_runtime_json_object_get(
         document, object_token, key);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     out_text[0] = '\0';
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (token < 0 || umi_language_runtime_json_is_null(document, token)) {
         return UMI_STATUS_OK;
     }
@@ -64,6 +73,10 @@ static UmiStatus optional_string(
         document, token, out_text, capacity);
 }
 
+/*
+ * Provide the debug runtime build request operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_build_request(
     uint64_t sequence,
     const char *command,
@@ -73,6 +86,10 @@ UmiStatus umi_debug_runtime_build_request(
 {
     UmiLanguageRuntimeJsonWriter writer;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (sequence == 0U || command == NULL || command[0] == '\0' ||
         out_json == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -86,6 +103,10 @@ UmiStatus umi_debug_runtime_build_request(
         &writer, ",\"type\":\"request\",\"command\":");
     (void)umi_language_runtime_json_writer_string(&writer, command);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (arguments_json != NULL) {
         (void)umi_language_runtime_json_writer_raw(
             &writer, ",\"arguments\":");
@@ -97,6 +118,10 @@ UmiStatus umi_debug_runtime_build_request(
     return writer.status;
 }
 
+/*
+ * Provide the debug runtime build response operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_build_response(
     uint64_t sequence,
     uint64_t request_sequence,
@@ -109,6 +134,7 @@ UmiStatus umi_debug_runtime_build_response(
 {
     UmiLanguageRuntimeJsonWriter writer;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (sequence == 0U || request_sequence == 0U ||
         command == NULL || out_json == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -128,6 +154,10 @@ UmiStatus umi_debug_runtime_build_response(
         &writer, ",\"command\":");
     (void)umi_language_runtime_json_writer_string(&writer, command);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message != NULL && message[0] != '\0') {
         (void)umi_language_runtime_json_writer_raw(
             &writer, ",\"message\":");
@@ -135,6 +165,10 @@ UmiStatus umi_debug_runtime_build_response(
             &writer, message);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (body_json != NULL) {
         (void)umi_language_runtime_json_writer_raw(
             &writer, ",\"body\":");
@@ -146,6 +180,10 @@ UmiStatus umi_debug_runtime_build_response(
     return writer.status;
 }
 
+/*
+ * Read debug runtime message into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_debug_runtime_message_parse(
     const char *json,
     UmiDebugRuntimeEnvelope *out_envelope)
@@ -155,6 +193,10 @@ UmiStatus umi_debug_runtime_message_parse(
     int success_token;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || out_envelope == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -162,8 +204,10 @@ UmiStatus umi_debug_runtime_message_parse(
     (void)memset(out_envelope, 0, sizeof(*out_envelope));
 
     status = umi_language_runtime_json_parse(json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (document.token_count == 0U ||
         document.tokens[0].type != UMI_LANGUAGE_RUNTIME_JSON_OBJECT) {
         return UMI_STATUS_PARSE_ERROR;
@@ -171,19 +215,21 @@ UmiStatus umi_debug_runtime_message_parse(
 
     status = optional_string(
         &document, 0, "type", type, sizeof(type));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || type[0] == '\0') {
         return UMI_STATUS_PARSE_ERROR;
     }
 
     (void)parse_uint(&document, 0, "seq", &out_envelope->sequence);
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(type, "request") == 0) {
         out_envelope->kind = UMI_DEBUG_RUNTIME_MESSAGE_REQUEST;
         status = optional_string(
             &document, 0, "command",
             out_envelope->command,
             sizeof(out_envelope->command));
-    } else if (strcmp(type, "response") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(type, "response") == 0) {
         int success = 0;
 
         out_envelope->kind = UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE;
@@ -191,6 +237,7 @@ UmiStatus umi_debug_runtime_message_parse(
             &document, 0, "command",
             out_envelope->command,
             sizeof(out_envelope->command));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = parse_uint(
                 &document, 0, "request_seq",
@@ -199,6 +246,7 @@ UmiStatus umi_debug_runtime_message_parse(
 
         success_token = umi_language_runtime_json_object_get(
             &document, 0, "success");
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (success_token >= 0 &&
             umi_language_runtime_json_bool(
                 &document, success_token, &success) == UMI_STATUS_OK) {
@@ -209,18 +257,20 @@ UmiStatus umi_debug_runtime_message_parse(
             &document, 0, "message",
             out_envelope->message,
             sizeof(out_envelope->message));
-    } else if (strcmp(type, "event") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(type, "event") == 0) {
         out_envelope->kind = UMI_DEBUG_RUNTIME_MESSAGE_EVENT;
         status = optional_string(
             &document, 0, "event",
             out_envelope->event,
             sizeof(out_envelope->event));
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return UMI_STATUS_PARSE_ERROR;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(json) >= sizeof(out_envelope->json)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -233,9 +283,17 @@ UmiStatus umi_debug_runtime_message_parse(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the debug runtime message body token operation used by this module and its
+ * client applications.
+ */
 int umi_debug_runtime_message_body_token(
     const UmiLanguageRuntimeJsonDocument *document)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || document->token_count == 0U) return -1;
     return umi_language_runtime_json_object_get(document, 0, "body");
 }

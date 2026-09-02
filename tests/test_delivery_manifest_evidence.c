@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/manifest.h"
 #include "umicom/delivery/build_evidence.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDeliveryManifest manifest;
     UmiBuildEvidence evidence;

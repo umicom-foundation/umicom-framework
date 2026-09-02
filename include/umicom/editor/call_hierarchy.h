@@ -24,11 +24,18 @@ extern "C" {
 
 #define UMI_EDITOR_CALL_HIERARCHY_API_VERSION 1U
 
+/**
+ * List the named editor call hierarchy direction values accepted by this public contract.
+ */
 typedef enum UmiEditorCallHierarchyDirection {
     UMI_EDITOR_CALL_HIERARCHY_INCOMING = 1,
     UMI_EDITOR_CALL_HIERARCHY_OUTGOING = 2
 } UmiEditorCallHierarchyDirection;
 
+/**
+ * Provide the editor call hierarchy build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_call_hierarchy_build(
     UmiEditorSymbolHierarchy *hierarchy,
     const UmiEditorSymbolIndex *symbol_index,

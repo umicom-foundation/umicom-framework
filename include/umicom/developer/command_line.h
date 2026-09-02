@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_DEVELOPER_COMMAND_LINE_API_VERSION 1U
 #define UMI_DEVELOPER_COMMAND_TOKEN_CAPACITY (UMI_DEVELOPER_MAX_ARGUMENTS + 1U)
 
+/**
+ * Represent the developer command line data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperCommandLine {
     uint32_t struct_size;
     uint32_t api_version;
@@ -45,6 +48,10 @@ typedef struct UmiDeveloperCommandLine {
     size_t argument_count;
 } UmiDeveloperCommandLine;
 
+/**
+ * Read developer command line into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_developer_command_line_parse(
     const char *text,
     UmiDeveloperCommandLine *out_command);

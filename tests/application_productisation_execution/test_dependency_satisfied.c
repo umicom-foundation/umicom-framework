@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test dependency satisfied and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_dependency_satisfied(void)
 {
     UmiProductExecutionWorkQueue q; UmiProductExecutionDependencyGraph g; UmiProductisationCompletionPlan p=test_plan_two_stage(); assert(umi_product_execution_work_queue_from_plan(&q,&p,3U)==UMI_STATUS_OK); umi_product_execution_dependency_graph_init(&g); assert(umi_product_execution_dependency_add(&g,0U,1U,2U)==UMI_STATUS_OK); assert(!umi_product_execution_dependencies_satisfied(&g,&q,1U)); q.items[0].state=UMI_PRODUCT_EXECUTION_SUCCEEDED; assert(umi_product_execution_dependencies_satisfied(&g,&q,1U));

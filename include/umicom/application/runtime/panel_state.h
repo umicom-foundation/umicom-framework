@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application panel state data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationPanelState {
     uint32_t structure_size;
     const UmiExperiencePanelDefinition *definition;
@@ -32,20 +35,44 @@ typedef struct UmiApplicationPanelState {
     uint64_t revision;
 } UmiApplicationPanelState;
 
+/**
+ * Initialise application panel state from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_panel_state_init(
     const UmiExperiencePanelDefinition *definition,
     UmiApplicationPanelState *out_state);
+/**
+ * Provide the application panel state set visibility operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_panel_state_set_visibility(
     UmiApplicationPanelState *state,
     UmiApplicationPanelVisibility visibility);
+/**
+ * Provide the application panel state set focus operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_panel_state_set_focus(
     UmiApplicationPanelState *state,
     bool focused);
+/**
+ * Provide the application panel state set monitor operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_panel_state_set_monitor(
     UmiApplicationPanelState *state,
     unsigned monitor_index);
+/**
+ * Provide the application panel state can float operation used by this module and its
+ * client applications.
+ */
 int umi_application_panel_state_can_float(
     const UmiApplicationPanelState *state);
+/**
+ * Provide the application panel state can auto hide operation used by this module and its
+ * client applications.
+ */
 int umi_application_panel_state_can_auto_hide(
     const UmiApplicationPanelState *state);
 /* Project application metadata into the existing canonical pane model.

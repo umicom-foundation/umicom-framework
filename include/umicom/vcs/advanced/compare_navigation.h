@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced compare navigation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedCompareNavigation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,9 +37,25 @@ typedef struct UmiVcsAdvancedCompareNavigation {
     int wrap;
 } UmiVcsAdvancedCompareNavigation;
 
+/**
+ * Initialise vcs advanced compare navigation from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_compare_navigation_init(UmiVcsAdvancedCompareNavigation *value);
+/**
+ * Check that vcs advanced compare navigation satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_compare_navigation_validate(const UmiVcsAdvancedCompareNavigation *value);
+/**
+ * Provide the vcs advanced compare navigation next operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_compare_navigation_next(UmiVcsAdvancedCompareNavigation *value);
+/**
+ * Provide the vcs advanced compare navigation previous operation used by this module and
+ * its client applications.
+ */
 int umi_vcs_advanced_compare_navigation_previous(UmiVcsAdvancedCompareNavigation *value);
 
 #ifdef __cplusplus

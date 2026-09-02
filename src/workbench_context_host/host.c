@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Provide the workbench context host config default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchContextHostConfig umi_workbench_context_host_config_default(void)
 {
     UmiWorkbenchContextHostConfig config;
@@ -30,6 +34,10 @@ UmiWorkbenchContextHostConfig umi_workbench_context_host_config_default(void)
     return config;
 }
 
+/*
+ * Initialise workbench context host from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_context_host_create(
     const UmiWorkbenchContextHostConfig *config,
     UmiWorkbenchContextLinkService *link_service,
@@ -39,6 +47,10 @@ UmiStatus umi_workbench_context_host_create(
     UmiWorkbenchContextHost *host;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_host == NULL || link_service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -47,6 +59,7 @@ UmiStatus umi_workbench_context_host_create(
     effective = config != NULL
         ? *config
         : umi_workbench_context_host_config_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective) ||
         effective.host_id == NULL ||
         effective.application_id == NULL ||
@@ -55,6 +68,10 @@ UmiStatus umi_workbench_context_host_create(
     }
 
     host = (UmiWorkbenchContextHost *)calloc(1U, sizeof(*host));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     host->link_service = link_service;
@@ -68,18 +85,21 @@ UmiStatus umi_workbench_context_host_create(
         host->host_id,
         sizeof(host->host_id),
         effective.host_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_context_host_copy_text(
             host->application_id,
             sizeof(host->application_id),
             effective.application_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_context_host_copy_text(
             host->observer_panel_id,
             sizeof(host->observer_panel_id),
             effective.observer_panel_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_workbench_context_host_destroy(host);
         return status;
@@ -89,19 +109,35 @@ UmiStatus umi_workbench_context_host_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench context host so the same storage can be reused
+ * safely.
+ */
 void umi_workbench_context_host_destroy(UmiWorkbenchContextHost *host)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL) return;
     umi_workbench_context_host_inbox_registry_destroy(&host->inboxes);
     umi_workbench_context_host_endpoint_registry_destroy(&host->endpoints);
     free(host);
 }
 
+/*
+ * Provide the workbench context host apply profile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_apply_profile(
     UmiWorkbenchContextHost *host,
     const UmiWorkbenchContextHostProfile *profile)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -112,6 +148,7 @@ UmiStatus umi_workbench_context_host_apply_profile(
         &host->endpoints,
         host->active_group_id,
         sizeof(host->active_group_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         ++host->metrics.error_count;
         return status;
@@ -125,19 +162,29 @@ UmiStatus umi_workbench_context_host_apply_profile(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context host set active group operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_host_set_active_group(
     UmiWorkbenchContextHost *host,
     const char *group_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || group_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_context_link_group_catalogue_find_const(
             &host->link_service->groups,
             group_id) == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(host->active_group_id, group_id) == 0) {
         return UMI_STATUS_OK;
     }
@@ -146,18 +193,27 @@ UmiStatus umi_workbench_context_host_set_active_group(
         host->active_group_id,
         sizeof(host->active_group_id),
         group_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     ++host->revision;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context host active group operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_host_active_group(
     const UmiWorkbenchContextHost *host)
 {
     return host != NULL ? host->active_group_id : NULL;
 }
 
+/*
+ * Provide the workbench context host assign endpoint group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_host_assign_endpoint_group(
     UmiWorkbenchContextHost *host,
     const char *endpoint_id,
@@ -169,9 +225,14 @@ UmiStatus umi_workbench_context_host_assign_endpoint_group(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || endpoint_id == NULL || group_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_context_link_group_catalogue_find_const(
             &host->link_service->groups,
             group_id) == NULL) {
@@ -181,12 +242,17 @@ UmiStatus umi_workbench_context_host_assign_endpoint_group(
     endpoint = umi_workbench_context_host_endpoint_registry_find(
         &host->endpoints,
         endpoint_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (endpoint == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_context_host_endpoint_set_group(
         endpoint,
         group_id,
         mode);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(
@@ -194,6 +260,7 @@ UmiStatus umi_workbench_context_host_assign_endpoint_group(
         sizeof(binding_id),
         "%s.binding",
         endpoint->endpoint_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(binding_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -206,20 +273,30 @@ UmiStatus umi_workbench_context_host_assign_endpoint_group(
         group_id,
         UMI_CONTEXT_KIND_GENERIC,
         mode);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++host->revision;
     return status;
 }
 
+/* Provide the find source operation used by this module and its client applications. */
 static const UmiWorkbenchContextHostEndpoint *find_source(
     const UmiWorkbenchContextHost *host,
     const char *source_panel_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_panel_id == NULL) return NULL;
     return umi_workbench_context_host_endpoint_registry_find_panel(
         &host->endpoints,
         source_panel_id);
 }
 
+/*
+ * Provide the workbench context host publish operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_publish(
     UmiWorkbenchContextHost *host,
     const char *group_id,
@@ -232,20 +309,33 @@ UmiStatus umi_workbench_context_host_publish(
     UmiWorkbenchContextLinkDeliveryBatch batch;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || payload == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (host->suspended) return UMI_STATUS_BUSY;
 
     effective_group =
         group_id != NULL && group_id[0] != '\0'
         ? group_id
         : host->active_group_id;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (effective_group == NULL || effective_group[0] == '\0') {
         return UMI_STATUS_NOT_FOUND;
     }
 
     source = find_source(host, source_panel_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_panel_id != NULL && source_panel_id[0] != '\0' &&
         (source == NULL ||
          !umi_workbench_context_host_endpoint_publishes(
@@ -262,6 +352,7 @@ UmiStatus umi_workbench_context_host_publish(
         payload,
         now_ms,
         &batch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         ++host->metrics.error_count;
         return status;
@@ -275,13 +366,22 @@ UmiStatus umi_workbench_context_host_publish(
         source_panel_id,
         payload,
         now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source != NULL) {
         UmiWorkbenchContextHostEndpoint *mutable_source =
             umi_workbench_context_host_endpoint_registry_find(
                 &host->endpoints,
                 source->endpoint_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (mutable_source != NULL) {
             ++mutable_source->publish_count;
             ++mutable_source->revision;
@@ -294,6 +394,10 @@ UmiStatus umi_workbench_context_host_publish(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context host pop delivery operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_pop_delivery(
     UmiWorkbenchContextHost *host,
     const char *endpoint_id,
@@ -302,6 +406,10 @@ UmiStatus umi_workbench_context_host_pop_delivery(
     UmiWorkbenchContextHostInbox *inbox;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || endpoint_id == NULL ||
         out_delivery == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -310,16 +418,25 @@ UmiStatus umi_workbench_context_host_pop_delivery(
     inbox = umi_workbench_context_host_inbox_registry_find(
         &host->inboxes,
         endpoint_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (inbox == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_context_host_inbox_pop(
         inbox,
         out_delivery);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         UmiWorkbenchContextHostEndpoint *endpoint =
             umi_workbench_context_host_endpoint_registry_find(
                 &host->endpoints,
                 endpoint_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (endpoint != NULL) {
             ++endpoint->delivery_count;
             ++endpoint->revision;
@@ -331,23 +448,39 @@ UmiStatus umi_workbench_context_host_pop_delivery(
     return status;
 }
 
+/*
+ * Provide the workbench context host clear inbox operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_clear_inbox(
     UmiWorkbenchContextHost *host,
     const char *endpoint_id)
 {
     UmiWorkbenchContextHostInbox *inbox;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || endpoint_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     inbox = umi_workbench_context_host_inbox_registry_find(
         &host->inboxes,
         endpoint_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (inbox == NULL) return UMI_STATUS_NOT_FOUND;
     umi_workbench_context_host_inbox_clear(inbox);
     ++host->revision;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context host observe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_observe(
     UmiWorkbenchContextHost *host,
     const UmiWorkbenchContextHostObservation *observation)
@@ -358,6 +491,10 @@ UmiStatus umi_workbench_context_host_observe(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || observation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -366,6 +503,7 @@ UmiStatus umi_workbench_context_host_observe(
         &host->observer,
         observation);
     ++host->metrics.observation_count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (changes == 0U) {
         ++host->metrics.duplicate_observation_count;
         ++host->metrics.revision;
@@ -378,6 +516,7 @@ UmiStatus umi_workbench_context_host_observe(
         "%s-observation-%llu",
         host->host_id,
         (unsigned long long)observation->source_revision);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(context_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -388,6 +527,7 @@ UmiStatus umi_workbench_context_host_observe(
         host->application_id,
         host->observer_panel_id,
         observation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_workbench_context_host_publish(
@@ -396,6 +536,7 @@ UmiStatus umi_workbench_context_host_observe(
         NULL,
         &payload,
         observation->observed_at_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         /*
          * An observation before a profile establishes an active group is not
@@ -406,6 +547,10 @@ UmiStatus umi_workbench_context_host_observe(
     return status;
 }
 
+/*
+ * Provide the workbench context host observe workbench operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_host_observe_workbench(
     UmiWorkbenchContextHost *host,
     const UmiUiWorkbench *workbench,
@@ -414,6 +559,10 @@ UmiStatus umi_workbench_context_host_observe_workbench(
     UmiWorkbenchContextHostObservation observation;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -421,12 +570,14 @@ UmiStatus umi_workbench_context_host_observe_workbench(
         workbench,
         now_ms,
         &observation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_context_host_observe(
         host,
         &observation);
 }
 
+/* Provide the navigate operation used by this module and its client applications. */
 static UmiStatus navigate(
     UmiWorkbenchContextHost *host,
     bool forward,
@@ -436,6 +587,10 @@ static UmiStatus navigate(
     UmiWorkbenchContextLinkDeliveryBatch batch;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || host->active_group_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -449,11 +604,16 @@ static UmiStatus navigate(
             host->link_service,
             host->active_group_id,
             &batch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     slot = umi_workbench_context_link_service_current(
         host->link_service,
         host->active_group_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (slot == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_workbench_context_host_dispatch(
@@ -464,6 +624,7 @@ static UmiStatus navigate(
         NULL,
         &slot->payload,
         now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         ++host->metrics.navigation_count;
         ++host->metrics.revision;
@@ -472,6 +633,10 @@ static UmiStatus navigate(
     return status;
 }
 
+/*
+ * Provide the workbench context host back operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_back(
     UmiWorkbenchContextHost *host,
     uint64_t now_ms)
@@ -479,6 +644,10 @@ UmiStatus umi_workbench_context_host_back(
     return navigate(host, false, now_ms);
 }
 
+/*
+ * Provide the workbench context host forward operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_forward(
     UmiWorkbenchContextHost *host,
     uint64_t now_ms)
@@ -486,12 +655,20 @@ UmiStatus umi_workbench_context_host_forward(
     return navigate(host, true, now_ms);
 }
 
+/*
+ * Provide the workbench context host pin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_pin(
     UmiWorkbenchContextHost *host,
     const char *pin_id,
     uint64_t now_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL || pin_id == NULL ||
         host->active_group_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -502,6 +679,7 @@ UmiStatus umi_workbench_context_host_pin(
         pin_id,
         host->active_group_id,
         now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         ++host->metrics.pin_count;
         ++host->metrics.revision;
@@ -510,10 +688,18 @@ UmiStatus umi_workbench_context_host_pin(
     return status;
 }
 
+/*
+ * Provide the workbench context host set suspended operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_context_host_set_suspended(
     UmiWorkbenchContextHost *host,
     bool suspended)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (host == NULL) return;
     host->suspended = suspended;
     umi_workbench_context_link_service_set_suspended(

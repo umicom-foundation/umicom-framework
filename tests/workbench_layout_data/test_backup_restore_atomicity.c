@@ -16,6 +16,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise seed source and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int seed_source(UmiDataServer *server)
 {
     TEST_STATUS_OK(umi_data_server_set(
@@ -41,6 +45,10 @@ static int seed_source(UmiDataServer *server)
     return 0;
 }
 
+/*
+ * Exercise create backup and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int create_backup(
     UmiDataServer *source,
     const UmiWorkbenchLayoutBackupOptions *options,
@@ -68,6 +76,10 @@ static int create_backup(
     return 0;
 }
 
+/*
+ * Exercise test validate only and policy filter and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_validate_only_and_policy_filter(void)
 {
     UmiDataServer *source = test_create_data_server();
@@ -116,6 +128,10 @@ static int test_validate_only_and_policy_filter(void)
     return 0;
 }
 
+/*
+ * Exercise test restore and integrity failure preserves destination and return a clear
+ * result when the behaviour no longer matches its contract.
+ */
 static int test_restore_and_integrity_failure_preserves_destination(void)
 {
     UmiDataServer *source = test_create_data_server();
@@ -183,6 +199,10 @@ static int test_restore_and_integrity_failure_preserves_destination(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_validate_only_and_policy_filter() == 0,

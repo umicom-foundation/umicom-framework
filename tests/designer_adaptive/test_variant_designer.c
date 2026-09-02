@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/variant_designer.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesignerVariantDesigner d; UmiDesignerAdaptiveVariant v; umi_designer_variant_designer_init(&d);

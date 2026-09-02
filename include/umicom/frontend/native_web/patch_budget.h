@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/patch_batch.h"
+/**
+ * Represent the native web patch budget data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebPatchBudget { size_t max_patches; size_t max_estimated_bytes; } UmiNativeWebPatchBudget;
 /* Estimate whether a patch batch is safe to deliver under configured limits. */
 UmiStatus umi_native_web_patch_budget_check(const UmiNativeWebPatchBatch *batch, const UmiNativeWebPatchBudget *budget, size_t *out_estimated_bytes);

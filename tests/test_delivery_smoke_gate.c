@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/smoke_test.h"
 #include "umicom/delivery/gate.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiSmokeReport report;
     UmiReleaseGate gate;

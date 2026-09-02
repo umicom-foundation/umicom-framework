@@ -16,23 +16,30 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination,
                            size_t capacity,
                            const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the add command operation used by this module and its client applications. */
 static UmiStatus add_command(
     UmiDeveloperProjectBuildPlan *plan,
     const char *program,
@@ -43,6 +50,10 @@ static UmiStatus add_command(
     UmiBuildCommand *command;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || program == NULL ||
         plan->command_count >= UMI_DEVELOPER_PROJECT_BUILD_PLAN_COMMANDS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -51,13 +62,19 @@ static UmiStatus add_command(
     command = &plan->commands[plan->command_count];
     umi_build_command_init(command, program);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (working_directory != NULL && working_directory[0] != '\0' &&
         !umi_build_command_set_working_directory(
             command, working_directory)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < argument_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!umi_build_command_add_argument(command, arguments[index])) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -67,10 +84,18 @@ static UmiStatus add_command(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise developer project build plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_project_build_plan_init(
     UmiDeveloperProjectBuildPlan *plan,
     UmiDeveloperProjectBuildSystem build_system)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) return;
 
     (void)memset(plan, 0, sizeof(*plan));
@@ -78,6 +103,10 @@ void umi_developer_project_build_plan_init(
     plan->revision = 1U;
 }
 
+/*
+ * Provide the developer project build plan cmake operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_build_plan_cmake(
     UmiDeveloperProjectBuildPlan *plan,
     const char *source_root,
@@ -96,12 +125,17 @@ UmiStatus umi_developer_project_build_plan_cmake(
     UmiStatus status;
     int use_preset;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || source_root == NULL ||
         source_root[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     use_preset = preset != NULL && preset[0] != '\0';
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!use_preset &&
         (build_directory == NULL || build_directory[0] == '\0')) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -113,35 +147,49 @@ UmiStatus umi_developer_project_build_plan_cmake(
     status = copy_text(plan->source_root,
                        sizeof(plan->source_root),
                        source_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (build_directory != NULL && build_directory[0] != '\0') {
         status = copy_text(plan->build_directory,
                            sizeof(plan->build_directory),
                            build_directory);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (use_preset) {
         status = copy_text(plan->preset, sizeof(plan->preset), preset);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (configuration != NULL && configuration[0] != '\0') {
         status = copy_text(
             plan->configuration,
             sizeof(plan->configuration),
             configuration);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (use_preset) {
         configure_preset_args[0] = "--preset";
         configure_preset_args[1] = preset;
         status = add_command(
             plan, "cmake", source_root,
             configure_preset_args, 2U);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         configure_dir_args[0] = "-S";
         configure_dir_args[1] = source_root;
         configure_dir_args[2] = "-B";
@@ -152,8 +200,10 @@ UmiStatus umi_developer_project_build_plan_cmake(
             plan, "cmake", source_root,
             configure_dir_args, 6U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (use_preset) {
         build_preset_args[0] = "--build";
         build_preset_args[1] = "--preset";
@@ -161,15 +211,17 @@ UmiStatus umi_developer_project_build_plan_cmake(
         status = add_command(
             plan, "cmake", source_root,
             build_preset_args, 3U);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         build_dir_args[0] = "--build";
         build_dir_args[1] = build_directory;
         status = add_command(
             plan, "cmake", source_root,
             build_dir_args, 2U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (include_test) {
         size_t test_count = 0U;
         test_args[test_count++] = "--test-dir";
@@ -179,6 +231,10 @@ UmiStatus umi_developer_project_build_plan_cmake(
                 : "build";
         test_args[test_count++] = "--output-on-failure";
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (configuration != NULL && configuration[0] != '\0') {
             test_args[test_count++] = "-C";
             test_args[test_count++] = configuration;
@@ -186,17 +242,20 @@ UmiStatus umi_developer_project_build_plan_cmake(
 
         status = add_command(
             plan, "ctest", source_root, test_args, test_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (include_package) {
         size_t package_count = 0U;
 
         package_args[package_count++] = "--build";
+        /* Apply this branch only when its contract condition is satisfied. */
         if (use_preset) {
             package_args[package_count++] = "--preset";
             package_args[package_count++] = preset;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             package_args[package_count++] = build_directory;
         }
         package_args[package_count++] = "--target";
@@ -205,12 +264,17 @@ UmiStatus umi_developer_project_build_plan_cmake(
         status = add_command(
             plan, "cmake", source_root,
             package_args, package_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer project build plan zig operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_build_plan_zig(
     UmiDeveloperProjectBuildPlan *plan,
     const char *source_root,
@@ -220,6 +284,10 @@ UmiStatus umi_developer_project_build_plan_zig(
     const char *test_args[] = {"build", "test"};
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || source_root == NULL ||
         source_root[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -229,12 +297,15 @@ UmiStatus umi_developer_project_build_plan_zig(
         plan, UMI_DEVELOPER_PROJECT_BUILD_ZIG);
     status = copy_text(
         plan->source_root, sizeof(plan->source_root), source_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_command(
         plan, "zig", source_root, build_args, 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (include_test) {
         status = add_command(
             plan, "zig", source_root, test_args, 2U);
@@ -243,6 +314,10 @@ UmiStatus umi_developer_project_build_plan_zig(
     return status;
 }
 
+/*
+ * Provide the developer project build plan cargo operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_build_plan_cargo(
     UmiDeveloperProjectBuildPlan *plan,
     const char *source_root,
@@ -255,6 +330,10 @@ UmiStatus umi_developer_project_build_plan_cargo(
     const char *test_release_args[] = {"test", "--release"};
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || source_root == NULL ||
         source_root[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -264,6 +343,7 @@ UmiStatus umi_developer_project_build_plan_cargo(
         plan, UMI_DEVELOPER_PROJECT_BUILD_CARGO);
     status = copy_text(
         plan->source_root, sizeof(plan->source_root), source_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_command(
@@ -272,8 +352,10 @@ UmiStatus umi_developer_project_build_plan_cargo(
         source_root,
         release ? build_release_args : build_debug_args,
         release ? 2U : 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (include_test) {
         status = add_command(
             plan,
@@ -286,11 +368,19 @@ UmiStatus umi_developer_project_build_plan_cargo(
     return status;
 }
 
+/*
+ * Check that developer project build plan satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_project_build_plan_validate(
     const UmiDeveloperProjectBuildPlan *plan)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL ||
         plan->build_system < UMI_DEVELOPER_PROJECT_BUILD_NONE ||
         plan->build_system > UMI_DEVELOPER_PROJECT_BUILD_CUSTOM ||
@@ -298,9 +388,11 @@ UmiStatus umi_developer_project_build_plan_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->command_count; ++index) {
         const UmiStatus status =
             umi_build_command_validate(&plan->commands[index], NULL, 0U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

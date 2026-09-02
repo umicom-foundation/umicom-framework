@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the bar volatility proxy operation used by this module and its client
+ * applications.
+ */
 double umi_bar_volatility_proxy(const UmiBar *bar);
 #ifdef __cplusplus
 }

@@ -27,9 +27,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics dashboard service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsDashboardService { char ids[UMI_ANALYTICS_MAX_ITEMS][UMI_ANALYTICS_ID_CAPACITY]; size_t count; uint64_t revision; } UmiAnalyticsDashboardService;
+/**
+ * Initialise analytics dashboard service from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_analytics_dashboard_service_init(UmiAnalyticsDashboardService *service);
+/**
+ * Add analytics dashboard service only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_analytics_dashboard_service_register(UmiAnalyticsDashboardService *service,const char *id);
+/**
+ * Provide the analytics dashboard service contains operation used by this module and its
+ * client applications.
+ */
 int umi_analytics_dashboard_service_contains(const UmiAnalyticsDashboardService *service,const char *id);
 
 #ifdef __cplusplus

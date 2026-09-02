@@ -20,14 +20,31 @@
 
 #include <string.h>
 
+/*
+ * Initialise repository submodule status from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_submodule_status_init(UmiRepositorySubmoduleStatus *status)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != NULL) (void)memset(status, 0, sizeof(*status));
 }
 
+/*
+ * Check that repository submodule status satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_repository_submodule_status_validate(const UmiRepositorySubmoduleStatus *status)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status->initialised > status->configured || status->missing > status->configured ||
         status->dirty > status->configured || status->head_mismatch > status->configured) {
         return UMI_STATUS_INVALID_STATE;
@@ -35,6 +52,10 @@ UmiStatus umi_repository_submodule_status_validate(const UmiRepositorySubmoduleS
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the repository submodule status healthy operation used by this module and its
+ * client applications.
+ */
 int umi_repository_submodule_status_healthy(const UmiRepositorySubmoduleStatus *status)
 {
     return status != NULL && umi_repository_submodule_status_validate(status) == UMI_STATUS_OK &&

@@ -17,14 +17,26 @@
 #include "test_fixture.h"
 
 
+/*
+ * Exercise test event listener and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void test_event_listener(
     const UmiWorkbenchDesignerEvent *event,
     void *context)
 {
     size_t *count = context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event != NULL && count != NULL) *count += 1U;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchDesignerEventBus bus;

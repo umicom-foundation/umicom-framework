@@ -15,6 +15,18 @@
 #include "umicom/editor/workbench/dirty_document_state.h"
 
 #include <string.h>
-UmiStatus umi_editor_wb_dirty_document_state_init(UmiEditorWbDirtyDocumentState *s,const char *id,bool enabled){if(s==NULL||!umi_editor_wb_id_valid(id))return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof *s);if(umi_editor_wb_copy_text(s->item_id,sizeof s->item_id,id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;s->enabled=enabled;s->revision=1U;return UMI_STATUS_OK;}
-UmiStatus umi_editor_wb_dirty_document_state_set(UmiEditorWbDirtyDocumentState *s,bool enabled){if(s==NULL)return UMI_STATUS_INVALID_ARGUMENT;s->enabled=enabled;if(enabled)s->promoted=true;s->revision++;return UMI_STATUS_OK;}
+/*
+ * Initialise editor wb dirty document state from caller-provided values so later
+ * operations receive a known state.
+ */
+UmiStatus umi_editor_wb_dirty_document_state_init(UmiEditorWbDirtyDocumentState *s,const char *id,bool enabled){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||!umi_editor_wb_id_valid(id))return UMI_STATUS_INVALID_ARGUMENT;memset(s,0,sizeof *s);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_editor_wb_copy_text(s->item_id,sizeof s->item_id,id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;s->enabled=enabled;s->revision=1U;return UMI_STATUS_OK;}
+/*
+ * Copy editor wb dirty document state into module-owned storage so callers keep ownership
+ * of their input values.
+ */
+UmiStatus umi_editor_wb_dirty_document_state_set(UmiEditorWbDirtyDocumentState *s,bool enabled){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL)return UMI_STATUS_INVALID_ARGUMENT;s->enabled=enabled;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(enabled)s->promoted=true;s->revision++;return UMI_STATUS_OK;}
+/*
+ * Check that editor wb dirty document state satisfies its contract before another service
+ * relies on it.
+ */
 int umi_editor_wb_dirty_document_state_valid(const UmiEditorWbDirtyDocumentState *s){return s!=NULL&&umi_editor_wb_id_valid(s->item_id)&&s->revision>0U;}

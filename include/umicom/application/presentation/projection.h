@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application presentation project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_presentation_project(
     const char *recipe_id,
     UmiApplicationPresentationPlan *out_plan);

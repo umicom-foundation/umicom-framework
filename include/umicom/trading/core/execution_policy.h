@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading execution policy data shared with callers of this public contract.
+ */
 typedef struct UmiTradingExecutionPolicy { uint32_t max_venues; uint32_t participation_bps; uint32_t urgency; } UmiTradingExecutionPolicy;
 /* Initialise and validate define venue-count, participation and urgency bounds for execution strategies. */
 UmiStatus umi_trading_execution_policy_init(UmiTradingExecutionPolicy *value,uint32_t max_venues, uint32_t participation_bps, uint32_t urgency);

@@ -17,6 +17,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise application and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiInstallerApplicationDefinition application(
     const char *id,
     const char *name,
@@ -39,6 +43,10 @@ static UmiInstallerApplicationDefinition application(
     return definition;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiInstallerSelection selection;

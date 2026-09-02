@@ -16,6 +16,10 @@
 #include "umicom/project/workspace/workspace_state.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspaceWorkspaceState a,b;
     CHECK(umi_project_workspace_workspace_state_init(&a,"item")==UMI_STATUS_OK);

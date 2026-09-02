@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/virtual_range.h"
 #include <stdio.h>
-int main(void){UmiUiEntSpan a={2U,5U},b={5U,4U},i=umi_ui_ent_virtual_range_intersection(a,b),u=umi_ui_ent_virtual_range_union(a,b);if(i.first!=5U||i.count!=2U||u.first!=2U||u.count!=7U)return 1;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntSpan a={2U,5U},b={5U,4U},i=umi_ui_ent_virtual_range_intersection(a,b),u=umi_ui_ent_virtual_range_union(a,b);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(i.first!=5U||i.count!=2U||u.first!=2U||u.count!=7U)return 1;puts("ok");return 0;}

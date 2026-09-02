@@ -32,6 +32,10 @@ extern "C" {
 #define UMI_EDITOR_SIGNATURE_DOCUMENTATION_CAPACITY 4096U
 #define UMI_EDITOR_SIGNATURE_RETURN_TYPE_CAPACITY 256U
 
+/**
+ * List the named editor signature help trigger kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiEditorSignatureHelpTriggerKind {
     UMI_EDITOR_SIGNATURE_HELP_INVOKED = 1,
     UMI_EDITOR_SIGNATURE_HELP_TRIGGER_CHARACTER = 2,
@@ -39,6 +43,10 @@ typedef enum UmiEditorSignatureHelpTriggerKind {
     UMI_EDITOR_SIGNATURE_HELP_RETRIGGER = 4
 } UmiEditorSignatureHelpTriggerKind;
 
+/**
+ * Represent the editor signature help item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSignatureHelpItem {
     uint32_t struct_size;
     uint32_t api_version;
@@ -54,6 +62,10 @@ typedef struct UmiEditorSignatureHelpItem {
     int visible;
 } UmiEditorSignatureHelpItem;
 
+/**
+ * Represent the editor signature help context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSignatureHelpContext {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,6 +76,10 @@ typedef struct UmiEditorSignatureHelpContext {
     int has_active_parameter;
 } UmiEditorSignatureHelpContext;
 
+/**
+ * Represent the editor signature help snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSignatureHelpSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -78,49 +94,117 @@ typedef struct UmiEditorSignatureHelpSnapshot {
     int presented;
 } UmiEditorSignatureHelpSnapshot;
 
+/**
+ * Represent the editor signature help model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSignatureHelpModel UmiEditorSignatureHelpModel;
 
+/**
+ * Initialise editor signature help model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_signature_help_model_create(
     UmiEditorSignatureHelpModel **out_model);
+/**
+ * Release or reset state held by editor signature help model so the same storage can be
+ * reused safely.
+ */
 void umi_editor_signature_help_model_destroy(
     UmiEditorSignatureHelpModel *model);
+/**
+ * Release or reset state held by editor signature help model so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_signature_help_model_clear(
     UmiEditorSignatureHelpModel *model);
+/**
+ * Provide the editor signature help model upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_signature_help_model_upsert(
     UmiEditorSignatureHelpModel *model,
     const UmiEditorSignatureHelpItem *item);
+/**
+ * Remove editor signature help model while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_signature_help_model_remove(
     UmiEditorSignatureHelpModel *model,
     const char *signature_id);
+/**
+ * Provide the editor signature help model sort operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_signature_help_model_sort(
     UmiEditorSignatureHelpModel *model);
+/**
+ * Provide the editor signature help model set context operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_signature_help_model_set_context(
     UmiEditorSignatureHelpModel *model,
     const UmiEditorSignatureHelpContext *context);
+/**
+ * Provide the editor signature help model set active operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_signature_help_model_set_active(
     UmiEditorSignatureHelpModel *model,
     const char *signature_id);
+/**
+ * Provide the editor signature help model select next operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_signature_help_model_select_next(
     UmiEditorSignatureHelpModel *model,
     int wrap);
+/**
+ * Provide the editor signature help model select previous operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_signature_help_model_select_previous(
     UmiEditorSignatureHelpModel *model,
     int wrap);
+/**
+ * Provide the editor signature help model set presented operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_signature_help_model_set_presented(
     UmiEditorSignatureHelpModel *model,
     int presented);
+/**
+ * Find editor signature help model while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_signature_help_model_at(
     const UmiEditorSignatureHelpModel *model,
     size_t index,
     UmiEditorSignatureHelpItem *out_item);
+/**
+ * Provide the editor signature help model active operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_signature_help_model_active(
     const UmiEditorSignatureHelpModel *model,
     UmiEditorSignatureHelpItem *out_item);
+/**
+ * Provide the editor signature help model snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_signature_help_model_snapshot(
     const UmiEditorSignatureHelpModel *model,
     UmiEditorSignatureHelpSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor signature help model without changing
+ * their state.
+ */
 size_t umi_editor_signature_help_model_count(
     const UmiEditorSignatureHelpModel *model);
+/**
+ * Provide the editor signature help model revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_signature_help_model_revision(
     const UmiEditorSignatureHelpModel *model);
 

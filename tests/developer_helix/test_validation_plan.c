@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/validation_plan.h"
-int main(void){ UmiHelixValidationPlan p={0}; UmiHelixValidationGate g; umi_helix_validation_gate_init(&g,"tests"); g.threshold=1.0; g.blocking=true; if(umi_helix_validation_plan_add(&p,&g)!=UMI_STATUS_OK||umi_helix_validation_plan_ready(&p)){ return 1; } if(umi_helix_validation_plan_record(&p,0,true)!=UMI_STATUS_OK||!umi_helix_validation_plan_ready(&p)){ return 2; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixValidationPlan p={0}; UmiHelixValidationGate g; umi_helix_validation_gate_init(&g,"tests"); g.threshold=1.0; g.blocking=true; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_validation_plan_add(&p,&g)!=UMI_STATUS_OK||umi_helix_validation_plan_ready(&p)){ return 1; } /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_validation_plan_record(&p,0,true)!=UMI_STATUS_OK||!umi_helix_validation_plan_ready(&p)){ return 2; } return 0; }

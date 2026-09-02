@@ -19,7 +19,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding runtime language for path operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_coding_runtime_language_for_path(const char *path);
+/**
+ * Provide the ai coding runtime path is text source operation used by this module and its
+ * client applications.
+ */
 int umi_ai_coding_runtime_path_is_text_source(const char *path);
 #ifdef __cplusplus
 }

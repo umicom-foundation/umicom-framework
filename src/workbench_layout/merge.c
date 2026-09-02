@@ -22,10 +22,15 @@
 
 #include "internal.h"
 
+/* Provide the node equal operation used by this module and its client applications. */
 static bool node_equal(
     const UmiWorkbenchLayoutNode *left,
     const UmiWorkbenchLayoutNode *right)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL) {
         return left == right;
     }
@@ -61,6 +66,7 @@ static bool node_equal(
                   sizeof(left->child_indices)) == 0;
 }
 
+/* Provide the metadata equal operation used by this module and its client applications. */
 static bool metadata_equal(
     const UmiWorkbenchLayoutDocument *left,
     const UmiWorkbenchLayoutDocument *right)
@@ -76,10 +82,15 @@ static bool metadata_equal(
                   sizeof(left->tags)) == 0;
 }
 
+/* Provide the node hash operation used by this module and its client applications. */
 static uint64_t node_hash(
     const UmiWorkbenchLayoutNode *node)
 {
     uint64_t hash = UMI_WORKBENCH_LAYOUT_FNV_OFFSET;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return 0U;
     }
@@ -113,12 +124,20 @@ static uint64_t node_hash(
     return hash;
 }
 
+/*
+ * Provide the conflict value node operation used by this module and its client
+ * applications.
+ */
 static UmiStatus conflict_value_node(
     char *buffer,
     size_t capacity,
     const UmiWorkbenchLayoutNode *node,
     const char *absent_text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return umi_workbench_layout_copy_text(
             buffer, capacity, absent_text, false);
@@ -131,6 +150,7 @@ static UmiStatus conflict_value_node(
         node_hash(node));
 }
 
+/* Provide the add conflict operation used by this module and its client applications. */
 static UmiStatus add_conflict(
     UmiWorkbenchLayoutMergePlan *plan,
     UmiWorkbenchLayoutConflictKind kind,
@@ -144,11 +164,16 @@ static UmiStatus add_conflict(
     UmiWorkbenchLayoutMergeConflict *conflict;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || field == NULL ||
         base_value == NULL || local_value == NULL ||
         remote_value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (plan->conflict_count >=
         UMI_WORKBENCH_LAYOUT_MAX_CONFLICTS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -165,6 +190,7 @@ static UmiStatus add_conflict(
         sizeof(conflict->conflict_id),
         "conflict-%zu",
         plan->conflict_count + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             conflict->node_id,
@@ -172,6 +198,7 @@ static UmiStatus add_conflict(
             node_id != NULL ? node_id : "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             conflict->field,
@@ -179,6 +206,7 @@ static UmiStatus add_conflict(
             field,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             conflict->base_value,
@@ -186,6 +214,7 @@ static UmiStatus add_conflict(
             base_value,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             conflict->local_value,
@@ -193,6 +222,7 @@ static UmiStatus add_conflict(
             local_value,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             conflict->remote_value,
@@ -200,6 +230,7 @@ static UmiStatus add_conflict(
             remote_value,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)memset(conflict, 0, sizeof(*conflict));
         return status;
@@ -209,18 +240,27 @@ static UmiStatus add_conflict(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the replace or add node operation used by this module and its client
+ * applications.
+ */
 static UmiStatus replace_or_add_node(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutNode *node)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || node == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = umi_workbench_layout_document_find_node_index(
         document, node->node_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         return umi_workbench_layout_document_add_node(
             document, node, NULL);
@@ -232,10 +272,15 @@ static UmiStatus replace_or_add_node(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the remove node if present operation used by this module and its client
+ * applications.
+ */
 static UmiStatus remove_node_if_present(
     UmiWorkbenchLayoutDocument *document,
     const char *node_id)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_document_find_node(
             document, node_id) == NULL) {
         return UMI_STATUS_OK;
@@ -244,16 +289,22 @@ static UmiStatus remove_node_if_present(
         document, node_id, true);
 }
 
+/*
+ * Provide the default resolution operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchLayoutMergeResolution default_resolution(
     const UmiWorkbenchLayoutMergeOptions *options,
     bool metadata)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (metadata && options->prefer_local_for_metadata) {
         return UMI_WORKBENCH_LAYOUT_MERGE_USE_LOCAL;
     }
     return UMI_WORKBENCH_LAYOUT_MERGE_UNRESOLVED;
 }
 
+/* Provide the merge metadata operation used by this module and its client applications. */
 static UmiStatus merge_metadata(
     const UmiWorkbenchLayoutDocument *base,
     const UmiWorkbenchLayoutDocument *local,
@@ -266,12 +317,14 @@ static UmiStatus merge_metadata(
     bool remote_changed = !metadata_equal(base, remote);
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!local_changed && remote_changed) {
         status = umi_workbench_layout_document_set_metadata(
             document,
             remote->name,
             remote->category,
             remote->description);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -284,14 +337,17 @@ static UmiStatus merge_metadata(
         plan->automatically_merged_count += 1U;
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (local_changed && !remote_changed) {
         *document = *local;
         plan->automatically_merged_count += 1U;
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!local_changed && !remote_changed) {
         return UMI_STATUS_OK;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (metadata_equal(local, remote)) {
         *document = *local;
         plan->automatically_merged_count += 1U;
@@ -307,15 +363,18 @@ static UmiStatus merge_metadata(
         local->name,
         remote->name,
         default_resolution(options, true));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (options->prefer_local_for_metadata) {
         *document = *local;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the merge one node operation used by this module and its client applications. */
 static UmiStatus merge_one_node(
     const UmiWorkbenchLayoutDocument *base,
     const UmiWorkbenchLayoutDocument *local,
@@ -336,10 +395,20 @@ static UmiStatus merge_one_node(
     char remote_value[UMI_WORKBENCH_LAYOUT_TEXT_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (base_node == NULL) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (local_node != NULL && remote_node == NULL) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (options->preserve_local_additions) {
                 status = replace_or_add_node(document, local_node);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status == UMI_STATUS_OK) {
                     plan->automatically_merged_count += 1U;
                 }
@@ -347,9 +416,15 @@ static UmiStatus merge_one_node(
             }
             return UMI_STATUS_OK;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (local_node == NULL && remote_node != NULL) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (options->preserve_remote_additions) {
                 status = replace_or_add_node(document, remote_node);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status == UMI_STATUS_OK) {
                     plan->automatically_merged_count += 1U;
                 }
@@ -357,9 +432,15 @@ static UmiStatus merge_one_node(
             }
             return UMI_STATUS_OK;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (local_node != NULL && remote_node != NULL) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (node_equal(local_node, remote_node)) {
                 status = replace_or_add_node(document, local_node);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status == UMI_STATUS_OK) {
                     plan->automatically_merged_count += 1U;
                 }
@@ -387,17 +468,28 @@ static UmiStatus merge_one_node(
         return UMI_STATUS_OK;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (local_node == NULL && remote_node == NULL) {
         status = remove_node_if_present(document, node_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             plan->automatically_merged_count += 1U;
         }
         return status;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (local_node == NULL && remote_node != NULL) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (node_equal(base_node, remote_node)) {
             status = remove_node_if_present(document, node_id);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 plan->automatically_merged_count += 1U;
             }
@@ -422,9 +514,15 @@ static UmiStatus merge_one_node(
             UMI_WORKBENCH_LAYOUT_MERGE_UNRESOLVED);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (local_node != NULL && remote_node == NULL) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (node_equal(base_node, local_node)) {
             status = remove_node_if_present(document, node_id);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 plan->automatically_merged_count += 1U;
             }
@@ -449,23 +547,29 @@ static UmiStatus merge_one_node(
             UMI_WORKBENCH_LAYOUT_MERGE_UNRESOLVED);
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (node_equal(local_node, remote_node)) {
         status = replace_or_add_node(document, local_node);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK &&
             !node_equal(base_node, local_node)) {
             plan->automatically_merged_count += 1U;
         }
         return status;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (node_equal(base_node, local_node)) {
         status = replace_or_add_node(document, remote_node);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             plan->automatically_merged_count += 1U;
         }
         return status;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (node_equal(base_node, remote_node)) {
         status = replace_or_add_node(document, local_node);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             plan->automatically_merged_count += 1U;
         }
@@ -489,6 +593,10 @@ static UmiStatus merge_one_node(
         UMI_WORKBENCH_LAYOUT_MERGE_UNRESOLVED);
 }
 
+/*
+ * Provide the identifier already processed operation used by this module and its client
+ * applications.
+ */
 static bool identifier_already_processed(
     char processed[UMI_WORKBENCH_LAYOUT_MAX_NODES * 3U]
                   [UMI_WORKBENCH_LAYOUT_ID_CAPACITY],
@@ -496,7 +604,9 @@ static bool identifier_already_processed(
     const char *node_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < processed_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(processed[index], node_id) == 0) {
             return true;
         }
@@ -504,6 +614,7 @@ static bool identifier_already_processed(
     return false;
 }
 
+/* Provide the merge node sets operation used by this module and its client applications. */
 static UmiStatus merge_node_sets(
     const UmiWorkbenchLayoutDocument *base,
     const UmiWorkbenchLayoutDocument *local,
@@ -523,18 +634,21 @@ static UmiStatus merge_node_sets(
     UmiStatus status = UMI_STATUS_OK;
 
     (void)memset(processed, 0, sizeof(processed));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (document_index = 0U;
          document_index < 3U && status == UMI_STATUS_OK;
          ++document_index) {
         const UmiWorkbenchLayoutDocument *source =
             documents[document_index];
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (node_index = 0U;
              node_index < source->node_count &&
              status == UMI_STATUS_OK;
              ++node_index) {
             const char *node_id = source->nodes[node_index].node_id;
 
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (identifier_already_processed(
                     processed, processed_count, node_id)) {
                 continue;
@@ -544,6 +658,7 @@ static UmiStatus merge_node_sets(
                 sizeof(processed[processed_count]),
                 node_id,
                 false);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
@@ -561,6 +676,10 @@ static UmiStatus merge_node_sets(
     return status;
 }
 
+/*
+ * Provide the select conflict node operation used by this module and its client
+ * applications.
+ */
 static UmiStatus select_conflict_node(
     const UmiWorkbenchLayoutDocument *base,
     const UmiWorkbenchLayoutDocument *local,
@@ -569,6 +688,10 @@ static UmiStatus select_conflict_node(
     const UmiWorkbenchLayoutNode **out_node,
     bool *out_remove)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (conflict == NULL || out_node == NULL ||
         out_remove == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -576,6 +699,7 @@ static UmiStatus select_conflict_node(
     *out_node = NULL;
     *out_remove = false;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (conflict->resolution) {
     case UMI_WORKBENCH_LAYOUT_MERGE_USE_BASE:
         *out_node = umi_workbench_layout_document_find_node(
@@ -599,6 +723,10 @@ static UmiStatus select_conflict_node(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout merge options default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutMergeOptions
 umi_workbench_layout_merge_options_default(void)
 {
@@ -613,9 +741,17 @@ umi_workbench_layout_merge_options_default(void)
     return options;
 }
 
+/*
+ * Initialise workbench layout merge plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_merge_plan_init(
     UmiWorkbenchLayoutMergePlan *plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) {
         return;
     }
@@ -624,6 +760,10 @@ void umi_workbench_layout_merge_plan_init(
     plan->complete = true;
 }
 
+/*
+ * Provide the workbench layout merge three way operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_merge_three_way(
     const UmiWorkbenchLayoutDocument *base,
     const UmiWorkbenchLayoutDocument *local,
@@ -635,6 +775,10 @@ UmiStatus umi_workbench_layout_merge_three_way(
     UmiWorkbenchLayoutMergeOptions effective;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (base == NULL || local == NULL || remote == NULL ||
         out_plan == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -646,6 +790,7 @@ UmiStatus umi_workbench_layout_merge_three_way(
     umi_workbench_layout_merge_plan_init(out_plan);
     status = umi_workbench_layout_document_copy(
         out_document, base);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = merge_metadata(
             base,
@@ -655,6 +800,7 @@ UmiStatus umi_workbench_layout_merge_three_way(
             out_plan,
             out_document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = merge_node_sets(
             base,
@@ -664,6 +810,7 @@ UmiStatus umi_workbench_layout_merge_three_way(
             out_plan,
             out_document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         out_plan->complete = false;
         return status;
@@ -673,6 +820,7 @@ UmiStatus umi_workbench_layout_merge_three_way(
         umi_workbench_layout_merge_unresolved_count(out_plan) == 0U;
     umi_workbench_layout_document_refresh_hash(out_document);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!out_plan->complete &&
         effective.reject_unresolved_conflicts) {
         return UMI_STATUS_BUSY;
@@ -680,6 +828,10 @@ UmiStatus umi_workbench_layout_merge_three_way(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout merge resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_merge_resolve(
     UmiWorkbenchLayoutMergePlan *plan,
     const char *conflict_id,
@@ -689,6 +841,10 @@ UmiStatus umi_workbench_layout_merge_resolve(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL ||
         !umi_workbench_layout_text_present(conflict_id) ||
         resolution < UMI_WORKBENCH_LAYOUT_MERGE_USE_BASE ||
@@ -696,24 +852,28 @@ UmiStatus umi_workbench_layout_merge_resolve(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->conflict_count; ++index) {
         UmiWorkbenchLayoutMergeConflict *conflict =
             &plan->conflicts[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_workbench_layout_text_equal(
                 conflict->conflict_id, conflict_id)) {
             continue;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (resolution == UMI_WORKBENCH_LAYOUT_MERGE_USE_CUSTOM) {
             status = umi_workbench_layout_copy_text(
                 conflict->custom_value,
                 sizeof(conflict->custom_value),
                 custom_value != NULL ? custom_value : "",
                 false);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             conflict->custom_value[0] = '\0';
         }
         conflict->resolution = resolution;
@@ -724,6 +884,10 @@ UmiStatus umi_workbench_layout_merge_resolve(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the workbench layout merge apply resolutions operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_merge_apply_resolutions(
     const UmiWorkbenchLayoutDocument *base,
     const UmiWorkbenchLayoutDocument *local,
@@ -737,10 +901,15 @@ UmiStatus umi_workbench_layout_merge_apply_resolutions(
     UmiStatus status;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (base == NULL || local == NULL || remote == NULL ||
         plan == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_merge_unresolved_count(plan) > 0U) {
         return UMI_STATUS_BUSY;
     }
@@ -753,44 +922,54 @@ UmiStatus umi_workbench_layout_merge_apply_resolutions(
         &options,
         &automatic_plan,
         out_document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK && status != UMI_STATUS_BUSY) {
         return status;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->conflict_count; ++index) {
         const UmiWorkbenchLayoutMergeConflict *conflict =
             &plan->conflicts[index];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (conflict->kind ==
             UMI_WORKBENCH_LAYOUT_CONFLICT_METADATA) {
             const UmiWorkbenchLayoutDocument *source = NULL;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (conflict->resolution ==
                 UMI_WORKBENCH_LAYOUT_MERGE_USE_BASE) {
                 source = base;
-            } else if (conflict->resolution ==
+            } else /* Apply this branch only when its contract condition is satisfied. */ if (conflict->resolution ==
                        UMI_WORKBENCH_LAYOUT_MERGE_USE_LOCAL) {
                 source = local;
-            } else if (conflict->resolution ==
+            } else /* Apply this branch only when its contract condition is satisfied. */ if (conflict->resolution ==
                        UMI_WORKBENCH_LAYOUT_MERGE_USE_REMOTE) {
                 source = remote;
-            } else if (conflict->resolution ==
+            } else /* Apply this branch only when its contract condition is satisfied. */ if (conflict->resolution ==
                        UMI_WORKBENCH_LAYOUT_MERGE_USE_CUSTOM) {
                 status = umi_workbench_layout_copy_text(
                     out_document->name,
                     sizeof(out_document->name),
                     conflict->custom_value,
                     false);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) {
                     return status;
                 }
                 continue;
             }
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (source != NULL) {
                 status = umi_workbench_layout_document_set_metadata(
                     out_document,
                     source->name,
                     source->category,
                     source->description);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) {
                     return status;
                 }
@@ -814,16 +993,19 @@ UmiStatus umi_workbench_layout_merge_apply_resolutions(
                 conflict,
                 &selected_node,
                 &remove_selected);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (remove_selected) {
                 status = remove_node_if_present(
                     out_document, conflict->node_id);
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = replace_or_add_node(
                     out_document, selected_node);
             }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
@@ -834,27 +1016,45 @@ UmiStatus umi_workbench_layout_merge_apply_resolutions(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench layout merge conflict while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchLayoutMergeConflict *
 umi_workbench_layout_merge_conflict_at(
     const UmiWorkbenchLayoutMergePlan *plan,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || index >= plan->conflict_count) {
         return NULL;
     }
     return &plan->conflicts[index];
 }
 
+/*
+ * Return the number of records represented by workbench layout merge unresolved without
+ * changing their state.
+ */
 size_t umi_workbench_layout_merge_unresolved_count(
     const UmiWorkbenchLayoutMergePlan *plan)
 {
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->conflict_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (plan->conflicts[index].resolution ==
             UMI_WORKBENCH_LAYOUT_MERGE_UNRESOLVED) {
             count += 1U;

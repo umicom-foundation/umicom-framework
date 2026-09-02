@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb session snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbSessionSnapshot { char active_id[UMI_EDITOR_WB_ID_CAPACITY]; size_t item_count; size_t group_count; uint64_t revision; uint64_t fingerprint; } UmiEditorWbSessionSnapshot;
+/**
+ * Provide the editor wb session snapshot capture operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_wb_session_snapshot_capture(UmiEditorWbSessionSnapshot *state,const char *active_id,size_t item_count,size_t group_count,uint64_t revision); int umi_editor_wb_session_snapshot_valid(const UmiEditorWbSessionSnapshot *state);
 
 #ifdef __cplusplus

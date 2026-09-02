@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress scenario data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressScenario { char scenario_id[UMI_PRU_ID_CAPACITY]; char name[UMI_PRU_NAME_CAPACITY]; UmiPrudentialSeverity severity; uint32_t horizon_days; } UmiPrudentialStressScenario;
 /* Initialise one governed enterprise stress scenario. */
 UmiStatus umi_pru_stress_scenario_init(UmiPrudentialStressScenario *scenario, const char *scenario_id, const char *display_name, UmiPrudentialSeverity severity, uint32_t horizon_days);

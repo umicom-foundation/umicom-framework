@@ -75,12 +75,20 @@ static const UmiDeveloperWorkbenchCommandDefinition COMMANDS[] = {
     }
 };
 
+/*
+ * Provide the developer workbench file commands operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchCommandDefinition *
 umi_developer_workbench_file_commands(void)
 {
     return COMMANDS;
 }
 
+/*
+ * Return the number of records represented by developer workbench file command without
+ * changing their state.
+ */
 size_t umi_developer_workbench_file_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);

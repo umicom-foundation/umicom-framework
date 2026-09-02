@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace cmake cache entry data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceCmakeCacheEntry {
         char key[UMI_PROJECT_WORKSPACE_NAME_CAPACITY];
         char type[64];

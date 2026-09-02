@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_UTF16BE_ENCODING "umicom.document.encoding.utf16be_encoding"
 
+/**
+ * Provide the document capability utf16be encoding operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_utf16be_encoding(void);
 

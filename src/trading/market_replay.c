@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/market_replay.h"
+/*
+ * Provide the market replay in window operation used by this module and its client
+ * applications.
+ */
 int umi_market_replay_in_window(const UmiReplayEvent *e,int64_t start,int64_t end){return e!=NULL&&start<=e->event_time_ms&&e->event_time_ms<=end;}

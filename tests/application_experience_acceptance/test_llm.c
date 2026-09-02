@@ -18,6 +18,10 @@
 
 #include "umicom/application/experiences/experiences.h"
 
+/*
+ * Exercise test application experience acceptance llm and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_application_experience_acceptance_llm(void)
 {
     const UmiApplicationExperienceDefinition *definition =

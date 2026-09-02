@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reg attestation data shared with callers of this public contract.
+ */
 typedef struct UmiRegAttestation {
     char attestation_id[UMI_REG_ID_CAPACITY];
     char report_id[UMI_REG_ID_CAPACITY];

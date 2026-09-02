@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the self trade risk operation used by this module and its client applications.
+ */
 int umi_self_trade_risk(const UmiOrderRequest *left, const UmiOrderRequest *right);
 #ifdef __cplusplus
 }

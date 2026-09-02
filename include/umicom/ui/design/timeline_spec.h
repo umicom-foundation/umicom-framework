@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design timeline spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTimelineSpec {
     uint16_t tracks;
     double pixels_per_unit;

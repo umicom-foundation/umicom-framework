@@ -24,6 +24,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the product manifest format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_product_manifest_format(const UmiProductProfile *profile,char *buffer,size_t capacity);
 #ifdef __cplusplus
 }

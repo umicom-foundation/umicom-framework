@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise ide view factory from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_view_factory_create(
     UmiIdeIntegrationPlatform *platform,
     const char *view_id,

@@ -33,16 +33,27 @@ typedef UmiStatus (*UmiSignFn)(void *instance,
                                const char *digest,
                                UmiSignatureRecord *signature);
 
+/**
+ * Represent the signing provider data shared with callers of this public contract.
+ */
 typedef struct UmiSigningProvider {
     char provider_id[UMI_DELIVERY_ID_CAPACITY];
     void *instance;
     UmiSignFn sign;
 } UmiSigningProvider;
 
+/**
+ * Initialise signing provider from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_signing_provider_init(UmiSigningProvider *provider,
                                     const char *provider_id,
                                     void *instance,
                                     UmiSignFn sign);
+/**
+ * Provide the signing provider sign operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_signing_provider_sign(const UmiSigningProvider *provider,
                                     const char *artifact_id,
                                     const char *digest,

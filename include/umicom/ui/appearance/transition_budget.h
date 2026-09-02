@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance transition budget data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceTransitionBudget {
     char budget_id[UMI_APPEARANCE_ID_CAPACITY];
     uint32_t max_concurrent;

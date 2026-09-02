@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide active context data shared with callers of this public contract.
+ */
 typedef struct UmiIdeActiveContext {
     UmiDocumentWorkingCopySnapshot document;
     UmiDeveloperProblemStoreSnapshot problems;
@@ -37,6 +40,10 @@ typedef struct UmiIdeActiveContext {
     int has_ai;
 } UmiIdeActiveContext;
 
+/**
+ * Provide the ide active context snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_active_context_snapshot(
     const UmiIdeIntegrationBindings *bindings,
     const char *workspace_root,

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test dependency duplicate and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_dependency_duplicate(void)
 {
     UmiProductExecutionDependencyGraph g; umi_product_execution_dependency_graph_init(&g); assert(umi_product_execution_dependency_add(&g,0U,1U,2U)==UMI_STATUS_OK); assert(umi_product_execution_dependency_add(&g,0U,1U,2U)==UMI_STATUS_ALREADY_EXISTS);

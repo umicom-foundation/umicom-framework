@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the delivery health data shared with callers of this public contract.
+ */
 typedef struct UmiDeliveryHealth {
     int ready;
     int live;
@@ -34,7 +37,15 @@ typedef struct UmiDeliveryHealth {
     uint32_t checks_failed;
     char message[UMI_DELIVERY_TEXT_CAPACITY];
 } UmiDeliveryHealth;
+/**
+ * Initialise delivery health from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_delivery_health_init(UmiDeliveryHealth *health);
+/**
+ * Provide the delivery health acceptable operation used by this module and its client
+ * applications.
+ */
 int umi_delivery_health_acceptable(const UmiDeliveryHealth *health);
 
 #ifdef __cplusplus

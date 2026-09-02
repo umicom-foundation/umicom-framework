@@ -22,11 +22,19 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap factory descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_factory_descriptor_init(
     UmiBootstrapFactoryDescriptor *descriptor,
     const char *factory_id,
     const UmiBootstrapServiceKey *produces,
     int32_t priority);
+/**
+ * Check that bootstrap factory descriptor satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_bootstrap_factory_descriptor_valid(
     const UmiBootstrapFactoryDescriptor *descriptor);
 

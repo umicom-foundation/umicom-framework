@@ -40,6 +40,9 @@ typedef int (*UmiApplicationCapabilityProbe)(
     const char *capability_id,
     void *user_data);
 
+/**
+ * List the named application panel visibility values accepted by this public contract.
+ */
 typedef enum UmiApplicationPanelVisibility {
     UMI_APPLICATION_PANEL_HIDDEN = 0,
     UMI_APPLICATION_PANEL_VISIBLE = 1,
@@ -47,12 +50,18 @@ typedef enum UmiApplicationPanelVisibility {
     UMI_APPLICATION_PANEL_FLOATING = 3
 } UmiApplicationPanelVisibility;
 
+/**
+ * List the named application health severity values accepted by this public contract.
+ */
 typedef enum UmiApplicationHealthSeverity {
     UMI_APPLICATION_HEALTH_READY = 0,
     UMI_APPLICATION_HEALTH_DEGRADED = 1,
     UMI_APPLICATION_HEALTH_BLOCKED = 2
 } UmiApplicationHealthSeverity;
 
+/**
+ * List the named application lifecycle phase values accepted by this public contract.
+ */
 typedef enum UmiApplicationLifecyclePhase {
     UMI_APPLICATION_LIFECYCLE_DISCOVERED = 0,
     UMI_APPLICATION_LIFECYCLE_CONFIGURED = 1,
@@ -63,6 +72,9 @@ typedef enum UmiApplicationLifecyclePhase {
     UMI_APPLICATION_LIFECYCLE_DESTROYED = 6
 } UmiApplicationLifecyclePhase;
 
+/**
+ * List the named application command kind values accepted by this public contract.
+ */
 typedef enum UmiApplicationCommandKind {
     UMI_APPLICATION_COMMAND_ACTIVATE_PANEL = 1,
     UMI_APPLICATION_COMMAND_SELECT_LAYOUT = 2,
@@ -70,6 +82,9 @@ typedef enum UmiApplicationCommandKind {
     UMI_APPLICATION_COMMAND_ACTIVATE_FEATURE = 4
 } UmiApplicationCommandKind;
 
+/**
+ * List the named application operation kind values accepted by this public contract.
+ */
 typedef enum UmiApplicationOperationKind {
     UMI_APPLICATION_OPERATION_SESSION_START = 1,
     UMI_APPLICATION_OPERATION_LAYOUT_CHANGE = 2,

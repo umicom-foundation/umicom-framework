@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/manifest_snapshot.h"
 
+/**
+ * List the named application production manifest drift flags values accepted by this
+ * public contract.
+ */
 typedef enum UmiApplicationProductionManifestDriftFlags {
     UMI_APPLICATION_PRODUCTION_DRIFT_NONE = 0U,
     UMI_APPLICATION_PRODUCTION_DRIFT_IDENTITY = 1U << 0,
@@ -35,12 +39,20 @@ typedef enum UmiApplicationProductionManifestDriftFlags {
     UMI_APPLICATION_PRODUCTION_DRIFT_AVAILABILITY = 1U << 6
 } UmiApplicationProductionManifestDriftFlags;
 
+/**
+ * Represent the application production manifest drift data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionManifestDrift {
     uint32_t flags;
     size_t difference_count;
     int compatible;
 } UmiApplicationProductionManifestDrift;
 
+/**
+ * Provide the application production manifest drift compare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_manifest_drift_compare(
     const UmiApplicationProductionManifestContract *expected,
     const UmiApplicationProductionManifestSnapshot *actual,

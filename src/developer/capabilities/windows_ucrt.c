@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/windows_ucrt.h"
 
+/*
+ * Provide the developer capability windows ucrt operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_windows_ucrt(void)
 {

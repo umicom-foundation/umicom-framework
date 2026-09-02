@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_NEXT_MATCH_COMMAND "umicom.document.navigation.next_match_command"
 
+/**
+ * Provide the document capability next match command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_next_match_command(void);
 

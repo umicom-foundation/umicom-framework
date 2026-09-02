@@ -38,11 +38,19 @@ static const TemplateFactory FACTORIES[] = {
     umi_developer_project_template_python_tool
 };
 
+/*
+ * Return the number of records represented by developer project builtin template without
+ * changing their state.
+ */
 size_t umi_developer_project_builtin_template_count(void)
 {
     return sizeof(FACTORIES) / sizeof(FACTORIES[0]);
 }
 
+/*
+ * Find developer project builtin template while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperProjectTemplate *
 umi_developer_project_builtin_template_at(size_t index)
 {
@@ -51,19 +59,29 @@ umi_developer_project_builtin_template_at(size_t index)
         : NULL;
 }
 
+/*
+ * Add developer project builtin templates only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_developer_project_builtin_templates_register(
     UmiDeveloperProjectTemplateRegistry *registry)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_developer_project_builtin_template_count();
          ++index) {
         const UmiStatus status =
             umi_developer_project_template_registry_register(
                 registry, FACTORIES[index]());
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

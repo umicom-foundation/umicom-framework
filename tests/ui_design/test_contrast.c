@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/contrast.h"
 
-int main(void){UmiDesignRgba a,b;double ratio=0.0;if(umi_design_color_make(0.0,0.0,0.0,1.0,&a)!=UMI_STATUS_OK)return 1;if(umi_design_color_make(1.0,1.0,1.0,1.0,&b)!=UMI_STATUS_OK)return 2;if(umi_design_contrast_ratio(a,b,&ratio)!=UMI_STATUS_OK)return 3;return umi_design_contrast_passes(ratio,7.0)?0:4;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignRgba a,b;double ratio=0.0;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_color_make(0.0,0.0,0.0,1.0,&a)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_color_make(1.0,1.0,1.0,1.0,&b)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_contrast_ratio(a,b,&ratio)!=UMI_STATUS_OK)return 3;return umi_design_contrast_passes(ratio,7.0)?0:4;}

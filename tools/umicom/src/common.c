@@ -21,6 +21,7 @@
 
 #include "umicom/toolchain/operation_context.h"
 
+/* Provide the cli print help operation used by this module and its client applications. */
 void umi_cli_print_help(void)
 {
     (void)puts(
@@ -97,6 +98,10 @@ void umi_cli_print_help(void)
 }
 
 
+/*
+ * Provide the cli print repo help operation used by this module and its client
+ * applications.
+ */
 void umi_cli_print_repo_help(void)
 {
     (void)puts(
@@ -137,9 +142,17 @@ void umi_cli_print_repo_help(void)
     );
 }
 
+/*
+ * Provide the cli diagnostic sink operation used by this module and its client
+ * applications.
+ */
 void umi_cli_diagnostic_sink(const UmiDiagnostic *diagnostic, void *user_data)
 {
     (void)user_data;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diagnostic == NULL) return;
     (void)fprintf(stderr,
                   "[%s][%s] %s\n",
@@ -148,6 +161,10 @@ void umi_cli_diagnostic_sink(const UmiDiagnostic *diagnostic, void *user_data)
                   diagnostic->message != NULL ? diagnostic->message : "");
 }
 
+/*
+ * Provide the cli context prepare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_cli_context_prepare(UmiCliContext *context,
                                   const char *project_root,
                                   int require_gtk,
@@ -156,17 +173,26 @@ UmiStatus umi_cli_context_prepare(UmiCliContext *context,
     UmiToolchainDiscoveryRequest request;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(context, 0, sizeof(*context));
     context->template_root = UMICOM_REPOSITORY_TEMPLATE_ROOT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_root != NULL && project_root[0] != '\0') {
         (void)snprintf(context->project_root,
                        sizeof(context->project_root),
                        "%s",
                        project_root);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_fs_current_directory(context->project_root,
                                           sizeof(context->project_root));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -175,9 +201,11 @@ UmiStatus umi_cli_context_prepare(UmiCliContext *context,
     request.require_github_cli = require_github_cli;
     request.diagnostic_sink = umi_cli_diagnostic_sink;
     status = umi_toolchain_discover(&request, &context->discovery);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_environment_plan_from_toolchain(&context->discovery.profile,
                                                  &context->environment);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->environment_ready = 1;
     return status;
 }
@@ -200,21 +228,35 @@ UmiStatus umi_cli_context_prepare_operation(
     UmiToolchainOperationContext *operation_context = NULL;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(context, 0, sizeof(*context));
     context->template_root = UMICOM_REPOSITORY_TEMPLATE_ROOT;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_root != NULL && project_root[0] != '\0') {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strlen(project_root) >= sizeof(context->project_root)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         (void)snprintf(context->project_root, sizeof(context->project_root), "%s", project_root);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_fs_current_directory(context->project_root, sizeof(context->project_root));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     operation_context = (UmiToolchainOperationContext *)calloc(1U, sizeof(*operation_context));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation_context == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = umi_toolchain_operation_context_prepare(
@@ -224,6 +266,7 @@ UmiStatus umi_cli_context_prepare_operation(
         umi_cli_diagnostic_sink,
         NULL,
         operation_context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         context->discovery.profile = operation_context->discovery.profile;
         context->discovery.tools_found = operation_context->discovery.tools_found;

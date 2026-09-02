@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/gtk4/feedback.h"
+/*
+ * Provide the gtk4 status message new operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_status_message_new(const UmiUiComponentSpec*s){GtkWidget*w=gtk_label_new(s&&s->text[0]?s->text:"");gtk_widget_add_css_class(w,"dim-label");return w;}

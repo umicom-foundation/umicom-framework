@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_SPLIT "umicom.developer.terminal.terminal_split"
 
+/**
+ * Provide the developer capability terminal split operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_split(void);
 

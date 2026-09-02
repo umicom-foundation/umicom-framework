@@ -40,11 +40,20 @@ struct UmiGtk4Desk {
     UmiDeskRuntime *runtime;
 };
 
+/* Provide the clear box operation used by this module and its client applications. */
 static void clear_box(GtkWidget *box)
 {
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (box == NULL) return;
     child = gtk_widget_get_first_child(box);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_box_remove(GTK_BOX(box), child);
@@ -52,13 +61,22 @@ static void clear_box(GtkWidget *box)
     }
 }
 
+/* Provide the set status operation used by this module and its client applications. */
 static void set_status(UmiGtk4Desk *desk, const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL || desk->status_label == NULL) return;
     gtk_label_set_text(GTK_LABEL(desk->status_label),
                        message != NULL ? message : "");
 }
 
+/*
+ * Provide the make global button operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *make_global_button(const char *label)
 {
     GtkWidget *button = gtk_button_new_with_label(label);
@@ -67,18 +85,34 @@ static GtkWidget *make_global_button(const char *label)
     return button;
 }
 
+/*
+ * Provide the show application chooser operation used by this module and its client
+ * applications.
+ */
 static void show_application_chooser(UmiGtk4Desk *desk)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL || desk->content_stack == NULL) return;
     gtk_stack_set_visible_child_name(
         GTK_STACK(desk->content_stack), "applications");
 }
 
+/*
+ * Provide the refresh selection controls operation used by this module and its client
+ * applications.
+ */
 static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
 {
     UmiApplicationLaunchSelectionSnapshot snapshot;
     UmiStatus status;
     char selection_text[160U];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL || desk->runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -87,6 +121,7 @@ static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
      * and destroying the check button that emitted the current signal. */
     status = umi_application_launch_selection_snapshot(
         umi_desk_runtime_launch_selection(desk->runtime), &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(
         selection_text, sizeof(selection_text),
@@ -94,10 +129,18 @@ static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
         snapshot.selected_count,
         snapshot.eligible_count,
         snapshot.running_count);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk->selection_summary != NULL) {
         gtk_label_set_text(
             GTK_LABEL(desk->selection_summary), selection_text);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk->launch_selected_button != NULL) {
         gtk_widget_set_sensitive(
             desk->launch_selected_button,
@@ -106,6 +149,10 @@ static UmiStatus refresh_selection_controls(UmiGtk4Desk *desk)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the on show applications clicked operation used by this module and its client
+ * applications.
+ */
 static void on_show_applications_clicked(
     GtkButton *button,
     gpointer user_data)
@@ -114,6 +161,10 @@ static void on_show_applications_clicked(
     show_application_chooser((UmiGtk4Desk *)user_data);
 }
 
+/*
+ * Provide the on launch choice toggled operation used by this module and its client
+ * applications.
+ */
 static void on_launch_choice_toggled(
     GtkCheckButton *button,
     gpointer user_data)
@@ -121,33 +172,55 @@ static void on_launch_choice_toggled(
     UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
     const char *application_id;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return;
     application_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-application-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id == NULL) return;
     status = umi_desk_runtime_select_application(
         desk->runtime,
         application_id,
         gtk_check_button_get_active(button));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = refresh_selection_controls(desk);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         set_status(desk, umi_status_text(status));
     }
 }
 
+/*
+ * Provide the on select all clicked operation used by this module and its client
+ * applications.
+ */
 static void on_select_all_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
     UmiStatus status;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return;
     status = umi_desk_runtime_select_all_applications(desk->runtime);
     (void)umi_gtk4_desk_refresh(desk);
     set_status(desk, umi_status_text(status));
 }
 
+/*
+ * Provide the on clear selection clicked operation used by this module and its client
+ * applications.
+ */
 static void on_clear_selection_clicked(
     GtkButton *button,
     gpointer user_data)
@@ -155,12 +228,20 @@ static void on_clear_selection_clicked(
     UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
     UmiStatus status;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return;
     status = umi_desk_runtime_clear_application_selection(desk->runtime);
     (void)umi_gtk4_desk_refresh(desk);
     set_status(desk, umi_status_text(status));
 }
 
+/*
+ * Provide the on launch selected clicked operation used by this module and its client
+ * applications.
+ */
 static void on_launch_selected_clicked(
     GtkButton *button,
     gpointer user_data)
@@ -170,9 +251,14 @@ static void on_launch_selected_clicked(
     UmiStatus status;
     char message[256U];
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return;
     status = umi_desk_runtime_launch_selected_applications(
         desk->runtime, &report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (report.result_count == 0U) {
         set_status(desk, "Choose at least one application to launch.");
         return;
@@ -185,26 +271,40 @@ static void on_launch_selected_clicked(
         report.failed_count);
     (void)umi_gtk4_desk_refresh(desk);
     set_status(desk, message);
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((report.started_count + report.activated_count) > 0U &&
         desk->content_stack != NULL) {
         gtk_stack_set_visible_child_name(
             GTK_STACK(desk->content_stack), "workbench");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         g_printerr("Application launch selection: %s\n",
                    umi_status_text(status));
     }
 }
 
+/*
+ * Provide the on application clicked operation used by this module and its client
+ * applications.
+ */
 static void on_application_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
     const char *application_id;
     UmiStatus status;
     char message[256U];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return;
     application_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-application-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id == NULL) return;
     status = umi_desk_runtime_request_application(
         desk->runtime, application_id,
@@ -215,15 +315,24 @@ static void on_application_clicked(GtkButton *button, gpointer user_data)
     (void)umi_gtk4_desk_refresh(desk);
 }
 
+/* Provide the on layout clicked operation used by this module and its client applications. */
 static void on_layout_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4Desk *desk = (UmiGtk4Desk *)user_data;
     const char *layout_id;
     UmiStatus status;
     char message[256U];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return;
     layout_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-layout-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout_id == NULL) return;
     status = umi_desk_runtime_activate_layout(desk->runtime, layout_id);
     (void)snprintf(message, sizeof(message), "Layout %s: %s",
@@ -232,6 +341,10 @@ static void on_layout_clicked(GtkButton *button, gpointer user_data)
     (void)umi_gtk4_desk_refresh(desk);
 }
 
+/*
+ * Provide the make application button operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *make_application_button(
     UmiGtk4Desk *desk,
     const UmiDesktopApplicationStripItem *item)
@@ -253,9 +366,13 @@ static GtkWidget *make_application_button(
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-desk-application-button");
     gtk_widget_add_css_class(state, "umicom-desk-application-state");
+    /* Apply this operation only while the related capability or state is available. */
     if (item->active) gtk_widget_add_css_class(button, "active");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item->running) gtk_widget_add_css_class(button, "running");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item->pinned) gtk_widget_add_css_class(button, "pinned");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item->attention) {
         gtk_widget_add_css_class(button, "requires-attention");
     }
@@ -287,6 +404,10 @@ static GtkWidget *make_application_button(
     return button;
 }
 
+/*
+ * Provide the make layout button operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *make_layout_button(
     UmiGtk4Desk *desk,
     const UmiDesktopShellTab *tab)
@@ -294,8 +415,11 @@ static GtkWidget *make_layout_button(
     GtkWidget *button = gtk_button_new_with_label(tab->label);
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-desk-layout-button");
+    /* Apply this operation only while the related capability or state is available. */
     if (tab->active) gtk_widget_add_css_class(button, "active");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (tab->dirty) gtk_widget_add_css_class(button, "dirty");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (tab->pinned) gtk_widget_add_css_class(button, "pinned");
     g_object_set_data_full(
         G_OBJECT(button),
@@ -307,6 +431,7 @@ static GtkWidget *make_layout_button(
     return button;
 }
 
+/* Provide the build top bar operation used by this module and its client applications. */
 static GtkWidget *build_top_bar(UmiGtk4Desk *desk)
 {
     GtkWidget *bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
@@ -339,6 +464,10 @@ static GtkWidget *build_top_bar(UmiGtk4Desk *desk)
     return bar;
 }
 
+/*
+ * Provide the make launch choice operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *make_launch_choice(
     UmiGtk4Desk *desk,
     const UmiApplicationLaunchChoice *choice)
@@ -374,6 +503,10 @@ static GtkWidget *make_launch_choice(
     return row;
 }
 
+/*
+ * Provide the build application chooser operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *build_application_chooser(UmiGtk4Desk *desk)
 {
     GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 16);
@@ -433,6 +566,10 @@ static GtkWidget *build_application_chooser(UmiGtk4Desk *desk)
     return page;
 }
 
+/*
+ * Provide the build workbench placeholder operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *build_workbench_placeholder(UmiGtk4Desk *desk)
 {
     GtkWidget *frame = gtk_frame_new(NULL);
@@ -457,6 +594,7 @@ static GtkWidget *build_workbench_placeholder(UmiGtk4Desk *desk)
     return frame;
 }
 
+/* Provide the build bottom area operation used by this module and its client applications. */
 static GtkWidget *build_bottom_area(UmiGtk4Desk *desk)
 {
     GtkWidget *outer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
@@ -488,6 +626,10 @@ static GtkWidget *build_bottom_area(UmiGtk4Desk *desk)
     return outer;
 }
 
+/*
+ * Initialise gtk4 desk from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_gtk4_desk_create(
     void *native_gtk_application,
     UmiDeskRuntime *runtime,
@@ -495,12 +637,20 @@ UmiStatus umi_gtk4_desk_create(
 {
     UmiGtk4Desk *desk;
     GtkWidget *root;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (native_gtk_application == NULL || runtime == NULL ||
         out_desk == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_desk = NULL;
     desk = (UmiGtk4Desk *)calloc(1U, sizeof(*desk));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     desk->application = GTK_APPLICATION(native_gtk_application);
     desk->runtime = runtime;
@@ -537,11 +687,13 @@ UmiStatus umi_gtk4_desk_create(
     return umi_gtk4_desk_refresh(desk);
 }
 
+/* Release or reset state held by gtk4 desk so the same storage can be reused safely. */
 void umi_gtk4_desk_destroy(UmiGtk4Desk *desk)
 {
     free(desk);
 }
 
+/* Provide the gtk4 desk refresh operation used by this module and its client applications. */
 UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
 {
     UmiDeskRuntimeSnapshot snapshot;
@@ -550,38 +702,51 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
     size_t index;
     UmiStatus status;
     char status_text[256U];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL || desk->runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_desk_runtime_refresh(desk->runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_desk_runtime_snapshot(desk->runtime, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     launch_selection = umi_desk_runtime_launch_selection(desk->runtime);
     clear_box(desk->application_choices);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < snapshot.launch_selection.choice_count;
          ++index) {
         UmiApplicationLaunchChoice choice;
         status = umi_application_launch_selection_at(
             launch_selection, index, &choice);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!choice.eligible) continue;
         gtk_box_append(GTK_BOX(desk->application_choices),
                        make_launch_choice(desk, &choice));
     }
     status = refresh_selection_controls(desk);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     strip = umi_desk_runtime_application_strip(desk->runtime);
     clear_box(desk->application_strip);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot.strip.item_count; ++index) {
         UmiDesktopApplicationStripItem item;
         status = umi_desktop_application_strip_at(strip, index, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         gtk_box_append(GTK_BOX(desk->application_strip),
                        make_application_button(desk, &item));
+        /* Apply this operation only while the related capability or state is available. */
         if (item.active) {
             gtk_label_set_text(GTK_LABEL(desk->workbench_title),
                                item.display_name);
@@ -595,11 +760,14 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
     }
 
     clear_box(desk->layout_strip);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot.has_shell) {
         UmiDesktopShellModel *shell = umi_desk_runtime_shell(desk->runtime);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < snapshot.shell.tab_count; ++index) {
             UmiDesktopShellTab tab;
             status = umi_desktop_shell_model_tab_at(shell, index, &tab);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             gtk_box_append(GTK_BOX(desk->layout_strip),
                            make_layout_button(desk, &tab));
@@ -624,8 +792,13 @@ UmiStatus umi_gtk4_desk_refresh(UmiGtk4Desk *desk)
     return UMI_STATUS_OK;
 }
 
+/* Provide the gtk4 desk present operation used by this module and its client applications. */
 UmiStatus umi_gtk4_desk_present(UmiGtk4Desk *desk)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desk == NULL || desk->window == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -633,6 +806,10 @@ UmiStatus umi_gtk4_desk_present(UmiGtk4Desk *desk)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the gtk4 desk native window operation used by this module and its client
+ * applications.
+ */
 void *umi_gtk4_desk_native_window(UmiGtk4Desk *desk)
 {
     return desk != NULL ? desk->window : NULL;

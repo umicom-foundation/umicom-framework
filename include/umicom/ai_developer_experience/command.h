@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai developer command descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperCommandDescriptor {
     const char *command_id;
     const char *label;
@@ -29,9 +33,21 @@ typedef struct UmiAiDeveloperCommandDescriptor {
     int mutates_state;
 } UmiAiDeveloperCommandDescriptor;
 
+/**
+ * Return the number of records represented by ai developer command without changing their
+ * state.
+ */
 size_t umi_ai_developer_command_count(void);
+/**
+ * Find ai developer command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiDeveloperCommandDescriptor *
 umi_ai_developer_command_at(size_t index);
+/**
+ * Find ai developer command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiDeveloperCommandDescriptor *
 umi_ai_developer_command_find(const char *command_id);
 

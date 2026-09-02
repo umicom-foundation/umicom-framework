@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application shell profile definition data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationShellProfileDefinition {
     uint32_t structure_size;
     uint32_t api_version;
@@ -32,9 +36,17 @@ typedef struct UmiApplicationShellProfileDefinition {
     size_t contribution_count;
 } UmiApplicationShellProfileDefinition;
 
+/**
+ * Check that application shell profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_shell_profile_validate(
     const UmiApplicationShellProfileDefinition *profile);
 
+/**
+ * Provide the application shell profile install operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_shell_profile_install(
     UmiApplicationShellRegistry *registry,
     const UmiApplicationShellProfileDefinition *profile);

@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital withdrawal policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalWithdrawalPolicy {
     UmiDigitalAssetId account_id;
     int64_t daily_limit_units;

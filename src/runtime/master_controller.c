@@ -65,6 +65,7 @@ struct UmiMasterController {
     int started;
 };
 
+/* Provide the master now operation used by this module and its client applications. */
 static uint64_t umi_master_now(const UmiMasterController *controller)
 {
     return controller != NULL &&
@@ -73,10 +74,15 @@ static uint64_t umi_master_now(const UmiMasterController *controller)
         : 0U;
 }
 
+/* Provide the master report operation used by this module and its client applications. */
 static void umi_master_report(UmiMasterController *controller,
                               UmiDiagnosticSeverity severity,
                               const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return;
     }
@@ -88,11 +94,16 @@ static void umi_master_report(UmiMasterController *controller,
                         0U);
 }
 
+/* Provide the master health operation used by this module and its client applications. */
 static void umi_master_health(UmiMasterController *controller,
                               const char *component_id,
                               UmiHealthState state,
                               const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->health == NULL) {
         return;
     }
@@ -103,6 +114,10 @@ static void umi_master_health(UmiMasterController *controller,
                                      umi_master_now(controller));
 }
 
+/*
+ * Provide the master register core service operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_master_register_core_service(
     UmiMasterController *controller,
     const char *service_id,
@@ -121,6 +136,10 @@ static UmiStatus umi_master_register_core_service(
     return umi_service_registry_register(controller->services, &descriptor);
 }
 
+/*
+ * Provide the master register core capability operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_master_register_core_capability(
     UmiMasterController *controller,
     const char *capability_id,
@@ -139,6 +158,10 @@ static UmiStatus umi_master_register_core_capability(
                                              &descriptor);
 }
 
+/*
+ * Provide the master register core capabilities operation used by this module and its
+ * client applications.
+ */
 static UmiStatus umi_master_register_core_capabilities(
     UmiMasterController *controller)
 {
@@ -220,6 +243,10 @@ static UmiStatus umi_master_register_core_capabilities(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise master controller from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_master_controller_create(
     const UmiMasterControllerConfig *config,
     UmiMasterController **out_controller)
@@ -227,6 +254,10 @@ UmiStatus umi_master_controller_create(
     UmiMasterController *controller;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || config->application_name == NULL ||
         config->application_name[0] == '\0' || out_controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -234,6 +265,10 @@ UmiStatus umi_master_controller_create(
     *out_controller = NULL;
 
     controller = (UmiMasterController *)calloc(1U, sizeof(*controller));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -246,6 +281,7 @@ UmiStatus umi_master_controller_create(
     controller->diagnostic_user_data = config->diagnostic_user_data;
     controller->clock = umi_clock_system();
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_event_bus_create(&controller->events) != UMI_STATUS_OK ||
         umi_command_bus_create(&controller->commands) != UMI_STATUS_OK ||
         umi_query_bus_create(&controller->queries) != UMI_STATUS_OK ||
@@ -266,6 +302,7 @@ UmiStatus umi_master_controller_create(
     }
 
     status = umi_master_register_core_capabilities(controller);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_master_controller_destroy(controller);
         return status;
@@ -282,26 +319,41 @@ UmiStatus umi_master_controller_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by master controller so the same storage can be reused
+ * safely.
+ */
 void umi_master_controller_destroy(UmiMasterController *controller)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->started) {
         (void)umi_master_controller_stop(controller);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = controller->module_count; index > 0U; --index) {
         UmiModuleRuntimeEntry *entry = &controller->modules[index - 1U];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (entry->state != UMI_MODULE_DESTROYED &&
             entry->descriptor != NULL &&
             entry->descriptor->lifecycle.destroy != NULL) {
             entry->descriptor->lifecycle.destroy(&entry->context);
         }
         entry->state = UMI_MODULE_DESTROYED;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (entry->descriptor != NULL) {
             umi_master_health(controller,
                               entry->descriptor->module_id,
@@ -310,8 +362,13 @@ void umi_master_controller_destroy(UmiMasterController *controller)
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = controller->authority_count; index > 0U; --index) {
         UmiMasterAuthorityEntry *entry = &controller->authorities[index - 1U];
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (entry->destroy != NULL) {
             entry->destroy(entry->authority);
         }
@@ -335,6 +392,10 @@ void umi_master_controller_destroy(UmiMasterController *controller)
     free(controller);
 }
 
+/*
+ * Provide the master controller register authority operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_master_controller_register_authority(
     UmiMasterController *controller,
     const char *authority_id,
@@ -345,19 +406,27 @@ UmiStatus umi_master_controller_register_authority(
     size_t index;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || authority_id == NULL ||
         authority_id[0] == '\0' || authority == NULL || destroy == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->started) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < controller->authority_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(controller->authorities[index].authority_id,
                    authority_id) == 0) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (controller->authority_count >= UMI_MASTER_MAX_AUTHORITIES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -365,6 +434,7 @@ UmiStatus umi_master_controller_register_authority(
     entry = &controller->authorities[controller->authority_count];
     written = snprintf(entry->authority_id, sizeof(entry->authority_id),
                        "%s", authority_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(entry->authority_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -374,15 +444,25 @@ UmiStatus umi_master_controller_register_authority(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the master controller authority operation used by this module and its client
+ * applications.
+ */
 void *umi_master_controller_authority(
     UmiMasterController *controller,
     const char *authority_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || authority_id == NULL) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < controller->authority_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(controller->authorities[index].authority_id,
                    authority_id) == 0) {
             return controller->authorities[index].authority;
@@ -391,16 +471,25 @@ void *umi_master_controller_authority(
     return NULL;
 }
 
+/*
+ * Provide the master register module capabilities operation used by this module and its
+ * client applications.
+ */
 static UmiStatus umi_master_register_module_capabilities(
     UmiMasterController *controller,
     const UmiModuleDescriptor *module)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (module->provided_capabilities == NULL) {
         return UMI_STATUS_OK;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; module->provided_capabilities[index] != NULL; ++index) {
         UmiCapabilityDescriptor descriptor;
         UmiStatus status;
@@ -414,6 +503,7 @@ static UmiStatus umi_master_register_module_capabilities(
         descriptor.flags = UMI_CAPABILITY_SINGLETON;
         status = umi_capability_registry_register(controller->capabilities,
                                                    &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -421,6 +511,7 @@ static UmiStatus umi_master_register_module_capabilities(
     return UMI_STATUS_OK;
 }
 
+/* Add master controller only after its inputs and available capacity have been checked. */
 UmiStatus umi_master_controller_register(
     UmiMasterController *controller,
     const UmiModuleDescriptor *module)
@@ -428,26 +519,35 @@ UmiStatus umi_master_controller_register(
     UmiModuleRuntimeEntry *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || module == NULL ||
         module->module_id == NULL || module->module_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->started) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (controller->module_count >= UMI_MASTER_MAX_MODULES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (module->structure_size < sizeof(UmiModuleDescriptor) ||
         module->abi_version != UMICOM_FRAMEWORK_ABI_VERSION) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_module_registry_add(controller->registry, module);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
     status = umi_master_register_module_capabilities(controller, module);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -482,6 +582,10 @@ UmiStatus umi_master_controller_register(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the master module index operation used by this module and its client
+ * applications.
+ */
 static int umi_master_module_index(
     const UmiMasterController *controller,
     const char *module_id,
@@ -489,9 +593,15 @@ static int umi_master_module_index(
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < controller->module_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(controller->modules[index].descriptor->module_id,
                    module_id) == 0) {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (out_index != NULL) {
                 *out_index = index;
             }
@@ -501,6 +611,10 @@ static int umi_master_module_index(
     return 0;
 }
 
+/*
+ * Provide the master dependencies ready operation used by this module and its client
+ * applications.
+ */
 static int umi_master_dependencies_ready(
     const UmiMasterController *controller,
     const UmiModuleDescriptor *module,
@@ -508,22 +622,33 @@ static int umi_master_dependencies_ready(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (module->required_capabilities == NULL) {
         return 1;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; module->required_capabilities[index] != NULL; ++index) {
         const UmiCapabilityDescriptor *capability =
             umi_capability_registry_find(controller->capabilities,
                                          module->required_capabilities[index]);
         size_t provider_index;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (capability == NULL) {
             return 0;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((capability->flags & UMI_CAPABILITY_EXTERNAL) != 0U) {
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_master_module_index(controller,
                                      capability->provider_module_id,
                                      &provider_index) ||
@@ -534,6 +659,7 @@ static int umi_master_dependencies_ready(
     return 1;
 }
 
+/* Check that master controller satisfies its contract before another service relies on it. */
 UmiStatus umi_master_controller_validate(
     UmiMasterController *controller,
     const char **out_missing_capability)
@@ -543,28 +669,41 @@ UmiStatus umi_master_controller_validate(
     size_t pass;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_missing_capability != NULL) {
         *out_missing_capability = NULL;
     }
     controller->start_order_count = 0U;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < controller->module_count; ++index) {
         UmiStatus status = umi_capability_registry_require(
             controller->capabilities,
             controller->modules[index].descriptor->required_capabilities,
             out_missing_capability
         );
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (pass = 0U; pass < controller->module_count; ++pass) {
         int progress = 0;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < controller->module_count; ++index) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (!scheduled[index] &&
                 umi_master_dependencies_ready(
                     controller,
@@ -576,6 +715,7 @@ UmiStatus umi_master_controller_validate(
                 progress = 1;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!progress) {
             break;
         }
@@ -586,6 +726,7 @@ UmiStatus umi_master_controller_validate(
         : UMI_STATUS_INVALID_STATE;
 }
 
+/* Provide the master run phase operation used by this module and its client applications. */
 static UmiStatus umi_master_run_phase(
     UmiMasterController *controller,
     UmiModuleRuntimeEntry *entry,
@@ -597,9 +738,14 @@ static UmiStatus umi_master_run_phase(
 {
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (phase != NULL) {
         status = phase(&entry->context);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         entry->state = UMI_MODULE_FAILED;
         umi_master_health(controller,
@@ -620,19 +766,26 @@ static UmiStatus umi_master_run_phase(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the master rollback start operation used by this module and its client
+ * applications.
+ */
 static void umi_master_rollback_start(UmiMasterController *controller,
                                       size_t completed_entries)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = completed_entries; index > 0U; --index) {
         UmiModuleRuntimeEntry *entry =
             &controller->modules[controller->start_order[index - 1U]];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (entry->state == UMI_MODULE_STARTED &&
             entry->descriptor->lifecycle.quiesce != NULL) {
             (void)entry->descriptor->lifecycle.quiesce(&entry->context);
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((entry->state == UMI_MODULE_STARTED ||
              entry->state == UMI_MODULE_QUIESCED ||
              entry->state == UMI_MODULE_INITIALISED ||
@@ -648,19 +801,29 @@ static void umi_master_rollback_start(UmiMasterController *controller,
     }
 }
 
+/*
+ * Provide the master controller start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_master_controller_start(UmiMasterController *controller)
 {
     size_t order_index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->started) {
         return UMI_STATUS_INVALID_STATE;
     }
 
     status = umi_master_controller_validate(controller, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_master_health(controller,
                           "org.umicom.framework.master",
@@ -677,6 +840,7 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller)
                       UMI_HEALTH_STARTING,
                       "Starting Slave Controllers");
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (order_index = 0U;
          order_index < controller->start_order_count;
          ++order_index) {
@@ -694,6 +858,7 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller)
                                       UMI_HEALTH_STARTING,
                                       "Module configured",
                                       "Module configure failed");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             umi_master_rollback_start(controller, order_index);
             return status;
@@ -706,6 +871,7 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller)
                                       UMI_HEALTH_STARTING,
                                       "Module initialised",
                                       "Module initialise failed");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             umi_master_rollback_start(controller, order_index + 1U);
             return status;
@@ -718,6 +884,7 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller)
                                       UMI_HEALTH_READY,
                                       "Module started",
                                       "Module start failed");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             umi_master_rollback_start(controller, order_index + 1U);
             return status;
@@ -735,14 +902,23 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the master controller stop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_master_controller_stop(UmiMasterController *controller)
 {
     size_t order_index;
     UmiStatus first_failure = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!controller->started) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -752,6 +928,7 @@ UmiStatus umi_master_controller_stop(UmiMasterController *controller)
                       UMI_HEALTH_STOPPING,
                       "Stopping Slave Controllers");
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (order_index = controller->start_order_count;
          order_index > 0U;
          --order_index) {
@@ -764,22 +941,34 @@ UmiStatus umi_master_controller_stop(UmiMasterController *controller)
                           UMI_HEALTH_STOPPING,
                           "Stopping module");
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (entry->descriptor->lifecycle.quiesce != NULL) {
             status = entry->descriptor->lifecycle.quiesce(&entry->context);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 entry->state = UMI_MODULE_QUIESCED;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 entry->state = UMI_MODULE_FAILED;
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (first_failure == UMI_STATUS_OK) {
                     first_failure = status;
                 }
             }
         }
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (entry->descriptor->lifecycle.stop != NULL) {
             status = entry->descriptor->lifecycle.stop(&entry->context);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 entry->state = UMI_MODULE_FAILED;
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (first_failure == UMI_STATUS_OK) {
                     first_failure = status;
                 }
@@ -799,6 +988,7 @@ UmiStatus umi_master_controller_stop(UmiMasterController *controller)
     }
 
     controller->started = 0;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (first_failure == UMI_STATUS_OK) {
         umi_master_health(controller,
                           "org.umicom.framework.master",
@@ -807,7 +997,7 @@ UmiStatus umi_master_controller_stop(UmiMasterController *controller)
         umi_master_report(controller,
                           UMI_DIAGNOSTIC_INFO,
                           "All Slave Controllers stopped");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         umi_master_health(controller,
                           "org.umicom.framework.master",
                           UMI_HEALTH_DEGRADED,
@@ -816,17 +1006,27 @@ UmiStatus umi_master_controller_stop(UmiMasterController *controller)
     return first_failure;
 }
 
+/*
+ * Provide the master controller module state operation used by this module and its client
+ * applications.
+ */
 UmiModuleState umi_master_controller_module_state(
     const UmiMasterController *controller,
     const char *module_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || module_id == NULL) {
         return UMI_MODULE_FAILED;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < controller->module_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(controller->modules[index].descriptor->module_id,
                    module_id) == 0) {
             return controller->modules[index].state;
@@ -835,54 +1035,110 @@ UmiModuleState umi_master_controller_module_state(
     return UMI_MODULE_FAILED;
 }
 
+/*
+ * Return the number of records represented by master controller module without changing
+ * their state.
+ */
 size_t umi_master_controller_module_count(
     const UmiMasterController *controller)
 {
     return controller != NULL ? controller->module_count : 0U;
 }
 
+/*
+ * Provide the master controller application name operation used by this module and its
+ * client applications.
+ */
 const char *umi_master_controller_application_name(
     const UmiMasterController *controller)
 {
     return controller != NULL ? controller->application_name : "";
 }
 
+/*
+ * Provide the master controller events operation used by this module and its client
+ * applications.
+ */
 UmiEventBus *umi_master_controller_events(UmiMasterController *controller)
 { return controller != NULL ? controller->events : NULL; }
 
+/*
+ * Provide the master controller commands operation used by this module and its client
+ * applications.
+ */
 UmiCommandBus *umi_master_controller_commands(UmiMasterController *controller)
 { return controller != NULL ? controller->commands : NULL; }
 
+/*
+ * Provide the master controller queries operation used by this module and its client
+ * applications.
+ */
 UmiQueryBus *umi_master_controller_queries(UmiMasterController *controller)
 { return controller != NULL ? controller->queries : NULL; }
 
+/*
+ * Provide the master controller data server operation used by this module and its client
+ * applications.
+ */
 UmiDataServer *umi_master_controller_data_server(UmiMasterController *controller)
 { return controller != NULL ? controller->data_server : NULL; }
 
+/*
+ * Provide the master controller config operation used by this module and its client
+ * applications.
+ */
 UmiConfig *umi_master_controller_config(UmiMasterController *controller)
 { return controller != NULL ? controller->config : NULL; }
 
+/*
+ * Provide the master controller clock operation used by this module and its client
+ * applications.
+ */
 UmiClock *umi_master_controller_clock(UmiMasterController *controller)
 { return controller != NULL ? &controller->clock : NULL; }
 
+/*
+ * Provide the master controller scheduler operation used by this module and its client
+ * applications.
+ */
 UmiScheduler *umi_master_controller_scheduler(UmiMasterController *controller)
 { return controller != NULL ? controller->scheduler : NULL; }
 
+/*
+ * Provide the master controller capabilities operation used by this module and its client
+ * applications.
+ */
 UmiCapabilityRegistry *umi_master_controller_capabilities(
     UmiMasterController *controller)
 { return controller != NULL ? controller->capabilities : NULL; }
 
+/*
+ * Provide the master controller services operation used by this module and its client
+ * applications.
+ */
 UmiServiceRegistry *umi_master_controller_services(
     UmiMasterController *controller)
 { return controller != NULL ? controller->services : NULL; }
 
+/*
+ * Provide the master controller command registry operation used by this module and its
+ * client applications.
+ */
 UmiCommandRegistry *umi_master_controller_command_registry(
     UmiMasterController *controller)
 { return controller != NULL ? controller->command_registry : NULL; }
 
+/*
+ * Provide the master controller health operation used by this module and its client
+ * applications.
+ */
 UmiHealthRegistry *umi_master_controller_health(
     UmiMasterController *controller)
 { return controller != NULL ? controller->health : NULL; }
 
+/*
+ * Provide the master controller policy operation used by this module and its client
+ * applications.
+ */
 UmiPolicyEngine *umi_master_controller_policy(UmiMasterController *controller)
 { return controller != NULL ? controller->policy : NULL; }

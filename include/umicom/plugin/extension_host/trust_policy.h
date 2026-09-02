@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host trust policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPluginExtensionHostTrustPolicy { UmiPluginExtensionHostTrust minimum_trust; int require_signature; int require_known_publisher; int allow_approval_override; } UmiPluginExtensionHostTrustPolicy;
+/**
+ * Initialise plugin extension host trust policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_trust_policy_init(UmiPluginExtensionHostTrustPolicy *policy);
+/**
+ * Provide the plugin extension host trust policy evaluate operation used by this module
+ * and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_trust_policy_evaluate(const UmiPluginExtensionHostTrustPolicy *policy, UmiPluginExtensionHostTrust trust, int signature_valid, int publisher_known);
 
 #ifdef __cplusplus

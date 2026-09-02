@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiPositionBook b;umi_position_book_init(&b);UmiInstrument i=test_instrument();UmiPosition *p=NULL;assert(umi_position_book_get(&b,&i,1,&p)==UMI_STATUS_OK);assert(p!=NULL);p->quantity=-3;
     assert(umi_portfolio_gross_quantity(&b)==3);UmiPosition *again=NULL;assert(umi_position_book_get(&b,&i,0,&again)==UMI_STATUS_OK);assert(again==p);return 0;

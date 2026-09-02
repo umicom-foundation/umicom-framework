@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime reproduction data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeReproduction {
     uint32_t structure_size;
     char id[UMI_TEST_RUNTIME_ID_CAPACITY];
@@ -29,13 +33,45 @@ typedef struct UmiTestRuntimeReproduction {
     uint64_t revision;
     bool active;
 } UmiTestRuntimeReproduction;
+/**
+ * Initialise test runtime reproduction from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_runtime_reproduction_init(UmiTestRuntimeReproduction *value,const char *id);
+/**
+ * Check that test runtime reproduction satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_reproduction_validate(const UmiTestRuntimeReproduction *value);
+/**
+ * Provide the test runtime reproduction set category operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_reproduction_set_category(UmiTestRuntimeReproduction *value,const char *category);
+/**
+ * Provide the test runtime reproduction set detail operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_reproduction_set_detail(UmiTestRuntimeReproduction *value,const char *detail);
+/**
+ * Return the number of records represented by test runtime reproduction set step without
+ * changing their state.
+ */
 UmiStatus umi_test_runtime_reproduction_set_step_count(UmiTestRuntimeReproduction *value,uint64_t number);
+/**
+ * Provide the test runtime reproduction set generation operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_reproduction_set_generation(UmiTestRuntimeReproduction *value,uint64_t number);
+/**
+ * Provide the test runtime reproduction set active operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_reproduction_set_active(UmiTestRuntimeReproduction *value,bool active);
+/**
+ * Provide the test runtime reproduction same identity operation used by this module and
+ * its client applications.
+ */
 bool umi_test_runtime_reproduction_same_identity(const UmiTestRuntimeReproduction *left,const UmiTestRuntimeReproduction *right);
 #ifdef __cplusplus
 }

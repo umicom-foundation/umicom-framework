@@ -17,8 +17,16 @@
 #include "internal.h"
 
 
+/*
+ * Initialise workbench designer status from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_status_init(UmiWorkbenchDesignerStatusModel *status)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == NULL) return;
     (void)memset(status, 0, sizeof(*status));
     status->mode = UMI_WORKBENCH_DESIGNER_MODE_BROWSE;
@@ -27,6 +35,10 @@ void umi_workbench_designer_status_init(UmiWorkbenchDesignerStatusModel *status)
     status->zoom = 1.0;
 }
 
+/*
+ * Provide the workbench designer status update operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_status_update(
     UmiWorkbenchDesignerStatusModel *status,
     const char *message,
@@ -42,9 +54,14 @@ UmiStatus umi_workbench_designer_status_update(
     bool layout_locked,
     uint64_t document_revision)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == NULL || message == NULL || layout_name == NULL || zoom <= 0.0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_workbench_designer_copy_text(status->message, sizeof(status->message), message) != UMI_STATUS_OK ||
         umi_workbench_designer_copy_text(status->layout_name, sizeof(status->layout_name), layout_name) != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;

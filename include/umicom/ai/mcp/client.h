@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai mcp client data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpClient {
     UmiAiMcpSession session;
     UmiAiMcpToolCatalogue tools;
@@ -30,11 +33,19 @@ typedef struct UmiAiMcpClient {
     UmiAiMcpToolBridge tool_bridge;
 } UmiAiMcpClient;
 
+/**
+ * Initialise ai mcp client from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_mcp_client_init(
     UmiAiMcpClient *client,
     const UmiAiMcpServerDescriptor *server,
     const UmiAiMcpTransport *transport);
 
+/**
+ * Provide the ai mcp client start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_client_start(
     UmiAiMcpClient *client,
     const char *client_name,

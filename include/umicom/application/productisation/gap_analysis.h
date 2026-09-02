@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the productisation gap data shared with callers of this public contract.
+ */
 typedef struct UmiProductisationGap {
     UmiProductisationGapKind kind;
     UmiProductisationSeverity severity;
@@ -35,6 +38,10 @@ typedef struct UmiProductisationGap {
     size_t affected_application_count;
 } UmiProductisationGap;
 
+/**
+ * Represent the productisation gap report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductisationGapReport {
     UmiProductisationGap gaps[UMI_PRODUCTISATION_MAX_GAPS];
     size_t gap_count;

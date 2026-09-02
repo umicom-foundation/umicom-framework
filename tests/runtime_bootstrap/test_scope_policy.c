@@ -26,6 +26,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     CHECK(umi_bootstrap_scope_policy_can_depend(UMI_BOOTSTRAP_SCOPE_REQUEST, UMI_BOOTSTRAP_SCOPE_SINGLETON));

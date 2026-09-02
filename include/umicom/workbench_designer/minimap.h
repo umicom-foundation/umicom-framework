@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer minimap item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerMinimapItem {
     char node_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     UmiWorkbenchDesignerRect bounds;
@@ -32,6 +36,10 @@ typedef struct UmiWorkbenchDesignerMinimapItem {
     bool active;
 } UmiWorkbenchDesignerMinimapItem;
 
+/**
+ * Represent the workbench designer minimap data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerMinimap {
     UmiWorkbenchDesignerMinimapItem items[UMI_WORKBENCH_DESIGNER_MAX_CANVAS_ITEMS];
     size_t count;
@@ -44,12 +52,24 @@ typedef struct UmiWorkbenchDesignerMinimap {
     uint64_t revision;
 } UmiWorkbenchDesignerMinimap;
 
+/**
+ * Initialise workbench designer minimap from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_minimap_init(UmiWorkbenchDesignerMinimap *minimap);
+/**
+ * Provide the workbench designer minimap build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_minimap_build(
     UmiWorkbenchDesignerMinimap *minimap,
     const UmiWorkbenchDesignerCanvas *canvas,
     const UmiWorkbenchDesignerViewport *viewport,
     UmiWorkbenchDesignerSize surface_size);
+/**
+ * Provide the workbench designer minimap world point operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchDesignerPoint umi_workbench_designer_minimap_world_point(
     const UmiWorkbenchDesignerMinimap *minimap,
     UmiWorkbenchDesignerPoint minimap_point);

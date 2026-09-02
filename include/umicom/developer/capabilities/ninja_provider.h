@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_NINJA_PROVIDER "umicom.developer.integration.ninja_provider"
 
+/**
+ * Provide the developer capability ninja provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_ninja_provider(void);
 

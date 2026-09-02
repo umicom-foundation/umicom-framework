@@ -18,4 +18,5 @@
  */
 #include "umicom/sdk/profile.h"
 #include <stddef.h>
-UmiStatus umi_sdk_profile_validate(const UmiSdkProfile *p){if(p==NULL||p->profile_id==NULL||p->profile_id[0]=='\0'||(p->linkage!=UMI_SDK_LINKAGE_STATIC&&p->linkage!=UMI_SDK_LINKAGE_SHARED))return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that sdk profile satisfies its contract before another service relies on it. */
+UmiStatus umi_sdk_profile_validate(const UmiSdkProfile *p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||p->profile_id==NULL||p->profile_id[0]=='\0'||(p->linkage!=UMI_SDK_LINKAGE_STATIC&&p->linkage!=UMI_SDK_LINKAGE_SHARED))return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

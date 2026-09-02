@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSuite suite;
@@ -35,19 +39,27 @@ int main(void)
     char path[UMI_PATH_CAPACITY];
 
     umi_suite_init(&suite, "org.umicom.suite", "Umicom Suite");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_suite_add(&suite, &studio) != UMI_STATUS_OK ||
         umi_suite_add(&suite, &trader) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_suite_validate(&suite, message, sizeof(message)) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_suite_find(&suite, "org.umicom.trader") == NULL)
         return EXIT_FAILURE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_temp_directory(temporary, sizeof(temporary)) != UMI_STATUS_OK ||
         umi_fs_join(path,
                     sizeof(path),
                     temporary,
                     "umicom-suite-test.yaml") != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_suite_write_manifest(&suite, path) != UMI_STATUS_OK ||
         !umi_fs_is_file(path))
         return EXIT_FAILURE;

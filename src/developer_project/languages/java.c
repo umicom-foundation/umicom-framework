@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "javac", "java", "mvn", "gradle"
 };
 
+/*
+ * Provide the developer project language java operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_java(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

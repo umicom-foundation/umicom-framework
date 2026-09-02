@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_credit_default_swap_init(UmiQuantCreditDefaultSwap *record, double notional, double default_probability, double recovery_rate)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(notional >= 0.0 && default_probability >= 0.0 && default_probability <= 1.0 && recovery_rate >= 0.0 && recovery_rate <= 1.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->notional = notional;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_credit_default_swap_init(UmiQuantCreditDefaultSwap *record, 
 /* Return expected loss from default probability and recovery. */
 double umi_quant_credit_default_swap_expected_loss(const UmiQuantCreditDefaultSwap *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->notional * record->default_probability * (1.0 - record->recovery_rate);
 }

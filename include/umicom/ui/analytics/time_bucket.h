@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the analytics time bucket floor operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_time_bucket_floor(int64_t timestamp_ns,int64_t interval_ns,int64_t *out_bucket_start);
 
 #ifdef __cplusplus

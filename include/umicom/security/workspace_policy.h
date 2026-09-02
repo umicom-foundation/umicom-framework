@@ -17,5 +17,9 @@
 #include "umicom/security/governance.h"
 #include "umicom/security/workspace_trust.h"
 #include "umicom/security/permission_catalogue.h"
+/**
+ * Provide the security workspace policy evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_security_workspace_policy_evaluate(UmiWorkspaceTrustLevel trust,const UmiSecurityPermissionDescriptor *permission,UmiSecurityGovernanceDecision *out_decision);
 #endif

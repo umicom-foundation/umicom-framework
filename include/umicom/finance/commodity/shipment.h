@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity shipment data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityShipment {
     UmiCommodityId id;
     UmiCommodityId contract_id;

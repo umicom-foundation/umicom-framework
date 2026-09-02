@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test runtime health and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_runtime_health(void){ UmiApplicationRuntimeHealth h; assert(umi_application_runtime_health_evaluate(test_trader_experience(),test_capability_probe,NULL,&h)==UMI_STATUS_OK); assert(h.readiness_percent<=100U); return 0; }

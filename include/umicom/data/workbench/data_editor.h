@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data cell edit data shared with callers of this public contract.
+ */
 typedef struct UmiDataCellEdit {
     char edit_id[UMI_DATABASE_ID_CAPACITY];
     char row_key[UMI_DATABASE_NAME_CAPACITY];
@@ -33,6 +36,9 @@ typedef struct UmiDataCellEdit {
     uint64_t expected_row_revision;
 } UmiDataCellEdit;
 
+/**
+ * Represent the data editor model data shared with callers of this public contract.
+ */
 typedef struct UmiDataEditorModel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -46,21 +52,44 @@ typedef struct UmiDataEditorModel {
     uint64_t revision;
 } UmiDataEditorModel;
 
+/**
+ * Initialise data editor model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_data_editor_model_init(
     UmiDataEditorModel *model,
     const char *table_name,
     int transaction_required);
+/**
+ * Provide the data editor model stage operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_editor_model_stage(
     UmiDataEditorModel *model,
     const UmiDataCellEdit *edit);
+/**
+ * Check that data editor model satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_data_editor_model_validate(
     UmiDataEditorModel *model,
     const char *edit_id,
     uint64_t actual_row_revision);
+/**
+ * Provide the data editor model mark applied operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_editor_model_mark_applied(
     UmiDataEditorModel *model,
     const char *edit_id);
+/**
+ * Release or reset state held by data editor model so the same storage can be reused
+ * safely.
+ */
 void umi_data_editor_model_clear(UmiDataEditorModel *model);
+/**
+ * Find data editor model edit while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiDataCellEdit *umi_data_editor_model_edit_at(
     const UmiDataEditorModel *model,
     size_t edit_index);

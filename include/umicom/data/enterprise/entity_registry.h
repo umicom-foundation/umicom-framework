@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data entity registry data shared with callers of this public contract.
+ */
 typedef struct UmiDataEntityRegistry {
     UmiDataEntityDescriptor items[UMI_DATA_ENTERPRISE_MAX_ITEMS];
     size_t count;

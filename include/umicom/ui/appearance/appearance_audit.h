@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance appearance audit data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceAppearanceAudit {
     char audit_id[UMI_APPEARANCE_ID_CAPACITY];
     uint32_t checks;

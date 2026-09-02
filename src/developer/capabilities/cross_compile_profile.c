@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/cross_compile_profile.h"
 
+/*
+ * Provide the developer capability cross compile profile operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cross_compile_profile(void)
 {

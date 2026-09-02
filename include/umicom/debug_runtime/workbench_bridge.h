@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug runtime workbench context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimeWorkbenchContext {
     char profile_id[128];
     char session_id[128];
@@ -35,6 +39,10 @@ typedef struct UmiDebugRuntimeWorkbenchContext {
     uint32_t timeout_ms;
 } UmiDebugRuntimeWorkbenchContext;
 
+/**
+ * Represent the debug runtime workbench bridge data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimeWorkbenchBridge
     UmiDebugRuntimeWorkbenchBridge;
 

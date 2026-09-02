@@ -18,6 +18,10 @@
 #include <string.h>
 #include "umicom/toolchain/kit_catalogue.h"
 
+/*
+ * Exercise make kit and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void make_kit(UmiToolchainKitSnapshot *kit, const char *id)
 {
     umi_toolchain_kit_init(kit, id, id);
@@ -28,6 +32,10 @@ static void make_kit(UmiToolchainKitSnapshot *kit, const char *id)
     kit->state = UMI_TOOLCHAIN_KIT_READY;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiToolchainKitCatalogue *catalogue = NULL;

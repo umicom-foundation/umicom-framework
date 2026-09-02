@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai request data shared with callers of this public contract.
+ */
 typedef struct UmiAiRequest {
     char request_id[UMI_AI_ID_CAPACITY];
     char model_id[UMI_AI_ID_CAPACITY];
@@ -39,7 +42,15 @@ typedef struct UmiAiRequest {
     int allow_tools;
 } UmiAiRequest;
 
+/**
+ * Initialise ai request from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_request_init(UmiAiRequest *request);
+/**
+ * Provide the ai request add message operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_request_add_message(UmiAiRequest *request,
                                      const UmiAiMessage *message);
 

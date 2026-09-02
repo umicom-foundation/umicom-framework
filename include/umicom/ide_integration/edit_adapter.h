@@ -33,12 +33,19 @@ typedef UmiStatus (*UmiIdeEditorInsertText)(
     const char *text,
     size_t length);
 
+/**
+ * Represent the ide editor edit adapter data shared with callers of this public contract.
+ */
 typedef struct UmiIdeEditorEditAdapter {
     UmiIdeEditorGetRevision get_revision;
     UmiIdeEditorInsertText insert_text;
     void *user_data;
 } UmiIdeEditorEditAdapter;
 
+/**
+ * Check that ide editor edit adapter satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ide_editor_edit_adapter_validate(
     const UmiIdeEditorEditAdapter *adapter);
 

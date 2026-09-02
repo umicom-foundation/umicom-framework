@@ -16,6 +16,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise test controller kill switch and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_controller_kill_switch(void)
 {
     UmiTradingUiTestFixture fixture;

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reconciliation run data shared with callers of this public contract.
+ */
 typedef struct UmiReconciliationRun { char run_id[UMI_REG_ID_CAPACITY]; size_t matched; size_t broken; double absolute_difference; } UmiReconciliationRun;
 /* Initialise an empty reconciliation run. */
 UmiStatus umi_reg_reconciliation_run_init(UmiReconciliationRun *run,const char *run_id);

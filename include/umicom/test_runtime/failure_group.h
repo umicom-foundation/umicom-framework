@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime failure group data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeFailureGroup {
     uint32_t structure_size;
     char id[UMI_TEST_RUNTIME_ID_CAPACITY];
@@ -29,13 +33,45 @@ typedef struct UmiTestRuntimeFailureGroup {
     uint64_t revision;
     bool active;
 } UmiTestRuntimeFailureGroup;
+/**
+ * Initialise test runtime failure group from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_runtime_failure_group_init(UmiTestRuntimeFailureGroup *value,const char *id);
+/**
+ * Check that test runtime failure group satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_failure_group_validate(const UmiTestRuntimeFailureGroup *value);
+/**
+ * Provide the test runtime failure group set category operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_failure_group_set_category(UmiTestRuntimeFailureGroup *value,const char *category);
+/**
+ * Provide the test runtime failure group set detail operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_failure_group_set_detail(UmiTestRuntimeFailureGroup *value,const char *detail);
+/**
+ * Return the number of records represented by test runtime failure group set member
+ * without changing their state.
+ */
 UmiStatus umi_test_runtime_failure_group_set_member_count(UmiTestRuntimeFailureGroup *value,uint64_t number);
+/**
+ * Provide the test runtime failure group set generation operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_failure_group_set_generation(UmiTestRuntimeFailureGroup *value,uint64_t number);
+/**
+ * Provide the test runtime failure group set active operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_failure_group_set_active(UmiTestRuntimeFailureGroup *value,bool active);
+/**
+ * Provide the test runtime failure group same identity operation used by this module and
+ * its client applications.
+ */
 bool umi_test_runtime_failure_group_same_identity(const UmiTestRuntimeFailureGroup *left,const UmiTestRuntimeFailureGroup *right);
 #ifdef __cplusplus
 }

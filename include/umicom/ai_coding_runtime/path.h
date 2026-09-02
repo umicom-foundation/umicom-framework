@@ -26,17 +26,29 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding runtime path normalize relative operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_coding_runtime_path_normalize_relative(
     const char *path,
     char *out_path,
     size_t capacity);
 
+/**
+ * Provide the ai coding runtime path join operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_runtime_path_join(
     const char *root,
     const char *relative_path,
     char *out_path,
     size_t capacity);
 
+/**
+ * Provide the ai coding runtime path extension operation used by this module and its
+ * client applications.
+ */
 const char *umi_ai_coding_runtime_path_extension(const char *path);
 
 #ifdef __cplusplus

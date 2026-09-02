@@ -23,11 +23,19 @@
 #define UMI_LAYOUT_DATA_SCHEMA_VERSION_KEY \
     "workbench-layout/metadata/schema-version"
 
+/*
+ * Initialise workbench layout migration plan from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_migration_plan_init(
     UmiWorkbenchLayoutDataMigrationPlan *plan,
     uint32_t source_version,
     uint32_t target_version)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || source_version > target_version) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -38,10 +46,18 @@ UmiStatus umi_workbench_layout_migration_plan_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Add workbench layout migration plan only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_layout_migration_plan_add(
     UmiWorkbenchLayoutDataMigrationPlan *plan,
     const UmiWorkbenchLayoutDataMigrationStep *step)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || step == NULL ||
         step->structure_size < sizeof(*step) ||
         step->descriptor.structure_size <
@@ -50,9 +66,11 @@ UmiStatus umi_workbench_layout_migration_plan_add(
         step->apply == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (plan->count >= UMI_WORKBENCH_LAYOUT_DATA_MAX_MIGRATIONS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (step->descriptor.from_version <
             plan->source_version ||
         step->descriptor.to_version >
@@ -61,6 +79,7 @@ UmiStatus umi_workbench_layout_migration_plan_add(
             step->descriptor.to_version) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (step->descriptor.from_version !=
             (plan->count == 0U
                 ? plan->source_version
@@ -71,6 +90,10 @@ UmiStatus umi_workbench_layout_migration_plan_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout migration read version operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_migration_read_version(
     const UmiDataServer *server,
     uint32_t *out_version)
@@ -78,6 +101,10 @@ UmiStatus umi_workbench_layout_migration_read_version(
     char value[64];
     unsigned int parsed;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || out_version == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -85,8 +112,11 @@ UmiStatus umi_workbench_layout_migration_read_version(
     status = umi_data_server_get(
         server, UMI_LAYOUT_DATA_SCHEMA_VERSION_KEY,
         value, sizeof(value));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (sscanf(value, "%u", &parsed) != 1) {
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -94,16 +124,25 @@ UmiStatus umi_workbench_layout_migration_read_version(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout migration write version operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_migration_write_version(
     UmiDataServer *server,
     uint32_t version)
 {
     char value[64];
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || version == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     written = snprintf(value, sizeof(value), "%u", version);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(value)) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
@@ -111,6 +150,7 @@ UmiStatus umi_workbench_layout_migration_write_version(
         server, UMI_LAYOUT_DATA_SCHEMA_VERSION_KEY, value);
 }
 
+/* Provide the record state operation used by this module and its client applications. */
 static UmiStatus record_state(
     UmiWorkbenchLayoutMigrationStoreRepository *records,
     const UmiWorkbenchLayoutDataMigrationStep *step,
@@ -137,6 +177,10 @@ static UmiStatus record_state(
         records, &record);
 }
 
+/*
+ * Perform workbench layout migration through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_migration_execute(
     UmiDataServer *server,
     UmiWorkbenchLayoutMigrationStoreRepository *records,
@@ -151,6 +195,10 @@ UmiStatus umi_workbench_layout_migration_execute(
     size_t failure_index = UMI_WORKBENCH_LAYOUT_DATA_INDEX_NONE;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || records == NULL ||
         plan == NULL || actor_id == NULL ||
         plan->structure_size < sizeof(*plan)) {
@@ -161,11 +209,17 @@ UmiStatus umi_workbench_layout_migration_execute(
     status = umi_workbench_layout_migration_read_version(
         server, &current_version);
     result.initial_version = current_version;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         result.status = status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_result != NULL) *out_result = result;
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (current_version < plan->source_version ||
         current_version > plan->target_version ||
         (plan->count > 0U &&
@@ -173,41 +227,50 @@ UmiStatus umi_workbench_layout_migration_execute(
              plan->target_version)) {
         status = UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_transaction_begin(
             server, &transaction_started);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < plan->count;
          ++index) {
         const UmiWorkbenchLayoutDataMigrationStep *step =
             &plan->steps[index];
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (step->descriptor.to_version <= current_version) {
             result.skipped_count += 1U;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (step->descriptor.from_version != current_version) {
             status = UMI_STATUS_INVALID_STATE;
             failure_index = index;
             break;
         }
         status = step->apply(server, step->context);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_workbench_layout_migration_write_version(
                 server, step->descriptor.to_version);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             current_version = step->descriptor.to_version;
             result.applied_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             failure_index = index;
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = plan->count; index > 0U; --index) {
             const UmiWorkbenchLayoutDataMigrationStep *step =
                 &plan->steps[index - 1U];
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (step->descriptor.to_version > result.initial_version &&
                 step->descriptor.to_version <= current_version &&
                 step->descriptor.reversible &&
@@ -220,10 +283,13 @@ UmiStatus umi_workbench_layout_migration_execute(
     status = umi_workbench_layout_data_transaction_finish(
         server, transaction_started, status);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < plan->count; ++index) {
             const UmiWorkbenchLayoutDataMigrationStep *step =
                 &plan->steps[index];
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (step->descriptor.to_version <= result.initial_version) {
                 continue;
             }
@@ -231,12 +297,15 @@ UmiStatus umi_workbench_layout_migration_execute(
                 records, step,
                 UMI_WORKBENCH_LAYOUT_DATA_MIGRATION_APPLIED,
                 actor_id, now_ms, now_ms, "");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) break;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < plan->count; ++index) {
             const UmiWorkbenchLayoutDataMigrationStep *step =
                 &plan->steps[index];
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (step->descriptor.to_version > result.initial_version &&
                 step->descriptor.to_version <= current_version) {
                 (void)record_state(
@@ -247,6 +316,7 @@ UmiStatus umi_workbench_layout_migration_execute(
             }
         }
         current_version = result.initial_version;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (failure_index != UMI_WORKBENCH_LAYOUT_DATA_INDEX_NONE &&
             failure_index < plan->count) {
             const UmiWorkbenchLayoutDataMigrationStep *failed =
@@ -271,6 +341,10 @@ UmiStatus umi_workbench_layout_migration_execute(
             ? "Layout persistence migrations completed."
             : "Layout persistence migration failed.",
         true);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) *out_result = result;
     return status;
 }

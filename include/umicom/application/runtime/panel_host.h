@@ -22,27 +22,50 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application panel host entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationPanelHostEntry {
     const char *panel_id;
     void *frontend_handle;
     int available;
 } UmiApplicationPanelHostEntry;
 
+/**
+ * Represent the application panel host data shared with callers of this public contract.
+ */
 typedef struct UmiApplicationPanelHost {
     uint32_t structure_size;
     UmiApplicationPanelHostEntry entries[UMI_APPLICATION_RUNTIME_MAX_PANELS];
     size_t entry_count;
 } UmiApplicationPanelHost;
 
+/**
+ * Initialise application panel host from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_application_panel_host_init(UmiApplicationPanelHost *host);
+/**
+ * Add application panel host only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_application_panel_host_register(
     UmiApplicationPanelHost *host,
     const UmiApplicationExperienceDefinition *experience,
     const char *panel_id,
     void *frontend_handle);
+/**
+ * Remove application panel host while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_application_panel_host_unregister(
     UmiApplicationPanelHost *host,
     const char *panel_id);
+/**
+ * Find application panel host while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationPanelHostEntry *umi_application_panel_host_find(
     const UmiApplicationPanelHost *host,
     const char *panel_id);

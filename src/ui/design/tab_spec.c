@@ -20,9 +20,18 @@
 #include "umicom/ui/design/tab_spec.h"
 
 #include <string.h>
+/* Check that design tab spec satisfies its contract before another service relies on it. */
 int umi_design_tab_spec_valid(const UmiDesignTabSpec *spec) { return spec!=NULL && (spec->accent_role>=UMI_DESIGN_ROLE_NEUTRAL && spec->accent_role<=UMI_DESIGN_ROLE_ACCENT) ? 1 : 0; }
+/*
+ * Initialise design tab spec from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_design_tab_spec_init(UmiDesignTabSpec *spec, int closable, int pinnable, int dirty, int attention, UmiDesignSemanticRole accent_role)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(spec,0,sizeof *spec);
     spec->closable=closable?1:0;spec->pinnable=pinnable?1:0;spec->dirty=dirty?1:0;spec->attention=attention?1:0;spec->accent_role=accent_role;

@@ -19,12 +19,18 @@
 
 #include "umicom/workbench_context_host/experience_profile.h"
 
+/*
+ * Exercise find endpoint and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static const UmiWorkbenchContextHostEndpoint *find_endpoint(
     const UmiWorkbenchContextHostProfile *profile,
     const char *panel_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < profile->endpoint_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(profile->endpoints[index].panel_id, panel_id) == 0) {
             return &profile->endpoints[index];
         }
@@ -32,6 +38,10 @@ static const UmiWorkbenchContextHostEndpoint *find_endpoint(
     return NULL;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextHostProfile profile;

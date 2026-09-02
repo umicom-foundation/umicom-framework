@@ -24,7 +24,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc focus contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcFocusContract { size_t focusable_count; size_t traversal_count; bool modal_trap_required; } UmiFcFocusContract;
+/**
+ * Check that fc focus contract satisfies its contract before another service relies on it.
+ */
 bool umi_fc_focus_contract_validate(const UmiFcFocusContract *item);
 
 #ifdef __cplusplus

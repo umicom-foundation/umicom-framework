@@ -28,6 +28,10 @@
 
 #include "umicom/editor/rename_symbol.h"
 
+/*
+ * Exercise set location and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void set_location(UmiEditorSourceLocation *location,
                          uint64_t start,
                          uint64_t end,
@@ -44,6 +48,10 @@ static void set_location(UmiEditorSourceLocation *location,
     location->document_revision = revision;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     static const char SOURCE[] = "int count = count + 1;";

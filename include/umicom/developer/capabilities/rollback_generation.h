@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ROLLBACK_GENERATION "umicom.developer.delivery.rollback_generation"
 
+/**
+ * Provide the developer capability rollback generation operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_rollback_generation(void);
 

@@ -28,6 +28,10 @@
 
 #include "umicom/debug/advanced_breakpoint.h"
 
+/*
+ * Exercise make breakpoint and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiDebugAdvancedBreakpoint make_breakpoint(
     const char *id,
     UmiDebugAdvancedBreakpointKind kind)
@@ -41,6 +45,7 @@ static UmiDebugAdvancedBreakpoint make_breakpoint(
     item.kind = kind;
     item.enabled = 1;
     item.stop_on_hit = 1;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEBUG_ADVANCED_BREAKPOINT_FUNCTION:
             (void)snprintf(item.name, sizeof(item.name), "%s", "calculate_risk");
@@ -63,6 +68,10 @@ static UmiDebugAdvancedBreakpoint make_breakpoint(
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugAdvancedBreakpointRegistry *registry = NULL;

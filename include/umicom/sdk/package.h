@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 #define UMI_SDK_PATH_CAPACITY 1024U
+/**
+ * Represent the sdk package data shared with callers of this public contract.
+ */
 typedef struct UmiSdkPackage { char prefix[UMI_SDK_PATH_CAPACITY]; char config_file[UMI_SDK_PATH_CAPACITY]; char version_file[UMI_SDK_PATH_CAPACITY]; char targets_file[UMI_SDK_PATH_CAPACITY]; } UmiSdkPackage;
+/**
+ * Provide the sdk package from prefix operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_sdk_package_from_prefix(const char *prefix,UmiSdkPackage *out_package);
 #ifdef __cplusplus
 }

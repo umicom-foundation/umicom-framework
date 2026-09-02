@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "python", "python3"
 };
 
+/*
+ * Provide the developer project language cpython operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_cpython(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

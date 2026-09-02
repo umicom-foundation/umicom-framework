@@ -18,10 +18,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution rollback entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionRollbackEntry {
     size_t item_index;
     int completed;
 } UmiProductExecutionRollbackEntry;
+/**
+ * Represent the product execution rollback plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionRollbackPlan {
     UmiProductExecutionRollbackEntry entries[UMI_PRODUCT_EXECUTION_MAX_ROLLBACKS];
     size_t count;

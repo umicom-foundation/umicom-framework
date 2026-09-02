@@ -30,6 +30,9 @@ extern "C" {
 #define UMI_EDITOR_EDIT_COMMAND_LABEL_CAPACITY 128U
 #define UMI_EDITOR_EDIT_COMMAND_KEY_CAPACITY 48U
 
+/**
+ * List the named editor edit command kind values accepted by this public contract.
+ */
 typedef enum UmiEditorEditCommandKind {
     UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT = 1,
     UMI_EDITOR_EDIT_COMMAND_REPLACE_RANGE = 2,
@@ -47,6 +50,10 @@ typedef enum UmiEditorEditCommandKind {
     UMI_EDITOR_EDIT_COMMAND_TRANSPOSE_LINES = 14
 } UmiEditorEditCommandKind;
 
+/**
+ * Represent the editor edit command descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorEditCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -59,6 +66,10 @@ typedef struct UmiEditorEditCommandDescriptor {
     int line_oriented;
 } UmiEditorEditCommandDescriptor;
 
+/**
+ * Represent the editor edit command request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorEditCommandRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -74,6 +85,10 @@ typedef struct UmiEditorEditCommandRequest {
     size_t line_comment_byte_count;
 } UmiEditorEditCommandRequest;
 
+/**
+ * Represent the editor edit command result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorEditCommandResult {
     uint32_t struct_size;
     uint32_t api_version;
@@ -89,12 +104,32 @@ typedef struct UmiEditorEditCommandResult {
     int changed;
 } UmiEditorEditCommandResult;
 
+/**
+ * Return the number of records represented by editor edit command without changing their
+ * state.
+ */
 size_t umi_editor_edit_command_count(void);
+/**
+ * Find editor edit command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiEditorEditCommandDescriptor *umi_editor_edit_command_at(size_t index);
+/**
+ * Find editor edit command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiEditorEditCommandDescriptor *umi_editor_edit_command_find(
     const char *id);
+/**
+ * Provide the editor edit command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiEditorEditCommandDescriptor *umi_editor_edit_command_for_kind(
     UmiEditorEditCommandKind kind);
+/**
+ * Initialise editor edit command request from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_edit_command_request_initialize(
     UmiEditorEditCommandRequest *request,
     UmiEditorEditCommandKind kind,

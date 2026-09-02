@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/portfolio.h"
 
+/**
+ * Represent the application production portfolio report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionPortfolioReport {
     size_t application_count;
     size_t ready_count;
@@ -37,6 +41,10 @@ typedef struct UmiApplicationProductionPortfolioReport {
     unsigned readiness_percent;
 } UmiApplicationProductionPortfolioReport;
 
+/**
+ * Provide the application production portfolio report build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_portfolio_report_build(
     const UmiApplicationProductionPortfolio *portfolio,
     UmiApplicationProductionPortfolioReport *out_report);

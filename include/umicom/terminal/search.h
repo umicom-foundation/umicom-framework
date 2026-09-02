@@ -24,6 +24,9 @@ extern "C" {
 
 #define UMI_TERMINAL_SEARCH_MAX_RESULTS 512U
 
+/**
+ * Represent the terminal search query data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalSearchQuery {
     char text[UMI_TERMINAL_QUERY_CAPACITY];
     int case_sensitive;
@@ -34,6 +37,9 @@ typedef struct UmiTerminalSearchQuery {
     size_t limit;
 } UmiTerminalSearchQuery;
 
+/**
+ * Represent the terminal search match data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalSearchMatch {
     uint64_t sequence;
     size_t line_index;
@@ -43,6 +49,9 @@ typedef struct UmiTerminalSearchMatch {
     char preview[UMI_TERMINAL_LINE_CAPACITY];
 } UmiTerminalSearchMatch;
 
+/**
+ * Represent the terminal search result data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalSearchResult {
     UmiTerminalSearchMatch matches[UMI_TERMINAL_SEARCH_MAX_RESULTS];
     size_t count;
@@ -50,7 +59,15 @@ typedef struct UmiTerminalSearchResult {
     int truncated;
 } UmiTerminalSearchResult;
 
+/**
+ * Initialise terminal search query from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_terminal_search_query_init(UmiTerminalSearchQuery *query);
+/**
+ * Provide the terminal search transcript operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_search_transcript(
     const UmiTerminalTranscript *transcript,
     const UmiTerminalSearchQuery *query,

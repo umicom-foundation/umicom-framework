@@ -21,6 +21,10 @@
 #include "umicom/desktop/master_authority.h"
 #include "umicom/runtime/capability_registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMasterControllerConfig config = {0};

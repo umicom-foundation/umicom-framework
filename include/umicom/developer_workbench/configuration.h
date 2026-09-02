@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer workbench configuration data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkbenchConfiguration {
     uint32_t structure_size;
     uint32_t api_version;
@@ -40,16 +44,28 @@ typedef struct UmiDeveloperWorkbenchConfiguration {
     uint64_t revision;
 } UmiDeveloperWorkbenchConfiguration;
 
+/**
+ * Initialise developer workbench configuration from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_workbench_configuration_init(
     UmiDeveloperWorkbenchConfiguration *configuration,
     const char *configuration_id,
     const char *title);
 
+/**
+ * Check that developer workbench configuration satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_configuration_validate(
     const UmiDeveloperWorkbenchConfiguration *configuration,
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the developer workbench configuration to build request operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_workbench_configuration_to_build_request(
     const UmiDeveloperWorkbenchConfiguration *configuration,
     UmiBuildRequest *out_request);

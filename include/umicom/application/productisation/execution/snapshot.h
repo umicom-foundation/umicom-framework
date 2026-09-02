@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionSnapshot {
     uint64_t revision;
     UmiProductExecutionMetrics metrics;

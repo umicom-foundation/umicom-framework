@@ -27,7 +27,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics sparkline summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsSparklineSummary { double first,last,minimum,maximum,change; size_t count; } UmiAnalyticsSparklineSummary;
+/**
+ * Provide the analytics sparkline summarize operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_sparkline_summarize(const double *values,size_t count,UmiAnalyticsSparklineSummary *out_summary);
 
 #ifdef __cplusplus

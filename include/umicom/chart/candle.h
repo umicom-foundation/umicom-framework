@@ -23,8 +23,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that chart candle satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_chart_candle_validate(const UmiChartCandle *candle);
+/**
+ * Provide the chart candle range operation used by this module and its client
+ * applications.
+ */
 double umi_chart_candle_range(const UmiChartCandle *candle);
+/**
+ * Provide the chart candle is up operation used by this module and its client
+ * applications.
+ */
 int umi_chart_candle_is_up(const UmiChartCandle *candle);
 #ifdef __cplusplus
 }

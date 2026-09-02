@@ -29,9 +29,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host permission evaluation data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiPluginExtensionHostPermissionEvaluation { uint64_t requested; uint64_t granted; uint64_t denied; int workspace_trusted; int allow_prompt; } UmiPluginExtensionHostPermissionEvaluation;
+/**
+ * Initialise plugin extension host permission evaluation from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_plugin_extension_host_permission_evaluation_init(UmiPluginExtensionHostPermissionEvaluation *value);
+/**
+ * Provide the plugin extension host permission evaluation missing operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_permission_evaluation_missing(const UmiPluginExtensionHostPermissionEvaluation *value);
+/**
+ * Provide the plugin extension host permission evaluation decide operation used by this
+ * module and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_permission_evaluation_decide(const UmiPluginExtensionHostPermissionEvaluation *value);
 
 #ifdef __cplusplus

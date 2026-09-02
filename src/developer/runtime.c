@@ -35,29 +35,48 @@ struct UmiDeveloperRuntime {
     int owns_services;
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) {
         return;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) {
         source = "";
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         length = capacity - 1U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         memcpy(destination, source, length);
     }
     destination[length] = '\0';
 }
 
+/*
+ * Initialise developer runtime bindings from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_runtime_bindings_init(UmiDeveloperRuntimeBindings *bindings)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) {
         return;
     }
@@ -66,36 +85,55 @@ void umi_developer_runtime_bindings_init(UmiDeveloperRuntimeBindings *bindings)
     bindings->api_version = UMI_DEVELOPER_RUNTIME_API_VERSION;
 }
 
+/*
+ * Provide the create or bind common operation used by this module and its client
+ * applications.
+ */
 static UmiStatus create_or_bind_common(
     UmiDeveloperRuntime *runtime)
 {
     UmiStatus status;
 
     status = umi_developer_context_create(&runtime->context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_pipeline_create(&runtime->pipeline);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_journal_create(&runtime->journal);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_universal_model_create(&runtime->universal_model);
     }
     return status;
 }
 
+/*
+ * Provide the developer runtime create owned operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_create_owned(
     UmiDeveloperRuntime **out_runtime)
 {
     UmiDeveloperRuntime *runtime;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_runtime = NULL;
     runtime = (UmiDeveloperRuntime *)calloc(1U, sizeof(*runtime));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -103,14 +141,22 @@ UmiStatus umi_developer_runtime_create_owned(
     runtime->owns_services = 1;
     runtime->revision = 1U;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_project_workspace_create(&runtime->projects);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_language_service_create(&runtime->language);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_debug_service_create(&runtime->debug);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_source_control_service_create(&runtime->source_control);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_test_platform_service_create(&runtime->tests);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_workbench_services_create(&runtime->workbench);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = create_or_bind_common(runtime);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_developer_runtime_destroy(runtime);
         return status;
@@ -120,6 +166,10 @@ UmiStatus umi_developer_runtime_create_owned(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer runtime create bound operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_create_bound(
     const UmiDeveloperRuntimeBindings *bindings,
     UmiDeveloperRuntime **out_runtime)
@@ -127,6 +177,10 @@ UmiStatus umi_developer_runtime_create_bound(
     UmiDeveloperRuntime *runtime;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || out_runtime == NULL ||
         bindings->projects == NULL ||
         bindings->language == NULL ||
@@ -139,6 +193,10 @@ UmiStatus umi_developer_runtime_create_bound(
 
     *out_runtime = NULL;
     runtime = (UmiDeveloperRuntime *)calloc(1U, sizeof(*runtime));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -153,6 +211,7 @@ UmiStatus umi_developer_runtime_create_bound(
     runtime->revision = 1U;
 
     status = create_or_bind_common(runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_developer_runtime_destroy(runtime);
         return status;
@@ -162,8 +221,16 @@ UmiStatus umi_developer_runtime_create_bound(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer runtime so the same storage can be reused
+ * safely.
+ */
 void umi_developer_runtime_destroy(UmiDeveloperRuntime *runtime)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return;
     }
@@ -173,6 +240,7 @@ void umi_developer_runtime_destroy(UmiDeveloperRuntime *runtime)
     umi_developer_pipeline_destroy(runtime->pipeline);
     umi_developer_context_destroy(runtime->context);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (runtime->owns_services != 0) {
         umi_ui_workbench_services_destroy(runtime->workbench);
         umi_test_platform_service_destroy(runtime->tests);
@@ -185,6 +253,7 @@ void umi_developer_runtime_destroy(UmiDeveloperRuntime *runtime)
     free(runtime);
 }
 
+/* Provide the publish workbench operation used by this module and its client applications. */
 static void publish_workbench(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperOperationSnapshot *operation,
@@ -198,6 +267,10 @@ static void publish_workbench(
     UmiUiProblemSnapshot problem;
     char status_text[UMI_DEVELOPER_SUMMARY_CAPACITY];
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || runtime->workbench == NULL || operation == NULL) {
         return;
     }
@@ -249,6 +322,7 @@ static void publish_workbench(
     (void)umi_ui_status_item_registry_upsert(
         umi_ui_workbench_services_status_item(runtime->workbench), &status_item);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (event_kind == UMI_DEVELOPER_EVENT_SUCCEEDED ||
         event_kind == UMI_DEVELOPER_EVENT_FAILED ||
         event_kind == UMI_DEVELOPER_EVENT_CANCELLED) {
@@ -267,6 +341,7 @@ static void publish_workbench(
             umi_ui_workbench_services_output_channel(runtime->workbench), &output);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (event_kind == UMI_DEVELOPER_EVENT_FAILED) {
         memset(&problem, 0, sizeof(problem));
         problem.struct_size = (uint32_t)sizeof(problem);
@@ -296,13 +371,17 @@ static void publish_workbench(
         (void)umi_ui_notification_item_registry_upsert(
             umi_ui_workbench_services_notification_item(runtime->workbench),
             &notification);
-    } else if (event_kind == UMI_DEVELOPER_EVENT_SUCCEEDED ||
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (event_kind == UMI_DEVELOPER_EVENT_SUCCEEDED ||
                event_kind == UMI_DEVELOPER_EVENT_RETRIED) {
         (void)umi_ui_problem_registry_remove(
             umi_ui_workbench_services_problem(runtime->workbench), operation->id);
     }
 }
 
+/*
+ * Provide the record operation event operation used by this module and its client
+ * applications.
+ */
 static UmiStatus record_operation_event(
     UmiDeveloperRuntime *runtime,
     const char *operation_id,
@@ -314,12 +393,14 @@ static UmiStatus record_operation_event(
 
     status = umi_developer_pipeline_find(
         runtime->pipeline, operation_id, &operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = umi_developer_journal_append(
         runtime->journal, kind, operation_id, message, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -329,17 +410,26 @@ static UmiStatus record_operation_event(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer runtime set context operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_set_context(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperContextSnapshot *context)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || context == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_context_set(runtime->context, context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -350,23 +440,33 @@ UmiStatus umi_developer_runtime_set_context(
         "",
         "Developer context changed.",
         NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         runtime->revision += 1U;
     }
     return status;
 }
 
+/*
+ * Provide the developer runtime submit operation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_submit_operation(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperOperationSnapshot *operation)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || operation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_submit(runtime->pipeline, operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -375,6 +475,10 @@ UmiStatus umi_developer_runtime_submit_operation(
         runtime, operation->id, UMI_DEVELOPER_EVENT_SUBMITTED, "Operation queued.");
 }
 
+/*
+ * Provide the developer runtime add dependency operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_add_dependency(
     UmiDeveloperRuntime *runtime,
     const char *operation_id,
@@ -382,12 +486,17 @@ UmiStatus umi_developer_runtime_add_dependency(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_add_dependency(
         runtime->pipeline, operation_id, depends_on_operation_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -399,6 +508,10 @@ UmiStatus umi_developer_runtime_add_dependency(
         "Operation dependency added.");
 }
 
+/*
+ * Provide the developer runtime submit cmake plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_submit_cmake_plan(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperCMakePlanRequest *request,
@@ -409,11 +522,16 @@ UmiStatus umi_developer_runtime_submit_cmake_plan(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_cmake_plan_submit(runtime->pipeline, request, &plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -423,36 +541,52 @@ UmiStatus umi_developer_runtime_submit_cmake_plan(
     operation_ids[2] = plan.test_operation_id;
     operation_ids[3] = plan.run_operation_id;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 4U; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (operation_ids[index][0] != '\0') {
             status = record_operation_event(
                 runtime,
                 operation_ids[index],
                 UMI_DEVELOPER_EVENT_SUBMITTED,
                 "Operation queued by CMake plan.");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_plan != NULL) {
         *out_plan = plan;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer runtime start operation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_start_operation(
     UmiDeveloperRuntime *runtime,
     const char *operation_id)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_start(runtime->pipeline, operation_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -460,6 +594,10 @@ UmiStatus umi_developer_runtime_start_operation(
         runtime, operation_id, UMI_DEVELOPER_EVENT_STARTED, "Operation started.");
 }
 
+/*
+ * Provide the developer runtime start next operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_start_next(
     UmiDeveloperRuntime *runtime,
     UmiDeveloperOperationSnapshot *out_operation)
@@ -467,27 +605,41 @@ UmiStatus umi_developer_runtime_start_next(
     UmiDeveloperOperationSnapshot operation;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_next_ready(runtime->pipeline, &operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = umi_developer_runtime_start_operation(runtime, operation.id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     status = umi_developer_pipeline_find(runtime->pipeline, operation.id, &operation);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && out_operation != NULL) {
         *out_operation = operation;
     }
     return status;
 }
 
+/*
+ * Provide the developer runtime set progress operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_set_progress(
     UmiDeveloperRuntime *runtime,
     const char *operation_id,
@@ -496,12 +648,17 @@ UmiStatus umi_developer_runtime_set_progress(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_set_progress(
         runtime->pipeline, operation_id, progress_basis_points, summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -509,6 +666,10 @@ UmiStatus umi_developer_runtime_set_progress(
         runtime, operation_id, UMI_DEVELOPER_EVENT_PROGRESS, summary);
 }
 
+/*
+ * Provide the developer runtime complete operation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_complete_operation(
     UmiDeveloperRuntime *runtime,
     const char *operation_id,
@@ -517,12 +678,17 @@ UmiStatus umi_developer_runtime_complete_operation(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_complete(
         runtime->pipeline, operation_id, exit_code, summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -530,6 +696,10 @@ UmiStatus umi_developer_runtime_complete_operation(
         runtime, operation_id, UMI_DEVELOPER_EVENT_SUCCEEDED, summary);
 }
 
+/*
+ * Provide the developer runtime fail operation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_fail_operation(
     UmiDeveloperRuntime *runtime,
     const char *operation_id,
@@ -538,12 +708,17 @@ UmiStatus umi_developer_runtime_fail_operation(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_fail(
         runtime->pipeline, operation_id, exit_code, summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -551,6 +726,10 @@ UmiStatus umi_developer_runtime_fail_operation(
         runtime, operation_id, UMI_DEVELOPER_EVENT_FAILED, summary);
 }
 
+/*
+ * Provide the developer runtime cancel operation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_cancel_operation(
     UmiDeveloperRuntime *runtime,
     const char *operation_id,
@@ -558,11 +737,16 @@ UmiStatus umi_developer_runtime_cancel_operation(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_cancel(runtime->pipeline, operation_id, summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -570,17 +754,26 @@ UmiStatus umi_developer_runtime_cancel_operation(
         runtime, operation_id, UMI_DEVELOPER_EVENT_CANCELLED, summary);
 }
 
+/*
+ * Provide the developer runtime retry operation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_runtime_retry_operation(
     UmiDeveloperRuntime *runtime,
     const char *operation_id)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_retry(runtime->pipeline, operation_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -588,6 +781,10 @@ UmiStatus umi_developer_runtime_retry_operation(
         runtime, operation_id, UMI_DEVELOPER_EVENT_RETRIED, "Operation queued for retry.");
 }
 
+/*
+ * Provide the developer runtime execute next operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_execute_next(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperExecutor *executor,
@@ -600,11 +797,16 @@ UmiStatus umi_developer_runtime_execute_next(
     UmiStatus final_status;
     const char *summary;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || executor == NULL || executor->execute == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_runtime_start_next(runtime, &operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -615,40 +817,58 @@ UmiStatus umi_developer_runtime_execute_next(
     status = executor->execute(executor->user_data, &operation, &result);
     summary = result.output[0] != '\0' ? result.output : umi_status_text(status);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CANCELLED || result.cancelled != 0) {
         final_status = umi_developer_runtime_cancel_operation(
             runtime, operation.id, summary);
-    } else if (status == UMI_STATUS_OK && result.exit_code == 0 &&
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_OK && result.exit_code == 0 &&
                result.timed_out == 0) {
         final_status = umi_developer_runtime_complete_operation(
             runtime, operation.id, result.exit_code, summary);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         final_status = umi_developer_runtime_fail_operation(
             runtime, operation.id, result.exit_code, summary);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (final_status != UMI_STATUS_OK) {
         return final_status;
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) {
         *out_result = result;
     }
 
     final_status = umi_developer_pipeline_find(
         runtime->pipeline, operation.id, &operation);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (final_status == UMI_STATUS_OK && out_operation != NULL) {
         *out_operation = operation;
     }
     return final_status;
 }
 
+/*
+ * Provide the developer runtime snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_runtime_snapshot(
     UmiDeveloperRuntime *runtime,
     UmiDeveloperRuntimeSnapshot *out_snapshot)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -691,51 +911,91 @@ UmiStatus umi_developer_runtime_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer runtime context operation used by this module and its client
+ * applications.
+ */
 UmiDeveloperContext *umi_developer_runtime_context(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->context : NULL;
 }
 
+/*
+ * Provide the developer runtime pipeline operation used by this module and its client
+ * applications.
+ */
 UmiDeveloperPipeline *umi_developer_runtime_pipeline(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->pipeline : NULL;
 }
 
+/*
+ * Provide the developer runtime journal operation used by this module and its client
+ * applications.
+ */
 UmiDeveloperJournal *umi_developer_runtime_journal(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->journal : NULL;
 }
 
+/*
+ * Provide the developer runtime projects operation used by this module and its client
+ * applications.
+ */
 UmiProjectWorkspace *umi_developer_runtime_projects(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->projects : NULL;
 }
 
+/*
+ * Provide the developer runtime language operation used by this module and its client
+ * applications.
+ */
 UmiLanguageService *umi_developer_runtime_language(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->language : NULL;
 }
 
+/*
+ * Provide the developer runtime debug operation used by this module and its client
+ * applications.
+ */
 UmiDebugService *umi_developer_runtime_debug(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->debug : NULL;
 }
 
+/*
+ * Provide the developer runtime source control operation used by this module and its
+ * client applications.
+ */
 UmiSourceControlService *umi_developer_runtime_source_control(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->source_control : NULL;
 }
 
+/*
+ * Provide the developer runtime tests operation used by this module and its client
+ * applications.
+ */
 UmiTestPlatformService *umi_developer_runtime_tests(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->tests : NULL;
 }
 
+/*
+ * Provide the developer runtime workbench operation used by this module and its client
+ * applications.
+ */
 UmiUiWorkbenchServices *umi_developer_runtime_workbench(UmiDeveloperRuntime *runtime)
 {
     return runtime != NULL ? runtime->workbench : NULL;
 }
 
+/*
+ * Provide the developer runtime universal model operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperUniversalModel *umi_developer_runtime_universal_model(
     UmiDeveloperRuntime *runtime)
 {

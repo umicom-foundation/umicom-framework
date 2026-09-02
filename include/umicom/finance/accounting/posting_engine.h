@@ -20,9 +20,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the accounting posting engine data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAccountingPostingEngine { size_t generated_entries; size_t rejected_events; } UmiAccountingPostingEngine;
+/**
+ * Initialise accounting posting engine from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_accounting_posting_engine_init(UmiAccountingPostingEngine *value);
+/**
+ * Provide the accounting posting engine generate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_accounting_posting_engine_generate(UmiAccountingPostingEngine *value,const UmiAccountingAccountingEvent *event,const UmiAccountingPostingRule *rule,const char *journal_id,UmiAccountingJournalEntry *out_entry);
+/**
+ * Check that accounting posting engine satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_accounting_posting_engine_valid(const UmiAccountingPostingEngine *value);
 #ifdef __cplusplus
 }

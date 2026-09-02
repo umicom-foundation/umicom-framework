@@ -14,9 +14,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/types.h"
 
+/*
+ * Provide the studio runtime surface kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_studio_runtime_surface_kind_text(
     UmiStudioRuntimeSurfaceKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_STUDIO_SURFACE_EXPLORER: return "explorer";
         case UMI_STUDIO_SURFACE_EDITOR: return "editor";
@@ -40,9 +45,14 @@ const char *umi_studio_runtime_surface_kind_text(
     }
 }
 
+/*
+ * Provide the studio runtime selection kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_studio_runtime_selection_kind_text(
     UmiStudioRuntimeSelectionKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_STUDIO_SELECTION_NONE: return "none";
         case UMI_STUDIO_SELECTION_PROBLEM: return "problem";
@@ -58,9 +68,14 @@ const char *umi_studio_runtime_selection_kind_text(
     }
 }
 
+/*
+ * Provide the studio runtime status kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_studio_runtime_status_kind_text(
     UmiStudioRuntimeStatusKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_STUDIO_STATUS_WORKSPACE: return "workspace";
         case UMI_STUDIO_STATUS_BRANCH: return "branch";
@@ -76,9 +91,14 @@ const char *umi_studio_runtime_status_kind_text(
     }
 }
 
+/*
+ * Provide the studio runtime close decision text operation used by this module and its
+ * client applications.
+ */
 const char *umi_studio_runtime_close_decision_text(
     UmiStudioRuntimeCloseDecision decision)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (decision) {
         case UMI_STUDIO_CLOSE_ALLOW: return "allow";
         case UMI_STUDIO_CLOSE_CONFIRM_DIRTY: return "confirm-dirty";

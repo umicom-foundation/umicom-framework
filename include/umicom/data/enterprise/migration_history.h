@@ -25,7 +25,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data migration history entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataMigrationHistoryEntry { char migration_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; uint64_t applied_at; uint64_t schema_fingerprint; bool success; } UmiDataMigrationHistoryEntry;
+/**
+ * Represent the data migration history data shared with callers of this public contract.
+ */
 typedef struct UmiDataMigrationHistory { UmiDataMigrationHistoryEntry items[UMI_DATA_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiDataMigrationHistory;
 /* Reset migration history evidence. */ void umi_data_migration_history_init(UmiDataMigrationHistory *history);
 /* Append immutable migration outcome evidence. */ UmiStatus umi_data_migration_history_append(UmiDataMigrationHistory *history,const char *migration_id,uint64_t applied_at,uint64_t schema_fingerprint,bool success);

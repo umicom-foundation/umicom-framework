@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design interaction state values accepted by this public contract.
+ */
 typedef enum UmiDesignInteractionState {
     UMI_DESIGN_INTERACTION_REST = 1,
     UMI_DESIGN_INTERACTION_HOVER = 2,

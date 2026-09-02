@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev model capability data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevModelCapability {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +41,25 @@ typedef struct UmiAiDevModelCapability {
     int enabled;
 } UmiAiDevModelCapability;
 
+/**
+ * Initialise ai dev model capability from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_model_capability_init(UmiAiDevModelCapability *policy);
+/**
+ * Provide the ai dev model capability configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_capability_configure(UmiAiDevModelCapability *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev model capability allows operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_model_capability_allows(const UmiAiDevModelCapability *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev model capability approval required operation used by this module and
+ * its client applications.
+ */
 int umi_ai_dev_model_capability_approval_required(const UmiAiDevModelCapability *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

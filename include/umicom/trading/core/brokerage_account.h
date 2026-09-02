@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading brokerage account data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingBrokerageAccount { UmiFinancialId account_id; UmiCurrency base_currency; bool enabled; bool margin_enabled; } UmiTradingBrokerageAccount;
 /* Initialise a brokerage account. */
 UmiStatus umi_trading_brokerage_account_init(UmiTradingBrokerageAccount *account,const char *account_id,const UmiCurrency *base_currency,bool margin_enabled);

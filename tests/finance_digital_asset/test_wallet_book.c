@@ -18,6 +18,10 @@
 
 #include "umicom/finance/digital_asset/wallet_book.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDigitalAssetWalletBook catalogue;

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the vcs commit parse record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_commit_parse_record(const char *record,
                                       UmiVcsCommit *out_commit);
 

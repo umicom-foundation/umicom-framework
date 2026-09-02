@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/privilege_boundary.h"
 
+/*
+ * Provide the developer capability privilege boundary operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_privilege_boundary(void)
 {

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_CLOUD_PROVIDER "umicom.document.provider.cloud_provider"
 
+/**
+ * Provide the document capability cloud provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_cloud_provider(void);
 

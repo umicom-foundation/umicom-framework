@@ -21,7 +21,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native lexer report data shared with callers of this public contract.
+ */
 typedef struct UmiNativeLexerReport { size_t tokens; size_t comments; size_t errors; uint32_t final_line; } UmiNativeLexerReport;
+/**
+ * Perform nc lexer through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_nc_lexer_run(const UmiNativeSourceBuffer *source,UmiNativeTokenStream *out_stream,UmiNativeLexerReport *out_report);
 #ifdef __cplusplus
 }

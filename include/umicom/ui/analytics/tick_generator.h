@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics ticks data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsTicks { double values[UMI_ANALYTICS_MAX_BINS]; size_t count; } UmiAnalyticsTicks;
+/**
+ * Provide the analytics ticks linear operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_ticks_linear(double minimum,double maximum,size_t requested,UmiAnalyticsTicks *out_ticks);
 
 #ifdef __cplusplus

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic layout command set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicLayoutCommandSet {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char label[UMI_UI_MOSAIC_TEXT_CAPACITY];

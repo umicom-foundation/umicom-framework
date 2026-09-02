@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix observation data shared with callers of this public contract.
+ */
 typedef struct UmiHelixObservation {
     char observation_id[UMI_HELIX_ID_CAPACITY];
     char component_id[UMI_HELIX_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixObservation {
     int severity;
 } UmiHelixObservation;
 
+/**
+ * Initialise helix observation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_observation_init(UmiHelixObservation *value);
 
 #ifdef __cplusplus

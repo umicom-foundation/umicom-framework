@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/binding_scheduler.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveBindingScheduler item; umi_ui_reactive_binding_scheduler_init(&item); return umi_ui_reactive_binding_scheduler_valid(&item) ? 0 : 1; }

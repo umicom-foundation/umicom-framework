@@ -18,15 +18,21 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     assert(umi_developer_capability_builtin_count() == 120U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_developer_capability_builtin_count(); ++index) {
         const UmiDeveloperCapabilityDescriptor *left =
             umi_developer_capability_builtin_at(index);
         size_t other;
         assert(left != NULL);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U;
              other < umi_developer_capability_builtin_count(); ++other) {
             const UmiDeveloperCapabilityDescriptor *right =

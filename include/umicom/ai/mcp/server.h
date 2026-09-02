@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise ai mcp server from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_mcp_server_init(
     UmiAiMcpServerDescriptor *server,
     const char *server_id,
@@ -29,6 +33,9 @@ UmiStatus umi_ai_mcp_server_init(
     const char *endpoint,
     UmiAiMcpTrust trust);
 
+/**
+ * Check that ai mcp server satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ai_mcp_server_validate(
     const UmiAiMcpServerDescriptor *server);
 

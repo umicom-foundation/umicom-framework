@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive ui state service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveUiStateService {
     bool bindings_ready;
     bool validation_ready;
@@ -25,7 +29,15 @@ typedef struct UmiUiReactiveUiStateService {
     bool scheduler_ready;
     uint64_t revision;
 } UmiUiReactiveUiStateService;
+/**
+ * Initialise ui reactive ui state service from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ui_reactive_ui_state_service_init(UmiUiReactiveUiStateService *item);
+/**
+ * Check that ui reactive ui state service satisfies its contract before another service
+ * relies on it.
+ */
 int umi_ui_reactive_ui_state_service_valid(const UmiUiReactiveUiStateService *item);
 #ifdef __cplusplus
 }

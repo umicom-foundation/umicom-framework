@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application runtime health data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationRuntimeHealth {
     uint32_t structure_size;
     UmiApplicationHealthSeverity severity;
@@ -32,11 +36,19 @@ typedef struct UmiApplicationRuntimeHealth {
     size_t open_p1_features;
 } UmiApplicationRuntimeHealth;
 
+/**
+ * Provide the application runtime health evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_runtime_health_evaluate(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationCapabilityProbe probe,
     void *user_data,
     UmiApplicationRuntimeHealth *out_health);
+/**
+ * Provide the application health severity text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_health_severity_text(
     UmiApplicationHealthSeverity severity);
 

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection provider from problem operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_problem(
     const UmiUiProblemSnapshot *problem,
     const char *application_id,
@@ -31,6 +35,10 @@ UmiStatus umi_workbench_selection_provider_from_problem(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider problem while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_problem_at(
     const UmiUiProblemRegistry *registry,
     size_t index,
@@ -40,6 +48,10 @@ UmiStatus umi_workbench_selection_provider_problem_at(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Find workbench selection provider problem while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_problem_find(
     const UmiUiProblemRegistry *registry,
     const char *problem_id,

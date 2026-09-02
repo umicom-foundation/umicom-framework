@@ -31,8 +31,18 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/cpu_feature_set.h"
+/**
+ * Represent the ct cpu profile data shared with callers of this public contract.
+ */
 typedef struct UmiCtCpuProfile { char profile_id[UMI_CT_ID_CAPACITY]; UmiCtArchitecture architecture; uint32_t xlen; UmiCtCpuFeatureSet required; uint32_t minimum_cores; } UmiCtCpuProfile;
+/**
+ * Check that ct cpu profile satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ct_cpu_profile_validate(const UmiCtCpuProfile *profile);
+/**
+ * Provide the ct cpu profile matches operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_cpu_profile_matches(const UmiCtCpuProfile *profile,UmiCtArchitecture architecture,uint32_t xlen,uint32_t cores,const UmiCtCpuFeatureSet *available);
 
 #ifdef __cplusplus

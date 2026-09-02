@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced staging hunk data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedStagingHunk {
     uint32_t struct_size;
     uint32_t api_version;
@@ -39,8 +43,20 @@ typedef struct UmiVcsAdvancedStagingHunk {
     int selected;
 } UmiVcsAdvancedStagingHunk;
 
+/**
+ * Initialise vcs advanced staging hunk from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_staging_hunk_init(UmiVcsAdvancedStagingHunk *value);
+/**
+ * Check that vcs advanced staging hunk satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_staging_hunk_validate(const UmiVcsAdvancedStagingHunk *value);
+/**
+ * Copy vcs advanced staging hunk into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_staging_hunk_set(UmiVcsAdvancedStagingHunk *value,
                                               const char *path,
                                               size_t old_start,

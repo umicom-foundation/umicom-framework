@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad device profile data shared with callers of this public contract.
+ */
 typedef struct UmiRadDeviceProfile {
     char profile_id[UMI_RAD_ID_CAPACITY];
     int32_t width;
@@ -25,7 +28,15 @@ typedef struct UmiRadDeviceProfile {
     uint32_t dpi;
     bool touch;
 } UmiRadDeviceProfile;
+/**
+ * Initialise rad device profile from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_device_profile_init(UmiRadDeviceProfile *item);
+/**
+ * Check that rad device profile satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_device_profile_is_valid(const UmiRadDeviceProfile *item);
 #ifdef __cplusplus
 }

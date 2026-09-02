@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic context route data shared with callers of this public contract.
+ */
 typedef struct UmiUiMosaicContextRoute {
     char group_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char context_type[UMI_UI_MOSAIC_ID_CAPACITY];

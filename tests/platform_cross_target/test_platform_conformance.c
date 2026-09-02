@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtPlatformConformanceInput i={3U,3U,3U,1U,4U,4U};UmiCtPlatformConformance r=umi_ct_platform_conformance_evaluate(&i);CHECK(r.cpu_gaps==1U);CHECK(r.score<100U);i.cpu_available=3U;r=umi_ct_platform_conformance_evaluate(&i);CHECK(r.score==100U&&r.health==UMI_CT_HEALTH_READY);return 0;}

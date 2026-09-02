@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the mean reversion distance operation used by this module and its client
+ * applications.
+ */
 double umi_mean_reversion_distance(double price, double reference);
 #ifdef __cplusplus
 }

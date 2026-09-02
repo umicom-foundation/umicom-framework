@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_sensitivity_request_init(UmiQuantSensitivityRequest *record, double base_value, double bump_size, int32_t central)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(umi_quant_number_valid(base_value) && bump_size > 0.0 && (central == 0 || central == 1))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->base_value = base_value;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_sensitivity_request_init(UmiQuantSensitivityRequest *record,
 /* Return the upward bumped market value. */
 double umi_quant_sensitivity_request_up_value(const UmiQuantSensitivityRequest *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->base_value + record->bump_size;
 }

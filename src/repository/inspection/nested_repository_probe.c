@@ -40,9 +40,11 @@ UmiStatus umi_repository_nested_repository_probe_read(
 
     /* Git returns an empty path when the repository is not a submodule. */
     status = umi_repository_git_command_execute(context, args, 2U, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result.exit_code != 0) {
         return UMI_STATUS_OK;
     }

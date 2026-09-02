@@ -24,12 +24,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* Provide the attr int operation used by this module and its client applications. */
 static int attr_int(const UmiDeclNode *node,
                     const char *name,
                     int fallback)
 {
     UmiDeclAttribute attribute;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_decl_node_get_attribute(node, name, &attribute) != UMI_STATUS_OK) {
         return fallback;
     }
@@ -37,6 +39,10 @@ static int attr_int(const UmiDeclNode *node,
     return (int)strtol(attribute.value.text, NULL, 10);
 }
 
+/*
+ * Provide the designer surface get rect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_surface_get_rect(
     const UmiDesignerDocument *document,
     const char *id,
@@ -45,6 +51,10 @@ UmiStatus umi_designer_surface_get_rect(
     UmiDeclNode node;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || id == NULL || out_rect == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -54,6 +64,7 @@ UmiStatus umi_designer_surface_get_rect(
         id,
         &node
     );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -65,6 +76,10 @@ UmiStatus umi_designer_surface_get_rect(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the designer surface set rect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_surface_set_rect(
     UmiDesignerDocument *document,
     const char *id,
@@ -74,6 +89,10 @@ UmiStatus umi_designer_surface_set_rect(
     char value[32];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || id == NULL ||
         rect.width < 0 || rect.height < 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -84,6 +103,7 @@ UmiStatus umi_designer_surface_set_rect(
         id,
         &node
     );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -93,6 +113,7 @@ UmiStatus umi_designer_surface_set_rect(
                                          "x",
                                          UMI_DECL_VALUE_INTEGER,
                                          value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(value, sizeof(value), "%d", rect.y);
         status = umi_decl_node_set_attribute(&node,
@@ -100,6 +121,7 @@ UmiStatus umi_designer_surface_set_rect(
                                              UMI_DECL_VALUE_INTEGER,
                                              value);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(value, sizeof(value), "%d", rect.width);
         status = umi_decl_node_set_attribute(&node,
@@ -107,6 +129,7 @@ UmiStatus umi_designer_surface_set_rect(
                                              UMI_DECL_VALUE_INTEGER,
                                              value);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)snprintf(value, sizeof(value), "%d", rect.height);
         status = umi_decl_node_set_attribute(&node,
@@ -114,12 +137,14 @@ UmiStatus umi_designer_surface_set_rect(
                                              UMI_DECL_VALUE_INTEGER,
                                              value);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_decl_document_update_node(
             umi_designer_document_declarative(document),
             &node
         );
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_designer_document_mark_changed(document);
     }
@@ -127,8 +152,16 @@ UmiStatus umi_designer_surface_set_rect(
     return status;
 }
 
+/*
+ * Initialise designer surface options from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_designer_surface_options_init(UmiDesignerSurfaceOptions *options)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (options == NULL) {
         return;
     }
@@ -140,10 +173,18 @@ void umi_designer_surface_options_init(UmiDesignerSurfaceOptions *options)
     options->show_guides = 1;
 }
 
+/*
+ * Provide the designer surface set zoom operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_surface_set_zoom(
     UmiDesignerSurfaceOptions *options,
     float zoom)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (options == NULL || zoom < 0.25F || zoom > 4.0F) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -152,11 +193,19 @@ UmiStatus umi_designer_surface_set_zoom(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the designer surface set grid operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_surface_set_grid(
     UmiDesignerSurfaceOptions *options,
     unsigned grid_size,
     int snap_to_grid)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (options == NULL || grid_size == 0U || grid_size > 256U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -166,16 +215,19 @@ UmiStatus umi_designer_surface_set_grid(
     return UMI_STATUS_OK;
 }
 
+/* Provide the snap value operation used by this module and its client applications. */
 static int snap_value(int value, unsigned grid)
 {
     int grid_value = (int)grid;
     int remainder;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (grid == 0U) {
         return value;
     }
 
     remainder = value % grid_value;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (remainder < 0) {
         remainder += grid_value;
     }
@@ -185,10 +237,18 @@ static int snap_value(int value, unsigned grid)
         : value - remainder;
 }
 
+/*
+ * Provide the designer surface snap rect operation used by this module and its client
+ * applications.
+ */
 UmiDesignerRect umi_designer_surface_snap_rect(
     const UmiDesignerSurfaceOptions *options,
     UmiDesignerRect rect)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (options == NULL || !options->snap_to_grid ||
         options->grid_size == 0U) {
         return rect;
@@ -201,6 +261,10 @@ UmiDesignerRect umi_designer_surface_snap_rect(
     return rect;
 }
 
+/*
+ * Provide the designer surface align operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_surface_align(
     UmiDesignerRect *rects,
     size_t count,
@@ -209,18 +273,26 @@ UmiStatus umi_designer_surface_align(
     size_t index;
     int target;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (rects == NULL || count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (alignment) {
         case UMI_DESIGNER_ALIGN_LEFT:
             target = rects[0].x;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 1U; index < count; ++index) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (rects[index].x < target) {
                     target = rects[index].x;
                 }
             }
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < count; ++index) {
                 rects[index].x = target;
             }
@@ -228,12 +300,15 @@ UmiStatus umi_designer_surface_align(
 
         case UMI_DESIGNER_ALIGN_RIGHT:
             target = rects[0].x + rects[0].width;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 1U; index < count; ++index) {
                 int edge = rects[index].x + rects[index].width;
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (edge > target) {
                     target = edge;
                 }
             }
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < count; ++index) {
                 rects[index].x = target - rects[index].width;
             }
@@ -241,11 +316,14 @@ UmiStatus umi_designer_surface_align(
 
         case UMI_DESIGNER_ALIGN_TOP:
             target = rects[0].y;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 1U; index < count; ++index) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (rects[index].y < target) {
                     target = rects[index].y;
                 }
             }
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < count; ++index) {
                 rects[index].y = target;
             }
@@ -253,12 +331,15 @@ UmiStatus umi_designer_surface_align(
 
         case UMI_DESIGNER_ALIGN_BOTTOM:
             target = rects[0].y + rects[0].height;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 1U; index < count; ++index) {
                 int edge = rects[index].y + rects[index].height;
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (edge > target) {
                     target = edge;
                 }
             }
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < count; ++index) {
                 rects[index].y = target - rects[index].height;
             }
@@ -266,6 +347,7 @@ UmiStatus umi_designer_surface_align(
 
         case UMI_DESIGNER_ALIGN_HORIZONTAL_CENTRE:
             target = rects[0].x + rects[0].width / 2;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < count; ++index) {
                 rects[index].x = target - rects[index].width / 2;
             }
@@ -273,6 +355,7 @@ UmiStatus umi_designer_surface_align(
 
         case UMI_DESIGNER_ALIGN_VERTICAL_CENTRE:
             target = rects[0].y + rects[0].height / 2;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < count; ++index) {
                 rects[index].y = target - rects[index].height / 2;
             }
@@ -285,13 +368,17 @@ UmiStatus umi_designer_surface_align(
     return UMI_STATUS_OK;
 }
 
+/* Provide the sort horizontal operation used by this module and its client applications. */
 static void sort_horizontal(UmiDesignerRect *rects, size_t count)
 {
     size_t outer;
     size_t inner;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (outer = 0U; outer + 1U < count; ++outer) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (inner = outer + 1U; inner < count; ++inner) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (rects[inner].x < rects[outer].x) {
                 UmiDesignerRect temporary = rects[outer];
                 rects[outer] = rects[inner];
@@ -301,13 +388,17 @@ static void sort_horizontal(UmiDesignerRect *rects, size_t count)
     }
 }
 
+/* Provide the sort vertical operation used by this module and its client applications. */
 static void sort_vertical(UmiDesignerRect *rects, size_t count)
 {
     size_t outer;
     size_t inner;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (outer = 0U; outer + 1U < count; ++outer) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (inner = outer + 1U; inner < count; ++inner) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (rects[inner].y < rects[outer].y) {
                 UmiDesignerRect temporary = rects[outer];
                 rects[outer] = rects[inner];
@@ -317,6 +408,10 @@ static void sort_vertical(UmiDesignerRect *rects, size_t count)
     }
 }
 
+/*
+ * Provide the designer surface distribute operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_surface_distribute(
     UmiDesignerRect *rects,
     size_t count,
@@ -327,18 +422,25 @@ UmiStatus umi_designer_surface_distribute(
     int occupied = 0;
     int gap;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (rects == NULL || count < 3U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (distribution == UMI_DESIGNER_DISTRIBUTE_HORIZONTAL) {
         sort_horizontal(rects, count);
         available = rects[count - 1U].x + rects[count - 1U].width -
                     rects[0].x;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < count; ++index) {
             occupied += rects[index].width;
         }
         gap = (available - occupied) / (int)(count - 1U);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 1U; index + 1U < count; ++index) {
             rects[index].x =
                 rects[index - 1U].x + rects[index - 1U].width + gap;
@@ -346,14 +448,17 @@ UmiStatus umi_designer_surface_distribute(
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (distribution == UMI_DESIGNER_DISTRIBUTE_VERTICAL) {
         sort_vertical(rects, count);
         available = rects[count - 1U].y + rects[count - 1U].height -
                     rects[0].y;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < count; ++index) {
             occupied += rects[index].height;
         }
         gap = (available - occupied) / (int)(count - 1U);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 1U; index + 1U < count; ++index) {
             rects[index].y =
                 rects[index - 1U].y + rects[index - 1U].height + gap;

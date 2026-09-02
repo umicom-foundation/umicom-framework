@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/brokerage_account_book.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingBrokerageAccountBook b;
@@ -20,6 +24,7 @@ int main(void) {
     UmiCurrency c={{'U','S','D','\0'}};
     umi_trading_brokerage_account_book_init(&b);
     umi_trading_brokerage_account_init(&a,"a",&c,false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_brokerage_account_book_add(&b,&a)!=UMI_STATUS_OK)return 1;
     return umi_trading_brokerage_account_book_find(&b,&a.account_id)!=NULL?0:2;
 }

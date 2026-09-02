@@ -26,7 +26,14 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named fabric schema compatibility values accepted by this public contract.
+ */
 typedef enum UmiFabricSchemaCompatibility { UMI_FABRIC_SCHEMA_INCOMPATIBLE=0,UMI_FABRIC_SCHEMA_EXACT=1,UMI_FABRIC_SCHEMA_BACKWARD=2,UMI_FABRIC_SCHEMA_FORWARD=3 } UmiFabricSchemaCompatibility;
+/**
+ * Provide the fabric schema compatibility classify operation used by this module and its
+ * client applications.
+ */
 UmiFabricSchemaCompatibility umi_fabric_schema_compatibility_classify(const UmiFabricSchemaDescriptor *producer,const UmiFabricSchemaDescriptor *consumer);
 
 #ifdef __cplusplus

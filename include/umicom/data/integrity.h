@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data integrity report data shared with callers of this public contract.
+ */
 typedef struct UmiDataIntegrityReport {
     UmiDataServerBackend backend;
     const char *backend_name;
@@ -35,6 +38,10 @@ typedef struct UmiDataIntegrityReport {
     UmiStatus integrity_status;
 } UmiDataIntegrityReport;
 
+/**
+ * Provide the data integrity check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_integrity_check(UmiDataServer *server,
                                    UmiDataIntegrityReport *out_report);
 

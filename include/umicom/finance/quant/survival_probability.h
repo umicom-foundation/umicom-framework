@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant survival probability data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantSurvivalProbability {
     double hazard_rate;
     double years;

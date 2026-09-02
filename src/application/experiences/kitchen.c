@@ -82,6 +82,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience kitchen operation used by this module and its client
+ * applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_kitchen(void)
 {
     return &DEFINITION;

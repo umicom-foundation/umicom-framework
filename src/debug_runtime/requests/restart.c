@@ -17,11 +17,19 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request restart operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_restart(
     UmiDebugRuntimeAdapter *adapter,
     const char *arguments_json,
     uint64_t *out_sequence)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_debug_runtime_request_raw(
         adapter, "restart", arguments_json, "", out_sequence);

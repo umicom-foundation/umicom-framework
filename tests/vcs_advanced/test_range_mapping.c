@@ -18,13 +18,20 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/range_mapping.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiVcsAdvancedRangeMapping value;
     umi_vcs_advanced_range_mapping_init(&value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_range_mapping_validate(&value) == UMI_STATUS_OK) return 1;
     value.source_start = 10U; value.source_count = 5U; value.target_start = 12U; value.target_count = 5U; value.confidence_percent = 100U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_range_mapping_validate(&value) != UMI_STATUS_OK) return 2;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_vcs_advanced_range_mapping_delta(&value) != 2LL) return 3;
     return 0;
 }

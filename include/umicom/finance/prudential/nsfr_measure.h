@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential nsfr measure data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialNsfrMeasure { double numerator; double denominator; double ratio; } UmiPrudentialNsfrMeasure;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_nsfr_measure_calculate(UmiPrudentialNsfrMeasure *result, double numerator, double denominator);

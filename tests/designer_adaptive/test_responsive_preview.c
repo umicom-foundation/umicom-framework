@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/responsive_preview.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesignerResponsivePreview p; UmiAdaptiveViewport v={390,844}; UmiAdaptiveInsets s={44,0,34,0};

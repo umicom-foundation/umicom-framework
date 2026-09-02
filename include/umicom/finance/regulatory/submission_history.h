@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the submission history entry data shared with callers of this public contract.
+ */
 typedef struct UmiSubmissionHistoryEntry { UmiRegLifecycleState state; int64_t event_ms; } UmiSubmissionHistoryEntry;
+/**
+ * Represent the submission history data shared with callers of this public contract.
+ */
 typedef struct UmiSubmissionHistory { UmiSubmissionHistoryEntry entries[UMI_REG_MAX_HISTORY]; size_t count; } UmiSubmissionHistory;
 /* Initialise an empty submission history. */
 void umi_reg_submission_history_init(UmiSubmissionHistory *history);

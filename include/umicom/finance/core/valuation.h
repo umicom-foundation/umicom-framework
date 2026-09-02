@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the valuation data shared with callers of this public contract.
+ */
 typedef struct UmiValuation { UmiFinancialId id; UmiMoney amount; UmiFinancialDate date; uint32_t state; } UmiValuation;
 /* Initialize monetary record. */ UmiStatus umi_valuation_init(UmiValuation *x,const char *id,UmiMoney amount,UmiFinancialDate date,uint32_t state);
 /* Validate monetary record. */ bool umi_valuation_is_valid(const UmiValuation *x);

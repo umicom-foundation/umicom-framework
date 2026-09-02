@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host metrics projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextHostMetricsProjection {
     UmiWorkbenchContextHostMetrics host;
     UmiWorkbenchContextLinkMetrics link;
@@ -27,6 +31,10 @@ typedef struct UmiWorkbenchContextHostMetricsProjection {
     double duplicate_observation_ratio;
     uint64_t revision;
 } UmiWorkbenchContextHostMetricsProjection;
+/**
+ * Provide the workbench context host metrics projection build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_metrics_projection_build(
     const UmiWorkbenchContextHost *host,
     UmiWorkbenchContextHostMetricsProjection *out_projection);

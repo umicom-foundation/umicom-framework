@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading order event data shared with callers of this public contract.
+ */
 typedef struct UmiTradingOrderEvent { UmiFinancialId client_order_id; uint64_t sequence; int64_t event_time_ms; UmiTradingCoreOrderState state; } UmiTradingOrderEvent;
 /* Initialise and validate capture sequence-ordered evidence for an order lifecycle transition. */
 UmiStatus umi_trading_order_event_init(UmiTradingOrderEvent *value,const UmiFinancialId * client_order_id, uint64_t sequence, int64_t event_time_ms, UmiTradingCoreOrderState state);

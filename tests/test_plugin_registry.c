@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/plugin/registry.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiPluginRegistry *r = NULL; UmiPluginManifest m = {0}; UmiPluginRecord out;
     (void)strcpy(m.plugin_id,"org.umicom.example"); (void)strcpy(m.display_name,"Example"); (void)strcpy(m.library_path,"example.so"); m.required_abi=2U;

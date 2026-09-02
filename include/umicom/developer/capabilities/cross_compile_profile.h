@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CROSS_COMPILE_PROFILE "umicom.developer.configuration.cross_compile_profile"
 
+/**
+ * Provide the developer capability cross compile profile operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cross_compile_profile(void);
 

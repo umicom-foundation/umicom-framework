@@ -39,6 +39,10 @@ extern "C" {
 #define UMI_WORKBENCH_CONTEXT_HOST_MAX_SESSION_ASSIGNMENTS 256U
 #define UMI_WORKBENCH_CONTEXT_HOST_MAX_DIAGNOSTICS 128U
 
+/**
+ * List the named workbench context host panel role values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextHostPanelRole {
     UMI_WORKBENCH_CONTEXT_HOST_PANEL_GENERIC = 1,
     UMI_WORKBENCH_CONTEXT_HOST_PANEL_EXPLORER = 2,
@@ -68,6 +72,10 @@ typedef enum UmiWorkbenchContextHostPanelRole {
     UMI_WORKBENCH_CONTEXT_HOST_PANEL_TREASURY = 26
 } UmiWorkbenchContextHostPanelRole;
 
+/**
+ * List the named workbench context host endpoint state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextHostEndpointState {
     UMI_WORKBENCH_CONTEXT_HOST_ENDPOINT_DISABLED = 1,
     UMI_WORKBENCH_CONTEXT_HOST_ENDPOINT_READY = 2,
@@ -76,6 +84,10 @@ typedef enum UmiWorkbenchContextHostEndpointState {
     UMI_WORKBENCH_CONTEXT_HOST_ENDPOINT_ERROR = 5
 } UmiWorkbenchContextHostEndpointState;
 
+/**
+ * List the named workbench context host delivery disposition values accepted by this
+ * public contract.
+ */
 typedef enum UmiWorkbenchContextHostDeliveryDisposition {
     UMI_WORKBENCH_CONTEXT_HOST_DELIVERY_QUEUED = 1,
     UMI_WORKBENCH_CONTEXT_HOST_DELIVERY_CONSUMED = 2,
@@ -83,6 +95,10 @@ typedef enum UmiWorkbenchContextHostDeliveryDisposition {
     UMI_WORKBENCH_CONTEXT_HOST_DELIVERY_DROPPED = 4
 } UmiWorkbenchContextHostDeliveryDisposition;
 
+/**
+ * List the named workbench context host observation flag values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextHostObservationFlag {
     UMI_WORKBENCH_CONTEXT_HOST_OBSERVATION_NONE = 0,
     UMI_WORKBENCH_CONTEXT_HOST_OBSERVATION_WORKSPACE = 1 << 0,
@@ -92,6 +108,10 @@ typedef enum UmiWorkbenchContextHostObservationFlag {
     UMI_WORKBENCH_CONTEXT_HOST_OBSERVATION_VIEW_CONTAINER = 1 << 4
 } UmiWorkbenchContextHostObservationFlag;
 
+/**
+ * List the named workbench context host command kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextHostCommandKind {
     UMI_WORKBENCH_CONTEXT_HOST_COMMAND_SET_ACTIVE_GROUP = 1,
     UMI_WORKBENCH_CONTEXT_HOST_COMMAND_ASSIGN_PANEL = 2,
@@ -105,6 +125,10 @@ typedef enum UmiWorkbenchContextHostCommandKind {
     UMI_WORKBENCH_CONTEXT_HOST_COMMAND_RESUME = 10
 } UmiWorkbenchContextHostCommandKind;
 
+/**
+ * List the named workbench context host event kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextHostEventKind {
     UMI_WORKBENCH_CONTEXT_HOST_EVENT_ENDPOINT_REGISTERED = 1,
     UMI_WORKBENCH_CONTEXT_HOST_EVENT_ENDPOINT_REMOVED = 2,
@@ -118,6 +142,10 @@ typedef enum UmiWorkbenchContextHostEventKind {
     UMI_WORKBENCH_CONTEXT_HOST_EVENT_ERROR = 10
 } UmiWorkbenchContextHostEventKind;
 
+/**
+ * List the named workbench context host query kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchContextHostQueryKind {
     UMI_WORKBENCH_CONTEXT_HOST_QUERY_SNAPSHOT = 1,
     UMI_WORKBENCH_CONTEXT_HOST_QUERY_ENDPOINT = 2,
@@ -127,27 +155,67 @@ typedef enum UmiWorkbenchContextHostQueryKind {
     UMI_WORKBENCH_CONTEXT_HOST_QUERY_METRICS = 6
 } UmiWorkbenchContextHostQueryKind;
 
+/**
+ * Represent the workbench context host clock data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextHostClock {
     uint64_t now_ms;
     uint64_t sequence;
 } UmiWorkbenchContextHostClock;
 
+/**
+ * Provide the workbench context host bounded length operation used by this module and its
+ * client applications.
+ */
 size_t umi_workbench_context_host_bounded_length(const char *text, size_t capacity);
+/**
+ * Check that workbench context host text satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_workbench_context_host_text_is_valid(const char *text, size_t capacity);
+/**
+ * Provide the workbench context host copy text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_copy_text(
     char *destination,
     size_t capacity,
     const char *source);
+/**
+ * Provide the workbench context host hash text operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_host_hash_text(
     uint64_t hash,
     const char *text,
     size_t capacity);
+/**
+ * Provide the workbench context host kind mask operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_host_kind_mask(UmiContextKind kind);
+/**
+ * Provide the workbench context host kind allowed operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_context_host_kind_allowed(uint64_t mask, UmiContextKind kind);
+/**
+ * Provide the workbench context host panel role text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_context_host_panel_role_text(
     UmiWorkbenchContextHostPanelRole role);
+/**
+ * Provide the workbench context host endpoint state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_context_host_endpoint_state_text(
     UmiWorkbenchContextHostEndpointState state);
+/**
+ * Provide the workbench context host delivery disposition text operation used by this
+ * module and its client applications.
+ */
 const char *umi_workbench_context_host_delivery_disposition_text(
     UmiWorkbenchContextHostDeliveryDisposition disposition);
 

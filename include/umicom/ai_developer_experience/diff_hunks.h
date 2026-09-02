@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer diff build hunks operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_diff_build_hunks(
     UmiAiDeveloperFileDiff *diff,
     size_t context_lines);

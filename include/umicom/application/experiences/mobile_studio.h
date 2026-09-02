@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application experience mobile studio operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_mobile_studio(void);
 
 #ifdef __cplusplus

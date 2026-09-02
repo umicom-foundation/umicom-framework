@@ -27,6 +27,7 @@ typedef struct PromptVisitorContext {
     UmiAiMcpPromptCatalogue *catalogue;
 } PromptVisitorContext;
 
+/* Provide the visit tool operation used by this module and its client applications. */
 static UmiStatus visit_tool(
     const char *object_json,
     void *user_data)
@@ -39,6 +40,7 @@ static UmiStatus visit_tool(
     status = umi_ai_mcp_decode_tool(
         object_json,
         &tool);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -48,6 +50,7 @@ static UmiStatus visit_tool(
         &tool);
 }
 
+/* Provide the visit resource operation used by this module and its client applications. */
 static UmiStatus visit_resource(
     const char *object_json,
     void *user_data)
@@ -60,6 +63,7 @@ static UmiStatus visit_resource(
     status = umi_ai_mcp_decode_resource(
         object_json,
         &resource);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -69,6 +73,7 @@ static UmiStatus visit_resource(
         &resource);
 }
 
+/* Provide the visit prompt operation used by this module and its client applications. */
 static UmiStatus visit_prompt(
     const char *object_json,
     void *user_data)
@@ -81,6 +86,7 @@ static UmiStatus visit_prompt(
     status = umi_ai_mcp_decode_prompt(
         object_json,
         &prompt);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -90,6 +96,7 @@ static UmiStatus visit_prompt(
         &prompt);
 }
 
+/* Provide the request list operation used by this module and its client applications. */
 static UmiStatus request_list(
     UmiAiMcpSession *session,
     const char *method,
@@ -101,6 +108,10 @@ static UmiStatus request_list(
     size_t count = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL ||
         method == NULL ||
         array_key == NULL ||
@@ -115,6 +126,7 @@ static UmiStatus request_list(
         "{}",
         result,
         sizeof(result));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -127,12 +139,20 @@ static UmiStatus request_list(
         &count);
 }
 
+/*
+ * Provide the ai mcp discover tools operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_discover_tools(
     UmiAiMcpSession *session,
     UmiAiMcpToolCatalogue *catalogue)
 {
     ToolVisitorContext context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -148,12 +168,20 @@ UmiStatus umi_ai_mcp_discover_tools(
         &context);
 }
 
+/*
+ * Provide the ai mcp discover resources operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_discover_resources(
     UmiAiMcpSession *session,
     UmiAiMcpResourceCatalogue *catalogue)
 {
     ResourceVisitorContext context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -169,12 +197,20 @@ UmiStatus umi_ai_mcp_discover_resources(
         &context);
 }
 
+/*
+ * Provide the ai mcp discover prompts operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_discover_prompts(
     UmiAiMcpSession *session,
     UmiAiMcpPromptCatalogue *catalogue)
 {
     PromptVisitorContext context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

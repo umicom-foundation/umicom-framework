@@ -24,6 +24,10 @@ extern "C" {
 
 #define UMI_DIAGNOSTIC_OUTPUT_VIEW_ROW_MAX 56U
 
+/**
+ * Initialise diagnostic output view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_diagnostic_output_view_create(const char *view_id,
                                             UmiDiagnosticPipeline *pipeline,
                                             const char *channel_id,

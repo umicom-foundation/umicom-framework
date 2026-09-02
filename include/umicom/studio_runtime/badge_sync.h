@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio badge sync operation used by this module and its client applications.
+ */
 UmiStatus umi_studio_badge_sync(
     UmiStudioRuntimeBindings *bindings,
     const UmiIdeIntegrationPlatformSnapshot *snapshot);

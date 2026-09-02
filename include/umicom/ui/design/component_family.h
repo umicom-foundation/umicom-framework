@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design component family data shared with callers of this public contract.
+ */
 typedef struct UmiDesignComponentFamily { char id[UMI_DESIGN_ID_CAPACITY]; char component_ids[32][UMI_DESIGN_ID_CAPACITY]; size_t count; } UmiDesignComponentFamily;
 /* Initialise a named semantic component family. */
 UmiStatus umi_design_component_family_init(UmiDesignComponentFamily *family, const char *id);

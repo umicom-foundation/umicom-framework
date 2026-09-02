@@ -22,8 +22,16 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap starter profile from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_starter_profile_init(UmiBootstrapStarterProfile *profile,
                                              const char *profile_id);
+/**
+ * Add bootstrap starter profile only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_bootstrap_starter_profile_add(
     UmiBootstrapStarterProfile *profile,
     const UmiBootstrapStarterCatalogue *catalogue,

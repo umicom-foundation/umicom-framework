@@ -21,5 +21,7 @@
 #include "umicom/platform/filesystem.h"
 #include "umicom/base/version.h"
 #include <stdio.h>
+/* Provide the valid operation used by this module and its client applications. */
 static int valid(const char *p){UmiSdkPackage pkg;return umi_sdk_package_from_prefix(p,&pkg)==UMI_STATUS_OK&&umi_fs_is_file(pkg.config_file);}
-UmiStatus umi_sdk_locate(const char *preferred,char *out,size_t cap){const char *candidates[]={preferred,"C:/Dev/umicom/sdk/umicom-framework-" UMICOM_FRAMEWORK_VERSION_STRING "-local","/usr/local","/usr"};size_t i;int n;if(out==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;for(i=0U;i<sizeof(candidates)/sizeof(candidates[0]);++i){if(candidates[i]!=NULL&&valid(candidates[i])){n=snprintf(out,cap,"%s",candidates[i]);return n<0||(size_t)n>=cap?UMI_STATUS_CAPACITY_EXCEEDED:UMI_STATUS_OK;}}return UMI_STATUS_NOT_FOUND;}
+/* Provide the sdk locate operation used by this module and its client applications. */
+UmiStatus umi_sdk_locate(const char *preferred,char *out,size_t cap){const char *candidates[]={preferred,"C:/Dev/umicom/sdk/umicom-framework-" UMICOM_FRAMEWORK_VERSION_STRING "-local","/usr/local","/usr"};size_t i;int n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(out==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<sizeof(candidates)/sizeof(candidates[0]);++i){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(candidates[i]!=NULL&&valid(candidates[i])){n=snprintf(out,cap,"%s",candidates[i]);return n<0||(size_t)n>=cap?UMI_STATUS_CAPACITY_EXCEEDED:UMI_STATUS_OK;}}return UMI_STATUS_NOT_FOUND;}

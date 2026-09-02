@@ -20,6 +20,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "output.", .surface = UMI_STUDIO_SURFACE_OUTPUT, .prefix_match = 1, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile output operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_output(void)
 {

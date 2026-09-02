@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_smile_slice_init(UmiQuantSmileSlice *record, double lower_strike, double lower_vol, double upper_strike, double upper_vol)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(upper_strike > lower_strike && lower_vol >= 0.0 && upper_vol >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->lower_strike = lower_strike;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_smile_slice_init(UmiQuantSmileSlice *record, double lower_st
 /* Return linear volatility smile slope between two strikes. */
 double umi_quant_smile_slice_slope(const UmiQuantSmileSlice *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return (record->upper_vol - record->lower_vol) / (record->upper_strike - record->lower_strike);
 }

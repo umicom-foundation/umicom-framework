@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/abi/abi.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){assert(umi_abi_hash_text("umicom")!=0U);assert(umi_abi_hash_text("umicom")==umi_abi_hash_text("umicom"));return 0;}

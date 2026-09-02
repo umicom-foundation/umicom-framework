@@ -20,5 +20,13 @@
 
 #include "umicom/declarative/generator.h"
 #include <stdio.h>
-UmiStatus umi_decl_generate_c_main(const UmiDeclApplicationPlan *p,char *out,size_t cap){int n;if(p==NULL||out==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;n=snprintf(out,cap,"#include <stdio.h>\n#include <umicom/umicom.h>\n\nint main(void)\n{\n    puts(\"%s\");\n    return 0;\n}\n",p->application_id);return n>=0&&(size_t)n<cap?UMI_STATUS_OK:UMI_STATUS_CAPACITY_EXCEEDED;}
-UmiStatus umi_decl_generate_cmake(const UmiDeclApplicationPlan *p,char *out,size_t cap){int n;if(p==NULL||out==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;n=snprintf(out,cap,"cmake_minimum_required(VERSION 3.24)\nproject(%s LANGUAGES C)\nfind_package(UmicomFramework CONFIG REQUIRED)\nadd_executable(app main.c)\ntarget_link_libraries(app PRIVATE Umicom::Framework)\n",p->application_id);return n>=0&&(size_t)n<cap?UMI_STATUS_OK:UMI_STATUS_CAPACITY_EXCEEDED;}
+/*
+ * Provide the decl generate c main operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_decl_generate_c_main(const UmiDeclApplicationPlan *p,char *out,size_t cap){int n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||out==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;n=snprintf(out,cap,"#include <stdio.h>\n#include <umicom/umicom.h>\n\nint main(void)\n{\n    puts(\"%s\");\n    return 0;\n}\n",p->application_id);return n>=0&&(size_t)n<cap?UMI_STATUS_OK:UMI_STATUS_CAPACITY_EXCEEDED;}
+/*
+ * Provide the decl generate cmake operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_decl_generate_cmake(const UmiDeclApplicationPlan *p,char *out,size_t cap){int n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||out==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;n=snprintf(out,cap,"cmake_minimum_required(VERSION 3.24)\nproject(%s LANGUAGES C)\nfind_package(UmicomFramework CONFIG REQUIRED)\nadd_executable(app main.c)\ntarget_link_libraries(app PRIVATE Umicom::Framework)\n",p->application_id);return n>=0&&(size_t)n<cap?UMI_STATUS_OK:UMI_STATUS_CAPACITY_EXCEEDED;}

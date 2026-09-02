@@ -58,25 +58,34 @@ static const UmiDeveloperLifecycleStageDefinition lifecycle_stages[] = {
      "Fetch and apply only a fast-forward update, then synchronise submodules.", 1, 1}
 };
 
+/* Provide the find stage operation used by this module and its client applications. */
 static const UmiDeveloperLifecycleStageDefinition *find_stage(
     UmiDeveloperLifecycleStage stage)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < sizeof(lifecycle_stages) / sizeof(lifecycle_stages[0]);
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (lifecycle_stages[index].stage == stage) return &lifecycle_stages[index];
     }
     return NULL;
 }
 
+/* Provide the append stage operation used by this module and its client applications. */
 static UmiStatus append_stage(UmiDeveloperLifecyclePlan *plan,
                               UmiDeveloperLifecycleStage stage,
                               int required)
 {
     const UmiDeveloperLifecycleStageDefinition *definition = find_stage(stage);
     UmiDeveloperLifecyclePlanStage *item;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || definition == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (plan->stage_count >= UMI_DEVELOPER_LIFECYCLE_STAGE_CAPACITY)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     item = &plan->stages[plan->stage_count++];
@@ -89,6 +98,10 @@ static UmiStatus append_stage(UmiDeveloperLifecyclePlan *plan,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the append verification operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_verification(
     const UmiDeveloperLifecyclePlanRequest *request,
     UmiDeveloperLifecyclePlan *plan)
@@ -103,8 +116,10 @@ static UmiStatus append_verification(
     };
     size_t index;
     UmiStatus status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(stages) / sizeof(stages[0]); ++index) {
         status = append_stage(plan, stages[index], 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return append_stage(
@@ -113,20 +128,36 @@ static UmiStatus append_verification(
         request->require_external_vulnerability_scanner != 0);
 }
 
+/*
+ * Initialise developer lifecycle plan request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_lifecycle_plan_request_init(
     UmiDeveloperLifecyclePlanRequest *request,
     UmiDeveloperLifecycleGoal goal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) return;
     (void)memset(request, 0, sizeof(*request));
     request->goal = goal;
 }
 
+/*
+ * Provide the developer lifecycle plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_lifecycle_plan_build(
     const UmiDeveloperLifecyclePlanRequest *request,
     UmiDeveloperLifecyclePlan *out_plan)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || out_plan == NULL ||
         request->goal < UMI_DEVELOPER_LIFECYCLE_VERIFY ||
         request->goal > UMI_DEVELOPER_LIFECYCLE_COMPLETE)
@@ -134,46 +165,65 @@ UmiStatus umi_developer_lifecycle_plan_build(
     (void)memset(out_plan, 0, sizeof(*out_plan));
     out_plan->goal = request->goal;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->goal == UMI_DEVELOPER_LIFECYCLE_UPDATE) {
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_REPOSITORY_VERIFY, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         return append_stage(out_plan, UMI_DEVELOPER_STAGE_REPOSITORY_UPDATE, 1);
     }
 
     status = append_verification(request, out_plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->goal == UMI_DEVELOPER_LIFECYCLE_VERIFY)
         return UMI_STATUS_OK;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->goal == UMI_DEVELOPER_LIFECYCLE_BUILD ||
         request->goal == UMI_DEVELOPER_LIFECYCLE_TEST ||
         request->goal == UMI_DEVELOPER_LIFECYCLE_COMPLETE) {
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_CONFIGURE, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_COMPILE_LINK, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->goal == UMI_DEVELOPER_LIFECYCLE_TEST ||
         request->goal == UMI_DEVELOPER_LIFECYCLE_COMPLETE) {
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_TEST, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->goal == UMI_DEVELOPER_LIFECYCLE_PUBLISH ||
         request->goal == UMI_DEVELOPER_LIFECYCLE_COMPLETE) {
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_REPOSITORY_VERIFY, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_REPOSITORY_STAGE, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_REPOSITORY_COMMIT, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = append_stage(out_plan, UMI_DEVELOPER_STAGE_REPOSITORY_PUSH, 1);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer lifecycle goal text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_lifecycle_goal_text(UmiDeveloperLifecycleGoal goal)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (goal) {
         case UMI_DEVELOPER_LIFECYCLE_VERIFY: return "verify";
         case UMI_DEVELOPER_LIFECYCLE_BUILD: return "build";
@@ -185,6 +235,10 @@ const char *umi_developer_lifecycle_goal_text(UmiDeveloperLifecycleGoal goal)
     }
 }
 
+/*
+ * Provide the developer lifecycle stage text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_lifecycle_stage_text(UmiDeveloperLifecycleStage stage)
 {
     const UmiDeveloperLifecycleStageDefinition *definition = find_stage(stage);

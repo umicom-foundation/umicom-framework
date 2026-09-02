@@ -22,6 +22,10 @@
 
 #include "umicom/editor/type_hierarchy.h"
 
+/*
+ * Exercise type symbol and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorIndexedSymbol type_symbol(const char *id, uint64_t line)
 {
     UmiEditorIndexedSymbol value = {0};
@@ -47,6 +51,10 @@ static UmiEditorIndexedSymbol type_symbol(const char *id, uint64_t line)
     return value;
 }
 
+/*
+ * Exercise add edge and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_edge(UmiEditorSymbolRelationshipGraph *graph,
                      const char *id,
                      const UmiEditorIndexedSymbol *source,
@@ -67,6 +75,10 @@ static void add_edge(UmiEditorSymbolRelationshipGraph *graph,
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSymbolIndex *index = NULL;

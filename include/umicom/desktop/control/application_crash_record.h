@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_APPLICATION_CRASH_RECORD_API_VERSION 1U
 
+/**
+ * Represent the desktop application crash record snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesktopApplicationCrashRecordSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

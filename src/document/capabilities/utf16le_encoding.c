@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/utf16le_encoding.h"
 
+/*
+ * Provide the document capability utf16le encoding operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_utf16le_encoding(void)
 {

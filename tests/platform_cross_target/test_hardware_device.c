@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtHardwareDevice d={"uart0","ns16550a",UMI_CT_DEVICE_OTHER,UINT64_C(0x10000000),0x100U,10U,true};CHECK(umi_ct_hardware_device_validate(&d)==UMI_STATUS_OK);return 0;}

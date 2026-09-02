@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_REOPEN_DOCUMENT "umicom.document.lifecycle.reopen_document"
 
+/**
+ * Provide the document capability reopen document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_reopen_document(void);
 

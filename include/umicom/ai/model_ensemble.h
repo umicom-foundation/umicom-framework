@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_AI_MODEL_ENSEMBLE_API_VERSION 1U
 #define UMI_AI_MODEL_ENSEMBLE_MAX_TARGETS 8U
 
+/**
+ * Represent the ai model target data shared with callers of this public contract.
+ */
 typedef struct UmiAiModelTarget {
     uint32_t structure_size;
     uint32_t api_version;
@@ -45,6 +48,9 @@ typedef struct UmiAiModelTarget {
     int approved;
 } UmiAiModelTarget;
 
+/**
+ * Represent the ai model result data shared with callers of this public contract.
+ */
 typedef struct UmiAiModelResult {
     uint32_t structure_size;
     uint32_t api_version;
@@ -53,6 +59,9 @@ typedef struct UmiAiModelResult {
     UmiAiResponse response;
 } UmiAiModelResult;
 
+/**
+ * Represent the ai model ensemble report data shared with callers of this public contract.
+ */
 typedef struct UmiAiModelEnsembleReport {
     uint32_t structure_size;
     uint32_t api_version;
@@ -64,6 +73,10 @@ typedef struct UmiAiModelEnsembleReport {
     uint64_t revision;
 } UmiAiModelEnsembleReport;
 
+/**
+ * Initialise ai model target from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_model_target_initialize(
     UmiAiModelTarget *target,
     const char *provider_id,
@@ -71,6 +84,10 @@ UmiStatus umi_ai_model_target_initialize(
     const char *label,
     int approved);
 
+/**
+ * Provide the ai model ensemble report initialize sized operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_model_ensemble_report_initialize_sized(
     UmiAiModelEnsembleReport *report,
     uint32_t caller_structure_size);
@@ -79,6 +96,10 @@ UmiStatus umi_ai_model_ensemble_report_initialize_sized(
     umi_ai_model_ensemble_report_initialize_sized( \
         (report), (uint32_t)sizeof(*(report)))
 
+/**
+ * Provide the ai model ensemble query sized operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_model_ensemble_query_sized(
     UmiAiRuntime *runtime,
     const UmiAiRequest *request,
@@ -93,10 +114,18 @@ UmiStatus umi_ai_model_ensemble_query_sized(
         (runtime), (request), (targets), (target_count), (report), \
         (uint32_t)sizeof(*(report)))
 
+/**
+ * Provide the ai model ensemble select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_model_ensemble_select(
     UmiAiModelEnsembleReport *report,
     size_t result_index);
 
+/**
+ * Find ai model ensemble while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiModelResult *umi_ai_model_ensemble_selected(
     const UmiAiModelEnsembleReport *report);
 

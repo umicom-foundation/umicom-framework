@@ -31,10 +31,15 @@ typedef struct LineTable {
     int truncated;
 } LineTable;
 
+/* Provide the split lines operation used by this module and its client applications. */
 static UmiStatus split_lines(const char *text, LineTable *table)
 {
     const char *cursor;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || table == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -42,25 +47,33 @@ static UmiStatus split_lines(const char *text, LineTable *table)
     (void)memset(table, 0, sizeof(*table));
     cursor = text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         const char *end = strchr(cursor, '\n');
         size_t length =
             end != NULL ? (size_t)(end - cursor) : strlen(cursor);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U && cursor[length - 1U] == '\r') {
             length -= 1U;
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (table->count >= MAX_INPUT_LINES) {
             table->truncated = 1;
             break;
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= UMI_AI_DEVELOPER_DIFF_TEXT_CAPACITY) {
             length = UMI_AI_DEVELOPER_DIFF_TEXT_CAPACITY - 1U;
             table->truncated = 1;
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (table->used + length + 1U > sizeof(table->storage)) {
             table->truncated = 1;
             break;
@@ -68,6 +81,7 @@ static UmiStatus split_lines(const char *text, LineTable *table)
 
         table->lines[table->count] = &table->storage[table->used];
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U) {
             (void)memcpy(
                 &table->storage[table->used],
@@ -79,6 +93,10 @@ static UmiStatus split_lines(const char *text, LineTable *table)
         table->used += length + 1U;
         table->count += 1U;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (end == NULL) break;
         cursor = end + 1;
     }
@@ -90,6 +108,7 @@ static UmiStatus split_lines(const char *text, LineTable *table)
     return UMI_STATUS_OK;
 }
 
+/* Provide the same line operation used by this module and its client applications. */
 static int same_line(
     const LineTable *left,
     size_t left_index,
@@ -103,6 +122,7 @@ static int same_line(
             left->lengths[left_index]) == 0;
 }
 
+/* Provide the append line operation used by this module and its client applications. */
 static UmiStatus append_line(
     UmiAiDeveloperFileDiff *diff,
     UmiAiDeveloperDiffLineKind kind,
@@ -113,6 +133,7 @@ static UmiStatus append_line(
     UmiAiDeveloperDiffLine *line;
     size_t length;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (diff->line_count >= UMI_AI_DEVELOPER_DIFF_LINE_CAPACITY) {
         diff->truncated = 1;
         return UMI_STATUS_OK;
@@ -125,27 +146,34 @@ static UmiStatus append_line(
     line->new_line = new_line;
 
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(line->text)) {
         length = sizeof(line->text) - 1U;
         diff->truncated = 1;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(line->text, text, length);
     }
     line->text[length] = '\0';
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_AI_DEVELOPER_DIFF_ADD) {
         diff->added_count += 1U;
-    } else if (kind == UMI_AI_DEVELOPER_DIFF_REMOVE) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (kind == UMI_AI_DEVELOPER_DIFF_REMOVE) {
         diff->removed_count += 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         diff->context_count += 1U;
     }
 
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer diff build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_diff_build(
     const char *path,
     UmiAiCodingPatchOperation operation,
@@ -165,20 +193,27 @@ UmiStatus umi_ai_developer_diff_build(
     size_t path_length;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || before_text == NULL ||
         after_text == NULL || out_diff == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     path_length = strlen(path);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (path_length >= sizeof(out_diff->path)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     status = split_lines(before_text, &before);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = split_lines(after_text, &after);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(out_diff, 0, sizeof(*out_diff));
@@ -193,16 +228,23 @@ UmiStatus umi_ai_developer_diff_build(
     columns = after.count + 1U;
 
     matrix = (uint16_t *)calloc(rows * columns, sizeof(*matrix));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (matrix == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
 #define CELL(r, c) matrix[(r) * columns + (c)]
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = before.count; i > 0U; --i) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (j = after.count; j > 0U; --j) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (same_line(&before, i - 1U, &after, j - 1U)) {
                 CELL(i - 1U, j - 1U) =
                     (uint16_t)(CELL(i, j) + 1U);
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 CELL(i - 1U, j - 1U) =
                     CELL(i, j - 1U) >= CELL(i - 1U, j)
                         ? CELL(i, j - 1U)
@@ -214,7 +256,12 @@ UmiStatus umi_ai_developer_diff_build(
     i = 0U;
     j = 0U;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (i < before.count || j < after.count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (i < before.count &&
             j < after.count &&
             same_line(&before, i, &after, j)) {
@@ -226,7 +273,7 @@ UmiStatus umi_ai_developer_diff_build(
                 before.lines[i]);
             i += 1U;
             j += 1U;
-        } else if (j < after.count &&
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (j < after.count &&
                    (i == before.count ||
                     CELL(i, j + 1U) >= CELL(i + 1U, j))) {
             (void)append_line(
@@ -236,7 +283,7 @@ UmiStatus umi_ai_developer_diff_build(
                 (uint32_t)(j + 1U),
                 after.lines[j]);
             j += 1U;
-        } else if (i < before.count) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (i < before.count) {
             (void)append_line(
                 out_diff,
                 UMI_AI_DEVELOPER_DIFF_REMOVE,

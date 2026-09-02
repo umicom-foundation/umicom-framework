@@ -32,6 +32,7 @@ struct UmiVcsWorkbenchRuntime {
     uint64_t revision;
 };
 
+/* Provide the finish operation used by this module and its client applications. */
 static UmiStatus finish(
     UmiVcsWorkbenchRuntime *runtime,
     UmiStatus status,
@@ -47,17 +48,30 @@ static UmiStatus finish(
     return status;
 }
 
+/*
+ * Initialise vcs workbench runtime from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_vcs_workbench_runtime_create(
     UmiVcsWorkbenchRuntime **out_runtime)
 {
     UmiVcsWorkbenchRuntime *runtime;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_runtime = NULL;
     runtime = (UmiVcsWorkbenchRuntime *)calloc(1U, sizeof(*runtime));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_vcs_workbench_merge_model_create(&runtime->merge);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(runtime);
         return status;
@@ -76,14 +90,26 @@ UmiStatus umi_vcs_workbench_runtime_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by vcs workbench runtime so the same storage can be reused
+ * safely.
+ */
 void umi_vcs_workbench_runtime_destroy(
     UmiVcsWorkbenchRuntime *runtime)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return;
     umi_vcs_workbench_merge_model_destroy(runtime->merge);
     free(runtime);
 }
 
+/*
+ * Provide the vcs workbench runtime open compare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_open_compare(
     UmiVcsWorkbenchRuntime *runtime,
     const char *session_id,
@@ -95,10 +121,15 @@ UmiStatus umi_vcs_workbench_runtime_open_compare(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_vcs_workbench_compare_model_open(
         &runtime->compare, session_id, left, right,
         left_text, right_text, options);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_workbench_difference_map_build(
             &runtime->difference_map, &runtime->compare);
@@ -108,6 +139,10 @@ UmiStatus umi_vcs_workbench_runtime_open_compare(
                       ? "Comparison opened." : "Comparison failed.");
 }
 
+/*
+ * Provide the vcs workbench runtime open merge operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_open_merge(
     UmiVcsWorkbenchRuntime *runtime,
     const char *session_id,
@@ -117,6 +152,10 @@ UmiStatus umi_vcs_workbench_runtime_open_merge(
     const char *theirs_text)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_vcs_workbench_merge_model_open(
         runtime->merge, session_id, path, base_text, ours_text, theirs_text);
@@ -125,9 +164,17 @@ UmiStatus umi_vcs_workbench_runtime_open_merge(
                       ? "Merge session opened." : "Merge session failed.");
 }
 
+/*
+ * Provide the vcs workbench runtime begin directory compare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_begin_directory_compare(
     UmiVcsWorkbenchRuntime *runtime)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_vcs_workbench_directory_model_init(&runtime->directory);
     return finish(runtime, UMI_STATUS_OK,
@@ -135,12 +182,20 @@ UmiStatus umi_vcs_workbench_runtime_begin_directory_compare(
                   "Directory comparison started.");
 }
 
+/*
+ * Provide the vcs workbench runtime begin partial stage operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_begin_partial_stage(
     UmiVcsWorkbenchRuntime *runtime,
     const char *repository_root,
     int reverse)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_vcs_workbench_partial_stage_model_begin(
         &runtime->partial_stage, repository_root, reverse);
@@ -150,11 +205,19 @@ UmiStatus umi_vcs_workbench_runtime_begin_partial_stage(
                       : "Partial-stage preview failed.");
 }
 
+/*
+ * Provide the vcs workbench runtime begin review operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_begin_review(
     UmiVcsWorkbenchRuntime *runtime,
     const char *session_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_vcs_workbench_review_session_begin(
         &runtime->review, session_id);
@@ -163,12 +226,20 @@ UmiStatus umi_vcs_workbench_runtime_begin_review(
                       ? "Review session started." : "Review session failed.");
 }
 
+/*
+ * Provide the vcs workbench runtime snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_snapshot(
     const UmiVcsWorkbenchRuntime *runtime,
     UmiVcsWorkbenchRuntimeSnapshot *out_snapshot)
 {
     UmiVcsWorkbenchMergeSnapshot merge_snapshot;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -180,6 +251,7 @@ UmiStatus umi_vcs_workbench_runtime_snapshot(
     out_snapshot->compare_hunks = runtime->compare.hunk_count;
     out_snapshot->directory_entries = runtime->directory.count;
     out_snapshot->visible_directory_entries = runtime->directory.visible_count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_vcs_workbench_merge_model_snapshot(
             runtime->merge, &merge_snapshot) == UMI_STATUS_OK) {
         out_snapshot->merge_conflicts = merge_snapshot.conflict_count;
@@ -203,36 +275,60 @@ UmiStatus umi_vcs_workbench_runtime_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs workbench runtime compare operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchCompareModel *umi_vcs_workbench_runtime_compare(
     UmiVcsWorkbenchRuntime *runtime)
 {
     return runtime != NULL ? &runtime->compare : NULL;
 }
 
+/*
+ * Provide the vcs workbench runtime difference map operation used by this module and its
+ * client applications.
+ */
 UmiVcsWorkbenchDifferenceMap *umi_vcs_workbench_runtime_difference_map(
     UmiVcsWorkbenchRuntime *runtime)
 {
     return runtime != NULL ? &runtime->difference_map : NULL;
 }
 
+/*
+ * Provide the vcs workbench runtime directory operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchDirectoryModel *umi_vcs_workbench_runtime_directory(
     UmiVcsWorkbenchRuntime *runtime)
 {
     return runtime != NULL ? &runtime->directory : NULL;
 }
 
+/*
+ * Provide the vcs workbench runtime merge operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchMergeModel *umi_vcs_workbench_runtime_merge(
     UmiVcsWorkbenchRuntime *runtime)
 {
     return runtime != NULL ? runtime->merge : NULL;
 }
 
+/*
+ * Provide the vcs workbench runtime partial stage operation used by this module and its
+ * client applications.
+ */
 UmiVcsWorkbenchPartialStageModel *umi_vcs_workbench_runtime_partial_stage(
     UmiVcsWorkbenchRuntime *runtime)
 {
     return runtime != NULL ? &runtime->partial_stage : NULL;
 }
 
+/*
+ * Provide the vcs workbench runtime review operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchReviewSession *umi_vcs_workbench_runtime_review(
     UmiVcsWorkbenchRuntime *runtime)
 {

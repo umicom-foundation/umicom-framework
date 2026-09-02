@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/terminal_clear.h"
 
+/*
+ * Release or reset state held by developer capability terminal so the same storage can be
+ * reused safely.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_clear(void)
 {

@@ -17,18 +17,36 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+/*
+ * Initialise crash report from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_crash_report_init(UmiCrashReport *report, const char *application, const char *reason, const char *detail, uint64_t thread_id, uint64_t timestamp_ns)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || application == NULL || reason == NULL || detail == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(application) >= sizeof(report->application) || strlen(reason) >= sizeof(report->reason) || strlen(detail) >= sizeof(report->detail)) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memset(report, 0, sizeof(*report)); (void)snprintf(report->application, sizeof(report->application), "%s", application); (void)snprintf(report->reason, sizeof(report->reason), "%s", reason); (void)snprintf(report->detail, sizeof(report->detail), "%s", detail); report->thread_id = thread_id; report->timestamp_ns = timestamp_ns; return UMI_STATUS_OK;
 }
+/*
+ * Write crash report in its stable representation and report capacity or input failures to
+ * the caller.
+ */
 UmiStatus umi_crash_report_write(const UmiCrashReport *report, const char *path)
 {
     FILE *stream; int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    stream = fopen(path, "wb"); if (stream == NULL) return UMI_STATUS_IO_ERROR;
+    stream = fopen(path, "wb"); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (stream == NULL) return UMI_STATUS_IO_ERROR;
     written = fprintf(stream, "application=%s\nreason=%s\ndetail=%s\nthread=%llu\ntimestamp_ns=%llu\n", report->application, report->reason, report->detail, (unsigned long long)report->thread_id, (unsigned long long)report->timestamp_ns);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (fclose(stream) != 0 || written < 0) return UMI_STATUS_IO_ERROR;
     return UMI_STATUS_OK;
 }

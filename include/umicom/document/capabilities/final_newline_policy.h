@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_FINAL_NEWLINE_POLICY "umicom.document.persistence.final_newline_policy"
 
+/**
+ * Provide the document capability final newline policy operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_final_newline_policy(void);
 

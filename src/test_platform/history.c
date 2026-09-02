@@ -17,6 +17,10 @@
 #include <float.h>
 #include <string.h>
 
+/*
+ * Provide the test platform history latest operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_history_latest(
     const UmiTestPlatformResultRegistry *results,
     const char *item_id,
@@ -27,17 +31,24 @@ UmiStatus umi_test_platform_history_latest(
     uint64_t best_revision = 0U;
     size_t index;
     int found = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (results == NULL || item_id == NULL || item_id[0] == '\0' ||
         out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_test_platform_result_registry_count(results);
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_test_platform_result_registry_at(results, index, &candidate) !=
             UMI_STATUS_OK || strcmp(candidate.item_id, item_id) != 0) {
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!found || candidate.sequence > best_sequence ||
             (candidate.sequence == best_sequence &&
              candidate.revision > best_revision)) {
@@ -50,6 +61,10 @@ UmiStatus umi_test_platform_history_latest(
     return found ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the test platform history duration operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_history_duration(
     const UmiTestPlatformResultRegistry *results,
     const char *item_id,
@@ -60,25 +75,34 @@ UmiStatus umi_test_platform_history_duration(
     uint64_t latest_revision = 0U;
     double total = 0.0;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (results == NULL || item_id == NULL || item_id[0] == '\0' ||
         out_history == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_history, 0, sizeof(*out_history));
     out_history->minimum_ms = DBL_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_test_platform_result_registry_count(results);
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_test_platform_result_registry_at(results, index, &candidate) !=
             UMI_STATUS_OK || strcmp(candidate.item_id, item_id) != 0) {
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (candidate.duration_ms < out_history->minimum_ms) {
             out_history->minimum_ms = candidate.duration_ms;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (candidate.duration_ms > out_history->maximum_ms) {
             out_history->maximum_ms = candidate.duration_ms;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (out_history->sample_count == 0U ||
             candidate.sequence > latest_sequence ||
             (candidate.sequence == latest_sequence &&
@@ -90,6 +114,7 @@ UmiStatus umi_test_platform_history_duration(
         total += candidate.duration_ms;
         out_history->sample_count += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_history->sample_count == 0U) {
         out_history->minimum_ms = 0.0;
         return UMI_STATUS_NOT_FOUND;
@@ -98,6 +123,10 @@ UmiStatus umi_test_platform_history_duration(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform history failed selection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_history_failed_selection(
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results,

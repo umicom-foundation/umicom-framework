@@ -14,18 +14,28 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/workbench_context_host/delivery_policy.h"
+/*
+ * Provide the workbench context host delivery policy default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchContextHostDeliveryPolicy umi_workbench_context_host_delivery_policy_default(void)
 {
     UmiWorkbenchContextHostDeliveryPolicy p;
     p.max_pending_per_endpoint=32U;p.overflow_mode=UMI_WORKBENCH_CONTEXT_HOST_OVERFLOW_DROP_OLDEST;
     p.coalesce_same_kind=false;p.coalesce_same_context=true;p.reject_expired=true;p.revision=1U;return p;
 }
+/*
+ * Check that workbench context host delivery policy satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_host_delivery_policy_validate(
     const UmiWorkbenchContextHostDeliveryPolicy *policy)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if(!policy||policy->max_pending_per_endpoint==0U||
        policy->max_pending_per_endpoint>UMI_WORKBENCH_CONTEXT_HOST_MAX_INBOX_ITEMS)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if(policy->overflow_mode<UMI_WORKBENCH_CONTEXT_HOST_OVERFLOW_DROP_OLDEST||
        policy->overflow_mode>UMI_WORKBENCH_CONTEXT_HOST_OVERFLOW_REJECT)
         return UMI_STATUS_INVALID_ARGUMENT;

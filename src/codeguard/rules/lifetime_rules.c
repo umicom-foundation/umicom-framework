@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-LIFE-001", "CWE-416", UMI_CODEGUARD_HIGH, UMI_CODEGUARD_CATEGORY_MEMORY, 90U, UMI_CODEGUARD_MATCH_CODE, "realloc(", "realloc can invalidate the original allocation and requires careful assignment.", "Assign realloc to a temporary pointer, check for NULL, then update the owner."}
 };
 
+/*
+ * Provide the codeguard rules lifetime rules operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_lifetime_rules(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/continuous_testing.h"
 
+/*
+ * Provide the developer capability continuous testing operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_continuous_testing(void)
 {

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "plugin_fixture.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiPluginManifest manifest = plugin_test_manifest("org.example", "Example");

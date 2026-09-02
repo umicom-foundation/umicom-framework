@@ -19,7 +19,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode text edits operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_text_edits(const char*json,UmiLanguageRuntimeTextEditList*out);
+/**
+ * Provide the language runtime decode text edit array token operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_language_runtime_decode_text_edit_array_token(const UmiLanguageRuntimeJsonDocument*d,int token,UmiLanguageRuntimeTextEditList*out);
 #ifdef __cplusplus
 }

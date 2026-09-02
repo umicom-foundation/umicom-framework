@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context source activation state data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextSourceActivationState {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_SOURCE_ID_CAPACITY];
@@ -38,28 +42,64 @@ typedef struct UmiWorkbenchContextSourceActivationState {
     uint64_t revision;
 } UmiWorkbenchContextSourceActivationState;
 
+/**
+ * Initialise workbench context source activation state from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_context_source_activation_state_init(
     UmiWorkbenchContextSourceActivationState *record,
     const char *record_id);
+/**
+ * Check that workbench context source activation state satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_context_source_activation_state_validate(
     const UmiWorkbenchContextSourceActivationState *record);
+/**
+ * Provide the workbench context source activation state set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_activation_state_set_source(
     UmiWorkbenchContextSourceActivationState *record,
     const char *source_id);
+/**
+ * Provide the workbench context source activation state set panel operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_activation_state_set_panel(
     UmiWorkbenchContextSourceActivationState *record,
     const char *panel_id);
+/**
+ * Provide the workbench context source activation state set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_activation_state_set_subject(
     UmiWorkbenchContextSourceActivationState *record,
     const char *subject_id);
+/**
+ * Provide the workbench context source activation state set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_activation_state_set_group(
     UmiWorkbenchContextSourceActivationState *record,
     const char *group_id);
+/**
+ * Provide the workbench context source activation state set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_activation_state_set_label(
     UmiWorkbenchContextSourceActivationState *record,
     const char *label);
+/**
+ * Provide the workbench context source activation state hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_source_activation_state_hash(
     const UmiWorkbenchContextSourceActivationState *record);
+/**
+ * Provide the workbench context source activation state touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_context_source_activation_state_touch(
     UmiWorkbenchContextSourceActivationState *record,
     uint64_t sequence,

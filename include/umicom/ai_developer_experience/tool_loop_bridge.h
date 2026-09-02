@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer tool loop configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_tool_loop_configure(
     UmiAiDeveloperExperiencePlatform *platform,
     UmiAiCodingToolLoopConfig *config);

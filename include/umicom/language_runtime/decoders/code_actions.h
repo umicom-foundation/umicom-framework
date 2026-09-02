@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode code actions operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_code_actions(const char*json,UmiLanguageRuntimeCodeActionList*out);
 #ifdef __cplusplus
 }

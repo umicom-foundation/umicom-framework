@@ -25,6 +25,10 @@ extern "C" {
 #define UMI_DEVELOPER_LANGUAGE_SUPPORT_CAPACITY \
     UMI_LANGUAGE_PROFILE_CAPACITY
 
+/**
+ * Represent the developer language support snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperLanguageSupportSnapshot {
     char language_id[UMI_LANGUAGE_PROFILE_ID_CAPACITY];
     char binding_id[128];
@@ -37,6 +41,10 @@ typedef struct UmiDeveloperLanguageSupportSnapshot {
     int binding_found;
 } UmiDeveloperLanguageSupportSnapshot;
 
+/**
+ * Represent the developer language support matrix data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperLanguageSupportMatrix {
     UmiDeveloperLanguageSupportSnapshot
         items[UMI_DEVELOPER_LANGUAGE_SUPPORT_CAPACITY];

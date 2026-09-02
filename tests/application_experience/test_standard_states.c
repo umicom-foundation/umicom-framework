@@ -17,6 +17,10 @@
 
 #include <assert.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   UmiApplicationExperienceUiState state;
   assert(umi_application_experience_state_empty(&state, "projects",

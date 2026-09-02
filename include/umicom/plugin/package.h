@@ -30,6 +30,9 @@ extern "C" {
 #define UMI_PLUGIN_PACKAGE_FILE_MAX 128U
 #define UMI_PLUGIN_PACKAGE_STEP_MAX 32U
 
+/**
+ * List the named plugin package action values accepted by this public contract.
+ */
 typedef enum UmiPluginPackageAction {
     UMI_PLUGIN_PACKAGE_INSTALL = 0,
     UMI_PLUGIN_PACKAGE_UPDATE = 1,
@@ -37,6 +40,9 @@ typedef enum UmiPluginPackageAction {
     UMI_PLUGIN_PACKAGE_UNINSTALL = 3
 } UmiPluginPackageAction;
 
+/**
+ * Represent the plugin package data shared with callers of this public contract.
+ */
 typedef struct UmiPluginPackage {
     UmiPluginManifest manifest;
     char source_path[UMI_PATH_CAPACITY];
@@ -46,6 +52,9 @@ typedef struct UmiPluginPackage {
     uint64_t unpacked_size;
 } UmiPluginPackage;
 
+/**
+ * Represent the plugin package plan data shared with callers of this public contract.
+ */
 typedef struct UmiPluginPackagePlan {
     UmiPluginPackageAction action;
     char plugin_id[UMI_PLUGIN_ID_CAPACITY];
@@ -59,19 +68,38 @@ typedef struct UmiPluginPackagePlan {
     int reversible;
 } UmiPluginPackagePlan;
 
+/**
+ * Initialise plugin package from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_plugin_package_init(UmiPluginPackage *package,
                                   const UmiPluginManifest *manifest,
                                   const char *source_path);
+/**
+ * Provide the plugin package add file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_plugin_package_add_file(UmiPluginPackage *package,
                                       const char *relative_path);
+/**
+ * Check that plugin package satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_plugin_package_validate(const UmiPluginPackage *package,
                                       char *out_reason,
                                       size_t reason_capacity);
+/**
+ * Initialise plugin package plan from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_plugin_package_plan_create(UmiPluginPackageAction action,
                                          const UmiPluginPackage *package,
                                          UmiVersion installed_version,
                                          const char *install_root,
                                          UmiPluginPackagePlan *out_plan);
+/**
+ * Provide the plugin package action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_plugin_package_action_text(UmiPluginPackageAction action);
 
 #ifdef __cplusplus

@@ -35,6 +35,7 @@ struct UmiTerminalSession {
     UmiMutex *mutex;
 };
 
+/* Provide the now ns operation used by this module and its client applications. */
 static uint64_t now_ns(UmiTerminalSession *session)
 {
     return session->clock != NULL &&
@@ -43,18 +44,30 @@ static uint64_t now_ns(UmiTerminalSession *session)
         : 0U;
 }
 
+/*
+ * Initialise terminal session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_terminal_session_create(
     const UmiTerminalSessionConfig *config,
     UmiTerminalSession **out_session)
 {
     UmiTerminalSession *session;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || out_session == NULL ||
         config->session_id == NULL || config->session_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_session = NULL;
     session = (UmiTerminalSession *)calloc(1U, sizeof(*session));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -74,9 +87,11 @@ UmiStatus umi_terminal_session_create(
     session->clock = config->clock;
     session->state = UMI_TERMINAL_READY;
     status = umi_mutex_create(&session->mutex);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_terminal_environment_create(&session->environment);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_terminal_transcript_create(
             config->transcript_capacity > 0U
@@ -85,6 +100,7 @@ UmiStatus umi_terminal_session_create(
             &session->transcript
         );
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_terminal_session_destroy(session);
         return status;
@@ -97,8 +113,16 @@ UmiStatus umi_terminal_session_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by terminal session so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_session_destroy(UmiTerminalSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session != NULL) {
         umi_terminal_transcript_destroy(session->transcript);
         umi_terminal_environment_destroy(session->environment);
@@ -107,14 +131,23 @@ void umi_terminal_session_destroy(UmiTerminalSession *session)
     }
 }
 
+/*
+ * Provide the terminal session set working directory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_terminal_session_set_working_directory(
     UmiTerminalSession *session,
     const char *working_directory)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || working_directory == NULL ||
         working_directory[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (strlen(working_directory) + 1U >
         sizeof(session->working_directory)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -128,6 +161,10 @@ UmiStatus umi_terminal_session_set_working_directory(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform terminal session through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
                                        const char *command_text,
                                        uint32_t timeout_ms,
@@ -137,10 +174,15 @@ UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
     UmiTerminalCommand command;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || command_text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_terminal_command_parse(&command, command_text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)umi_mutex_lock(session->mutex);
         session->state = UMI_TERMINAL_FAILED;
@@ -152,6 +194,10 @@ UmiStatus umi_terminal_session_execute(UmiTerminalSession *session,
         out_exit_code);
 }
 
+/*
+ * Provide the terminal session execute prepared operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_terminal_session_execute_prepared(
     UmiTerminalSession *session,
     const UmiTerminalCommand *command,
@@ -167,10 +213,15 @@ UmiStatus umi_terminal_session_execute_prepared(
     const char *program;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || command == NULL || display_text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(session->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (session->state == UMI_TERMINAL_CLOSED) {
         (void)umi_mutex_unlock(session->mutex);
         return UMI_STATUS_INVALID_STATE;
@@ -179,6 +230,10 @@ UmiStatus umi_terminal_session_execute_prepared(
     (void)umi_mutex_unlock(session->mutex);
 
     program = umi_terminal_command_program(command);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (program == NULL) {
         (void)umi_mutex_lock(session->mutex);
         session->state = UMI_TERMINAL_FAILED;
@@ -194,6 +249,7 @@ UmiStatus umi_terminal_session_execute_prepared(
                                              variables,
                                              UMI_TERMINAL_MAX_ENVIRONMENT,
                                              &variable_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)umi_mutex_lock(session->mutex);
         session->state = UMI_TERMINAL_FAILED;
@@ -232,16 +288,28 @@ UmiStatus umi_terminal_session_execute_prepared(
         ? UMI_TERMINAL_READY
         : UMI_TERMINAL_FAILED;
     (void)umi_mutex_unlock(session->mutex);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_exit_code != NULL) {
         *out_exit_code = result.exit_code;
     }
     return status;
 }
 
+/*
+ * Provide the terminal session snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_session_snapshot(
     const UmiTerminalSession *session,
     UmiTerminalSessionSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -267,20 +335,36 @@ UmiStatus umi_terminal_session_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the terminal session environment operation used by this module and its client
+ * applications.
+ */
 UmiTerminalEnvironment *umi_terminal_session_environment(
     UmiTerminalSession *session)
 {
     return session != NULL ? session->environment : NULL;
 }
 
+/*
+ * Provide the terminal session transcript operation used by this module and its client
+ * applications.
+ */
 UmiTerminalTranscript *umi_terminal_session_transcript(
     UmiTerminalSession *session)
 {
     return session != NULL ? session->transcript : NULL;
 }
 
+/*
+ * Provide the terminal session close operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_session_close(UmiTerminalSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

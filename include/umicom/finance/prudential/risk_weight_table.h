@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential risk weight table data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialRiskWeightTable { UmiPrudentialRiskWeightRule rules[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialRiskWeightTable;
 /* Add or reject a duplicate exposure-class risk-weight rule. */
 UmiStatus umi_pru_risk_weight_table_add(UmiPrudentialRiskWeightTable *table, const UmiPrudentialRiskWeightRule *rule);

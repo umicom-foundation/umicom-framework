@@ -24,9 +24,14 @@
 UmiStatus umi_commodity_loss_allowance_init(UmiCommodityLossAllowance *value, const char *contract_id, int32_t basis_points)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || basis_points < 0 || basis_points > 10000) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_commodity_copy_text(value->contract_id.value, sizeof value->contract_id.value, contract_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->basis_points = basis_points;
     value->active = true;

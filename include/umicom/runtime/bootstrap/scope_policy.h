@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap scope policy can depend operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_scope_policy_can_depend(
     UmiBootstrapScopeKind owner_scope,
     UmiBootstrapScopeKind dependency_scope);

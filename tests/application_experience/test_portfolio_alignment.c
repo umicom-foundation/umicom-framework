@@ -20,10 +20,15 @@
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/portfolio.h"
 
+/*
+ * Exercise test experience portfolio alignment and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_experience_portfolio_alignment(void)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_experience_catalogue_count();
          ++index) {
         const UmiApplicationExperienceDefinition *experience =

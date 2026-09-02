@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise test actions and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 void test_actions(void)
 {
     assert(umi_trading_ui_action_kind(UMI_TRADING_UI_ACTION_REFRESH) ==

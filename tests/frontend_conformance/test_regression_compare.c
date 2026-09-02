@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcRegressionBaseline b={"web",0.95,0U,10U,1U}; UmiFcRegressionComparison c; umi_fc_regression_compare_run(&b,0.90,0U,11U,0.02,&c); CHECK(c.regressed); CHECK(c.fingerprint_changed);
     return 0;

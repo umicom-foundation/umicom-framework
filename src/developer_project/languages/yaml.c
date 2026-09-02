@@ -20,6 +20,10 @@ static const char *const EXTENSIONS[] = {
     ".yaml", ".yml"
 };
 
+/*
+ * Provide the developer project language yaml operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_yaml(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

@@ -28,15 +28,33 @@ extern "C" {
 #define UMI_HELIX_MAX_ITEMS 64U
 #define UMI_HELIX_MAX_EDGES 128U
 
+/**
+ * List the named helix state values accepted by this public contract.
+ */
 typedef enum UmiHelixState {
     UMI_HELIX_IDLE=0, UMI_HELIX_PLANNED=1, UMI_HELIX_READY=2, UMI_HELIX_RUNNING=3,
     UMI_HELIX_BLOCKED=4, UMI_HELIX_SUCCEEDED=5, UMI_HELIX_FAILED=6,
     UMI_HELIX_ROLLED_BACK=7, UMI_HELIX_CANCELLED=8
 } UmiHelixState;
+/**
+ * List the named helix severity values accepted by this public contract.
+ */
 typedef enum UmiHelixSeverity { UMI_HELIX_INFO=0, UMI_HELIX_WARNING=1, UMI_HELIX_ERROR=2, UMI_HELIX_CRITICAL=3 } UmiHelixSeverity;
+/**
+ * List the named helix decision values accepted by this public contract.
+ */
 typedef enum UmiHelixDecision { UMI_HELIX_DECISION_UNKNOWN=0, UMI_HELIX_DECISION_ALLOW=1, UMI_HELIX_DECISION_REVIEW=2, UMI_HELIX_DECISION_DENY=3, UMI_HELIX_DECISION_ROLLBACK=4 } UmiHelixDecision;
+/**
+ * List the named helix autonomy mode values accepted by this public contract.
+ */
 typedef enum UmiHelixAutonomyMode { UMI_HELIX_AUTONOMY_MANUAL=0, UMI_HELIX_AUTONOMY_ASSISTED=1, UMI_HELIX_AUTONOMY_SUPERVISED=2, UMI_HELIX_AUTONOMY_GUARDED=3 } UmiHelixAutonomyMode;
+/**
+ * List the named helix change kind values accepted by this public contract.
+ */
 typedef enum UmiHelixChangeKind { UMI_HELIX_CHANGE_ADD=0, UMI_HELIX_CHANGE_MODIFY=1, UMI_HELIX_CHANGE_DELETE=2, UMI_HELIX_CHANGE_RENAME=3 } UmiHelixChangeKind;
+/**
+ * List the named helix feedback kind values accepted by this public contract.
+ */
 typedef enum UmiHelixFeedbackKind { UMI_HELIX_FEEDBACK_BUILD=0, UMI_HELIX_FEEDBACK_TEST=1, UMI_HELIX_FEEDBACK_COMPILER=2, UMI_HELIX_FEEDBACK_QUALITY=3, UMI_HELIX_FEEDBACK_REPOSITORY=4, UMI_HELIX_FEEDBACK_OBSERVABILITY=5 } UmiHelixFeedbackKind;
 
 /* Copy bounded text without truncation so engineering identifiers remain deterministic. */

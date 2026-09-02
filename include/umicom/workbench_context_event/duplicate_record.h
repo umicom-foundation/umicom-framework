@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context event duplicate record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextEventDuplicateRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_EVENT_ID_CAPACITY];
@@ -39,25 +43,57 @@ typedef struct UmiWorkbenchContextEventDuplicateRecord {
     uint64_t revision;
 } UmiWorkbenchContextEventDuplicateRecord;
 
+/**
+ * Initialise workbench context event duplicate record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_event_duplicate_record_init(
     UmiWorkbenchContextEventDuplicateRecord *record,
     const char *record_id);
+/**
+ * Check that workbench context event duplicate record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_context_event_duplicate_record_validate(
     const UmiWorkbenchContextEventDuplicateRecord *record);
+/**
+ * Provide the workbench context event duplicate record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_duplicate_record_set_source(
     UmiWorkbenchContextEventDuplicateRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench context event duplicate record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_duplicate_record_set_subject(
     UmiWorkbenchContextEventDuplicateRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench context event duplicate record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_duplicate_record_set_group(
     UmiWorkbenchContextEventDuplicateRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench context event duplicate record set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_duplicate_record_set_label(
     UmiWorkbenchContextEventDuplicateRecord *record,
     const char *label);
+/**
+ * Provide the workbench context event duplicate record hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_event_duplicate_record_hash(
     const UmiWorkbenchContextEventDuplicateRecord *record);
+/**
+ * Provide the workbench context event duplicate record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_event_duplicate_record_touch(
     UmiWorkbenchContextEventDuplicateRecord *record,
     uint64_t sequence,

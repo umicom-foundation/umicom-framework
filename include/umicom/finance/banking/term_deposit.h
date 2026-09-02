@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the banking term deposit data shared with callers of this public contract.
+ */
 typedef struct UmiBankingTermDeposit {
     UmiFinancialId id;
     UmiFinancialId customer_id;
@@ -26,6 +29,10 @@ typedef struct UmiBankingTermDeposit {
     UmiFinancialDate maturity_date;
     bool rollover;
 } UmiBankingTermDeposit;
+/**
+ * Initialise banking term deposit from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_banking_term_deposit_init(UmiBankingTermDeposit *value,
     const char *id,
     const char *customer_id,
@@ -33,7 +40,15 @@ UmiStatus umi_banking_term_deposit_init(UmiBankingTermDeposit *value,
     UmiFinancialDate start_date,
     UmiFinancialDate maturity_date,
     bool rollover);
+/**
+ * Check that banking term deposit satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_banking_term_deposit_valid(const UmiBankingTermDeposit *value);
+/**
+ * Provide the banking term deposit auto rollover operation used by this module and its
+ * client applications.
+ */
 bool umi_banking_term_deposit_auto_rollover(const UmiBankingTermDeposit *value);
 #ifdef __cplusplus
 }

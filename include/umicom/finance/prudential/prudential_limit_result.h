@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential limit result data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialLimitResult { char limit_id[UMI_PRU_ID_CAPACITY]; double observed; double threshold; double headroom; int breached; } UmiPrudentialLimitResult;
 /* Evaluate an observed metric against a prudential minimum or maximum. */
 UmiStatus umi_pru_prudential_limit_result_evaluate(UmiPrudentialLimitResult *result, const UmiPrudentialLimit *limit, double observed);

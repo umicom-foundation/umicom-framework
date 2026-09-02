@@ -16,8 +16,16 @@
 #include <string.h>
 /* Initialise and validate model a bounded venue trading session and its current phase.. */
 UmiStatus umi_trading_venue_session_init(UmiTradingVenueSession *value,const UmiFinancialId * venue_id, int64_t open_time_ms, int64_t close_time_ms, UmiTradingCoreMarketPhase phase) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(venue_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->venue_id=*venue_id;
     value->open_time_ms=open_time_ms;

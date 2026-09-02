@@ -22,6 +22,10 @@
 
 #include "umicom/editor/peek_definition.h"
 
+/*
+ * Exercise definition and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorNavigationResult definition(const char *uri, uint64_t line)
 {
     UmiEditorNavigationResult result = {0};
@@ -36,6 +40,10 @@ static UmiEditorNavigationResult definition(const char *uri, uint64_t line)
     return result;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorPeekDefinitionModel *model = NULL;

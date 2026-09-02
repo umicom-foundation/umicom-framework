@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise and validate define maker/taker exchange fees in minor units per lot.. */
 UmiStatus umi_trading_fee_schedule_init(UmiTradingFeeSchedule *value,int64_t maker_minor_per_lot, int64_t taker_minor_per_lot, int64_t regulatory_minor_per_lot) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
     value->maker_minor_per_lot=maker_minor_per_lot;

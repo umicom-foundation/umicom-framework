@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital resource book data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalResourceBook { UmiPrudentialCapitalResource items[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialCapitalResourceBook;
 /* Add one capital resource to a bounded resource book. */
 UmiStatus umi_pru_capital_resource_book_add(UmiPrudentialCapitalResourceBook *book, const UmiPrudentialCapitalResource *resource);

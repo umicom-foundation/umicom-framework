@@ -23,8 +23,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web url data shared with callers of this public contract.
+ */
 typedef struct UmiWebUrl { char scheme[16]; char host[256]; uint16_t port; char path[UMI_WEB_PATH_CAPACITY]; char query[UMI_WEB_QUERY_CAPACITY]; } UmiWebUrl;
+/**
+ * Read web url into validated module state and return a status when input cannot be used.
+ */
 UmiStatus umi_web_url_parse(const char *text,UmiWebUrl *out_url);
+/**
+ * Read web url into validated module state and return a status when input cannot be used.
+ */
 UmiStatus umi_web_url_decode(const char *text,char *out_text,size_t capacity);
 #ifdef __cplusplus
 }

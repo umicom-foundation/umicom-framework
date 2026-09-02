@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer terminal profile ucrt64 bash operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_ucrt64_bash(void);
 
 #ifdef __cplusplus

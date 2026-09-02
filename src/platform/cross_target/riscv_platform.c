@@ -20,4 +20,5 @@
 
 #include "umicom/platform/cross_target/riscv_platform.h"
 
-UmiStatus umi_ct_riscv_platform_validate(const UmiCtRiscvPlatform*p){if(p==NULL||!umi_ct_id_valid(p->platform_id)||p->cpu_count==0U||p->memory_bytes<UINT64_C(16)*1024U*1024U)return UMI_STATUS_INVALID_ARGUMENT;if(p->machine==UMI_CT_RISCV_MACHINE_QEMU_VIRT&&(!p->plic||!p->clint))return UMI_STATUS_INVALID_STATE;return UMI_STATUS_OK;}
+/* Check that ct riscv platform satisfies its contract before another service relies on it. */
+UmiStatus umi_ct_riscv_platform_validate(const UmiCtRiscvPlatform*p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||!umi_ct_id_valid(p->platform_id)||p->cpu_count==0U||p->memory_bytes<UINT64_C(16)*1024U*1024U)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->machine==UMI_CT_RISCV_MACHINE_QEMU_VIRT&&(!p->plic||!p->clint))return UMI_STATUS_INVALID_STATE;return UMI_STATUS_OK;}

@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the position key data shared with callers of this public contract.
+ */
 typedef struct UmiPositionKey { UmiFinancialId book_id; UmiFinancialId portfolio_id; UmiProductId product_id; } UmiPositionKey;
 /* Initialize key. */ UmiStatus umi_position_key_init(UmiPositionKey *k,const char *book,const char *portfolio,const char *product);
 /* Compare keys. */ bool umi_position_key_equal(const UmiPositionKey *a,const UmiPositionKey *b);

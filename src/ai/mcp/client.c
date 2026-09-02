@@ -17,11 +17,19 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai mcp client from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_mcp_client_init(
     UmiAiMcpClient *client,
     const UmiAiMcpServerDescriptor *server,
     const UmiAiMcpTransport *transport)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -37,11 +45,19 @@ UmiStatus umi_ai_mcp_client_init(
         transport);
 }
 
+/*
+ * Provide the ai mcp client start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_client_start(
     UmiAiMcpClient *client,
     const char *client_name,
     const char *client_version)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -52,12 +68,20 @@ UmiStatus umi_ai_mcp_client_start(
         client_version);
 }
 
+/*
+ * Provide the ai mcp client discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_client_discover(
     UmiAiMcpClient *client)
 {
     UmiStatus status;
     uint32_t flags;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL ||
         client->session.state != UMI_AI_MCP_SESSION_READY) {
         return UMI_STATUS_INVALID_STATE;
@@ -65,37 +89,52 @@ UmiStatus umi_ai_mcp_client_discover(
 
     flags = client->session.capabilities.flags;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((flags & UMI_AI_MCP_CAPABILITY_TOOLS) != 0U) {
         status = umi_ai_mcp_discover_tools(
             &client->session,
             &client->tools);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((flags & UMI_AI_MCP_CAPABILITY_RESOURCES) != 0U) {
         status = umi_ai_mcp_discover_resources(
             &client->session,
             &client->resources);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((flags & UMI_AI_MCP_CAPABILITY_PROMPTS) != 0U) {
         status = umi_ai_mcp_discover_prompts(
             &client->session,
             &client->prompts);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp client register tools operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_client_register_tools(
     UmiAiMcpClient *client,
     UmiAiToolRegistry *tool_registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || tool_registry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (client->session.state != UMI_AI_MCP_SESSION_READY) {
         return UMI_STATUS_INVALID_STATE;
     }

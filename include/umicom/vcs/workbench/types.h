@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_VCS_WORKBENCH_MAX_REVIEW_THREADS 128U
 #define UMI_VCS_WORKBENCH_MAX_REVIEW_COMMENTS 256U
 
+/**
+ * List the named vcs workbench phase values accepted by this public contract.
+ */
 typedef enum UmiVcsWorkbenchPhase {
     UMI_VCS_WORKBENCH_IDLE = 0,
     UMI_VCS_WORKBENCH_COMPARING = 1,
@@ -48,20 +51,38 @@ typedef enum UmiVcsWorkbenchPhase {
     UMI_VCS_WORKBENCH_FAILED = 6
 } UmiVcsWorkbenchPhase;
 
+/**
+ * List the named vcs workbench compare view mode values accepted by this public contract.
+ */
 typedef enum UmiVcsWorkbenchCompareViewMode {
     UMI_VCS_WORKBENCH_SIDE_BY_SIDE = 0,
     UMI_VCS_WORKBENCH_INLINE = 1
 } UmiVcsWorkbenchCompareViewMode;
 
+/**
+ * List the named vcs workbench review decision values accepted by this public contract.
+ */
 typedef enum UmiVcsWorkbenchReviewDecision {
     UMI_VCS_WORKBENCH_REVIEW_PENDING = 0,
     UMI_VCS_WORKBENCH_REVIEW_APPROVED = 1,
     UMI_VCS_WORKBENCH_REVIEW_CHANGES_REQUESTED = 2
 } UmiVcsWorkbenchReviewDecision;
 
+/**
+ * Provide the vcs workbench phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_workbench_phase_text(UmiVcsWorkbenchPhase phase);
+/**
+ * Provide the vcs workbench review decision text operation used by this module and its
+ * client applications.
+ */
 const char *umi_vcs_workbench_review_decision_text(
     UmiVcsWorkbenchReviewDecision decision);
+/**
+ * Provide the vcs workbench copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_workbench_copy_text(
     char *destination,
     size_t capacity,

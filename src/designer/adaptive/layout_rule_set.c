@@ -18,6 +18,10 @@
 /* Reset the bounded layout-rule set. */
 void umi_designer_layout_rule_set_init(UmiDesignerAdaptiveLayoutRuleSet *set)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (set != NULL) memset(set, 0, sizeof *set);
 }
 
@@ -26,9 +30,16 @@ UmiStatus umi_designer_layout_rule_set_add(UmiDesignerAdaptiveLayoutRuleSet *set
                                            const UmiDesignerAdaptiveLayoutRule *rule)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (set == NULL || rule == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < set->count; ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(set->rules[index].rule_id, rule->rule_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (set->count >= UMI_DESIGNER_ADAPTIVE_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED;
     set->rules[set->count++] = *rule;
     return UMI_STATUS_OK;
@@ -39,8 +50,14 @@ size_t umi_designer_layout_rule_set_match_count(const UmiDesignerAdaptiveLayoutR
                                                 UmiDesignSizeClass size_class)
 {
     size_t index, count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (set == NULL) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < set->count; ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_designer_layout_rule_matches(&set->rules[index], size_class)) ++count;
     return count;
 }

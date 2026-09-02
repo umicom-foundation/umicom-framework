@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the legal entity registry data shared with callers of this public contract.
+ */
 typedef struct UmiLegalEntityRegistry { UmiLegalEntity items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiLegalEntityRegistry;
 /* Reset the bounded registry. */ void umi_legal_entity_registry_init(UmiLegalEntityRegistry *registry);
 /* Add a unique item. */ UmiStatus umi_legal_entity_registry_add(UmiLegalEntityRegistry *registry,const UmiLegalEntity *item);

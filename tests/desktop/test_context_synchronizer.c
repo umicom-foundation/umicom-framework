@@ -21,6 +21,10 @@
 #include "umicom/application/application.h"
 #include "umicom/desktop/context_synchronizer.h"
 
+/*
+ * Exercise create view and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus create_view(
     const char *view_id,
     void *user_data,
@@ -30,6 +34,10 @@ static UmiStatus create_view(
         view_id, (const char *)user_data, UMI_UI_ROLE_PANE, out_view);
 }
 
+/*
+ * Exercise register factory and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void register_factory(
     UmiDesktopContentRuntime *content,
     const char *view_type)
@@ -45,6 +53,10 @@ static void register_factory(
         UMI_STATUS_OK);
 }
 
+/*
+ * Exercise bind window and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void bind_window(
     UmiDesktopContentRuntime *content,
     const char *window_id,
@@ -61,6 +73,10 @@ static void bind_window(
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationContextHub *context_hub = NULL;

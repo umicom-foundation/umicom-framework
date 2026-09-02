@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/factor_observation.h"
+/* Provide the factor change operation used by this module and its client applications. */
 double umi_factor_change(const UmiMarketFactor *f){return f!=NULL?f->value_after-f->value_before:0.0;}

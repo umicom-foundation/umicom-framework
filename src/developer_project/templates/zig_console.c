@@ -43,6 +43,10 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
     }
 };
 
+/*
+ * Provide the developer project template zig console operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_zig_console(void)
 {
     static const UmiDeveloperProjectTemplate project_template = {

@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital key reference data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalKeyReference {
     UmiDigitalAssetId id;
     char provider_reference[UMI_DIGITAL_ASSET_NAME_CAPACITY];

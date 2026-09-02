@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtToolchainRequirement r={"gnu",14U,0U,true,true,true,false};UmiCtToolchainEvidence e={"gnu",14U,2U,true,true,true,true};CHECK(umi_ct_toolchain_requirement_satisfied(&r,&e));e.linker=false;CHECK(!umi_ct_toolchain_requirement_satisfied(&r,&e));return 0;}

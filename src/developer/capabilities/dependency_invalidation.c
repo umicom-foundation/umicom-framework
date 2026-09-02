@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/dependency_invalidation.h"
 
+/*
+ * Provide the developer capability dependency invalidation operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_dependency_invalidation(void)
 {

@@ -14,11 +14,19 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/capabilities.h"
 
+/*
+ * Provide the debug runtime capability bits operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_runtime_capability_bits(
     const UmiDebugRuntimeCapabilities *capabilities)
 {
     uint64_t bits = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (capabilities == NULL) return 0U;
 
 #define MAP(field, bit) do { if (capabilities->field) bits |= (bit); } while (0)

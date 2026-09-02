@@ -19,13 +19,19 @@
 
 #include "umicom/trading/market_state.h"
 
+/*
+ * Provide the market state transition allowed operation used by this module and its client
+ * applications.
+ */
 int umi_market_state_transition_allowed(UmiMarketState from,
                                         UmiMarketState to)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (from == to) {
         return 1;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (from) {
     case UMI_MARKET_CLOSED:
         return to == UMI_MARKET_PREOPEN;

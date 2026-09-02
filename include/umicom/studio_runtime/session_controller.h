@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime session controller data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeSessionController {
     UmiSessionStore *store;
     char path[UMI_STUDIO_RUNTIME_PATH_CAPACITY];
@@ -32,18 +36,34 @@ typedef struct UmiStudioRuntimeSessionController {
     int loaded;
 } UmiStudioRuntimeSessionController;
 
+/**
+ * Initialise studio session controller from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_session_controller_create(
     const char *path,
     const char *prefix,
     UmiStudioRuntimeSessionController **out_controller);
 
+/**
+ * Release or reset state held by studio session controller so the same storage can be
+ * reused safely.
+ */
 void umi_studio_session_controller_destroy(
     UmiStudioRuntimeSessionController *controller);
 
+/**
+ * Write studio session controller in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_studio_session_controller_save(
     UmiStudioRuntimeSessionController *controller,
     UmiStudioRuntimePlatform *platform);
 
+/**
+ * Provide the studio session controller restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_session_controller_restore(
     UmiStudioRuntimeSessionController *controller,
     UmiStudioRuntimePlatform *platform,

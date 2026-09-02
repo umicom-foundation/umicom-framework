@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrInstallReceipt value; umi_dr_install_receipt_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"receipt")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.package_digest,sizeof(value.package_digest),"d")==UMI_STATUS_OK); value.installed_at=1U; CHECK(umi_dr_install_receipt_valid(&value)); CHECK(umi_dr_install_receipt_fingerprint(&value) != 0U);
     return 0;

@@ -17,15 +17,24 @@
 
 #include <string.h>
 
+/*
+ * Provide the application experience status operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_experience_status(
     const UmiApplicationExperienceDefinition *definition,
     UmiApplicationExperienceStatus *out_status)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL || out_status == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_application_experience_validate(definition);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     memset(out_status, 0, sizeof(*out_status));

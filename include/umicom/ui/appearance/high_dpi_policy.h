@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance high dpi policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceHighDpiPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     bool allow_fractional_layout;

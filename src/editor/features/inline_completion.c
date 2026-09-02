@@ -36,6 +36,10 @@ static const UmiEditorFeatureDescriptor FEATURE = {
     .revision = 1U
 };
 
+/*
+ * Provide the editor feature inline completion operation used by this module and its
+ * client applications.
+ */
 const UmiEditorFeatureDescriptor *umi_editor_feature_inline_completion(void)
 {
     return &FEATURE;

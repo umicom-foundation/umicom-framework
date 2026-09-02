@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential service data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialService { int capital_ready; int liquidity_ready; int stress_ready; int governance_ready; size_t blocked_controls; } UmiPrudentialService;
 /* Evaluate aggregate prudential service readiness without overriding failed domain controls. */
 UmiStatus umi_pru_prudential_service_evaluate(UmiPrudentialService *service, int capital_ready, int liquidity_ready, int stress_ready, int governance_ready, size_t blocked_controls);

@@ -21,7 +21,9 @@
 /* Centralise lifecycle policy so custody adapters cannot invent incompatible states. */
 bool umi_digital_asset_transaction_status_can_transition(UmiDigitalTransactionState from, UmiDigitalTransactionState to)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (from == to) return true;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (from) {
         case UMI_DIGITAL_TX_CREATED:
             return to == UMI_DIGITAL_TX_SIGNING || to == UMI_DIGITAL_TX_CANCELLED;

@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform duration history data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformDurationHistory {
     size_t sample_count;
     double latest_ms;
@@ -40,11 +44,19 @@ UmiStatus umi_test_platform_history_latest(
     const char *item_id,
     UmiTestPlatformResultSnapshot *out_result
 );
+/**
+ * Provide the test platform history duration operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_history_duration(
     const UmiTestPlatformResultRegistry *results,
     const char *item_id,
     UmiTestPlatformDurationHistory *out_history
 );
+/**
+ * Provide the test platform history failed selection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_history_failed_selection(
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results,

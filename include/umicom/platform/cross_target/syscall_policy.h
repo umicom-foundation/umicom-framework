@@ -31,7 +31,14 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/syscall_descriptor.h"
+/**
+ * Represent the ct syscall policy data shared with callers of this public contract.
+ */
 typedef struct UmiCtSyscallPolicy { uint32_t minimum_number; uint32_t maximum_number; UmiCtSyscallFlags denied_flags; bool default_allow; } UmiCtSyscallPolicy;
+/**
+ * Provide the ct syscall policy allows operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_syscall_policy_allows(const UmiCtSyscallPolicy *policy,const UmiCtSyscallDescriptor *descriptor);
 
 #ifdef __cplusplus

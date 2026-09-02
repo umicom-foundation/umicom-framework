@@ -19,6 +19,10 @@
 #include "umicom/application/experience/experience.h"
 #include "umicom/application/experience_catalogue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_application_experience_catalogue_find("org.umicom.studio") !=

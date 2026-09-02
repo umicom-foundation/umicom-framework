@@ -20,7 +20,13 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/matching_policy.h"
+/**
+ * Represent the trading match request data shared with callers of this public contract.
+ */
 typedef struct UmiTradingMatchRequest { UmiTradingPriceTicks buy_limit_ticks; UmiTradingQuantityLots buy_lots; UmiTradingPriceTicks sell_limit_ticks; UmiTradingQuantityLots sell_lots; } UmiTradingMatchRequest;
+/**
+ * Represent the trading match result data shared with callers of this public contract.
+ */
 typedef struct UmiTradingMatchResult { UmiTradingPriceTicks execution_ticks; UmiTradingQuantityLots execution_lots; bool matched; } UmiTradingMatchResult;
 /* Match two opposing limit interests when their prices cross. */
 UmiStatus umi_trading_matching_engine_match(const UmiTradingMatchingPolicy *policy,const UmiTradingMatchRequest *request,UmiTradingMatchResult *out_result);

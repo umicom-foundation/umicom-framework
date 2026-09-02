@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution runtime data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionRuntime {
     UmiProductExecutionPolicy policy;
     UmiProductExecutionAdapter adapter;

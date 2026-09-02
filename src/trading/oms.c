@@ -21,8 +21,13 @@
 #include "umicom/trading/order_request.h"
 #include "umicom/trading/pretrade_risk.h"
 
+/* Initialise oms from caller-provided values so later operations receive a known state. */
 void umi_oms_init(UmiOms *oms, UmiRiskLimit limit)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (oms == NULL) {
         return;
     }
@@ -33,6 +38,7 @@ void umi_oms_init(UmiOms *oms, UmiRiskLimit limit)
     oms->risk_limit = limit;
 }
 
+/* Provide the oms submit operation used by this module and its client applications. */
 UmiStatus umi_oms_submit(UmiOms *oms,
                          const UmiOrderRequest *request,
                          double current_position,
@@ -40,21 +46,28 @@ UmiStatus umi_oms_submit(UmiOms *oms,
                          int64_t now_ms,
                          UmiRiskDecision *decision)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (oms == NULL || request == NULL || decision == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (oms->kill_switch.engaged) {
         umi_risk_decision_deny(decision, "kill switch engaged");
         return UMI_STATUS_PERMISSION_DENIED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_order_throttle_accept(&oms->throttle, now_ms)) {
         umi_risk_decision_deny(decision, "order throttle exceeded");
         return UMI_STATUS_BUSY;
     }
 
     const UmiStatus validation = umi_order_request_validate(request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (validation != UMI_STATUS_OK) {
         umi_risk_decision_deny(decision, "invalid order request");
         return validation;
@@ -64,6 +77,7 @@ UmiStatus umi_oms_submit(UmiOms *oms,
                                            &oms->risk_limit,
                                            current_position,
                                            daily_pnl);
+    /* Apply this operation only while the related capability or state is available. */
     if (!decision->allowed) {
         return UMI_STATUS_PERMISSION_DENIED;
     }

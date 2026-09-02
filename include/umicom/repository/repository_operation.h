@@ -25,6 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named repository operation kind values accepted by this public contract.
+ */
 typedef enum UmiRepositoryOperationKind { UMI_REPOSITORY_OPERATION_STATUS=1, UMI_REPOSITORY_OPERATION_DOCTOR, UMI_REPOSITORY_OPERATION_AUDIT, UMI_REPOSITORY_OPERATION_GRAPH, UMI_REPOSITORY_OPERATION_PLAN } UmiRepositoryOperationKind;
 /* Translate one operation kind to stable command text. */
 const char *umi_repository_operation_text(UmiRepositoryOperationKind kind);

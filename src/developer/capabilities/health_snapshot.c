@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/health_snapshot.h"
 
+/*
+ * Provide the developer capability health snapshot operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_health_snapshot(void)
 {

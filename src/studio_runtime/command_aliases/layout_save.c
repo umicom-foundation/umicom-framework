@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/layout_save.h"
 
+/*
+ * Write studio command alias layout in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_layout_save(void)
 {

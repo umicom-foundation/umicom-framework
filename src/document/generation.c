@@ -37,6 +37,10 @@ static bool valid_format(UmiDocumentGenerationFormat format)
 static UmiStatus copy_text(char *destination, size_t capacity, const char *text)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -49,6 +53,7 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *text)
 const char *umi_document_generation_format_text(
     UmiDocumentGenerationFormat format)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (format) {
         case UMI_DOCUMENT_GENERATION_TEXT: return "text";
         case UMI_DOCUMENT_GENERATION_PDF: return "pdf";
@@ -69,6 +74,10 @@ UmiStatus umi_document_generation_plan(
     const char *mime_type;
     bool requires_adapter;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || out_plan == NULL || request->title == NULL ||
         request->title[0] == '\0' || request->body == NULL ||
         request->output_name == NULL || request->output_name[0] == '\0' ||
@@ -113,8 +122,10 @@ UmiStatus umi_document_generation_plan(
     out_plan->requires_external_adapter = requires_adapter;
     status = copy_text(out_plan->output_name,
                        sizeof(out_plan->output_name), request->output_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = copy_text(
         out_plan->extension, sizeof(out_plan->extension), extension);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = copy_text(
         out_plan->mime_type, sizeof(out_plan->mime_type), mime_type);
     return status;
@@ -131,21 +142,28 @@ UmiStatus umi_document_generation_write_text(
     const char *section_label = "";
     int written;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL || capacity == 0U || out_required_size == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_required_size = 0U;
     status = umi_document_generation_plan(request, &plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Binary container formats are never disguised as plain text output. */
     if (plan.requires_external_adapter) return UMI_STATUS_NOT_IMPLEMENTED;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->format == UMI_DOCUMENT_GENERATION_VIDEO_SCRIPT) {
         section_label = "VIDEO SCRIPT\n\n";
-    } else if (request->format == UMI_DOCUMENT_GENERATION_STORYBOARD) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (request->format == UMI_DOCUMENT_GENERATION_STORYBOARD) {
         section_label = "STORYBOARD\n\n";
     }
     written = snprintf(buffer, capacity, "%s\n\n%s%s\n",
                        request->title, section_label, request->body);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_INTERNAL_ERROR;
     *out_required_size = (size_t)written + 1U;
     /* The required size includes the terminator so callers can retry exactly. */
@@ -159,12 +177,20 @@ UmiStatus umi_document_generation_registry_create(
     UmiDocumentGenerationRegistry **out_registry)
 {
     UmiDocumentGenerationRegistry *registry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL || adapter_capacity == 0U ||
         adapter_capacity > SIZE_MAX / sizeof(UmiDocumentGenerationAdapter)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_registry = NULL;
     registry = (UmiDocumentGenerationRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->adapters = (UmiDocumentGenerationAdapter *)calloc(
         adapter_capacity, sizeof(*registry->adapters));
@@ -182,6 +208,10 @@ UmiStatus umi_document_generation_registry_create(
 void umi_document_generation_registry_destroy(
     UmiDocumentGenerationRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return;
     free(registry->adapters);
     free(registry);
@@ -193,10 +223,15 @@ UmiStatus umi_document_generation_registry_register(
     const UmiDocumentGenerationAdapter *adapter)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || adapter == NULL || adapter->adapter_id[0] == '\0' ||
         !valid_format(adapter->format) || adapter->generate == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         /* Duplicate ID or format would make dispatch order-dependent. */
         if (strcmp(registry->adapters[index].adapter_id,
@@ -205,6 +240,7 @@ UmiStatus umi_document_generation_registry_register(
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= registry->capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -223,9 +259,15 @@ UmiStatus umi_document_generation_registry_generate(
     UmiDocumentGenerationPlan plan;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || sink == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_document_generation_plan(request, &plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         /* Dispatch the normalised format recorded by the validated plan. */
         if (registry->adapters[index].format == plan.format) {

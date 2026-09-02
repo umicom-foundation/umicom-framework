@@ -36,6 +36,10 @@ extern "C" {
 #define UMI_DEVELOPER_CMAKE_PLAN_API_VERSION 1U
 #define UMI_DEVELOPER_CMAKE_DELIVERY_PLAN_API_VERSION 1U
 
+/**
+ * Represent the developer cmake plan request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperCMakePlanRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -56,6 +60,10 @@ typedef struct UmiDeveloperCMakePlanRequest {
     size_t run_argument_count;
 } UmiDeveloperCMakePlanRequest;
 
+/**
+ * Represent the developer cmake plan snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperCMakePlanSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -66,6 +74,10 @@ typedef struct UmiDeveloperCMakePlanSnapshot {
     size_t operation_count;
 } UmiDeveloperCMakePlanSnapshot;
 
+/**
+ * List the named developer cmake delivery stage flags values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperCMakeDeliveryStageFlags {
     UMI_DEVELOPER_CMAKE_DELIVERY_TESTS = 1U << 0,
     UMI_DEVELOPER_CMAKE_DELIVERY_INSTALL = 1U << 1,
@@ -76,6 +88,10 @@ typedef enum UmiDeveloperCMakeDeliveryStageFlags {
         UMI_DEVELOPER_CMAKE_DELIVERY_PACKAGE
 } UmiDeveloperCMakeDeliveryStageFlags;
 
+/**
+ * Represent the developer cmake delivery plan request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperCMakeDeliveryPlanRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -93,6 +109,10 @@ typedef struct UmiDeveloperCMakeDeliveryPlanRequest {
     uint32_t stage_flags;
 } UmiDeveloperCMakeDeliveryPlanRequest;
 
+/**
+ * Represent the developer cmake delivery plan snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperCMakeDeliveryPlanSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -104,6 +124,10 @@ typedef struct UmiDeveloperCMakeDeliveryPlanSnapshot {
     size_t operation_count;
 } UmiDeveloperCMakeDeliveryPlanSnapshot;
 
+/**
+ * Provide the developer cmake plan submit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_cmake_plan_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperCMakePlanRequest *request,

@@ -14,4 +14,4 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/logical_expression.h"
 /* Evaluate logical operation: 1=AND, 2=OR, 3=XOR. */
-UmiStatus umi_ui_reactive_logical_expression_eval(UmiUiReactiveLogicalExpression *item){if(!item)return UMI_STATUS_INVALID_ARGUMENT;switch(item->operation){case 1:item->result=item->left&&item->right;break;case 2:item->result=item->left||item->right;break;case 3:item->result=(item->left!=item->right);break;default:return UMI_STATUS_INVALID_ARGUMENT;}return UMI_STATUS_OK;}
+UmiStatus umi_ui_reactive_logical_expression_eval(UmiUiReactiveLogicalExpression *item){/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!item)return UMI_STATUS_INVALID_ARGUMENT;/* Select the behaviour associated with the requested command or state value. */ switch(item->operation){case 1:item->result=item->left&&item->right;break;case 2:item->result=item->left||item->right;break;case 3:item->result=(item->left!=item->right);break;default:return UMI_STATUS_INVALID_ARGUMENT;}return UMI_STATUS_OK;}

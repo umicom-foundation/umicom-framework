@@ -21,22 +21,36 @@
 
 #include <string.h>
 
+/*
+ * Provide the vcs advanced copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_advanced_copy_text(char *destination,
                                      size_t capacity,
                                      const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) {
         source = "";
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         destination[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(destination, source, length);
     }
@@ -44,10 +58,18 @@ UmiStatus umi_vcs_advanced_copy_text(char *destination,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_vcs_advanced_hash_text(const char *text)
 {
     const unsigned char *cursor = (const unsigned char *)(text != NULL ? text : "");
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
         hash ^= (uint64_t)(*cursor);
         hash *= UINT64_C(1099511628211);
@@ -56,21 +78,38 @@ uint64_t umi_vcs_advanced_hash_text(const char *text)
     return hash;
 }
 
+/*
+ * Provide the vcs advanced text present operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_text_present(const char *text)
 {
     return text != NULL && text[0] != '\0';
 }
 
+/*
+ * Provide the vcs advanced text equal operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_text_equal(const char *left, const char *right)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL) {
         return left == right;
     }
     return strcmp(left, right) == 0;
 }
 
+/*
+ * Provide the vcs advanced state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_advanced_state_text(UmiVcsAdvancedState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_VCS_ADVANCED_STATE_UNKNOWN: return "unknown";
         case UMI_VCS_ADVANCED_STATE_READY: return "ready";
@@ -83,8 +122,13 @@ const char *umi_vcs_advanced_state_text(UmiVcsAdvancedState state)
     }
 }
 
+/*
+ * Provide the vcs advanced operation text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_advanced_operation_text(UmiVcsAdvancedOperationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_VCS_ADVANCED_OPERATION_NONE: return "none";
         case UMI_VCS_ADVANCED_OPERATION_STAGE: return "stage";
@@ -102,8 +146,13 @@ const char *umi_vcs_advanced_operation_text(UmiVcsAdvancedOperationKind kind)
     }
 }
 
+/*
+ * Provide the vcs compare mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_compare_mode_text(UmiVcsCompareMode mode)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (mode) {
         case UMI_VCS_COMPARE_TWO_WAY: return "two-way";
         case UMI_VCS_COMPARE_THREE_WAY: return "three-way";
@@ -114,8 +163,13 @@ const char *umi_vcs_compare_mode_text(UmiVcsCompareMode mode)
     }
 }
 
+/*
+ * Provide the vcs diff kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_diff_kind_text(UmiVcsDiffKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_VCS_DIFF_CONTEXT: return "context";
         case UMI_VCS_DIFF_ADDED: return "added";
@@ -126,8 +180,13 @@ const char *umi_vcs_diff_kind_text(UmiVcsDiffKind kind)
     }
 }
 
+/*
+ * Provide the vcs conflict choice text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_conflict_choice_text(UmiVcsConflictChoice choice)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (choice) {
         case UMI_VCS_CONFLICT_UNRESOLVED: return "unresolved";
         case UMI_VCS_CONFLICT_USE_BASE: return "base";

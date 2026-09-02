@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance font stack data shared with callers of this public contract.
+ */
 typedef struct UmiAppearanceFontStack { char stack_id[UMI_APPEARANCE_ID_CAPACITY]; char family_ids[UMI_APPEARANCE_MAX_FONTS][UMI_APPEARANCE_ID_CAPACITY]; size_t count; } UmiAppearanceFontStack;
 /* Initialise an empty semantic font stack. */
 UmiStatus umi_appearance_font_stack_init(UmiAppearanceFontStack *stack,const char *stack_id);

@@ -19,6 +19,10 @@
 #include "umicom/workbench_context_source/workbench_context_source.h"
 
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextHostTestFixture fixture;

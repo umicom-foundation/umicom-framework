@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer locale layout policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerLocaleLayoutPolicy {
     int right_to_left;
     int mirror_navigation;

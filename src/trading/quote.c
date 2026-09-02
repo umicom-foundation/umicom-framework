@@ -18,6 +18,9 @@
  */
 
 #include "umicom/trading/quote.h"
+/* Check that quote satisfies its contract before another service relies on it. */
 int umi_quote_valid(const UmiQuote *q){return q!=NULL&&q->bid>0.0&&q->ask>=q->bid&&q->bid_size>=0.0&&q->ask_size>=0.0;}
+/* Provide the quote mid operation used by this module and its client applications. */
 double umi_quote_mid(const UmiQuote *q){return umi_quote_valid(q)?(q->bid+q->ask)*0.5:0.0;}
+/* Provide the quote spread operation used by this module and its client applications. */
 double umi_quote_spread(const UmiQuote *q){return umi_quote_valid(q)?q->ask-q->bid:0.0;}

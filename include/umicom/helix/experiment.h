@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix experiment data shared with callers of this public contract.
+ */
 typedef struct UmiHelixExperiment {
     char experiment_id[UMI_HELIX_ID_CAPACITY];
     char baseline_candidate[UMI_HELIX_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixExperiment {
     double delta_score;
 } UmiHelixExperiment;
 
+/**
+ * Initialise helix experiment from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_experiment_init(UmiHelixExperiment *value);
 
 #ifdef __cplusplus

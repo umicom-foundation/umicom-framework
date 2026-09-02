@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_profiles/build.h"
 
+/*
+ * Provide the studio surface profile build operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_build(void)
 {
     static const UmiStudioRuntimeSurfaceBinding binding = {

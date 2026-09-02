@@ -36,6 +36,10 @@
 
 #include "umicom/editor/hierarchy_navigation_session.h"
 
+/*
+ * Exercise emit node and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus emit_node(UmiEditorNavigationHierarchySink sink,
                            void *user_data,
                            const char *node_id,
@@ -64,6 +68,10 @@ static UmiStatus emit_node(UmiEditorNavigationHierarchySink sink,
     return sink(&node, user_data);
 }
 
+/*
+ * Exercise fake hierarchy and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus fake_hierarchy(
     void *instance,
     const UmiEditorNavigationHierarchyRequest *request,
@@ -75,10 +83,12 @@ static UmiStatus fake_hierarchy(
     (void)instance;
     (void)out_report;
     assert(!cancellation->is_cancelled(cancellation->user_data));
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (request->expand_node_id[0] == '\0') {
         return emit_node(sink, sink_user_data, "root", "", "symbol.root",
                          "Root Function", 1U, 1);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(request->expand_node_id, "root") == 0) {
         assert(emit_node(sink, sink_user_data, "child", "root",
                          "symbol.child", "Child Function", 5U, 0) ==
@@ -90,6 +100,10 @@ static UmiStatus fake_hierarchy(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;

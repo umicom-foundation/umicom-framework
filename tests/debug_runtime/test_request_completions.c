@@ -17,6 +17,10 @@
 #include "request_test_support.h"
 #include "umicom/debug_runtime/requests/completions.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     DebugRequestTestFixture f;

@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc context contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcContextContract { uint64_t required_types; bool bidirectional; bool accessible_label; } UmiFcContextContract;
+/**
+ * Check that fc context contract satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_fc_context_contract_validate(const UmiFcContextContract *item);
 
 #ifdef __cplusplus

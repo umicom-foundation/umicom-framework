@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_PATH_CANONICALIZATION "umicom.document.identity.path_canonicalization"
 
+/**
+ * Provide the document capability path canonicalization operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_path_canonicalization(void);
 

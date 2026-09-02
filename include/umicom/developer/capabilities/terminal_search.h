@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_SEARCH "umicom.developer.terminal.terminal_search"
 
+/**
+ * Provide the developer capability terminal search operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_search(void);
 

@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct atomic semantics data shared with callers of this public contract.
+ */
 typedef struct UmiCtAtomicSemantics { bool width8; bool width16; bool width32; bool width64; bool width128; bool acquire_release; bool sequential_consistency; } UmiCtAtomicSemantics;
+/**
+ * Provide the ct atomic width lock free operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_atomic_width_lock_free(const UmiCtAtomicSemantics *semantics,uint32_t bits);
+/**
+ * Provide the ct atomic semantics support operation used by this module and its client
+ * applications.
+ */
 UmiCtSupportLevel umi_ct_atomic_semantics_support(const UmiCtAtomicSemantics *semantics,uint32_t required_bits,bool require_seq_cst);
 
 #ifdef __cplusplus

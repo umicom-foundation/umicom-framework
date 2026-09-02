@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/scheduler_profile.h"
 
-UmiStatus umi_ct_scheduler_profile_validate(const UmiCtSchedulerProfile*p){if(p==NULL||p->scheduler_class<UMI_CT_SCHED_COOPERATIVE||p->scheduler_class>UMI_CT_SCHED_REALTIME||p->cpu_count==0U||p->priority_levels==0U)return UMI_STATUS_INVALID_ARGUMENT;if(p->scheduler_class!=UMI_CT_SCHED_COOPERATIVE&&p->timeslice_us==0U)return UMI_STATUS_INVALID_STATE;return UMI_STATUS_OK;}
+/*
+ * Check that ct scheduler profile satisfies its contract before another service relies on
+ * it.
+ */
+UmiStatus umi_ct_scheduler_profile_validate(const UmiCtSchedulerProfile*p){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL||p->scheduler_class<UMI_CT_SCHED_COOPERATIVE||p->scheduler_class>UMI_CT_SCHED_REALTIME||p->cpu_count==0U||p->priority_levels==0U)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->scheduler_class!=UMI_CT_SCHED_COOPERATIVE&&p->timeslice_us==0U)return UMI_STATUS_INVALID_STATE;return UMI_STATUS_OK;}

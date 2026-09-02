@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/terminal_profiles/cmd.h"
 
+/*
+ * Provide the developer terminal profile cmd operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_cmd(void)
 {
     static const UmiDeveloperTerminalProfile profile = {

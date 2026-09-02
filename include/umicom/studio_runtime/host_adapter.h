@@ -50,6 +50,10 @@ typedef UmiStatus (*UmiStudioHostNotify)(
     void *user_data,
     const char *message);
 
+/**
+ * Represent the studio runtime host adapter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeHostAdapter {
     UmiStudioHostSetWindowTitle set_window_title;
     UmiStudioHostPresentSurface present_surface;
@@ -60,6 +64,10 @@ typedef struct UmiStudioRuntimeHostAdapter {
     void *user_data;
 } UmiStudioRuntimeHostAdapter;
 
+/**
+ * Check that studio host adapter satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_studio_host_adapter_validate(
     const UmiStudioRuntimeHostAdapter *adapter);
 

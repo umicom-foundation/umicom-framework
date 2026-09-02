@@ -118,27 +118,42 @@ static const BuiltinToolchainBinding builtin_bindings[] = {
      "", "", DOCUMENT_TOOLS, 100U}
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(const UmiDeveloperToolchainBindingRegistry *registry,
                          const char *binding_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->items[index].id, binding_id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/* Provide the selector matches operation used by this module and its client applications. */
 static int selector_matches(const char *selector, const char *requested)
 {
     return selector[0] == '\0' || strcmp(selector, "*") == 0 ||
@@ -146,9 +161,17 @@ static int selector_matches(const char *selector, const char *requested)
         strcmp(selector, requested) == 0;
 }
 
+/*
+ * Initialise developer toolchain binding from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_toolchain_binding_init(
     UmiDeveloperToolchainBindingSnapshot *binding)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL) return;
     memset(binding, 0, sizeof(*binding));
     binding->struct_size = (uint32_t)sizeof(*binding);
@@ -159,35 +182,61 @@ void umi_developer_toolchain_binding_init(
     binding->revision = 1U;
 }
 
+/*
+ * Initialise developer toolchain binding registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_create(
     UmiDeveloperToolchainBindingRegistry **out_registry)
 {
     UmiDeveloperToolchainBindingRegistry *registry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiDeveloperToolchainBindingRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->revision = 1U;
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer toolchain binding registry so the same storage
+ * can be reused safely.
+ */
 void umi_developer_toolchain_binding_registry_destroy(
     UmiDeveloperToolchainBindingRegistry *registry)
 {
     free(registry);
 }
 
+/*
+ * Provide the developer toolchain binding registry upsert operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_upsert(
     UmiDeveloperToolchainBindingRegistry *registry,
     const UmiDeveloperToolchainBindingSnapshot *binding)
 {
     size_t index;
     UmiDeveloperToolchainBindingSnapshot copy;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || binding == NULL || binding->id[0] == '\0' ||
         binding->language_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, binding->id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->count >= UMI_DEVELOPER_TOOLCHAIN_BINDING_CAPACITY)
             return UMI_STATUS_CAPACITY_EXCEEDED;
         index = registry->count++;
@@ -196,20 +245,31 @@ UmiStatus umi_developer_toolchain_binding_registry_upsert(
     copy.struct_size = (uint32_t)sizeof(copy);
     copy.api_version = UMI_DEVELOPER_TOOLCHAIN_BINDING_API_VERSION;
     copy.revision = registry->items[index].revision + 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy.revision == 1U) copy.revision = 1U;
     registry->items[index] = copy;
     registry->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove developer toolchain binding registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_remove(
     UmiDeveloperToolchainBindingRegistry *registry, const char *binding_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || binding_id == NULL || binding_id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, binding_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < registry->count) {
         memmove(&registry->items[index], &registry->items[index + 1U],
                 (registry->count - index - 1U) * sizeof(registry->items[0]));
@@ -220,19 +280,32 @@ UmiStatus umi_developer_toolchain_binding_registry_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find developer toolchain binding registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_find(
     const UmiDeveloperToolchainBindingRegistry *registry, const char *binding_id,
     UmiDeveloperToolchainBindingSnapshot *out_binding)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || binding_id == NULL || out_binding == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, binding_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_binding = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer toolchain binding registry resolve operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_resolve(
     const UmiDeveloperToolchainBindingRegistry *registry,
     const char *language_id, const char *platform, const char *architecture,
@@ -242,11 +315,17 @@ UmiStatus umi_developer_toolchain_binding_registry_resolve(
     size_t index;
     size_t best_index = SIZE_MAX;
     uint64_t best_score = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || language_id == NULL || language_id[0] == '\0' ||
         out_binding == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         const UmiDeveloperToolchainBindingSnapshot *candidate = &registry->items[index];
         uint64_t score;
+        /* Apply this operation only while the related capability or state is available. */
         if (candidate->enabled == 0 ||
             strcmp(candidate->language_id, language_id) != 0 ||
             !selector_matches(candidate->platform, platform) ||
@@ -254,61 +333,103 @@ UmiStatus umi_developer_toolchain_binding_registry_resolve(
             (candidate->capabilities & required_capabilities) != required_capabilities)
             continue;
         score = candidate->priority;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (platform != NULL && platform[0] != '\0' &&
             strcmp(candidate->platform, platform) == 0) score += UINT64_C(1000000);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (architecture != NULL && architecture[0] != '\0' &&
             strcmp(candidate->architecture, architecture) == 0) score += UINT64_C(100000);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (best_index == SIZE_MAX || score > best_score) {
             best_index = index;
             best_score = score;
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (best_index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_binding = registry->items[best_index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find developer toolchain binding registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_at(
     const UmiDeveloperToolchainBindingRegistry *registry, size_t index,
     UmiDeveloperToolchainBindingSnapshot *out_binding)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_binding == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
     *out_binding = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer toolchain binding registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_registry_snapshot(
     const UmiDeveloperToolchainBindingRegistry *registry,
     UmiDeveloperToolchainBindingRegistrySnapshot *out_snapshot)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
     out_snapshot->api_version = UMI_DEVELOPER_TOOLCHAIN_BINDING_API_VERSION;
     out_snapshot->binding_count = registry->count;
     out_snapshot->revision = registry->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
         const UmiDeveloperToolchainBindingSnapshot *binding = &registry->items[index];
+        /* Apply this operation only while the related capability or state is available. */
         if (binding->enabled != 0) out_snapshot->enabled_count += 1U;
+        /* Create this optional product surface only when its build option is enabled. */
         if ((binding->capabilities & UMI_LANGUAGE_CAPABILITY_BUILD) != 0U)
             out_snapshot->build_capable_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((binding->capabilities & UMI_LANGUAGE_CAPABILITY_DEBUG) != 0U)
             out_snapshot->debug_capable_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((binding->capabilities & UMI_LANGUAGE_CAPABILITY_TEST) != 0U)
             out_snapshot->test_capable_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((binding->capabilities & UMI_LANGUAGE_CAPABILITY_PACKAGE) != 0U)
             out_snapshot->package_capable_count += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer toolchain binding register builtins operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_toolchain_binding_register_builtins(
     UmiDeveloperToolchainBindingRegistry *registry)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_developer_toolchain_binding_builtin_count(); ++index) {
         const BuiltinToolchainBinding *builtin = &builtin_bindings[index];
         UmiDeveloperToolchainBindingSnapshot binding;
@@ -330,11 +451,16 @@ UmiStatus umi_developer_toolchain_binding_register_builtins(
         binding.capabilities = builtin->capabilities;
         binding.priority = builtin->priority;
         status = umi_developer_toolchain_binding_registry_upsert(registry, &binding);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by developer toolchain binding builtin without
+ * changing their state.
+ */
 size_t umi_developer_toolchain_binding_builtin_count(void)
 {
     return sizeof(builtin_bindings) / sizeof(builtin_bindings[0]);

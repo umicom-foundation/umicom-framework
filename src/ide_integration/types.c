@@ -14,8 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/types.h"
 
+/* Provide the ide domain text operation used by this module and its client applications. */
 const char *umi_ide_domain_text(UmiIdeIntegrationDomain domain)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (domain) {
         case UMI_IDE_DOMAIN_EDITOR: return "editor";
         case UMI_IDE_DOMAIN_PROBLEMS: return "problems";
@@ -30,8 +32,13 @@ const char *umi_ide_domain_text(UmiIdeIntegrationDomain domain)
     }
 }
 
+/*
+ * Provide the ide navigation reason text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ide_navigation_reason_text(UmiIdeNavigationReason reason)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (reason) {
         case UMI_IDE_NAVIGATION_DIRECT: return "direct";
         case UMI_IDE_NAVIGATION_PROBLEM: return "problem";
@@ -45,8 +52,13 @@ const char *umi_ide_navigation_reason_text(UmiIdeNavigationReason reason)
     }
 }
 
+/*
+ * Provide the ide inline state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ide_inline_state_text(UmiIdeInlineSuggestionState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_IDE_INLINE_IDLE: return "idle";
         case UMI_IDE_INLINE_REQUESTED: return "requested";
@@ -59,8 +71,13 @@ const char *umi_ide_inline_state_text(UmiIdeInlineSuggestionState state)
     }
 }
 
+/*
+ * Provide the ide gate state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ide_gate_state_text(UmiIdeWorkflowGateState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_IDE_GATE_UNKNOWN: return "unknown";
         case UMI_IDE_GATE_PASS: return "pass";

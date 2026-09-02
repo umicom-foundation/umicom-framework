@@ -19,5 +19,13 @@
 #include "umicom/finance/enterprise/market_data_entitlement.h"
 
 #include <string.h>
-UmiStatus umi_enterprise_market_data_entitlement_init(UmiEnterpriseMarketDataEntitlement *e,const char *principal,const char *prefix,int can_read){ UmiStatus s; if(e==NULL||(can_read!=0&&can_read!=1))return UMI_STATUS_INVALID_ARGUMENT; memset(e,0,sizeof *e); s=umi_quant_copy_text(e->principal_id,sizeof e->principal_id,principal); if(s!=UMI_STATUS_OK)return s; s=umi_quant_copy_text(e->topic_prefix,sizeof e->topic_prefix,prefix); if(s==UMI_STATUS_OK)e->can_read=can_read; return s; }
-int umi_enterprise_market_data_entitlement_allows(const UmiEnterpriseMarketDataEntitlement *e,const char *topic){ size_t n; if(e==NULL||topic==NULL||e->can_read==0)return 0; n=strlen(e->topic_prefix); return strncmp(topic,e->topic_prefix,n)==0 ? 1:0; }
+/*
+ * Initialise enterprise market data entitlement from caller-provided values so later
+ * operations receive a known state.
+ */
+UmiStatus umi_enterprise_market_data_entitlement_init(UmiEnterpriseMarketDataEntitlement *e,const char *principal,const char *prefix,int can_read){ UmiStatus s; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(e==NULL||(can_read!=0&&can_read!=1))return UMI_STATUS_INVALID_ARGUMENT; memset(e,0,sizeof *e); s=umi_quant_copy_text(e->principal_id,sizeof e->principal_id,principal); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; s=umi_quant_copy_text(e->topic_prefix,sizeof e->topic_prefix,prefix); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==UMI_STATUS_OK)e->can_read=can_read; return s; }
+/*
+ * Provide the enterprise market data entitlement allows operation used by this module and
+ * its client applications.
+ */
+int umi_enterprise_market_data_entitlement_allows(const UmiEnterpriseMarketDataEntitlement *e,const char *topic){ size_t n; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(e==NULL||topic==NULL||e->can_read==0)return 0; n=strlen(e->topic_prefix); return strncmp(topic,e->topic_prefix,n)==0 ? 1:0; }

@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi feature data shared with callers of this public contract.
+ */
 typedef struct UmiAbiFeature { const char *feature_id; uint32_t version; int required; } UmiAbiFeature;
+/**
+ * Check that abi feature satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_abi_feature_validate(const UmiAbiFeature *feature);
 #ifdef __cplusplus
 }

@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap service descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_service_descriptor_init(
     UmiBootstrapServiceDescriptor *descriptor,
     const char *service_id,
@@ -30,6 +34,10 @@ UmiStatus umi_bootstrap_service_descriptor_init(
     UmiBootstrapScopeKind scope,
     UmiBootstrapLifetimeKind lifetime,
     int32_t priority);
+/**
+ * Check that bootstrap service descriptor satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_bootstrap_service_descriptor_valid(
     const UmiBootstrapServiceDescriptor *descriptor);
 

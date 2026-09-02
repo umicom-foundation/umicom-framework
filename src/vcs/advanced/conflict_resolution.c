@@ -21,9 +21,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced conflict resolution from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_conflict_resolution_init(
     UmiVcsAdvancedConflictResolution *resolution)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (resolution == NULL) {
         return;
     }
@@ -33,10 +41,18 @@ void umi_vcs_advanced_conflict_resolution_init(
     resolution->state = UMI_VCS_ADVANCED_STATE_CONFLICTED;
 }
 
+/*
+ * Provide the vcs advanced conflict resolution set path operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_advanced_conflict_resolution_set_path(
     UmiVcsAdvancedConflictResolution *resolution,
     const char *path)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (resolution == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -44,14 +60,23 @@ UmiStatus umi_vcs_advanced_conflict_resolution_set_path(
         resolution->path, sizeof(resolution->path), path);
 }
 
+/*
+ * Add vcs advanced conflict resolution only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_vcs_advanced_conflict_resolution_add(
     UmiVcsAdvancedConflictResolution *resolution,
     const UmiVcsAdvancedConflictHunk *hunk)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (resolution == NULL ||
         umi_vcs_advanced_conflict_hunk_validate(hunk) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (resolution->hunk_count >= UMI_VCS_ADVANCED_SMALL_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -59,12 +84,20 @@ UmiStatus umi_vcs_advanced_conflict_resolution_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced conflict resolution choose operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_advanced_conflict_resolution_choose(
     UmiVcsAdvancedConflictResolution *resolution,
     size_t index,
     UmiVcsConflictChoice choice)
 {
     UmiVcsConflictChoice previous;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (resolution == NULL ||
         index >= resolution->hunk_count ||
         choice == UMI_VCS_CONFLICT_UNRESOLVED ||
@@ -74,18 +107,24 @@ UmiStatus umi_vcs_advanced_conflict_resolution_choose(
 
     previous = resolution->hunks[index].choice;
     resolution->hunks[index].choice = choice;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (previous == UMI_VCS_CONFLICT_UNRESOLVED) {
         resolution->resolved_count += 1U;
     }
     resolution->result_fingerprint ^=
         resolution->hunks[index].fingerprint ^ ((uint64_t)choice << 8);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (resolution->resolved_count == resolution->hunk_count) {
         resolution->state = UMI_VCS_ADVANCED_STATE_READY;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced conflict resolution complete operation used by this module and
+ * its client applications.
+ */
 int umi_vcs_advanced_conflict_resolution_complete(
     const UmiVcsAdvancedConflictResolution *resolution)
 {

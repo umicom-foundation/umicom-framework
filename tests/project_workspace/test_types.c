@@ -16,6 +16,10 @@
 #include "umicom/project/workspace/types.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspaceNamedState v,w;
     CHECK(umi_project_workspace_named_state_init(&v,"x")==UMI_STATUS_OK);

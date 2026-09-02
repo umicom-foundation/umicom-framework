@@ -18,13 +18,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad drag session data shared with callers of this public contract.
+ */
 typedef struct UmiRadDragSession {
     char component_id[UMI_RAD_ID_CAPACITY];
     UmiRadPoint start;
     UmiRadPoint current;
     bool active;
 } UmiRadDragSession;
+/**
+ * Initialise rad drag session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_drag_session_init(UmiRadDragSession *item);
+/**
+ * Check that rad drag session satisfies its contract before another service relies on it.
+ */
 int umi_rad_drag_session_is_valid(const UmiRadDragSession *item);
 #ifdef __cplusplus
 }

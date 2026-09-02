@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+  Umicom Framework
+  File: resources/brand/umicom-icon.svg
+
+  PURPOSE:
+  Store scalable umicom icon artwork with accessible metadata for every
+  supported frontend.
+
+  AUTHOR AND ORGANISATION:
+  Sammy Hegab
+  Umicom Foundation
+
+  LICENCE:
+  MIT
+-->
+
+<!--
   Umicom Framework owns this transparent vector mark so every application can
   display the same identity at any screen density without copying artwork.
 -->

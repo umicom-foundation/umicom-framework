@@ -20,6 +20,10 @@
 
 #include "umicom/project/language_matrix.h"
 
+/*
+ * Exercise make entry and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiProjectLanguageEntrySnapshot make_entry(
     const char *language_id, const char *roots, const char *standard,
     uint32_t compile_order, UmiProjectLanguageInteropPolicy interop)
@@ -34,6 +38,10 @@ static UmiProjectLanguageEntrySnapshot make_entry(
     return entry;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProjectLanguageMatrix *matrix = NULL;

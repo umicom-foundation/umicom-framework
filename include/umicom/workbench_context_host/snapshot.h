@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextHostSnapshot {
     uint32_t structure_size;
     char host_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
@@ -33,6 +37,10 @@ typedef struct UmiWorkbenchContextHostSnapshot {
     uint64_t link_revision;
     uint64_t revision;
 } UmiWorkbenchContextHostSnapshot;
+/**
+ * Provide the workbench context host snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_context_host_snapshot(
     const UmiWorkbenchContextHost *host,UmiWorkbenchContextHostSnapshot *out_snapshot);
 #ifdef __cplusplus

@@ -27,29 +27,53 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout outbox repository data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutOutboxRepository {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataRecordRepository records;
 } UmiWorkbenchLayoutOutboxRepository;
 
+/**
+ * Write workbench layout outbox in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_outbox_encode(
     const UmiWorkbenchLayoutOutboxEntry *record,
     char *buffer,
     size_t capacity,
     size_t *out_required);
 
+/**
+ * Read workbench layout outbox into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_outbox_decode(
     const char *value,
     UmiWorkbenchLayoutOutboxEntry *out_record);
 
+/**
+ * Initialise workbench layout outbox repository from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_outbox_repository_init(
     UmiWorkbenchLayoutOutboxRepository *repository,
     UmiDataServer *server);
 
+/**
+ * Write workbench layout outbox in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_outbox_save(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     const UmiWorkbenchLayoutOutboxEntry *record);
 
+/**
+ * Read workbench layout outbox into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_outbox_load(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     const char *aggregate_id,
@@ -57,12 +81,20 @@ UmiStatus umi_workbench_layout_outbox_load(
     uint64_t sequence,
     UmiWorkbenchLayoutOutboxEntry *out_record);
 
+/**
+ * Provide the workbench layout outbox delete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_outbox_delete(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     const char *aggregate_id,
     const char *record_id,
     uint64_t sequence);
 
+/**
+ * Provide the workbench layout outbox list operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_outbox_list(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     const char *aggregate_id,
@@ -73,15 +105,27 @@ UmiStatus umi_workbench_layout_outbox_list(
     size_t *out_count,
     size_t *out_total);
 
+/**
+ * Provide the workbench layout outbox claim available operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_outbox_claim_available(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     uint64_t now_ms,
     uint64_t lease_duration_ms,
     UmiWorkbenchLayoutOutboxEntry *out_entry);
+/**
+ * Provide the workbench layout outbox mark delivered operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_outbox_mark_delivered(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     UmiWorkbenchLayoutOutboxEntry *entry,
     uint64_t delivered_at_ms);
+/**
+ * Provide the workbench layout outbox mark failed operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_outbox_mark_failed(
     const UmiWorkbenchLayoutOutboxRepository *repository,
     UmiWorkbenchLayoutOutboxEntry *entry,

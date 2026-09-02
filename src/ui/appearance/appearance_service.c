@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_service_init(UmiAppearanceAppearanceService *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(item, 0, sizeof *item);
     (void)umi_appearance_copy_text(item->service_id,sizeof item->service_id,"ui.appearance");
@@ -30,7 +34,15 @@ UmiStatus umi_appearance_service_init(UmiAppearanceAppearanceService *item) {
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_service_is_valid(const UmiAppearanceAppearanceService *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->service_id) && item->revision > 0U);
 }
+/*
+ * Provide the appearance service ready operation used by this module and its client
+ * applications.
+ */
 int umi_appearance_service_ready(const UmiAppearanceAppearanceService *item){return item!=NULL&&item->themes_ready&&item->typography_ready&&item->scaling_ready&&item->accessibility_ready&&item->renderers_ready;}

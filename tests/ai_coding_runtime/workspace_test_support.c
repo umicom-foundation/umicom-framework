@@ -17,11 +17,17 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Exercise find file and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static size_t find_file(TestWorkspace *workspace, const char *path)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < workspace->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(workspace->files[index].path, path) == 0) {
             return index;
         }
@@ -30,13 +36,22 @@ static size_t find_file(TestWorkspace *workspace, const char *path)
     return workspace->count;
 }
 
+/*
+ * Initialise test workspace from caller-provided values so later operations receive a
+ * known state.
+ */
 void test_workspace_init(TestWorkspace *workspace)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace != NULL) {
         (void)memset(workspace, 0, sizeof(*workspace));
     }
 }
 
+/* Add test workspace only after its inputs and available capacity have been checked. */
 UmiStatus test_workspace_add(
     TestWorkspace *workspace,
     const char *path,
@@ -46,10 +61,15 @@ UmiStatus test_workspace_add(
     size_t path_length;
     size_t text_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || path == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (workspace->count >= TEST_WORKSPACE_FILE_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -57,6 +77,7 @@ UmiStatus test_workspace_add(
     path_length = strlen(path);
     text_length = strlen(text);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (path_length >= sizeof(workspace->files[0].path) ||
         text_length >= sizeof(workspace->files[0].text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -71,6 +92,10 @@ UmiStatus test_workspace_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise read file and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus read_file(
     void *user_data,
     const char *relative_path,
@@ -81,17 +106,23 @@ static UmiStatus read_file(
     TestWorkspace *workspace = (TestWorkspace *)user_data;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || relative_path == NULL ||
         out_text == NULL || capacity == 0U || out_length == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = find_file(workspace, relative_path);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == workspace->count ||
         !workspace->files[index].exists) {
         return UMI_STATUS_NOT_FOUND;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (workspace->files[index].length + 1U > capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -104,6 +135,10 @@ static UmiStatus read_file(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise write file and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus write_file(
     void *user_data,
     const char *relative_path,
@@ -113,20 +148,27 @@ static UmiStatus write_file(
     TestWorkspace *workspace = (TestWorkspace *)user_data;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || relative_path == NULL ||
         (text == NULL && length > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(workspace->files[0].text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     index = find_file(workspace, relative_path);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == workspace->count) {
         UmiStatus status;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= UMI_AI_CODING_PATCH_CONTENT_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -134,6 +176,7 @@ static UmiStatus write_file(
         {
             char temporary[UMI_AI_CODING_PATCH_CONTENT_CAPACITY];
 
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (length > 0U) (void)memcpy(temporary, text, length);
             temporary[length] = '\0';
 
@@ -146,6 +189,7 @@ static UmiStatus write_file(
         return status;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(workspace->files[index].text, text, length);
     }
@@ -155,16 +199,25 @@ static UmiStatus write_file(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise remove file and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus remove_file(void *user_data, const char *relative_path)
 {
     TestWorkspace *workspace = (TestWorkspace *)user_data;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || relative_path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = find_file(workspace, relative_path);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == workspace->count ||
         !workspace->files[index].exists) {
         return UMI_STATUS_NOT_FOUND;
@@ -174,6 +227,10 @@ static UmiStatus remove_file(void *user_data, const char *relative_path)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise exists file and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus exists_file(
     void *user_data,
     const char *relative_path,
@@ -182,6 +239,10 @@ static UmiStatus exists_file(
     TestWorkspace *workspace = (TestWorkspace *)user_data;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || relative_path == NULL ||
         out_exists == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -194,10 +255,18 @@ static UmiStatus exists_file(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise test workspace adapter and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 UmiStatus test_workspace_adapter(
     TestWorkspace *workspace,
     UmiAiCodingWorkspaceAdapter *out_adapter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace == NULL || out_adapter == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

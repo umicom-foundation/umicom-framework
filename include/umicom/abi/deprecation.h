@@ -23,8 +23,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi deprecation data shared with callers of this public contract.
+ */
 typedef struct UmiAbiDeprecation { const char *symbol; uint32_t deprecated_since; uint32_t remove_after; const char *replacement; } UmiAbiDeprecation;
+/**
+ * Check that abi deprecation satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_abi_deprecation_validate(const UmiAbiDeprecation *entry);
+/**
+ * Provide the abi deprecation removable operation used by this module and its client
+ * applications.
+ */
 int umi_abi_deprecation_removable(const UmiAbiDeprecation *entry, uint32_t current_abi);
 #ifdef __cplusplus
 }

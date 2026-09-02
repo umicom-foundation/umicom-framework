@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk probe result data shared with callers of this public contract.
+ */
 typedef struct UmiSdkProbeResult { int package_config; int public_header; int libraries; int passed; } UmiSdkProbeResult;
+/**
+ * Provide the sdk probe prefix operation used by this module and its client applications.
+ */
 UmiStatus umi_sdk_probe_prefix(const char *prefix,UmiSdkProbeResult *out_result);
 #ifdef __cplusplus
 }

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance icon fallback chain data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceIconFallbackChain { char ids[16][UMI_APPEARANCE_ID_CAPACITY]; size_t count; } UmiAppearanceIconFallbackChain;
 /* Initialise an empty icon fallback chain. */
 UmiStatus umi_appearance_icon_fallback_chain_init(UmiAppearanceIconFallbackChain *chain);

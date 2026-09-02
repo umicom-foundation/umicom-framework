@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/language_runtime/decoders/hover.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiLanguageRuntimeHoverResult x; assert(umi_language_runtime_decode_hover("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"contents\":{\"kind\":\"markdown\",\"value\":\"int value\"}}}",&x)==UMI_STATUS_OK); assert(strstr(x.contents,"int")!=NULL);return 0;}

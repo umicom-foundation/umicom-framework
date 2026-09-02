@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test prompt user evidence boundary and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_prompt_user_evidence_boundary(void){UmiAiHelixAgentRequest r;char out[UMI_AI_TEXT_CAPACITY];test_bridge_request(&r,UMI_HELIX_AGENT_ROLE_BUILDER);TEST_CHECK(umi_ai_helix_prompt_build_user(&r,out,sizeof(out))==UMI_STATUS_OK);TEST_CHECK(strstr(out,"---BEGIN EVIDENCE---")!=NULL);TEST_CHECK(strstr(out,"untrusted evidence")!=NULL);return 0;}

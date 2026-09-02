@@ -23,11 +23,23 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the diagnostic ui project problem operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_ui_project_problem(const UmiDiagnosticSnapshot *diagnostic,
                                             UmiUiProblemSnapshot *out_problem);
+/**
+ * Provide the diagnostic ui project output channel operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_ui_project_output_channel(const UmiOutputBuffer *buffer,
                                                    const char *channel_id,
                                                    UmiUiOutputChannelSnapshot *out_channel);
+/**
+ * Provide the diagnostic ui sync registries operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_ui_sync_registries(UmiDiagnosticPipeline *pipeline,
                                             UmiUiProblemRegistry *problems,
                                             UmiUiOutputChannelRegistry *channels);

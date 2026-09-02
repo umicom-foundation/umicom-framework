@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap context from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_bootstrap_context_init(UmiBootstrapContext *context,
                                      const char *application_id,
                                      const char *platform_id,

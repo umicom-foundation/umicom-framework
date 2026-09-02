@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Perform ai coding tool plan through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_tool_plan_execute(
     UmiAiCodingToolExecutor *executor,
     const UmiAiCodingToolPlan *plan,

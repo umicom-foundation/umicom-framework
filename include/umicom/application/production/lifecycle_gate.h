@@ -25,6 +25,10 @@ extern "C" {
 #include "umicom/application/production/acceptance_report.h"
 #include "umicom/application/production/workspace_recovery.h"
 
+/**
+ * Represent the application production lifecycle gate data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionLifecycleGate {
     UmiApplicationProductionGate gate;
     UmiApplicationProductionState state;
@@ -32,6 +36,10 @@ typedef struct UmiApplicationProductionLifecycleGate {
     char reason[UMI_APPLICATION_PRODUCTION_TEXT_CAPACITY];
 } UmiApplicationProductionLifecycleGate;
 
+/**
+ * Provide the application production lifecycle gate evaluate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_lifecycle_gate_evaluate(
     UmiApplicationProductionGate gate,
     const UmiApplicationProductionBinding *binding,

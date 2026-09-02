@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation result record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationResultRecord { char job_id[UMI_ENTERPRISE_ID_CAPACITY]; char task_id[UMI_ENTERPRISE_ID_CAPACITY]; double present_value; UmiStatus status; } UmiEnterpriseValuationResultRecord;
+/**
+ * Represent the enterprise valuation result store data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationResultStore { UmiEnterpriseValuationResultRecord records[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiEnterpriseValuationResultStore;
 /* Initialise an empty valuation-result store. */
 void umi_enterprise_valuation_result_store_init(UmiEnterpriseValuationResultStore *store);

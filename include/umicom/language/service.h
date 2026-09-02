@@ -46,7 +46,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the language service data shared with callers of this public contract.
+ */
 typedef struct UmiLanguageService UmiLanguageService;
+/**
+ * Represent the language service snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageServiceSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -73,27 +80,115 @@ typedef struct UmiLanguageServiceSnapshot {
     size_t navigation_location_count;
 } UmiLanguageServiceSnapshot;
 
+/**
+ * Initialise language service from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_language_service_create(UmiLanguageService **out_owner);
+/**
+ * Release or reset state held by language service so the same storage can be reused
+ * safely.
+ */
 void umi_language_service_destroy(UmiLanguageService *owner);
+/**
+ * Provide the language service snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_service_snapshot(const UmiLanguageService *owner, UmiLanguageServiceSnapshot *out_snapshot);
+/**
+ * Provide the language service definition operation used by this module and its client
+ * applications.
+ */
 UmiLanguageDefinitionRegistry *umi_language_service_definition(UmiLanguageService *owner);
+/**
+ * Provide the language service provider operation used by this module and its client
+ * applications.
+ */
 UmiLanguageProviderRegistry *umi_language_service_provider(UmiLanguageService *owner);
+/**
+ * Provide the language service document operation used by this module and its client
+ * applications.
+ */
 UmiLanguageDocumentRegistry *umi_language_service_document(UmiLanguageService *owner);
+/**
+ * Provide the language service symbol operation used by this module and its client
+ * applications.
+ */
 UmiLanguageSymbolRegistry *umi_language_service_symbol(UmiLanguageService *owner);
+/**
+ * Provide the language service completion operation used by this module and its client
+ * applications.
+ */
 UmiLanguageCompletionRegistry *umi_language_service_completion(UmiLanguageService *owner);
+/**
+ * Provide the language service hover operation used by this module and its client
+ * applications.
+ */
 UmiLanguageHoverRegistry *umi_language_service_hover(UmiLanguageService *owner);
+/**
+ * Provide the language service signature operation used by this module and its client
+ * applications.
+ */
 UmiLanguageSignatureRegistry *umi_language_service_signature(UmiLanguageService *owner);
+/**
+ * Provide the language service diagnostic operation used by this module and its client
+ * applications.
+ */
 UmiLanguageDiagnosticRegistry *umi_language_service_diagnostic(UmiLanguageService *owner);
+/**
+ * Provide the language service code action operation used by this module and its client
+ * applications.
+ */
 UmiLanguageCodeActionRegistry *umi_language_service_code_action(UmiLanguageService *owner);
+/**
+ * Provide the language service formatting operation used by this module and its client
+ * applications.
+ */
 UmiLanguageFormattingRegistry *umi_language_service_formatting(UmiLanguageService *owner);
+/**
+ * Provide the language service reference operation used by this module and its client
+ * applications.
+ */
 UmiLanguageReferenceRegistry *umi_language_service_reference(UmiLanguageService *owner);
+/**
+ * Provide the language service rename operation used by this module and its client
+ * applications.
+ */
 UmiLanguageRenameRegistry *umi_language_service_rename(UmiLanguageService *owner);
+/**
+ * Provide the language service semantic token operation used by this module and its client
+ * applications.
+ */
 UmiLanguageSemanticTokenRegistry *umi_language_service_semantic_token(UmiLanguageService *owner);
+/**
+ * Provide the language service inlay hint operation used by this module and its client
+ * applications.
+ */
 UmiLanguageInlayHintRegistry *umi_language_service_inlay_hint(UmiLanguageService *owner);
+/**
+ * Provide the language service folding range operation used by this module and its client
+ * applications.
+ */
 UmiLanguageFoldingRangeRegistry *umi_language_service_folding_range(UmiLanguageService *owner);
+/**
+ * Provide the language service compilation database operation used by this module and its
+ * client applications.
+ */
 UmiCompilationDatabase *umi_language_service_compilation_database(UmiLanguageService *owner);
+/**
+ * Provide the language service server profiles operation used by this module and its
+ * client applications.
+ */
 UmiLanguageServerProfileRegistry *umi_language_service_server_profiles(UmiLanguageService *owner);
+/**
+ * Provide the language service request ledger operation used by this module and its client
+ * applications.
+ */
 UmiLanguageRequestLedger *umi_language_service_request_ledger(UmiLanguageService *owner);
+/**
+ * Provide the language service navigation operation used by this module and its client
+ * applications.
+ */
 UmiLanguageNavigationHistory *umi_language_service_navigation(UmiLanguageService *owner);
 
 #ifdef __cplusplus

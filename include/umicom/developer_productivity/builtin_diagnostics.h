@@ -21,11 +21,23 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by developer builtin diagnostic parser without
+ * changing their state.
+ */
 size_t umi_developer_builtin_diagnostic_parser_count(void);
 
+/**
+ * Find developer builtin diagnostic parser while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperDiagnosticParser *
 umi_developer_builtin_diagnostic_parser_at(size_t index);
 
+/**
+ * Add developer builtin diagnostics only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_developer_builtin_diagnostics_register(
     UmiDeveloperDiagnosticRegistry *registry);
 

@@ -45,15 +45,18 @@ typedef struct UmiGtk4TradingPanelState {
     int building;
 } UmiGtk4TradingPanelState;
 
+/* Provide the new text label operation used by this module and its client applications. */
 static GtkWidget *new_text_label(const char *text, int title)
 {
     GtkWidget *label = gtk_label_new(text != NULL ? text : "");
     gtk_label_set_xalign(GTK_LABEL(label), 0.0F);
     gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (title) gtk_widget_add_css_class(label, "title-4");
     return label;
 }
 
+/* Provide the new section operation used by this module and its client applications. */
 static GtkWidget *new_section(const char *title)
 {
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
@@ -63,6 +66,7 @@ static GtkWidget *new_section(const char *title)
     return box;
 }
 
+/* Provide the new dropdown operation used by this module and its client applications. */
 static GtkWidget *new_dropdown(const char *const *labels,
                                size_t count,
                                size_t selected)
@@ -70,19 +74,26 @@ static GtkWidget *new_dropdown(const char *const *labels,
     GtkStringList *items = gtk_string_list_new(NULL);
     GtkWidget *dropdown;
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index)
         gtk_string_list_append(items, labels[index]);
     dropdown = gtk_drop_down_new(G_LIST_MODEL(items), NULL);
     g_object_unref(items);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > 0U)
         gtk_drop_down_set_selected(GTK_DROP_DOWN(dropdown), (guint)selected);
     return dropdown;
 }
 
+/* Provide the set feedback operation used by this module and its client applications. */
 static void set_feedback(UmiGtk4TradingPanelState *state,
                          const char *fallback)
 {
     UmiTradingUiControllerSnapshot snapshot;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->risk_label == NULL || state->context == NULL ||
         state->context->controller == NULL) return;
     snapshot = umi_trading_ui_controller_snapshot(state->context->controller);
@@ -92,33 +103,61 @@ static void set_feedback(UmiGtk4TradingPanelState *state,
             : (fallback != NULL ? fallback : ""));
 }
 
+/*
+ * Provide the on refresh clicked operation used by this module and its client
+ * applications.
+ */
 static void on_refresh_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state != NULL && state->context != NULL)
         (void)umi_trading_ui_controller_refresh(state->context->controller);
 }
 
+/*
+ * Provide the on kill switch clicked operation used by this module and its client
+ * applications.
+ */
 static void on_kill_switch_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state != NULL && state->context != NULL)
         (void)umi_trading_ui_controller_engage_kill_switch(
             state->context->controller,
             "Requested from Framework GTK4 trading workstation");
 }
 
+/*
+ * Provide the on reset kill switch clicked operation used by this module and its client
+ * applications.
+ */
 static void on_reset_kill_switch_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state != NULL && state->context != NULL)
         (void)umi_trading_ui_controller_reset_kill_switch(
             state->context->controller);
 }
 
+/*
+ * Find on environment while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 static void on_environment_selected(GObject *object,
                                     GParamSpec *pspec,
                                     gpointer data)
@@ -127,6 +166,10 @@ static void on_environment_selected(GObject *object,
     guint selected;
     UmiTradingEnvironment environment;
     (void)pspec;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->building || state->context == NULL) return;
     selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
     environment = selected == 0U ? UMI_TRADING_SIMULATION
@@ -135,6 +178,10 @@ static void on_environment_selected(GObject *object,
         state->context->controller, environment);
 }
 
+/*
+ * Provide the create dashboard panel operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_dashboard_panel(UmiGtk4TradingPanelContext *context)
 {
     static const char *const environment_labels[] = {
@@ -153,10 +200,18 @@ static GtkWidget *create_dashboard_panel(UmiGtk4TradingPanelContext *context)
     size_t environment_count;
     size_t selected;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || context->workspace == NULL ||
         umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
             UMI_STATUS_OK) return NULL;
     state = calloc(1U, sizeof(*state));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) return NULL;
     state->context = context;
     state->building = 1;
@@ -183,6 +238,7 @@ static GtkWidget *create_dashboard_panel(UmiGtk4TradingPanelContext *context)
     environment_count = context->allow_live_environment ? 3U : 2U;
     selected = snapshot.environment == UMI_TRADING_PAPER ? 1U
         : snapshot.environment == UMI_TRADING_LIVE ? 2U : 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (selected >= environment_count) selected = 0U;
     state->environment_dropdown = new_dropdown(
         environment_labels, environment_count, selected);
@@ -209,11 +265,16 @@ static GtkWidget *create_dashboard_panel(UmiGtk4TradingPanelContext *context)
     return root;
 }
 
+/* Provide the on filter clicked operation used by this module and its client applications. */
 static void on_filter_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
     const char *text;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->context == NULL || state->filter_entry == NULL)
         return;
     text = gtk_editable_get_text(GTK_EDITABLE(state->filter_entry));
@@ -221,6 +282,7 @@ static void on_filter_clicked(GtkButton *button, gpointer data)
         state->context->controller, text != NULL ? text : "");
 }
 
+/* Find on instrument while leaving the underlying catalogue or model owned by this module. */
 static void on_instrument_selected(GObject *object,
                                    GParamSpec *pspec,
                                    gpointer data)
@@ -228,13 +290,22 @@ static void on_instrument_selected(GObject *object,
     UmiGtk4TradingPanelState *state = data;
     guint selected;
     (void)pspec;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->building || state->context == NULL) return;
     selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((size_t)selected < state->instrument_count)
         (void)umi_trading_ui_controller_select_instrument(
             state->context->controller, state->instrument_ids[selected]);
 }
 
+/*
+ * Provide the create watchlist panel operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
 {
     UmiTradingWorkspaceSnapshot snapshot;
@@ -247,10 +318,18 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
     size_t index;
     size_t selected_index = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || context->workspace == NULL ||
         umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
             UMI_STATUS_OK) return NULL;
     state = calloc(1U, sizeof(*state));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) return NULL;
     state->context = context;
     state->building = 1;
@@ -271,10 +350,13 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
 
     items = gtk_string_list_new(NULL);
     count = snapshot.visible_instrument_count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_TRADING_MAX_WATCHLIST) count = UMI_TRADING_MAX_WATCHLIST;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiTradingMarketSnapshot market;
         char label[UMI_GTK4_TRADING_TEXT_CAPACITY];
+        /* Apply this operation only while the related capability or state is available. */
         if (umi_trading_workspace_visible_instrument_at(
                 context->workspace, index, &market) != UMI_STATUS_OK) continue;
         (void)snprintf(label, sizeof(label),
@@ -288,6 +370,7 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
         (void)snprintf(state->instrument_ids[state->instrument_count],
                        sizeof(state->instrument_ids[state->instrument_count]),
                        "%s", market.instrument.instrument_id.value);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(market.instrument.instrument_id.value,
                    snapshot.selected_instrument_id) == 0)
             selected_index = state->instrument_count;
@@ -295,6 +378,7 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
     }
     state->instrument_dropdown = gtk_drop_down_new(G_LIST_MODEL(items), NULL);
     g_object_unref(items);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state->instrument_count > 0U)
         gtk_drop_down_set_selected(GTK_DROP_DOWN(state->instrument_dropdown),
                                    (guint)selected_index);
@@ -302,6 +386,7 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
     g_signal_connect(state->instrument_dropdown, "notify::selected",
                      G_CALLBACK(on_instrument_selected), state);
     gtk_box_append(GTK_BOX(root), state->instrument_dropdown);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state->instrument_count == 0U)
         gtk_box_append(GTK_BOX(root),
             new_text_label("No instruments match the current filter.", 0));
@@ -309,6 +394,10 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
     return root;
 }
 
+/*
+ * Provide the apply order controls operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_order_controls(UmiGtk4TradingPanelState *state)
 {
     static const UmiSide sides[] = {UMI_SIDE_BUY, UMI_SIDE_SELL};
@@ -322,21 +411,29 @@ static UmiStatus apply_order_controls(UmiGtk4TradingPanelState *state)
     guint type_index;
     guint tif_index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     side_index = gtk_drop_down_get_selected(GTK_DROP_DOWN(state->side_dropdown));
     type_index = gtk_drop_down_get_selected(GTK_DROP_DOWN(state->type_dropdown));
     tif_index = gtk_drop_down_get_selected(GTK_DROP_DOWN(state->tif_dropdown));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (side_index >= 2U || type_index >= 4U || tif_index >= 4U)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_trading_ui_controller_set_draft_side(
         state->context->controller, sides[side_index]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_ui_controller_set_draft_type(
             state->context->controller, types[type_index], tifs[tif_index]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_ui_controller_set_draft_quantity(
             state->context->controller,
             gtk_spin_button_get_value(GTK_SPIN_BUTTON(state->quantity_spin)));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_ui_controller_set_draft_prices(
             state->context->controller,
@@ -345,6 +442,10 @@ static UmiStatus apply_order_controls(UmiGtk4TradingPanelState *state)
     return status;
 }
 
+/*
+ * Provide the on preview clicked operation used by this module and its client
+ * applications.
+ */
 static void on_preview_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
@@ -352,6 +453,7 @@ static void on_preview_clicked(GtkButton *button, gpointer data)
     UmiStatus status;
     (void)button;
     status = apply_order_controls(state);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_trading_ui_controller_preview_order(
             state->context->controller, &decision);
@@ -359,6 +461,7 @@ static void on_preview_clicked(GtkButton *button, gpointer data)
     set_feedback(state, decision.reason);
 }
 
+/* Provide the on submit clicked operation used by this module and its client applications. */
 static void on_submit_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
@@ -367,9 +470,15 @@ static void on_submit_clicked(GtkButton *button, gpointer data)
     UmiStatus status;
     int64_t now_ms;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->context == NULL) return;
     status = umi_trading_workspace_snapshot(state->context->workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!snapshot.has_draft_risk || !snapshot.can_submit_order) {
         gtk_label_set_text(GTK_LABEL(state->risk_label),
                            "Preview and pass risk controls before submission.");
@@ -382,22 +491,29 @@ static void on_submit_clicked(GtkButton *button, gpointer data)
     set_feedback(state, decision.reason);
 }
 
+/* Provide the side index operation used by this module and its client applications. */
 static size_t side_index(UmiSide side)
 {
     return side == UMI_SIDE_SELL ? 1U : 0U;
 }
 
+/* Provide the type index operation used by this module and its client applications. */
 static size_t type_index(UmiOrderType type)
 {
     return type >= UMI_ORDER_MARKET && type <= UMI_ORDER_STOP_LIMIT
         ? (size_t)type : 1U;
 }
 
+/* Provide the tif index operation used by this module and its client applications. */
 static size_t tif_index(UmiTimeInForce tif)
 {
     return tif >= UMI_TIF_DAY && tif <= UMI_TIF_FOK ? (size_t)tif : 0U;
 }
 
+/*
+ * Provide the create order entry panel operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
 {
     static const char *const side_labels[] = {"Buy", "Sell"};
@@ -414,10 +530,18 @@ static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
     GtkWidget *submit;
     char heading[UMI_GTK4_TRADING_TEXT_CAPACITY];
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || context->workspace == NULL ||
         umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
             UMI_STATUS_OK) return NULL;
     state = calloc(1U, sizeof(*state));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) return NULL;
     state->context = context;
     root = new_section("Order Entry");
@@ -484,6 +608,10 @@ static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
     return root;
 }
 
+/*
+ * Find on order filter while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 static void on_order_filter_selected(GObject *object,
                                      GParamSpec *pspec,
                                      gpointer data)
@@ -491,14 +619,20 @@ static void on_order_filter_selected(GObject *object,
     UmiGtk4TradingPanelState *state = data;
     guint selected;
     (void)pspec;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->building || state->context == NULL) return;
     selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (selected <= (guint)UMI_TRADING_WORKSPACE_ORDERS_REJECTED)
         (void)umi_trading_ui_controller_set_order_filter(
             state->context->controller,
             (UmiTradingWorkspaceOrderFilter)selected);
 }
 
+/* Find on order while leaving the underlying catalogue or model owned by this module. */
 static void on_order_selected(GObject *object,
                               GParamSpec *pspec,
                               gpointer data)
@@ -506,22 +640,39 @@ static void on_order_selected(GObject *object,
     UmiGtk4TradingPanelState *state = data;
     guint selected;
     (void)pspec;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->building || state->context == NULL) return;
     selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((size_t)selected < state->order_count)
         (void)umi_trading_ui_controller_select_order(
             state->context->controller, state->order_ids[selected]);
 }
 
+/*
+ * Provide the on cancel order clicked operation used by this module and its client
+ * applications.
+ */
 static void on_cancel_order_clicked(GtkButton *button, gpointer data)
 {
     UmiGtk4TradingPanelState *state = data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state != NULL && state->context != NULL)
         (void)umi_trading_ui_controller_cancel_selected_order(
             state->context->controller);
 }
 
+/*
+ * Provide the create orders panel operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
 {
     static const char *const filter_labels[] = {
@@ -537,10 +688,18 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
     size_t index;
     size_t selected_index = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || context->workspace == NULL ||
         umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
             UMI_STATUS_OK) return NULL;
     state = calloc(1U, sizeof(*state));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) return NULL;
     state->context = context;
     state->building = 1;
@@ -559,10 +718,13 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
 
     orders = gtk_string_list_new(NULL);
     count = snapshot.visible_order_count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_TRADING_MAX_ORDERS) count = UMI_TRADING_MAX_ORDERS;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiOrder order;
         char label[UMI_GTK4_TRADING_TEXT_CAPACITY];
+        /* Apply this operation only while the related capability or state is available. */
         if (umi_trading_workspace_visible_order_at(
                 context->workspace, index, &order) != UMI_STATUS_OK) continue;
         (void)snprintf(label, sizeof(label),
@@ -577,6 +739,7 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
         (void)snprintf(state->order_ids[state->order_count],
                        sizeof(state->order_ids[state->order_count]),
                        "%s", order.request.client_order_id.value);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(order.request.client_order_id.value,
                    snapshot.selected_order_id) == 0)
             selected_index = state->order_count;
@@ -584,6 +747,7 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
     }
     state->order_dropdown = gtk_drop_down_new(G_LIST_MODEL(orders), NULL);
     g_object_unref(orders);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state->order_count > 0U)
         gtk_drop_down_set_selected(GTK_DROP_DOWN(state->order_dropdown),
                                    (guint)selected_index);
@@ -600,74 +764,95 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
     return root;
 }
 
+/*
+ * Provide the generic action handler operation used by this module and its client
+ * applications.
+ */
 static UmiStatus generic_action_handler(const char *action_id, void *user_data)
 {
     UmiGtk4TradingPanelContext *context = user_data;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || context->controller == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_trading_ui_controller_dispatch(
         context->controller, action_id, NULL, NULL);
 }
 
+/*
+ * Provide the create generic panel operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_generic_panel(const UmiUiWorkspaceWindow *window,
                                        UmiGtk4TradingPanelContext *context)
 {
     UmiUiViewModel *view = NULL;
     UmiStatus status = UMI_STATUS_NOT_IMPLEMENTED;
     GtkWidget *widget;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL || context == NULL || context->workspace == NULL)
         return NULL;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->tool_id, "depth") == 0)
         status = umi_trading_ui_depth_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "chart") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "chart") == 0)
         status = umi_trading_ui_chart_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "positions") == 0 ||
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "positions") == 0 ||
              strcmp(window->tool_id, "risk") == 0)
         status = umi_trading_ui_portfolio_risk_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "executions") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "executions") == 0)
         status = umi_trading_ui_executions_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "dashboard") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "dashboard") == 0)
         status = umi_trading_ui_dashboard_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "scanner") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "scanner") == 0)
         status = umi_trading_ui_scanner_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "predictive-lab") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "predictive-lab") == 0)
         status = umi_trading_ui_predictive_lab_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "news") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "news") == 0)
         status = umi_trading_ui_news_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "context-inspector") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "context-inspector") == 0)
         status = umi_trading_ui_context_inspector_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "strategy") == 0 ||
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "strategy") == 0 ||
              strcmp(window->tool_id, "strategy-analysis") == 0)
         status = umi_trading_ui_strategy_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "replay") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "replay") == 0)
         status = umi_trading_ui_replay_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "output") == 0 ||
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "output") == 0 ||
              strcmp(window->tool_id, "trade-performance") == 0)
         status = umi_trading_ui_research_output_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "time-and-sales") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "time-and-sales") == 0)
         status = umi_trading_ui_time_and_sales_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "economic-calendar") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "economic-calendar") == 0)
         status = umi_trading_ui_economic_calendar_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "fundamentals") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "fundamentals") == 0)
         status = umi_trading_ui_fundamentals_view_create(
             window->window_id, context->workspace, &view);
-    else if (strcmp(window->tool_id, "price-ladder") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "price-ladder") == 0)
         status = umi_trading_ui_depth_view_create(
             window->window_id, context->workspace, &view);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || view == NULL) return NULL;
     widget = umi_gtk4_view_model_panel_create(
         view, generic_action_handler, context);
@@ -675,18 +860,30 @@ static GtkWidget *create_generic_panel(const UmiUiWorkspaceWindow *window,
     return widget;
 }
 
+/*
+ * Initialise gtk4 trading panel from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_trading_panel_create(
     const UmiUiWorkspaceWindow *window,
     UmiGtk4TradingPanelContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL || context == NULL || context->workspace == NULL ||
         context->controller == NULL) return NULL;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->tool_id, "account") == 0)
         return create_dashboard_panel(context);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->tool_id, "watchlist") == 0)
         return create_watchlist_panel(context);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->tool_id, "order-entry") == 0)
         return create_order_entry_panel(context);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->tool_id, "blotter") == 0)
         return create_orders_panel(context);
     return create_generic_panel(window, context);

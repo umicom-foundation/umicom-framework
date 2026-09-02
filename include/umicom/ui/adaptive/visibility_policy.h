@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive visibility policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveVisibilityPolicy {
     UmiDesignSizeClass minimum_class;
     uint32_t minimum_priority;

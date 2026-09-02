@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/sdk_runtime/compatibility_matrix.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSdkRuntimeCompatibilityMatrix value,same;

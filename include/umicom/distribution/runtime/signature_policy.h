@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr signature policy data shared with callers of this public contract.
+ */
 typedef struct UmiDrSignaturePolicy { bool required; bool trusted_publisher_only; bool timestamp_required; } UmiDrSignaturePolicy;
+/**
+ * Initialise dr signature policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_signature_policy_init(UmiDrSignaturePolicy *policy); bool umi_dr_signature_policy_accept(const UmiDrSignaturePolicy *policy,bool signed_artifact,bool trusted_publisher,bool timestamped);
 
 #ifdef __cplusplus

@@ -16,8 +16,13 @@
 
 #include "umicom/developer/types.h"
 
+/*
+ * Provide the developer operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_operation_kind_text(UmiDeveloperOperationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEVELOPER_OPERATION_CUSTOM: return "custom";
         case UMI_DEVELOPER_OPERATION_CONFIGURE: return "configure";
@@ -33,8 +38,13 @@ const char *umi_developer_operation_kind_text(UmiDeveloperOperationKind kind)
     }
 }
 
+/*
+ * Provide the developer operation state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_operation_state_text(UmiDeveloperOperationState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_DEVELOPER_OPERATION_QUEUED: return "queued";
         case UMI_DEVELOPER_OPERATION_RUNNING: return "running";
@@ -46,8 +56,13 @@ const char *umi_developer_operation_state_text(UmiDeveloperOperationState state)
     }
 }
 
+/*
+ * Provide the developer event kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_event_kind_text(UmiDeveloperEventKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_DEVELOPER_EVENT_SUBMITTED: return "submitted";
         case UMI_DEVELOPER_EVENT_DEPENDENCY_ADDED: return "dependency-added";

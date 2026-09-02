@@ -267,6 +267,10 @@ UmiStatus umi_application_suite_customisation_load_experience(
      * published only after every panel and layout has succeeded. */
     candidate = (UmiUiWorkspaceCustomisation *)calloc(1U, sizeof(*candidate));
     projected = (UmiUiWorkspaceLayout *)calloc(1U, sizeof(*projected));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (candidate == NULL || projected == NULL) {
         free(projected);
         free(candidate);

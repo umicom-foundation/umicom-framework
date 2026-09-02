@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data entity descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiDataEntityDescriptor {
     char entity_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char table_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];

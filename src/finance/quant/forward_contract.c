@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_forward_contract_init(UmiQuantForwardContract *record, double quantity, double strike, double spot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(quantity >= 0.0 && strike >= 0.0 && spot >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->quantity = quantity;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_forward_contract_init(UmiQuantForwardContract *record, doubl
 /* Return long-forward intrinsic payoff before discounting. */
 double umi_quant_forward_contract_payoff(const UmiQuantForwardContract *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->quantity * (record->spot - record->strike);
 }

@@ -23,6 +23,10 @@
 
 #include "umicom/toolchain/task_executor.h"
 
+/*
+ * Exercise expect action and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void expect_action(UmiBuildTaskKind kind,
                           UmiBuildAction expected)
 {
@@ -37,6 +41,10 @@ static void expect_action(UmiBuildTaskKind kind,
     assert(action == expected);
 }
 
+/*
+ * Exercise expect not implemented and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void expect_not_implemented(UmiBuildTaskKind kind)
 {
     UmiBuildTaskSnapshot task;
@@ -49,6 +57,10 @@ static void expect_not_implemented(UmiBuildTaskKind kind)
         &task, &action) == UMI_STATUS_NOT_IMPLEMENTED);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     expect_action(UMI_BUILD_TASK_COMMAND, UMI_BUILD_COMMAND);

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/cashflow.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCashflow c; UmiMoney m={100,2U,{{'U','S','D','\0'}}}; CHECK(umi_cashflow_init(&c,"CF","T",m,UMI_FINANCIAL_DIRECTION_RECEIVE,(UmiFinancialDate){2026,9U,1U})==UMI_STATUS_OK);

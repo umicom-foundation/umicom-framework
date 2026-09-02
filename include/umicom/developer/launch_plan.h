@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_LAUNCH_PLAN_API_VERSION 1U
 
+/**
+ * Represent the developer launch plan request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperLaunchPlanRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,6 +44,10 @@ typedef struct UmiDeveloperLaunchPlanRequest {
     int debug_mode;
 } UmiDeveloperLaunchPlanRequest;
 
+/**
+ * Represent the developer launch plan snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperLaunchPlanSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

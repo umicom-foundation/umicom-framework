@@ -48,27 +48,54 @@ typedef enum UmiDeclValueKind {
     UMI_DECL_VALUE_REAL = 4
 } UmiDeclValueKind;
 
+/**
+ * List the named decl node kind values accepted by this public contract.
+ */
 typedef enum UmiDeclNodeKind {
     UMI_DECL_NODE_COMPONENT = 1,
     UMI_DECL_NODE_RESOURCE = 2
 } UmiDeclNodeKind;
 
+/**
+ * List the named decl diagnostic severity values accepted by this public contract.
+ */
 typedef enum UmiDeclDiagnosticSeverity {
     UMI_DECL_DIAGNOSTIC_INFO = 1,
     UMI_DECL_DIAGNOSTIC_WARNING = 2,
     UMI_DECL_DIAGNOSTIC_ERROR = 3
 } UmiDeclDiagnosticSeverity;
 
+/**
+ * Represent the decl version data shared with callers of this public contract.
+ */
 typedef struct UmiDeclVersion {
     uint16_t major;
     uint16_t minor;
     uint16_t patch;
 } UmiDeclVersion;
 
+/**
+ * Provide the decl version current operation used by this module and its client
+ * applications.
+ */
 UmiDeclVersion umi_decl_version_current(void);
+/**
+ * Provide the decl version equal operation used by this module and its client
+ * applications.
+ */
 int umi_decl_version_equal(UmiDeclVersion left, UmiDeclVersion right);
+/**
+ * Provide the decl copy text operation used by this module and its client applications.
+ */
 UmiStatus umi_decl_copy_text(char *destination, size_t capacity, const char *source);
+/**
+ * Check that decl id satisfies its contract before another service relies on it.
+ */
 int umi_decl_id_is_valid(const char *identifier);
+/**
+ * Provide the decl value kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_decl_value_kind_text(UmiDeclValueKind kind);
 
 #ifdef __cplusplus

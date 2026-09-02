@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data isolation policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataIsolationPolicy {
     uint32_t minimum_level;
     uint32_t maximum_level;

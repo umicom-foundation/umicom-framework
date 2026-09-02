@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_coding_tools/chat_session.h"
+/**
+ * Initialise ai developer chat view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_chat_view_create(
     const char *view_id,
     const UmiAiCodingToolChatSession *session,

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace project template catalogue data shared with callers of
+ * this public contract.
+ */
     typedef struct UmiProjectWorkspaceProjectTemplateCatalogue {
         uint32_t structure_size;
         uint32_t api_version;

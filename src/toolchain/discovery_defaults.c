@@ -17,9 +17,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise toolchain discovery request from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_discovery_request_init(
     UmiToolchainDiscoveryRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) {
         return;
     }

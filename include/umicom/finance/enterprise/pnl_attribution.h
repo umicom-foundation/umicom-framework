@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise pnl attribution data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePnlAttribution { double market; double carry; double new_trades; double residual; double total; } UmiEnterprisePnlAttribution;
 /* Build a reconciled P&L attribution whose residual closes to the actual total. */
 UmiStatus umi_enterprise_pnl_attribution_calculate(UmiEnterprisePnlAttribution *attribution,double actual_total,double market,double carry,double new_trades);

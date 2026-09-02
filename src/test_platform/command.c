@@ -110,11 +110,19 @@ static const UmiTestPlatformCommandDescriptor COMMANDS[] = {
 
 #undef TEST_COMMAND
 
+/*
+ * Return the number of records represented by test platform command without changing their
+ * state.
+ */
 size_t umi_test_platform_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find test platform command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiTestPlatformCommandDescriptor *umi_test_platform_command_at(
     size_t position)
 {
@@ -122,22 +130,38 @@ const UmiTestPlatformCommandDescriptor *umi_test_platform_command_at(
                                                          : NULL;
 }
 
+/*
+ * Find test platform command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiTestPlatformCommandDescriptor *umi_test_platform_command_find(
     const char *command_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].id, command_id) == 0) return &COMMANDS[index];
     }
     return NULL;
 }
 
+/*
+ * Provide the test platform command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiTestPlatformCommandDescriptor *umi_test_platform_command_for_kind(
     UmiTestPlatformCommandKind kind)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (COMMANDS[index].kind == kind) return &COMMANDS[index];
     }
     return NULL;

@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/market_gap.h"
+/*
+ * Provide the market event gap ms operation used by this module and its client
+ * applications.
+ */
 int64_t umi_market_event_gap_ms(int64_t previous,int64_t current){return current>=previous?current-previous:-1;}

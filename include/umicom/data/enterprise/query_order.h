@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query order data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryOrder {
     char order_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char field[UMI_DATA_ENTERPRISE_ID_CAPACITY];

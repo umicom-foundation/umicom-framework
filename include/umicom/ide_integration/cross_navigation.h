@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide cross navigation data shared with callers of this public contract.
+ */
 typedef struct UmiIdeCrossNavigation {
     UmiIdeIntegrationBindings *bindings;
     UmiIdeNavigationHistory *history;
@@ -38,18 +41,34 @@ typedef struct UmiIdeCrossNavigation {
     uint64_t revision;
 } UmiIdeCrossNavigation;
 
+/**
+ * Initialise ide cross navigation from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ide_cross_navigation_init(
     UmiIdeCrossNavigation *navigation,
     UmiIdeIntegrationBindings *bindings);
 
+/**
+ * Provide the ide cross navigation deinit operation used by this module and its client
+ * applications.
+ */
 void umi_ide_cross_navigation_deinit(
     UmiIdeCrossNavigation *navigation);
 
+/**
+ * Provide the ide cross navigation set debug resolver operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ide_cross_navigation_set_debug_resolver(
     UmiIdeCrossNavigation *navigation,
     UmiIdeDebugFrameLocationResolver resolver,
     void *user_data);
 
+/**
+ * Provide the ide cross navigation open operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_open(
     UmiIdeCrossNavigation *navigation,
     const UmiIdeNavigationTarget *target,
@@ -57,6 +76,10 @@ UmiStatus umi_ide_cross_navigation_open(
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation problem operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_problem(
     UmiIdeCrossNavigation *navigation,
     size_t problem_index,
@@ -64,6 +87,10 @@ UmiStatus umi_ide_cross_navigation_problem(
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation test operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_test(
     UmiIdeCrossNavigation *navigation,
     const char *test_item_id,
@@ -71,6 +98,10 @@ UmiStatus umi_ide_cross_navigation_test(
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation source control operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_cross_navigation_source_control(
     UmiIdeCrossNavigation *navigation,
     const char *path,
@@ -79,6 +110,10 @@ UmiStatus umi_ide_cross_navigation_source_control(
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation symbol operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_symbol(
     UmiIdeCrossNavigation *navigation,
     const char *symbol_id,
@@ -86,6 +121,10 @@ UmiStatus umi_ide_cross_navigation_symbol(
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation diagnostic operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_diagnostic(
     UmiIdeCrossNavigation *navigation,
     size_t diagnostic_index,
@@ -93,18 +132,30 @@ UmiStatus umi_ide_cross_navigation_diagnostic(
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation debug frame operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_cross_navigation_debug_frame(
     UmiIdeCrossNavigation *navigation,
     char *out_view_id,
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation back operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_back(
     UmiIdeCrossNavigation *navigation,
     char *out_view_id,
     size_t view_id_capacity,
     size_t *out_offset);
 
+/**
+ * Provide the ide cross navigation forward operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_cross_navigation_forward(
     UmiIdeCrossNavigation *navigation,
     char *out_view_id,

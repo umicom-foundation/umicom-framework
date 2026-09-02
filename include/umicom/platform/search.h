@@ -29,6 +29,9 @@ extern "C" {
 
 #define UMI_SEARCH_PREVIEW_CAPACITY 320U
 
+/**
+ * Represent the search request data shared with callers of this public contract.
+ */
 typedef struct UmiSearchRequest {
     const char *query;
     int case_sensitive;
@@ -37,6 +40,9 @@ typedef struct UmiSearchRequest {
     const UmiCancellationToken *cancellation;
 } UmiSearchRequest;
 
+/**
+ * Represent the search match data shared with callers of this public contract.
+ */
 typedef struct UmiSearchMatch {
     char path[UMI_PATH_CAPACITY];
     size_t line;
@@ -44,6 +50,9 @@ typedef struct UmiSearchMatch {
     char preview[UMI_SEARCH_PREVIEW_CAPACITY];
 } UmiSearchMatch;
 
+/**
+ * Represent the search stats data shared with callers of this public contract.
+ */
 typedef struct UmiSearchStats {
     size_t files_considered;
     size_t files_searched;
@@ -57,7 +66,14 @@ typedef struct UmiSearchStats {
 typedef UmiStatus (*UmiSearchMatchSink)(const UmiSearchMatch *match,
                                         void *user_data);
 
+/**
+ * Provide the search request default operation used by this module and its client
+ * applications.
+ */
 UmiSearchRequest umi_search_request_default(const char *query);
+/**
+ * Provide the search file index operation used by this module and its client applications.
+ */
 UmiStatus umi_search_file_index(const UmiFileIndex *index,
                                 const UmiSearchRequest *request,
                                 UmiSearchMatchSink sink,

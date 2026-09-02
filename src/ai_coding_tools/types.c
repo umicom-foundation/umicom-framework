@@ -14,8 +14,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/types.h"
 
+/*
+ * Provide the ai coding tool risk text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_tool_risk_text(UmiAiCodingToolRisk risk)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (risk) {
         case UMI_AI_CODING_TOOL_RISK_READ_ONLY: return "read-only";
         case UMI_AI_CODING_TOOL_RISK_LOCAL_MUTATION: return "local-mutation";
@@ -28,8 +33,13 @@ const char *umi_ai_coding_tool_risk_text(UmiAiCodingToolRisk risk)
     }
 }
 
+/*
+ * Provide the ai coding tool call state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_coding_tool_call_state_text(UmiAiCodingToolCallState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_CODING_TOOL_CALL_PENDING: return "pending";
         case UMI_AI_CODING_TOOL_CALL_APPROVAL_REQUIRED:

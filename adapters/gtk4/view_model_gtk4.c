@@ -33,22 +33,35 @@ typedef struct UmiGtk4CommandViewBinding {
     char action_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4CommandViewBinding;
 
+/*
+ * Provide the command view binding free operation used by this module and its client
+ * applications.
+ */
 static void command_view_binding_free(gpointer data, GClosure *closure)
 {
     (void)closure;
     g_free(data);
 }
 
+/*
+ * Provide the command view clicked operation used by this module and its client
+ * applications.
+ */
 static void command_view_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4CommandViewBinding *binding =
         (UmiGtk4CommandViewBinding *)user_data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding != NULL && binding->adapter != NULL) {
         umi_gtk4_dispatch_action(binding->adapter, binding->action_id);
     }
 }
 
+/* Provide the fallback widget operation used by this module and its client applications. */
 static GtkWidget *fallback_widget(const UmiUiPaneSnapshot *pane)
 {
     GtkWidget *label = gtk_label_new(pane != NULL ? pane->view_type : "");
@@ -58,12 +71,17 @@ static GtkWidget *fallback_widget(const UmiUiPaneSnapshot *pane)
     return label;
 }
 
+/* Provide the property is operation used by this module and its client applications. */
 static int property_is(const UmiUiPropertySnapshot *property, const char *key)
 {
     return property != NULL && key != NULL &&
            strcmp(property->key, key) == 0;
 }
 
+/*
+ * Provide the presentation widget operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *presentation_widget(
     UmiGtk4Adapter *adapter,
     const UmiUiViewPresentation *presentation,
@@ -82,6 +100,7 @@ static GtkWidget *presentation_widget(
     gtk_widget_set_margin_start(box, 8);
     gtk_widget_set_margin_end(box, 8);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_view_presentation_find_property(
             presentation, "title", &title_property) == UMI_STATUS_OK &&
         title_property.value.kind == UMI_UI_VALUE_STRING) {
@@ -89,13 +108,14 @@ static GtkWidget *presentation_widget(
         gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
         gtk_widget_add_css_class(title, "heading");
         gtk_box_append(GTK_BOX(box), title);
-    } else if (pane != NULL && pane->title[0] != '\0') {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (pane != NULL && pane->title[0] != '\0') {
         GtkWidget *title = gtk_label_new(pane->title);
         gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
         gtk_widget_add_css_class(title, "heading");
         gtk_box_append(GTK_BOX(box), title);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_view_presentation_find_property(
             presentation, "summary", &summary_property) == UMI_STATUS_OK &&
         summary_property.value.kind == UMI_UI_VALUE_STRING &&
@@ -107,6 +127,10 @@ static GtkWidget *presentation_widget(
         gtk_box_append(GTK_BOX(box), summary);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter != NULL &&
         umi_ui_view_presentation_find_property(
             presentation,
@@ -117,9 +141,11 @@ static GtkWidget *presentation_widget(
         GtkWidget *actions = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
         int64_t requested = action_count_property.value.integer_value;
         size_t action_count = (size_t)requested;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (action_count > UMI_UI_COMMAND_VIEW_ACTION_MAX) {
             action_count = UMI_UI_COMMAND_VIEW_ACTION_MAX;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < action_count; ++index) {
             char id_key[UMI_UI_PROPERTY_KEY_CAPACITY];
             char label_key[UMI_UI_PROPERTY_KEY_CAPACITY];
@@ -139,6 +165,7 @@ static GtkWidget *presentation_widget(
                            "command-view.action.%02zu.tooltip", index);
             (void)snprintf(enabled_key, sizeof(enabled_key),
                            "command-view.action.%02zu.enabled", index);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_ui_view_presentation_find_property(
                     presentation, id_key, &id_property) != UMI_STATUS_OK ||
                 umi_ui_view_presentation_find_property(
@@ -148,12 +175,14 @@ static GtkWidget *presentation_widget(
                 continue;
             }
             button = gtk_button_new_with_label(label_property.value.string_value);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_ui_view_presentation_find_property(
                     presentation, tooltip_key, &tooltip_property) == UMI_STATUS_OK &&
                 tooltip_property.value.kind == UMI_UI_VALUE_STRING) {
                 gtk_widget_set_tooltip_text(
                     button, tooltip_property.value.string_value);
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_ui_view_presentation_find_property(
                     presentation, enabled_key, &enabled_property) == UMI_STATUS_OK &&
                 enabled_property.value.kind == UMI_UI_VALUE_BOOLEAN) {
@@ -161,6 +190,10 @@ static GtkWidget *presentation_widget(
                                          enabled_property.value.boolean_value);
             }
             binding = g_new0(UmiGtk4CommandViewBinding, 1);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (binding == NULL) continue;
             binding->adapter = adapter;
             (void)g_strlcpy(binding->action_id,
@@ -177,6 +210,7 @@ static GtkWidget *presentation_widget(
         gtk_box_append(GTK_BOX(box), actions);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < presentation->property_count; ++index) {
         const UmiUiPropertySnapshot *property =
             &presentation->properties[index];
@@ -185,12 +219,14 @@ static GtkWidget *presentation_widget(
         GtkWidget *name;
         GtkWidget *value;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (property_is(property, "title") ||
             property_is(property, "summary") ||
             umi_ui_command_view_property_is_reserved(property->key)) {
             continue;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_view_presentation_value_text(
                 &property->value, value_text, sizeof(value_text)) !=
             UMI_STATUS_OK) {
@@ -222,6 +258,10 @@ static GtkWidget *presentation_widget(
     return scroll;
 }
 
+/*
+ * Provide the gtk4 build view widget operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_build_view_widget(
     UmiGtk4Adapter *adapter,
     UmiUiWorkbench *workbench,
@@ -231,6 +271,10 @@ UmiStatus umi_gtk4_build_view_widget(
     UmiUiViewPresentation presentation;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL || pane == NULL ||
         out_widget == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -243,38 +287,47 @@ UmiStatus umi_gtk4_build_view_widget(
         pane->pane_id,
         &presentation);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) {
         *out_widget = fallback_widget(pane);
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     {
         UmiUiPropertySnapshot kind;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_view_presentation_find_property(
                 &presentation, "umicom.view-kind", &kind) == UMI_STATUS_OK &&
             kind.value.kind == UMI_UI_VALUE_STRING) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(kind.value.string_value, "problems") == 0) {
                 *out_widget = umi_gtk4_problems_widget(&presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(kind.value.string_value, "output") == 0) {
                 *out_widget = umi_gtk4_output_widget(&presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(kind.value.string_value, "terminal") == 0 ||
                 strcmp(kind.value.string_value, "terminal-history") == 0) {
                 *out_widget = umi_gtk4_terminal_widget(adapter, &presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(kind.value.string_value, "processes") == 0) {
                 *out_widget = umi_gtk4_process_widget(adapter, &presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(kind.value.string_value, "tasks") == 0) {
                 *out_widget = umi_gtk4_task_widget(adapter, &presentation);
                 return *out_widget != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
             }
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(kind.value.string_value, "source-control") == 0 ||
                 strcmp(kind.value.string_value, "vcs-history") == 0 ||
                 strcmp(kind.value.string_value, "vcs-branches") == 0 ||

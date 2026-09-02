@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/historical_scenario.h"
+/**
+ * Represent the enterprise scenario grid data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseScenarioGrid { UmiEnterpriseHistoricalScenario scenarios[UMI_ENTERPRISE_MAX_SCENARIOS]; size_t count; } UmiEnterpriseScenarioGrid;
 /* Initialise an empty scenario grid. */
 void umi_enterprise_scenario_grid_init(UmiEnterpriseScenarioGrid *grid);

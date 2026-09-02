@@ -35,6 +35,7 @@ struct UmiGtk4TradingSuiteWorkstation {
  * The text is informative only; order permission still comes from policy. */
 static const char *environment_badge(UmiTradingEnvironment environment)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (environment) {
     case UMI_TRADING_SIMULATION:
         return "Simulation";
@@ -54,10 +55,15 @@ static void refresh_environment_badge(
 {
     UmiTradingWorkspaceSnapshot snapshot;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || workstation->suite == NULL ||
         workstation->config.workspace == NULL) {
         return;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_trading_workspace_snapshot(
             workstation->config.workspace, &snapshot) == UMI_STATUS_OK) {
         (void)umi_application_suite_gtk4_workstation_set_mode_badge(
@@ -66,26 +72,41 @@ static void refresh_environment_badge(
     }
 }
 
+/* Provide the rebuild idle operation used by this module and its client applications. */
 static gboolean rebuild_idle(gpointer data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = data;
     UmiApplicationSuiteGtk4WorkstationSnapshot snapshot;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || workstation->suite == NULL)
         return G_SOURCE_REMOVE;
     workstation->pending_refresh = 0U;
     snapshot = umi_application_suite_gtk4_workstation_snapshot(workstation->suite);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (snapshot.active_layout_id[0] != '\0')
         (void)umi_application_suite_gtk4_workstation_select_layout(
             workstation->suite, snapshot.active_layout_id);
     return G_SOURCE_REMOVE;
 }
 
+/* Provide the schedule rebuild operation used by this module and its client applications. */
 static void schedule_rebuild(UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || workstation->pending_refresh != 0U) return;
     workstation->pending_refresh = g_idle_add(rebuild_idle, workstation);
 }
 
+/*
+ * Provide the on controller changed operation used by this module and its client
+ * applications.
+ */
 static void on_controller_changed(uint64_t revision, void *user_data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = user_data;
@@ -94,33 +115,52 @@ static void on_controller_changed(uint64_t revision, void *user_data)
     schedule_rebuild(workstation);
 }
 
+/* Provide the simulation tick operation used by this module and its client applications. */
 static gboolean simulation_tick(gpointer data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = data;
     UmiTradingWorkspaceSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || !workstation->simulation_seeded)
         return G_SOURCE_CONTINUE;
     status = umi_trading_workspace_snapshot(
         workstation->config.workspace, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         snapshot.environment == UMI_TRADING_SIMULATION) {
         status = umi_trading_simulation_market_step(
             &workstation->simulation,
             (int64_t)workstation->config.simulation_step_interval_ms);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) schedule_rebuild(workstation);
     }
     return G_SOURCE_CONTINUE;
 }
 
+/*
+ * Provide the trading panel factory operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *trading_panel_factory(const UmiUiWorkspaceWindow *window,
                                         void *user_data)
 {
     UmiGtk4TradingSuiteWorkstation *workstation = user_data;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return NULL;
     return umi_gtk4_trading_panel_create(window, &workstation->panel_context);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation config default operation used by this module
+ * and its client applications.
+ */
 UmiGtk4TradingSuiteWorkstationConfig
 umi_gtk4_trading_suite_workstation_config_default(
     UmiTradingWorkspace *workspace)
@@ -137,6 +177,10 @@ umi_gtk4_trading_suite_workstation_config_default(
     return config;
 }
 
+/*
+ * Initialise gtk4 trading suite workstation from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_create(
     const UmiGtk4TradingSuiteWorkstationConfig *config,
     UmiGtk4TradingSuiteWorkstation **out_workstation)
@@ -146,14 +190,23 @@ UmiStatus umi_gtk4_trading_suite_workstation_create(
     UmiApplicationSuiteGtk4WorkstationConfig suite_config;
     UmiTradingWorkspaceSnapshot trading_snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || out_workstation == NULL ||
         config->workspace == NULL || config->application_id == NULL ||
         config->application_id[0] == '\0')
         return UMI_STATUS_INVALID_ARGUMENT;
     *out_workstation = NULL;
     workstation = calloc(1U, sizeof(*workstation));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     workstation->config = *config;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (workstation->config.simulation_step_interval_ms < 100U)
         workstation->config.simulation_step_interval_ms = 1000U;
 
@@ -164,21 +217,27 @@ UmiStatus umi_gtk4_trading_suite_workstation_create(
         &workstation->controller,
         workstation->config.workspace,
         &controller_config);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     umi_trading_ui_controller_set_changed_handler(
         &workstation->controller, on_controller_changed, workstation);
 
     status = umi_trading_simulation_market_init(
         &workstation->simulation, workstation->config.workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (workstation->config.seed_simulation_market) {
         status = umi_trading_workspace_snapshot(
             workstation->config.workspace, &trading_snapshot);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto fail;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (trading_snapshot.watchlist_count == 0U) {
             status = umi_trading_simulation_market_seed_default(
                 &workstation->simulation,
                 (int64_t)(g_get_real_time() / 1000));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) goto fail;
             workstation->simulation_seeded = 1;
         }
@@ -193,6 +252,7 @@ UmiStatus umi_gtk4_trading_suite_workstation_create(
      * first rendered frame already carries the correct safety mode badge. */
     status = umi_trading_workspace_snapshot(
         workstation->config.workspace, &trading_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     (void)memset(&suite_config, 0, sizeof(suite_config));
     suite_config.application_id = workstation->config.application_id;
@@ -203,9 +263,11 @@ UmiStatus umi_gtk4_trading_suite_workstation_create(
     suite_config.user_data = workstation;
     status = umi_application_suite_gtk4_workstation_create(
         &suite_config, &workstation->suite);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     refresh_environment_badge(workstation);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (workstation->config.animate_simulation_market &&
         workstation->simulation_seeded) {
         workstation->simulation_timer = g_timeout_add(
@@ -221,14 +283,24 @@ fail:
     return status;
 }
 
+/*
+ * Release or reset state held by gtk4 trading suite workstation so the same storage can be
+ * reused safely.
+ */
 void umi_gtk4_trading_suite_workstation_destroy(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (workstation->simulation_timer != 0U) {
         g_source_remove(workstation->simulation_timer);
         workstation->simulation_timer = 0U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (workstation->pending_refresh != 0U) {
         g_source_remove(workstation->pending_refresh);
         workstation->pending_refresh = 0U;
@@ -240,6 +312,10 @@ void umi_gtk4_trading_suite_workstation_destroy(
     free(workstation);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation widget operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_gtk4_trading_suite_workstation_widget(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
@@ -248,10 +324,18 @@ GtkWidget *umi_gtk4_trading_suite_workstation_widget(
         : NULL;
 }
 
+/*
+ * Provide the gtk4 trading suite workstation select layout operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_select_layout(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *layout_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || layout_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_select_layout(
@@ -264,6 +348,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_select_appearance(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *profile_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || profile_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -276,6 +364,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_apply_custom_appearance(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const UmiUiAppearanceProfile *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -288,6 +380,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_active_appearance(
     const UmiGtk4TradingSuiteWorkstation *workstation,
     UmiUiAppearanceProfile *out_profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || out_profile == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -295,25 +391,49 @@ UmiStatus umi_gtk4_trading_suite_workstation_active_appearance(
         workstation->suite, out_profile);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation begin layout edit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_begin_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_begin_layout_edit(
         workstation->suite);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation commit layout edit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_commit_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_commit_layout_edit(
         workstation->suite);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation cancel layout edit operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_cancel_layout_edit(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_cancel_layout_edit(
         workstation->suite);
@@ -326,6 +446,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_export_layout(
     char *out_text,
     size_t capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -340,6 +464,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_import_layout(
     int activate,
     UmiUiWorkspaceImportReport *out_report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -352,6 +480,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_save_checkpoint(
     UmiGtk4TradingSuiteWorkstation *workstation,
     uint64_t saved_at_ns)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -363,6 +495,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_save_checkpoint(
 UmiStatus umi_gtk4_trading_suite_workstation_restore_checkpoint(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -370,6 +506,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_restore_checkpoint(
         workstation->suite);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation open window operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_open_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *tool_id,
@@ -379,6 +519,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_open_window(
     char *out_window_id,
     size_t out_window_id_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_open_window(
         workstation->suite,
@@ -390,6 +534,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_open_window(
         out_window_id_capacity);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation move window operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_move_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *window_id,
@@ -399,6 +547,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_move_window(
     double width,
     double height)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_move_window(
         workstation->suite,
@@ -410,10 +562,18 @@ UmiStatus umi_gtk4_trading_suite_workstation_move_window(
         height);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation close window operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_close_window(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const char *window_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_suite_gtk4_workstation_close_window(
         workstation->suite, window_id);
@@ -424,6 +584,10 @@ UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
     UmiGtk4TradingSuiteWorkstation *workstation,
     const UmiUiWorkspacePanelSettings *settings)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || settings == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -433,19 +597,35 @@ UmiStatus umi_gtk4_trading_suite_workstation_apply_panel_settings(
         workstation->suite, settings);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_trading_suite_workstation_refresh(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_trading_ui_controller_refresh(&workstation->controller);
 }
 
+/*
+ * Provide the gtk4 trading suite workstation snapshot operation used by this module and
+ * its client applications.
+ */
 UmiGtk4TradingSuiteWorkstationSnapshot
 umi_gtk4_trading_suite_workstation_snapshot(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {
     UmiGtk4TradingSuiteWorkstationSnapshot snapshot;
     (void)memset(&snapshot, 0, sizeof(snapshot));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return snapshot;
     snapshot.layout = umi_application_suite_gtk4_workstation_snapshot(
         workstation->suite);
@@ -461,6 +641,10 @@ umi_gtk4_trading_suite_workstation_snapshot(
     return snapshot;
 }
 
+/*
+ * Provide the gtk4 trading suite workstation controller operation used by this module and
+ * its client applications.
+ */
 UmiTradingUiController *umi_gtk4_trading_suite_workstation_controller(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {

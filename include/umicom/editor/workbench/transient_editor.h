@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb transient editor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbTransientEditor { char id[UMI_EDITOR_WB_ID_CAPACITY]; char text[UMI_EDITOR_WB_TEXT_CAPACITY]; uint64_t primary; uint64_t secondary; bool enabled; } UmiEditorWbTransientEditor;
+/**
+ * Initialise editor wb transient editor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_transient_editor_init(UmiEditorWbTransientEditor *state,const char *id,const char *text); UmiStatus umi_editor_wb_transient_editor_set_values(UmiEditorWbTransientEditor *state,uint64_t primary,uint64_t secondary,bool enabled); int umi_editor_wb_transient_editor_valid(const UmiEditorWbTransientEditor *state);
 
 #ifdef __cplusplus

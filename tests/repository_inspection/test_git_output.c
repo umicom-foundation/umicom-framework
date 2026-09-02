@@ -23,5 +23,5 @@
 /* Verify this module remains callable through its public Framework contract. */
 int main(void)
 {
-    char t[32]="  42\r\n"; size_t v=0U; if(umi_repository_git_output_trim(t)!=UMI_STATUS_OK)return 1; if(umi_repository_git_output_parse_size(t,&v)!=UMI_STATUS_OK)return 1; return v==42U?0:1;
+    char t[32]="  42\r\n"; size_t v=0U; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_repository_git_output_trim(t)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_repository_git_output_parse_size(t,&v)!=UMI_STATUS_OK)return 1; return v==42U?0:1;
 }

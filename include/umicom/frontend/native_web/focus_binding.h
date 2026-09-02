@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/types.h"
+/**
+ * Represent the native web focus binding data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebFocusBinding { char element_id[UMI_NATIVE_WEB_ID_CAPACITY]; bool focusable; int32_t tab_index; } UmiNativeWebFocusBinding;
 /* Initialise validated focus binding state. */
 UmiStatus umi_native_web_focus_binding_init(UmiNativeWebFocusBinding *binding, const char *element_id, bool focusable, int32_t tab_index);

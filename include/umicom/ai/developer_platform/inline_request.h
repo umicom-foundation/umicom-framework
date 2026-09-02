@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev inline request data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevInlineRequest {
     char id[UMI_AI_DEV_ID_CAPACITY];
     char label[UMI_AI_DEV_TEXT_CAPACITY];
@@ -38,9 +41,25 @@ typedef struct UmiAiDevInlineRequest {
     int enabled;
 } UmiAiDevInlineRequest;
 
+/**
+ * Initialise ai dev inline request from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_inline_request_init(UmiAiDevInlineRequest *value);
+/**
+ * Provide the ai dev inline request configure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_inline_request_configure(UmiAiDevInlineRequest *value, const char *id, const char *label, uint32_t priority, uint64_t flags);
+/**
+ * Check that ai dev inline request satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ai_dev_inline_request_validate(const UmiAiDevInlineRequest *value);
+/**
+ * Provide the ai dev inline request evidence score operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_dev_inline_request_evidence_score(const UmiAiDevInlineRequest *value, uint32_t relevance);
 
 #ifdef __cplusplus

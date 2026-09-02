@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant fx swap data shared with callers of this public contract.
+ */
 typedef struct UmiQuantFxSwap {
     double near_rate;
     double far_rate;

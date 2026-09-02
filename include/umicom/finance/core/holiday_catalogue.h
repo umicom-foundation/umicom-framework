@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the holiday catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiHolidayCatalogue { UmiHolidayCalendar items[16U]; size_t count; } UmiHolidayCatalogue;
 /* Reset catalogue. */ void umi_holiday_catalogue_init(UmiHolidayCatalogue *c);
 /* Add unique calendar. */ UmiStatus umi_holiday_catalogue_add(UmiHolidayCatalogue *c,const UmiHolidayCalendar *item);

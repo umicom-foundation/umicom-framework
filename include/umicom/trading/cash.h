@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Perform cash through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_cash_apply(UmiMoney *balance, const UmiMoney *movement);
 #ifdef __cplusplus
 }

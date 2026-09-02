@@ -28,12 +28,23 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the decl attribute data shared with callers of this public contract.
+ */
 typedef struct UmiDeclAttribute {
     char name[UMI_DECL_NAME_CAPACITY];
     UmiDeclValue value;
 } UmiDeclAttribute;
 
+/**
+ * Initialise decl attribute from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_decl_attribute_init(UmiDeclAttribute *attribute, const char *name, UmiDeclValueKind kind, const char *value_text);
+/**
+ * Provide the decl attribute name equal operation used by this module and its client
+ * applications.
+ */
 int umi_decl_attribute_name_equal(const UmiDeclAttribute *attribute, const char *name);
 
 #ifdef __cplusplus

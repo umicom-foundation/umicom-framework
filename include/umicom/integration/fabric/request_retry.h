@@ -26,8 +26,19 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric request retry data shared with callers of this public contract.
+ */
 typedef struct UmiFabricRequestRetry { uint32_t max_attempts; uint64_t initial_delay_ms; uint64_t maximum_delay_ms; double multiplier; } UmiFabricRequestRetry;
+/**
+ * Provide the fabric request retry default operation used by this module and its client
+ * applications.
+ */
 void umi_fabric_request_retry_default(UmiFabricRequestRetry *policy);
+/**
+ * Provide the fabric request retry delay operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_request_retry_delay(const UmiFabricRequestRetry *policy,uint32_t attempt,uint64_t *out_delay_ms);
 
 #ifdef __cplusplus

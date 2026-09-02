@@ -290,24 +290,42 @@ static const UmiApplicationFeaturePackDefinition PACKS[] = {
 
 #undef ARRAY_COUNT
 
+/* Provide the valid list operation used by this module and its client applications. */
 static int valid_list(const char *const *items, size_t count)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (count > 0U && items == NULL) return 0;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (items[index] == NULL || items[index][0] == '\0') return 0;
     }
 
     return 1;
 }
 
+/*
+ * Return the number of records represented by application feature pack catalogue without
+ * changing their state.
+ */
 size_t umi_application_feature_pack_catalogue_count(void)
 {
     return sizeof(PACKS) / sizeof(PACKS[0]);
 }
 
+/*
+ * Find application feature pack catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationFeaturePackDefinition *
 umi_application_feature_pack_catalogue_at(size_t index)
 {
@@ -316,16 +334,26 @@ umi_application_feature_pack_catalogue_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find application feature pack catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationFeaturePackDefinition *
 umi_application_feature_pack_catalogue_find(const char *pack_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pack_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_feature_pack_catalogue_count();
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(PACKS[index].pack_id, pack_id) == 0) {
             return &PACKS[index];
         }
@@ -334,11 +362,19 @@ umi_application_feature_pack_catalogue_find(const char *pack_id)
     return NULL;
 }
 
+/*
+ * Check that application feature pack satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_application_feature_pack_validate(
     const UmiApplicationFeaturePackDefinition *pack)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pack == NULL ||
         pack->structure_size != sizeof(*pack) ||
         pack->api_version != UMI_APPLICATION_FEATURE_PACK_API_VERSION ||
@@ -361,21 +397,27 @@ UmiStatus umi_application_feature_pack_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pack->required_capability_count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_framework_capability_catalogue_find(
                 pack->required_capabilities[index]) == NULL) {
             return UMI_STATUS_NOT_FOUND;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pack->optional_capability_count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_framework_capability_catalogue_find(
                 pack->optional_capabilities[index]) == NULL) {
             return UMI_STATUS_NOT_FOUND;
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pack->component_count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_application_component_catalogue_find(
                 pack->component_ids[index]) == NULL) {
             return UMI_STATUS_NOT_FOUND;

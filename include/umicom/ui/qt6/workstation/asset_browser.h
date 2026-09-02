@@ -23,7 +23,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the qt6 ws asset browser descriptor operation used by this module and its client
+ * applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_ws_asset_browser_descriptor(void);
+/**
+ * Initialise qt6 ws asset browser from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiQt6WidgetHandle umi_qt6_ws_asset_browser_create(const UmiWsAssetBrowserModel *model);
 
 #ifdef __cplusplus

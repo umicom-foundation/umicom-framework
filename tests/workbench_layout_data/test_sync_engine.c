@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Initialise endpoint from caller-provided values so later operations receive a known
+ * state.
+ */
 static void endpoint_init(
     UmiWorkbenchLayoutSyncEndpoint *endpoint,
     const char *replica_id,
@@ -31,6 +35,10 @@ static void endpoint_init(
     endpoint->change_count = change_count;
 }
 
+/*
+ * Exercise test create remote and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_create_remote(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -93,6 +101,10 @@ static int test_create_remote(void)
     return 0;
 }
 
+/*
+ * Exercise test conflict recording and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_conflict_recording(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -143,6 +155,10 @@ static int test_conflict_recording(void)
     return 0;
 }
 
+/*
+ * Exercise test delete policy and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_delete_policy(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -197,6 +213,10 @@ static int test_delete_policy(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_create_remote() == 0, "create remote");

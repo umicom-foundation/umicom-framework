@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc regression baseline data shared with callers of this public contract.
+ */
 typedef struct UmiFcRegressionBaseline { char frontend_id[UMI_FC_ID_CAPACITY]; double score; size_t blockers; uint64_t semantic_fingerprint; uint64_t revision; } UmiFcRegressionBaseline;
+/**
+ * Provide the fc regression baseline make operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fc_regression_baseline_make(const char *frontend_id,double score,size_t blockers,uint64_t fingerprint,uint64_t revision,UmiFcRegressionBaseline *out_baseline);
 
 #ifdef __cplusplus

@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/session_calendar.h"
+/*
+ * Provide the trading weekday open operation used by this module and its client
+ * applications.
+ */
 int umi_trading_weekday_open(unsigned weekday){return weekday>=1U&&weekday<=5U;}

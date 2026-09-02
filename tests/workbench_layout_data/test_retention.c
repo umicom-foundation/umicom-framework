@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise seed retention records and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int seed_retention_records(
     UmiDataServer *server,
     UmiWorkbenchLayoutOutboxRepository *outbox,
@@ -98,6 +102,10 @@ static int seed_retention_records(
     return 0;
 }
 
+/*
+ * Perform test dry through the module contract so client applications do not duplicate its
+ * policy.
+ */
 static int test_dry_run(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -139,6 +147,10 @@ static int test_dry_run(void)
     return 0;
 }
 
+/*
+ * Exercise test pruning and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int test_pruning(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -176,6 +188,10 @@ static int test_pruning(void)
     return 0;
 }
 
+/*
+ * Exercise test authoritative layout preserved and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_authoritative_layout_preserved(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -202,6 +218,10 @@ static int test_authoritative_layout_preserved(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_dry_run() == 0, "retention dry run");

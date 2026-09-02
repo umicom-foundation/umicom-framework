@@ -17,11 +17,16 @@
 #include <assert.h>
 #include <string.h>
 #include "test_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiApplicationProductionLaunchPlan plan;
     UmiApplicationProductionLifecycleGate gate;
     int value;
     assert(umi_application_production_launch_plan_build(&plan) == UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (value = UMI_APPLICATION_PRODUCTION_GATE_CONTRACT; value <= UMI_APPLICATION_PRODUCTION_GATE_ACCEPTANCE; ++value) {
         (void)memset(&gate, 0, sizeof(gate));
         gate.gate = (UmiApplicationProductionGate)value;

@@ -18,7 +18,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding tool source control stage all descriptor operation used by this
+ * module and its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_source_control_stage_all_descriptor(void);
+/**
+ * Provide the ai coding tool source control stage all invoke operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_ai_coding_tool_source_control_stage_all_invoke(
     const char *arguments_json,
     char *output,

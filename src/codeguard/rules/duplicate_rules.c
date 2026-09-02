@@ -25,8 +25,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-DUP-001", "", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_DUPLICATION, 100U, UMI_CODEGUARD_MATCH_RAW, "__CODEGUARD_DUPLICATE_SENTINEL__", "Duplicate source content detected.", "Keep one authoritative implementation and make consumers depend on it."}
 };
 
+/*
+ * Provide the codeguard rules duplicate rules operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_duplicate_rules(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

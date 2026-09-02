@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the integrity result data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrityResult {
     char artifact_id[UMI_DELIVERY_ID_CAPACITY];
     char expected[UMI_DELIVERY_DIGEST_CAPACITY];
@@ -34,6 +37,9 @@ typedef struct UmiIntegrityResult {
     UmiEvidenceStatus status;
 } UmiIntegrityResult;
 
+/**
+ * Provide the integrity verify operation used by this module and its client applications.
+ */
 UmiStatus umi_integrity_verify(UmiIntegrityResult *result,
                                const char *artifact_id,
                                const char *expected,

@@ -52,6 +52,9 @@ extern "C" {
 #define UMI_WORKBENCH_DESIGNER_MAX_SESSIONS 8U
 #define UMI_WORKBENCH_DESIGNER_INDEX_NONE ((size_t)-1)
 
+/**
+ * List the named workbench designer state values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerState {
     UMI_WORKBENCH_DESIGNER_STATE_CREATED = 1,
     UMI_WORKBENCH_DESIGNER_STATE_INITIALISED = 2,
@@ -61,6 +64,9 @@ typedef enum UmiWorkbenchDesignerState {
     UMI_WORKBENCH_DESIGNER_STATE_FAILED = 6
 } UmiWorkbenchDesignerState;
 
+/**
+ * List the named workbench designer mode values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerMode {
     UMI_WORKBENCH_DESIGNER_MODE_BROWSE = 1,
     UMI_WORKBENCH_DESIGNER_MODE_DESIGN = 2,
@@ -69,6 +75,9 @@ typedef enum UmiWorkbenchDesignerMode {
     UMI_WORKBENCH_DESIGNER_MODE_CONFLICT = 5
 } UmiWorkbenchDesignerMode;
 
+/**
+ * List the named workbench designer tool values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerTool {
     UMI_WORKBENCH_DESIGNER_TOOL_SELECT = 1,
     UMI_WORKBENCH_DESIGNER_TOOL_PAN = 2,
@@ -80,6 +89,9 @@ typedef enum UmiWorkbenchDesignerTool {
     UMI_WORKBENCH_DESIGNER_TOOL_LINK_CONTEXT = 8
 } UmiWorkbenchDesignerTool;
 
+/**
+ * List the named workbench designer drop zone values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerDropZone {
     UMI_WORKBENCH_DESIGNER_DROP_NONE = 0,
     UMI_WORKBENCH_DESIGNER_DROP_LEFT = 1,
@@ -91,6 +103,9 @@ typedef enum UmiWorkbenchDesignerDropZone {
     UMI_WORKBENCH_DESIGNER_DROP_FLOATING = 7
 } UmiWorkbenchDesignerDropZone;
 
+/**
+ * List the named workbench designer property kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerPropertyKind {
     UMI_WORKBENCH_DESIGNER_PROPERTY_TEXT = 1,
     UMI_WORKBENCH_DESIGNER_PROPERTY_NUMBER = 2,
@@ -100,6 +115,9 @@ typedef enum UmiWorkbenchDesignerPropertyKind {
     UMI_WORKBENCH_DESIGNER_PROPERTY_IDENTIFIER = 6
 } UmiWorkbenchDesignerPropertyKind;
 
+/**
+ * List the named workbench designer command kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerCommandKind {
     UMI_WORKBENCH_DESIGNER_COMMAND_NONE = 0,
     UMI_WORKBENCH_DESIGNER_COMMAND_ADD_PANEL = 1,
@@ -123,6 +141,9 @@ typedef enum UmiWorkbenchDesignerCommandKind {
     UMI_WORKBENCH_DESIGNER_COMMAND_EXPORT = 19
 } UmiWorkbenchDesignerCommandKind;
 
+/**
+ * List the named workbench designer save state values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerSaveState {
     UMI_WORKBENCH_DESIGNER_SAVE_CLEAN = 1,
     UMI_WORKBENCH_DESIGNER_SAVE_DIRTY = 2,
@@ -132,12 +153,19 @@ typedef enum UmiWorkbenchDesignerSaveState {
     UMI_WORKBENCH_DESIGNER_SAVE_CONFLICT = 6
 } UmiWorkbenchDesignerSaveState;
 
+/**
+ * List the named workbench designer issue severity values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchDesignerIssueSeverity {
     UMI_WORKBENCH_DESIGNER_ISSUE_INFO = 1,
     UMI_WORKBENCH_DESIGNER_ISSUE_WARNING = 2,
     UMI_WORKBENCH_DESIGNER_ISSUE_ERROR = 3
 } UmiWorkbenchDesignerIssueSeverity;
 
+/**
+ * List the named workbench designer event kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerEventKind {
     UMI_WORKBENCH_DESIGNER_EVENT_SESSION_OPENED = 1,
     UMI_WORKBENCH_DESIGNER_EVENT_SESSION_CLOSED = 2,
@@ -153,11 +181,17 @@ typedef enum UmiWorkbenchDesignerEventKind {
     UMI_WORKBENCH_DESIGNER_EVENT_CONFLICT_DETECTED = 12
 } UmiWorkbenchDesignerEventKind;
 
+/**
+ * Represent the workbench designer point data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchDesignerPoint {
     double x;
     double y;
 } UmiWorkbenchDesignerPoint;
 
+/**
+ * Represent the workbench designer rect data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchDesignerRect {
     double x;
     double y;
@@ -165,25 +199,76 @@ typedef struct UmiWorkbenchDesignerRect {
     double height;
 } UmiWorkbenchDesignerRect;
 
+/**
+ * Represent the workbench designer size data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchDesignerSize {
     double width;
     double height;
 } UmiWorkbenchDesignerSize;
 
+/**
+ * Represent the workbench designer identifier data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerIdentifier {
     char value[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
 } UmiWorkbenchDesignerIdentifier;
 
+/**
+ * Provide the workbench designer state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_designer_state_text(UmiWorkbenchDesignerState state);
+/**
+ * Provide the workbench designer mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_designer_mode_text(UmiWorkbenchDesignerMode mode);
+/**
+ * Provide the workbench designer tool text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_designer_tool_text(UmiWorkbenchDesignerTool tool);
+/**
+ * Provide the workbench designer drop zone text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_designer_drop_zone_text(UmiWorkbenchDesignerDropZone zone);
+/**
+ * Provide the workbench designer command kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_designer_command_kind_text(UmiWorkbenchDesignerCommandKind kind);
+/**
+ * Provide the workbench designer save state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_designer_save_state_text(UmiWorkbenchDesignerSaveState state);
+/**
+ * Check that workbench designer rect satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_workbench_designer_rect_is_valid(const UmiWorkbenchDesignerRect *rect);
+/**
+ * Provide the workbench designer rect contains point operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_rect_contains_point(const UmiWorkbenchDesignerRect *rect, UmiWorkbenchDesignerPoint point);
+/**
+ * Provide the workbench designer rect intersects operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_rect_intersects(const UmiWorkbenchDesignerRect *left, const UmiWorkbenchDesignerRect *right);
+/**
+ * Provide the workbench designer rect intersection operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchDesignerRect umi_workbench_designer_rect_intersection(const UmiWorkbenchDesignerRect *left, const UmiWorkbenchDesignerRect *right);
+/**
+ * Provide the workbench designer clamp operation used by this module and its client
+ * applications.
+ */
 double umi_workbench_designer_clamp(double value, double minimum, double maximum);
 
 #ifdef __cplusplus

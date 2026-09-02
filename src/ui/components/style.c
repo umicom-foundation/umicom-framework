@@ -20,4 +20,8 @@
  */
 #include "umicom/ui/components/style.h"
 #include <string.h>
+/*
+ * Provide the ui component style default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentStyle umi_ui_component_style_default(void){UmiUiComponentStyle v;memset(&v,0,sizeof(v));return v;}

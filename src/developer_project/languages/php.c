@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "php", "composer"
 };
 
+/*
+ * Provide the developer project language php operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_php(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric api operation data shared with callers of this public contract.
+ */
 typedef struct UmiFabricApiOperation {
     char operation_id[UMI_FABRIC_ID_CAPACITY];
     char method[UMI_FABRIC_ID_CAPACITY];
@@ -34,7 +37,15 @@ typedef struct UmiFabricApiOperation {
     bool idempotent;
 } UmiFabricApiOperation;
 
+/**
+ * Initialise fabric api operation from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_fabric_api_operation_init(UmiFabricApiOperation *item, const char *operation_id, const char *method, const char *path, const char *request_schema, const char *response_schema, bool idempotent);
+/**
+ * Check that fabric api operation satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_fabric_api_operation_validate(const UmiFabricApiOperation *item);
 
 #ifdef __cplusplus

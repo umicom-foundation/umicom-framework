@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Provide the compare entries operation used by this module and its client applications. */
 static int compare_entries(const void *left, const void *right)
 {
     const UmiWatcherEntry *a = (const UmiWatcherEntry *)left;
@@ -38,20 +39,28 @@ typedef struct UmiCaptureContext {
     size_t maximum;
 } UmiCaptureContext;
 
+/* Provide the capture visitor operation used by this module and its client applications. */
 static UmiStatus capture_visitor(const UmiFileInfo *info, void *user_data)
 {
     UmiCaptureContext *context = (UmiCaptureContext *)user_data;
     UmiWatcherEntry *resized;
     size_t capacity;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (context->count >= context->maximum) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (context->count == context->capacity) {
         capacity = context->capacity == 0U ? 256U : context->capacity * 2U;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > context->maximum) capacity = context->maximum;
         resized = (UmiWatcherEntry *)realloc(
             context->entries,
             capacity * sizeof(*resized));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (resized == NULL) return UMI_STATUS_OUT_OF_MEMORY;
         context->entries = resized;
         context->capacity = capacity;
@@ -72,6 +81,10 @@ static UmiStatus capture_visitor(const UmiFileInfo *info, void *user_data)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the watcher polling scan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_watcher_polling_scan(UmiWatcher *watcher)
 {
     UmiDirectoryWalkOptions options;
@@ -91,6 +104,7 @@ UmiStatus umi_watcher_polling_scan(UmiWatcher *watcher)
                                 &options,
                                 capture_visitor,
                                 &capture);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CAPACITY_EXCEEDED) {
         (void)umi_watcher_emit(watcher,
                                UMI_WATCH_OVERFLOW,
@@ -100,6 +114,7 @@ UmiStatus umi_watcher_polling_scan(UmiWatcher *watcher)
         free(capture.entries);
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(capture.entries);
         return status;
@@ -109,12 +124,19 @@ UmiStatus umi_watcher_polling_scan(UmiWatcher *watcher)
           sizeof(*capture.entries),
           compare_entries);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (old_index < watcher->entry_count || new_index < capture.count) {
         int comparison;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (old_index >= watcher->entry_count) comparison = 1;
-        else if (new_index >= capture.count) comparison = -1;
+        else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (new_index >= capture.count) comparison = -1;
+        /* Use this fallback path when the earlier condition does not apply. */
         else comparison = compare_entries(&watcher->entries[old_index],
                                            &capture.entries[new_index]);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (comparison < 0) {
             (void)umi_watcher_emit(watcher,
                                    UMI_WATCH_DELETED,
@@ -122,14 +144,15 @@ UmiStatus umi_watcher_polling_scan(UmiWatcher *watcher)
                                    NULL,
                                    watcher->entries[old_index].directory);
             ++old_index;
-        } else if (comparison > 0) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (comparison > 0) {
             (void)umi_watcher_emit(watcher,
                                    UMI_WATCH_CREATED,
                                    capture.entries[new_index].path,
                                    NULL,
                                    capture.entries[new_index].directory);
             ++new_index;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (watcher->entries[old_index].size !=
                     capture.entries[new_index].size ||
                 watcher->entries[old_index].modified_nanoseconds !=

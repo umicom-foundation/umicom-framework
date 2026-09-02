@@ -22,23 +22,42 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai mcp tool catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpToolCatalogue {
     UmiAiMcpToolDescriptor items[UMI_AI_MCP_MAX_TOOLS];
     size_t count;
     uint64_t revision;
 } UmiAiMcpToolCatalogue;
 
+/**
+ * Initialise ai mcp tool catalogue from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_mcp_tool_catalogue_init(
     UmiAiMcpToolCatalogue *catalogue);
 
+/**
+ * Add ai mcp tool catalogue only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_mcp_tool_catalogue_add(
     UmiAiMcpToolCatalogue *catalogue,
     const UmiAiMcpToolDescriptor *item);
 
+/**
+ * Find ai mcp tool catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiMcpToolDescriptor *umi_ai_mcp_tool_catalogue_find(
     const UmiAiMcpToolCatalogue *catalogue,
     const char *identifier);
 
+/**
+ * Find ai mcp tool catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiMcpToolDescriptor *umi_ai_mcp_tool_catalogue_at(
     const UmiAiMcpToolCatalogue *catalogue,
     size_t index);

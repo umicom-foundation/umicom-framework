@@ -141,38 +141,66 @@ static const UmiGtk4WidgetDefinition WIDGETS[] = {
     INTERNAL("gtk.shortcuts-shortcut", "GtkShortcutsShortcut", UMI_GTK4_WIDGET_SPECIALIST, 0U)
 };
 
+/*
+ * Return the number of records represented by gtk4 widget catalogue without changing their
+ * state.
+ */
 size_t umi_gtk4_widget_catalogue_count(void)
 {
     return sizeof(WIDGETS) / sizeof(WIDGETS[0]);
 }
 
+/*
+ * Find gtk4 widget catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiGtk4WidgetDefinition *umi_gtk4_widget_catalogue_at(size_t index)
 {
     return index < umi_gtk4_widget_catalogue_count() ? &WIDGETS[index] : NULL;
 }
 
+/*
+ * Find gtk4 widget catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiGtk4WidgetDefinition *umi_gtk4_widget_catalogue_find(
     const char *gtk_type_name)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (gtk_type_name == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_gtk4_widget_catalogue_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(WIDGETS[index].gtk_type_name, gtk_type_name) == 0)
             return &WIDGETS[index];
     }
     return NULL;
 }
 
+/*
+ * Return the number of records represented by gtk4 widget category without changing their
+ * state.
+ */
 size_t umi_gtk4_widget_category_count(UmiGtk4WidgetCategory category)
 {
     size_t index;
     size_t count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_gtk4_widget_catalogue_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (WIDGETS[index].category == category) count += 1U;
     }
     return count;
 }
 
+/*
+ * Provide the gtk4 widget coverage operation used by this module and its client
+ * applications.
+ */
 UmiGtk4CoverageReport umi_gtk4_widget_coverage(void)
 {
     UmiGtk4CoverageReport report = {0};
@@ -180,7 +208,9 @@ UmiGtk4CoverageReport umi_gtk4_widget_coverage(void)
     report.widget_count = umi_gtk4_widget_catalogue_count();
     report.minimum_major = 4U;
     report.minimum_minor = 10U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < report.widget_count; ++index) {
+        /* Select the behaviour associated with the requested command or state value. */
         switch (WIDGETS[index].exposure) {
             case UMI_GTK4_EXPOSURE_SEMANTIC_FACTORY:
                 report.semantic_factory_count += 1U;
@@ -203,8 +233,13 @@ UmiGtk4CoverageReport umi_gtk4_widget_coverage(void)
     return report;
 }
 
+/*
+ * Provide the gtk4 widget category text operation used by this module and its client
+ * applications.
+ */
 const char *umi_gtk4_widget_category_text(UmiGtk4WidgetCategory category)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (category) {
         case UMI_GTK4_WIDGET_WINDOW: return "window";
         case UMI_GTK4_WIDGET_LAYOUT: return "layout";
@@ -219,8 +254,13 @@ const char *umi_gtk4_widget_category_text(UmiGtk4WidgetCategory category)
     }
 }
 
+/*
+ * Provide the gtk4 widget exposure text operation used by this module and its client
+ * applications.
+ */
 const char *umi_gtk4_widget_exposure_text(UmiGtk4WidgetExposure exposure)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (exposure) {
         case UMI_GTK4_EXPOSURE_SEMANTIC_FACTORY: return "semantic-factory";
         case UMI_GTK4_EXPOSURE_BUILDER_NATIVE: return "builder-native";

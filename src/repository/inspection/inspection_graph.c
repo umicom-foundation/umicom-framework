@@ -25,7 +25,8 @@
 /* Build graph edges from canonical inventory records; no second dependency model is introduced. */
 UmiStatus umi_repository_inspection_graph_format(const char *root_name, const UmiRepositoryInventory *inventory, char *out_text, size_t capacity)
 {
-    size_t index, used=0U; if(root_name==NULL||inventory==NULL||out_text==NULL||capacity==0U) return UMI_STATUS_INVALID_ARGUMENT; out_text[0]='\0';
-    for(index=0U;index<inventory->count;++index){int written=snprintf(out_text+used,capacity-used,"%s -> %s\n",root_name,inventory->items[index].path); if(written<0) return UMI_STATUS_IO_ERROR; if((size_t)written>=capacity-used) return UMI_STATUS_CAPACITY_EXCEEDED; used+=(size_t)written;} return UMI_STATUS_OK;
+    size_t index, used=0U; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(root_name==NULL||inventory==NULL||out_text==NULL||capacity==0U) return UMI_STATUS_INVALID_ARGUMENT; out_text[0]='\0';
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(index=0U;index<inventory->count;++index){int written=snprintf(out_text+used,capacity-used,"%s -> %s\n",root_name,inventory->items[index].path); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(written<0) return UMI_STATUS_IO_ERROR; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if((size_t)written>=capacity-used) return UMI_STATUS_CAPACITY_EXCEEDED; used+=(size_t)written;} return UMI_STATUS_OK;
 }
 

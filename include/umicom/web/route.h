@@ -25,8 +25,18 @@
 extern "C" {
 #endif
 typedef UmiStatus (*UmiWebHandler)(const UmiWebRequest *request,UmiWebResponse *response,void *user_data);
+/**
+ * Represent the web route data shared with callers of this public contract.
+ */
 typedef struct UmiWebRoute { UmiHttpMethod method; char pattern[UMI_WEB_PATH_CAPACITY]; UmiWebHandler handler; void *user_data; } UmiWebRoute;
+/**
+ * Initialise web route from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_web_route_init(UmiWebRoute *route,UmiHttpMethod method,const char *pattern,UmiWebHandler handler,void *user_data);
+/**
+ * Provide the web route matches operation used by this module and its client applications.
+ */
 int umi_web_route_matches(const UmiWebRoute *route,const UmiWebRequest *request);
 #ifdef __cplusplus
 }

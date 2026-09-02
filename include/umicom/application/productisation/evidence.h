@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the productisation evidence data shared with callers of this public contract.
+ */
 typedef struct UmiProductisationEvidence {
     char application_id[UMI_PRODUCTISATION_ID_CAPACITY];
     UmiProductisationAssetKind asset_kind;
@@ -32,6 +35,10 @@ typedef struct UmiProductisationEvidence {
     uint64_t revision;
 } UmiProductisationEvidence;
 
+/**
+ * Represent the productisation evidence ledger data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductisationEvidenceLedger {
     UmiProductisationEvidence entries[UMI_PRODUCTISATION_MAX_EVIDENCE];
     size_t count;

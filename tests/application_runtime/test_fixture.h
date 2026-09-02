@@ -23,6 +23,10 @@
 #include "umicom/application/runtime/runtime.h"
 #include "umicom/application_ui/application_ui.h"
 
+/**
+ * Exercise test trader experience and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline const UmiApplicationExperienceDefinition *test_trader_experience(void)
 {
     const UmiApplicationExperienceDefinition *experience =
@@ -31,6 +35,10 @@ static inline const UmiApplicationExperienceDefinition *test_trader_experience(v
     return experience;
 }
 
+/**
+ * Exercise test capability probe and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline int test_capability_probe(const char *capability_id, void *user_data)
 {
     const char *blocked = (const char *)user_data;

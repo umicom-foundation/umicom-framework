@@ -20,6 +20,7 @@ UmiAdaptivePanelDecision umi_adaptive_panel_adaptation_resolve(UmiDesignSizeClas
     UmiAdaptivePanelDecision decision;
     decision.placement = preferred;
     decision.presentation = UMI_ADAPTIVE_PRESENTATION_INLINE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (size_class == UMI_DESIGN_SIZE_COMPACT && preferred != UMI_UI_PLACEMENT_CENTRE) {
         decision.presentation = UMI_ADAPTIVE_PRESENTATION_OVERLAY;
         decision.placement = UMI_UI_PLACEMENT_FLOATING;

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_CRASH_RECOVERY "umicom.document.recovery.crash_recovery"
 
+/**
+ * Provide the document capability crash recovery operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_crash_recovery(void);
 

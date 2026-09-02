@@ -24,6 +24,10 @@ typedef UmiStatus (*UmiProductExecutionInvoke)(
     char *evidence,
     size_t evidence_capacity,
     UmiProductExecutionOutcome *out_outcome);
+/**
+ * Represent the product execution adapter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionAdapter {
     void *context;
     UmiProductExecutionInvoke framework;

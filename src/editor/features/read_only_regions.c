@@ -36,6 +36,10 @@ static const UmiEditorFeatureDescriptor FEATURE = {
     .revision = 1U
 };
 
+/*
+ * Provide the editor feature read only regions operation used by this module and its
+ * client applications.
+ */
 const UmiEditorFeatureDescriptor *umi_editor_feature_read_only_regions(void)
 {
     return &FEATURE;

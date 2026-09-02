@@ -29,6 +29,9 @@ typedef UmiStatus (*UmiWebWorkbenchTransportExecuteFn)(
     const volatile bool *cancel_requested,
     UmiWebWorkbenchResponse *out_response);
 
+/**
+ * Represent the web workbench transport data shared with callers of this public contract.
+ */
 typedef struct UmiWebWorkbenchTransport {
     char provider_id[UMI_WEB_WORKBENCH_ID_CAPACITY];
     void *context;
@@ -37,14 +40,26 @@ typedef struct UmiWebWorkbenchTransport {
     bool supports_streaming;
 } UmiWebWorkbenchTransport;
 
+/**
+ * Initialise web workbench transport from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_web_workbench_transport_init(
     UmiWebWorkbenchTransport *transport,
     const char *provider_id,
     UmiWebWorkbenchTransportExecuteFn execute,
     void *context);
+/**
+ * Check that web workbench transport satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_web_workbench_transport_validate(
     const UmiWebWorkbenchTransport *transport,
     const UmiWebWorkbenchRequest *request);
+/**
+ * Perform web workbench transport through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_web_workbench_transport_execute(
     const UmiWebWorkbenchTransport *transport,
     const UmiWebWorkbenchRequest *request,

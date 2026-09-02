@@ -18,46 +18,60 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the optional string operation used by this module and its client applications. */
 static void optional_string(
     const char *json,
     const char *key,
     char *output,
     size_t capacity)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_json_string(
             json,
             key,
             output,
             capacity) != UMI_STATUS_OK) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > 0U) {
             output[0] = '\0';
         }
     }
 }
 
+/* Provide the optional raw operation used by this module and its client applications. */
 static void optional_raw(
     const char *json,
     const char *key,
     char *output,
     size_t capacity)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_json_raw(
             json,
             key,
             output,
             capacity) != UMI_STATUS_OK) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > 0U) {
             output[0] = '\0';
         }
     }
 }
 
+/*
+ * Provide the ai mcp decode initialize result operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_decode_initialize_result(
     const char *result_json,
     UmiAiMcpServerCapabilities *out_capabilities)
 {
     char server_info[UMI_AI_MCP_TEXT_CAPACITY];
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result_json == NULL || out_capabilities == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -70,19 +84,24 @@ UmiStatus umi_ai_mcp_decode_initialize_result(
         out_capabilities->protocol_version,
         sizeof(out_capabilities->protocol_version));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_mcp_json_has_key(result_json, "tools")) {
         out_capabilities->flags |= UMI_AI_MCP_CAPABILITY_TOOLS;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_mcp_json_has_key(result_json, "resources")) {
         out_capabilities->flags |= UMI_AI_MCP_CAPABILITY_RESOURCES;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_mcp_json_has_key(result_json, "prompts")) {
         out_capabilities->flags |= UMI_AI_MCP_CAPABILITY_PROMPTS;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_mcp_json_has_key(result_json, "logging")) {
         out_capabilities->flags |= UMI_AI_MCP_CAPABILITY_LOGGING;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_json_raw(
             result_json,
             "serverInfo",
@@ -103,16 +122,25 @@ UmiStatus umi_ai_mcp_decode_initialize_result(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp decode tool operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_decode_tool(
     const char *object_json,
     UmiAiMcpToolDescriptor *out_tool)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (object_json == NULL || out_tool == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(out_tool, 0, sizeof(*out_tool));
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_json_string(
             object_json,
             "name",
@@ -135,16 +163,25 @@ UmiStatus umi_ai_mcp_decode_tool(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp decode resource operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_decode_resource(
     const char *object_json,
     UmiAiMcpResourceDescriptor *out_resource)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (object_json == NULL || out_resource == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(out_resource, 0, sizeof(*out_resource));
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_json_string(
             object_json,
             "uri",
@@ -172,16 +209,25 @@ UmiStatus umi_ai_mcp_decode_resource(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp decode prompt operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_decode_prompt(
     const char *object_json,
     UmiAiMcpPromptDescriptor *out_prompt)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (object_json == NULL || out_prompt == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(out_prompt, 0, sizeof(*out_prompt));
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ai_mcp_json_string(
             object_json,
             "name",
@@ -204,6 +250,7 @@ UmiStatus umi_ai_mcp_decode_prompt(
     return UMI_STATUS_OK;
 }
 
+/* Provide the encode named raw operation used by this module and its client applications. */
 static UmiStatus encode_named_raw(
     const char *name_key,
     const char *name,
@@ -220,6 +267,7 @@ static UmiStatus encode_named_raw(
         name,
         escaped_name,
         sizeof(escaped_name));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -235,6 +283,7 @@ static UmiStatus encode_named_raw(
             ? raw_value
             : "{}");
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= output_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -242,6 +291,10 @@ static UmiStatus encode_named_raw(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp encode initialize params operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_encode_initialize_params(
     const char *client_name,
     const char *client_version,
@@ -253,6 +306,10 @@ UmiStatus umi_ai_mcp_encode_initialize_params(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client_name == NULL ||
         client_version == NULL ||
         out_json == NULL ||
@@ -264,12 +321,14 @@ UmiStatus umi_ai_mcp_encode_initialize_params(
         client_name,
         escaped_name,
         sizeof(escaped_name));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_mcp_json_escape_string(
         client_version,
         escaped_version,
         sizeof(escaped_version));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(
@@ -281,6 +340,7 @@ UmiStatus umi_ai_mcp_encode_initialize_params(
         escaped_name,
         escaped_version);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= output_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -288,12 +348,20 @@ UmiStatus umi_ai_mcp_encode_initialize_params(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp encode tool call params operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_encode_tool_call_params(
     const char *tool_name,
     const char *arguments_json,
     char *out_json,
     size_t output_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool_name == NULL ||
         arguments_json == NULL ||
         out_json == NULL ||
@@ -310,6 +378,10 @@ UmiStatus umi_ai_mcp_encode_tool_call_params(
         output_capacity);
 }
 
+/*
+ * Provide the ai mcp encode resource read params operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_mcp_encode_resource_read_params(
     const char *uri,
     char *out_json,
@@ -319,6 +391,10 @@ UmiStatus umi_ai_mcp_encode_resource_read_params(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (uri == NULL || out_json == NULL || output_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -327,6 +403,7 @@ UmiStatus umi_ai_mcp_encode_resource_read_params(
         uri,
         escaped_uri,
         sizeof(escaped_uri));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -342,12 +419,20 @@ UmiStatus umi_ai_mcp_encode_resource_read_params(
         : UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai mcp encode prompt get params operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_encode_prompt_get_params(
     const char *prompt_name,
     const char *arguments_json,
     char *out_json,
     size_t output_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (prompt_name == NULL ||
         arguments_json == NULL ||
         out_json == NULL ||

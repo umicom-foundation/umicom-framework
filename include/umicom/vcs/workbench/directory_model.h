@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs workbench directory model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchDirectoryModel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -45,19 +49,39 @@ typedef struct UmiVcsWorkbenchDirectoryModel {
     uint64_t revision;
 } UmiVcsWorkbenchDirectoryModel;
 
+/**
+ * Initialise vcs workbench directory model from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_workbench_directory_model_init(
     UmiVcsWorkbenchDirectoryModel *model);
+/**
+ * Add vcs workbench directory model only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_vcs_workbench_directory_model_add(
     UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryEntry *left,
     const UmiVcsAdvancedDirectoryEntry *right);
+/**
+ * Provide the vcs workbench directory model set filter operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_directory_model_set_filter(
     UmiVcsWorkbenchDirectoryModel *model,
     const UmiVcsAdvancedDirectoryFilter *filter,
     int show_equal);
+/**
+ * Provide the vcs workbench directory model select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_directory_model_select(
     UmiVcsWorkbenchDirectoryModel *model,
     size_t visible_index);
+/**
+ * Find vcs workbench directory model visible while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiVcsAdvancedDirectoryDiff *
 umi_vcs_workbench_directory_model_visible_at(
     const UmiVcsWorkbenchDirectoryModel *model,

@@ -30,20 +30,37 @@ extern "C" {
 
 #define UMI_AI_VECTOR_STORE_CAPACITY 128U
 
+/**
+ * Represent the ai vector entry data shared with callers of this public contract.
+ */
 typedef struct UmiAiVectorEntry {
     UmiAiChunk chunk;
     UmiAiEmbedding embedding;
 } UmiAiVectorEntry;
 
+/**
+ * Represent the ai vector store data shared with callers of this public contract.
+ */
 typedef struct UmiAiVectorStore {
     UmiAiVectorEntry entries[UMI_AI_VECTOR_STORE_CAPACITY];
     size_t count;
 } UmiAiVectorStore;
 
+/**
+ * Initialise ai vector store from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ai_vector_store_init(UmiAiVectorStore *store);
+/**
+ * Add ai vector store only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ai_vector_store_add(UmiAiVectorStore *store,
                                   const UmiAiChunk *chunk,
                                   const UmiAiEmbedding *embedding);
+/**
+ * Provide the ai vector store search operation used by this module and its client
+ * applications.
+ */
 size_t umi_ai_vector_store_search(const UmiAiVectorStore *store,
                                   const UmiAiEmbedding *query,
                                   size_t *indices,

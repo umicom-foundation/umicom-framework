@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_profiles/editor.h"
 
+/*
+ * Provide the studio surface profile editor operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_editor(void)
 {
     static const UmiStudioRuntimeSurfaceBinding binding = {

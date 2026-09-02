@@ -32,6 +32,9 @@ extern "C" {
 #define UMI_DEBUG_WORKSPACE_ID_CAPACITY 128U
 #define UMI_DEBUG_WORKSPACE_LABEL_CAPACITY 256U
 
+/**
+ * Represent the debug workspace data shared with callers of this public contract.
+ */
 typedef struct UmiDebugWorkspace UmiDebugWorkspace;
 
 /*
@@ -62,90 +65,177 @@ typedef struct UmiDebugWorkspaceSnapshot {
     int follows_active_thread;
 } UmiDebugWorkspaceSnapshot;
 
+/**
+ * Initialise debug workspace from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_debug_workspace_create(
     UmiDebugService *service,
     UmiDebugController *controller,
     UmiDebugWorkspace **out_workspace
 );
+/**
+ * Release or reset state held by debug workspace so the same storage can be reused safely.
+ */
 void umi_debug_workspace_destroy(UmiDebugWorkspace *workspace);
 
+/**
+ * Provide the debug workspace refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_refresh(UmiDebugWorkspace *workspace);
+/**
+ * Provide the debug workspace snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_snapshot(
     UmiDebugWorkspace *workspace,
     UmiDebugWorkspaceSnapshot *out_snapshot
 );
 
+/**
+ * Provide the debug workspace select thread operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_select_thread(
     UmiDebugWorkspace *workspace,
     const char *thread_id
 );
+/**
+ * Provide the debug workspace select frame operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_select_frame(
     UmiDebugWorkspace *workspace,
     const char *frame_id
 );
+/**
+ * Provide the debug workspace select scope operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_select_scope(
     UmiDebugWorkspace *workspace,
     const char *scope_id
 );
+/**
+ * Provide the debug workspace set follow active thread operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_workspace_set_follow_active_thread(
     UmiDebugWorkspace *workspace,
     int enabled
 );
 
+/**
+ * Provide the debug workspace add watch operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_add_watch(
     UmiDebugWorkspace *workspace,
     const char *expression,
     char *out_watch_id,
     size_t out_watch_id_capacity
 );
+/**
+ * Provide the debug workspace remove watch operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workspace_remove_watch(
     UmiDebugWorkspace *workspace,
     const char *watch_id
 );
+/**
+ * Provide the debug workspace clear watches operation used by this module and its client
+ * applications.
+ */
 void umi_debug_workspace_clear_watches(UmiDebugWorkspace *workspace);
 
+/**
+ * Provide the debug workspace set breakpoint enabled operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_workspace_set_breakpoint_enabled(
     UmiDebugWorkspace *workspace,
     const char *breakpoint_id,
     int enabled
 );
+/**
+ * Provide the debug workspace remove breakpoint operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_workspace_remove_breakpoint(
     UmiDebugWorkspace *workspace,
     const char *breakpoint_id
 );
+/**
+ * Provide the debug workspace clear breakpoints operation used by this module and its
+ * client applications.
+ */
 void umi_debug_workspace_clear_breakpoints(UmiDebugWorkspace *workspace);
+/**
+ * Provide the debug workspace clear console operation used by this module and its client
+ * applications.
+ */
 void umi_debug_workspace_clear_console(UmiDebugWorkspace *workspace);
 
+/**
+ * Find debug workspace thread while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_workspace_thread_at(
     UmiDebugWorkspace *workspace,
     size_t index,
     UmiDebugThreadSnapshot *out_thread
 );
+/**
+ * Find debug workspace frame while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_debug_workspace_frame_at(
     UmiDebugWorkspace *workspace,
     size_t visible_index,
     UmiDebugStackFrameSnapshot *out_frame
 );
+/**
+ * Find debug workspace scope while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_debug_workspace_scope_at(
     UmiDebugWorkspace *workspace,
     size_t visible_index,
     UmiDebugScopeSnapshot *out_scope
 );
+/**
+ * Find debug workspace variable while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_workspace_variable_at(
     UmiDebugWorkspace *workspace,
     size_t visible_index,
     UmiDebugVariableSnapshot *out_variable
 );
+/**
+ * Find debug workspace watch while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_debug_workspace_watch_at(
     UmiDebugWorkspace *workspace,
     size_t index,
     UmiDebugWatchSnapshot *out_watch
 );
+/**
+ * Find debug workspace breakpoint while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_workspace_breakpoint_at(
     UmiDebugWorkspace *workspace,
     size_t index,
     UmiDebugBreakpointSnapshot *out_breakpoint
 );
+/**
+ * Find debug workspace console entry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_debug_workspace_console_entry_at(
     UmiDebugWorkspace *workspace,
     size_t index,

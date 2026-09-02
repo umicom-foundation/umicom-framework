@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/risk_factor_vector.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseRiskFactorVector v; double x=0.0; umi_enterprise_risk_factor_vector_init(&v); CHECK(umi_enterprise_risk_factor_vector_add(&v,"USD01",3.0)==UMI_STATUS_OK); CHECK(umi_enterprise_risk_factor_vector_get(&v,"USD01",&x)==UMI_STATUS_OK); CHECK(x==3.0); return 0; }

@@ -25,9 +25,14 @@ static UmiStatus copy_text(char *destination, size_t capacity,
                            const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
@@ -38,7 +43,9 @@ static UmiProductCapabilityUsage *find_mutable(
     UmiProductCapabilityMatrix *matrix, const char *capability_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < matrix->usage_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(matrix->usages[index].capability_id, capability_id) == 0)
             return &matrix->usages[index];
     }
@@ -64,23 +71,30 @@ static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
     /* The first reference resolves the capability once and records whether its
      * Framework declaration is missing. Later references reuse this result. */
     if (usage == NULL) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (matrix->usage_count >= UMI_PRODUCTISATION_MAX_CAPABILITIES)
             return UMI_STATUS_CAPACITY_EXCEEDED;
         usage = &matrix->usages[matrix->usage_count++];
         (void)memset(usage, 0, sizeof(*usage));
         status = copy_text(usage->capability_id,
                            sizeof(usage->capability_id), capability_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         capability = umi_framework_capability_catalogue_find(capability_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (capability == NULL) {
             usage->missing_from_framework = 1;
             status = copy_text(usage->category, sizeof(usage->category),
                                "unregistered");
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             usage->maturity = capability->maturity;
             status = copy_text(usage->category, sizeof(usage->category),
                                capability->category);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     /* Count each application once even when several of its panels and features
@@ -89,7 +103,9 @@ static UmiStatus touch_usage(UmiProductCapabilityMatrix *matrix,
         usage->application_mask |= application_bit;
         usage->application_count += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (feature_reference) usage->feature_reference_count += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (panel_reference) usage->panel_reference_count += 1U;
     return UMI_STATUS_OK;
 }
@@ -104,6 +120,10 @@ UmiStatus umi_product_capability_matrix_build(
     const size_t application_count =
         umi_application_experience_catalogue_count();
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_matrix == NULL ||
         application_count > UMI_PRODUCTISATION_MAX_APPLICATIONS)
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -116,17 +136,25 @@ UmiStatus umi_product_capability_matrix_build(
         const UmiApplicationExperienceDefinition *definition =
             umi_application_experience_catalogue_at(application_index);
         size_t index;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (definition == NULL) return UMI_STATUS_INVALID_STATE;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < definition->feature_count; ++index) {
             UmiStatus status = touch_usage(out_matrix,
                 definition->features[index].required_capability,
                 application_index, 1, 0);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < definition->panel_count; ++index) {
             UmiStatus status = touch_usage(out_matrix,
                 definition->panels[index].required_capability,
                 application_index, 0, 1);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
     }
@@ -138,8 +166,16 @@ UmiStatus umi_product_capability_matrix_build(
         const UmiApplicationComponentDefinition *component =
             umi_application_component_catalogue_at(component_index);
         UmiProductCapabilityUsage *usage;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (component == NULL) continue;
         usage = find_mutable(out_matrix, component->capability_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (usage != NULL) usage->component_count += 1U;
     }
 
@@ -148,14 +184,17 @@ UmiStatus umi_product_capability_matrix_build(
          ++usage_index) {
         UmiProductCapabilityUsage *usage = &out_matrix->usages[usage_index];
         usage->shared_across_applications = usage->application_count >= 2U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (usage->shared_across_applications) out_matrix->shared_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (usage->missing_from_framework) out_matrix->missing_count += 1U;
-        else if (usage->maturity == UMI_CAPABILITY_IMPLEMENTED)
+        else /* Apply this branch only when its contract condition is satisfied. */ if (usage->maturity == UMI_CAPABILITY_IMPLEMENTED)
             out_matrix->implemented_count += 1U;
-        else if (usage->maturity == UMI_CAPABILITY_FOUNDATION)
+        else /* Apply this branch only when its contract condition is satisfied. */ if (usage->maturity == UMI_CAPABILITY_FOUNDATION)
             out_matrix->foundation_count += 1U;
-        else if (usage->maturity == UMI_CAPABILITY_PLANNED)
+        else /* Apply this branch only when its contract condition is satisfied. */ if (usage->maturity == UMI_CAPABILITY_PLANNED)
             out_matrix->planned_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (usage->panel_reference_count > 0U && usage->component_count == 0U)
             out_matrix->missing_component_count += 1U;
     }
@@ -168,8 +207,14 @@ const UmiProductCapabilityUsage *umi_product_capability_matrix_find(
     const char *capability_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (matrix == NULL || capability_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < matrix->usage_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(matrix->usages[index].capability_id, capability_id) == 0)
             return &matrix->usages[index];
     }
@@ -181,6 +226,10 @@ int umi_product_capability_usage_has_application(
     const UmiProductCapabilityUsage *usage,
     size_t application_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (usage == NULL || application_index >= 64U) return 0;
     return (usage->application_mask &
             (UINT64_C(1) << application_index)) != 0U;

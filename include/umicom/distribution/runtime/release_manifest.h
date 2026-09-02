@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr release manifest data shared with callers of this public contract.
+ */
 typedef struct UmiDrReleaseManifest { char id[UMI_DR_ID_CAPACITY]; char application_id[UMI_DR_ID_CAPACITY]; UmiDrVersion version; UmiDrChannelKind channel; size_t artifact_count; size_t platform_count; uint64_t fingerprint; } UmiDrReleaseManifest;
+/**
+ * Initialise dr release manifest from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_release_manifest_init(UmiDrReleaseManifest *value);
+/**
+ * Check that dr release manifest satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_dr_release_manifest_valid(const UmiDrReleaseManifest *value);
+/**
+ * Provide the dr release manifest fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_dr_release_manifest_fingerprint(const UmiDrReleaseManifest *value);
 
 #ifdef __cplusplus

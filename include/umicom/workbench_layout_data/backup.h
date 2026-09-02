@@ -27,6 +27,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout backup options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutBackupOptions {
     uint32_t structure_size;
     bool include_sessions;
@@ -36,6 +40,10 @@ typedef struct UmiWorkbenchLayoutBackupOptions {
     bool include_migrations;
 } UmiWorkbenchLayoutBackupOptions;
 
+/**
+ * Represent the workbench layout backup result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutBackupResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -45,9 +53,17 @@ typedef struct UmiWorkbenchLayoutBackupResult {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutBackupResult;
 
+/**
+ * Provide the workbench layout backup options default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutBackupOptions
 umi_workbench_layout_backup_options_default(void);
 
+/**
+ * Initialise workbench layout backup from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_backup_create(
     const UmiDataServer *server,
     const char *backup_id,
@@ -58,6 +74,10 @@ UmiStatus umi_workbench_layout_backup_create(
     size_t capacity,
     UmiWorkbenchLayoutBackupResult *out_result);
 
+/**
+ * Check that workbench layout backup satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_workbench_layout_backup_validate(
     const char *backup,
     size_t length,

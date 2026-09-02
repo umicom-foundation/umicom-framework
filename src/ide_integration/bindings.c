@@ -16,9 +16,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise ide integration bindings from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ide_integration_bindings_init(
     UmiIdeIntegrationBindings *bindings)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) return;
     (void)memset(bindings, 0, sizeof(*bindings));
     bindings->revision = 1U;

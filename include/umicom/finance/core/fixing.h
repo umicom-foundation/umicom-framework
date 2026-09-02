@@ -20,6 +20,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the fixing data shared with callers of this public contract.
+ */
 typedef struct UmiFixing { UmiMarketDataKey key; UmiFinancialDate date; double value; int64_t timestamp; } UmiFixing;
 /* Initialize fixing. */ UmiStatus umi_fixing_init(UmiFixing *f,const UmiMarketDataKey *k,UmiFinancialDate d,double value,int64_t ts);
 /* Validate fixing. */ bool umi_fixing_is_valid(const UmiFixing *f);

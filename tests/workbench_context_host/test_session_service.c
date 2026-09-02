@@ -21,6 +21,10 @@
 #include "umicom/platform/session_store.h"
 #include "umicom/workbench_context_host/session_service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextHostTestFixture fixture;
@@ -43,6 +47,7 @@ int main(void)
      * boundary in the line-safe encoded representation.
      */
     assert(umi_session_store_count(store) >= 2U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_session_store_count(store); ++index) {
         UmiSessionEntrySnapshot snapshot;
 

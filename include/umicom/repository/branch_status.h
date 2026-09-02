@@ -26,6 +26,9 @@ extern "C" {
 
 #define UMI_REPOSITORY_BRANCH_NAME_CAPACITY 256U
 
+/**
+ * Represent the repository branch status data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryBranchStatus {
     char branch[UMI_REPOSITORY_BRANCH_NAME_CAPACITY];
     char upstream[UMI_REPOSITORY_BRANCH_NAME_CAPACITY];
@@ -34,13 +37,25 @@ typedef struct UmiRepositoryBranchStatus {
     int detached;
 } UmiRepositoryBranchStatus;
 
+/**
+ * Initialise repository branch status from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_branch_status_init(UmiRepositoryBranchStatus *status);
+/**
+ * Copy repository branch status into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_repository_branch_status_set(UmiRepositoryBranchStatus *status,
                                            const char *branch,
                                            const char *upstream,
                                            size_t ahead,
                                            size_t behind,
                                            int detached);
+/**
+ * Check that repository branch status satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_repository_branch_status_validate(const UmiRepositoryBranchStatus *status);
 
 #ifdef __cplusplus

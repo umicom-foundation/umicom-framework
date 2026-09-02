@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/semantic_element.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebSemanticElement e; CHECK(umi_native_web_semantic_element_init(&e,"root","main") == UMI_STATUS_OK); CHECK(umi_native_web_semantic_element_validate(&e) == UMI_STATUS_OK);

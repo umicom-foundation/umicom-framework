@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrSignaturePolicy p; umi_dr_signature_policy_init(&p); CHECK(!umi_dr_signature_policy_accept(&p,false,true,true)); CHECK(umi_dr_signature_policy_accept(&p,true,true,false));
     return 0;

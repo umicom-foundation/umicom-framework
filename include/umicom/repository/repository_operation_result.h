@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository operation result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryOperationResult { UmiStatus status; size_t issue_count; size_t warning_count; size_t error_count; size_t action_count; char text[UMI_REPOSITORY_INSPECTION_OUTPUT_CAPACITY]; } UmiRepositoryOperationResult;
 /* Initialise an empty operation result. */
 void umi_repository_operation_result_init(UmiRepositoryOperationResult *result);

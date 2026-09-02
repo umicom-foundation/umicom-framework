@@ -40,6 +40,9 @@ extern "C" {
 #define UMI_APPLICATION_RUNTIME_PATH_CAPACITY 2048U
 #define UMI_APPLICATION_RUNTIME_MESSAGE_CAPACITY 512U
 
+/**
+ * List the named application runtime state values accepted by this public contract.
+ */
 typedef enum UmiApplicationRuntimeState {
     UMI_APPLICATION_RUNTIME_UNKNOWN = 0,
     UMI_APPLICATION_RUNTIME_UNAVAILABLE = 1,
@@ -51,6 +54,10 @@ typedef enum UmiApplicationRuntimeState {
     UMI_APPLICATION_RUNTIME_STOPPING = 7
 } UmiApplicationRuntimeState;
 
+/**
+ * Represent the application runtime registration data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationRuntimeRegistration {
     uint32_t structure_size;
     const char *application_id;
@@ -70,6 +77,10 @@ typedef struct UmiApplicationRuntimeRegistration {
     bool visible_when_unavailable;
 } UmiApplicationRuntimeRegistration;
 
+/**
+ * Represent the application runtime record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationRuntimeRecord {
     char application_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
     char display_name[UMI_APPLICATION_RUNTIME_NAME_CAPACITY];
@@ -98,6 +109,10 @@ typedef struct UmiApplicationRuntimeRecord {
     int last_exit_code;
 } UmiApplicationRuntimeRecord;
 
+/**
+ * Represent the application runtime snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationRuntimeSnapshot {
     char active_application_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
     size_t application_count;
@@ -108,19 +123,43 @@ typedef struct UmiApplicationRuntimeSnapshot {
     uint64_t revision;
 } UmiApplicationRuntimeSnapshot;
 
+/**
+ * Represent the application runtime catalogue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationRuntimeCatalogue UmiApplicationRuntimeCatalogue;
 
+/**
+ * Initialise application runtime catalogue from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_runtime_catalogue_create(
     UmiApplicationRuntimeCatalogue **out_catalogue);
+/**
+ * Release or reset state held by application runtime catalogue so the same storage can be
+ * reused safely.
+ */
 void umi_application_runtime_catalogue_destroy(
     UmiApplicationRuntimeCatalogue *catalogue);
 
+/**
+ * Check that application runtime registration satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_runtime_registration_validate(
     const UmiApplicationRuntimeRegistration *registration);
 
+/**
+ * Add application runtime catalogue only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_application_runtime_catalogue_register(
     UmiApplicationRuntimeCatalogue *catalogue,
     const UmiApplicationRuntimeRegistration *registration);
+/**
+ * Provide the application runtime catalogue upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_upsert(
     UmiApplicationRuntimeCatalogue *catalogue,
     const UmiApplicationRuntimeRegistration *registration);
@@ -134,48 +173,92 @@ UmiStatus umi_application_runtime_catalogue_upsert(
 UmiStatus umi_application_runtime_catalogue_seed_portfolio(
     UmiApplicationRuntimeCatalogue *catalogue);
 
+/**
+ * Provide the application runtime catalogue set presence operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_set_presence(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,
     bool installed,
     bool compatible,
     bool enabled);
+/**
+ * Provide the application runtime catalogue set state operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_set_state(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,
     UmiApplicationRuntimeState state,
     const char *message);
+/**
+ * Provide the application runtime catalogue set process operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_set_process(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,
     uint64_t process_token);
+/**
+ * Provide the application runtime catalogue pin operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_pin(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,
     bool pinned);
+/**
+ * Provide the application runtime catalogue activate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_activate(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id);
+/**
+ * Provide the application runtime catalogue mark exit operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_mark_exit(
     UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,
     int exit_code,
     const char *message);
 
+/**
+ * Find application runtime catalogue while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_runtime_catalogue_find(
     const UmiApplicationRuntimeCatalogue *catalogue,
     const char *application_id,
     UmiApplicationRuntimeRecord *out_record);
+/**
+ * Find application runtime catalogue while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_application_runtime_catalogue_at(
     const UmiApplicationRuntimeCatalogue *catalogue,
     size_t index,
     UmiApplicationRuntimeRecord *out_record);
+/**
+ * Return the number of records represented by application runtime catalogue without
+ * changing their state.
+ */
 size_t umi_application_runtime_catalogue_count(
     const UmiApplicationRuntimeCatalogue *catalogue);
+/**
+ * Provide the application runtime catalogue snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_runtime_catalogue_snapshot(
     const UmiApplicationRuntimeCatalogue *catalogue,
     UmiApplicationRuntimeSnapshot *out_snapshot);
 
+/**
+ * Provide the application runtime state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_application_runtime_state_text(
     UmiApplicationRuntimeState state);
 

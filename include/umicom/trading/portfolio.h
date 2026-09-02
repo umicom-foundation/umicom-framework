@@ -27,6 +27,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the portfolio gross quantity operation used by this module and its client
+ * applications.
+ */
 double umi_portfolio_gross_quantity(const UmiPositionBook *book);
 #ifdef __cplusplus
 }

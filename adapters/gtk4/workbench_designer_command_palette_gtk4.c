@@ -17,10 +17,18 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the command palette search changed operation used by this module and its client
+ * applications.
+ */
 static void command_palette_search_changed(GtkEditable *editable, gpointer user_data)
 {
     UmiWorkbenchDesignerGtk4 *designer = user_data;
     const char *query;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return;
     query = gtk_editable_get_text(editable);
     (void)umi_workbench_designer_command_palette_filter(
@@ -28,6 +36,10 @@ static void command_palette_search_changed(GtkEditable *editable, gpointer user_
     umi_workbench_designer_gtk4_refresh_command_palette(designer);
 }
 
+/*
+ * Provide the workbench designer gtk4 build command palette operation used by this module
+ * and its client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_command_palette(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -45,24 +57,38 @@ GtkWidget *umi_workbench_designer_gtk4_build_command_palette(
     return popover;
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh command palette operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_command_palette(
     UmiWorkbenchDesignerGtk4 *designer)
 {
     GtkWidget *child;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->command_list == NULL) return;
     child = gtk_widget_get_first_child(designer->command_list);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_list_box_remove(GTK_LIST_BOX(designer->command_list), child);
         child = next;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < designer->bundle.command_palette.count; ++index) {
         const UmiWorkbenchDesignerCommandPaletteItem *item =
             &designer->bundle.command_palette.items[index];
         GtkWidget *row;
         GtkWidget *label;
         GtkWidget *shortcut;
+        /* Apply this operation only while the related capability or state is available. */
         if (!item->visible) continue;
         row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
         label = gtk_label_new(item->label);

@@ -24,9 +24,23 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr provenance data shared with callers of this public contract.
+ */
 typedef struct UmiDrProvenance { char id[UMI_DR_ID_CAPACITY]; char source_revision[UMI_DR_DIGEST_CAPACITY]; char toolchain[UMI_DR_TEXT_CAPACITY]; char builder[UMI_DR_TEXT_CAPACITY]; bool reproducible; } UmiDrProvenance;
+/**
+ * Initialise dr provenance from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_dr_provenance_init(UmiDrProvenance *value);
+/**
+ * Check that dr provenance satisfies its contract before another service relies on it.
+ */
 bool umi_dr_provenance_valid(const UmiDrProvenance *value);
+/**
+ * Provide the dr provenance fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_dr_provenance_fingerprint(const UmiDrProvenance *value);
 
 #ifdef __cplusplus

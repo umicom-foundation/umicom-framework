@@ -28,6 +28,9 @@ extern "C" {
 
 #define UMI_TEST_RERUN_POLICY_API_VERSION 1U
 
+/**
+ * List the named test rerun reason values accepted by this public contract.
+ */
 typedef enum UmiTestRerunReason {
     UMI_TEST_RERUN_REASON_NONE = 0U,
     UMI_TEST_RERUN_REASON_FAILED = 1U << 0,
@@ -38,6 +41,9 @@ typedef enum UmiTestRerunReason {
     UMI_TEST_RERUN_REASON_SKIPPED = 1U << 5
 } UmiTestRerunReason;
 
+/**
+ * Represent the test rerun policy data shared with callers of this public contract.
+ */
 typedef struct UmiTestRerunPolicy {
     uint32_t struct_size;
     uint32_t api_version;
@@ -50,6 +56,9 @@ typedef struct UmiTestRerunPolicy {
     int include_disabled;
 } UmiTestRerunPolicy;
 
+/**
+ * Represent the test rerun candidate data shared with callers of this public contract.
+ */
 typedef struct UmiTestRerunCandidate {
     uint32_t struct_size;
     uint32_t api_version;
@@ -65,6 +74,9 @@ typedef struct UmiTestRerunCandidate {
     int selected;
 } UmiTestRerunCandidate;
 
+/**
+ * Represent the test rerun plan snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiTestRerunPlanSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -80,35 +92,81 @@ typedef struct UmiTestRerunPlanSnapshot {
     uint64_t revision;
 } UmiTestRerunPlanSnapshot;
 
+/**
+ * Represent the test rerun plan data shared with callers of this public contract.
+ */
 typedef struct UmiTestRerunPlan UmiTestRerunPlan;
 
+/**
+ * Initialise test rerun policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_test_rerun_policy_init(UmiTestRerunPolicy *policy);
+/**
+ * Initialise test rerun plan from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_rerun_plan_create(UmiTestRerunPlan **out_plan);
+/**
+ * Release or reset state held by test rerun plan so the same storage can be reused safely.
+ */
 void umi_test_rerun_plan_destroy(UmiTestRerunPlan *plan);
+/**
+ * Provide the test rerun plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_rerun_plan_build(
     UmiTestRerunPlan *plan,
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results,
     const UmiTestRerunPolicy *policy);
+/**
+ * Find test rerun plan set while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_test_rerun_plan_set_selected(
     UmiTestRerunPlan *plan,
     const char *item_id,
     int selected);
+/**
+ * Provide the test rerun plan select all operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_rerun_plan_select_all(UmiTestRerunPlan *plan, int selected);
+/**
+ * Provide the test rerun plan selection operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_rerun_plan_selection(
     const UmiTestRerunPlan *plan,
     UmiTestPlatformSelection *out_selection);
+/**
+ * Provide the test rerun plan operation operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_rerun_plan_operation(
     const UmiTestRerunPlan *plan,
     const UmiTestRerunPolicy *policy,
     UmiTestPlatformOperationPlan *out_operation);
+/**
+ * Find test rerun plan while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_test_rerun_plan_at(
     const UmiTestRerunPlan *plan,
     size_t position,
     UmiTestRerunCandidate *out_candidate);
+/**
+ * Provide the test rerun plan snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_rerun_plan_snapshot(
     const UmiTestRerunPlan *plan,
     UmiTestRerunPlanSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by test rerun plan without changing their
+ * state.
+ */
 size_t umi_test_rerun_plan_count(const UmiTestRerunPlan *plan);
 
 #ifdef __cplusplus

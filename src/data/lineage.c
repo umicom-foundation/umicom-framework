@@ -18,25 +18,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise lineage store from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_lineage_store_init(UmiLineageStore *store,
                                  const UmiStore *data_store)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || data_store == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(store, 0, sizeof(*store));
     status = umi_repository_init(&store->repository,
                                  data_store,
                                  "lineage");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) store->next_sequence = 1U;
     return status;
 }
 
+/* Add lineage only after its inputs and available capacity have been checked. */
 UmiStatus umi_lineage_append(UmiLineageStore *store,
                              UmiLineageRecord *record)
 {
     char key[32];
     char text[1024];
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || record == NULL || record->entity_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -52,12 +66,14 @@ UmiStatus umi_lineage_append(UmiLineageStore *store,
                        record->actor,
                        (unsigned long long)record->correlation_id,
                        (unsigned long long)record->occurred_at_nanoseconds);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     return umi_repository_save(&store->repository, key, text);
 }
 
+/* Read lineage into validated module state and return a status when input cannot be used. */
 UmiStatus umi_lineage_load(const UmiLineageStore *store,
                            uint64_t sequence,
                            UmiLineageRecord *out_record)
@@ -68,18 +84,28 @@ UmiStatus umi_lineage_load(const UmiLineageStore *store,
     char *cursor;
     size_t count = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || sequence == 0U || out_record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)snprintf(key, sizeof(key), "%020llu",
                    (unsigned long long)sequence);
     status = umi_repository_load(&store->repository, key, text, sizeof(text));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     cursor = strtok(text, "\t");
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cursor != NULL && count < 6U) {
         fields[count++] = cursor;
         cursor = strtok(NULL, "\t");
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count != 6U) return UMI_STATUS_PARSE_ERROR;
     (void)memset(out_record, 0, sizeof(*out_record));
     out_record->sequence = sequence;

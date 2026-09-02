@@ -31,6 +31,7 @@ int main(void)
                      UMI_STATUS_OK);
     UMI_TEST_REQUIRE(catalogue->count ==
                      umi_application_experience_catalogue_count());
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_experience_catalogue_count();
          ++index) {

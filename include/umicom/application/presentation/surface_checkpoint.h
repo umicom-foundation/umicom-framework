@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application presentation surface checkpoint item data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceCheckpointItem {
     const char *component_id;
     int visible;
@@ -29,6 +33,10 @@ typedef struct UmiApplicationPresentationSurfaceCheckpointItem {
     int dirty;
 } UmiApplicationPresentationSurfaceCheckpointItem;
 
+/**
+ * Represent the application presentation surface checkpoint data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceCheckpoint {
     const char *recipe_id;
     UmiApplicationPresentationSurfaceCheckpointItem
@@ -37,9 +45,17 @@ typedef struct UmiApplicationPresentationSurfaceCheckpoint {
     uint64_t source_revision;
 } UmiApplicationPresentationSurfaceCheckpoint;
 
+/**
+ * Provide the application presentation surface checkpoint capture operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_surface_checkpoint_capture(
     const UmiApplicationPresentationSurfaceSession *session,
     UmiApplicationPresentationSurfaceCheckpoint *out_checkpoint);
+/**
+ * Provide the application presentation surface checkpoint restore operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_surface_checkpoint_restore(
     UmiApplicationPresentationSurfaceSession *session,
     const UmiApplicationPresentationSurfaceCheckpoint *checkpoint);

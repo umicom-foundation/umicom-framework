@@ -15,5 +15,13 @@
 #include "umicom/ui/analytics/status_indicator.h"
 
 #include <string.h>
-UmiStatus umi_analytics_status_indicator_init(UmiAnalyticsStatusIndicator *item){if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(item,0,sizeof *item);(void)umi_analytics_copy_text(item->label,sizeof item->label,"Status");item->severity=UMI_ANALYTICS_SEVERITY_INFO;item->active=1;return UMI_STATUS_OK;}
-int umi_analytics_status_indicator_valid(const UmiAnalyticsStatusIndicator *item){if(item==NULL)return 0;return (item->severity>=UMI_ANALYTICS_SEVERITY_INFO&&item->severity<=UMI_ANALYTICS_SEVERITY_ERROR)?1:0;}
+/*
+ * Initialise analytics status indicator from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_analytics_status_indicator_init(UmiAnalyticsStatusIndicator *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(item,0,sizeof *item);(void)umi_analytics_copy_text(item->label,sizeof item->label,"Status");item->severity=UMI_ANALYTICS_SEVERITY_INFO;item->active=1;return UMI_STATUS_OK;}
+/*
+ * Check that analytics status indicator satisfies its contract before another service
+ * relies on it.
+ */
+int umi_analytics_status_indicator_valid(const UmiAnalyticsStatusIndicator *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return (item->severity>=UMI_ANALYTICS_SEVERITY_INFO&&item->severity<=UMI_ANALYTICS_SEVERITY_ERROR)?1:0;}

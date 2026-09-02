@@ -23,5 +23,5 @@
 /* Verify this module remains callable through its public Framework contract. */
 int main(void)
 {
-    UmiRepositoryRemediationAction a; if(umi_repository_remediation_action_set(&a,UMI_REMEDIATION_REVIEW_WORKTREE,UMI_REPOSITORY_REMEDIATION_DESTRUCTIVE,"x","y","z",1)!=UMI_STATUS_OK)return 1; return a.executable_automatically==0?0:1;
+    UmiRepositoryRemediationAction a; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_repository_remediation_action_set(&a,UMI_REMEDIATION_REVIEW_WORKTREE,UMI_REPOSITORY_REMEDIATION_DESTRUCTIVE,"x","y","z",1)!=UMI_STATUS_OK)return 1; return a.executable_automatically==0?0:1;
 }

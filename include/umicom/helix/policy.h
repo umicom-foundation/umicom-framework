@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix policy data shared with callers of this public contract.
+ */
 typedef struct UmiHelixPolicy {
     uint32_t autonomy_level;
     int allow_source_changes;
@@ -36,10 +39,22 @@ typedef struct UmiHelixPolicy {
     double minimum_fitness;
 } UmiHelixPolicy;
 
+/**
+ * Provide the helix policy default operation used by this module and its client
+ * applications.
+ */
 UmiHelixPolicy umi_helix_policy_default(void);
+/**
+ * Provide the helix policy can modify operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_policy_can_modify(const UmiHelixPolicy *policy,
                                       int dependency_change,
                                       int human_approved);
+/**
+ * Provide the helix policy can promote operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_policy_can_promote(const UmiHelixPolicy *policy,
                                        double fitness,
                                        int human_approved);

@@ -18,4 +18,8 @@
  */
 #include "umicom/product/launcher.h"
 #include <stddef.h>
-UmiStatus umi_product_launcher_select(const UmiProductProfile *p,UmiProductLaunchMode preferred,UmiProductFrontendKind *o){size_t i;UmiProductFrontendKind wanted;if(o==NULL||umi_product_profile_validate(p)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;wanted=preferred==UMI_PRODUCT_LAUNCH_CONSOLE?UMI_PRODUCT_FRONTEND_CONSOLE:(preferred==UMI_PRODUCT_LAUNCH_WEB?UMI_PRODUCT_FRONTEND_WEB:UMI_PRODUCT_FRONTEND_GTK4);for(i=0U;i<p->frontend_count;++i)if(p->frontends[i].enabled&&p->frontends[i].kind==wanted){*o=wanted;return UMI_STATUS_OK;}return UMI_STATUS_NOT_FOUND;}
+/*
+ * Provide the product launcher select operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_product_launcher_select(const UmiProductProfile *p,UmiProductLaunchMode preferred,UmiProductFrontendKind *o){size_t i;UmiProductFrontendKind wanted;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(o==NULL||umi_product_profile_validate(p)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;wanted=preferred==UMI_PRODUCT_LAUNCH_CONSOLE?UMI_PRODUCT_FRONTEND_CONSOLE:(preferred==UMI_PRODUCT_LAUNCH_WEB?UMI_PRODUCT_FRONTEND_WEB:UMI_PRODUCT_FRONTEND_GTK4);/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<p->frontend_count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p->frontends[i].enabled&&p->frontends[i].kind==wanted){*o=wanted;return UMI_STATUS_OK;}return UMI_STATUS_NOT_FOUND;}

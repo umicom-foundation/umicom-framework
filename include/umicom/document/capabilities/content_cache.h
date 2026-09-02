@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_CONTENT_CACHE "umicom.document.performance.content_cache"
 
+/**
+ * Provide the document capability content cache operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_content_cache(void);
 

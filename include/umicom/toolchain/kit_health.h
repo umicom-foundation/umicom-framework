@@ -40,6 +40,9 @@ enum {
     UMI_TOOLCHAIN_KIT_HEALTH_CAPABILITY_GAP = UINT64_C(1) << 12
 };
 
+/**
+ * List the named toolchain kit health state values accepted by this public contract.
+ */
 typedef enum UmiToolchainKitHealthState {
     UMI_TOOLCHAIN_KIT_HEALTH_UNKNOWN = 0,
     UMI_TOOLCHAIN_KIT_HEALTH_HEALTHY = 1,
@@ -47,6 +50,10 @@ typedef enum UmiToolchainKitHealthState {
     UMI_TOOLCHAIN_KIT_HEALTH_UNHEALTHY = 3
 } UmiToolchainKitHealthState;
 
+/**
+ * Represent the toolchain kit health snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainKitHealthSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -59,11 +66,19 @@ typedef struct UmiToolchainKitHealthSnapshot {
     int ready;
 } UmiToolchainKitHealthSnapshot;
 
+/**
+ * Provide the toolchain kit health evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_health_evaluate(
     const UmiToolchainKitSnapshot *kit,
     UmiToolchainKitCapabilityFlags required_capabilities,
     int require_sysroot_for_cross_compile,
     UmiToolchainKitHealthSnapshot *out_health);
+/**
+ * Provide the toolchain kit health state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_toolchain_kit_health_state_text(
     UmiToolchainKitHealthState state);
 

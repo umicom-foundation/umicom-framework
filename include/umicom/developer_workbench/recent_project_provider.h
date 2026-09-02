@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise developer workbench recent project provider from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_developer_workbench_recent_project_provider_init(
     UmiDeveloperWorkbenchSearchProvider *provider,
     UmiRecentItemRegistry *recent_items);

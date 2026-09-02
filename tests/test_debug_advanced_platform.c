@@ -28,6 +28,10 @@
 
 #include "umicom/debug/advanced_debugging.h"
 
+/*
+ * Exercise fake invoke and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_invoke(
     void *instance,
     const UmiDebugAdapterRequest *request,
@@ -42,6 +46,10 @@ static UmiStatus fake_invoke(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise make adapter and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugAdapterDescriptor make_adapter(void)
 {
     UmiDebugAdapterDescriptor descriptor;
@@ -67,6 +75,10 @@ static UmiDebugAdapterDescriptor make_adapter(void)
     return descriptor;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugService *service = NULL;

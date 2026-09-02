@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode folding ranges operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_folding_ranges(const char*json,UmiLanguageRuntimeFoldingRangeList*out);
 #ifdef __cplusplus
 }

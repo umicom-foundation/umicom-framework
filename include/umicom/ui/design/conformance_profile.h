@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design conformance profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignConformanceProfile { uint32_t token_checks; uint32_t token_failures; uint32_t accessibility_checks; uint32_t accessibility_failures; uint32_t contrast_checks; uint32_t contrast_failures; uint32_t responsive_checks; uint32_t responsive_failures; uint32_t component_checks; uint32_t component_failures; } UmiDesignConformanceProfile;
 /* Record one pass/fail result for a named design conformance category. */
 UmiStatus umi_design_conformance_record(UmiDesignConformanceProfile *profile, const char *category, int passed);

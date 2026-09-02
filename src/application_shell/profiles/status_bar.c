@@ -145,6 +145,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
     }
 };
 
+/*
+ * Provide the application shell profile status bar operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_status_bar(void)
 {
     static const UmiApplicationShellProfileDefinition profile = {

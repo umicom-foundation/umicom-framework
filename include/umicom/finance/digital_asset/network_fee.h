@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital network fee data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalNetworkFee {
     UmiDigitalAssetId network_id;
     int64_t base_units;

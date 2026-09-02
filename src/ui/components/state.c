@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/state.h"
+/*
+ * Provide the ui component state default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentState umi_ui_component_state_default(void){UmiUiComponentState v={true,true,false,false};return v;}

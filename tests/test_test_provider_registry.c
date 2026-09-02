@@ -26,6 +26,10 @@
 #include <string.h>
 #include "umicom/test_platform/provider_registry.h"
 
+/*
+ * Exercise provider and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformProviderDescriptor provider(const char *id, int32_t priority,
                                                    uint32_t capabilities)
 {
@@ -45,6 +49,10 @@ static UmiTestPlatformProviderDescriptor provider(const char *id, int32_t priori
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformProviderRegistry *registry = NULL;

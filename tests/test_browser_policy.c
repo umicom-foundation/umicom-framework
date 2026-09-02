@@ -19,4 +19,8 @@
 
 #include "umicom/umicom.h"
 #include <assert.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiBrowserPolicy p=umi_browser_policy_default();assert(umi_browser_policy_check(&p,"https://example.com")==UMI_STATUS_OK);assert(umi_browser_policy_check(&p,"http://example.com")==UMI_STATUS_PERMISSION_DENIED);return 0;}

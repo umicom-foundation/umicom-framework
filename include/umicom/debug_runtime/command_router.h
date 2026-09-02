@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug runtime command context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimeCommandContext {
     char profile_id[128];
     char session_id[128];
@@ -48,14 +52,26 @@ typedef struct UmiDebugRuntimeCommandContext {
     uint32_t timeout_ms;
 } UmiDebugRuntimeCommandContext;
 
+/**
+ * Initialise debug runtime command context from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_debug_runtime_command_context_init(
     UmiDebugRuntimeCommandContext *context);
 
+/**
+ * Provide the debug runtime command enabled operation used by this module and its client
+ * applications.
+ */
 int umi_debug_runtime_command_enabled(
     UmiDebugRuntimePlatform *platform,
     UmiDebugCommandKind kind,
     const UmiDebugRuntimeCommandContext *context);
 
+/**
+ * Perform debug runtime command through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_debug_runtime_command_execute(
     UmiDebugRuntimePlatform *platform,
     UmiDebugCommandKind kind,

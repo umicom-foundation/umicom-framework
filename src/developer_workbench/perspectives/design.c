@@ -20,6 +20,10 @@ static const char *const SURFACES[] = {
     "umicom.development.editor"
 };
 
+/*
+ * Provide the developer workbench perspective design operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *umi_developer_workbench_perspective_design(void)
 {
     static const UmiDeveloperWorkbenchPerspectiveDefinition perspective = {

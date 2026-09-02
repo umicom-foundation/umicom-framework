@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application command descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationCommandDescriptor {
     UmiApplicationCommandKind kind;
     const char *target_id;
@@ -29,15 +33,27 @@ typedef struct UmiApplicationCommandDescriptor {
     UmiExperienceFeatureState feature_state;
 } UmiApplicationCommandDescriptor;
 
+/**
+ * Represent the application command surface data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationCommandSurface {
     uint32_t structure_size;
     UmiApplicationCommandDescriptor commands[UMI_APPLICATION_RUNTIME_MAX_COMMANDS];
     size_t command_count;
 } UmiApplicationCommandSurface;
 
+/**
+ * Provide the application command surface build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_command_surface_build(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationCommandSurface *out_surface);
+/**
+ * Find application command surface while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationCommandDescriptor *umi_application_command_surface_find(
     const UmiApplicationCommandSurface *surface,
     UmiApplicationCommandKind kind,

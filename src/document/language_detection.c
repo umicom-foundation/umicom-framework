@@ -49,12 +49,20 @@ static const LanguageDefinition DEFINITIONS[] = {
     {"yml", "yaml", "application/yaml", "text-x-generic-symbolic"}
 };
 
+/*
+ * Provide the document language detect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_language_detect(
     const char *path_or_name,
     UmiDocumentLanguageIdentity *out_identity)
 {
     const char *extension;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path_or_name == NULL || out_identity == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -64,9 +72,15 @@ UmiStatus umi_document_language_detect(
     (void)snprintf(out_identity->icon_name, sizeof(out_identity->icon_name), "%s", "text-x-generic-symbolic");
     out_identity->text = 1;
     extension = strrchr(path_or_name, '.');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (extension == NULL || extension[1] == '\0') return UMI_STATUS_OK;
     extension += 1U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(DEFINITIONS) / sizeof(DEFINITIONS[0]); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(DEFINITIONS[index].extension, extension) == 0) {
             (void)snprintf(out_identity->language_id, sizeof(out_identity->language_id),
                            "%s", DEFINITIONS[index].language_id);

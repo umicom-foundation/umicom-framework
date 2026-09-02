@@ -69,11 +69,19 @@ static const struct ActionDefinition {
      "Inspect the Framework-owned multi-monitor topology", ACTION_ALWAYS}
 };
 
+/*
+ * Return the number of records represented by desktop shell action without changing their
+ * state.
+ */
 size_t umi_desktop_shell_action_count(void)
 {
     return sizeof(ACTIONS) / sizeof(ACTIONS[0]);
 }
 
+/*
+ * Find desktop shell action while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_desktop_shell_action_at(
     const UmiDesktopLayoutDesigner *designer,
     size_t index,
@@ -83,9 +91,14 @@ UmiStatus umi_desktop_shell_action_at(
     int first;
     int second;
     int third;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || out_action == NULL ||
         index >= umi_desktop_shell_action_count())
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_layout_designer_snapshot(designer, &snapshot) !=
         UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE;
     (void)memset(out_action, 0, sizeof(*out_action));
@@ -95,11 +108,13 @@ UmiStatus umi_desktop_shell_action_at(
                       ACTIONS[index].label);
     third = snprintf(out_action->tooltip, sizeof(out_action->tooltip), "%s",
                      ACTIONS[index].tooltip);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first < 0 || second < 0 || third < 0 ||
         (size_t)first >= sizeof(out_action->action_id) ||
         (size_t)second >= sizeof(out_action->label) ||
         (size_t)third >= sizeof(out_action->tooltip))
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (ACTIONS[index].enablement) {
         case ACTION_ALWAYS: out_action->enabled = true; break;
         case ACTION_DESIGNER_INACTIVE:

@@ -17,6 +17,10 @@
 
 #include "umicom/developer_productivity/diagnostic_parsers/java.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperProblem problem;

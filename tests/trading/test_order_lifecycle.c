@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiOrderRequest r=test_order_request();assert(umi_order_request_validate(&r)==UMI_STATUS_OK);
     assert(umi_order_transition_allowed(UMI_ORDER_NEW,UMI_ORDER_VALIDATED));

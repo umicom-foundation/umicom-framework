@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/sensitive_content_redaction.h"
 
+/*
+ * Provide the document capability sensitive content redaction operation used by this
+ * module and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_sensitive_content_redaction(void)
 {

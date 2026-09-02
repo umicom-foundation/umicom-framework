@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ws command scope values accepted by this public contract.
+ */
 typedef enum UmiWsCommandScope {
     UMI_WS_COMMAND_SCOPE_ALL = 0,
     UMI_WS_COMMAND_SCOPE_COMMAND = 1,
@@ -35,6 +38,9 @@ typedef enum UmiWsCommandScope {
     UMI_WS_COMMAND_SCOPE_AI = 7
 } UmiWsCommandScope;
 
+/**
+ * Represent the ws command bar query data shared with callers of this public contract.
+ */
 typedef struct UmiWsCommandBarQuery {
     UmiWsCommandScope scope;
     char text[UMI_UI_TEXT_CAPACITY];

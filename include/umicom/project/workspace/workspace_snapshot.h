@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace workspace snapshot data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceWorkspaceSnapshot {
         char workspace_id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];
         size_t root_count;

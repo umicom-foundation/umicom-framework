@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 #define UMI_DESIGN_SPACING_SCALE_LEVELS 10U
+/**
+ * Represent the design spacing scale data shared with callers of this public contract.
+ */
 typedef struct UmiDesignSpacingScale { double values[10U]; } UmiDesignSpacingScale;
 /* Initialise the canonical scale used as a stable design-system baseline. */
 UmiDesignSpacingScale spacing_scale_default(void);

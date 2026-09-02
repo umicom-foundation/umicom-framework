@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/compiler_observation.h"
-int main(void){ UmiHelixCompilerObservation r; umi_helix_compiler_observation_init(&r,"compiler_observation"); if(umi_helix_compiler_observation_validate(&r)!=UMI_STATUS_OK){ return 1; } r.passed=9U; r.failed=1U; double s=umi_helix_compiler_observation_score(&r); if(s<=0.0 || s>1.0){ return 2; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixCompilerObservation r; umi_helix_compiler_observation_init(&r,"compiler_observation"); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_helix_compiler_observation_validate(&r)!=UMI_STATUS_OK){ return 1; } r.passed=9U; r.failed=1U; double s=umi_helix_compiler_observation_score(&r); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(s<=0.0 || s>1.0){ return 2; } return 0; }

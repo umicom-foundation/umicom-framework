@@ -17,16 +17,28 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the palette search changed operation used by this module and its client
+ * applications.
+ */
 static void palette_search_changed(GtkEditable *editable, gpointer user_data)
 {
     UmiWorkbenchDesignerGtk4 *designer = user_data;
     const char *query;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return;
     query = gtk_editable_get_text(editable);
     (void)query;
     umi_workbench_designer_gtk4_refresh_palette(designer);
 }
 
+/*
+ * Provide the workbench designer gtk4 build palette operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_palette(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -47,6 +59,10 @@ GtkWidget *umi_workbench_designer_gtk4_build_palette(
     return root;
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh palette operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_palette(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -55,8 +71,16 @@ void umi_workbench_designer_gtk4_refresh_palette(
     const char *query;
     GtkWidget *child;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->palette_list == NULL) return;
     child = gtk_widget_get_first_child(designer->palette_list);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_list_box_remove(GTK_LIST_BOX(designer->palette_list), child);
@@ -64,16 +88,30 @@ void umi_workbench_designer_gtk4_refresh_palette(
     }
     session = umi_workbench_designer_service_active(
         designer->config.controller->service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return;
     palette = umi_workbench_designer_session_palette(session);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette == NULL) return;
     query = gtk_editable_get_text(GTK_EDITABLE(designer->palette_search));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < palette->count; ++index) {
         const UmiWorkbenchDesignerPaletteItem *item = &palette->items[index];
         GtkWidget *row;
         GtkWidget *label;
         GtkWidget *owner;
+        /* Apply this operation only while the related capability or state is available. */
         if (!item->enabled) continue;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (query != NULL && query[0] != '\0' &&
             !g_str_match_string(query, item->label, TRUE) &&
             !g_str_match_string(query, item->category, TRUE) &&

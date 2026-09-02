@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test protocol disposition invalid and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_protocol_disposition_invalid(void){UmiAiHelixDisposition d=(UmiAiHelixDisposition)0;TEST_CHECK(umi_ai_helix_protocol_parse_disposition("invalid",&d)==UMI_STATUS_PARSE_ERROR);return 0;}

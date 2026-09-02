@@ -13,12 +13,17 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/matching_engine.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiTradingMatchingPolicy p;
     UmiTradingMatchRequest r={101,10,100,7};
     UmiTradingMatchResult m;
     umi_trading_matching_policy_init(&p,true,true,10U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_matching_engine_match(&p,&r,&m)!=UMI_STATUS_OK)return 1;
     return m.matched&&m.execution_lots==7&&m.execution_ticks==100?0:2;
 }

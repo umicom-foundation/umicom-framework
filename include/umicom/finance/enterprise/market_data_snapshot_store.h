@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/finance/enterprise/market_data_snapshot.h"
 
+/**
+ * Represent the enterprise market data snapshot store data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEnterpriseMarketDataSnapshotStore {
     UmiEnterpriseMarketDataSnapshot snapshots[16U];
     size_t count;

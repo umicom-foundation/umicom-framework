@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_evaluate(
     UmiDebugRuntimeAdapter *adapter,
     const char *expression,

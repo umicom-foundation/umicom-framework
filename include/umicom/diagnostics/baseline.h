@@ -28,6 +28,9 @@ extern "C" {
 
 #define UMI_DIAGNOSTIC_BASELINE_API_VERSION 1U
 
+/**
+ * List the named diagnostic baseline state values accepted by this public contract.
+ */
 typedef enum UmiDiagnosticBaselineState {
     UMI_DIAGNOSTIC_BASELINE_NONE = 0,
     UMI_DIAGNOSTIC_BASELINE_NEW = 1,
@@ -36,6 +39,10 @@ typedef enum UmiDiagnosticBaselineState {
     UMI_DIAGNOSTIC_BASELINE_ABSENT = 4
 } UmiDiagnosticBaselineState;
 
+/**
+ * Represent the diagnostic baseline entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticBaselineEntry {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,6 +58,10 @@ typedef struct UmiDiagnosticBaselineEntry {
     UmiDiagnosticSeverity severity;
 } UmiDiagnosticBaselineEntry;
 
+/**
+ * Represent the diagnostic baseline decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticBaselineDecision {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,6 +75,10 @@ typedef struct UmiDiagnosticBaselineDecision {
     int content_changed;
 } UmiDiagnosticBaselineDecision;
 
+/**
+ * Represent the diagnostic baseline snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticBaselineSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -74,6 +89,9 @@ typedef struct UmiDiagnosticBaselineSnapshot {
     uint64_t revision;
 } UmiDiagnosticBaselineSnapshot;
 
+/**
+ * Represent the diagnostic baseline diff data shared with callers of this public contract.
+ */
 typedef struct UmiDiagnosticBaselineDiff {
     uint32_t struct_size;
     uint32_t api_version;
@@ -86,38 +104,93 @@ typedef struct UmiDiagnosticBaselineDiff {
     uint64_t revision;
 } UmiDiagnosticBaselineDiff;
 
+/**
+ * Represent the diagnostic baseline data shared with callers of this public contract.
+ */
 typedef struct UmiDiagnosticBaseline UmiDiagnosticBaseline;
 
+/**
+ * Initialise diagnostic baseline from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_diagnostic_baseline_create(UmiDiagnosticBaseline **out_baseline);
+/**
+ * Release or reset state held by diagnostic baseline so the same storage can be reused
+ * safely.
+ */
 void umi_diagnostic_baseline_destroy(UmiDiagnosticBaseline *baseline);
+/**
+ * Release or reset state held by diagnostic baseline so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_diagnostic_baseline_clear(UmiDiagnosticBaseline *baseline);
+/**
+ * Provide the diagnostic baseline capture finding operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_capture_finding(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderFinding *finding);
+/**
+ * Provide the diagnostic baseline capture batch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_capture_batch(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderBatch *batch);
+/**
+ * Provide the diagnostic baseline begin comparison operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_begin_comparison(
     UmiDiagnosticBaseline *baseline);
+/**
+ * Provide the diagnostic baseline compare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_baseline_compare(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderFinding *finding,
     UmiDiagnosticBaselineDecision *out_decision);
+/**
+ * Provide the diagnostic baseline finish comparison operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_finish_comparison(
     UmiDiagnosticBaseline *baseline,
     UmiDiagnosticBaselineDiff *out_diff);
+/**
+ * Find diagnostic baseline while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_diagnostic_baseline_at(
     const UmiDiagnosticBaseline *baseline,
     size_t position,
     UmiDiagnosticBaselineEntry *out_entry);
+/**
+ * Find diagnostic baseline absent while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_diagnostic_baseline_absent_at(
     const UmiDiagnosticBaseline *baseline,
     size_t position,
     UmiDiagnosticBaselineEntry *out_entry);
+/**
+ * Provide the diagnostic baseline snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_baseline_snapshot(
     const UmiDiagnosticBaseline *baseline,
     UmiDiagnosticBaselineSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by diagnostic baseline without changing their
+ * state.
+ */
 size_t umi_diagnostic_baseline_count(const UmiDiagnosticBaseline *baseline);
+/**
+ * Provide the diagnostic baseline revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_diagnostic_baseline_revision(const UmiDiagnosticBaseline *baseline);
 
 #ifdef __cplusplus

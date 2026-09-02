@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named helix approval decision values accepted by this public contract.
+ */
 typedef enum UmiHelixApprovalDecision {
     UMI_HELIX_APPROVAL_PENDING = 1,
     UMI_HELIX_APPROVAL_APPROVED = 2,
@@ -31,6 +34,9 @@ typedef enum UmiHelixApprovalDecision {
     UMI_HELIX_APPROVAL_REVOKED = 4
 } UmiHelixApprovalDecision;
 
+/**
+ * Represent the helix approval ticket data shared with callers of this public contract.
+ */
 typedef struct UmiHelixApprovalTicket {
     char operation_id[UMI_HELIX_ID_CAPACITY];
     char action_id[UMI_HELIX_ID_CAPACITY];
@@ -41,17 +47,32 @@ typedef struct UmiHelixApprovalTicket {
     uint64_t revision;
 } UmiHelixApprovalTicket;
 
+/**
+ * Represent the helix approval gate data shared with callers of this public contract.
+ */
 typedef struct UmiHelixApprovalGate {
     UmiHelixApprovalTicket tickets[UMI_HELIX_RUNTIME_MAX_APPROVALS];
     size_t count;
 } UmiHelixApprovalGate;
 
+/**
+ * Initialise helix approval gate from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_helix_approval_gate_init(UmiHelixApprovalGate *gate);
+/**
+ * Provide the helix approval gate request operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_approval_gate_request(
     UmiHelixApprovalGate *gate,
     const char *operation_id,
     const char *action_id,
     const char *plan_hash);
+/**
+ * Provide the helix approval gate decide operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_approval_gate_decide(
     UmiHelixApprovalGate *gate,
     const char *operation_id,
@@ -59,6 +80,10 @@ UmiStatus umi_helix_approval_gate_decide(
     UmiHelixApprovalDecision decision,
     const char *approver,
     const char *reason);
+/**
+ * Provide the helix approval gate is approved operation used by this module and its client
+ * applications.
+ */
 int umi_helix_approval_gate_is_approved(
     const UmiHelixApprovalGate *gate,
     const char *operation_id,

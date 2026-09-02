@@ -21,8 +21,16 @@ extern "C" {
 
 #define UMI_KNOWLEDGE_ARCHIVE_VERSION 1U
 
+/**
+ * Write knowledge archive in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_knowledge_archive_save(const UmiKnowledgeService *service,
                                      const char *path);
+/**
+ * Read knowledge archive into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_knowledge_archive_load(UmiKnowledgeService *service,
                                      const char *path);
 

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application ui ownership row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationUiOwnershipRow {
     UmiExperienceOwnership owner;
     const char *owner_text;
@@ -30,6 +34,10 @@ typedef struct UmiApplicationUiOwnershipRow {
 
 #define UMI_APPLICATION_UI_OWNERSHIP_ROW_COUNT 3U
 
+/**
+ * Provide the application ui ownership rows operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_ownership_rows(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationUiOwnershipRow rows[UMI_APPLICATION_UI_OWNERSHIP_ROW_COUNT]);

@@ -13,22 +13,41 @@
 
 #include <string.h>
 
+/* Provide the copy message operation used by this module and its client applications. */
 static void copy_message(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/*
+ * Initialise test platform build inventory from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_platform_build_inventory_init(
     UmiTestPlatformBuildInventory *inventory)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (inventory != NULL) (void)memset(inventory, 0, sizeof(*inventory));
 }
 
+/*
+ * Provide the test platform build inventory record operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_build_inventory_record(
     UmiTestPlatformBuildInventory *inventory,
     const UmiTestPlatformBuildArtifact *artifact,
@@ -36,16 +55,24 @@ UmiStatus umi_test_platform_build_inventory_record(
 {
     size_t index;
     UmiTestPlatformBuildObservation *observation;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (inventory == NULL ||
         umi_test_platform_build_artifact_validate(artifact) != UMI_STATUS_OK ||
         state < UMI_TEST_PLATFORM_BUILD_STATE_UNKNOWN ||
         state > UMI_TEST_PLATFORM_BUILD_STATE_ARTIFACT_MISSING)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < inventory->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(inventory->items[index].artifact->test_name,
                    artifact->test_name) == 0) break;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == inventory->count) {
+        /* Create this optional product surface only when its build option is enabled. */
         if (inventory->count >= UMI_TEST_PLATFORM_BUILD_INVENTORY_CAPACITY)
             return UMI_STATUS_CAPACITY_EXCEEDED;
         inventory->count++;
@@ -57,13 +84,23 @@ UmiStatus umi_test_platform_build_inventory_record(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform build inventory find test operation used by this module and
+ * its client applications.
+ */
 const UmiTestPlatformBuildObservation *
 umi_test_platform_build_inventory_find_test(
     const UmiTestPlatformBuildInventory *inventory, const char *test_name)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (inventory == NULL || test_name == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < inventory->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(inventory->items[index].artifact->test_name, test_name) == 0)
             return &inventory->items[index];
     }

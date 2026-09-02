@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ide workflow profile self host operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_profile_self_host(
     UmiIdeWorkflowPolicy *out_policy);
 #ifdef __cplusplus

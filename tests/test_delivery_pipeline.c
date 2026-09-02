@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/pipeline.h"
 #include "umicom/delivery/pipeline_state.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDeliveryPipeline pipeline;
     UmiReleaseGate gate;

@@ -15,5 +15,9 @@
 
 #include "umicom/frontend/native_web/heartbeat_policy.h"
 
-bool umi_native_web_heartbeat_expired(const UmiNativeWebHeartbeatPolicy *policy,uint64_t last_activity_ms,uint64_t now_ms){if(policy==NULL||now_ms<last_activity_ms)return true;return now_ms-last_activity_ms>policy->timeout_ms;}
+/*
+ * Provide the native web heartbeat expired operation used by this module and its client
+ * applications.
+ */
+bool umi_native_web_heartbeat_expired(const UmiNativeWebHeartbeatPolicy *policy,uint64_t last_activity_ms,uint64_t now_ms){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(policy==NULL||now_ms<last_activity_ms)return true;return now_ms-last_activity_ms>policy->timeout_ms;}
 

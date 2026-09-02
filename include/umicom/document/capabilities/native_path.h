@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_NATIVE_PATH "umicom.document.identity.native_path"
 
+/**
+ * Provide the document capability native path operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_native_path(void);
 

@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design semantic role values accepted by this public contract.
+ */
 typedef enum UmiDesignSemanticRole {
     UMI_DESIGN_ROLE_NEUTRAL = 0,
     UMI_DESIGN_ROLE_PRIMARY = 1,

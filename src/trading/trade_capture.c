@@ -21,10 +21,15 @@
 #include "umicom/trading/trade_capture.h"
 #include "umicom/trading/execution_report.h"
 
+/*
+ * Provide the trade capture reference operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trade_capture_reference(const UmiExecutionReport *report,
                                       char *buffer,
                                       size_t capacity)
 {
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_execution_report_valid(report) ||
         buffer == NULL ||
         capacity == 0U) {
@@ -33,6 +38,7 @@ UmiStatus umi_trade_capture_reference(const UmiExecutionReport *report,
 
     const int written =
         snprintf(buffer, capacity, "TRD-%s", report->execution_id.value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

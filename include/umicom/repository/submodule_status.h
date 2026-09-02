@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository submodule status data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositorySubmoduleStatus {
     size_t configured;
     size_t initialised;
@@ -32,8 +36,20 @@ typedef struct UmiRepositorySubmoduleStatus {
     size_t head_mismatch;
 } UmiRepositorySubmoduleStatus;
 
+/**
+ * Initialise repository submodule status from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_submodule_status_init(UmiRepositorySubmoduleStatus *status);
+/**
+ * Check that repository submodule status satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_repository_submodule_status_validate(const UmiRepositorySubmoduleStatus *status);
+/**
+ * Provide the repository submodule status healthy operation used by this module and its
+ * client applications.
+ */
 int umi_repository_submodule_status_healthy(const UmiRepositorySubmoduleStatus *status);
 
 #ifdef __cplusplus

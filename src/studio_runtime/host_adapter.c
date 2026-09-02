@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/host_adapter.h"
 
+/*
+ * Check that studio host adapter satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_studio_host_adapter_validate(
     const UmiStudioRuntimeHostAdapter *adapter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL ||
         adapter->set_window_title == NULL ||
         adapter->present_surface == NULL ||

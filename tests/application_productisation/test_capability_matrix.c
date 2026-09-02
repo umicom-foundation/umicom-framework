@@ -18,6 +18,10 @@
 #include "umicom/application/productisation/capability_matrix.h"
 #include "umicom/test_runtime/check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProductCapabilityMatrix *matrix =
@@ -39,10 +43,12 @@ int main(void)
      * turns a future catalogue mismatch into an actionable CTest diagnostic. */
     for (usage_index = 0U; usage_index < matrix->usage_count; ++usage_index) {
         const UmiProductCapabilityUsage *usage = &matrix->usages[usage_index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (usage->missing_from_framework) {
             (void)fprintf(stderr, "Missing Framework capability: %s\n",
                           usage->capability_id);
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (usage->panel_reference_count > 0U &&
             usage->component_count == 0U) {
             (void)fprintf(stderr, "Missing reusable panel component: %s\n",

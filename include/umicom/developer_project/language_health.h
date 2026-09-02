@@ -23,12 +23,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project language tool health data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectLanguageToolHealth {
     char tool[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
     char path[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
     int available;
 } UmiDeveloperProjectLanguageToolHealth;
 
+/**
+ * Represent the developer project language health data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectLanguageHealth {
     char language_id[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
     UmiDeveloperProjectLanguageToolHealth
@@ -39,6 +47,10 @@ typedef struct UmiDeveloperProjectLanguageHealth {
     int ready;
 } UmiDeveloperProjectLanguageHealth;
 
+/**
+ * Provide the developer project language health probe operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_project_language_health_probe(
     const UmiDeveloperProjectLanguagePack *pack,
     UmiDeveloperProjectLanguageHealth *out_health);

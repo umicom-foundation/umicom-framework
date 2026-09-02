@@ -24,7 +24,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the workbench designer split wrap node operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_split_wrap_node(UmiWorkbenchLayoutDocument *document, const char *target_node_id, const UmiWorkbenchLayoutNode *new_node, UmiWorkbenchLayoutOrientation orientation, double ratio, bool new_node_after, char *out_split_node_id, size_t out_capacity);
+/**
+ * Provide the workbench designer split set ratio operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_split_set_ratio(UmiWorkbenchLayoutDocument *document, const char *split_node_id, double ratio);
 
 #ifdef __cplusplus

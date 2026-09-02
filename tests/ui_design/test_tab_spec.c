@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/tab_spec.h"
 
-int main(void){UmiDesignTabSpec s;if(umi_design_tab_spec_init(&s,1,1,1,0,UMI_DESIGN_ROLE_ACCENT)!=UMI_STATUS_OK)return 1;return s.dirty?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignTabSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_tab_spec_init(&s,1,1,1,0,UMI_DESIGN_ROLE_ACCENT)!=UMI_STATUS_OK)return 1;return s.dirty?0:2;}

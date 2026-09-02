@@ -24,8 +24,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor close policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbEditorClosePolicy { bool confirm_dirty; bool protect_pinned; bool allow_force; } UmiEditorWbEditorClosePolicy;
+/**
+ * Initialise editor wb editor close policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_editor_close_policy_init(UmiEditorWbEditorClosePolicy *policy);
+/**
+ * Provide the editor wb editor close policy evaluate operation used by this module and its
+ * client applications.
+ */
 UmiEditorWbCloseDecision umi_editor_wb_editor_close_policy_evaluate(const UmiEditorWbEditorClosePolicy *policy,bool dirty,bool pinned,bool force);
 
 #ifdef __cplusplus

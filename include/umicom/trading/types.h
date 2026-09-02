@@ -36,17 +36,26 @@ extern "C" {
 #define UMI_TRADING_MAX_FACTORS 32U
 #define UMI_TRADING_MAX_WATCHLIST 64U
 
+/**
+ * List the named trading environment values accepted by this public contract.
+ */
 typedef enum UmiTradingEnvironment {
     UMI_TRADING_SIMULATION = 0,
     UMI_TRADING_PAPER = 1,
     UMI_TRADING_LIVE = 2
 } UmiTradingEnvironment;
 
+/**
+ * List the named side values accepted by this public contract.
+ */
 typedef enum UmiSide {
     UMI_SIDE_BUY = 1,
     UMI_SIDE_SELL = -1
 } UmiSide;
 
+/**
+ * List the named order type values accepted by this public contract.
+ */
 typedef enum UmiOrderType {
     UMI_ORDER_MARKET = 0,
     UMI_ORDER_LIMIT = 1,
@@ -54,6 +63,9 @@ typedef enum UmiOrderType {
     UMI_ORDER_STOP_LIMIT = 3
 } UmiOrderType;
 
+/**
+ * List the named time in force values accepted by this public contract.
+ */
 typedef enum UmiTimeInForce {
     UMI_TIF_DAY = 0,
     UMI_TIF_GTC = 1,
@@ -61,6 +73,9 @@ typedef enum UmiTimeInForce {
     UMI_TIF_FOK = 3
 } UmiTimeInForce;
 
+/**
+ * List the named order status values accepted by this public contract.
+ */
 typedef enum UmiOrderStatus {
     UMI_ORDER_NEW = 0,
     UMI_ORDER_VALIDATED = 1,
@@ -71,6 +86,9 @@ typedef enum UmiOrderStatus {
     UMI_ORDER_REJECTED = 6
 } UmiOrderStatus;
 
+/**
+ * List the named market state values accepted by this public contract.
+ */
 typedef enum UmiMarketState {
     UMI_MARKET_CLOSED = 0,
     UMI_MARKET_PREOPEN = 1,
@@ -78,6 +96,9 @@ typedef enum UmiMarketState {
     UMI_MARKET_HALTED = 3
 } UmiMarketState;
 
+/**
+ * Represent the instrument data shared with callers of this public contract.
+ */
 typedef struct UmiInstrument {
     UmiFinancialId instrument_id;
     char symbol[UMI_TRADING_SYMBOL_CAPACITY];
@@ -87,6 +108,9 @@ typedef struct UmiInstrument {
     int32_t expiry_yyyymmdd;
 } UmiInstrument;
 
+/**
+ * Represent the quote data shared with callers of this public contract.
+ */
 typedef struct UmiQuote {
     UmiInstrument instrument;
     double bid;
@@ -96,6 +120,9 @@ typedef struct UmiQuote {
     int64_t event_time_ms;
 } UmiQuote;
 
+/**
+ * Represent the trade tick data shared with callers of this public contract.
+ */
 typedef struct UmiTradeTick {
     UmiInstrument instrument;
     double price;
@@ -103,6 +130,9 @@ typedef struct UmiTradeTick {
     int64_t event_time_ms;
 } UmiTradeTick;
 
+/**
+ * Represent the bar data shared with callers of this public contract.
+ */
 typedef struct UmiBar {
     UmiInstrument instrument;
     double open;
@@ -114,11 +144,17 @@ typedef struct UmiBar {
     int64_t end_time_ms;
 } UmiBar;
 
+/**
+ * Represent the depth level data shared with callers of this public contract.
+ */
 typedef struct UmiDepthLevel {
     double price;
     double size;
 } UmiDepthLevel;
 
+/**
+ * Represent the market depth data shared with callers of this public contract.
+ */
 typedef struct UmiMarketDepth {
     UmiInstrument instrument;
     UmiDepthLevel bids[UMI_TRADING_MAX_DEPTH];
@@ -128,6 +164,9 @@ typedef struct UmiMarketDepth {
     int64_t event_time_ms;
 } UmiMarketDepth;
 
+/**
+ * Represent the order request data shared with callers of this public contract.
+ */
 typedef struct UmiOrderRequest {
     UmiFinancialId client_order_id;
     UmiFinancialId account_id;
@@ -141,6 +180,9 @@ typedef struct UmiOrderRequest {
     UmiTradingEnvironment environment;
 } UmiOrderRequest;
 
+/**
+ * Represent the order data shared with callers of this public contract.
+ */
 typedef struct UmiOrder {
     UmiOrderRequest request;
     UmiOrderStatus status;
@@ -149,6 +191,9 @@ typedef struct UmiOrder {
     uint64_t version;
 } UmiOrder;
 
+/**
+ * Represent the execution report data shared with callers of this public contract.
+ */
 typedef struct UmiExecutionReport {
     UmiFinancialId execution_id;
     UmiFinancialId client_order_id;
@@ -157,6 +202,9 @@ typedef struct UmiExecutionReport {
     int64_t event_time_ms;
 } UmiExecutionReport;
 
+/**
+ * Represent the position data shared with callers of this public contract.
+ */
 typedef struct UmiPosition {
     UmiInstrument instrument;
     double quantity;
@@ -164,6 +212,9 @@ typedef struct UmiPosition {
     double realised_pnl;
 } UmiPosition;
 
+/**
+ * Represent the risk limit data shared with callers of this public contract.
+ */
 typedef struct UmiRiskLimit {
     double max_order_quantity;
     double max_order_notional;
@@ -171,11 +222,17 @@ typedef struct UmiRiskLimit {
     double max_daily_loss;
 } UmiRiskLimit;
 
+/**
+ * Represent the risk decision data shared with callers of this public contract.
+ */
 typedef struct UmiRiskDecision {
     int allowed;
     char reason[UMI_TRADING_TEXT_CAPACITY];
 } UmiRiskDecision;
 
+/**
+ * Represent the replay event data shared with callers of this public contract.
+ */
 typedef struct UmiReplayEvent {
     uint64_t sequence;
     int64_t event_time_ms;
@@ -183,6 +240,9 @@ typedef struct UmiReplayEvent {
     char payload[UMI_TRADING_TEXT_CAPACITY];
 } UmiReplayEvent;
 
+/**
+ * Represent the strategy signal data shared with callers of this public contract.
+ */
 typedef struct UmiStrategySignal {
     double score;
     double probability;
@@ -190,6 +250,9 @@ typedef struct UmiStrategySignal {
     int64_t valid_until_ms;
 } UmiStrategySignal;
 
+/**
+ * Represent the market factor data shared with callers of this public contract.
+ */
 typedef struct UmiMarketFactor {
     char name[48];
     double value_before;
@@ -197,6 +260,9 @@ typedef struct UmiMarketFactor {
     double contribution;
 } UmiMarketFactor;
 
+/**
+ * Represent the movement event data shared with callers of this public contract.
+ */
 typedef struct UmiMovementEvent {
     double start_price;
     double end_price;

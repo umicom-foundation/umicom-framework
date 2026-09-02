@@ -14,7 +14,15 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/preview_state.h"
 #include <string.h>
+/*
+ * Initialise rad preview state from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_preview_state_init(UmiRadPreviewState *item){
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(item,0,sizeof *item);
     item->document_revision = 0U;
@@ -22,4 +30,5 @@ UmiStatus umi_rad_preview_state_init(UmiRadPreviewState *item){
     item->healthy = true;
     return UMI_STATUS_OK;
 }
-int umi_rad_preview_state_is_valid(const UmiRadPreviewState *item){if(item==NULL)return 0;return item->render_revision <= item->document_revision;}
+/* Check that rad preview state satisfies its contract before another service relies on it. */
+int umi_rad_preview_state_is_valid(const UmiRadPreviewState *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return item->render_revision <= item->document_revision;}

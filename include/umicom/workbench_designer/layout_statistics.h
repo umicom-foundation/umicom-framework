@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_WORKBENCH_DESIGNER_MAX_APPLICATION_STATISTICS 32U
 
+/**
+ * Represent the workbench designer application statistic data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerApplicationStatistic {
     char application_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     size_t node_count;
@@ -35,6 +39,10 @@ typedef struct UmiWorkbenchDesignerApplicationStatistic {
     size_t hidden_count;
 } UmiWorkbenchDesignerApplicationStatistic;
 
+/**
+ * Represent the workbench designer layout statistics data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerLayoutStatistics {
     size_t total_nodes;
     size_t containers;
@@ -57,8 +65,20 @@ typedef struct UmiWorkbenchDesignerLayoutStatistics {
     uint64_t revision;
 } UmiWorkbenchDesignerLayoutStatistics;
 
+/**
+ * Initialise workbench designer layout statistics from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_layout_statistics_init(UmiWorkbenchDesignerLayoutStatistics *statistics);
+/**
+ * Provide the workbench designer layout statistics build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_layout_statistics_build(UmiWorkbenchDesignerLayoutStatistics *statistics, const UmiWorkbenchLayoutDocument *document);
+/**
+ * Provide the workbench designer layout statistics application operation used by this
+ * module and its client applications.
+ */
 const UmiWorkbenchDesignerApplicationStatistic *umi_workbench_designer_layout_statistics_application(const UmiWorkbenchDesignerLayoutStatistics *statistics, const char *application_id);
 
 #ifdef __cplusplus

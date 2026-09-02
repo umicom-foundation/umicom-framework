@@ -23,24 +23,33 @@ struct UmiLanguageRuntimeDocumentSync {
   UmiLanguageRuntimeDocumentState d[UMI_LANGUAGE_RUNTIME_MAX_DOCUMENTS];
   size_t n;
 };
+/* Provide the lines operation used by this module and its client applications. */
 static size_t lines(const char *t) {
   size_t n = 1;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!t)
     return 1;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (; *t; t++)
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*t == '\n')
       n++;
   return n;
 }
+/* Provide the find operation used by this module and its client applications. */
 static size_t find(const UmiLanguageRuntimeDocumentSync *s, const char *d) {
   size_t i;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !d)
     return (size_t)-1;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < s->n; i++)
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(s->d[i].document_id, d) == 0)
       return i;
   return (size_t)-1;
 }
+/* Provide the pub operation used by this module and its client applications. */
 static UmiStatus pub(UmiLanguageRuntimeDocumentSync *s, const UmiLanguageRuntimeDocumentState *d) {
   UmiLanguageDocumentSnapshot x = {0};
   x.struct_size = sizeof(x);
@@ -55,33 +64,51 @@ static UmiStatus pub(UmiLanguageRuntimeDocumentSync *s, const UmiLanguageRuntime
   x.revision = d->version;
   return umi_language_document_registry_upsert(umi_language_service_document(s->l), &x);
 }
+/*
+ * Initialise language runtime document sync from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_language_runtime_document_sync_create(UmiLanguageService *l,
                                                     UmiLanguageRuntimeDocumentSync **out) {
   UmiLanguageRuntimeDocumentSync *s;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!l || !out)
     return UMI_STATUS_INVALID_ARGUMENT;
   *out = NULL;
   s = calloc(1, sizeof(*s));
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s)
     return UMI_STATUS_OUT_OF_MEMORY;
   s->l = l;
   *out = s;
   return UMI_STATUS_OK;
 }
+/*
+ * Release or reset state held by language runtime document sync so the same storage can be
+ * reused safely.
+ */
 void umi_language_runtime_document_sync_destroy(UmiLanguageRuntimeDocumentSync *s) { free(s); }
+/*
+ * Provide the language runtime document open operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_document_open(UmiLanguageRuntimeDocumentSync *s,
                                              UmiLanguageRuntimeServer *server, const char *d,
                                              const char *uri, const char *lang, const char *text) {
   UmiLanguageRuntimeDocumentState *x;
   char n[128];
   UmiStatus q;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !server || !d || !*d || !uri || !*uri || !lang || !text)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (find(s, d) != (size_t)-1)
     return UMI_STATUS_ALREADY_EXISTS;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (s->n >= UMI_LANGUAGE_RUNTIME_MAX_DOCUMENTS)
     return UMI_STATUS_CAPACITY_EXCEEDED;
   q = umi_language_runtime_normalize_language_id(lang, n, sizeof(n));
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (q != UMI_STATUS_OK)
     return q;
   x = &s->d[s->n];
@@ -94,8 +121,10 @@ UmiStatus umi_language_runtime_document_open(UmiLanguageRuntimeDocumentSync *s,
   x->open = 1;
   x->server = server;
   q = umi_language_runtime_request_did_open(server, uri, n, 1, text);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (q == UMI_STATUS_OK)
     q = pub(s, x);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (q != UMI_STATUS_OK) {
     memset(x, 0, sizeof(*x));
     return q;
@@ -103,13 +132,19 @@ UmiStatus umi_language_runtime_document_open(UmiLanguageRuntimeDocumentSync *s,
   s->n++;
   return UMI_STATUS_OK;
 }
+/*
+ * Provide the language runtime document change operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_document_change(UmiLanguageRuntimeDocumentSync *s, const char *d,
                                                const char *text) {
   size_t i = find(s, d);
   UmiLanguageRuntimeDocumentState *x;
   UmiStatus q;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !d || !text)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (i == (size_t)-1)
     return UMI_STATUS_NOT_FOUND;
   x = &s->d[i];
@@ -119,64 +154,96 @@ UmiStatus umi_language_runtime_document_change(UmiLanguageRuntimeDocumentSync *s
   q = umi_language_runtime_request_did_change(x->server, x->uri, x->version, text);
   return q == UMI_STATUS_OK ? pub(s, x) : q;
 }
+/*
+ * Write language runtime document in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_language_runtime_document_save(UmiLanguageRuntimeDocumentSync *s, const char *d,
                                              const char *text) {
   size_t i = find(s, d);
   UmiLanguageRuntimeDocumentState *x;
   UmiStatus q;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !d)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (i == (size_t)-1)
     return UMI_STATUS_NOT_FOUND;
   x = &s->d[i];
   q = umi_language_runtime_request_did_save(x->server, x->uri, text);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (q != UMI_STATUS_OK)
     return q;
   x->dirty = 0;
   return pub(s, x);
 }
+/*
+ * Provide the language runtime document close operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_document_close(UmiLanguageRuntimeDocumentSync *s, const char *d) {
   size_t i = find(s, d), tail;
   UmiStatus q;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !d)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (i == (size_t)-1)
     return UMI_STATUS_NOT_FOUND;
   q = umi_language_runtime_request_did_close(s->d[i].server, s->d[i].uri);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (q != UMI_STATUS_OK)
     return q;
   (void)umi_language_document_registry_remove(umi_language_service_document(s->l), d);
   tail = s->n - i - 1;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (tail)
     memmove(&s->d[i], &s->d[i + 1], tail * sizeof(s->d[0]));
   s->n--;
   memset(&s->d[s->n], 0, sizeof(s->d[0]));
   return UMI_STATUS_OK;
 }
+/*
+ * Find language runtime document while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_language_runtime_document_find(const UmiLanguageRuntimeDocumentSync *s, const char *d,
                                              UmiLanguageRuntimeDocumentState *out) {
   size_t i;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !d || !out)
     return UMI_STATUS_INVALID_ARGUMENT;
   i = find(s, d);
+  /* Apply this branch only when its contract condition is satisfied. */
   if (i == (size_t)-1)
     return UMI_STATUS_NOT_FOUND;
   *out = s->d[i];
   return UMI_STATUS_OK;
 }
+/*
+ * Provide the language runtime document find by uri operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_document_find_by_uri(const UmiLanguageRuntimeDocumentSync *s,
                                                     const char *uri,
                                                     UmiLanguageRuntimeDocumentState *out) {
   size_t i;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!s || !uri || !out)
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < s->n; i++)
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(s->d[i].uri, uri) == 0) {
       *out = s->d[i];
       return UMI_STATUS_OK;
     }
   return UMI_STATUS_NOT_FOUND;
 }
+/*
+ * Return the number of records represented by language runtime document sync without
+ * changing their state.
+ */
 size_t umi_language_runtime_document_sync_count(const UmiLanguageRuntimeDocumentSync *s) {
   return s ? s->n : 0;
 }

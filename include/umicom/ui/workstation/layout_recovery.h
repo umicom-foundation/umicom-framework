@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws layout recovery result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWsLayoutRecoveryResult {
     char chosen_monitor_id[UMI_UI_ID_CAPACITY];
     UmiUiRect recovered_bounds;
@@ -30,6 +34,10 @@ typedef struct UmiWsLayoutRecoveryResult {
     bool geometry_changed;
 } UmiWsLayoutRecoveryResult;
 
+/**
+ * Provide the ws layout recover window operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_layout_recover_window(const UmiWsFloatingWindow *window,
                                        const UmiWsMonitorTopology *topology,
                                        UmiWsLayoutRecoveryResult *out_result);

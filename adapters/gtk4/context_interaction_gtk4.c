@@ -36,17 +36,24 @@
 #define UMI_GTK4_CONTEXT_VIEW_KIND_KEY \
     "umicom-context-view-kind"
 
+/* Provide the now ms operation used by this module and its client applications. */
 static uint64_t now_ms(void)
 {
     return (uint64_t)(g_get_monotonic_time() / 1000);
 }
 
+/* Provide the adapter workbench operation used by this module and its client applications. */
 static UmiUiWorkbench *adapter_workbench(UmiGtk4Adapter *adapter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) return NULL;
     return umi_ui_application_shell_workbench(adapter->shell);
 }
 
+/* Provide the find document operation used by this module and its client applications. */
 static UmiStatus find_document(
     UmiGtk4Adapter *adapter,
     const char *view_id,
@@ -56,19 +63,29 @@ static UmiStatus find_document(
     UmiUiWorkbench *workbench;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || view_id == NULL ||
         out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     workbench = adapter_workbench(adapter);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_STATE;
     documents = umi_ui_workbench_documents(workbench);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_ui_document_view_model_count(documents);
          ++index) {
         UmiUiDocumentViewSnapshot document;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ui_document_view_model_at(
                 documents, index, &document) == UMI_STATUS_OK &&
             strcmp(document.view_id, view_id) == 0) {
@@ -79,16 +96,26 @@ static UmiStatus find_document(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/* Provide the document path operation used by this module and its client applications. */
 static char *document_path(const UmiUiDocumentViewSnapshot *document)
 {
     char *filename;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) return NULL;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (g_str_has_prefix(document->uri, "file://")) {
         filename = g_filename_from_uri(
             document->uri,
             NULL,
             NULL);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (filename != NULL) return filename;
     }
     return g_strdup(
@@ -97,21 +124,39 @@ static char *document_path(const UmiUiDocumentViewSnapshot *document)
             : document->document_id);
 }
 
+/* Provide the find text view operation used by this module and its client applications. */
 static GtkWidget *find_text_view(GtkWidget *root)
 {
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL) return NULL;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (GTK_IS_TEXT_VIEW(root)) return root;
 
     child = gtk_widget_get_first_child(root);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *found = find_text_view(child);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (found != NULL) return found;
         child = gtk_widget_get_next_sibling(child);
     }
     return NULL;
 }
 
+/*
+ * Provide the emit editor location operation used by this module and its client
+ * applications.
+ */
 static UmiStatus emit_editor_location(
     UmiGtk4Adapter *adapter,
     GtkTextBuffer *buffer,
@@ -128,15 +173,21 @@ static UmiStatus emit_editor_location(
     char *path;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || buffer == NULL || view_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!adapter->context_interactions_bound ||
         adapter->context_interaction_sink.editor_location == NULL) {
         return UMI_STATUS_OK;
     }
 
     status = find_document(adapter, view_id, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     insert_mark = gtk_text_buffer_get_insert(buffer);
@@ -148,6 +199,7 @@ static UmiStatus emit_editor_location(
     line = (uint32_t)gtk_text_iter_get_line(&caret) + 1U;
     column = (uint32_t)gtk_text_iter_get_line_offset(&caret) + 1U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (gtk_text_buffer_get_selection_bounds(
             buffer,
             &selection_start,
@@ -163,6 +215,10 @@ static UmiStatus emit_editor_location(
     }
 
     path = document_path(&document);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = adapter->context_interaction_sink.editor_location(
@@ -179,6 +235,10 @@ static UmiStatus emit_editor_location(
     return status;
 }
 
+/*
+ * Copy on text mark into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 static void on_text_mark_set(
     GtkTextBuffer *buffer,
     const GtkTextIter *location,
@@ -191,6 +251,10 @@ static void on_text_mark_set(
     GtkTextMark *selection_mark;
 
     (void)location;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || buffer == NULL || mark == NULL ||
         !adapter->context_interactions_bound ||
         adapter->applying_document_state) {
@@ -199,11 +263,16 @@ static void on_text_mark_set(
 
     insert_mark = gtk_text_buffer_get_insert(buffer);
     selection_mark = gtk_text_buffer_get_selection_bound(buffer);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (mark != insert_mark && mark != selection_mark) return;
 
     view_id = (const char *)g_object_get_data(
         G_OBJECT(buffer),
         UMI_GTK4_CONTEXT_VIEW_ID_KEY);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || view_id[0] == '\0') return;
 
     (void)emit_editor_location(
@@ -212,6 +281,7 @@ static void on_text_mark_set(
         view_id);
 }
 
+/* Provide the bind editor page operation used by this module and its client applications. */
 static void bind_editor_page(
     UmiGtk4Adapter *adapter,
     GtkWidget *page)
@@ -220,17 +290,33 @@ static void bind_editor_page(
     GtkTextBuffer *buffer;
     const char *view_id;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || page == NULL) return;
 
     view_id = (const char *)g_object_get_data(
         G_OBJECT(page),
         "umicom-view-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || view_id[0] == '\0') return;
 
     text_view = find_text_view(page);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text_view == NULL) return;
     buffer = gtk_text_view_get_buffer(
         GTK_TEXT_VIEW(text_view));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL) return;
 
     g_object_set_data_full(
@@ -243,6 +329,7 @@ static void bind_editor_page(
         UMI_GTK4_CONTEXT_ADAPTER_KEY,
         adapter);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (g_object_get_data(
             G_OBJECT(buffer),
             UMI_GTK4_CONTEXT_BOUND_KEY) == NULL) {
@@ -258,6 +345,10 @@ static void bind_editor_page(
     }
 }
 
+/*
+ * Provide the bind notebook pages operation used by this module and its client
+ * applications.
+ */
 static void bind_notebook_pages(
     UmiGtk4Adapter *adapter,
     GtkWidget *notebook)
@@ -265,6 +356,10 @@ static void bind_notebook_pages(
     int page_count;
     int page_index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || notebook == NULL ||
         !GTK_IS_NOTEBOOK(notebook)) {
         return;
@@ -272,6 +367,7 @@ static void bind_notebook_pages(
 
     page_count = gtk_notebook_get_n_pages(
         GTK_NOTEBOOK(notebook));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (page_index = 0;
          page_index < page_count;
          ++page_index) {
@@ -282,6 +378,10 @@ static void bind_notebook_pages(
     }
 }
 
+/*
+ * Provide the emit document activation operation used by this module and its client
+ * applications.
+ */
 static void emit_document_activation(
     UmiGtk4Adapter *adapter,
     GtkWidget *page)
@@ -292,6 +392,10 @@ static void emit_document_activation(
     const char *view_id;
     char *path;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || page == NULL ||
         !adapter->context_interactions_bound) {
         return;
@@ -300,14 +404,27 @@ static void emit_document_activation(
     view_id = (const char *)g_object_get_data(
         G_OBJECT(page),
         "umicom-view-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || view_id[0] == '\0') return;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (find_document(adapter, view_id, &document) != UMI_STATUS_OK) {
         return;
     }
     path = document_path(&document);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL) return;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter->context_interaction_sink.document_activated != NULL) {
         (void)adapter->context_interaction_sink.document_activated(
             adapter->context_interaction_sink.context,
@@ -318,9 +435,17 @@ static void emit_document_activation(
     }
 
     text_view = find_text_view(page);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text_view != NULL) {
         buffer = gtk_text_view_get_buffer(
             GTK_TEXT_VIEW(text_view));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (buffer != NULL) {
             (void)emit_editor_location(
                 adapter,
@@ -331,6 +456,10 @@ static void emit_document_activation(
     g_free(path);
 }
 
+/*
+ * Provide the on context document switched operation used by this module and its client
+ * applications.
+ */
 static void on_context_document_switched(
     GtkNotebook *notebook,
     GtkWidget *page,
@@ -341,19 +470,32 @@ static void on_context_document_switched(
         (UmiGtk4Adapter *)user_data;
     (void)notebook;
     (void)page_num;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->applying_document_state) return;
     emit_document_activation(adapter, page);
 }
 
+/*
+ * Provide the bind notebook switch operation used by this module and its client
+ * applications.
+ */
 static void bind_notebook_switch(
     UmiGtk4Adapter *adapter,
     GtkWidget *notebook,
     gulong *handler_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || notebook == NULL ||
         handler_id == NULL || !GTK_IS_NOTEBOOK(notebook)) {
         return;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (*handler_id == 0U) {
         *handler_id = g_signal_connect(
             notebook,
@@ -363,9 +505,17 @@ static void bind_notebook_switch(
     }
 }
 
+/*
+ * Provide the gtk4 context interaction tag problem list operation used by this module and
+ * its client applications.
+ */
 void umi_gtk4_context_interaction_tag_problem_list(
     GtkWidget *list)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL) return;
     g_object_set_data_full(
         G_OBJECT(list),
@@ -374,11 +524,19 @@ void umi_gtk4_context_interaction_tag_problem_list(
         g_free);
 }
 
+/*
+ * Provide the gtk4 context interaction tag source control row operation used by this
+ * module and its client applications.
+ */
 void umi_gtk4_context_interaction_tag_source_control_row(
     GtkWidget *widget,
     const char *view_kind,
     const char *row_text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (widget == NULL || view_kind == NULL ||
         row_text == NULL) {
         return;
@@ -400,6 +558,10 @@ void umi_gtk4_context_interaction_tag_source_control_row(
         g_free);
 }
 
+/*
+ * Find on problem row while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 static void on_problem_row_selected(
     GtkListBox *list,
     GtkListBoxRow *row,
@@ -412,6 +574,10 @@ static void on_problem_row_selected(
     GtkWidget *child;
     const char *text;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || row == NULL ||
         !adapter->context_interactions_bound ||
         adapter->context_interaction_sink.problem_selected == NULL) {
@@ -419,8 +585,16 @@ static void on_problem_row_selected(
     }
 
     child = gtk_list_box_row_get_child(row);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (child == NULL || !GTK_IS_LABEL(child)) return;
     text = gtk_label_get_text(GTK_LABEL(child));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || text[0] == '\0') return;
 
     (void)adapter->context_interaction_sink.problem_selected(
@@ -429,6 +603,10 @@ static void on_problem_row_selected(
         now_ms());
 }
 
+/*
+ * Provide the on source control pressed operation used by this module and its client
+ * applications.
+ */
 static void on_source_control_pressed(
     GtkGestureClick *gesture,
     int n_press,
@@ -446,6 +624,10 @@ static void on_source_control_pressed(
     (void)x;
     (void)y;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL ||
         !adapter->context_interactions_bound ||
         adapter->context_interaction_sink.source_control_selected == NULL) {
@@ -454,6 +636,10 @@ static void on_source_control_pressed(
 
     widget = gtk_event_controller_get_widget(
         GTK_EVENT_CONTROLLER(gesture));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (widget == NULL) return;
 
     row_text = (const char *)g_object_get_data(
@@ -462,6 +648,10 @@ static void on_source_control_pressed(
     view_kind = (const char *)g_object_get_data(
         G_OBJECT(widget),
         UMI_GTK4_CONTEXT_VIEW_KIND_KEY);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (row_text == NULL || row_text[0] == '\0') return;
 
     (void)adapter->context_interaction_sink.source_control_selected(
@@ -471,6 +661,10 @@ static void on_source_control_pressed(
         now_ms());
 }
 
+/*
+ * Provide the bind tagged widgets operation used by this module and its client
+ * applications.
+ */
 static void bind_tagged_widgets(
     UmiGtk4Adapter *adapter,
     GtkWidget *widget)
@@ -478,12 +672,20 @@ static void bind_tagged_widgets(
     GtkWidget *child;
     const char *source_kind;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || widget == NULL) return;
 
     source_kind = (const char *)g_object_get_data(
         G_OBJECT(widget),
         UMI_GTK4_CONTEXT_SOURCE_KIND_KEY);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_kind != NULL &&
         strcmp(source_kind, "problems") == 0 &&
         GTK_IS_LIST_BOX(widget) &&
@@ -499,7 +701,7 @@ static void bind_tagged_widgets(
             G_OBJECT(widget),
             UMI_GTK4_CONTEXT_BOUND_KEY,
             GINT_TO_POINTER(1));
-    } else if (source_kind != NULL &&
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (source_kind != NULL &&
                strcmp(source_kind, "source-control") == 0 &&
                g_object_get_data(
                    G_OBJECT(widget),
@@ -523,16 +725,29 @@ static void bind_tagged_widgets(
     }
 
     child = gtk_widget_get_first_child(widget);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         bind_tagged_widgets(adapter, child);
         child = gtk_widget_get_next_sibling(child);
     }
 }
 
+/*
+ * Provide the gtk4 context interaction refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_gtk4_context_interaction_refresh(
     UmiGtk4Adapter *adapter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!adapter->context_interactions_bound) {
         return UMI_STATUS_OK;
     }
@@ -553,6 +768,10 @@ UmiStatus umi_gtk4_context_interaction_refresh(
         adapter->secondary_document_notebook,
         &adapter->context_secondary_switch_handler);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter->window != NULL) {
         bind_tagged_widgets(
             adapter,
@@ -561,9 +780,17 @@ UmiStatus umi_gtk4_context_interaction_refresh(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the gtk4 context interaction unbind operation used by this module and its client
+ * applications.
+ */
 void umi_gtk4_context_interaction_unbind(
     UmiGtk4Adapter *adapter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL) return;
 
     /*

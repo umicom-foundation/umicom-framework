@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the factor change operation used by this module and its client applications.
+ */
 double umi_factor_change(const UmiMarketFactor *factor);
 #ifdef __cplusplus
 }

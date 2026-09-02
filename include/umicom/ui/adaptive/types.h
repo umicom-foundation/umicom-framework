@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_ADAPTIVE_MAX_ITEMS 64U
 #define UMI_ADAPTIVE_MAX_BREAKPOINTS 16U
 
+/**
+ * List the named adaptive device family values accepted by this public contract.
+ */
 typedef enum UmiAdaptiveDeviceFamily {
     UMI_ADAPTIVE_DEVICE_DESKTOP = 1,
     UMI_ADAPTIVE_DEVICE_LAPTOP = 2,
@@ -43,6 +46,9 @@ typedef enum UmiAdaptiveDeviceFamily {
     UMI_ADAPTIVE_DEVICE_FOLDABLE = 6
 } UmiAdaptiveDeviceFamily;
 
+/**
+ * List the named adaptive form factor values accepted by this public contract.
+ */
 typedef enum UmiAdaptiveFormFactor {
     UMI_ADAPTIVE_FORM_TALL = 1,
     UMI_ADAPTIVE_FORM_STANDARD = 2,
@@ -50,6 +56,9 @@ typedef enum UmiAdaptiveFormFactor {
     UMI_ADAPTIVE_FORM_ULTRAWIDE = 4
 } UmiAdaptiveFormFactor;
 
+/**
+ * List the named adaptive input mode values accepted by this public contract.
+ */
 typedef enum UmiAdaptiveInputMode {
     UMI_ADAPTIVE_INPUT_POINTER = 1,
     UMI_ADAPTIVE_INPUT_TOUCH = 2,
@@ -57,12 +66,18 @@ typedef enum UmiAdaptiveInputMode {
     UMI_ADAPTIVE_INPUT_KEYBOARD = 4
 } UmiAdaptiveInputMode;
 
+/**
+ * List the named adaptive display orientation values accepted by this public contract.
+ */
 typedef enum UmiAdaptiveDisplayOrientation {
     UMI_ADAPTIVE_ORIENTATION_PORTRAIT = 1,
     UMI_ADAPTIVE_ORIENTATION_LANDSCAPE = 2,
     UMI_ADAPTIVE_ORIENTATION_SQUARE = 3
 } UmiAdaptiveDisplayOrientation;
 
+/**
+ * List the named adaptive navigation pattern values accepted by this public contract.
+ */
 typedef enum UmiAdaptiveNavigationPattern {
     UMI_ADAPTIVE_NAV_TOP_BAR = 1,
     UMI_ADAPTIVE_NAV_SIDE_RAIL = 2,
@@ -71,6 +86,9 @@ typedef enum UmiAdaptiveNavigationPattern {
     UMI_ADAPTIVE_NAV_COMMAND = 5
 } UmiAdaptiveNavigationPattern;
 
+/**
+ * List the named adaptive region role values accepted by this public contract.
+ */
 typedef enum UmiAdaptiveRegionRole {
     UMI_ADAPTIVE_REGION_HEADER = 1,
     UMI_ADAPTIVE_REGION_NAVIGATION = 2,
@@ -81,6 +99,9 @@ typedef enum UmiAdaptiveRegionRole {
     UMI_ADAPTIVE_REGION_OVERLAY = 7
 } UmiAdaptiveRegionRole;
 
+/**
+ * List the named adaptive presentation values accepted by this public contract.
+ */
 typedef enum UmiAdaptivePresentation {
     UMI_ADAPTIVE_PRESENTATION_HIDDEN = 0,
     UMI_ADAPTIVE_PRESENTATION_INLINE = 1,
@@ -88,6 +109,9 @@ typedef enum UmiAdaptivePresentation {
     UMI_ADAPTIVE_PRESENTATION_OVERLAY = 3
 } UmiAdaptivePresentation;
 
+/**
+ * Represent the adaptive insets data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveInsets {
     int32_t top;
     int32_t right;
@@ -95,6 +119,9 @@ typedef struct UmiAdaptiveInsets {
     int32_t left;
 } UmiAdaptiveInsets;
 
+/**
+ * Represent the adaptive viewport data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveViewport {
     int32_t width;
     int32_t height;

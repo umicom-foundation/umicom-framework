@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise frontend gtkjs from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_frontend_gtkjs_create(UmiFrontendRenderer *out_renderer);
 #ifdef __cplusplus
 }

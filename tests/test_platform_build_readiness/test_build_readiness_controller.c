@@ -12,6 +12,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/test_platform/build_readiness/controller.h"
+/*
+ * Exercise probe and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus probe(const UmiTestPlatformBuildArtifact *artifact,
                        UmiTestPlatformBuildDiagnosticInput *input,
                        void *user_data) {
@@ -23,6 +27,10 @@ static UmiStatus probe(const UmiTestPlatformBuildArtifact *artifact,
     input->executable_exists = strcmp(artifact->target_name, missing) != 0;
     return UMI_STATUS_OK;
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiTestPlatformBuildInventory inventory;
     UmiTestPlatformBuildReadinessReport report;

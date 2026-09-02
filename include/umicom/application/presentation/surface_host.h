@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application presentation surface host operations data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceHostOperations {
     uint32_t struct_size;
     UmiStatus (*begin)(void *context,
@@ -37,11 +41,19 @@ typedef struct UmiApplicationPresentationSurfaceHostOperations {
     void (*end)(void *context);
 } UmiApplicationPresentationSurfaceHostOperations;
 
+/**
+ * Represent the application presentation surface host data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceHost {
     const UmiApplicationPresentationSurfaceHostOperations *operations;
     void *context;
 } UmiApplicationPresentationSurfaceHost;
 
+/**
+ * Check that application presentation surface host satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_presentation_surface_host_validate(
     const UmiApplicationPresentationSurfaceHost *host);
 

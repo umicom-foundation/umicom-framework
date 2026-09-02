@@ -15,4 +15,8 @@
 
 #include <assert.h>
 #include "test_support.h"
+/*
+ * Find test ai mcp server registry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 int test_ai_mcp_server_registry_find(void){UmiAiMcpServerRegistry r;UmiAiMcpServerDescriptor s;umi_ai_mcp_server_registry_init(&r);assert(umi_test_mcp_server(&s)==UMI_STATUS_OK);assert(umi_ai_mcp_server_registry_add(&r,&s)==UMI_STATUS_OK);assert(umi_ai_mcp_server_registry_find(&r,"test")!=NULL);assert(umi_ai_mcp_server_registry_find(&r,"missing")==NULL);return 0;}

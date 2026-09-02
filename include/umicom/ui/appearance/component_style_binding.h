@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance component style binding data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceComponentStyleBinding {
     char component_id[UMI_APPEARANCE_ID_CAPACITY];
     char style_id[UMI_APPEARANCE_ID_CAPACITY];

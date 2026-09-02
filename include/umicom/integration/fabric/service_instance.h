@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric service instance data shared with callers of this public contract.
+ */
 typedef struct UmiFabricServiceInstance {
     char instance_id[UMI_FABRIC_ID_CAPACITY];
     char service_id[UMI_FABRIC_ID_CAPACITY];
@@ -35,7 +38,15 @@ typedef struct UmiFabricServiceInstance {
     uint64_t last_seen_ms;
 } UmiFabricServiceInstance;
 
+/**
+ * Initialise fabric service instance from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_service_instance_init(UmiFabricServiceInstance *item, const char *instance_id, const char *service_id, const char *endpoint_id, uint32_t priority, uint32_t weight);
+/**
+ * Check that fabric service instance satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_fabric_service_instance_validate(const UmiFabricServiceInstance *item);
 
 #ifdef __cplusplus

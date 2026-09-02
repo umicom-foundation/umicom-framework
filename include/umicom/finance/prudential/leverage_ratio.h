@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential leverage ratio data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLeverageRatio { double numerator; double denominator; double ratio; } UmiPrudentialLeverageRatio;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_leverage_ratio_calculate(UmiPrudentialLeverageRatio *result, double numerator, double denominator);

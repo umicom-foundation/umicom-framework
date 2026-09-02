@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Combined quality evaluation v2 | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/codeguard/quality_evaluation.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCodeGuardQualityPolicy policy;

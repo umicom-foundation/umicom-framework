@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/syscall_descriptor.h"
 
-UmiStatus umi_ct_syscall_descriptor_validate(const UmiCtSyscallDescriptor*d){if(d==NULL||!umi_ct_id_valid(d->name)||d->argument_count>8U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/*
+ * Check that ct syscall descriptor satisfies its contract before another service relies on
+ * it.
+ */
+UmiStatus umi_ct_syscall_descriptor_validate(const UmiCtSyscallDescriptor*d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||!umi_ct_id_valid(d->name)||d->argument_count>8U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

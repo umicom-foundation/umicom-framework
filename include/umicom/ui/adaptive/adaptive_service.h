@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive service snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveServiceSnapshot {
     UmiAdaptiveDeviceFamily family;
     UmiDesignSizeClass size_class;

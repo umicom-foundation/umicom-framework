@@ -16,6 +16,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_FINANCE_TREASURY_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_finance)
     message(FATAL_ERROR "UmicomTreasuryRiskSettlementCollateralPlatform.cmake requires canonical umicom_finance")
 endif()
@@ -91,16 +92,22 @@ target_sources(umicom_finance PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/finance/treasury/treasury_service.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add finance treasury test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_finance_treasury_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_FINANCE_TREASURY_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::finance)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

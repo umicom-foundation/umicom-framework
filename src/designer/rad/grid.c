@@ -14,7 +14,15 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/grid.h"
 #include <string.h>
+/*
+ * Initialise rad grid from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_rad_grid_init(UmiRadDesignGrid *item){
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(item,0,sizeof *item);
     item->spacing_x = 1;
@@ -22,4 +30,5 @@ UmiStatus umi_rad_grid_init(UmiRadDesignGrid *item){
     item->visible = true;
     return UMI_STATUS_OK;
 }
-int umi_rad_grid_is_valid(const UmiRadDesignGrid *item){if(item==NULL)return 0;return item->spacing_x > 0 && item->spacing_y > 0;}
+/* Check that rad grid satisfies its contract before another service relies on it. */
+int umi_rad_grid_is_valid(const UmiRadDesignGrid *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return 0;return item->spacing_x > 0 && item->spacing_y > 0;}

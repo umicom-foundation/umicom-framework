@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel call hierarchy node model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelCallHierarchyNodeModel { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelCallHierarchyNodeModel;
+/**
+ * Initialise editor intel call hierarchy node model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_call_hierarchy_node_model_init(UmiEditorIntelCallHierarchyNodeModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel call hierarchy node model set score operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_intel_call_hierarchy_node_model_set_score(UmiEditorIntelCallHierarchyNodeModel *model,uint32_t score);
+/**
+ * Find editor intel call hierarchy node model set while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 UmiStatus umi_editor_intel_call_hierarchy_node_model_set_selected(UmiEditorIntelCallHierarchyNodeModel *model,bool selected);
+/**
+ * Check that editor intel call hierarchy node model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_call_hierarchy_node_model_valid(const UmiEditorIntelCallHierarchyNodeModel *model);
 
 #ifdef __cplusplus

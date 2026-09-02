@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant swaption data shared with callers of this public contract.
+ */
 typedef struct UmiQuantSwaption {
     double annuity;
     double strike_rate;

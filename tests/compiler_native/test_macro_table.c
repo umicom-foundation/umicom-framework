@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/macro_table.h"
-int main(void){ UmiNativeMacroTable t; umi_nc_macro_table_init(&t); UmiNativeMacro m; if(umi_nc_macro_init(&m,"N","4",false)!=UMI_STATUS_OK) return 1; if(umi_nc_macro_table_define(&t,&m)!=UMI_STATUS_OK) return 2; if(umi_nc_macro_table_find(&t,"N")==NULL) return 3; if(umi_nc_macro_table_undef(&t,"N")!=UMI_STATUS_OK||t.count!=0U) return 4; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiNativeMacroTable t; umi_nc_macro_table_init(&t); UmiNativeMacro m; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_macro_init(&m,"N","4",false)!=UMI_STATUS_OK) return 1; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_macro_table_define(&t,&m)!=UMI_STATUS_OK) return 2; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_macro_table_find(&t,"N")==NULL) return 3; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_macro_table_undef(&t,"N")!=UMI_STATUS_OK||t.count!=0U) return 4; return 0; }

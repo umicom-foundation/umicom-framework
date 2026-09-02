@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_CLEAR "umicom.developer.terminal.terminal_clear"
 
+/**
+ * Release or reset state held by developer capability terminal so the same storage can be
+ * reused safely.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_clear(void);
 

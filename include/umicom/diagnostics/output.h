@@ -30,6 +30,9 @@ extern "C" {
 #define UMI_OUTPUT_TEXT_CAPACITY 4096U
 #define UMI_OUTPUT_STREAM_COUNT 4U
 
+/**
+ * List the named output stream values accepted by this public contract.
+ */
 typedef enum UmiOutputStream {
     UMI_OUTPUT_STREAM_STANDARD = 0,
     UMI_OUTPUT_STREAM_ERROR = 1,
@@ -37,6 +40,9 @@ typedef enum UmiOutputStream {
     UMI_OUTPUT_STREAM_DEBUG = 3
 } UmiOutputStream;
 
+/**
+ * Represent the output record data shared with callers of this public contract.
+ */
 typedef struct UmiOutputRecord {
     char channel_id[UMI_OUTPUT_CHANNEL_ID_CAPACITY];
     char channel_name[UMI_OUTPUT_CHANNEL_NAME_CAPACITY];
@@ -51,12 +57,20 @@ typedef struct UmiOutputRecord {
     int complete_line;
 } UmiOutputRecord;
 
+/**
+ * Initialise output record from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_output_record_init(UmiOutputRecord *record,
                                  const char *channel_id,
                                  const char *channel_name,
                                  const char *source,
                                  UmiOutputStream stream,
                                  const char *text);
+/**
+ * Provide the output stream text operation used by this module and its client
+ * applications.
+ */
 const char *umi_output_stream_text(UmiOutputStream stream);
 
 #ifdef __cplusplus

@@ -18,6 +18,10 @@
 
 #include "umicom/finance/commodity/physical_contract.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommodityPhysicalContract value;

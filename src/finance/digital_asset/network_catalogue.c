@@ -23,6 +23,10 @@
 /* Reset catalogue state without heap allocation. */
 void umi_digital_asset_network_catalogue_init(UmiDigitalNetworkCatalogue *catalogue)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue != NULL) {
         memset(catalogue, 0, sizeof *catalogue);
     }
@@ -32,14 +36,21 @@ void umi_digital_asset_network_catalogue_init(UmiDigitalNetworkCatalogue *catalo
 UmiStatus umi_digital_asset_network_catalogue_add(UmiDigitalNetworkCatalogue *catalogue, const UmiDigitalNetworkDescriptor *item)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || item == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(catalogue->items[index].id.value, (*item).id.value) == 0) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (catalogue->count >= UMI_DIGITAL_ASSET_MAX_ITEMS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -52,10 +63,16 @@ UmiStatus umi_digital_asset_network_catalogue_add(UmiDigitalNetworkCatalogue *ca
 const UmiDigitalNetworkDescriptor *umi_digital_asset_network_catalogue_find(const UmiDigitalNetworkCatalogue *catalogue, const char *id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || id == NULL) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(catalogue->items[index].id.value, id) == 0) {
             return &catalogue->items[index];
         }

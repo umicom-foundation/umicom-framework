@@ -31,6 +31,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime bindings data shared with callers of this public contract.
+ */
 typedef struct UmiStudioRuntimeBindings {
     UmiApplicationShellRegistry *shell_registry;
     UmiApplicationShellState *shell_state;
@@ -41,27 +44,51 @@ typedef struct UmiStudioRuntimeBindings {
     uint64_t revision;
 } UmiStudioRuntimeBindings;
 
+/**
+ * Initialise studio runtime bindings from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_studio_runtime_bindings_init(
     UmiStudioRuntimeBindings *bindings);
 
+/**
+ * Provide the studio runtime bind shell operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_bind_shell(
     UmiStudioRuntimeBindings *bindings,
     UmiApplicationShellRegistry *registry,
     UmiApplicationShellState *state,
     UmiApplicationShellLayout *layout);
 
+/**
+ * Provide the studio runtime bind commands operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_bind_commands(
     UmiStudioRuntimeBindings *bindings,
     UmiCommandRegistry *commands);
 
+/**
+ * Provide the studio runtime bind ide operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_bind_ide(
     UmiStudioRuntimeBindings *bindings,
     UmiIdeIntegrationPlatform *ide);
 
+/**
+ * Provide the studio runtime bind documents operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_bind_documents(
     UmiStudioRuntimeBindings *bindings,
     UmiDocumentCoordinator *documents);
 
+/**
+ * Check that studio runtime bindings satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_studio_runtime_bindings_validate(
     const UmiStudioRuntimeBindings *bindings);
 

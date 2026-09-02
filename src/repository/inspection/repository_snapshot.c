@@ -54,6 +54,7 @@ UmiStatus umi_repository_snapshot_collect(
 
     /* Read branch, worktree and index from one identical porcelain-v2 snapshot. */
     status = umi_repository_status_probe_read(context, &porcelain);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -64,6 +65,7 @@ UmiStatus umi_repository_snapshot_collect(
     /* Read remote and submodule health through their established state models. */
     status = umi_repository_remote_probe_read(
         context, &out_snapshot->maintenance.remotes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -72,9 +74,11 @@ UmiStatus umi_repository_snapshot_collect(
 
     status = umi_repository_submodule_probe_read(
         context, &out_snapshot->maintenance.submodules);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (porcelain.submodule_dirty > out_snapshot->maintenance.submodules.dirty) {
         out_snapshot->maintenance.submodules.dirty = porcelain.submodule_dirty;
     }
@@ -84,6 +88,7 @@ UmiStatus umi_repository_snapshot_collect(
         context, out_snapshot->identity.root, sizeof(out_snapshot->identity.root));
     (void)umi_repository_head_probe_read(
         context, out_snapshot->identity.head, sizeof(out_snapshot->identity.head));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_repository_tag_probe_read(
             context, out_snapshot->identity.exact_tag,
             sizeof(out_snapshot->identity.exact_tag)) == UMI_STATUS_OK &&
@@ -106,6 +111,7 @@ UmiStatus umi_repository_snapshot_collect(
 
     /* Reuse the established Framework maintenance projection exactly once. */
     status = umi_repository_status_summary_refresh(&out_snapshot->maintenance);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

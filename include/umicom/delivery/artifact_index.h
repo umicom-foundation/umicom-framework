@@ -28,13 +28,27 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the artifact index data shared with callers of this public contract.
+ */
 typedef struct UmiArtifactIndex {
     UmiDeliveryArtifact artifacts[UMI_DELIVERY_MAX_ARTIFACTS];
     size_t count;
 } UmiArtifactIndex;
+/**
+ * Initialise artifact index from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_artifact_index_init(UmiArtifactIndex *index);
+/**
+ * Add artifact index only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_artifact_index_add(UmiArtifactIndex *index,
                                  const UmiDeliveryArtifact *artifact);
+/**
+ * Provide the artifact index get operation used by this module and its client
+ * applications.
+ */
 const UmiDeliveryArtifact *umi_artifact_index_get(const UmiArtifactIndex *index,
                                                    const char *artifact_id);
 

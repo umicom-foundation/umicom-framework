@@ -20,6 +20,7 @@
 
 #include "internal.h"
 
+/* Provide the compare items operation used by this module and its client applications. */
 static int compare_items(
     const UmiWorkbenchLayoutBrowserItem *left,
     const UmiWorkbenchLayoutBrowserItem *right,
@@ -27,24 +28,29 @@ static int compare_items(
 {
     int result;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (order) {
     case UMI_WORKBENCH_LAYOUT_SORT_NAME_DESCENDING:
         return -strcmp(left->summary.name, right->summary.name);
     case UMI_WORKBENCH_LAYOUT_SORT_RECENT_FIRST:
+        /* Apply this branch only when its contract condition is satisfied. */
         if (left->summary.modified_at_ms >
             right->summary.modified_at_ms) {
             return -1;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (left->summary.modified_at_ms <
             right->summary.modified_at_ms) {
             return 1;
         }
         break;
     case UMI_WORKBENCH_LAYOUT_SORT_REVISION_DESCENDING:
+        /* Apply this branch only when its contract condition is satisfied. */
         if (left->summary.revision >
             right->summary.revision) {
             return -1;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (left->summary.revision <
             right->summary.revision) {
             return 1;
@@ -56,6 +62,7 @@ static int compare_items(
     }
 
     result = strcmp(left->summary.name, right->summary.name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result != 0) {
         return result;
     }
@@ -64,6 +71,10 @@ static int compare_items(
         right->summary.layout_id);
 }
 
+/*
+ * Provide the workbench layout browser query default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutBrowserQuery
 umi_workbench_layout_browser_query_default(void)
 {
@@ -82,6 +93,10 @@ umi_workbench_layout_browser_query_default(void)
     return query;
 }
 
+/*
+ * Provide the workbench layout browser sort operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_browser_sort(
     UmiWorkbenchLayoutBrowserResult *result,
     UmiWorkbenchLayoutSortOrder order)
@@ -89,6 +104,10 @@ UmiStatus umi_workbench_layout_browser_sort(
     size_t index;
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL ||
         order < UMI_WORKBENCH_LAYOUT_SORT_NAME_ASCENDING ||
         order >
@@ -96,10 +115,15 @@ UmiStatus umi_workbench_layout_browser_sort(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 1U; index < result->count; ++index) {
         UmiWorkbenchLayoutBrowserItem selected =
             result->items[index];
         position = index;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (position > 0U &&
                compare_items(
                    &selected,
@@ -115,6 +139,10 @@ UmiStatus umi_workbench_layout_browser_sort(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout browser search operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_browser_search(
     const UmiWorkbenchLayoutStoreAdapter *adapter,
     const UmiWorkbenchLayoutBrowserQuery *query,
@@ -128,6 +156,10 @@ UmiStatus umi_workbench_layout_browser_search(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -173,6 +205,7 @@ UmiStatus umi_workbench_layout_browser_search(
 
     status = umi_workbench_layout_store_list(
         adapter, &store_query, &list);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -183,6 +216,7 @@ UmiStatus umi_workbench_layout_browser_search(
     out_result->truncated = list.truncated;
     out_result->revision = 1U;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < list.count &&
          out_result->count <
@@ -222,11 +256,19 @@ UmiStatus umi_workbench_layout_browser_search(
         out_result, effective.sort_order);
 }
 
+/*
+ * Find workbench layout browser result while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchLayoutBrowserItem *
 umi_workbench_layout_browser_result_at(
     const UmiWorkbenchLayoutBrowserResult *result,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL || index >= result->count) {
         return NULL;
     }

@@ -20,6 +20,7 @@
 
 #include "internal.h"
 
+/* Provide the initialise entry operation used by this module and its client applications. */
 static UmiStatus initialise_entry(
     UmiWorkbenchLayoutHistoryEntry *entry,
     const UmiWorkbenchLayoutDocument *document,
@@ -32,6 +33,10 @@ static UmiStatus initialise_entry(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entry == NULL || document == NULL ||
         !umi_workbench_layout_text_present(entry_id) ||
         !umi_workbench_layout_text_present(label)) {
@@ -45,6 +50,7 @@ static UmiStatus initialise_entry(
         sizeof(entry->entry_id),
         entry_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             entry->label,
@@ -52,6 +58,7 @@ static UmiStatus initialise_entry(
             label,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             entry->actor_id,
@@ -59,6 +66,7 @@ static UmiStatus initialise_entry(
             actor_id != NULL ? actor_id : "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             entry->correlation_id,
@@ -66,10 +74,12 @@ static UmiStatus initialise_entry(
             correlation_id != NULL ? correlation_id : "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_copy(
             &entry->document, document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)memset(entry, 0, sizeof(*entry));
         return status;
@@ -80,16 +90,25 @@ static UmiStatus initialise_entry(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the discard redo entries operation used by this module and its client
+ * applications.
+ */
 static void discard_redo_entries(
     UmiWorkbenchLayoutHistory *history)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || history->count == 0U ||
         history->cursor + 1U >= history->count) {
         return;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = history->cursor + 1U;
          index < history->count;
          ++index) {
@@ -101,14 +120,23 @@ static void discard_redo_entries(
     history->count = history->cursor + 1U;
 }
 
+/*
+ * Provide the discard oldest entry operation used by this module and its client
+ * applications.
+ */
 static void discard_oldest_entry(
     UmiWorkbenchLayoutHistory *history)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || history->count == 0U) {
         return;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 1U; index < history->count; ++index) {
         history->entries[index - 1U] = history->entries[index];
     }
@@ -117,14 +145,23 @@ static void discard_oldest_entry(
         0,
         sizeof(history->entries[history->count - 1U]));
     history->count -= 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (history->cursor > 0U) {
         history->cursor -= 1U;
     }
 }
 
+/*
+ * Initialise workbench layout history from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_history_init(
     UmiWorkbenchLayoutHistory *history)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) {
         return;
     }
@@ -134,6 +171,10 @@ void umi_workbench_layout_history_init(
     history->revision = 1U;
 }
 
+/*
+ * Provide the workbench layout history seed operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_history_seed(
     UmiWorkbenchLayoutHistory *history,
     const UmiWorkbenchLayoutDocument *document,
@@ -142,6 +183,10 @@ UmiStatus umi_workbench_layout_history_seed(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -156,6 +201,7 @@ UmiStatus umi_workbench_layout_history_seed(
         "",
         0U,
         true);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -166,6 +212,10 @@ UmiStatus umi_workbench_layout_history_seed(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout history push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_history_push(
     UmiWorkbenchLayoutHistory *history,
     const UmiWorkbenchLayoutDocument *document,
@@ -179,6 +229,10 @@ UmiStatus umi_workbench_layout_history_push(
     UmiWorkbenchLayoutHistoryEntry entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -192,15 +246,18 @@ UmiStatus umi_workbench_layout_history_push(
         correlation_id,
         captured_at_ms,
         checkpoint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (history->count > 0U &&
         history->cursor != UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         discard_redo_entries(history);
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (history->count >= UMI_WORKBENCH_LAYOUT_MAX_HISTORY) {
         discard_oldest_entry(history);
     }
@@ -212,6 +269,10 @@ UmiStatus umi_workbench_layout_history_push(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout history can undo operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_history_can_undo(
     const UmiWorkbenchLayoutHistory *history)
 {
@@ -221,6 +282,10 @@ bool umi_workbench_layout_history_can_undo(
            history->cursor > 0U;
 }
 
+/*
+ * Provide the workbench layout history can redo operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_history_can_redo(
     const UmiWorkbenchLayoutHistory *history)
 {
@@ -229,15 +294,24 @@ bool umi_workbench_layout_history_can_redo(
            history->cursor + 1U < history->count;
 }
 
+/*
+ * Provide the workbench layout history undo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_history_undo(
     UmiWorkbenchLayoutHistory *history,
     UmiWorkbenchLayoutDocument *out_document)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_history_can_undo(history)) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -246,6 +320,7 @@ UmiStatus umi_workbench_layout_history_undo(
     status = umi_workbench_layout_document_copy(
         out_document,
         &history->entries[history->cursor].document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         history->cursor += 1U;
         return status;
@@ -254,15 +329,24 @@ UmiStatus umi_workbench_layout_history_undo(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout history redo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_history_redo(
     UmiWorkbenchLayoutHistory *history,
     UmiWorkbenchLayoutDocument *out_document)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_history_can_redo(history)) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -271,6 +355,7 @@ UmiStatus umi_workbench_layout_history_redo(
     status = umi_workbench_layout_document_copy(
         out_document,
         &history->entries[history->cursor].document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         history->cursor -= 1U;
         return status;
@@ -279,6 +364,10 @@ UmiStatus umi_workbench_layout_history_redo(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout history restore entry operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_history_restore_entry(
     UmiWorkbenchLayoutHistory *history,
     const char *entry_id,
@@ -287,16 +376,23 @@ UmiStatus umi_workbench_layout_history_restore_entry(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || out_document == NULL ||
         !umi_workbench_layout_text_present(entry_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < history->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (umi_workbench_layout_text_equal(
                 history->entries[index].entry_id, entry_id)) {
             status = umi_workbench_layout_document_copy(
                 out_document, &history->entries[index].document);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 return status;
             }
@@ -308,10 +404,18 @@ UmiStatus umi_workbench_layout_history_restore_entry(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the workbench layout history current operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchLayoutHistoryEntry *
 umi_workbench_layout_history_current(
     const UmiWorkbenchLayoutHistory *history)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL ||
         history->cursor == UMI_WORKBENCH_LAYOUT_INDEX_NONE ||
         history->cursor >= history->count) {
@@ -320,27 +424,45 @@ umi_workbench_layout_history_current(
     return &history->entries[history->cursor];
 }
 
+/*
+ * Find workbench layout history while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchLayoutHistoryEntry *
 umi_workbench_layout_history_at(
     const UmiWorkbenchLayoutHistory *history,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || index >= history->count) {
         return NULL;
     }
     return &history->entries[index];
 }
 
+/*
+ * Return the number of records represented by workbench layout history checkpoint without
+ * changing their state.
+ */
 size_t umi_workbench_layout_history_checkpoint_count(
     const UmiWorkbenchLayoutHistory *history)
 {
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < history->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (history->entries[index].checkpoint) {
             count += 1U;
         }

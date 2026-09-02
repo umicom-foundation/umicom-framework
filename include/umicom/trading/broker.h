@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the broker data shared with callers of this public contract.
+ */
 typedef struct UmiBroker {
     void *instance;
     const char *provider_name;
@@ -34,6 +37,9 @@ typedef struct UmiBroker {
     UmiStatus (*cancel_order)(void *instance, const UmiFinancialId *client_order_id);
     void (*destroy)(void *instance);
 } UmiBroker;
+/**
+ * Check that broker contract satisfies its contract before another service relies on it.
+ */
 int umi_broker_contract_valid(const UmiBroker *broker);
 #ifdef __cplusplus
 }

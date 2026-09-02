@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PROBLEM_REGISTRY "umicom.developer.diagnostics.problem_registry"
 
+/**
+ * Provide the developer capability problem registry operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_problem_registry(void);
 

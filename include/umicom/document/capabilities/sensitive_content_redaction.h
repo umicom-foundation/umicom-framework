@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_SENSITIVE_CONTENT_REDACTION "umicom.document.security.sensitive_content_redaction"
 
+/**
+ * Provide the document capability sensitive content redaction operation used by this
+ * module and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_sensitive_content_redaction(void);
 

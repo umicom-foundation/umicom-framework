@@ -30,11 +30,23 @@ extern "C" {
 #define UMI_APPLICATION_PRESENTATION_BADGE_CAPACITY 32U
 #define UMI_APPLICATION_PRESENTATION_JOURNAL_CAPACITY 128U
 
+/**
+ * Represent the application presentation surface behavior data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceBehavior
     UmiApplicationPresentationSurfaceBehavior;
+/**
+ * Represent the application presentation workspace runtime policy data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiApplicationPresentationWorkspaceRuntimePolicy
     UmiApplicationPresentationWorkspaceRuntimePolicy;
 
+/**
+ * List the named application presentation surface state values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationPresentationSurfaceState {
     UMI_APPLICATION_PRESENTATION_STATE_DORMANT = 1,
     UMI_APPLICATION_PRESENTATION_STATE_LOADING = 2,
@@ -47,6 +59,10 @@ typedef enum UmiApplicationPresentationSurfaceState {
     UMI_APPLICATION_PRESENTATION_STATE_PERMISSION_REQUIRED = 9
 } UmiApplicationPresentationSurfaceState;
 
+/**
+ * List the named application presentation surface event values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationPresentationSurfaceEvent {
     UMI_APPLICATION_PRESENTATION_EVENT_MOUNT = 1,
     UMI_APPLICATION_PRESENTATION_EVENT_UNMOUNT = 2,
@@ -58,6 +74,10 @@ typedef enum UmiApplicationPresentationSurfaceEvent {
     UMI_APPLICATION_PRESENTATION_EVENT_CONTEXT_CHANGED = 8
 } UmiApplicationPresentationSurfaceEvent;
 
+/**
+ * Represent the application presentation surface update data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceUpdate {
     UmiApplicationPresentationSurfaceState state;
     char message[UMI_APPLICATION_PRESENTATION_MESSAGE_CAPACITY];
@@ -67,6 +87,10 @@ typedef struct UmiApplicationPresentationSurfaceUpdate {
     int dirty;
 } UmiApplicationPresentationSurfaceUpdate;
 
+/**
+ * Represent the application presentation surface item data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceItem {
     const UmiApplicationPresentationPanelPlacement *placement;
     const UmiApplicationPresentationSurfaceBehavior *behavior;
@@ -82,6 +106,10 @@ typedef struct UmiApplicationPresentationSurfaceItem {
     uint64_t revision;
 } UmiApplicationPresentationSurfaceItem;
 
+/**
+ * Represent the application presentation surface snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationSurfaceSnapshot {
     const char *recipe_id;
     const char *window_id;
@@ -99,8 +127,16 @@ typedef struct UmiApplicationPresentationSurfaceSnapshot {
     uint64_t revision;
 } UmiApplicationPresentationSurfaceSnapshot;
 
+/**
+ * Provide the application presentation surface state text operation used by this module
+ * and its client applications.
+ */
 const char *umi_application_presentation_surface_state_text(
     UmiApplicationPresentationSurfaceState state);
+/**
+ * Provide the application presentation surface event text operation used by this module
+ * and its client applications.
+ */
 const char *umi_application_presentation_surface_event_text(
     UmiApplicationPresentationSurfaceEvent event);
 

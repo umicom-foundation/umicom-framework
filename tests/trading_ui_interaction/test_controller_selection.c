@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise test controller selection and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_controller_selection(void)
 {
     UmiTradingUiTestFixture fixture;

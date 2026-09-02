@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai policy data shared with callers of this public contract.
+ */
 typedef struct UmiAiPolicy {
     int allow_local;
     int allow_remote;
@@ -35,10 +38,21 @@ typedef struct UmiAiPolicy {
     int require_remote_approval;
 } UmiAiPolicy;
 
+/**
+ * Provide the ai policy default operation used by this module and its client applications.
+ */
 UmiAiPolicy umi_ai_policy_default(void);
+/**
+ * Provide the ai policy check provider operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_policy_check_provider(const UmiAiPolicy *policy,
                                        UmiAiProviderKind kind,
                                        int approved);
+/**
+ * Provide the ai policy check tool operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_policy_check_tool(const UmiAiPolicy *policy, int approved);
 
 #ifdef __cplusplus

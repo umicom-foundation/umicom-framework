@@ -18,16 +18,30 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the diagnostic ui severity operation used by this module and its client
+ * applications.
+ */
 static int diagnostic_ui_severity(UmiDiagnosticSeverity severity)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (severity >= UMI_DIAGNOSTIC_ERROR) return 4;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (severity == UMI_DIAGNOSTIC_WARNING) return 3;
     return 1;
 }
 
+/*
+ * Provide the diagnostic ui project problem operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_ui_project_problem(const UmiDiagnosticSnapshot *diagnostic,
                                             UmiUiProblemSnapshot *out_problem)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diagnostic == NULL || out_problem == NULL ||
         umi_diagnostic_snapshot_validate(diagnostic, NULL, 0U) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -48,6 +62,10 @@ UmiStatus umi_diagnostic_ui_project_problem(const UmiDiagnosticSnapshot *diagnos
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic ui project output channel operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_ui_project_output_channel(const UmiOutputBuffer *buffer,
                                                    const char *channel_id,
                                                    UmiUiOutputChannelSnapshot *out_channel)
@@ -56,6 +74,10 @@ UmiStatus umi_diagnostic_ui_project_output_channel(const UmiOutputBuffer *buffer
     size_t index;
     size_t used = 0U;
     int found = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL || channel_id == NULL || channel_id[0] == '\0' || out_channel == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -64,10 +86,12 @@ UmiStatus umi_diagnostic_ui_project_output_channel(const UmiOutputBuffer *buffer
     out_channel->api_version = UMI_UI_OUTPUT_CHANNEL_API_VERSION;
     (void)snprintf(out_channel->id, sizeof(out_channel->id), "%s", channel_id);
     count = umi_output_buffer_count(buffer);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiOutputRecord record;
         size_t available;
         size_t length;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_output_buffer_at(buffer, index, &record) != UMI_STATUS_OK ||
             strcmp(record.channel_id, channel_id) != 0) continue;
         found = 1;
@@ -78,10 +102,12 @@ UmiStatus umi_diagnostic_ui_project_output_channel(const UmiOutputBuffer *buffer
         out_channel->revision = record.revision;
         available = sizeof(out_channel->text) - used;
         length = strlen(record.text);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (available > 1U) {
             size_t copied = length < available - 1U ? length : available - 1U;
             (void)memcpy(out_channel->text + used, record.text, copied);
             used += copied;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (used + 1U < sizeof(out_channel->text) &&
                 (used == 0U || out_channel->text[used - 1U] != '\n')) {
                 out_channel->text[used++] = '\n';
@@ -94,6 +120,10 @@ UmiStatus umi_diagnostic_ui_project_output_channel(const UmiOutputBuffer *buffer
     return found != 0 ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the diagnostic ui sync registries operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_ui_sync_registries(UmiDiagnosticPipeline *pipeline,
                                             UmiUiProblemRegistry *problems,
                                             UmiUiOutputChannelRegistry *channels)
@@ -103,33 +133,45 @@ UmiStatus umi_diagnostic_ui_sync_registries(UmiDiagnosticPipeline *pipeline,
     size_t count;
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || problems == NULL || channels == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     model = umi_diagnostic_pipeline_model(pipeline);
     output = umi_diagnostic_pipeline_output(pipeline);
     umi_ui_problem_registry_clear(problems);
     umi_ui_output_channel_registry_clear(channels);
     count = umi_diagnostic_model_count(model);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count && status == UMI_STATUS_OK; ++index) {
         UmiDiagnosticSnapshot diagnostic;
         UmiUiProblemSnapshot problem;
         status = umi_diagnostic_model_at(model, index, &diagnostic);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = umi_diagnostic_ui_project_problem(&diagnostic, &problem);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = umi_ui_problem_registry_upsert(problems, &problem);
     }
     count = umi_output_buffer_count(output);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count && status == UMI_STATUS_OK; ++index) {
         UmiOutputRecord record;
         UmiUiOutputChannelSnapshot channel;
         size_t prior;
         int first = 1;
         status = umi_output_buffer_at(output, index, &record);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (prior = 0U; prior < index && status == UMI_STATUS_OK; ++prior) {
             UmiOutputRecord previous;
             status = umi_output_buffer_at(output, prior, &previous);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK && strcmp(previous.channel_id, record.channel_id) == 0) first = 0;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK && first != 0) {
             status = umi_diagnostic_ui_project_output_channel(output, record.channel_id, &channel);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) status = umi_ui_output_channel_registry_upsert(channels, &channel);
         }
     }

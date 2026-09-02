@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the editor wb tab navigation next operation used by this module and its client
+ * applications.
+ */
 size_t umi_editor_wb_tab_navigation_next(size_t current,size_t count,int direction,bool wrap);
 
 #ifdef __cplusplus

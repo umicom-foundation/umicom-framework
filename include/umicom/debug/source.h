@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_DEBUG_SOURCE_CAPACITY 2048U
 #define UMI_DEBUG_SOURCE_API_VERSION 1U
 
+/**
+ * Represent the debug source snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiDebugSourceSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -43,16 +46,55 @@ typedef struct UmiDebugSourceSnapshot {
     uint64_t revision;
 } UmiDebugSourceSnapshot;
 
+/**
+ * Represent the debug source registry data shared with callers of this public contract.
+ */
 typedef struct UmiDebugSourceRegistry UmiDebugSourceRegistry;
 
+/**
+ * Initialise debug source registry from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_debug_source_registry_create(UmiDebugSourceRegistry **out_registry);
+/**
+ * Release or reset state held by debug source registry so the same storage can be reused
+ * safely.
+ */
 void umi_debug_source_registry_destroy(UmiDebugSourceRegistry *registry);
+/**
+ * Provide the debug source registry upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_source_registry_upsert(UmiDebugSourceRegistry *registry, const UmiDebugSourceSnapshot *item);
+/**
+ * Remove debug source registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_debug_source_registry_remove(UmiDebugSourceRegistry *registry, const char *id);
+/**
+ * Find debug source registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_debug_source_registry_find(const UmiDebugSourceRegistry *registry, const char *id, UmiDebugSourceSnapshot *out_item);
+/**
+ * Find debug source registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_debug_source_registry_at(const UmiDebugSourceRegistry *registry, size_t index, UmiDebugSourceSnapshot *out_item);
+/**
+ * Return the number of records represented by debug source registry without changing their
+ * state.
+ */
 size_t umi_debug_source_registry_count(const UmiDebugSourceRegistry *registry);
+/**
+ * Provide the debug source registry revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_source_registry_revision(const UmiDebugSourceRegistry *registry);
+/**
+ * Release or reset state held by debug source registry so the same storage can be reused
+ * safely.
+ */
 void umi_debug_source_registry_clear(UmiDebugSourceRegistry *registry);
 
 #ifdef __cplusplus

@@ -20,6 +20,7 @@
 #define UMI_TRADING_GROUP_ID "trading.red"
 #define UMI_OPERATIONS_GROUP_ID "operations.green"
 
+/* Provide the add group operation used by this module and its client applications. */
 static UmiStatus add_group(
     UmiWorkbenchContextHostProfile *profile,
     const char *group_id,
@@ -35,6 +36,7 @@ static UmiStatus add_group(
         &group, group_id);
     status = umi_workbench_context_host_copy_text(
         group.title, sizeof(group.title), title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     group.colour = colour;
     group.allowed_kinds_mask = kinds;
@@ -45,6 +47,7 @@ static UmiStatus add_group(
         profile, &group);
 }
 
+/* Provide the add endpoint operation used by this module and its client applications. */
 static UmiStatus add_endpoint(
     UmiWorkbenchContextHostProfile *profile,
     const char *endpoint_id,
@@ -67,11 +70,13 @@ static UmiStatus add_endpoint(
         panel_id,
         application_id,
         display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_context_host_endpoint_set_group(
         &endpoint,
         group_id,
         mode);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     endpoint.role = role;
@@ -83,6 +88,7 @@ static UmiStatus add_endpoint(
         profile, &endpoint);
 }
 
+/* Provide the build trader operation used by this module and its client applications. */
 static UmiStatus build_trader(
     UmiWorkbenchContextHostProfile *profile)
 {
@@ -111,6 +117,7 @@ static UmiStatus build_trader(
     status = umi_workbench_context_host_profile_set_title(
         profile,
         "Umicom Trader Linked Workbench");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_group(
@@ -120,6 +127,7 @@ static UmiStatus build_trader(
         UMI_CONTEXT_COLOUR_RED,
         trading,
         true);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_group(
@@ -129,6 +137,7 @@ static UmiStatus build_trader(
         UMI_CONTEXT_COLOUR_GREEN,
         operations,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -142,6 +151,7 @@ static UmiStatus build_trader(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         instrument | selection,
         instrument | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -155,6 +165,7 @@ static UmiStatus build_trader(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         instrument | trade | selection,
         instrument | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -168,6 +179,7 @@ static UmiStatus build_trader(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_FOLLOW,
         instrument | account | trade,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -181,6 +193,7 @@ static UmiStatus build_trader(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         account | selection,
         account | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -194,6 +207,7 @@ static UmiStatus build_trader(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         instrument | account | trade | selection,
         account | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -207,6 +221,7 @@ static UmiStatus build_trader(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         instrument | account | trade | selection,
         trade | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return add_endpoint(
@@ -222,6 +237,7 @@ static UmiStatus build_trader(
         0U);
 }
 
+/* Provide the build tms operation used by this module and its client applications. */
 static UmiStatus build_tms(
     UmiWorkbenchContextHostProfile *profile)
 {
@@ -248,6 +264,7 @@ static UmiStatus build_tms(
     status = umi_workbench_context_host_profile_set_title(
         profile,
         "Umicom TMS Linked Workbench");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_group(
@@ -257,6 +274,7 @@ static UmiStatus build_tms(
         UMI_CONTEXT_COLOUR_RED,
         trading,
         true);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_group(
@@ -266,6 +284,7 @@ static UmiStatus build_tms(
         UMI_CONTEXT_COLOUR_GREEN,
         account | trade | selection,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -279,6 +298,7 @@ static UmiStatus build_tms(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         trade | instrument | account | selection,
         trade | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -292,6 +312,7 @@ static UmiStatus build_tms(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_FOLLOW,
         trade | account | instrument,
         0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_endpoint(
@@ -305,6 +326,7 @@ static UmiStatus build_tms(
         UMI_WORKBENCH_CONTEXT_LINK_MODE_BIDIRECTIONAL,
         account | trade | selection,
         account | selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return add_endpoint(
@@ -320,10 +342,18 @@ static UmiStatus build_tms(
         0U);
 }
 
+/*
+ * Provide the workbench selection provider trading workbench build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_trading_workbench_build(
     UmiWorkbenchSelectionProviderTradingWorkbench *out_profile)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_profile, 0, sizeof(*out_profile));
 
@@ -331,16 +361,20 @@ UmiStatus umi_workbench_selection_provider_trading_workbench_build(
         out_profile->trading_group_id,
         sizeof(out_profile->trading_group_id),
         UMI_TRADING_GROUP_ID);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_provider_copy_text(
         out_profile->operations_group_id,
         sizeof(out_profile->operations_group_id),
         UMI_OPERATIONS_GROUP_ID);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = build_trader(&out_profile->trader);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = build_tms(&out_profile->tms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_profile->sources =
@@ -355,9 +389,17 @@ UmiStatus umi_workbench_selection_provider_trading_workbench_build(
         out_profile);
 }
 
+/*
+ * Check that workbench selection provider trading workbench satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_trading_workbench_validate(
     const UmiWorkbenchSelectionProviderTradingWorkbench *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL ||
         profile->trading_group_id[0] == '\0' ||
         profile->operations_group_id[0] == '\0' ||
@@ -365,6 +407,7 @@ UmiStatus umi_workbench_selection_provider_trading_workbench_validate(
         profile->sources.tms_application_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_workbench_context_host_profile_validate(
             &profile->trader) != UMI_STATUS_OK ||
         umi_workbench_context_host_profile_validate(

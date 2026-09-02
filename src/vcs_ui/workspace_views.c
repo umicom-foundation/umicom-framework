@@ -22,22 +22,35 @@
 
 #include "view_internal.h"
 
+/*
+ * Provide the coordinator snapshot operation used by this module and its client
+ * applications.
+ */
 static UmiStatus coordinator_snapshot(
     UmiVcsWorkspaceCoordinator *coordinator,
     UmiVcsWorkspaceCoordinatorSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (coordinator == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return umi_vcs_workspace_coordinator_snapshot(coordinator, out_snapshot);
 }
 
+/* Provide the visible rows operation used by this module and its client applications. */
 static size_t visible_rows(size_t count)
 {
     return count < UMI_VCS_UI_VISIBLE_ROWS
         ? count : UMI_VCS_UI_VISIBLE_ROWS;
 }
 
+/*
+ * Provide the set repository properties operation used by this module and its client
+ * applications.
+ */
 static UmiStatus set_repository_properties(
     UmiUiViewModel *view,
     const UmiVcsWorkspaceCoordinatorSnapshot *snapshot)
@@ -46,30 +59,37 @@ static UmiStatus set_repository_properties(
 
     status = umi_vcs_ui_set_boolean(view, "vcs.available",
                                     snapshot->repository.available);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(view, "vcs.root",
                                        snapshot->repository.root);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(view, "vcs.provider",
                                        snapshot->repository.provider_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(view, "vcs.branch",
                                        snapshot->repository.branch);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(view, "vcs.upstream",
                                        snapshot->repository.upstream);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(view, "vcs.ahead",
                                         snapshot->repository.ahead);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(view, "vcs.behind",
                                         snapshot->repository.behind);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(view, "vcs.revision",
                                         (int64_t)snapshot->revision);
@@ -77,6 +97,10 @@ static UmiStatus set_repository_properties(
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace changes view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_changes_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -90,49 +114,61 @@ UmiStatus umi_vcs_ui_workspace_changes_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.change-filter",
                                        snapshot.change_filter_label);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.selected-change",
                                        snapshot.selected_change_path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.change-count",
             (int64_t)snapshot.repository.changes);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.visible-change-count",
             (int64_t)snapshot.visible_change_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.staged-count",
             (int64_t)snapshot.staged_change_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.unstaged-count",
             (int64_t)snapshot.unstaged_change_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.conflict-count",
             (int64_t)snapshot.conflict_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_boolean(*out_view, "vcs.show-untracked",
                                         snapshot.show_untracked);
     }
 
     count = visible_rows(snapshot.visible_change_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsChange change;
         char key[64];
@@ -140,6 +176,7 @@ UmiStatus umi_vcs_ui_workspace_changes_view_create(
 
         status = umi_vcs_workspace_coordinator_change_at(
             coordinator, index, &change);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s%s %s%s%s — index: %s; tree: %s",
@@ -154,41 +191,54 @@ UmiStatus umi_vcs_ui_workspace_changes_view_create(
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.refresh", "Refresh",
         "Refresh working tree, history and references", snapshot.can_refresh);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.filter", "Filter…",
         "Show all, staged, unstaged or conflicting changes", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 2U, "studio.action.vcs.select-change", "Select Path…",
         "Select a repository-relative change", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 3U, "studio.action.vcs.stage-selected", "Stage Selected",
         "Stage the selected working-tree path",
         snapshot.can_stage_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 4U, "studio.action.vcs.unstage-selected",
         "Unstage Selected", "Remove the selected path from the index",
         snapshot.can_unstage_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 5U, "studio.action.vcs.diff-selected", "Open Diff",
         "Open the selected path in the Diff Viewer",
         snapshot.can_open_selected_diff);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 6U, "studio.action.vcs.discard-selected", "Discard…",
         "Discard the selected unstaged change after confirmation",
         snapshot.can_discard_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 7U, "studio.action.vcs.stage-all", "Stage All",
         "Stage every working-tree change",
         snapshot.unstaged_change_count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 8U, "studio.action.vcs.unstage-all", "Unstage All",
         "Remove every indexed change", snapshot.staged_change_count > 0U);
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace commit view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_commit_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -200,33 +250,42 @@ UmiStatus umi_vcs_ui_workspace_commit_view_create(
         "Compose and validate a commit from the current staged changes.",
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.commit-message",
                                        snapshot.commit_message);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.staged-count",
             (int64_t)snapshot.staged_change_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.conflict-count",
             (int64_t)snapshot.conflict_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_boolean(*out_view, "vcs.commit-ready",
                                         snapshot.can_commit);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.set-commit-message",
         "Commit Message…", "Set the commit message", 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.commit-composed", "Commit",
         "Create a commit using the composed message", snapshot.can_commit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 2U, "studio.action.vcs.stage-all", "Stage All",
         "Stage every working-tree change",
@@ -234,6 +293,10 @@ UmiStatus umi_vcs_ui_workspace_commit_view_create(
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace history view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_history_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -247,20 +310,25 @@ UmiStatus umi_vcs_ui_workspace_history_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.selected-commit",
                                        snapshot.selected_commit_id);
     }
     count = visible_rows(snapshot.history_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsCommit commit;
         char key[64];
@@ -269,6 +337,7 @@ UmiStatus umi_vcs_ui_workspace_history_view_create(
                   UMI_VCS_ID_CAPACITY + 64U];
         status = umi_vcs_workspace_coordinator_commit_at(
             coordinator, index, &commit);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s%.12s  %s — %s <%s>",
@@ -279,15 +348,21 @@ UmiStatus umi_vcs_ui_workspace_history_view_create(
                        commit.author, commit.email);
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.select-commit", "Select Commit…",
         "Select a commit by its stable identifier", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.refresh", "Refresh",
         "Refresh repository history", snapshot.can_refresh);
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace branches view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_branches_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -301,26 +376,32 @@ UmiStatus umi_vcs_ui_workspace_branches_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.selected-branch",
                                        snapshot.selected_branch_name);
     }
     count = visible_rows(snapshot.branch_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsBranch branch;
         char key[64];
         char text[(UMI_VCS_NAME_CAPACITY * 2U) + 128U];
         status = umi_vcs_workspace_coordinator_branch_at(
             coordinator, index, &branch);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s%s %s%s%s  ahead %d; behind %d",
@@ -333,22 +414,30 @@ UmiStatus umi_vcs_ui_workspace_branches_view_create(
                        branch.upstream, branch.ahead, branch.behind);
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.select-branch", "Select Branch…",
         "Select a branch for subsequent actions", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.branch-create", "New Branch…",
         "Create and check out a validated branch",
         snapshot.can_create_branch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 2U, "studio.action.vcs.branch-checkout", "Checkout…",
         "Switch to an existing branch", snapshot.branch_count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 3U, "studio.action.vcs.branch-delete", "Delete…",
         "Safely delete a merged branch", snapshot.branch_count > 1U);
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace remotes view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_remotes_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -362,20 +451,25 @@ UmiStatus umi_vcs_ui_workspace_remotes_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.selected-remote",
                                        snapshot.selected_remote_name);
     }
     count = visible_rows(snapshot.remote_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsRemote remote;
         char key[64];
@@ -383,6 +477,7 @@ UmiStatus umi_vcs_ui_workspace_remotes_view_create(
                   UMI_VCS_NAME_CAPACITY + 64U];
         status = umi_vcs_workspace_coordinator_remote_at(
             coordinator, index, &remote);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s%s — fetch: %s; push: %s",
@@ -392,21 +487,29 @@ UmiStatus umi_vcs_ui_workspace_remotes_view_create(
                        remote.name, remote.fetch_url, remote.push_url);
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.select-remote", "Select Remote…",
         "Select a configured remote", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.fetch", "Fetch",
         "Fetch and prune remote references", snapshot.can_fetch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 2U, "studio.action.vcs.pull", "Pull",
         "Fast-forward the active branch", snapshot.can_pull);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 3U, "studio.action.vcs.push", "Push",
         "Push the active branch", snapshot.can_push);
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace conflicts view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_conflicts_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -420,22 +523,27 @@ UmiStatus umi_vcs_ui_workspace_conflicts_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
     count = visible_rows(snapshot.conflict_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsConflict conflict;
         char key[64];
         char text[UMI_VCS_PATH_CAPACITY + 128U];
         status = umi_vcs_workspace_coordinator_conflict_at(
             coordinator, index, &conflict);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "%s [%s] — %s",
@@ -443,18 +551,25 @@ UmiStatus umi_vcs_ui_workspace_conflicts_view_create(
                        umi_vcs_conflict_kind_text(conflict.kind));
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.select-change", "Select Conflict…",
         "Select a conflicting repository path", count > 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.diff-selected", "Open Diff",
         "Inspect the selected conflict", snapshot.can_open_selected_diff);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 2U, "studio.action.vcs.refresh", "Refresh",
         "Refresh conflict state", snapshot.can_refresh);
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace diff view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_diff_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -468,46 +583,57 @@ UmiStatus umi_vcs_ui_workspace_diff_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_string(*out_view, "vcs.diff-path",
                                        snapshot.diff_path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_boolean(*out_view, "vcs.diff-staged",
                                         snapshot.diff_staged);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_boolean(*out_view, "vcs.diff-binary",
                                         snapshot.diff_binary);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.diff-additions",
             (int64_t)snapshot.diff_addition_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.diff-deletions",
             (int64_t)snapshot.diff_deletion_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.diff-hunks",
             (int64_t)snapshot.diff_hunk_count);
     }
     count = visible_rows(snapshot.diff_line_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsDiffLine line;
         char key[64];
         char text[UMI_VCS_DIFF_TEXT_CAPACITY + 96U];
         status = umi_vcs_workspace_coordinator_diff_line_at(
             coordinator, index, &line);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "[%s] %6zu %6zu  %s",
@@ -515,22 +641,30 @@ UmiStatus umi_vcs_ui_workspace_diff_view_create(
                        line.old_line, line.new_line, line.text);
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.diff-selected", "Working Tree",
         "Load the selected working-tree diff",
         snapshot.can_open_selected_diff);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 1U, "studio.action.vcs.diff-selected-staged", "Staged",
         "Load the selected index diff", snapshot.can_open_selected_diff);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 2U, "studio.action.vcs.stage-selected", "Stage",
         "Stage the selected path", snapshot.can_stage_selected);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 3U, "studio.action.vcs.unstage-selected", "Unstage",
         "Unstage the selected path", snapshot.can_unstage_selected);
     return status;
 }
 
+/*
+ * Initialise vcs ui workspace operations view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_vcs_ui_workspace_operations_view_create(
     const char *view_id,
     UmiVcsWorkspaceCoordinator *coordinator,
@@ -544,16 +678,20 @@ UmiStatus umi_vcs_ui_workspace_operations_view_create(
     size_t count;
     size_t index;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = coordinator_snapshot(coordinator, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_repository_properties(*out_view, &snapshot);
     }
     count = visible_rows(snapshot.operation_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_vcs_ui_set_integer(*out_view, "vcs.row-count",
                                         (int64_t)count);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
         UmiVcsOperation operation;
         char key[64];
@@ -561,6 +699,7 @@ UmiStatus umi_vcs_ui_workspace_operations_view_create(
                   UMI_VCS_MESSAGE_CAPACITY + 160U];
         status = umi_vcs_workspace_coordinator_operation_at(
             coordinator, index, &operation);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         (void)snprintf(key, sizeof(key), "vcs.row.%zu", index);
         (void)snprintf(text, sizeof(text), "#%llu %s [%s] %s — %s",
@@ -570,6 +709,7 @@ UmiStatus umi_vcs_ui_workspace_operations_view_create(
                        operation.subject, operation.summary);
         status = umi_vcs_ui_set_string(*out_view, key, text);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_vcs_ui_set_action(
         *out_view, 0U, "studio.action.vcs.refresh", "Refresh",
         "Refresh repository state and operation journal",

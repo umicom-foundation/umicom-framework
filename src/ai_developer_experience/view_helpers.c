@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the ai developer view set string operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_string(
     UmiUiViewModel *view,
     const char *key,
@@ -25,6 +29,10 @@ UmiStatus umi_ai_developer_view_set_string(
     UmiUiValue value;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL || key == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -38,6 +46,10 @@ UmiStatus umi_ai_developer_view_set_string(
         : status;
 }
 
+/*
+ * Provide the ai developer view set integer operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_integer(
     UmiUiViewModel *view,
     const char *key,
@@ -46,6 +58,10 @@ UmiStatus umi_ai_developer_view_set_integer(
     UmiUiValue value;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL || key == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -57,6 +73,10 @@ UmiStatus umi_ai_developer_view_set_integer(
         : status;
 }
 
+/*
+ * Provide the ai developer view set boolean operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_boolean(
     UmiUiViewModel *view,
     const char *key,
@@ -65,6 +85,10 @@ UmiStatus umi_ai_developer_view_set_boolean(
     UmiUiValue value;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL || key == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -76,6 +100,10 @@ UmiStatus umi_ai_developer_view_set_boolean(
         : status;
 }
 
+/*
+ * Provide the ai developer view set action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_set_action(
     UmiUiViewModel *view,
     size_t index,
@@ -86,6 +114,10 @@ UmiStatus umi_ai_developer_view_set_action(
 {
     UmiUiCommandViewAction action;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view == NULL || action_id == NULL ||
         label == NULL || tooltip == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -112,6 +144,10 @@ UmiStatus umi_ai_developer_view_set_action(
     return umi_ui_command_view_set_action(view, index, &action);
 }
 
+/*
+ * Provide the ai developer view create base operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_view_create_base(
     const char *view_id,
     const char *kind,
@@ -121,6 +157,10 @@ UmiStatus umi_ai_developer_view_create_base(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || kind == NULL ||
         title == NULL || summary == NULL ||
         out_view == NULL) {
@@ -135,19 +175,26 @@ UmiStatus umi_ai_developer_view_create_base(
         UMI_UI_ROLE_PANE,
         out_view);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_view_set_string(
             *out_view, "umicom.view-kind", kind);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_view_set_string(
             *out_view, "title", title);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_view_set_string(
             *out_view, "summary", summary);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;

@@ -16,14 +16,31 @@
 #include <string.h>
 #include <limits.h>
 
+/*
+ * Initialise fabric schema descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_schema_descriptor_init(UmiFabricSchemaDescriptor *item, const char *schema_id, const char *name, UmiFabricVersion version, uint64_t fingerprint, bool backward_compatible, bool forward_compatible) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(item,0,sizeof(*item));
-    UmiStatus s=umi_fabric_copy_text(item->schema_id,sizeof(item->schema_id),schema_id);if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->name,sizeof(item->name),name);if(s!=UMI_STATUS_OK)return s;item->version=version;item->fingerprint=fingerprint;item->backward_compatible=backward_compatible;item->forward_compatible=forward_compatible;
+    UmiStatus s=umi_fabric_copy_text(item->schema_id,sizeof(item->schema_id),schema_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_fabric_copy_text(item->name,sizeof(item->name),name);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->version=version;item->fingerprint=fingerprint;item->backward_compatible=backward_compatible;item->forward_compatible=forward_compatible;
     return umi_fabric_schema_descriptor_validate(item);
 }
+/*
+ * Check that fabric schema descriptor satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_fabric_schema_descriptor_validate(const UmiFabricSchemaDescriptor *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(item->schema_id[0]!='\0' && item->name[0]!='\0' && item->version.major>0U && item->fingerprint!=0U)) return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }

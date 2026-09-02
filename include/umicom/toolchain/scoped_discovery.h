@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain scoped discovery request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainScopedDiscoveryRequest {
     const UmiToolchainOperationProfile *operation;
     const char *explicit_root;
@@ -33,6 +37,10 @@ typedef struct UmiToolchainScopedDiscoveryRequest {
     void *diagnostic_user_data;
 } UmiToolchainScopedDiscoveryRequest;
 
+/**
+ * Represent the toolchain scoped discovery report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainScopedDiscoveryReport {
     UmiToolchainProfile profile;
     size_t requirement_count;
@@ -43,6 +51,10 @@ typedef struct UmiToolchainScopedDiscoveryReport {
     int complete;
 } UmiToolchainScopedDiscoveryReport;
 
+/**
+ * Provide the toolchain discover scoped operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_discover_scoped(
     const UmiToolchainScopedDiscoveryRequest *request,
     UmiToolchainScopedDiscoveryReport *out_report);

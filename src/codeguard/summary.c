@@ -20,5 +20,13 @@
  */
 
 #include "umicom/codeguard/summary.h"
+/*
+ * Provide the codeguard summary build operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardSummary umi_codeguard_summary_build(const UmiCodeGuardResult *r){UmiCodeGuardSummary s={0};s.total=umi_codeguard_result_count(r);s.critical=umi_codeguard_result_count_severity(r,UMI_CODEGUARD_CRITICAL);s.high=umi_codeguard_result_count_severity(r,UMI_CODEGUARD_HIGH);s.medium=umi_codeguard_result_count_severity(r,UMI_CODEGUARD_MEDIUM);s.low=umi_codeguard_result_count_severity(r,UMI_CODEGUARD_LOW);s.info=umi_codeguard_result_count_severity(r,UMI_CODEGUARD_INFO);s.memory=umi_codeguard_result_count_category(r,UMI_CODEGUARD_CATEGORY_MEMORY);s.buffers=umi_codeguard_result_count_category(r,UMI_CODEGUARD_CATEGORY_BUFFER);s.architecture=umi_codeguard_result_count_category(r,UMI_CODEGUARD_CATEGORY_ARCHITECTURE);s.duplicates=umi_codeguard_result_count_category(r,UMI_CODEGUARD_CATEGORY_DUPLICATION);return s;}
-int umi_codeguard_summary_failed(const UmiCodeGuardSummary *s,UmiCodeGuardSeverity t){if(s==NULL)return 1;if(t<=UMI_CODEGUARD_CRITICAL&&s->critical>0U)return 1;if(t<=UMI_CODEGUARD_HIGH&&s->high>0U)return 1;if(t<=UMI_CODEGUARD_MEDIUM&&s->medium>0U)return 1;if(t<=UMI_CODEGUARD_LOW&&s->low>0U)return 1;if(t<=UMI_CODEGUARD_INFO&&s->info>0U)return 1;return 0;}
+/*
+ * Provide the codeguard summary failed operation used by this module and its client
+ * applications.
+ */
+int umi_codeguard_summary_failed(const UmiCodeGuardSummary *s,UmiCodeGuardSeverity t){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL)return 1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t<=UMI_CODEGUARD_CRITICAL&&s->critical>0U)return 1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t<=UMI_CODEGUARD_HIGH&&s->high>0U)return 1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t<=UMI_CODEGUARD_MEDIUM&&s->medium>0U)return 1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t<=UMI_CODEGUARD_LOW&&s->low>0U)return 1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t<=UMI_CODEGUARD_INFO&&s->info>0U)return 1;return 0;}

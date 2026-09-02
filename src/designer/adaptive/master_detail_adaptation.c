@@ -19,6 +19,7 @@ UmiDesignerMasterDetailMode umi_designer_master_detail_adaptation_resolve(
     UmiDesignSizeClass size_class,
     int detail_is_primary)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (size_class >= UMI_DESIGN_SIZE_EXPANDED) return UMI_DESIGNER_MASTER_DETAIL_SPLIT;
     return detail_is_primary != 0
         ? UMI_DESIGNER_MASTER_DETAIL_OVERLAY

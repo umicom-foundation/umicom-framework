@@ -17,12 +17,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryWorkflowRequest request;
 
     umi_repository_workflow_request_init(
         &request, UMI_REPOSITORY_WORKFLOW_PUBLISH, NULL);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request.action != UMI_REPOSITORY_WORKFLOW_PUBLISH ||
         strcmp(request.repository_root, ".") != 0 ||
         strcmp(request.branch, "main") != 0 ||

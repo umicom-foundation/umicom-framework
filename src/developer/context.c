@@ -22,8 +22,13 @@ struct UmiDeveloperContext {
     UmiDeveloperContextSnapshot state;
 };
 
+/* Provide the normalise operation used by this module and its client applications. */
 static void normalise(UmiDeveloperContextSnapshot *state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL) {
         return;
     }
@@ -40,16 +45,28 @@ static void normalise(UmiDeveloperContextSnapshot *state)
     state->workspace_directory[UMI_DEVELOPER_PATH_CAPACITY - 1U] = '\0';
 }
 
+/*
+ * Initialise developer context from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_developer_context_create(UmiDeveloperContext **out_context)
 {
     UmiDeveloperContext *context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_context == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_context = NULL;
     context = (UmiDeveloperContext *)calloc(1U, sizeof(*context));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -60,17 +77,29 @@ UmiStatus umi_developer_context_create(UmiDeveloperContext **out_context)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer context so the same storage can be reused
+ * safely.
+ */
 void umi_developer_context_destroy(UmiDeveloperContext *context)
 {
     free(context);
 }
 
+/*
+ * Copy developer context into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_developer_context_set(
     UmiDeveloperContext *context,
     const UmiDeveloperContextSnapshot *snapshot)
 {
     uint64_t next_revision;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -82,10 +111,18 @@ UmiStatus umi_developer_context_set(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer context snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_context_snapshot(
     const UmiDeveloperContext *context,
     UmiDeveloperContextSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -94,8 +131,13 @@ UmiStatus umi_developer_context_snapshot(
     return UMI_STATUS_OK;
 }
 
+/* Provide the append char operation used by this module and its client applications. */
 static int append_char(char *out_text, size_t capacity, size_t *position, char value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_text == NULL || position == NULL || *position + 1U >= capacity) {
         return 0;
     }
@@ -106,6 +148,7 @@ static int append_char(char *out_text, size_t capacity, size_t *position, char v
     return 1;
 }
 
+/* Provide the append escape operation used by this module and its client applications. */
 static int append_escape(
     char *out_text,
     size_t capacity,
@@ -115,23 +158,33 @@ static int append_escape(
     const char hex[] = "0123456789ABCDEF";
     const unsigned char *cursor = (const unsigned char *)text;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) {
         text = "";
         cursor = (const unsigned char *)text;
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
         unsigned char value = *cursor;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value == (unsigned char)'%' ||
             value == (unsigned char)'|' ||
             value == (unsigned char)'\n' ||
             value == (unsigned char)'\r') {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (!append_char(out_text, capacity, position, '%') ||
                 !append_char(out_text, capacity, position, hex[(value >> 4U) & 0x0FU]) ||
                 !append_char(out_text, capacity, position, hex[value & 0x0FU])) {
                 return 0;
             }
-        } else if (!append_char(out_text, capacity, position, (char)value)) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (!append_char(out_text, capacity, position, (char)value)) {
             return 0;
         }
         cursor += 1U;
@@ -140,6 +193,10 @@ static int append_escape(
     return 1;
 }
 
+/*
+ * Write developer context in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_developer_context_encode(
     const UmiDeveloperContext *context,
     char *out_text,
@@ -150,6 +207,10 @@ UmiStatus umi_developer_context_encode(
     size_t position = 0U;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -164,37 +225,49 @@ UmiStatus umi_developer_context_encode(
     fields[6] = context->state.active_document;
     fields[7] = context->state.workspace_directory;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!append_escape(out_text, capacity, &position, UMI_DEVELOPER_CONTEXT_CODEC_PREFIX)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 8U; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!append_char(out_text, capacity, &position, '|') ||
             !append_escape(out_text, capacity, &position, fields[index])) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_length != NULL) {
         *out_length = position;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the hex value operation used by this module and its client applications. */
 static int hex_value(char value)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= '0' && value <= '9') {
         return value - '0';
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= 'A' && value <= 'F') {
         return value - 'A' + 10;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= 'a' && value <= 'f') {
         return value - 'a' + 10;
     }
     return -1;
 }
 
+/* Provide the decode field operation used by this module and its client applications. */
 static UmiStatus decode_field(
     const char **cursor,
     char *destination,
@@ -203,32 +276,44 @@ static UmiStatus decode_field(
 {
     size_t length = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || *cursor == NULL ||
         destination == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (**cursor != '\0' && **cursor != '|') {
         char value = **cursor;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value == '%') {
             int high;
             int low;
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if ((*cursor)[1] == '\0' || (*cursor)[2] == '\0') {
                 return UMI_STATUS_PARSE_ERROR;
             }
             high = hex_value((*cursor)[1]);
             low = hex_value((*cursor)[2]);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (high < 0 || low < 0) {
                 return UMI_STATUS_PARSE_ERROR;
             }
             value = (char)((high << 4) | low);
             *cursor += 3;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             *cursor += 1;
         }
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length + 1U >= capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -237,7 +322,9 @@ static UmiStatus decode_field(
 
     destination[length] = '\0';
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (expect_separator) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (**cursor != '|') {
             return UMI_STATUS_PARSE_ERROR;
         }
@@ -246,6 +333,10 @@ static UmiStatus decode_field(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Read developer context into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_developer_context_decode(
     const char *text,
     UmiDeveloperContextSnapshot *out_snapshot)
@@ -254,6 +345,10 @@ UmiStatus umi_developer_context_decode(
     char prefix[8];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -262,6 +357,7 @@ UmiStatus umi_developer_context_decode(
     cursor = text;
 
     status = decode_field(&cursor, prefix, sizeof(prefix), 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         strcmp(prefix, UMI_DEVELOPER_CONTEXT_CODEC_PREFIX) != 0) {
         return UMI_STATUS_PARSE_ERROR;
@@ -288,6 +384,7 @@ UmiStatus umi_developer_context_decode(
 
 #undef UMI_DECODE_CONTEXT_FIELD
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*cursor != '\0') {
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -298,19 +395,26 @@ UmiStatus umi_developer_context_decode(
 }
 
 
+/* Provide the patch copy text operation used by this module and its client applications. */
 static UmiStatus patch_copy_text(char *destination,
                                  size_t capacity,
                                  const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         memcpy(destination, source, length);
     }
@@ -318,6 +422,10 @@ static UmiStatus patch_copy_text(char *destination,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer context patch operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_context_patch(
     UmiDeveloperContext *context,
     const UmiDeveloperContextPatch *patch,
@@ -326,6 +434,10 @@ UmiStatus umi_developer_context_patch(
     UmiDeveloperContextSnapshot next;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || patch == NULL ||
         patch->struct_size < sizeof(*patch) ||
         patch->api_version != UMI_DEVELOPER_CONTEXT_PATCH_API_VERSION ||
@@ -338,6 +450,7 @@ UmiStatus umi_developer_context_patch(
     }
 
     status = umi_developer_context_snapshot(context, &next);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -370,9 +483,14 @@ UmiStatus umi_developer_context_patch(
 #undef UMI_PATCH_CONTEXT_TEXT
 
     status = umi_developer_context_set(context, &next);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_snapshot != NULL) {
         return umi_developer_context_snapshot(context, out_snapshot);
     }

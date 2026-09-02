@@ -23,6 +23,7 @@
 
 #include <string.h>
 
+/* Provide the designer inspect operation used by this module and its client applications. */
 UmiStatus umi_designer_inspect(
     const UmiDesignerDocument *document,
     const char *id,
@@ -31,6 +32,10 @@ UmiStatus umi_designer_inspect(
     UmiDeclNode node;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || id == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -40,6 +45,7 @@ UmiStatus umi_designer_inspect(
         id,
         &node
     );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -53,6 +59,7 @@ UmiStatus umi_designer_inspect(
                              node.component_type);
     out_snapshot->attribute_count = node.attribute_count;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node.attribute_count > 0U) {
         (void)memcpy(out_snapshot->attributes,
                      node.attributes,
@@ -62,6 +69,10 @@ UmiStatus umi_designer_inspect(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the designer inspector schema operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_inspector_schema(
     const UmiDeclComponentRegistry *registry,
     const char *component_type,
@@ -70,6 +81,10 @@ UmiStatus umi_designer_inspector_schema(
     UmiDeclComponentDescriptor descriptor;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || component_type == NULL || out_schema == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -77,6 +92,7 @@ UmiStatus umi_designer_inspector_schema(
     status = umi_decl_component_registry_find(registry,
                                               component_type,
                                               &descriptor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -87,6 +103,7 @@ UmiStatus umi_designer_inspector_schema(
                              descriptor.component_type);
     out_schema->property_count = descriptor.property_count;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor.property_count > 0U) {
         (void)memcpy(out_schema->properties,
                      descriptor.properties,
@@ -97,17 +114,27 @@ UmiStatus umi_designer_inspector_schema(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the designer inspector property operation used by this module and its client
+ * applications.
+ */
 const UmiDeclPropertyDescriptor *umi_designer_inspector_property(
     const UmiDesignerInspectorSchema *schema,
     const char *property_name)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (schema == NULL || property_name == NULL) {
         return NULL;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < schema->property_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(schema->properties[index].name, property_name) == 0) {
             return &schema->properties[index];
         }
@@ -116,6 +143,10 @@ const UmiDeclPropertyDescriptor *umi_designer_inspector_property(
     return NULL;
 }
 
+/*
+ * Provide the designer inspector validate property operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_designer_inspector_validate_property(
     const UmiDeclComponentRegistry *registry,
     const char *component_type,
@@ -126,6 +157,10 @@ UmiStatus umi_designer_inspector_validate_property(
     const UmiDeclPropertyDescriptor *property;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || component_type == NULL ||
         property_name == NULL || value_text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -134,11 +169,16 @@ UmiStatus umi_designer_inspector_validate_property(
     status = umi_designer_inspector_schema(registry,
                                            component_type,
                                            &schema);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     property = umi_designer_inspector_property(&schema, property_name);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (property == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }

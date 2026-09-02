@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/capital_tier.h"
 
-int main(void) { UmiPrudentialCapitalTier r; UmiCurrency c={"GBP"}; if(umi_pru_capital_tier_init(&r,"CET1",UMI_PRU_CAPITAL_CET1,100.0,c)!=UMI_STATUS_OK)return 1; if(r.amount!=100.0||r.tier!=UMI_PRU_CAPITAL_CET1)return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialCapitalTier r; UmiCurrency c={"GBP"}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_capital_tier_init(&r,"CET1",UMI_PRU_CAPITAL_CET1,100.0,c)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(r.amount!=100.0||r.tier!=UMI_PRU_CAPITAL_CET1)return 2; return 0; }

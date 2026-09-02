@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant credit spread data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCreditSpread {
     double risky_yield;
     double benchmark_yield;

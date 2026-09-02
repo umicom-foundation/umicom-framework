@@ -24,6 +24,10 @@
 #include "umicom/runtime/bootstrap/graph_ordering.h"
 
 
+/*
+ * Provide the bootstrap startup order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_startup_order(const UmiBootstrapServiceGraph *graph,
                                       UmiBootstrapIdList *out_order) {
     return umi_bootstrap_graph_order(graph, out_order);

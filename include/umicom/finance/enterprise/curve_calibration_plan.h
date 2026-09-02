@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise curve calibration plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCurveCalibrationPlan { char curve_id[UMI_ENTERPRISE_ID_CAPACITY]; size_t instrument_count; double tolerance; size_t max_iterations; } UmiEnterpriseCurveCalibrationPlan;
 /* Initialise a numerically valid bounded curve-calibration plan. */
 UmiStatus umi_enterprise_curve_calibration_plan_init(UmiEnterpriseCurveCalibrationPlan *plan,const char *curve_id,size_t instrument_count,double tolerance,size_t max_iterations);

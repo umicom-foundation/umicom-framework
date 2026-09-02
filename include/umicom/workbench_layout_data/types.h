@@ -47,6 +47,10 @@ extern "C" {
 #define UMI_WORKBENCH_LAYOUT_DATA_MAX_BACKUP_RECORDS 2048U
 #define UMI_WORKBENCH_LAYOUT_DATA_INDEX_NONE ((size_t)-1)
 
+/**
+ * List the named workbench layout data record kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataRecordKind {
     UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST = 1,
     UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK = 2,
@@ -65,6 +69,10 @@ typedef enum UmiWorkbenchLayoutDataRecordKind {
     UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA = 15
 } UmiWorkbenchLayoutDataRecordKind;
 
+/**
+ * List the named workbench layout data change kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataChangeKind {
     UMI_WORKBENCH_LAYOUT_DATA_CHANGE_CREATED = 1,
     UMI_WORKBENCH_LAYOUT_DATA_CHANGE_UPDATED = 2,
@@ -78,6 +86,9 @@ typedef enum UmiWorkbenchLayoutDataChangeKind {
     UMI_WORKBENCH_LAYOUT_DATA_CHANGE_CONFLICT_RESOLVED = 10
 } UmiWorkbenchLayoutDataChangeKind;
 
+/**
+ * List the named workbench layout data permission values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutDataPermission {
     UMI_WORKBENCH_LAYOUT_DATA_PERMISSION_VIEW = 1,
     UMI_WORKBENCH_LAYOUT_DATA_PERMISSION_EDIT = 2,
@@ -87,6 +98,10 @@ typedef enum UmiWorkbenchLayoutDataPermission {
     UMI_WORKBENCH_LAYOUT_DATA_PERMISSION_ADMINISTER = 6
 } UmiWorkbenchLayoutDataPermission;
 
+/**
+ * List the named workbench layout data lease state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataLeaseState {
     UMI_WORKBENCH_LAYOUT_DATA_LEASE_AVAILABLE = 1,
     UMI_WORKBENCH_LAYOUT_DATA_LEASE_HELD = 2,
@@ -95,6 +110,10 @@ typedef enum UmiWorkbenchLayoutDataLeaseState {
     UMI_WORKBENCH_LAYOUT_DATA_LEASE_REVOKED = 5
 } UmiWorkbenchLayoutDataLeaseState;
 
+/**
+ * List the named workbench layout data outbox state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataOutboxState {
     UMI_WORKBENCH_LAYOUT_DATA_OUTBOX_PENDING = 1,
     UMI_WORKBENCH_LAYOUT_DATA_OUTBOX_LEASED = 2,
@@ -103,6 +122,10 @@ typedef enum UmiWorkbenchLayoutDataOutboxState {
     UMI_WORKBENCH_LAYOUT_DATA_OUTBOX_DEAD_LETTER = 5
 } UmiWorkbenchLayoutDataOutboxState;
 
+/**
+ * List the named workbench layout data conflict kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataConflictKind {
     UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_CONCURRENT_UPDATE = 1,
     UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_DELETE_VERSUS_UPDATE = 2,
@@ -112,6 +135,10 @@ typedef enum UmiWorkbenchLayoutDataConflictKind {
     UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_MISSING_BASE = 6
 } UmiWorkbenchLayoutDataConflictKind;
 
+/**
+ * List the named workbench layout data conflict state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataConflictState {
     UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_OPEN = 1,
     UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_RESOLVED_LOCAL = 2,
@@ -120,12 +147,20 @@ typedef enum UmiWorkbenchLayoutDataConflictState {
     UMI_WORKBENCH_LAYOUT_DATA_CONFLICT_DISMISSED = 5
 } UmiWorkbenchLayoutDataConflictState;
 
+/**
+ * List the named workbench layout data sync direction values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataSyncDirection {
     UMI_WORKBENCH_LAYOUT_DATA_SYNC_PULL = 1,
     UMI_WORKBENCH_LAYOUT_DATA_SYNC_PUSH = 2,
     UMI_WORKBENCH_LAYOUT_DATA_SYNC_BIDIRECTIONAL = 3
 } UmiWorkbenchLayoutDataSyncDirection;
 
+/**
+ * List the named workbench layout data sync action values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataSyncAction {
     UMI_WORKBENCH_LAYOUT_DATA_SYNC_NO_ACTION = 1,
     UMI_WORKBENCH_LAYOUT_DATA_SYNC_CREATE_LOCAL = 2,
@@ -137,6 +172,10 @@ typedef enum UmiWorkbenchLayoutDataSyncAction {
     UMI_WORKBENCH_LAYOUT_DATA_SYNC_RECORD_CONFLICT = 8
 } UmiWorkbenchLayoutDataSyncAction;
 
+/**
+ * List the named workbench layout data operation state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataOperationState {
     UMI_WORKBENCH_LAYOUT_DATA_OPERATION_PENDING = 1,
     UMI_WORKBENCH_LAYOUT_DATA_OPERATION_CLAIMED = 2,
@@ -146,6 +185,10 @@ typedef enum UmiWorkbenchLayoutDataOperationState {
     UMI_WORKBENCH_LAYOUT_DATA_OPERATION_CANCELLED = 6
 } UmiWorkbenchLayoutDataOperationState;
 
+/**
+ * List the named workbench layout data migration state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataMigrationState {
     UMI_WORKBENCH_LAYOUT_DATA_MIGRATION_PENDING = 1,
     UMI_WORKBENCH_LAYOUT_DATA_MIGRATION_RUNNING = 2,
@@ -154,6 +197,10 @@ typedef enum UmiWorkbenchLayoutDataMigrationState {
     UMI_WORKBENCH_LAYOUT_DATA_MIGRATION_ROLLED_BACK = 5
 } UmiWorkbenchLayoutDataMigrationState;
 
+/**
+ * List the named workbench layout data health state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataHealthState {
     UMI_WORKBENCH_LAYOUT_DATA_HEALTH_HEALTHY = 1,
     UMI_WORKBENCH_LAYOUT_DATA_HEALTH_DEGRADED = 2,
@@ -161,6 +208,10 @@ typedef enum UmiWorkbenchLayoutDataHealthState {
     UMI_WORKBENCH_LAYOUT_DATA_HEALTH_UNAVAILABLE = 4
 } UmiWorkbenchLayoutDataHealthState;
 
+/**
+ * List the named workbench layout data controller state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataControllerState {
     UMI_WORKBENCH_LAYOUT_DATA_CONTROLLER_CREATED = 1,
     UMI_WORKBENCH_LAYOUT_DATA_CONTROLLER_INITIALISED = 2,
@@ -170,6 +221,10 @@ typedef enum UmiWorkbenchLayoutDataControllerState {
     UMI_WORKBENCH_LAYOUT_DATA_CONTROLLER_FAILED = 6
 } UmiWorkbenchLayoutDataControllerState;
 
+/**
+ * Represent the workbench layout data record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDataRecord {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataRecordKind kind;
@@ -185,6 +240,10 @@ typedef struct UmiWorkbenchLayoutDataRecord {
     uint32_t flags;
 } UmiWorkbenchLayoutDataRecord;
 
+/**
+ * Represent the workbench layout data chunk manifest data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataChunkManifest {
     uint32_t structure_size;
     char aggregate_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -197,6 +256,10 @@ typedef struct UmiWorkbenchLayoutDataChunkManifest {
     uint64_t modified_at_ms;
 } UmiWorkbenchLayoutDataChunkManifest;
 
+/**
+ * Represent the workbench layout revision record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutRevisionRecord {
     uint32_t structure_size;
     char revision_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -211,6 +274,9 @@ typedef struct UmiWorkbenchLayoutRevisionRecord {
     char summary[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutRevisionRecord;
 
+/**
+ * Represent the workbench layout grant data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutGrant {
     uint32_t structure_size;
     char grant_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -224,6 +290,9 @@ typedef struct UmiWorkbenchLayoutGrant {
     bool revoked;
 } UmiWorkbenchLayoutGrant;
 
+/**
+ * Represent the workbench layout lease data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutLease {
     uint32_t structure_size;
     char lease_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -238,6 +307,9 @@ typedef struct UmiWorkbenchLayoutLease {
     uint64_t revision;
 } UmiWorkbenchLayoutLease;
 
+/**
+ * Represent the workbench layout change data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutChange {
     uint32_t structure_size;
     char change_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -253,6 +325,10 @@ typedef struct UmiWorkbenchLayoutChange {
     char summary[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutChange;
 
+/**
+ * Represent the workbench layout outbox entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutOutboxEntry {
     uint32_t structure_size;
     char entry_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -270,6 +346,10 @@ typedef struct UmiWorkbenchLayoutOutboxEntry {
     char last_error[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutOutboxEntry;
 
+/**
+ * Represent the workbench layout conflict data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutConflict {
     uint32_t structure_size;
     char conflict_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -287,6 +367,10 @@ typedef struct UmiWorkbenchLayoutConflict {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutConflict;
 
+/**
+ * Represent the workbench layout sync cursor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncCursor {
     uint32_t structure_size;
     char cursor_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -300,6 +384,10 @@ typedef struct UmiWorkbenchLayoutSyncCursor {
     char last_error[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutSyncCursor;
 
+/**
+ * Represent the workbench layout sync plan item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncPlanItem {
     uint32_t structure_size;
     char layout_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -314,6 +402,10 @@ typedef struct UmiWorkbenchLayoutSyncPlanItem {
     char reason[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutSyncPlanItem;
 
+/**
+ * Represent the workbench layout sync plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutSyncPlan {
     uint32_t structure_size;
     char plan_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -330,6 +422,10 @@ typedef struct UmiWorkbenchLayoutSyncPlan {
     uint64_t created_at_ms;
 } UmiWorkbenchLayoutSyncPlan;
 
+/**
+ * Represent the workbench layout offline operation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutOfflineOperation {
     uint32_t structure_size;
     char operation_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -348,6 +444,10 @@ typedef struct UmiWorkbenchLayoutOfflineOperation {
     char last_error[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutOfflineOperation;
 
+/**
+ * Represent the workbench layout presence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutPresence {
     uint32_t structure_size;
     char presence_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -362,6 +462,10 @@ typedef struct UmiWorkbenchLayoutPresence {
     bool synchronising;
 } UmiWorkbenchLayoutPresence;
 
+/**
+ * Represent the workbench layout data metrics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDataMetrics {
     uint32_t structure_size;
     uint64_t save_count;
@@ -381,6 +485,10 @@ typedef struct UmiWorkbenchLayoutDataMetrics {
     uint64_t revision;
 } UmiWorkbenchLayoutDataMetrics;
 
+/**
+ * Represent the workbench layout data health snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataHealthSnapshot {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataHealthState state;
@@ -397,6 +505,10 @@ typedef struct UmiWorkbenchLayoutDataHealthSnapshot {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutDataHealthSnapshot;
 
+/**
+ * Represent the workbench layout migration descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutMigrationDescriptor {
     uint32_t structure_size;
     char migration_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -408,6 +520,10 @@ typedef struct UmiWorkbenchLayoutMigrationDescriptor {
     bool requires_exclusive_access;
 } UmiWorkbenchLayoutMigrationDescriptor;
 
+/**
+ * Represent the workbench layout migration record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutMigrationRecord {
     uint32_t structure_size;
     UmiWorkbenchLayoutMigrationDescriptor descriptor;
@@ -418,6 +534,10 @@ typedef struct UmiWorkbenchLayoutMigrationRecord {
     char error[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutMigrationRecord;
 
+/**
+ * Represent the workbench layout backup manifest data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutBackupManifest {
     uint32_t structure_size;
     char backup_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -434,6 +554,10 @@ typedef struct UmiWorkbenchLayoutBackupManifest {
     bool includes_outbox;
 } UmiWorkbenchLayoutBackupManifest;
 
+/**
+ * Represent the workbench layout reconciliation issue data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutReconciliationIssue {
     uint32_t structure_size;
     char issue_id[UMI_WORKBENCH_LAYOUT_DATA_TEXT_CAPACITY];
@@ -444,6 +568,10 @@ typedef struct UmiWorkbenchLayoutReconciliationIssue {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutReconciliationIssue;
 
+/**
+ * Represent the workbench layout reconciliation report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutReconciliationReport {
     uint32_t structure_size;
     UmiWorkbenchLayoutReconciliationIssue
@@ -459,45 +587,113 @@ typedef struct UmiWorkbenchLayoutReconciliationReport {
     bool consistent;
 } UmiWorkbenchLayoutReconciliationReport;
 
+/**
+ * Provide the workbench layout data record kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_record_kind_text(
     UmiWorkbenchLayoutDataRecordKind kind);
+/**
+ * Provide the workbench layout data change kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_change_kind_text(
     UmiWorkbenchLayoutDataChangeKind kind);
+/**
+ * Provide the workbench layout data permission text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_permission_text(
     UmiWorkbenchLayoutDataPermission permission);
+/**
+ * Provide the workbench layout data lease state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_lease_state_text(
     UmiWorkbenchLayoutDataLeaseState state);
+/**
+ * Provide the workbench layout data outbox state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_outbox_state_text(
     UmiWorkbenchLayoutDataOutboxState state);
+/**
+ * Provide the workbench layout data conflict kind text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_conflict_kind_text(
     UmiWorkbenchLayoutDataConflictKind kind);
+/**
+ * Provide the workbench layout data conflict state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_conflict_state_text(
     UmiWorkbenchLayoutDataConflictState state);
+/**
+ * Provide the workbench layout data sync action text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_data_sync_action_text(
     UmiWorkbenchLayoutDataSyncAction action);
+/**
+ * Provide the workbench layout data operation state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_operation_state_text(
     UmiWorkbenchLayoutDataOperationState state);
+/**
+ * Provide the workbench layout data health state text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_health_state_text(
     UmiWorkbenchLayoutDataHealthState state);
+/**
+ * Provide the workbench layout data controller state text operation used by this module
+ * and its client applications.
+ */
 const char *umi_workbench_layout_data_controller_state_text(
     UmiWorkbenchLayoutDataControllerState state);
 
+/**
+ * Provide the workbench layout data hash bytes operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_layout_data_hash_bytes(
     const void *data,
     size_t size);
+/**
+ * Provide the workbench layout data hash text operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_workbench_layout_data_hash_text(
     const char *text);
+/**
+ * Provide the workbench layout data copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_data_copy_text(
     char *destination,
     size_t capacity,
     const char *source,
     bool allow_empty);
+/**
+ * Provide the workbench layout data text equal operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_text_equal(
     const char *left,
     const char *right);
+/**
+ * Provide the workbench layout data text has prefix operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_text_has_prefix(
     const char *text,
     const char *prefix);
+/**
+ * Provide the workbench layout data time expired operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_data_time_expired(
     uint64_t expires_at_ms,
     uint64_t now_ms);

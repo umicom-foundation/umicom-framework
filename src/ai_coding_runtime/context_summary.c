@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the ai coding context summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_context_summary(
     const UmiAiCodingMaterializedContext *context,
     char *out_text,
@@ -26,6 +30,10 @@ UmiStatus umi_ai_coding_context_summary(
     size_t used = 0U;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -39,11 +47,13 @@ UmiStatus umi_ai_coding_context_summary(
         context->estimated_tokens,
         context->truncated ? ", truncated" : "");
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     used = (size_t)written;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < context->file_count; ++index) {
         const UmiAiCodingMaterializedFile *file = &context->files[index];
 
@@ -57,6 +67,7 @@ UmiStatus umi_ai_coding_context_summary(
             file->length,
             (unsigned long long)file->hash);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= capacity - used) {
             out_text[capacity - 1U] = '\0';
             return UMI_STATUS_CAPACITY_EXCEEDED;

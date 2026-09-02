@@ -21,8 +21,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native target profile data shared with callers of this public contract.
+ */
 typedef struct UmiNativeTargetProfile { UmiNativeMachineArch architecture; UmiNativeObjectFormat object_format; char triple[UMI_NC_NAME_CAPACITY]; uint32_t pointer_bits; bool little_endian; uint64_t feature_mask; } UmiNativeTargetProfile;
+/**
+ * Initialise nc target profile from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_nc_target_profile_init(UmiNativeTargetProfile *profile,const char *triple);
+/**
+ * Provide the nc target profile compatible operation used by this module and its client
+ * applications.
+ */
 bool umi_nc_target_profile_compatible(const UmiNativeTargetProfile *a,const UmiNativeTargetProfile *b);
 #ifdef __cplusplus
 }

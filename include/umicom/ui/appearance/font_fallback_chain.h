@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance font fallback entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceFontFallbackEntry { char family_id[UMI_APPEARANCE_ID_CAPACITY]; char script_id[UMI_APPEARANCE_ID_CAPACITY]; } UmiAppearanceFontFallbackEntry;
+/**
+ * Represent the appearance font fallback chain data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceFontFallbackChain { UmiAppearanceFontFallbackEntry items[UMI_APPEARANCE_MAX_FONTS]; size_t count; } UmiAppearanceFontFallbackChain;
 /* Initialise an empty fallback chain. */
 UmiStatus umi_appearance_font_fallback_chain_init(UmiAppearanceFontFallbackChain *chain);

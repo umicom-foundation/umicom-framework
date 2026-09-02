@@ -69,60 +69,144 @@ struct UmiWorkbenchDesignerGtk4 {
     uint64_t revision;
 };
 
+/**
+ * Provide the workbench designer gtk4 build toolbar operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_toolbar(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build palette operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_palette(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build canvas operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_canvas(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build tree operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_tree(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build properties operation used by this module and
+ * its client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_properties(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build review operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_review(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build status operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_status(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 build command palette operation used by this module
+ * and its client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_command_palette(
     UmiWorkbenchDesignerGtk4 *designer);
 
+/**
+ * Provide the workbench designer gtk4 refresh toolbar operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_toolbar(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 refresh palette operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_palette(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 refresh tree operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_tree(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 refresh properties operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_properties(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 refresh review operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_review(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 refresh status operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_status(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Provide the workbench designer gtk4 refresh command palette operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_command_palette(
     UmiWorkbenchDesignerGtk4 *designer);
+/**
+ * Perform workbench designer gtk4 through the module contract so client applications do
+ * not duplicate its policy.
+ */
 void umi_workbench_designer_gtk4_dispatch(
     UmiWorkbenchDesignerGtk4 *designer,
     const char *command_id);
+/**
+ * Provide the workbench designer gtk4 clear box operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_clear_box(GtkWidget *box);
 
+/**
+ * Provide the workbench designer gtk4 canvas draw operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_canvas_draw(
     GtkDrawingArea *area,
     cairo_t *cr,
     int width,
     int height,
     gpointer user_data);
+/**
+ * Provide the workbench designer gtk4 minimap draw operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_minimap_draw(
     GtkDrawingArea *area,
     cairo_t *cr,
     int width,
     int height,
     gpointer user_data);
+/**
+ * Provide the workbench designer gtk4 docking draw operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_docking_draw(
     GtkDrawingArea *area,
     cairo_t *cr,
     int width,
     int height,
     gpointer user_data);
+/**
+ * Provide the workbench layout browser gtk4 preview draw operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_layout_browser_gtk4_preview_draw(
     GtkDrawingArea *area,
     cairo_t *cr,

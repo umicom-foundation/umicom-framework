@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PATH_NORMALISATION "umicom.developer.portability.path_normalisation"
 
+/**
+ * Provide the developer capability path normalisation operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_path_normalisation(void);
 

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reconciliation break data shared with callers of this public contract.
+ */
 typedef struct UmiReconciliationBreak {
     char break_id[UMI_REG_ID_CAPACITY];
     char item_id[UMI_REG_ID_CAPACITY];

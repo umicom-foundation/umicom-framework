@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the settlement event data shared with callers of this public contract.
+ */
 typedef struct UmiSettlementEvent { UmiFinancialId event_id; UmiFinancialId parent_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; UmiFinancialDate effective_date; uint32_t state; bool active; } UmiSettlementEvent;
 /* Initialize the typed financial record. */ UmiStatus umi_settlement_event_init(UmiSettlementEvent *item,const char *id,const char *name,const char *parent_id,UmiFinancialDate effective_date,uint32_t state);
 /* Validate the typed financial record. */ bool umi_settlement_event_is_valid(const UmiSettlementEvent *item);

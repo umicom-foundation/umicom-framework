@@ -22,9 +22,17 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap instance binding configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_bootstrap_instance_binding_configure(
     UmiBootstrapBindingDescriptor *binding,
     void *instance);
+/**
+ * Provide the bootstrap instance binding ready operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_instance_binding_ready(
     const UmiBootstrapBindingDescriptor *binding);
 

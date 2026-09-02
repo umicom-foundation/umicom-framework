@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+/* Provide the record active operation used by this module and its client applications. */
 static UmiStatus record_active(UmiIdeInlineController *controller)
 {
     return umi_ide_inline_history_record(
@@ -23,6 +24,10 @@ static UmiStatus record_active(UmiIdeInlineController *controller)
         &controller->active);
 }
 
+/*
+ * Initialise ide inline controller from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ide_inline_controller_init(
     UmiIdeInlineController *controller,
     const UmiIdeInlineExecutor *executor,
@@ -30,11 +35,16 @@ UmiStatus umi_ide_inline_controller_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || executor == NULL || edits == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_ide_editor_edit_adapter_validate(edits);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(controller, 0, sizeof(*controller));
@@ -44,29 +54,47 @@ UmiStatus umi_ide_inline_controller_init(
     controller->revision = 1U;
 
     status = umi_ide_inline_history_create(&controller->history);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)memset(controller, 0, sizeof(*controller));
     }
     return status;
 }
 
+/*
+ * Provide the ide inline controller deinit operation used by this module and its client
+ * applications.
+ */
 void umi_ide_inline_controller_deinit(UmiIdeInlineController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return;
     umi_ide_inline_history_destroy(controller->history);
     (void)memset(controller, 0, sizeof(*controller));
 }
 
+/*
+ * Provide the ide inline controller request operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_request(
     UmiIdeInlineController *controller,
     const UmiIdeEditorSelection *context)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || context == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (controller->active.state == UMI_IDE_INLINE_READY ||
         controller->active.state == UMI_IDE_INLINE_REQUESTED) {
         return UMI_STATUS_BUSY;
@@ -84,6 +112,7 @@ UmiStatus umi_ide_inline_controller_request(
 
     controller->revision += 1U;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)record_active(controller);
     }
@@ -91,14 +120,23 @@ UmiStatus umi_ide_inline_controller_request(
     return status;
 }
 
+/*
+ * Provide the ide inline controller accept operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_accept(
     UmiIdeInlineController *controller)
 {
     uint64_t revision = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (controller->active.state != UMI_IDE_INLINE_READY) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -107,8 +145,10 @@ UmiStatus umi_ide_inline_controller_accept(
         controller->edits.user_data,
         controller->active.document_id,
         &revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (revision != controller->active.document_revision) {
         controller->active.state = UMI_IDE_INLINE_FAILED;
         controller->active.status = UMI_STATUS_INVALID_STATE;
@@ -135,11 +175,20 @@ UmiStatus umi_ide_inline_controller_accept(
     return status;
 }
 
+/*
+ * Provide the ide inline controller reject operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_reject(
     UmiIdeInlineController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (controller->active.state != UMI_IDE_INLINE_READY) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -151,11 +200,20 @@ UmiStatus umi_ide_inline_controller_reject(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide inline controller cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_cancel(
     UmiIdeInlineController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (controller->active.state != UMI_IDE_INLINE_REQUESTED &&
         controller->active.state != UMI_IDE_INLINE_READY) {
         return UMI_STATUS_INVALID_STATE;
@@ -168,10 +226,18 @@ UmiStatus umi_ide_inline_controller_cancel(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ide inline controller snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_snapshot(
     const UmiIdeInlineController *controller,
     UmiIdeInlineSuggestion *out_suggestion)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || out_suggestion == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

@@ -29,6 +29,10 @@
 #include "umicom/runtime/bootstrap/property_condition.h"
 
 
+/*
+ * Provide the bootstrap condition evaluate operation used by this module and its client
+ * applications.
+ */
 bool umi_bootstrap_condition_evaluate(
     const UmiBootstrapCondition *condition,
     const UmiBootstrapPropertySet *properties,
@@ -37,7 +41,12 @@ bool umi_bootstrap_condition_evaluate(
     const UmiBootstrapIdList *capabilities,
     const char *platform_id) {
     bool result = false;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (condition == NULL) return false;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (condition->kind) {
         case UMI_BOOTSTRAP_CONDITION_PROPERTY_PRESENT:
             result = umi_bootstrap_property_condition_match(properties, condition->key, NULL);
@@ -66,6 +75,10 @@ bool umi_bootstrap_condition_evaluate(
     return condition->negate ? !result : result;
 }
 
+/*
+ * Provide the bootstrap condition set evaluate operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_condition_set_evaluate(
     const UmiBootstrapConditionSet *set,
     const UmiBootstrapPropertySet *properties,
@@ -75,7 +88,12 @@ bool umi_bootstrap_condition_set_evaluate(
     const char *platform_id) {
     bool results[UMI_BOOTSTRAP_MAX_DEPENDENCIES] = {false};
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (set == NULL) return false;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 0U; i < set->count; ++i) {
         results[i] = umi_bootstrap_condition_evaluate(&set->items[i], properties,
             environment, features, capabilities, platform_id);

@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include "umicom/ui/gtk4/workstation/asset_browser.h"
 
+/*
+ * Initialise gtk4 ws asset browser from caller-provided values so later operations receive
+ * a known state.
+ */
 GtkWidget *umi_gtk4_ws_asset_browser_create(const UmiWsAssetBrowserModel *model) {
     GtkWidget *scroller = gtk_scrolled_window_new();
     GtkWidget *flow = gtk_flow_box_new();
@@ -26,7 +30,12 @@ GtkWidget *umi_gtk4_ws_asset_browser_create(const UmiWsAssetBrowserModel *model)
     gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(flow), 1U);
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(flow), 8U);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), flow);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return scroller;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 0U; i < model->count; ++i) {
         char size_text[64];
         GtkWidget *tile = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);

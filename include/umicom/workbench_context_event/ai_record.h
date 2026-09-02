@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context event ai record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextEventAiRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_EVENT_ID_CAPACITY];
@@ -39,25 +43,57 @@ typedef struct UmiWorkbenchContextEventAiRecord {
     uint64_t revision;
 } UmiWorkbenchContextEventAiRecord;
 
+/**
+ * Initialise workbench context event ai record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_event_ai_record_init(
     UmiWorkbenchContextEventAiRecord *record,
     const char *record_id);
+/**
+ * Check that workbench context event ai record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_event_ai_record_validate(
     const UmiWorkbenchContextEventAiRecord *record);
+/**
+ * Provide the workbench context event ai record set source operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_ai_record_set_source(
     UmiWorkbenchContextEventAiRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench context event ai record set subject operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_ai_record_set_subject(
     UmiWorkbenchContextEventAiRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench context event ai record set group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_ai_record_set_group(
     UmiWorkbenchContextEventAiRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench context event ai record set label operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_event_ai_record_set_label(
     UmiWorkbenchContextEventAiRecord *record,
     const char *label);
+/**
+ * Provide the workbench context event ai record hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_event_ai_record_hash(
     const UmiWorkbenchContextEventAiRecord *record);
+/**
+ * Provide the workbench context event ai record touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_event_ai_record_touch(
     UmiWorkbenchContextEventAiRecord *record,
     uint64_t sequence,

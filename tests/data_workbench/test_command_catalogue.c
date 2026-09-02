@@ -17,15 +17,21 @@
 
 #include "umicom/data/workbench/command_catalogue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     size_t comparison;
     assert(umi_data_workbench_command_count() == 34U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_data_workbench_command_count(); ++index) {
         const UmiDataWorkbenchCommand *command =
             umi_data_workbench_command_at(index);
         assert(command != NULL);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = index + 1U;
              comparison < umi_data_workbench_command_count(); ++comparison) {
             assert(strcmp(command->command_id,

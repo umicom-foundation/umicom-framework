@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced patch apply plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedPatchApplyPlan {
     uint32_t struct_size;
     uint32_t api_version;
@@ -38,8 +42,20 @@ typedef struct UmiVcsAdvancedPatchApplyPlan {
     UmiVcsSafetyLevel safety;
 } UmiVcsAdvancedPatchApplyPlan;
 
+/**
+ * Initialise vcs advanced patch apply plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_patch_apply_plan_init(UmiVcsAdvancedPatchApplyPlan *value);
+/**
+ * Check that vcs advanced patch apply plan satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_patch_apply_plan_validate(const UmiVcsAdvancedPatchApplyPlan *value);
+/**
+ * Copy vcs advanced patch apply plan into module-owned storage so callers keep ownership
+ * of their input values.
+ */
 UmiStatus umi_vcs_advanced_patch_apply_plan_set(UmiVcsAdvancedPatchApplyPlan *value,
                                                   const char *repository_root,
                                                   const char *patch_path,

@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital settlement finality data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalSettlementFinality {
     uint32_t confirmations;
     bool provisionally_settled;

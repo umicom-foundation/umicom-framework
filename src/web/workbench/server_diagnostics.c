@@ -17,9 +17,17 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise web workbench server diagnostics from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_web_workbench_server_diagnostics_init(
     UmiWebWorkbenchServerDiagnostics *diagnostics)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diagnostics == NULL) return;
     memset(diagnostics, 0, sizeof(*diagnostics));
     diagnostics->phase = UMI_WEB_SERVER_STOPPED;
@@ -27,6 +35,10 @@ void umi_web_workbench_server_diagnostics_init(
     diagnostics->revision = 1U;
 }
 
+/*
+ * Provide the web workbench server diagnostics capture operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_web_workbench_server_diagnostics_capture(
     UmiWebWorkbenchServerDiagnostics *diagnostics,
     const UmiWebServerState *state,
@@ -34,6 +46,10 @@ UmiStatus umi_web_workbench_server_diagnostics_capture(
 {
     uint64_t responses;
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diagnostics == NULL || state == NULL || metrics == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -56,6 +72,7 @@ UmiStatus umi_web_workbench_server_diagnostics_capture(
         "%s on port %u: %llu requests, %.2f%% errors",
         umi_web_server_phase_text(state->phase), (unsigned)state->port,
         (unsigned long long)metrics->requests, diagnostics->error_rate * 100.0);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(diagnostics->summary)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

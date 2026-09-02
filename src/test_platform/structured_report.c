@@ -17,17 +17,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the escape json operation used by this module and its client applications. */
 static UmiStatus escape_json(const char *text,
                              char *out_text,
                              size_t capacity)
 {
     const unsigned char *cursor;
     size_t used = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (cursor = (const unsigned char *)text; *cursor != '\0'; ++cursor) {
         const char *replacement = NULL;
+        /* Select the behaviour associated with the requested command or state value. */
         switch (*cursor) {
             case '"': replacement = "\\\""; break;
             case '\\': replacement = "\\\\"; break;
@@ -36,14 +43,20 @@ static UmiStatus escape_json(const char *text,
             case '\t': replacement = "\\t"; break;
             default: break;
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (replacement != NULL) {
             size_t length = strlen(replacement);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (used + length + 1U > capacity) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
             }
             (void)memcpy(out_text + used, replacement, length);
             used += length;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (used + 2U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
             out_text[used++] = (char)*cursor;
         }
@@ -52,6 +65,10 @@ static UmiStatus escape_json(const char *text,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform report result json operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_report_result_json(
     const UmiTestPlatformResultSnapshot *result,
     char *out_json,
@@ -63,9 +80,14 @@ UmiStatus umi_test_platform_report_result_json(
     char message[2048];
     char details[4096];
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL || out_json == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (escape_json(result->id, id, sizeof(id)) != UMI_STATUS_OK ||
         escape_json(result->session_id, session, sizeof(session)) !=
             UMI_STATUS_OK ||
@@ -93,6 +115,10 @@ UmiStatus umi_test_platform_report_result_json(
                : UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform report session json operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_report_session_json(
     const UmiTestPlatformRunSessionSnapshot *session,
     char *out_json,
@@ -102,9 +128,14 @@ UmiStatus umi_test_platform_report_session_json(
     char profile[256];
     char suite[256];
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_json == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (escape_json(session->id, id, sizeof(id)) != UMI_STATUS_OK ||
         escape_json(session->profile_id, profile, sizeof(profile)) !=
             UMI_STATUS_OK ||

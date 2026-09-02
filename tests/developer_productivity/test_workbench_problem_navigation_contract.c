@@ -23,6 +23,10 @@ typedef UmiStatus (*ProblemNavigationFunction)(
     size_t *,
     UmiDeveloperProblem *);
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     ProblemNavigationFunction next_problem = umi_developer_problem_next;

@@ -22,14 +22,30 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by developer workbench command catalogue
+ * without changing their state.
+ */
 size_t umi_developer_workbench_command_catalogue_count(void);
 
+/**
+ * Find developer workbench command catalogue while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiDeveloperWorkbenchCommandDefinition *
 umi_developer_workbench_command_catalogue_at(size_t index);
 
+/**
+ * Find developer workbench command catalogue while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiDeveloperWorkbenchCommandDefinition *
 umi_developer_workbench_command_catalogue_find(const char *command_id);
 
+/**
+ * Check that developer workbench command catalogue satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_command_catalogue_validate(void);
 
 #ifdef __cplusplus

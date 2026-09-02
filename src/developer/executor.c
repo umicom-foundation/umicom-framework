@@ -20,11 +20,19 @@
 
 #include "umicom/platform/process.h"
 
+/*
+ * Initialise developer executor from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_developer_executor_init(
     UmiDeveloperExecutor *executor,
     UmiDeveloperExecuteFunction execute,
     void *user_data)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (executor == NULL) {
         return;
     }
@@ -36,6 +44,10 @@ void umi_developer_executor_init(
     executor->execute = execute;
 }
 
+/*
+ * Perform developer process through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_developer_process_execute(
     void *user_data,
     const UmiDeveloperOperationSnapshot *operation,
@@ -50,12 +62,17 @@ UmiStatus umi_developer_process_execute(
 
     (void)user_data;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation == NULL || out_result == NULL ||
         operation->program[0] == '\0' ||
         operation->argument_count > UMI_DEVELOPER_MAX_ARGUMENTS) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < operation->argument_count; ++index) {
         arguments[index] = operation->arguments[index];
     }
@@ -87,10 +104,12 @@ UmiStatus umi_developer_process_execute(
     out_result->duration_ms = process_result.duration_ms;
 
     output_length = strlen(process_result.output);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (output_length >= sizeof(out_result->output)) {
         output_length = sizeof(out_result->output) - 1U;
         out_result->output_truncated = 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (output_length > 0U) {
         memcpy(out_result->output, process_result.output, output_length);
     }

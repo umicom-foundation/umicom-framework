@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation worker data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationWorker { char worker_id[UMI_ENTERPRISE_ID_CAPACITY]; size_t capacity; size_t active_tasks; int64_t heartbeat_ms; int enabled; } UmiEnterpriseValuationWorker;
 /* Initialise an enabled valuation worker with fixed task capacity. */
 UmiStatus umi_enterprise_valuation_worker_init(UmiEnterpriseValuationWorker *worker,const char *worker_id,size_t capacity);

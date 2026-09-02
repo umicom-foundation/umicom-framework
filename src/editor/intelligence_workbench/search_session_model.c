@@ -20,7 +20,23 @@
 
 #include <string.h>
 
-UmiStatus umi_editor_intel_search_session_model_begin(UmiEditorIntelSearchSessionModel *session,const char *session_id){if(session==NULL||!umi_editor_intel_id_valid(session_id))return UMI_STATUS_INVALID_ARGUMENT;memset(session,0,sizeof *session);if(umi_editor_intel_copy_text(session->session_id,sizeof session->session_id,session_id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;session->phase=UMI_EDITOR_INTEL_PHASE_PREPARING;session->revision=1U;return UMI_STATUS_OK;}
-UmiStatus umi_editor_intel_search_session_model_set_ready(UmiEditorIntelSearchSessionModel *session,uint32_t item_count){if(session==NULL||session->phase!=UMI_EDITOR_INTEL_PHASE_PREPARING)return UMI_STATUS_INVALID_STATE;session->item_count=item_count;session->phase=UMI_EDITOR_INTEL_PHASE_READY;session->changed=true;session->revision++;return UMI_STATUS_OK;}
-UmiStatus umi_editor_intel_search_session_model_cancel(UmiEditorIntelSearchSessionModel *session){if(session==NULL||session->phase==UMI_EDITOR_INTEL_PHASE_COMMITTED)return UMI_STATUS_INVALID_STATE;session->phase=UMI_EDITOR_INTEL_PHASE_CANCELLED;session->revision++;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel search session model begin operation used by this module and
+ * its client applications.
+ */
+UmiStatus umi_editor_intel_search_session_model_begin(UmiEditorIntelSearchSessionModel *session,const char *session_id){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(session==NULL||!umi_editor_intel_id_valid(session_id))return UMI_STATUS_INVALID_ARGUMENT;memset(session,0,sizeof *session);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_editor_intel_copy_text(session->session_id,sizeof session->session_id,session_id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;session->phase=UMI_EDITOR_INTEL_PHASE_PREPARING;session->revision=1U;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel search session model set ready operation used by this module
+ * and its client applications.
+ */
+UmiStatus umi_editor_intel_search_session_model_set_ready(UmiEditorIntelSearchSessionModel *session,uint32_t item_count){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(session==NULL||session->phase!=UMI_EDITOR_INTEL_PHASE_PREPARING)return UMI_STATUS_INVALID_STATE;session->item_count=item_count;session->phase=UMI_EDITOR_INTEL_PHASE_READY;session->changed=true;session->revision++;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel search session model cancel operation used by this module and
+ * its client applications.
+ */
+UmiStatus umi_editor_intel_search_session_model_cancel(UmiEditorIntelSearchSessionModel *session){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(session==NULL||session->phase==UMI_EDITOR_INTEL_PHASE_COMMITTED)return UMI_STATUS_INVALID_STATE;session->phase=UMI_EDITOR_INTEL_PHASE_CANCELLED;session->revision++;return UMI_STATUS_OK;}
+/*
+ * Check that editor intel search session model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_search_session_model_valid(const UmiEditorIntelSearchSessionModel *session){return session!=NULL&&umi_editor_intel_id_valid(session->session_id)&&session->phase>=UMI_EDITOR_INTEL_PHASE_PREPARING&&session->phase<=UMI_EDITOR_INTEL_PHASE_CANCELLED;}

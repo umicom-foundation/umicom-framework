@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/ai_developer_experience/timeline.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiDeveloperTimeline *timeline = NULL;

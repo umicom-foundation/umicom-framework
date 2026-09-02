@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data transaction scope data shared with callers of this public contract.
+ */
 typedef struct UmiDataTransactionScope { char transaction_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; uint32_t depth; bool active; bool rollback_only; bool committed; } UmiDataTransactionScope;
 /* Begin a transaction scope at depth one. */ UmiStatus umi_data_transaction_scope_begin(UmiDataTransactionScope *scope,const char *transaction_id);
 /* Enter a nested logical scope without creating hidden backend transactions. */ UmiStatus umi_data_transaction_scope_enter(UmiDataTransactionScope *scope);

@@ -24,9 +24,23 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr install state data shared with callers of this public contract.
+ */
 typedef struct UmiDrInstallState { char id[UMI_DR_ID_CAPACITY]; char application_id[UMI_DR_ID_CAPACITY]; UmiDrVersion version; UmiDrChannelKind channel; UmiDrInstallScope scope; bool healthy; } UmiDrInstallState;
+/**
+ * Initialise dr install state from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_install_state_init(UmiDrInstallState *value);
+/**
+ * Check that dr install state satisfies its contract before another service relies on it.
+ */
 bool umi_dr_install_state_valid(const UmiDrInstallState *value);
+/**
+ * Provide the dr install state fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_dr_install_state_fingerprint(const UmiDrInstallState *value);
 
 #ifdef __cplusplus

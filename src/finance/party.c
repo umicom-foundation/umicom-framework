@@ -19,4 +19,5 @@
 
 #include "umicom/finance/party.h"
 #include "umicom/finance/identifier.h"
+/* Check that financial party satisfies its contract before another service relies on it. */
 int umi_financial_party_valid(const UmiFinancialParty *party){return party!=NULL && umi_financial_id_valid(&party->party_id) && party->display_name[0]!='\0';}

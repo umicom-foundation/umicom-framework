@@ -31,6 +31,10 @@ extern "C" {
 #define UMI_UI_SECONDARY_EDITOR_GROUP_ID "editor.secondary"
 
 
+/**
+ * Represent the ui document view snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiDocumentViewSnapshot {
     char view_id[UMI_UI_ID_CAPACITY];
     char document_id[UMI_UI_ID_CAPACITY];
@@ -62,6 +66,9 @@ typedef struct UmiUiDocumentViewSnapshot {
     int show_line_numbers;
 } UmiUiDocumentViewSnapshot;
 
+/**
+ * Represent the ui document close result data shared with callers of this public contract.
+ */
 typedef struct UmiUiDocumentCloseResult {
     size_t closed_count;
     size_t dirty_count;
@@ -69,18 +76,53 @@ typedef struct UmiUiDocumentCloseResult {
     size_t non_closable_count;
 } UmiUiDocumentCloseResult;
 
+/**
+ * Represent the ui document view model data shared with callers of this public contract.
+ */
 typedef struct UmiUiDocumentViewModel UmiUiDocumentViewModel;
 
+/**
+ * Initialise ui document view model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ui_document_view_model_create(UmiUiDocumentViewModel **out_model);
+/**
+ * Release or reset state held by ui document view model so the same storage can be reused
+ * safely.
+ */
 void umi_ui_document_view_model_destroy(UmiUiDocumentViewModel *model);
+/**
+ * Provide the ui document view model upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_document_view_model_upsert(UmiUiDocumentViewModel *model,
                                      const UmiUiDocumentViewSnapshot *item);
+/**
+ * Remove ui document view model while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ui_document_view_model_remove(UmiUiDocumentViewModel *model, const char *item_id);
+/**
+ * Find ui document view model while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ui_document_view_model_find(const UmiUiDocumentViewModel *model, const char *item_id,
                                    UmiUiDocumentViewSnapshot *out_item);
+/**
+ * Find ui document view model while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_ui_document_view_model_at(const UmiUiDocumentViewModel *model, size_t index,
                                  UmiUiDocumentViewSnapshot *out_item);
+/**
+ * Return the number of records represented by ui document view model without changing
+ * their state.
+ */
 size_t umi_ui_document_view_model_count(const UmiUiDocumentViewModel *model);
+/**
+ * Provide the ui document view model revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ui_document_view_model_revision(const UmiUiDocumentViewModel *model);
 
 /* Open a replaceable preview without disturbing dirty or pinned editors. */
@@ -93,13 +135,25 @@ UmiStatus umi_ui_document_view_model_set_pinned(
     UmiUiDocumentViewModel *model,
     const char *item_id,
     int pinned);
+/**
+ * Provide the ui document view model promote preview operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_document_view_model_promote_preview(
     UmiUiDocumentViewModel *model,
     const char *item_id);
+/**
+ * Provide the ui document view model set word wrap operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_document_view_model_set_word_wrap(
     UmiUiDocumentViewModel *model,
     const char *item_id,
     int word_wrap);
+/**
+ * Provide the ui document view model move to group operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_document_view_model_move_to_group(
     UmiUiDocumentViewModel *model,
     const char *item_id,
@@ -114,20 +168,36 @@ UmiStatus umi_ui_document_view_model_place(
     const char *item_id,
     const char *group_id,
     size_t position);
+/**
+ * Provide the ui document view model activate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_document_view_model_activate(
     UmiUiDocumentViewModel *model,
     const char *item_id);
+/**
+ * Provide the ui document view model activate relative operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_document_view_model_activate_relative(
     UmiUiDocumentViewModel *model,
     const char *item_id,
     int direction,
     char *out_item_id,
     size_t capacity);
+/**
+ * Provide the ui document view model activate group operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_document_view_model_activate_group(
     UmiUiDocumentViewModel *model,
     const char *group_id,
     char *out_item_id,
     size_t capacity);
+/**
+ * Provide the ui document view model merge group operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_document_view_model_merge_group(
     UmiUiDocumentViewModel *model,
     const char *source_group_id,
@@ -138,9 +208,17 @@ UmiStatus umi_ui_document_view_model_close_others(
     UmiUiDocumentViewModel *model,
     const char *item_id,
     UmiUiDocumentCloseResult *out_result);
+/**
+ * Provide the ui document view model close all operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_document_view_model_close_all(
     UmiUiDocumentViewModel *model,
     UmiUiDocumentCloseResult *out_result);
+/**
+ * Return the number of records represented by ui document view model group without
+ * changing their state.
+ */
 size_t umi_ui_document_view_model_group_count(
     const UmiUiDocumentViewModel *model,
     const char *group_id);

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric protocol contract data shared with callers of this public contract.
+ */
 typedef struct UmiFabricProtocolContract {
     char contract_id[UMI_FABRIC_ID_CAPACITY];
     UmiFabricProtocol protocol;
@@ -34,7 +37,15 @@ typedef struct UmiFabricProtocolContract {
     bool bidirectional;
 } UmiFabricProtocolContract;
 
+/**
+ * Initialise fabric protocol contract from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_protocol_contract_init(UmiFabricProtocolContract *item, const char *contract_id, UmiFabricProtocol protocol, UmiFabricVersion minimum_version, UmiFabricVersion maximum_version, bool streaming, bool bidirectional);
+/**
+ * Check that fabric protocol contract satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_fabric_protocol_contract_validate(const UmiFabricProtocolContract *item);
 
 #ifdef __cplusplus

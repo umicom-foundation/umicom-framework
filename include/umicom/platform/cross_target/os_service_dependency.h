@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct os service dependency data shared with callers of this public contract.
+ */
 typedef struct UmiCtOsServiceDependency { char service_id[UMI_CT_ID_CAPACITY]; char dependency_id[UMI_CT_ID_CAPACITY]; bool required; } UmiCtOsServiceDependency;
+/**
+ * Initialise ct os service dependency from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ct_os_service_dependency_init(UmiCtOsServiceDependency *dependency,const char *service_id,const char *dependency_id,bool required);
+/**
+ * Provide the ct os service dependency self cycle operation used by this module and its
+ * client applications.
+ */
 bool umi_ct_os_service_dependency_self_cycle(const UmiCtOsServiceDependency *dependency);
 
 #ifdef __cplusplus

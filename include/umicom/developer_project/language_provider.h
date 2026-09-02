@@ -34,6 +34,10 @@ typedef UmiStatus (*UmiDeveloperProjectPlanRunFunction)(
     const UmiDeveloperProjectModel *model,
     UmiDeveloperProjectRunPlan *out_plan);
 
+/**
+ * Represent the developer project language provider data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectLanguageProvider {
     uint32_t structure_size;
     uint32_t api_version;
@@ -47,6 +51,10 @@ typedef struct UmiDeveloperProjectLanguageProvider {
     UmiDeveloperProjectPlanRunFunction plan_run;
 } UmiDeveloperProjectLanguageProvider;
 
+/**
+ * Check that developer project language provider satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_project_language_provider_validate(
     const UmiDeveloperProjectLanguageProvider *provider);
 

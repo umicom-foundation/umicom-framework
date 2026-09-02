@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web response data shared with callers of this public contract.
+ */
 typedef struct UmiWebResponse {
     int status;
     UmiWebHeader headers[UMI_WEB_MAX_HEADERS];
@@ -30,9 +33,25 @@ typedef struct UmiWebResponse {
     char body[UMI_WEB_BODY_CAPACITY];
     size_t body_length;
 } UmiWebResponse;
+/**
+ * Initialise web response from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_web_response_init(UmiWebResponse *response);
+/**
+ * Provide the web response set header operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_response_set_header(UmiWebResponse *response,const char *name,const char *value);
+/**
+ * Provide the web response set text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_response_set_text(UmiWebResponse *response,int status,const char *content_type,const char *body);
+/**
+ * Provide the web response format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_response_format(const UmiWebResponse *response,char *out_text,size_t capacity,size_t *out_length);
 #ifdef __cplusplus
 }

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad component instance data shared with callers of this public contract.
+ */
 typedef struct UmiRadComponentInstance {
     char component_id[UMI_RAD_ID_CAPACITY];
     char component_type[UMI_RAD_ID_CAPACITY];
@@ -25,7 +28,15 @@ typedef struct UmiRadComponentInstance {
     UmiRadRect bounds;
     bool visible;
 } UmiRadComponentInstance;
+/**
+ * Initialise rad component instance from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_rad_component_instance_init(UmiRadComponentInstance *item);
+/**
+ * Check that rad component instance satisfies its contract before another service relies
+ * on it.
+ */
 int umi_rad_component_instance_is_valid(const UmiRadComponentInstance *item);
 #ifdef __cplusplus
 }

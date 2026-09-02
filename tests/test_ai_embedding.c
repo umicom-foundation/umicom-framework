@@ -22,6 +22,10 @@
 #include <assert.h>
 #include "umicom/umicom.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const float a_values[3] = {1.0F, 0.0F, 0.0F};

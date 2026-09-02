@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance contrast policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceContrastPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     double normal_text_ratio;

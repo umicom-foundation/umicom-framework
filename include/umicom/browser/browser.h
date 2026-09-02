@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the browser data shared with callers of this public contract.
+ */
 typedef struct UmiBrowser {
     void *instance;
     UmiStatus (*navigate)(void *instance,const char *url);
@@ -33,6 +36,9 @@ typedef struct UmiBrowser {
     const char *(*current_url)(const void *instance);
     void (*destroy)(void *instance);
 } UmiBrowser;
+/**
+ * Check that browser satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_browser_validate(const UmiBrowser *browser);
 #ifdef __cplusplus
 }

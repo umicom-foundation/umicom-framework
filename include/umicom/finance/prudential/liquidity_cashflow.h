@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential liquidity cashflow data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLiquidityCashflow { int32_t horizon_day; double inflow; double outflow; UmiCurrency currency; } UmiPrudentialLiquidityCashflow;
 /* Initialise a non-negative liquidity cashflow for one horizon day. */
 UmiStatus umi_pru_liquidity_cashflow_init(UmiPrudentialLiquidityCashflow *flow, int32_t horizon_day, double inflow, double outflow, UmiCurrency currency);

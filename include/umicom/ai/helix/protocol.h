@@ -22,11 +22,27 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai helix protocol specification operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_helix_protocol_specification(void);
+/**
+ * Provide the ai helix protocol action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_helix_protocol_action_text(UmiHelixActionKind kind);
+/**
+ * Provide the ai helix protocol parse disposition operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_helix_protocol_parse_disposition(
     const char *text,
     UmiAiHelixDisposition *out_disposition);
+/**
+ * Provide the ai helix protocol parse action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_helix_protocol_parse_action(
     const char *text,
     UmiHelixActionKind *out_kind);

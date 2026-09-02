@@ -29,12 +29,19 @@ struct UmiAiContextBroker {
     uint64_t revision;
 };
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(const UmiAiContextBroker *broker,
                          const char *source_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || source_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < broker->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(broker->sources[index].source_id, source_id) == 0) {
             return index;
         }
@@ -42,6 +49,7 @@ static size_t find_index(const UmiAiContextBroker *broker,
     return SIZE_MAX;
 }
 
+/* Check that source satisfies its contract before another service relies on it. */
 static int source_valid(const UmiAiContextSource *source)
 {
     return source != NULL && source->source_id[0] != '\0' &&
@@ -53,33 +61,59 @@ static int source_valid(const UmiAiContextSource *source)
            source->estimated_tokens > 0U;
 }
 
+/*
+ * Initialise ai context broker from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_context_broker_create(UmiAiContextBroker **out_broker)
 {
     UmiAiContextBroker *broker;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_broker == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_broker = NULL;
     broker = (UmiAiContextBroker *)calloc(1U, sizeof(*broker));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     broker->revision = 1U;
     *out_broker = broker;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ai context broker so the same storage can be reused
+ * safely.
+ */
 void umi_ai_context_broker_destroy(UmiAiContextBroker *broker)
 {
     free(broker);
 }
 
+/*
+ * Provide the ai context broker upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_context_broker_upsert(
     UmiAiContextBroker *broker,
     const UmiAiContextSource *source)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || !source_valid(source)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_index(broker, source->source_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (broker->count >= UMI_AI_CONTEXT_SOURCE_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -91,14 +125,24 @@ UmiStatus umi_ai_context_broker_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove ai context broker while keeping the remaining records in a valid and discoverable
+ * state.
+ */
 UmiStatus umi_ai_context_broker_remove(
     UmiAiContextBroker *broker,
     const char *source_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || source_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(broker, source_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < broker->count) {
         (void)memmove(&broker->sources[index],
                       &broker->sources[index + 1U],
@@ -111,40 +155,68 @@ UmiStatus umi_ai_context_broker_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ai context broker so the same storage can be reused
+ * safely.
+ */
 void umi_ai_context_broker_clear(UmiAiContextBroker *broker)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL) return;
     (void)memset(broker->sources, 0, sizeof(broker->sources));
     broker->count = 0U;
     ++broker->revision;
 }
 
+/*
+ * Find ai context broker while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_ai_context_broker_at(
     const UmiAiContextBroker *broker,
     size_t index,
     UmiAiContextSource *out_source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || out_source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= broker->count) return UMI_STATUS_NOT_FOUND;
     *out_source = broker->sources[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by ai context broker without changing their
+ * state.
+ */
 size_t umi_ai_context_broker_count(const UmiAiContextBroker *broker)
 {
     return broker != NULL ? broker->count : 0U;
 }
 
+/* Provide the before operation used by this module and its client applications. */
 static int before(const UmiAiContextSource *left,
                   const UmiAiContextSource *right)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->mandatory != right->mandatory) return left->mandatory > right->mandatory;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->priority != right->priority) return left->priority > right->priority;
     return strcmp(left->source_id, right->source_id) < 0;
 }
 
+/*
+ * Provide the ai context broker plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_context_broker_plan(
     const UmiAiContextBroker *broker,
     uint32_t context_limit,
@@ -160,6 +232,10 @@ UmiStatus umi_ai_context_broker_plan(
     size_t index;
     uint32_t available;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || privacy == NULL || out_plan == NULL ||
         context_limit == 0U || reserved_output_tokens >= context_limit ||
         maximum_sources == 0U ||
@@ -173,10 +249,16 @@ UmiStatus umi_ai_context_broker_plan(
     out_plan->revision = broker->revision;
     available = context_limit - reserved_output_tokens;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < broker->count; ++index) {
         size_t position;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!broker->sources[index].enabled) continue;
         position = order_count;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (position > 0U &&
                before(&broker->sources[index],
                       &broker->sources[order[position - 1U]])) {
@@ -187,6 +269,7 @@ UmiStatus umi_ai_context_broker_plan(
         ++order_count;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < order_count; ++index) {
         const UmiAiContextSource *source = &broker->sources[order[index]];
         UmiStatus privacy_status = umi_ai_privacy_policy_check_share(
@@ -196,7 +279,9 @@ UmiStatus umi_ai_context_broker_plan(
                    available - out_plan->selected_tokens;
         int has_slot = out_plan->source_count < maximum_sources;
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (privacy_status != UMI_STATUS_OK || !fits || !has_slot) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (source->mandatory) {
                 return privacy_status != UMI_STATUS_OK
                     ? privacy_status : UMI_STATUS_CAPACITY_EXCEEDED;
@@ -207,6 +292,7 @@ UmiStatus umi_ai_context_broker_plan(
         }
         out_plan->sources[out_plan->source_count++] = *source;
         out_plan->selected_tokens += source->estimated_tokens;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (source->classification > out_plan->highest_classification) {
             out_plan->highest_classification = source->classification;
         }
@@ -215,8 +301,13 @@ UmiStatus umi_ai_context_broker_plan(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai context source kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_context_source_kind_text(UmiAiContextSourceKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_AI_CONTEXT_WORKSPACE: return "workspace";
         case UMI_AI_CONTEXT_PROJECT: return "project";

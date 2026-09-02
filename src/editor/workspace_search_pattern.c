@@ -165,21 +165,32 @@ struct UmiEditorWorkspaceSearchPattern {
     char expression[UMI_EDITOR_WORKSPACE_SEARCH_EXPRESSION_CAPACITY];
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination,
                       size_t capacity,
                       const char *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) {
         destination[0] = '\0';
         return;
@@ -187,9 +198,14 @@ static void copy_text(char *destination,
     (void)snprintf(destination, capacity, "%s", source);
 }
 
+/* Release or reset state held by diagnostic so the same storage can be reused safely. */
 static void diagnostic_clear(
     UmiEditorWorkspaceSearchPatternDiagnostic *diagnostic)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diagnostic == NULL) return;
     (void)memset(diagnostic, 0, sizeof(*diagnostic));
     diagnostic->struct_size = (uint32_t)sizeof(*diagnostic);
@@ -198,14 +214,23 @@ static void diagnostic_clear(
     diagnostic->status = UMI_STATUS_OK;
 }
 
+/*
+ * Copy diagnostic into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 static void diagnostic_set(
     RegexParser *parser,
     UmiStatus status,
     size_t position,
     const char *message)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser->status != UMI_STATUS_OK) return;
     parser->status = status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (parser->diagnostic != NULL) {
         parser->diagnostic->status = status;
         parser->diagnostic->expression_offset = position;
@@ -215,55 +240,78 @@ static void diagnostic_set(
     }
 }
 
+/* Initialise node from caller-provided values so later operations receive a known state. */
 static RegexNode *node_create(RegexNodeType type)
 {
     RegexNode *node = (RegexNode *)calloc(1U, sizeof(*node));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node != NULL) node->type = type;
     return node;
 }
 
+/* Release or reset state held by node so the same storage can be reused safely. */
 static void node_destroy(RegexNode *node)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node->type == REGEX_NODE_SEQUENCE ||
         node->type == REGEX_NODE_ALTERNATION) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < node->data.list.count; ++index) {
             node_destroy(node->data.list.items[index]);
         }
         free(node->data.list.items);
         node->data.list.items = NULL;
-    } else if (node->type == REGEX_NODE_REPEAT) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (node->type == REGEX_NODE_REPEAT) {
         node_destroy(node->data.repeat.child);
         node->data.repeat.child = NULL;
-    } else if (node->type == REGEX_NODE_GROUP) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (node->type == REGEX_NODE_GROUP) {
         node_destroy(node->data.group.child);
         node->data.group.child = NULL;
     }
     free(node);
 }
 
+/* Add node list only after its inputs and available capacity have been checked. */
 static UmiStatus node_list_append(RegexNode *node, RegexNode *child)
 {
     RegexNode **replacement;
     size_t capacity;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL || child == NULL ||
         (node->type != REGEX_NODE_SEQUENCE &&
          node->type != REGEX_NODE_ALTERNATION)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (node->data.list.count < node->data.list.capacity) {
         node->data.list.items[node->data.list.count++] = child;
         return UMI_STATUS_OK;
     }
     capacity = node->data.list.capacity == 0U
         ? 4U : node->data.list.capacity * 2U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity < node->data.list.capacity ||
         capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (RegexNode **)realloc(
         node->data.list.items, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     node->data.list.items = replacement;
     node->data.list.capacity = capacity;
@@ -271,54 +319,64 @@ static UmiStatus node_list_append(RegexNode *node, RegexNode *child)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parser at end operation used by this module and its client applications. */
 static int parser_at_end(const RegexParser *parser)
 {
     return parser->position >= parser->length;
 }
 
+/* Provide the parser peek operation used by this module and its client applications. */
 static char parser_peek(const RegexParser *parser)
 {
     return parser_at_end(parser) ? '\0' : parser->expression[parser->position];
 }
 
+/* Provide the parser take operation used by this module and its client applications. */
 static char parser_take(RegexParser *parser)
 {
     return parser_at_end(parser) ? '\0'
                                  : parser->expression[parser->position++];
 }
 
+/* Copy class into module-owned storage so callers keep ownership of their input values. */
 static void class_set(RegexClass *character_class, unsigned char value)
 {
     character_class->bitmap[value >> 3U] |=
         (unsigned char)(1U << (value & 7U));
 }
 
+/* Provide the class has operation used by this module and its client applications. */
 static int class_has(const RegexClass *character_class, unsigned char value)
 {
     return (character_class->bitmap[value >> 3U] &
             (unsigned char)(1U << (value & 7U))) != 0U;
 }
 
+/* Provide the class add range operation used by this module and its client applications. */
 static void class_add_range(RegexClass *character_class,
                             unsigned char first,
                             unsigned char last)
 {
     unsigned int value;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first > last) {
         unsigned char temporary = first;
         first = last;
         last = temporary;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (value = first; value <= (unsigned int)last; ++value) {
         class_set(character_class, (unsigned char)value);
     }
 }
 
+/* Provide the class add digits operation used by this module and its client applications. */
 static void class_add_digits(RegexClass *character_class)
 {
     class_add_range(character_class, (unsigned char)'0', (unsigned char)'9');
 }
 
+/* Provide the class add word operation used by this module and its client applications. */
 static void class_add_word(RegexClass *character_class)
 {
     class_add_range(character_class, (unsigned char)'0', (unsigned char)'9');
@@ -327,6 +385,7 @@ static void class_add_word(RegexClass *character_class)
     class_set(character_class, (unsigned char)'_');
 }
 
+/* Provide the class add space operation used by this module and its client applications. */
 static void class_add_space(RegexClass *character_class)
 {
     class_set(character_class, (unsigned char)' ');
@@ -337,24 +396,36 @@ static void class_add_space(RegexClass *character_class)
     class_set(character_class, (unsigned char)'\v');
 }
 
+/* Provide the hex value operation used by this module and its client applications. */
 static int hex_value(char character)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= '0' && character <= '9') return character - '0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= 'a' && character <= 'f') {
         return character - 'a' + 10;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= 'A' && character <= 'F') {
         return character - 'A' + 10;
     }
     return -1;
 }
 
+/*
+ * Provide the parser escape character operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parser_escape_character(RegexParser *parser,
                                          unsigned char *out_character)
 {
     char escaped;
     int high;
     int low;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (parser_at_end(parser) || out_character == NULL) {
         diagnostic_set(parser,
                        UMI_STATUS_PARSE_ERROR,
@@ -363,6 +434,7 @@ static UmiStatus parser_escape_character(RegexParser *parser,
         return parser->status;
     }
     escaped = parser_take(parser);
+    /* Select the behaviour associated with the requested command or state value. */
     switch (escaped) {
         case 'n': *out_character = (unsigned char)'\n'; return UMI_STATUS_OK;
         case 'r': *out_character = (unsigned char)'\r'; return UMI_STATUS_OK;
@@ -370,6 +442,7 @@ static UmiStatus parser_escape_character(RegexParser *parser,
         case 'f': *out_character = (unsigned char)'\f'; return UMI_STATUS_OK;
         case 'v': *out_character = (unsigned char)'\v'; return UMI_STATUS_OK;
         case 'x':
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (parser->position + 2U > parser->length) {
                 diagnostic_set(parser,
                                UMI_STATUS_PARSE_ERROR,
@@ -379,6 +452,7 @@ static UmiStatus parser_escape_character(RegexParser *parser,
             }
             high = hex_value(parser_take(parser));
             low = hex_value(parser_take(parser));
+            /* Apply this branch only when its contract condition is satisfied. */
             if (high < 0 || low < 0) {
                 diagnostic_set(parser,
                                UMI_STATUS_PARSE_ERROR,
@@ -394,8 +468,13 @@ static UmiStatus parser_escape_character(RegexParser *parser,
     }
 }
 
+/* Provide the parse alternation operation used by this module and its client applications. */
 static RegexNode *parse_alternation(RegexParser *parser);
 
+/*
+ * Provide the parse character class operation used by this module and its client
+ * applications.
+ */
 static RegexNode *parse_character_class(RegexParser *parser)
 {
     RegexNode *node;
@@ -405,15 +484,25 @@ static RegexNode *parse_character_class(RegexParser *parser)
     unsigned char previous = 0U;
 
     (void)memset(&character_class, 0, sizeof(character_class));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_peek(parser) == '^') {
         character_class.negated = 1;
         (void)parser_take(parser);
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (!parser_at_end(parser)) {
         char current = parser_take(parser);
         unsigned char value;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (current == ']' && !first_position) {
             node = node_create(REGEX_NODE_CLASS);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (node == NULL) {
                 diagnostic_set(parser,
                                UMI_STATUS_OUT_OF_MEMORY,
@@ -425,8 +514,10 @@ static RegexNode *parse_character_class(RegexParser *parser)
             return node;
         }
         first_position = 0;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (current == '\\') {
             char category = parser_peek(parser);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (category == 'd' || category == 'D' ||
                 category == 'w' || category == 'W' ||
                 category == 's' || category == 'S') {
@@ -436,37 +527,45 @@ static RegexNode *parse_character_class(RegexParser *parser)
                 (void)memset(&category_class, 0, sizeof(category_class));
                 category = parser_take(parser);
                 category_negated = isupper((unsigned char)category) != 0;
+                /* Select the behaviour associated with the requested command or state value. */
                 switch ((char)tolower((unsigned char)category)) {
                     case 'd': class_add_digits(&category_class); break;
                     case 'w': class_add_word(&category_class); break;
                     default: class_add_space(&category_class); break;
                 }
+                /* Visit each bounded item once so every record receives the same rule. */
                 for (index = 0U; index < 256U; ++index) {
                     int present = class_has(&category_class,
                                             (unsigned char)index);
+                    /* Apply this branch only when its contract condition is satisfied. */
                     if (category_negated) present = !present;
+                    /* Apply this branch only when its contract condition is satisfied. */
                     if (present) class_set(&character_class,
                                            (unsigned char)index);
                 }
                 have_value = 0;
                 continue;
             }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (parser_escape_character(parser, &value) != UMI_STATUS_OK) {
                 return NULL;
             }
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             value = (unsigned char)current;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value == (unsigned char)'-' && have_value &&
             parser_peek(parser) != ']' && !parser_at_end(parser)) {
             unsigned char range_end;
             char end_character = parser_take(parser);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (end_character == '\\') {
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (parser_escape_character(parser, &range_end) !=
                     UMI_STATUS_OK) {
                     return NULL;
                 }
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 range_end = (unsigned char)end_character;
             }
             class_add_range(&character_class, previous, range_end);
@@ -484,11 +583,13 @@ static RegexNode *parse_character_class(RegexParser *parser)
     return NULL;
 }
 
+/* Provide the parse escape atom operation used by this module and its client applications. */
 static RegexNode *parse_escape_atom(RegexParser *parser)
 {
     char category;
     RegexNode *node;
     unsigned char value;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_at_end(parser)) {
         diagnostic_set(parser,
                        UMI_STATUS_PARSE_ERROR,
@@ -497,11 +598,16 @@ static RegexNode *parse_escape_atom(RegexParser *parser)
         return NULL;
     }
     category = parser_peek(parser);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (category == 'd' || category == 'D' ||
         category == 'w' || category == 'W' ||
         category == 's' || category == 'S') {
         category = parser_take(parser);
         node = node_create(REGEX_NODE_CLASS);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (node == NULL) {
             diagnostic_set(parser,
                            UMI_STATUS_OUT_OF_MEMORY,
@@ -511,6 +617,7 @@ static RegexNode *parse_escape_atom(RegexParser *parser)
         }
         node->data.character_class.negated =
             isupper((unsigned char)category) != 0;
+        /* Select the behaviour associated with the requested command or state value. */
         switch ((char)tolower((unsigned char)category)) {
             case 'd': class_add_digits(&node->data.character_class); break;
             case 'w': class_add_word(&node->data.character_class); break;
@@ -518,9 +625,14 @@ static RegexNode *parse_escape_atom(RegexParser *parser)
         }
         return node;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (category == 'b' || category == 'B') {
         category = parser_take(parser);
         node = node_create(REGEX_NODE_WORD_BOUNDARY);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (node == NULL) {
             diagnostic_set(parser,
                            UMI_STATUS_OUT_OF_MEMORY,
@@ -531,8 +643,13 @@ static RegexNode *parse_escape_atom(RegexParser *parser)
         node->data.boundary.negated = category == 'B';
         return node;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser_escape_character(parser, &value) != UMI_STATUS_OK) return NULL;
     node = node_create(REGEX_NODE_LITERAL);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         diagnostic_set(parser,
                        UMI_STATUS_OUT_OF_MEMORY,
@@ -544,6 +661,7 @@ static RegexNode *parse_escape_atom(RegexParser *parser)
     return node;
 }
 
+/* Provide the parse atom operation used by this module and its client applications. */
 static RegexNode *parse_atom(RegexParser *parser)
 {
     char current;
@@ -552,13 +670,17 @@ static RegexNode *parse_atom(RegexParser *parser)
     uint32_t group_index;
     int capturing = 1;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_at_end(parser)) return node_create(REGEX_NODE_EMPTY);
     current = parser_take(parser);
+    /* Select the behaviour associated with the requested command or state value. */
     switch (current) {
         case '(':
+            /* Apply this branch only when its contract condition is satisfied. */
             if (parser_peek(parser) == '?') {
                 size_t marker = parser->position;
                 (void)parser_take(parser);
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (parser_peek(parser) != ':') {
                     diagnostic_set(parser,
                                    UMI_STATUS_PARSE_ERROR,
@@ -571,7 +693,9 @@ static RegexNode *parse_atom(RegexParser *parser)
                 capturing = 0;
             }
             group_index = 0U;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (capturing) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (parser->capture_count + 1U >=
                     UMI_EDITOR_WORKSPACE_SEARCH_MAX_CAPTURES) {
                     diagnostic_set(parser,
@@ -583,7 +707,12 @@ static RegexNode *parse_atom(RegexParser *parser)
                 group_index = (uint32_t)(++parser->capture_count);
             }
             child = parse_alternation(parser);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (child == NULL) return NULL;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (parser_peek(parser) != ')') {
                 node_destroy(child);
                 diagnostic_set(parser,
@@ -593,8 +722,13 @@ static RegexNode *parse_atom(RegexParser *parser)
                 return NULL;
             }
             (void)parser_take(parser);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!capturing) return child;
             node = node_create(REGEX_NODE_GROUP);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (node == NULL) {
                 node_destroy(child);
                 diagnostic_set(parser,
@@ -631,6 +765,10 @@ static RegexNode *parse_atom(RegexParser *parser)
             return NULL;
         default:
             node = node_create(REGEX_NODE_LITERAL);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (node == NULL) {
                 diagnostic_set(parser,
                                UMI_STATUS_OUT_OF_MEMORY,
@@ -643,10 +781,15 @@ static RegexNode *parse_atom(RegexParser *parser)
     }
 }
 
+/* Provide the parse unsigned operation used by this module and its client applications. */
 static UmiStatus parse_unsigned(RegexParser *parser, uint32_t *out_value)
 {
     uint64_t value = 0U;
     size_t start = parser->position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL || parser_at_end(parser) ||
         !isdigit((unsigned char)parser_peek(parser))) {
         diagnostic_set(parser,
@@ -655,10 +798,15 @@ static UmiStatus parse_unsigned(RegexParser *parser, uint32_t *out_value)
                        "Expected repetition count");
         return parser->status;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (!parser_at_end(parser) &&
            isdigit((unsigned char)parser_peek(parser))) {
         unsigned int digit = (unsigned int)(parser_take(parser) - '0');
         value = value * 10U + digit;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value > MAX_BOUNDED_REPEAT) {
             diagnostic_set(parser,
                            UMI_STATUS_CAPACITY_EXCEEDED,
@@ -671,6 +819,7 @@ static UmiStatus parse_unsigned(RegexParser *parser, uint32_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse repetition operation used by this module and its client applications. */
 static RegexNode *parse_repetition(RegexParser *parser)
 {
     RegexNode *atom = parse_atom(parser);
@@ -680,14 +829,21 @@ static RegexNode *parse_repetition(RegexParser *parser)
     int greedy = 1;
     char quantifier;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (atom == NULL || parser->status != UMI_STATUS_OK) return atom;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_at_end(parser)) return atom;
     quantifier = parser_peek(parser);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (quantifier != '*' && quantifier != '+' &&
         quantifier != '?' && quantifier != '{') {
         return atom;
     }
     (void)parser_take(parser);
+    /* Select the behaviour associated with the requested command or state value. */
     switch (quantifier) {
         case '*':
             minimum = 0U;
@@ -702,20 +858,24 @@ static RegexNode *parse_repetition(RegexParser *parser)
             maximum = 1U;
             break;
         default:
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (parse_unsigned(parser, &minimum) != UMI_STATUS_OK) {
                 node_destroy(atom);
                 return NULL;
             }
             maximum = minimum;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (parser_peek(parser) == ',') {
                 (void)parser_take(parser);
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (parser_peek(parser) == '}') {
                     maximum = UMI_EDITOR_WORKSPACE_SEARCH_UNBOUNDED_REPEAT;
-                } else if (parse_unsigned(parser, &maximum) != UMI_STATUS_OK) {
+                } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (parse_unsigned(parser, &maximum) != UMI_STATUS_OK) {
                     node_destroy(atom);
                     return NULL;
                 }
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (parser_peek(parser) != '}') {
                 node_destroy(atom);
                 diagnostic_set(parser,
@@ -725,6 +885,7 @@ static RegexNode *parse_repetition(RegexParser *parser)
                 return NULL;
             }
             (void)parser_take(parser);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (maximum != UMI_EDITOR_WORKSPACE_SEARCH_UNBOUNDED_REPEAT &&
                 minimum > maximum) {
                 node_destroy(atom);
@@ -736,10 +897,12 @@ static RegexNode *parse_repetition(RegexParser *parser)
             }
             break;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_peek(parser) == '?') {
         (void)parser_take(parser);
         greedy = 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_peek(parser) == '*' || parser_peek(parser) == '+' ||
         parser_peek(parser) == '?' || parser_peek(parser) == '{') {
         node_destroy(atom);
@@ -750,6 +913,10 @@ static RegexNode *parse_repetition(RegexParser *parser)
         return NULL;
     }
     repeat = node_create(REGEX_NODE_REPEAT);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repeat == NULL) {
         node_destroy(atom);
         diagnostic_set(parser,
@@ -765,9 +932,14 @@ static RegexNode *parse_repetition(RegexParser *parser)
     return repeat;
 }
 
+/* Provide the parse sequence operation used by this module and its client applications. */
 static RegexNode *parse_sequence(RegexParser *parser)
 {
     RegexNode *sequence = node_create(REGEX_NODE_SEQUENCE);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (sequence == NULL) {
         diagnostic_set(parser,
                        UMI_STATUS_OUT_OF_MEMORY,
@@ -775,15 +947,24 @@ static RegexNode *parse_sequence(RegexParser *parser)
                        "Unable to allocate sequence");
         return NULL;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (!parser_at_end(parser) && parser_peek(parser) != ')' &&
            parser_peek(parser) != '|') {
         RegexNode *item = parse_repetition(parser);
         UmiStatus status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (item == NULL) {
             node_destroy(sequence);
             return NULL;
         }
         status = node_list_append(sequence, item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             node_destroy(item);
             node_destroy(sequence);
@@ -794,10 +975,12 @@ static RegexNode *parse_sequence(RegexParser *parser)
             return NULL;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (sequence->data.list.count == 0U) {
         node_destroy(sequence);
         return node_create(REGEX_NODE_EMPTY);
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (sequence->data.list.count == 1U) {
         RegexNode *single = sequence->data.list.items[0];
         free(sequence->data.list.items);
@@ -808,14 +991,24 @@ static RegexNode *parse_sequence(RegexParser *parser)
     return sequence;
 }
 
+/* Provide the parse alternation operation used by this module and its client applications. */
 static RegexNode *parse_alternation(RegexParser *parser)
 {
     RegexNode *first = parse_sequence(parser);
     RegexNode *alternation;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (first == NULL) return NULL;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser_peek(parser) != '|') return first;
     alternation = node_create(REGEX_NODE_ALTERNATION);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (alternation == NULL) {
         node_destroy(first);
         diagnostic_set(parser,
@@ -825,6 +1018,7 @@ static RegexNode *parse_alternation(RegexParser *parser)
         return NULL;
     }
     status = node_list_append(alternation, first);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         node_destroy(first);
         node_destroy(alternation);
@@ -834,15 +1028,24 @@ static RegexNode *parse_alternation(RegexParser *parser)
                        "Unable to grow alternation");
         return NULL;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (parser_peek(parser) == '|') {
         RegexNode *branch;
         (void)parser_take(parser);
         branch = parse_sequence(parser);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (branch == NULL) {
             node_destroy(alternation);
             return NULL;
         }
         status = node_list_append(alternation, branch);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             node_destroy(branch);
             node_destroy(alternation);
@@ -856,19 +1059,26 @@ static RegexNode *parse_alternation(RegexParser *parser)
     return alternation;
 }
 
+/* Provide the parse regex operation used by this module and its client applications. */
 static RegexNode *parse_regex(RegexParser *parser)
 {
     RegexNode *root = parse_alternation(parser);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL) return NULL;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!parser_at_end(parser)) {
         char unexpected = parser_peek(parser);
         node_destroy(root);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (unexpected == ')') {
             diagnostic_set(parser,
                            UMI_STATUS_PARSE_ERROR,
                            parser->position,
                            "Unmatched closing parenthesis");
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             diagnostic_set(parser,
                            UMI_STATUS_PARSE_ERROR,
                            parser->position,
@@ -879,10 +1089,18 @@ static RegexNode *parse_regex(RegexParser *parser)
     return root;
 }
 
+/*
+ * Provide the parse literal expression operation used by this module and its client
+ * applications.
+ */
 static RegexNode *parse_literal_expression(RegexParser *parser)
 {
     RegexNode *sequence = node_create(REGEX_NODE_SEQUENCE);
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (sequence == NULL) {
         diagnostic_set(parser,
                        UMI_STATUS_OUT_OF_MEMORY,
@@ -890,9 +1108,14 @@ static RegexNode *parse_literal_expression(RegexParser *parser)
                        "Unable to allocate literal sequence");
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < parser->length; ++index) {
         RegexNode *literal = node_create(REGEX_NODE_LITERAL);
         UmiStatus status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (literal == NULL) {
             node_destroy(sequence);
             diagnostic_set(parser,
@@ -903,6 +1126,7 @@ static RegexNode *parse_literal_expression(RegexParser *parser)
         }
         literal->data.literal = (unsigned char)parser->expression[index];
         status = node_list_append(sequence, literal);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             node_destroy(literal);
             node_destroy(sequence);
@@ -913,6 +1137,7 @@ static RegexNode *parse_literal_expression(RegexParser *parser)
             return NULL;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (sequence->data.list.count == 1U) {
         RegexNode *single = sequence->data.list.items[0];
         free(sequence->data.list.items);
@@ -922,44 +1147,68 @@ static RegexNode *parse_literal_expression(RegexParser *parser)
     return sequence;
 }
 
+/* Provide the program reserve operation used by this module and its client applications. */
 static UmiStatus program_reserve(RegexProgram *program, size_t required)
 {
     RegexInstruction *replacement;
     size_t capacity;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= program->capacity) return UMI_STATUS_OK;
     capacity = program->capacity == 0U ? 32U : program->capacity * 2U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > program->maximum ||
         capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (RegexInstruction *)realloc(
         program->instructions, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     program->instructions = replacement;
     program->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the program emit operation used by this module and its client applications. */
 static UmiStatus program_emit(RegexProgram *program,
                               RegexInstruction instruction,
                               size_t *out_position)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (program == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (program->count >= program->maximum) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     status = program_reserve(program, program->count + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_position != NULL) *out_position = program->count;
     program->instructions[program->count++] = instruction;
     return UMI_STATUS_OK;
 }
 
+/* Provide the instruction make operation used by this module and its client applications. */
 static RegexInstruction instruction_make(RegexInstructionType type)
 {
     RegexInstruction instruction;
@@ -968,8 +1217,13 @@ static RegexInstruction instruction_make(RegexInstructionType type)
     return instruction;
 }
 
+/* Provide the compile node operation used by this module and its client applications. */
 static UmiStatus compile_node(RegexProgram *program, const RegexNode *node);
 
+/*
+ * Provide the compile alternatives operation used by this module and its client
+ * applications.
+ */
 static UmiStatus compile_alternatives(RegexProgram *program,
                                       RegexNode *const *items,
                                       size_t index,
@@ -980,24 +1234,31 @@ static UmiStatus compile_alternatives(RegexProgram *program,
     size_t split_position;
     size_t jump_position;
     UmiStatus status;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= count) return UMI_STATUS_OK;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U == count) return compile_node(program, items[index]);
     split = instruction_make(REGEX_INSTRUCTION_SPLIT);
     status = program_emit(program, split, &split_position);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     program->instructions[split_position].first = program->count;
     status = compile_node(program, items[index]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     jump = instruction_make(REGEX_INSTRUCTION_JUMP);
     status = program_emit(program, jump, &jump_position);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     program->instructions[split_position].second = program->count;
     status = compile_alternatives(program, items, index + 1U, count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     program->instructions[jump_position].first = program->count;
     return UMI_STATUS_OK;
 }
 
+/* Provide the compile optional operation used by this module and its client applications. */
 static UmiStatus compile_optional(RegexProgram *program,
                                   const RegexNode *child,
                                   int greedy)
@@ -1007,21 +1268,25 @@ static UmiStatus compile_optional(RegexProgram *program,
     size_t child_start;
     size_t after;
     UmiStatus status = program_emit(program, split, &split_position);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     child_start = program->count;
     status = compile_node(program, child);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     after = program->count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (greedy) {
         program->instructions[split_position].first = child_start;
         program->instructions[split_position].second = after;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         program->instructions[split_position].first = after;
         program->instructions[split_position].second = child_start;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the compile star operation used by this module and its client applications. */
 static UmiStatus compile_star(RegexProgram *program,
                               const RegexNode *child,
                               int greedy)
@@ -1032,30 +1297,40 @@ static UmiStatus compile_star(RegexProgram *program,
     size_t child_start;
     size_t after;
     UmiStatus status = program_emit(program, split, &split_position);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     child_start = program->count;
     status = compile_node(program, child);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     jump.first = split_position;
     status = program_emit(program, jump, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     after = program->count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (greedy) {
         program->instructions[split_position].first = child_start;
         program->instructions[split_position].second = after;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         program->instructions[split_position].first = after;
         program->instructions[split_position].second = child_start;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the compile node operation used by this module and its client applications. */
 static UmiStatus compile_node(RegexProgram *program, const RegexNode *node)
 {
     RegexInstruction instruction;
     UmiStatus status;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (program == NULL || node == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (node->type) {
         case REGEX_NODE_EMPTY:
             return UMI_STATUS_OK;
@@ -1081,8 +1356,10 @@ static UmiStatus compile_node(RegexProgram *program, const RegexNode *node)
             instruction.negated = node->data.boundary.negated;
             return program_emit(program, instruction, NULL);
         case REGEX_NODE_SEQUENCE:
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < node->data.list.count; ++index) {
                 status = compile_node(program, node->data.list.items[index]);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
             return UMI_STATUS_OK;
@@ -1095,30 +1372,37 @@ static UmiStatus compile_node(RegexProgram *program, const RegexNode *node)
             instruction = instruction_make(REGEX_INSTRUCTION_SAVE);
             instruction.capture_slot = node->data.group.group_index * 2U;
             status = program_emit(program, instruction, NULL);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             status = compile_node(program, node->data.group.child);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             instruction = instruction_make(REGEX_INSTRUCTION_SAVE);
             instruction.capture_slot =
                 node->data.group.group_index * 2U + 1U;
             return program_emit(program, instruction, NULL);
         case REGEX_NODE_REPEAT:
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = 0U; index < node->data.repeat.minimum; ++index) {
                 status = compile_node(program, node->data.repeat.child);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (node->data.repeat.maximum ==
                 UMI_EDITOR_WORKSPACE_SEARCH_UNBOUNDED_REPEAT) {
                 return compile_star(program,
                                     node->data.repeat.child,
                                     node->data.repeat.greedy);
             }
+            /* Visit each bounded item once so every record receives the same rule. */
             for (index = node->data.repeat.minimum;
                  index < node->data.repeat.maximum;
                  ++index) {
                 status = compile_optional(program,
                                           node->data.repeat.child,
                                           node->data.repeat.greedy);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
             return UMI_STATUS_OK;
@@ -1127,6 +1411,7 @@ static UmiStatus compile_node(RegexProgram *program, const RegexNode *node)
     }
 }
 
+/* Check that request satisfies its contract before another service relies on it. */
 static int request_valid(
     const UmiEditorWorkspaceSearchPatternRequest *request)
 {
@@ -1143,19 +1428,33 @@ static int request_valid(
            request->expression[0] != '\0';
 }
 
+/*
+ * Provide the expression has uppercase operation used by this module and its client
+ * applications.
+ */
 static int expression_has_uppercase(const char *expression)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; expression[index] != '\0'; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (isupper((unsigned char)expression[index])) return 1;
     }
     return 0;
 }
 
+/*
+ * Initialise editor workspace search pattern request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_editor_workspace_search_pattern_request_init(
     UmiEditorWorkspaceSearchPatternRequest *request,
     const char *expression)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) return;
     (void)memset(request, 0, sizeof(*request));
     request->struct_size = (uint32_t)sizeof(*request);
@@ -1167,28 +1466,52 @@ void umi_editor_workspace_search_pattern_request_init(
     copy_text(request->expression, sizeof(request->expression), expression);
 }
 
+/*
+ * Initialise editor workspace search pattern from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_pattern_create(
     UmiEditorWorkspaceSearchPattern **out_pattern)
 {
     UmiEditorWorkspaceSearchPattern *pattern;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_pattern == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_pattern = NULL;
     pattern = (UmiEditorWorkspaceSearchPattern *)calloc(1U, sizeof(*pattern));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     pattern->revision = 1U;
     *out_pattern = pattern;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor workspace search pattern so the same storage can
+ * be reused safely.
+ */
 void umi_editor_workspace_search_pattern_destroy(
     UmiEditorWorkspaceSearchPattern *pattern)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL) return;
     free(pattern->instructions);
     pattern->instructions = NULL;
     free(pattern);
 }
 
+/*
+ * Provide the editor workspace search pattern compile operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_pattern_compile(
     UmiEditorWorkspaceSearchPattern *pattern,
     const UmiEditorWorkspaceSearchPatternRequest *request,
@@ -1202,7 +1525,15 @@ UmiStatus umi_editor_workspace_search_pattern_compile(
     size_t maximum_program;
 
     diagnostic_clear(out_diagnostic);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL || !request_valid(request)) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_diagnostic != NULL) {
             out_diagnostic->status = UMI_STATUS_INVALID_ARGUMENT;
             copy_text(out_diagnostic->message,
@@ -1214,7 +1545,12 @@ UmiStatus umi_editor_workspace_search_pattern_compile(
     maximum_program = request->maximum_program_instructions == 0U
         ? DEFAULT_PROGRAM_CAPACITY
         : request->maximum_program_instructions;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (maximum_program < 2U || maximum_program > 65536U) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_diagnostic != NULL) {
             out_diagnostic->status = UMI_STATUS_INVALID_ARGUMENT;
             copy_text(out_diagnostic->message,
@@ -1232,6 +1568,10 @@ UmiStatus umi_editor_workspace_search_pattern_compile(
     root = request->mode == UMI_EDITOR_WORKSPACE_SEARCH_PATTERN_LITERAL
         ? parse_literal_expression(&parser)
         : parse_regex(&parser);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || parser.status != UMI_STATUS_OK) {
         node_destroy(root);
         return parser.status == UMI_STATUS_OK
@@ -1241,13 +1581,19 @@ UmiStatus umi_editor_workspace_search_pattern_compile(
     (void)memset(&program, 0, sizeof(program));
     program.maximum = maximum_program;
     status = compile_node(&program, root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         match = instruction_make(REGEX_INSTRUCTION_MATCH);
         status = program_emit(&program, match, NULL);
     }
     node_destroy(root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(program.instructions);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_diagnostic != NULL) {
             out_diagnostic->status = status;
             copy_text(out_diagnostic->message,
@@ -1280,13 +1626,25 @@ UmiStatus umi_editor_workspace_search_pattern_compile(
               request->expression);
     pattern->compiled = 1;
     pattern->revision = next_revision(pattern->revision);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_diagnostic != NULL) out_diagnostic->status = UMI_STATUS_OK;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor workspace search pattern so the same storage can
+ * be reused safely.
+ */
 UmiStatus umi_editor_workspace_search_pattern_reset(
     UmiEditorWorkspaceSearchPattern *pattern)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     free(pattern->instructions);
     pattern->instructions = NULL;
@@ -1300,24 +1658,29 @@ UmiStatus umi_editor_workspace_search_pattern_reset(
     return UMI_STATUS_OK;
 }
 
+/* Provide the is word byte operation used by this module and its client applications. */
 static int is_word_byte(unsigned char value)
 {
     return isalnum(value) != 0 || value == (unsigned char)'_';
 }
 
+/* Provide the character equal operation used by this module and its client applications. */
 static int character_equal(unsigned char left,
                            unsigned char right,
                            int case_sensitive)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (case_sensitive) return left == right;
     return tolower(left) == tolower(right);
 }
 
+/* Provide the class matches operation used by this module and its client applications. */
 static int class_matches(const RegexClass *character_class,
                          unsigned char value,
                          int case_sensitive)
 {
     int present = class_has(character_class, value);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!case_sensitive) {
         present = present ||
                   class_has(character_class,
@@ -1328,6 +1691,7 @@ static int class_matches(const RegexClass *character_class,
     return character_class->negated ? !present : present;
 }
 
+/* Provide the at beginning operation used by this module and its client applications. */
 static int at_beginning(const UmiEditorWorkspaceSearchPattern *pattern,
                         const char *text,
                         size_t position)
@@ -1337,6 +1701,7 @@ static int at_beginning(const UmiEditorWorkspaceSearchPattern *pattern,
             text[position - 1U] == '\n');
 }
 
+/* Provide the at end operation used by this module and its client applications. */
 static int at_end(const UmiEditorWorkspaceSearchPattern *pattern,
                   const char *text,
                   size_t text_length,
@@ -1347,6 +1712,7 @@ static int at_end(const UmiEditorWorkspaceSearchPattern *pattern,
             text[position] == '\n');
 }
 
+/* Provide the at word boundary operation used by this module and its client applications. */
 static int at_word_boundary(const char *text,
                             size_t text_length,
                             size_t position)
@@ -1358,27 +1724,43 @@ static int at_word_boundary(const char *text,
     return left_word != right_word;
 }
 
+/*
+ * Provide the thread list reserve operation used by this module and its client
+ * applications.
+ */
 static UmiStatus thread_list_reserve(RegexThreadList *list, size_t required)
 {
     RegexThread *replacement;
     size_t capacity;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= list->capacity) return UMI_STATUS_OK;
     capacity = list->capacity == 0U ? 32U : list->capacity * 2U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (RegexThread *)realloc(
         list->items, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     list->items = replacement;
     list->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the same thread operation used by this module and its client applications. */
 static int same_thread(const RegexThread *left, const RegexThread *right)
 {
     return left->program_counter == right->program_counter &&
@@ -1387,23 +1769,29 @@ static int same_thread(const RegexThread *left, const RegexThread *right)
                   sizeof(left->captures)) == 0;
 }
 
+/* Add thread list only after its inputs and available capacity have been checked. */
 static UmiStatus thread_list_add(RegexThreadList *list,
                                  const RegexThread *thread)
 {
     size_t index;
     UmiStatus status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < list->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (same_thread(&list->items[index], thread)) return UMI_STATUS_OK;
     }
     status = thread_list_reserve(list, list->count + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     list->items[list->count++] = *thread;
     return UMI_STATUS_OK;
 }
 
+/* Provide the next generation operation used by this module and its client applications. */
 static uint32_t next_generation(RegexExecution *execution)
 {
     ++execution->generation;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (execution->generation == 0U) {
         (void)memset(execution->visited_generation,
                      0,
@@ -1414,6 +1802,7 @@ static uint32_t next_generation(RegexExecution *execution)
     return execution->generation;
 }
 
+/* Provide the add thread operation used by this module and its client applications. */
 static UmiStatus add_thread(RegexExecution *execution,
                             RegexThreadList *list,
                             size_t program_counter,
@@ -1426,20 +1815,25 @@ static UmiStatus add_thread(RegexExecution *execution,
     RegexThread thread;
     UmiStatus status;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (execution->status != UMI_STATUS_OK) return execution->status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (++execution->steps > execution->maximum_steps) {
         execution->status = UMI_STATUS_TIMEOUT;
         return execution->status;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (program_counter >= execution->pattern->instruction_count) {
         execution->status = UMI_STATUS_INTERNAL_ERROR;
         return execution->status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (execution->visited_generation[program_counter] == generation) {
         return UMI_STATUS_OK;
     }
     execution->visited_generation[program_counter] = generation;
     instruction = &execution->pattern->instructions[program_counter];
+    /* Select the behaviour associated with the requested command or state value. */
     switch (instruction->type) {
         case REGEX_INSTRUCTION_JUMP:
             return add_thread(execution,
@@ -1455,6 +1849,7 @@ static UmiStatus add_thread(RegexExecution *execution,
                                 captures,
                                 position,
                                 generation);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             return add_thread(execution,
                               list,
@@ -1463,6 +1858,7 @@ static UmiStatus add_thread(RegexExecution *execution,
                               position,
                               generation);
         case REGEX_INSTRUCTION_SAVE:
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (instruction->capture_slot >= CAPTURE_SLOT_COUNT) {
                 execution->status = UMI_STATUS_INTERNAL_ERROR;
                 return execution->status;
@@ -1478,6 +1874,7 @@ static UmiStatus add_thread(RegexExecution *execution,
                               position,
                               generation);
         case REGEX_INSTRUCTION_BEGIN:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!at_beginning(execution->pattern,
                               execution->text,
                               position)) {
@@ -1490,6 +1887,7 @@ static UmiStatus add_thread(RegexExecution *execution,
                               position,
                               generation);
         case REGEX_INSTRUCTION_END:
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!at_end(execution->pattern,
                         execution->text,
                         execution->text_length,
@@ -1506,7 +1904,9 @@ static UmiStatus add_thread(RegexExecution *execution,
             int boundary = at_word_boundary(execution->text,
                                             execution->text_length,
                                             position);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (instruction->negated) boundary = !boundary;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (!boundary) return UMI_STATUS_OK;
             return add_thread(execution,
                               list,
@@ -1525,11 +1925,16 @@ static UmiStatus add_thread(RegexExecution *execution,
     }
 }
 
+/*
+ * Provide the instruction consumes operation used by this module and its client
+ * applications.
+ */
 static int instruction_consumes(
     const UmiEditorWorkspaceSearchPattern *pattern,
     const RegexInstruction *instruction,
     unsigned char value)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (instruction->type) {
         case REGEX_INSTRUCTION_CHARACTER:
             return character_equal(instruction->character,
@@ -1546,6 +1951,10 @@ static int instruction_consumes(
     }
 }
 
+/*
+ * Provide the whole word accepts operation used by this module and its client
+ * applications.
+ */
 static int whole_word_accepts(const char *text,
                               size_t text_length,
                               size_t start,
@@ -1562,6 +1971,7 @@ static int whole_word_accepts(const char *text,
     return left != first && last != right;
 }
 
+/* Provide the capture match operation used by this module and its client applications. */
 static void capture_match(
     const UmiEditorWorkspaceSearchPattern *pattern,
     const RegexThread *thread,
@@ -1583,9 +1993,11 @@ static void capture_match(
     out_match->captures[0].matched = 1;
     out_match->captures[0].start_byte_offset = (uint64_t)start;
     out_match->captures[0].end_byte_offset = (uint64_t)end;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 1U; index < pattern->capture_count; ++index) {
         uint64_t capture_start = thread->captures[index * 2U];
         uint64_t capture_end = thread->captures[index * 2U + 1U];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (capture_start != CAPTURE_UNSET &&
             capture_end != CAPTURE_UNSET &&
             capture_start <= capture_end) {
@@ -1596,6 +2008,7 @@ static void capture_match(
     }
 }
 
+/* Provide the find from start operation used by this module and its client applications. */
 static UmiStatus find_from_start(
     const UmiEditorWorkspaceSearchPattern *pattern,
     const char *text,
@@ -1620,6 +2033,7 @@ static UmiStatus find_from_start(
     (void)memset(&current, 0, sizeof(current));
     (void)memset(&next, 0, sizeof(next));
     (void)memset(&candidate_thread, 0, sizeof(candidate_thread));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < CAPTURE_SLOT_COUNT; ++index) {
         initial_captures[index] = CAPTURE_UNSET;
     }
@@ -1632,6 +2046,10 @@ static UmiStatus find_from_start(
     execution.visited_generation = (uint32_t *)calloc(
         pattern->instruction_count,
         sizeof(*execution.visited_generation));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (execution.visited_generation == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -1641,6 +2059,7 @@ static UmiStatus find_from_start(
                         initial_captures,
                         start,
                         next_generation(&execution));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto cleanup;
 
     /*
@@ -1655,10 +2074,12 @@ static UmiStatus find_from_start(
     for (position = start; position <= text_length; ++position) {
         size_t first_match = SIZE_MAX;
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < current.count; ++index) {
             const RegexThread *thread = &current.items[index];
             const RegexInstruction *instruction =
                 &pattern->instructions[thread->program_counter];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (instruction->type == REGEX_INSTRUCTION_MATCH &&
                 (!pattern->whole_word ||
                  whole_word_accepts(text,
@@ -1670,10 +2091,12 @@ static UmiStatus find_from_start(
             }
         }
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (first_match != SIZE_MAX) {
             candidate_found = 1;
             candidate_end = position;
             candidate_thread = current.items[first_match];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (first_match == 0U) {
                 capture_match(pattern,
                               &candidate_thread,
@@ -1690,12 +2113,15 @@ static UmiStatus find_from_start(
             current.count = first_match;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (position == text_length) break;
         next.count = 0U;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < current.count; ++index) {
             const RegexThread *thread = &current.items[index];
             const RegexInstruction *instruction =
                 &pattern->instructions[thread->program_counter];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (instruction_consumes(pattern,
                                      instruction,
                                      (unsigned char)text[position])) {
@@ -1705,6 +2131,7 @@ static UmiStatus find_from_start(
                                     thread->captures,
                                     position + 1U,
                                     next_generation(&execution));
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) goto cleanup;
             }
         }
@@ -1713,9 +2140,11 @@ static UmiStatus find_from_start(
             current = next;
             next = temporary;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (current.count == 0U) break;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (candidate_found) {
         capture_match(pattern,
                       &candidate_thread,
@@ -1734,6 +2163,10 @@ cleanup:
     return status;
 }
 
+/*
+ * Find editor workspace search pattern while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_workspace_search_pattern_find(
     const UmiEditorWorkspaceSearchPattern *pattern,
     const char *text,
@@ -1743,14 +2176,23 @@ UmiStatus umi_editor_workspace_search_pattern_find(
 {
     size_t start;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_match != NULL) {
         (void)memset(out_match, 0, sizeof(*out_match));
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL || text == NULL || out_match == NULL ||
         !pattern->compiled || pattern->instructions == NULL ||
         pattern->instruction_count == 0U || start_byte_offset > text_length) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (start = start_byte_offset; start <= text_length; ++start) {
         int found = 0;
         status = find_from_start(pattern,
@@ -1759,16 +2201,26 @@ UmiStatus umi_editor_workspace_search_pattern_find(
                                  start,
                                  out_match,
                                  &found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (found) return UMI_STATUS_OK;
     }
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the editor workspace search pattern snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_pattern_snapshot(
     const UmiEditorWorkspaceSearchPattern *pattern,
     UmiEditorWorkspaceSearchPatternSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pattern == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -1790,6 +2242,10 @@ UmiStatus umi_editor_workspace_search_pattern_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search pattern revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_editor_workspace_search_pattern_revision(
     const UmiEditorWorkspaceSearchPattern *pattern)
 {

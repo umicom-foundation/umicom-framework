@@ -17,24 +17,44 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the browser search changed operation used by this module and its client
+ * applications.
+ */
 static void browser_search_changed(GtkEditable *editable, gpointer user_data)
 {
     UmiWorkbenchLayoutBrowserGtk4 *browser = user_data;
     const char *text;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL) return;
     text = gtk_editable_get_text(editable);
     (void)text;
     browser->revision += 1U;
 }
 
+/*
+ * Provide the browser open clicked operation used by this module and its client
+ * applications.
+ */
 static void browser_open_clicked(GtkButton *button, gpointer user_data)
 {
     UmiWorkbenchLayoutBrowserGtk4 *browser = user_data;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || browser->controller == NULL) return;
     browser->revision += 1U;
 }
 
+/*
+ * Initialise workbench layout browser gtk4 from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_browser_gtk4_create(
     UmiWorkbenchDesignerController *controller,
     UmiWorkbenchLayoutBrowserGtk4 **out_browser)
@@ -45,11 +65,19 @@ UmiStatus umi_workbench_layout_browser_gtk4_create(
     GtkWidget *list_scrolled;
     GtkWidget *preview_box;
     GtkWidget *actions;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || out_browser == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_browser = NULL;
     browser = g_new0(UmiWorkbenchLayoutBrowserGtk4, 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     browser->controller = controller;
     umi_workbench_designer_browser_init(&browser->model);
@@ -117,32 +145,57 @@ UmiStatus umi_workbench_layout_browser_gtk4_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench layout browser gtk4 so the same storage can be
+ * reused safely.
+ */
 void umi_workbench_layout_browser_gtk4_destroy(
     UmiWorkbenchLayoutBrowserGtk4 *browser)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser != NULL) g_free(browser);
 }
 
+/*
+ * Provide the workbench layout browser gtk4 widget operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_layout_browser_gtk4_widget(
     UmiWorkbenchLayoutBrowserGtk4 *browser)
 {
     return browser != NULL ? browser->root : NULL;
 }
 
+/*
+ * Provide the workbench layout browser gtk4 refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_browser_gtk4_refresh(
     UmiWorkbenchLayoutBrowserGtk4 *browser,
     const UmiWorkbenchDesignerBrowser *model)
 {
     size_t index;
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     browser->model = *model;
     child = gtk_widget_get_first_child(browser->list_box);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_list_box_remove(GTK_LIST_BOX(browser->list_box), child);
         child = next;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         const UmiWorkbenchDesignerBrowserItem *item = &model->items[index];
         GtkWidget *row_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);

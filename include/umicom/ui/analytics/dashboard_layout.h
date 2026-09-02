@@ -28,7 +28,15 @@ extern "C" {
 #endif
 
 #include "umicom/ui/analytics/dashboard_grid.h"
+/**
+ * Represent the analytics dashboard layout data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsDashboardLayout { char id[UMI_ANALYTICS_ID_CAPACITY]; char title[UMI_ANALYTICS_TEXT_CAPACITY]; UmiAnalyticsDashboardGrid grid; int compact; } UmiAnalyticsDashboardLayout;
+/**
+ * Initialise analytics dashboard layout from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_dashboard_layout_init(UmiAnalyticsDashboardLayout *layout,const char *id,const char *title,uint16_t rows,uint16_t columns);
 
 #ifdef __cplusplus

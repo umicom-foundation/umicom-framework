@@ -31,7 +31,15 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/abi_descriptor.h"
+/**
+ * Provide the ct riscv abi descriptor operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_riscv_abi_descriptor(const char *abi,UmiCtAbiDescriptor *out_descriptor);
+/**
+ * Provide the ct riscv abi matches xlen operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_riscv_abi_matches_xlen(const UmiCtAbiDescriptor *descriptor,uint32_t xlen);
 
 #ifdef __cplusplus

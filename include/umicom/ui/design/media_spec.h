@@ -26,7 +26,13 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design media kind values accepted by this public contract.
+ */
 typedef enum UmiDesignMediaKind { UMI_DESIGN_MEDIA_IMAGE=1, UMI_DESIGN_MEDIA_AUDIO=2, UMI_DESIGN_MEDIA_VIDEO=3 } UmiDesignMediaKind;
+/**
+ * Represent the design media spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignMediaSpec { UmiDesignMediaKind kind; int controls; int autoplay; int loop; int preserve_aspect; } UmiDesignMediaSpec;
 /* Initialise a semantic media-surface specification. */
 UmiStatus umi_design_media_spec_init(UmiDesignMediaSpec *spec, UmiDesignMediaKind kind, int controls, int autoplay, int loop, int preserve_aspect);

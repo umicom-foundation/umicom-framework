@@ -16,6 +16,7 @@
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_context_channel)
     return()
 endif()
@@ -119,12 +120,15 @@ target_include_directories(umicom_context_channel PUBLIC
     $<BUILD_INTERFACE:${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_context_channel)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_context_channel)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE Umicom::context_channel)
 endif()
@@ -177,12 +181,15 @@ target_include_directories(umicom_cross_application_panel PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_link_libraries(umicom_cross_application_panel PUBLIC Umicom::context_channel)
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_cross_application_panel)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_cross_application_panel)
 endif()
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE Umicom::cross_application_panel)
 endif()
@@ -201,6 +208,7 @@ install(
 )
 
 install(DIRECTORY "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/include/umicom/cross_application_panel" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/adapters/gtk4/context_channel_badge.c"

@@ -20,7 +20,23 @@
 
 #include <string.h>
 
-UmiStatus umi_editor_intel_code_action_context_model_init(UmiEditorIntelCodeActionContextModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range){if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(model,0,sizeof *model);if(umi_editor_intel_entry_init(&model->value,id,label,path,range)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;model->applicability=UMI_EDITOR_INTEL_APPLICABILITY_AVAILABLE;model->revision=1U;return UMI_STATUS_OK;}
-UmiStatus umi_editor_intel_code_action_context_model_set_score(UmiEditorIntelCodeActionContextModel *model,uint32_t score){if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->value.score=score;model->value.revision++;model->revision++;return UMI_STATUS_OK;}
-UmiStatus umi_editor_intel_code_action_context_model_set_selected(UmiEditorIntelCodeActionContextModel *model,bool selected){if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->selected=selected;model->revision++;return UMI_STATUS_OK;}
+/*
+ * Initialise editor intel code action context model from caller-provided values so later
+ * operations receive a known state.
+ */
+UmiStatus umi_editor_intel_code_action_context_model_init(UmiEditorIntelCodeActionContextModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;memset(model,0,sizeof *model);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_editor_intel_entry_init(&model->value,id,label,path,range)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;model->applicability=UMI_EDITOR_INTEL_APPLICABILITY_AVAILABLE;model->revision=1U;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel code action context model set score operation used by this
+ * module and its client applications.
+ */
+UmiStatus umi_editor_intel_code_action_context_model_set_score(UmiEditorIntelCodeActionContextModel *model,uint32_t score){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->value.score=score;model->value.revision++;model->revision++;return UMI_STATUS_OK;}
+/*
+ * Find editor intel code action context model set while leaving the underlying catalogue
+ * or model owned by this module.
+ */
+UmiStatus umi_editor_intel_code_action_context_model_set_selected(UmiEditorIntelCodeActionContextModel *model,bool selected){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->selected=selected;model->revision++;return UMI_STATUS_OK;}
+/*
+ * Check that editor intel code action context model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_code_action_context_model_valid(const UmiEditorIntelCodeActionContextModel *model){return model!=NULL&&umi_editor_intel_entry_valid(&model->value)&&model->applicability>=UMI_EDITOR_INTEL_APPLICABILITY_DISABLED&&model->applicability<=UMI_EDITOR_INTEL_APPLICABILITY_PREFERRED;}

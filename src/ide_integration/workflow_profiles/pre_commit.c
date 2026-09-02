@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/workflow_profiles/pre_commit.h"
 
+/*
+ * Provide the ide workflow profile pre commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_profile_pre_commit(
     UmiIdeWorkflowPolicy *out_policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_policy == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_ide_workflow_policy_init(out_policy);
     out_policy->require_document = 0;

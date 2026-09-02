@@ -17,6 +17,10 @@
 
 #include "umicom/build/deployment_plan.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildArtifactManifest artifact;
@@ -62,11 +66,14 @@ int main(void)
     assert(snapshot.approved != 0);
     assert(snapshot.rollback_step_count == 1U);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan.step_count; ++index) {
         assert(umi_build_deployment_plan_step_at(&plan, index, &step) ==
                UMI_STATUS_OK);
+        /* Create this optional product surface only when its build option is enabled. */
         if (step.kind == UMI_BUILD_DEPLOYMENT_STEP_TRANSFER)
             transfer_found = 1;
+        /* Create this optional product surface only when its build option is enabled. */
         if (step.kind == UMI_BUILD_DEPLOYMENT_STEP_ROLLBACK)
             rollback_found = 1;
     }

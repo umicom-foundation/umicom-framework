@@ -35,12 +35,36 @@ extern "C" {
 #define UMI_FRONTEND_DEV_MAX_CONSOLE_ENTRIES 256U
 #define UMI_FRONTEND_DEV_MAX_BUILD_PROFILES 32U
 #define UMI_FRONTEND_DEV_MAX_CHANGES 128U
+/**
+ * List the named frontend device kind values accepted by this public contract.
+ */
 typedef enum UmiFrontendDeviceKind { UMI_FRONTEND_DEVICE_DESKTOP=1, UMI_FRONTEND_DEVICE_TABLET=2, UMI_FRONTEND_DEVICE_PHONE=3, UMI_FRONTEND_DEVICE_CUSTOM=4 } UmiFrontendDeviceKind;
+/**
+ * List the named frontend orientation values accepted by this public contract.
+ */
 typedef enum UmiFrontendOrientation { UMI_FRONTEND_ORIENTATION_PORTRAIT=1, UMI_FRONTEND_ORIENTATION_LANDSCAPE=2 } UmiFrontendOrientation;
+/**
+ * List the named frontend console level values accepted by this public contract.
+ */
 typedef enum UmiFrontendConsoleLevel { UMI_FRONTEND_CONSOLE_DEBUG=1, UMI_FRONTEND_CONSOLE_INFO=2, UMI_FRONTEND_CONSOLE_WARNING=3, UMI_FRONTEND_CONSOLE_ERROR=4 } UmiFrontendConsoleLevel;
+/**
+ * List the named frontend resource kind values accepted by this public contract.
+ */
 typedef enum UmiFrontendResourceKind { UMI_FRONTEND_RESOURCE_DOCUMENT=1, UMI_FRONTEND_RESOURCE_STYLESHEET=2, UMI_FRONTEND_RESOURCE_SCRIPT=3, UMI_FRONTEND_RESOURCE_IMAGE=4, UMI_FRONTEND_RESOURCE_FONT=5, UMI_FRONTEND_RESOURCE_API=6, UMI_FRONTEND_RESOURCE_OTHER=7 } UmiFrontendResourceKind;
+/**
+ * Provide the frontend dev copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_frontend_dev_copy_text(char *destination,size_t capacity,const char *source);
+/**
+ * Provide the frontend device kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_frontend_device_kind_text(UmiFrontendDeviceKind kind);
+/**
+ * Provide the frontend console level text operation used by this module and its client
+ * applications.
+ */
 const char *umi_frontend_console_level_text(UmiFrontendConsoleLevel level);
 #ifdef __cplusplus
 }

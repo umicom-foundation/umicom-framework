@@ -23,7 +23,15 @@
 extern "C" {
 #endif
 typedef uint64_t UmiTerminalRemoteTerminalCapabilityFlags;
+/**
+ * Provide the terminal remote terminal capability satisfies operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_terminal_capability_satisfies(UmiTerminalRemoteTerminalCapabilityFlags available,UmiTerminalRemoteTerminalCapabilityFlags required);
+/**
+ * Return the number of records represented by terminal remote terminal capability without
+ * changing their state.
+ */
 size_t umi_terminal_remote_terminal_capability_count(UmiTerminalRemoteTerminalCapabilityFlags flags);
 #ifdef __cplusplus
 }

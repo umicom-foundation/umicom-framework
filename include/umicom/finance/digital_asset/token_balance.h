@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital token balance data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalTokenBalance {
     UmiDigitalAssetId account_id;
     UmiDigitalAssetId asset_id;

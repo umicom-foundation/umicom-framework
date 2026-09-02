@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk runtime environment probe data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiSdkRuntimeEnvironmentProbe
 {
     uint32_t structure_size;
@@ -31,13 +35,45 @@ typedef struct UmiSdkRuntimeEnvironmentProbe
     UmiSdkRuntimeState state;
     bool enabled;
     } UmiSdkRuntimeEnvironmentProbe;
+/**
+ * Initialise sdk runtime environment probe from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_sdk_runtime_environment_probe_init(UmiSdkRuntimeEnvironmentProbe *value,const char *id);
+/**
+ * Check that sdk runtime environment probe satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_sdk_runtime_environment_probe_validate(const UmiSdkRuntimeEnvironmentProbe *value);
+/**
+ * Provide the sdk runtime environment probe set path operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_environment_probe_set_path(UmiSdkRuntimeEnvironmentProbe *value,const char *path);
+/**
+ * Provide the sdk runtime environment probe set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_environment_probe_set_detail(UmiSdkRuntimeEnvironmentProbe *value,const char *detail);
+/**
+ * Return the number of records represented by sdk runtime environment probe set entry
+ * without changing their state.
+ */
 UmiStatus umi_sdk_runtime_environment_probe_set_entry_count(UmiSdkRuntimeEnvironmentProbe *value,uint64_t number);
+/**
+ * Return the number of records represented by sdk runtime environment probe set warning
+ * without changing their state.
+ */
 UmiStatus umi_sdk_runtime_environment_probe_set_warning_count(UmiSdkRuntimeEnvironmentProbe *value,uint64_t number);
+/**
+ * Provide the sdk runtime environment probe set state operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_environment_probe_set_state(UmiSdkRuntimeEnvironmentProbe *value,UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime environment probe same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_sdk_runtime_environment_probe_same_identity(const UmiSdkRuntimeEnvironmentProbe *left,const UmiSdkRuntimeEnvironmentProbe *right);
 #ifdef __cplusplus
 }

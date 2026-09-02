@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb tab overflow data shared with callers of this public contract.
+ */
 typedef struct UmiEditorWbTabOverflow { size_t total_tabs; size_t visible_tabs; size_t overflow_tabs; int32_t available_width; int32_t preferred_tab_width; } UmiEditorWbTabOverflow;
+/**
+ * Provide the editor wb tab overflow resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_wb_tab_overflow_resolve(UmiEditorWbTabOverflow *state,size_t total_tabs,int32_t available_width,int32_t preferred_tab_width);
 
 #ifdef __cplusplus

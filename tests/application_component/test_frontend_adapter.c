@@ -18,6 +18,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
+/*
+ * Initialise adapter from caller-provided values so later operations receive a known
+ * state.
+ */
 static UmiStatus adapter_create(
     const UmiApplicationComponentContract *contract, const char *instance_id,
     void *user_data, void **out_handle) {
@@ -25,9 +29,17 @@ static UmiStatus adapter_create(
   (void)contract;
   (void)instance_id;
   (void)user_data;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (out_handle == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   handle = (int *)calloc(1U, sizeof(*handle));
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (handle == NULL)
     return UMI_STATUS_OUT_OF_MEMORY;
   *handle = 1;
@@ -35,19 +47,32 @@ static UmiStatus adapter_create(
   return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise adapter activate and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus adapter_activate(void *handle, void *user_data) {
   (void)user_data;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (handle == NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   *(int *)handle = 2;
   return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by adapter so the same storage can be reused safely. */
 static void adapter_destroy(void *handle, void *user_data) {
   (void)user_data;
   free(handle);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
   UmiApplicationComponentRegistry components;
   UmiApplicationComponentFactoryRegistry factories;

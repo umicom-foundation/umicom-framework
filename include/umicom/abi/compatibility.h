@@ -23,7 +23,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi compatibility data shared with callers of this public contract.
+ */
 typedef struct UmiAbiCompatibility { int compatible; size_t missing_features; size_t missing_symbols; size_t incompatible_layouts; } UmiAbiCompatibility;
+/**
+ * Provide the abi compatibility check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_abi_compatibility_check(const UmiAbiDescriptor *required, const UmiAbiDescriptor *available, UmiAbiCompatibility *out_result);
 #ifdef __cplusplus
 }

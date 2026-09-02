@@ -21,6 +21,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_CROSS_TARGET_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_platform)
     message(FATAL_ERROR "UmicomCrossTargetPlatform.cmake requires canonical umicom_platform")
 endif()
@@ -94,16 +95,22 @@ target_sources(umicom_platform PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/umicom_os_profile.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add cross target test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_cross_target_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_CROSS_TARGET_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::platform)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

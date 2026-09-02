@@ -19,6 +19,10 @@
 #include <float.h>
 
 
+/*
+ * Provide the canvas screen rect operation used by this module and its client
+ * applications.
+ */
 static UmiWorkbenchDesignerRect canvas_screen_rect(
     const UmiWorkbenchDesignerViewport *viewport,
     UmiWorkbenchDesignerRect world)
@@ -39,6 +43,10 @@ static UmiWorkbenchDesignerRect canvas_screen_rect(
     return result;
 }
 
+/*
+ * Provide the canvas append item operation used by this module and its client
+ * applications.
+ */
 static UmiStatus canvas_append_item(
     UmiWorkbenchDesignerCanvas *canvas,
     const UmiWorkbenchLayoutDocument *document,
@@ -51,9 +59,11 @@ static UmiStatus canvas_append_item(
     const UmiWorkbenchLayoutNode *node;
     UmiWorkbenchDesignerCanvasItem *item;
     const char *primary;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (canvas->count >= UMI_WORKBENCH_DESIGNER_MAX_CANVAS_ITEMS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_designer_document_index_valid(document, node_index)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -82,6 +92,7 @@ static UmiStatus canvas_append_item(
     return UMI_STATUS_OK;
 }
 
+/* Provide the canvas visit operation used by this module and its client applications. */
 static UmiStatus canvas_visit(
     UmiWorkbenchDesignerCanvas *canvas,
     const UmiWorkbenchLayoutDocument *document,
@@ -96,37 +107,45 @@ static UmiStatus canvas_visit(
     size_t child_position;
     double cursor;
     UmiStatus status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (depth > UMI_WORKBENCH_LAYOUT_MAX_NODES ||
         !umi_workbench_designer_document_index_valid(document, node_index)) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (visited[node_index]) return UMI_STATUS_INVALID_STATE;
     visited[node_index] = true;
     status = canvas_append_item(
         canvas, document, viewport, selection, node_index, depth, bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     node = &document->nodes[node_index];
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (node->child_count == 0U) return UMI_STATUS_OK;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node->kind == UMI_WORKBENCH_LAYOUT_NODE_SPLIT) {
         cursor = node->orientation == UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL
             ? bounds.x : bounds.y;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (child_position = 0U;
              child_position < node->child_count;
              ++child_position) {
             UmiWorkbenchDesignerRect child_bounds = bounds;
             double share;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (node->child_count == 2U) {
                 share = child_position == 0U
                     ? node->split_ratio : 1.0 - node->split_ratio;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 share = 1.0 / (double)node->child_count;
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (node->orientation == UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL) {
                 child_bounds.x = cursor;
                 child_bounds.width = bounds.width * share;
                 cursor += child_bounds.width;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 child_bounds.y = cursor;
                 child_bounds.height = bounds.height * share;
                 cursor += child_bounds.height;
@@ -135,15 +154,18 @@ static UmiStatus canvas_visit(
                 canvas, document, viewport, selection,
                 node->child_indices[child_position], depth + 1U,
                 child_bounds, visited);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
         }
         return UMI_STATUS_OK;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (child_position = 0U;
          child_position < node->child_count;
          ++child_position) {
         UmiWorkbenchDesignerRect child_bounds = bounds;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node->kind == UMI_WORKBENCH_LAYOUT_NODE_TAB_GROUP &&
             child_position != node->active_child_index) {
             child_bounds.width = 0.0;
@@ -153,17 +175,30 @@ static UmiStatus canvas_visit(
             canvas, document, viewport, selection,
             node->child_indices[child_position], depth + 1U,
             child_bounds, visited);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise workbench designer canvas from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_canvas_init(UmiWorkbenchDesignerCanvas *canvas)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL) return;
     (void)memset(canvas, 0, sizeof(*canvas));
 }
 
+/*
+ * Provide the workbench designer canvas build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_canvas_build(
     UmiWorkbenchDesignerCanvas *canvas,
     const UmiWorkbenchLayoutDocument *document,
@@ -173,6 +208,10 @@ UmiStatus umi_workbench_designer_canvas_build(
 {
     bool visited[UMI_WORKBENCH_LAYOUT_MAX_NODES];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL || document == NULL || viewport == NULL ||
         !umi_workbench_designer_rect_is_valid(&root_bounds) ||
         document->root_index >= document->node_count) {
@@ -184,6 +223,7 @@ UmiStatus umi_workbench_designer_canvas_build(
     status = canvas_visit(
         canvas, document, viewport, selection,
         document->root_index, 0U, root_bounds, visited);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     canvas->document_revision = document->version.revision;
     canvas->viewport_revision = viewport->revision;
@@ -192,21 +232,39 @@ UmiStatus umi_workbench_designer_canvas_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench designer canvas while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_canvas_at(
     const UmiWorkbenchDesignerCanvas *canvas,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL || index >= canvas->count) return NULL;
     return &canvas->items[index];
 }
 
+/*
+ * Find workbench designer canvas while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_canvas_find(
     const UmiWorkbenchDesignerCanvas *canvas,
     const char *node_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL || node_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < canvas->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(canvas->items[index].node_id, node_id) == 0) {
             return &canvas->items[index];
         }
@@ -214,6 +272,10 @@ const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_canvas_find(
     return NULL;
 }
 
+/*
+ * Provide the workbench designer canvas hit test operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_canvas_hit_test(
     const UmiWorkbenchDesignerCanvas *canvas,
     UmiWorkbenchDesignerPoint screen_point,
@@ -221,12 +283,23 @@ const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_canvas_hit_test(
 {
     const UmiWorkbenchDesignerCanvasItem *best = NULL;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < canvas->count; ++index) {
         const UmiWorkbenchDesignerCanvasItem *item = &canvas->items[index];
+        /* Apply this operation only while the related capability or state is available. */
         if (!item->visible || (!include_containers && item->container)) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_workbench_designer_rect_contains_point(
                 &item->screen_bounds, screen_point)) {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (best == NULL || item->depth > best->depth ||
                 (item->depth == best->depth && item->z_order > best->z_order)) {
                 best = item;
@@ -236,6 +309,10 @@ const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_canvas_hit_test(
     return best;
 }
 
+/*
+ * Provide the workbench designer canvas selection bounds operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchDesignerRect umi_workbench_designer_canvas_selection_bounds(
     const UmiWorkbenchDesignerCanvas *canvas)
 {
@@ -246,20 +323,31 @@ UmiWorkbenchDesignerRect umi_workbench_designer_canvas_selection_bounds(
     double max_y = -DBL_MAX;
     size_t index;
     bool found = false;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL) return result;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < canvas->count; ++index) {
         const UmiWorkbenchDesignerCanvasItem *item = &canvas->items[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!item->selected) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->world_bounds.x < min_x) min_x = item->world_bounds.x;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->world_bounds.y < min_y) min_y = item->world_bounds.y;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->world_bounds.x + item->world_bounds.width > max_x) {
             max_x = item->world_bounds.x + item->world_bounds.width;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->world_bounds.y + item->world_bounds.height > max_y) {
             max_y = item->world_bounds.y + item->world_bounds.height;
         }
         found = true;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (found) {
         result.x = min_x;
         result.y = min_y;

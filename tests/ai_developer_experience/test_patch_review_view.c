@@ -17,6 +17,10 @@
 #include "umicom/ai_developer_experience/views/patch_review.h"
 #include "umicom/ui/command_view.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiCodingPatch patch;

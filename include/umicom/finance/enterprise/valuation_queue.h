@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/valuation_job.h"
+/**
+ * Represent the enterprise valuation queue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationQueue { UmiEnterpriseValuationJob jobs[UMI_ENTERPRISE_MAX_ITEMS]; uint64_t insertion[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; uint64_t next_insertion; } UmiEnterpriseValuationQueue;
 /* Initialise an empty stable valuation queue. */
 void umi_enterprise_valuation_queue_init(UmiEnterpriseValuationQueue *queue);

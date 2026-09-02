@@ -18,6 +18,10 @@
 
 #include "umicom/ai/coding_context.h"
 
+/*
+ * Exercise file and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiAiCodingContextFile file(const char *path,
                                    uint32_t tokens,
                                    uint32_t priority,
@@ -36,6 +40,10 @@ static UmiAiCodingContextFile file(const char *path,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiCodingContextIndex *index = NULL;

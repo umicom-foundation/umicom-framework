@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/toolchain/scoped_environment.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnvironmentPlan e; assert(umi_toolchain_scoped_environment(NULL,NULL,&e)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

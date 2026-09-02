@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise count visitor and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static bool count_visitor(
     void *context,
     const UmiWorkbenchLayoutDocument *document,
@@ -31,6 +35,10 @@ static bool count_visitor(
     return true;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchLayoutDocument *document =

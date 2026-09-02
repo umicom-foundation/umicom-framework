@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb session restore data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbSessionRestore { char id[UMI_EDITOR_WB_ID_CAPACITY]; char text[UMI_EDITOR_WB_TEXT_CAPACITY]; uint64_t primary; uint64_t secondary; bool enabled; } UmiEditorWbSessionRestore;
+/**
+ * Initialise editor wb session restore from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_session_restore_init(UmiEditorWbSessionRestore *state,const char *id,const char *text); UmiStatus umi_editor_wb_session_restore_set_values(UmiEditorWbSessionRestore *state,uint64_t primary,uint64_t secondary,bool enabled); int umi_editor_wb_session_restore_valid(const UmiEditorWbSessionRestore *state);
 
 #ifdef __cplusplus

@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/design_token.h"
 
-int main(void){UmiDesignToken t;UmiDesignRgba c;if(umi_design_color_make(0.2,0.6,0.9,1.0,&c)!=UMI_STATUS_OK)return 1;if(umi_design_token_color(&t,"accent",c)!=UMI_STATUS_OK)return 2;return umi_design_token_valid(&t)?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignToken t;UmiDesignRgba c;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_color_make(0.2,0.6,0.9,1.0,&c)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_token_color(&t,"accent",c)!=UMI_STATUS_OK)return 2;return umi_design_token_valid(&t)?0:3;}

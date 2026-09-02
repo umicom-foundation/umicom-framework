@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the regulatory limit data shared with callers of this public contract.
+ */
 typedef struct UmiRegulatoryLimit {
     char limit_id[UMI_REG_ID_CAPACITY];
     char metric[UMI_REG_NAME_CAPACITY];

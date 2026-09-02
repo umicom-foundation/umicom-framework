@@ -28,6 +28,10 @@ extern "C" {
 #endif
 
 #include "umicom/ui/analytics/axis.h"
+/**
+ * Provide the analytics axis scale normalize operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_axis_scale_normalize(const UmiAnalyticsAxis *axis,double value,double *out_normalized);
 
 #ifdef __cplusplus

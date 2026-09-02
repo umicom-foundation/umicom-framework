@@ -22,6 +22,10 @@
 
 #include "umicom/editor/source_bookmark.h"
 
+/*
+ * Exercise bookmark and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorSourceBookmark bookmark(const char *id,
                                         const char *group,
                                         uint64_t line,
@@ -42,6 +46,10 @@ static UmiEditorSourceBookmark bookmark(const char *id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSourceBookmarkRegistry *registry = NULL;

@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/surface.h"
+/*
+ * Provide the ui surface default operation used by this module and its client
+ * applications.
+ */
 UmiUiSurface umi_ui_surface_default(void){UmiUiSurface s={-1,-1,0U};return s;}

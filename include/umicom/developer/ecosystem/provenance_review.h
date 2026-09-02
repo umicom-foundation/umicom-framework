@@ -18,6 +18,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ecosystem provenance policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEcosystemProvenancePolicy {
     bool require_verified_publisher;
     bool require_signature;
@@ -27,6 +31,10 @@ typedef struct UmiEcosystemProvenancePolicy {
     bool require_trusted_source;
 } UmiEcosystemProvenancePolicy;
 
+/**
+ * Represent the ecosystem provenance review data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEcosystemProvenanceReview {
     char package_id[UMI_ECOSYSTEM_ID_CAPACITY];
     char publisher[UMI_ECOSYSTEM_NAME_CAPACITY];
@@ -48,13 +56,29 @@ typedef struct UmiEcosystemProvenanceReview {
     UmiEcosystemEvidenceState decision;
 } UmiEcosystemProvenanceReview;
 
+/**
+ * Provide the ecosystem provenance policy default operation used by this module and its
+ * client applications.
+ */
 UmiEcosystemProvenancePolicy umi_ecosystem_provenance_policy_default(void);
+/**
+ * Initialise ecosystem provenance review from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ecosystem_provenance_review_init(
     UmiEcosystemProvenanceReview *review,
     const char *package_id);
+/**
+ * Provide the ecosystem provenance review evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ecosystem_provenance_review_evaluate(
     UmiEcosystemProvenanceReview *review,
     const UmiEcosystemProvenancePolicy *policy);
+/**
+ * Provide the ecosystem provenance review acceptable operation used by this module and its
+ * client applications.
+ */
 bool umi_ecosystem_provenance_review_acceptable(
     const UmiEcosystemProvenanceReview *review);
 

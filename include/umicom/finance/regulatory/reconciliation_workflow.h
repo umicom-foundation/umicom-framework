@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reconciliation workflow data shared with callers of this public contract.
+ */
 typedef struct UmiReconciliationWorkflow {
     char workflow_id[UMI_REG_ID_CAPACITY];
     char break_id[UMI_REG_ID_CAPACITY];

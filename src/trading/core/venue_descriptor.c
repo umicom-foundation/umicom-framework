@@ -17,10 +17,17 @@
 #include <string.h>
 /* Initialise a venue descriptor with bounded identifiers and text. */
 UmiStatus umi_trading_venue_descriptor_init(UmiTradingVenueDescriptor *venue,const char *id,const char *mic,const char *name,bool auctions,bool hidden,uint32_t priority) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(venue==NULL||id==NULL||mic==NULL||name==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(venue,0,sizeof *venue);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_core_id_assign(&venue->venue_id,id)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_core_copy_text(venue->mic,sizeof venue->mic,mic)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_core_copy_text(venue->name,sizeof venue->name,name)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
     venue->supports_auctions=auctions; venue->supports_hidden_liquidity=hidden; venue->priority=priority;
     return umi_trading_venue_descriptor_valid(venue)?UMI_STATUS_OK:UMI_STATUS_INVALID_ARGUMENT;

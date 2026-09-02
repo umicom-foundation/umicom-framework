@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading order replace data shared with callers of this public contract.
+ */
 typedef struct UmiTradingOrderReplace { UmiFinancialId client_order_id; uint64_t expected_version; UmiTradingQuantityLots new_quantity_lots; UmiTradingPriceTicks new_limit_ticks; } UmiTradingOrderReplace;
 /* Initialise and validate describe a replacement request with optimistic order-version control. */
 UmiStatus umi_trading_order_replace_init(UmiTradingOrderReplace *value,const UmiFinancialId * client_order_id, uint64_t expected_version, UmiTradingQuantityLots new_quantity_lots, UmiTradingPriceTicks new_limit_ticks);

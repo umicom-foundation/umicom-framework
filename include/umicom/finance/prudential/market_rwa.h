@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential market rwa data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialMarketRwa { double capital_charge; double conversion_factor; double rwa; } UmiPrudentialMarketRwa;
 /* Convert a capital charge to RWA using a positive reciprocal minimum-ratio factor. */
 UmiStatus umi_pru_market_rwa_calculate(UmiPrudentialMarketRwa *result, double capital_charge, double conversion_factor);

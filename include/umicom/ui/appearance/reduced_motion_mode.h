@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance reduced motion mode data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceReducedMotionMode {
     char mode_id[UMI_APPEARANCE_ID_CAPACITY];
     bool enabled;

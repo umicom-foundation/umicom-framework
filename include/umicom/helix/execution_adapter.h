@@ -28,6 +28,9 @@ typedef UmiStatus (*UmiHelixExecuteAction)(
     char *out_evidence,
     size_t evidence_capacity);
 
+/**
+ * Represent the helix execution adapter data shared with callers of this public contract.
+ */
 typedef struct UmiHelixExecutionAdapter {
     void *context;
     UmiHelixExecuteAction read;
@@ -38,8 +41,16 @@ typedef struct UmiHelixExecutionAdapter {
     UmiHelixExecuteAction source_control;
 } UmiHelixExecutionAdapter;
 
+/**
+ * Check that helix execution adapter satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_helix_execution_adapter_validate(
     const UmiHelixExecutionAdapter *adapter);
+/**
+ * Perform helix execution adapter through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_helix_execution_adapter_execute(
     const UmiHelixExecutionAdapter *adapter,
     const UmiHelixAction *action,

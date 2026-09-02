@@ -26,8 +26,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading kill switch data shared with callers of this public contract.
+ */
 typedef struct UmiTradingKillSwitch { int engaged; char reason[UMI_TRADING_TEXT_CAPACITY]; } UmiTradingKillSwitch;
+/**
+ * Provide the kill switch engage operation used by this module and its client
+ * applications.
+ */
 void umi_kill_switch_engage(UmiTradingKillSwitch *state, const char *reason);
+/**
+ * Release or reset state held by kill switch so the same storage can be reused safely.
+ */
 void umi_kill_switch_reset(UmiTradingKillSwitch *state);
 #ifdef __cplusplus
 }

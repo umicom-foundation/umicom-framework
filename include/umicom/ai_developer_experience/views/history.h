@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_developer_experience/timeline.h"
+/**
+ * Initialise ai developer history view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_history_view_create(
     const char *view_id,
     const UmiAiDeveloperTimeline *timeline,

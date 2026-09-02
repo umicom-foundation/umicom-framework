@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/capital_resource.h"
 
-int main(void) { UmiPrudentialCapitalResource r; UmiCurrency c={"GBP"}; if(umi_pru_capital_resource_init(&r,"RES",UMI_PRU_CAPITAL_CET1,120.0,20.0,c)!=UMI_STATUS_OK)return 1; return r.eligible_amount==100.0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialCapitalResource r; UmiCurrency c={"GBP"}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_capital_resource_init(&r,"RES",UMI_PRU_CAPITAL_CET1,120.0,20.0,c)!=UMI_STATUS_OK)return 1; return r.eligible_amount==100.0?0:2; }

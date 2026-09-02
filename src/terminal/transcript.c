@@ -30,16 +30,28 @@ struct UmiTerminalTranscript {
     UmiMutex *mutex;
 };
 
+/*
+ * Initialise terminal transcript from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_terminal_transcript_create(size_t capacity,
                                          UmiTerminalTranscript **out_transcript)
 {
     UmiTerminalTranscript *transcript;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_transcript == NULL || capacity == 0U ||
         capacity > UMI_TERMINAL_TRANSCRIPT_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_transcript = NULL;
     transcript = (UmiTerminalTranscript *)calloc(1U, sizeof(*transcript));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -47,6 +59,10 @@ UmiStatus umi_terminal_transcript_create(size_t capacity,
         capacity,
         sizeof(*transcript->lines)
     );
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript->lines == NULL ||
         umi_mutex_create(&transcript->mutex) != UMI_STATUS_OK) {
         umi_terminal_transcript_destroy(transcript);
@@ -58,8 +74,16 @@ UmiStatus umi_terminal_transcript_create(size_t capacity,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by terminal transcript so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_transcript_destroy(UmiTerminalTranscript *transcript)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript != NULL) {
         umi_mutex_destroy(transcript->mutex);
         free(transcript->lines);
@@ -67,6 +91,7 @@ void umi_terminal_transcript_destroy(UmiTerminalTranscript *transcript)
     }
 }
 
+/* Add terminal transcript only after its inputs and available capacity have been checked. */
 UmiStatus umi_terminal_transcript_append(UmiTerminalTranscript *transcript,
                                          uint64_t timestamp_ns,
                                          UmiTerminalStream stream,
@@ -74,17 +99,22 @@ UmiStatus umi_terminal_transcript_append(UmiTerminalTranscript *transcript,
 {
     size_t position;
     UmiTerminalTranscriptLine *line;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(transcript->mutex);
     position = (transcript->head + transcript->count) %
                transcript->capacity;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (transcript->count == transcript->capacity) {
         position = transcript->head;
         transcript->head = (transcript->head + 1U) %
                            transcript->capacity;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         transcript->count += 1U;
     }
     line = &transcript->lines[position];
@@ -97,9 +127,17 @@ UmiStatus umi_terminal_transcript_append(UmiTerminalTranscript *transcript,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by terminal transcript without changing their
+ * state.
+ */
 size_t umi_terminal_transcript_count(const UmiTerminalTranscript *transcript)
 {
     size_t count;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript == NULL) {
         return 0U;
     }
@@ -109,15 +147,24 @@ size_t umi_terminal_transcript_count(const UmiTerminalTranscript *transcript)
     return count;
 }
 
+/*
+ * Find terminal transcript while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_terminal_transcript_at(const UmiTerminalTranscript *transcript,
                                      size_t index,
                                      UmiTerminalTranscriptLine *out_line)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript == NULL || out_line == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(transcript->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= transcript->count) {
         (void)umi_mutex_unlock(transcript->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -128,8 +175,16 @@ UmiStatus umi_terminal_transcript_at(const UmiTerminalTranscript *transcript,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by terminal transcript so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_transcript_clear(UmiTerminalTranscript *transcript)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript == NULL) {
         return;
     }

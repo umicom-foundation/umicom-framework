@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance mnemonic policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceMnemonicPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     bool show_on_keyboard_intent;

@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiDataSchemaSnapshot {
     UmiDataSchemaTable items[UMI_DATA_ENTERPRISE_MAX_ITEMS];
     size_t count;

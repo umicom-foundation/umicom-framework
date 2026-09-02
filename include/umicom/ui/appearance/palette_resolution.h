@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance palette resolution data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearancePaletteResolution {
     char role_id[UMI_APPEARANCE_ID_CAPACITY];
     char base_token_id[UMI_APPEARANCE_TOKEN_CAPACITY];

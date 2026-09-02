@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test parser crlf and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 int test_parser_crlf(void){UmiAiHelixParsedResponse p;const char *t="disposition=complete\r\naction=none\r\ntarget=-\r\nsummary=done\r\nconfidence=1\r\nrationale=x\r\n";TEST_CHECK(umi_ai_helix_response_parse(t,1,&p)==UMI_STATUS_OK);return 0;}

@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named repository workflow action values accepted by this public contract.
+ */
 typedef enum UmiRepositoryWorkflowAction {
     UMI_REPOSITORY_WORKFLOW_UNKNOWN = 0,
     UMI_REPOSITORY_WORKFLOW_CLONE = 1,
@@ -33,10 +36,22 @@ typedef enum UmiRepositoryWorkflowAction {
     UMI_REPOSITORY_WORKFLOW_UPDATE = 8
 } UmiRepositoryWorkflowAction;
 
+/**
+ * Provide the repository workflow action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_repository_workflow_action_text(
     UmiRepositoryWorkflowAction action);
+/**
+ * Provide the repository workflow action writes index operation used by this module and
+ * its client applications.
+ */
 int umi_repository_workflow_action_writes_index(
     UmiRepositoryWorkflowAction action);
+/**
+ * Provide the repository workflow action uses remote operation used by this module and its
+ * client applications.
+ */
 int umi_repository_workflow_action_uses_remote(
     UmiRepositoryWorkflowAction action);
 

@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the fabric filter rule match operation used by this module and its client
+ * applications.
+ */
 bool umi_fabric_filter_rule_match(const UmiFabricFilterExpression *expression,const char *field,const char *value);
 
 #ifdef __cplusplus

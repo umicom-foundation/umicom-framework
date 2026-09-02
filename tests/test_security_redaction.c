@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/security/redaction.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiRedactor *r = NULL; char out[64];
     assert(umi_redactor_create(&r) == UMI_STATUS_OK);

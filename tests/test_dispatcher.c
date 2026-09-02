@@ -16,6 +16,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise count handler and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus count_handler(const UmiMessageEnvelope *message, void *user_data)
 {
     int *count = (int *)user_data;
@@ -24,6 +28,10 @@ static UmiStatus count_handler(const UmiMessageEnvelope *message, void *user_dat
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSchemaRegistry *schemas = NULL;

@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/surface_calibration_plan.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseSurfaceCalibrationPlan p; CHECK(umi_enterprise_surface_calibration_plan_init(&p,"SPX-VOL",40U,1e-8,200U)==UMI_STATUS_OK); CHECK(p.point_count==40U); return 0; }

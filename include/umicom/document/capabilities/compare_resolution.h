@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_COMPARE_RESOLUTION "umicom.document.conflict.compare_resolution"
 
+/**
+ * Provide the document capability compare resolution operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_compare_resolution(void);
 

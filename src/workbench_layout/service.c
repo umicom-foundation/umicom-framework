@@ -40,9 +40,14 @@ struct UmiWorkbenchLayoutService {
     uint64_t revision;
 };
 
+/* Release or reset state held by service so the same storage can be reused safely. */
 static void service_release(
     UmiWorkbenchLayoutService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) {
         return;
     }
@@ -59,6 +64,10 @@ static void service_release(
     free(service);
 }
 
+/*
+ * Provide the allocate components operation used by this module and its client
+ * applications.
+ */
 static UmiStatus allocate_components(
     UmiWorkbenchLayoutService *service)
 {
@@ -83,6 +92,10 @@ static UmiStatus allocate_components(
         (UmiWorkbenchLayoutSession *)
         calloc(1U, sizeof(*service->active_session));
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service->history == NULL ||
         service->templates == NULL ||
         service->panels == NULL ||
@@ -96,6 +109,7 @@ static UmiStatus allocate_components(
     return UMI_STATUS_OK;
 }
 
+/* Provide the make event id operation used by this module and its client applications. */
 static UmiStatus make_event_id(
     UmiWorkbenchLayoutService *service,
     char *buffer,
@@ -109,6 +123,7 @@ static UmiStatus make_event_id(
         service->event_sequence);
 }
 
+/* Provide the publish event operation used by this module and its client applications. */
 static UmiStatus publish_event(
     UmiWorkbenchLayoutService *service,
     UmiWorkbenchLayoutEventKind kind,
@@ -126,12 +141,17 @@ static UmiStatus publish_event(
     char event_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || !service->config.emit_events) {
         return UMI_STATUS_OK;
     }
 
     status = make_event_id(
         service, event_id, sizeof(event_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -170,6 +190,7 @@ static UmiStatus publish_event(
         service->events, &event);
 }
 
+/* Provide the decide access operation used by this module and its client applications. */
 static UmiStatus decide_access(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -179,6 +200,10 @@ static UmiStatus decide_access(
     UmiWorkbenchLayoutAccessDecision decision;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -190,6 +215,7 @@ static UmiStatus decide_access(
         document,
         action,
         &decision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -198,21 +224,31 @@ static UmiStatus decide_access(
         : UMI_STATUS_PERMISSION_DENIED;
 }
 
+/*
+ * Provide the ensure create access operation used by this module and its client
+ * applications.
+ */
 static UmiStatus ensure_create_access(
     const UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         principal->structure_size < sizeof(*principal) ||
         !umi_workbench_layout_text_present(principal->user_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->config.access_policy
             .require_trusted_workspace_for_edit &&
         !principal->trusted_workspace &&
         !principal->administrator) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (principal->administrator ||
         principal->role >= UMI_WORKBENCH_LAYOUT_ROLE_EDITOR) {
         return UMI_STATUS_OK;
@@ -220,6 +256,7 @@ static UmiStatus ensure_create_access(
     return UMI_STATUS_PERMISSION_DENIED;
 }
 
+/* Provide the make empty layout operation used by this module and its client applications. */
 static UmiStatus make_empty_layout(
     const UmiWorkbenchLayoutIdentity *identity,
     const char *name,
@@ -228,6 +265,10 @@ static UmiStatus make_empty_layout(
     UmiWorkbenchLayoutNode root;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (identity == NULL || document == NULL ||
         !umi_workbench_layout_text_present(identity->layout_id) ||
         !umi_workbench_layout_text_present(name)) {
@@ -238,6 +279,7 @@ static UmiStatus make_empty_layout(
         document, identity->layout_id, name);
     status = umi_workbench_layout_document_set_identity(
         document, identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -250,10 +292,12 @@ static UmiStatus make_empty_layout(
         &root, "Empty Workbench");
     status = umi_workbench_layout_document_add_node(
         document, &root, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_root(
             document, root.node_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_metadata(
             document,
@@ -261,6 +305,7 @@ static UmiStatus make_empty_layout(
             "user",
             "User-created semantic workbench layout.");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_flag(
             document,
@@ -270,6 +315,7 @@ static UmiStatus make_empty_layout(
     return status;
 }
 
+/* Provide the set active layout operation used by this module and its client applications. */
 static UmiStatus set_active_layout(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutDocument *document,
@@ -279,12 +325,14 @@ static UmiStatus set_active_layout(
 
     status = umi_workbench_layout_document_copy(
         service->active_layout, document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
     service->has_active_layout = true;
     service->revision += 1U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->config.maintain_history) {
         umi_workbench_layout_history_init(service->history);
         status = umi_workbench_layout_history_seed(
@@ -298,6 +346,7 @@ static UmiStatus set_active_layout(
     return status;
 }
 
+/* Provide the push history operation used by this module and its client applications. */
 static UmiStatus push_history(
     UmiWorkbenchLayoutService *service,
     const char *entry_prefix,
@@ -310,6 +359,7 @@ static UmiStatus push_history(
     char entry_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!service->config.maintain_history ||
         !service->has_active_layout) {
         return UMI_STATUS_OK;
@@ -321,6 +371,7 @@ static UmiStatus push_history(
         "%s-%" PRIu64,
         entry_prefix,
         service->revision + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -336,6 +387,10 @@ static UmiStatus push_history(
         checkpoint);
 }
 
+/*
+ * Provide the workbench layout service config default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutServiceConfig
 umi_workbench_layout_service_config_default(void)
 {
@@ -354,6 +409,10 @@ umi_workbench_layout_service_config_default(void)
     return config;
 }
 
+/*
+ * Initialise workbench layout service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_service_create(
     const UmiWorkbenchLayoutServiceConfig *config,
     const UmiWorkbenchLayoutStoreAdapter *store_adapter,
@@ -363,6 +422,10 @@ UmiStatus umi_workbench_layout_service_create(
     UmiWorkbenchLayoutService *service;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store_adapter == NULL || out_service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -370,6 +433,10 @@ UmiStatus umi_workbench_layout_service_create(
 
     service = (UmiWorkbenchLayoutService *)
         calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -380,6 +447,7 @@ UmiStatus umi_workbench_layout_service_create(
     service->event_sequence = 0U;
 
     status = allocate_components(service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         service_release(service);
         return status;
@@ -394,11 +462,13 @@ UmiStatus umi_workbench_layout_service_create(
     umi_workbench_layout_event_bus_init(service->events);
     umi_workbench_recovery_journal_init(service->recovery);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->config.seed_framework_templates) {
         status =
             umi_workbench_layout_template_registry_seed_framework(
                 service->templates);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         service_release(service);
         return status;
@@ -411,6 +481,7 @@ UmiStatus umi_workbench_layout_service_create(
         &persistence_config,
         service->recovery,
         &service->persistence);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         service_release(service);
         return status;
@@ -420,18 +491,31 @@ UmiStatus umi_workbench_layout_service_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench layout service so the same storage can be
+ * reused safely.
+ */
 void umi_workbench_layout_service_destroy(
     UmiWorkbenchLayoutService *service)
 {
     service_release(service);
 }
 
+/*
+ * Provide the workbench layout service start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_service_start(
     UmiWorkbenchLayoutService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (service->started) {
         return UMI_STATUS_OK;
     }
@@ -440,19 +524,29 @@ UmiStatus umi_workbench_layout_service_start(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout service stop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_service_stop(
     UmiWorkbenchLayoutService *service,
     uint64_t timestamp_ms)
 {
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || timestamp_ms == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!service->started) {
         return UMI_STATUS_OK;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (service->has_active_session &&
         service->config.auto_checkpoint_sessions &&
         service->has_active_layout) {
@@ -481,6 +575,7 @@ UmiStatus umi_workbench_layout_service_stop(
                 &principal,
                 timestamp_ms,
                 &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -489,6 +584,7 @@ UmiStatus umi_workbench_layout_service_stop(
                 service->active_session,
                 timestamp_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && service->has_active_session) {
         char entry_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
         (void)umi_workbench_layout_format(
@@ -504,6 +600,7 @@ UmiStatus umi_workbench_layout_service_stop(
                 timestamp_ms);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         service->started = false;
         service->revision += 1U;
@@ -511,6 +608,10 @@ UmiStatus umi_workbench_layout_service_stop(
     return status;
 }
 
+/*
+ * Provide the workbench layout service create layout operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_service_create_layout(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -521,18 +622,25 @@ UmiStatus umi_workbench_layout_service_create_layout(
     UmiWorkbenchLayoutDocument document;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         identity == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = ensure_create_access(service, principal);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = make_empty_layout(identity, name, &document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_active_layout(
             service, &document, "Created layout");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *out_document = document;
         (void)push_history(
@@ -559,6 +667,10 @@ UmiStatus umi_workbench_layout_service_create_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout service clone template operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_service_clone_template(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -570,11 +682,16 @@ UmiStatus umi_workbench_layout_service_clone_template(
     UmiWorkbenchLayoutDocument document;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         identity == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = ensure_create_access(service, principal);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status =
             umi_workbench_layout_template_registry_clone(
@@ -584,10 +701,12 @@ UmiStatus umi_workbench_layout_service_clone_template(
                 name,
                 &document);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_active_layout(
             service, &document, "Cloned layout template");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         *out_document = document;
         (void)push_history(
@@ -614,6 +733,10 @@ UmiStatus umi_workbench_layout_service_clone_template(
     return status;
 }
 
+/*
+ * Read workbench layout service into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_service_load(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -623,6 +746,10 @@ UmiStatus umi_workbench_layout_service_load(
     UmiWorkbenchLayoutPersistenceResult result;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -632,6 +759,7 @@ UmiStatus umi_workbench_layout_service_load(
         layout_id,
         &document,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = decide_access(
             service,
@@ -639,6 +767,7 @@ UmiStatus umi_workbench_layout_service_load(
             &document,
             UMI_WORKBENCH_LAYOUT_ACCESS_VIEW);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_active_layout(
             service, &document, "Loaded layout");
@@ -646,6 +775,10 @@ UmiStatus umi_workbench_layout_service_load(
     return status;
 }
 
+/*
+ * Provide the workbench layout service activate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_service_activate(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -653,25 +786,33 @@ UmiStatus umi_workbench_layout_service_activate(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         !umi_workbench_layout_text_present(layout_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!service->has_active_layout ||
         strcmp(
             service->active_layout->identity.layout_id,
             layout_id) != 0) {
         status = umi_workbench_layout_service_load(
             service, principal, layout_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (service->has_active_session) {
         status =
             umi_workbench_layout_session_set_active_layout(
                 service->active_session, layout_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -694,6 +835,10 @@ UmiStatus umi_workbench_layout_service_activate(
         UMI_STATUS_OK);
 }
 
+/*
+ * Provide the workbench layout service apply operation operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_service_apply_operation(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -702,6 +847,10 @@ UmiStatus umi_workbench_layout_service_apply_operation(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         operation == NULL || !service->has_active_layout) {
         return UMI_STATUS_INVALID_STATE;
@@ -712,12 +861,14 @@ UmiStatus umi_workbench_layout_service_apply_operation(
         principal,
         service->active_layout,
         UMI_WORKBENCH_LAYOUT_ACCESS_EDIT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_operation_apply(
             service->active_layout,
             operation,
             out_result);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         service->revision += 1U;
         (void)push_history(
@@ -746,6 +897,10 @@ UmiStatus umi_workbench_layout_service_apply_operation(
     return status;
 }
 
+/*
+ * Write workbench layout service in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_service_save(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -757,6 +912,10 @@ UmiStatus umi_workbench_layout_service_save(
     uint64_t expected_revision;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         !service->has_active_layout) {
         return UMI_STATUS_INVALID_STATE;
@@ -766,12 +925,14 @@ UmiStatus umi_workbench_layout_service_save(
         principal,
         service->active_layout,
         UMI_WORKBENCH_LAYOUT_ACCESS_EDIT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     expected_revision =
         service->active_layout->version.base_revision;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (expected_revision == 0U) {
         expected_revision =
             service->active_layout->version.revision;
@@ -785,6 +946,7 @@ UmiStatus umi_workbench_layout_service_save(
         correlation_id,
         timestamp_ms,
         out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND &&
         service->active_layout->version.base_revision == 0U) {
         status = umi_workbench_layout_persistence_save_layout(
@@ -796,6 +958,7 @@ UmiStatus umi_workbench_layout_service_save(
             timestamp_ms,
             out_result);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         service->active_layout->version.base_revision =
             service->active_layout->version.revision;
@@ -830,6 +993,10 @@ UmiStatus umi_workbench_layout_service_save(
     return status;
 }
 
+/*
+ * Provide the workbench layout service delete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_service_delete(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -840,22 +1007,28 @@ UmiStatus umi_workbench_layout_service_delete(
     UmiWorkbenchLayoutPersistenceResult result;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         !umi_workbench_layout_text_present(layout_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (service->has_active_layout &&
         strcmp(
             service->active_layout->identity.layout_id,
             layout_id) == 0) {
         document = *service->active_layout;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_workbench_layout_persistence_load_layout(
             service->persistence,
             layout_id,
             &document,
             &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -866,6 +1039,7 @@ UmiStatus umi_workbench_layout_service_delete(
         principal,
         &document,
         UMI_WORKBENCH_LAYOUT_ACCESS_DELETE);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status =
             umi_workbench_layout_persistence_delete_layout(
@@ -874,7 +1048,9 @@ UmiStatus umi_workbench_layout_service_delete(
                 expected_revision,
                 &result);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Apply this operation only while the related capability or state is available. */
         if (service->has_active_layout &&
             strcmp(
                 service->active_layout->identity.layout_id,
@@ -904,12 +1080,20 @@ UmiStatus umi_workbench_layout_service_delete(
     return status;
 }
 
+/*
+ * Provide the workbench layout service undo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_service_undo(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         !service->has_active_layout) {
         return UMI_STATUS_INVALID_STATE;
@@ -919,11 +1103,13 @@ UmiStatus umi_workbench_layout_service_undo(
         principal,
         service->active_layout,
         UMI_WORKBENCH_LAYOUT_ACCESS_EDIT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_history_undo(
             service->history,
             service->active_layout);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_workbench_layout_document_set_flag(
             service->active_layout,
@@ -934,12 +1120,20 @@ UmiStatus umi_workbench_layout_service_undo(
     return status;
 }
 
+/*
+ * Provide the workbench layout service redo operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_service_redo(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         !service->has_active_layout) {
         return UMI_STATUS_INVALID_STATE;
@@ -949,11 +1143,13 @@ UmiStatus umi_workbench_layout_service_redo(
         principal,
         service->active_layout,
         UMI_WORKBENCH_LAYOUT_ACCESS_EDIT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_history_redo(
             service->history,
             service->active_layout);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_workbench_layout_document_set_flag(
             service->active_layout,
@@ -964,16 +1160,25 @@ UmiStatus umi_workbench_layout_service_redo(
     return status;
 }
 
+/*
+ * Provide the workbench layout service begin session operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_service_begin_session(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutSession *session)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_workbench_layout_session_validate(session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -984,6 +1189,10 @@ UmiStatus umi_workbench_layout_service_begin_session(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout service checkpoint session operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_service_checkpoint_session(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -992,6 +1201,10 @@ UmiStatus umi_workbench_layout_service_checkpoint_session(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         !service->has_active_layout ||
         !service->has_active_session) {
@@ -1002,6 +1215,7 @@ UmiStatus umi_workbench_layout_service_checkpoint_session(
         principal,
         service->active_layout,
         UMI_WORKBENCH_LAYOUT_ACCESS_EDIT);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -1015,12 +1229,17 @@ UmiStatus umi_workbench_layout_service_checkpoint_session(
             "",
             timestamp_ms,
             out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         service->revision += 1U;
     }
     return status;
 }
 
+/*
+ * Provide the workbench layout service browser search operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_service_browser_search(
     UmiWorkbenchLayoutService *service,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -1029,6 +1248,10 @@ UmiStatus umi_workbench_layout_service_browser_search(
 {
     const UmiWorkbenchLayoutStoreAdapter *adapter;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || principal == NULL ||
         out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -1046,12 +1269,20 @@ UmiStatus umi_workbench_layout_service_browser_search(
         out_result);
 }
 
+/*
+ * Provide the workbench layout service snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_service_snapshot(
     const UmiWorkbenchLayoutService *service,
     UmiWorkbenchLayoutServiceSnapshot *out_snapshot)
 {
     UmiWorkbenchRecoveryPlan plan;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -1070,6 +1301,7 @@ UmiStatus umi_workbench_layout_service_snapshot(
         service->events->subscription_count;
     out_snapshot->service_revision = service->revision;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (service->has_active_layout) {
         (void)umi_workbench_layout_copy_text(
             out_snapshot->active_layout_id,
@@ -1083,12 +1315,14 @@ UmiStatus umi_workbench_layout_service_snapshot(
                 service->active_layout,
                 UMI_WORKBENCH_LAYOUT_DOCUMENT_DIRTY);
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (service->has_active_session) {
         (void)umi_workbench_layout_copy_text(
             out_snapshot->active_session_id,
             sizeof(out_snapshot->active_session_id),
             service->active_session->session_id,
             true);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_workbench_recovery_plan_build(
                 service->recovery,
                 service->active_session->session_id,
@@ -1100,6 +1334,10 @@ UmiStatus umi_workbench_layout_service_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout service active layout operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchLayoutDocument *
 umi_workbench_layout_service_active_layout(
     const UmiWorkbenchLayoutService *service)
@@ -1109,6 +1347,10 @@ umi_workbench_layout_service_active_layout(
         : NULL;
 }
 
+/*
+ * Provide the workbench layout service active layout mutable operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutDocument *
 umi_workbench_layout_service_active_layout_mutable(
     UmiWorkbenchLayoutService *service)
@@ -1118,6 +1360,10 @@ umi_workbench_layout_service_active_layout_mutable(
         : NULL;
 }
 
+/*
+ * Provide the workbench layout service active session operation used by this module and
+ * its client applications.
+ */
 const UmiWorkbenchLayoutSession *
 umi_workbench_layout_service_active_session(
     const UmiWorkbenchLayoutService *service)
@@ -1127,6 +1373,10 @@ umi_workbench_layout_service_active_session(
         : NULL;
 }
 
+/*
+ * Provide the workbench layout service templates operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutTemplateRegistry *
 umi_workbench_layout_service_templates(
     UmiWorkbenchLayoutService *service)
@@ -1134,6 +1384,10 @@ umi_workbench_layout_service_templates(
     return service != NULL ? service->templates : NULL;
 }
 
+/*
+ * Provide the workbench layout service panels operation used by this module and its client
+ * applications.
+ */
 UmiWorkbenchPanelRegistry *
 umi_workbench_layout_service_panels(
     UmiWorkbenchLayoutService *service)
@@ -1141,6 +1395,10 @@ umi_workbench_layout_service_panels(
     return service != NULL ? service->panels : NULL;
 }
 
+/*
+ * Provide the workbench layout service perspectives operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchPerspectiveRegistry *
 umi_workbench_layout_service_perspectives(
     UmiWorkbenchLayoutService *service)
@@ -1148,6 +1406,10 @@ umi_workbench_layout_service_perspectives(
     return service != NULL ? service->perspectives : NULL;
 }
 
+/*
+ * Provide the workbench layout service events operation used by this module and its client
+ * applications.
+ */
 UmiWorkbenchLayoutEventBus *
 umi_workbench_layout_service_events(
     UmiWorkbenchLayoutService *service)

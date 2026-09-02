@@ -30,6 +30,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design dialog spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignDialogSpec {
     UmiDesignSizeClass width_class;
     uint16_t action_count;

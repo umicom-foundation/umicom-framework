@@ -25,6 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named code guard external tool values accepted by this public contract.
+ */
 typedef enum UmiCodeGuardExternalTool {
     UMI_CODEGUARD_TOOL_CLANG_ANALYZER = 0,
     UMI_CODEGUARD_TOOL_CLANG_TIDY,
@@ -32,7 +35,15 @@ typedef enum UmiCodeGuardExternalTool {
     UMI_CODEGUARD_TOOL_UB_SANITIZER,
     UMI_CODEGUARD_TOOL_LEAK_SANITIZER
 } UmiCodeGuardExternalTool;
+/**
+ * Provide the codeguard external tool name operation used by this module and its client
+ * applications.
+ */
 const char *umi_codeguard_external_tool_name(UmiCodeGuardExternalTool tool);
+/**
+ * Provide the codeguard external tool command operation used by this module and its client
+ * applications.
+ */
 int umi_codeguard_external_tool_command(UmiCodeGuardExternalTool tool,
                                         const char *source,
                                         char *buffer, size_t capacity);

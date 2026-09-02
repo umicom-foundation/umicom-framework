@@ -29,6 +29,9 @@
 #define UMI_DESKTOP_SNAP_GUIDE_PEER_X        (1U << 8U)
 #define UMI_DESKTOP_SNAP_GUIDE_PEER_Y        (1U << 9U)
 
+/**
+ * Represent the desktop snap policy data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopSnapPolicy {
     int32_t grid_size;
     int32_t snap_distance;
@@ -40,13 +43,24 @@ typedef struct UmiDesktopSnapPolicy {
     bool snap_to_windows;
 } UmiDesktopSnapPolicy;
 
+/**
+ * Represent the desktop snap result data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopSnapResult {
     UmiDesktopRect bounds;
     uint32_t guides;
     bool changed;
 } UmiDesktopSnapResult;
 
+/**
+ * Initialise desktop snap policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_desktop_snap_policy_init(UmiDesktopSnapPolicy *policy);
+/**
+ * Perform desktop snap engine through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_desktop_snap_engine_apply(
     const UmiDesktopSnapPolicy *policy,
     const UmiDesktopMonitor *monitor,

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the banking loan installment data shared with callers of this public contract.
+ */
 typedef struct UmiBankingLoanInstallment {
     UmiFinancialId id;
     UmiFinancialId loan_id;
@@ -26,6 +29,10 @@ typedef struct UmiBankingLoanInstallment {
     int64_t interest_minor;
     int64_t paid_minor;
 } UmiBankingLoanInstallment;
+/**
+ * Initialise banking loan installment from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_banking_loan_installment_init(UmiBankingLoanInstallment *value,
     const char *id,
     const char *loan_id,
@@ -33,7 +40,15 @@ UmiStatus umi_banking_loan_installment_init(UmiBankingLoanInstallment *value,
     int64_t principal_minor,
     int64_t interest_minor,
     int64_t paid_minor);
+/**
+ * Check that banking loan installment satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_banking_loan_installment_valid(const UmiBankingLoanInstallment *value);
+/**
+ * Provide the banking loan installment outstanding minor operation used by this module and
+ * its client applications.
+ */
 int64_t umi_banking_loan_installment_outstanding_minor(const UmiBankingLoanInstallment *value);
 #ifdef __cplusplus
 }

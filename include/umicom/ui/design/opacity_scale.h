@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 #define UMI_DESIGN_OPACITY_SCALE_LEVELS 8U
+/**
+ * Represent the design opacity scale data shared with callers of this public contract.
+ */
 typedef struct UmiDesignOpacityScale { double values[8U]; } UmiDesignOpacityScale;
 /* Initialise the canonical scale used as a stable design-system baseline. */
 UmiDesignOpacityScale opacity_scale_default(void);

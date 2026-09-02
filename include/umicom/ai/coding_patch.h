@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding patch policy data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingPatchPolicy {
     size_t maximum_files;
     uint32_t maximum_changed_lines;
@@ -36,6 +39,9 @@ typedef struct UmiAiCodingPatchPolicy {
     int require_approval;
 } UmiAiCodingPatchPolicy;
 
+/**
+ * Represent the ai coding patch file data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingPatchFile {
     char path[UMI_AI_TEXT_CAPACITY];
     UmiAiCodingPatchOperation operation;
@@ -49,6 +55,9 @@ typedef struct UmiAiCodingPatchFile {
     uint32_t added_lines;
 } UmiAiCodingPatchFile;
 
+/**
+ * Represent the ai coding patch data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingPatch {
     uint32_t structure_size;
     uint32_t abi_version;
@@ -79,6 +88,9 @@ typedef UmiStatus (*UmiAiCodingFileRemove)(
     void *user_data,
     const char *relative_path);
 
+/**
+ * Represent the ai coding file adapter data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingFileAdapter {
     uint32_t structure_size;
     uint32_t abi_version;
@@ -88,26 +100,57 @@ typedef struct UmiAiCodingFileAdapter {
     void *user_data;
 } UmiAiCodingFileAdapter;
 
+/**
+ * Provide the ai coding patch policy default operation used by this module and its client
+ * applications.
+ */
 UmiAiCodingPatchPolicy umi_ai_coding_patch_policy_default(void);
+/**
+ * Initialise ai coding patch from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_coding_patch_init(UmiAiCodingPatch *patch,
                                    const char *patch_id,
                                    const char *request_id,
                                    const char *title,
                                    const char *rationale);
+/**
+ * Provide the ai coding patch add file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_patch_add_file(UmiAiCodingPatch *patch,
                                        const char *path,
                                        UmiAiCodingPatchOperation operation,
                                        const char *before_text,
                                        const char *after_text);
+/**
+ * Check that ai coding patch satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ai_coding_patch_validate(
     const UmiAiCodingPatch *patch,
     const UmiAiCodingPatchPolicy *policy);
+/**
+ * Provide the ai coding patch approve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_patch_approve(UmiAiCodingPatch *patch,
                                       const char *approved_by);
+/**
+ * Provide the ai coding patch reject operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_patch_reject(UmiAiCodingPatch *patch);
+/**
+ * Perform ai coding patch through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_ai_coding_patch_apply(UmiAiCodingPatch *patch,
                                     const UmiAiCodingPatchPolicy *policy,
                                     const UmiAiCodingFileAdapter *adapter);
+/**
+ * Provide the ai coding patch revert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_patch_revert(UmiAiCodingPatch *patch,
                                      const UmiAiCodingFileAdapter *adapter);
 

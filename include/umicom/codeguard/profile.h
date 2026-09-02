@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the code guard profile data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardProfile {
     int scan_c;
     int scan_cpp;
@@ -40,9 +43,25 @@ typedef struct UmiCodeGuardProfile {
     size_t max_source_lines;
     UmiCodeGuardSeverity fail_on;
 } UmiCodeGuardProfile;
+/**
+ * Provide the codeguard profile default operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_default(void);
+/**
+ * Provide the codeguard profile security operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_security(void);
+/**
+ * Provide the codeguard profile architecture operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_architecture(void);
+/**
+ * Provide the codeguard profile ci operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_ci(void);
 #ifdef __cplusplus
 }

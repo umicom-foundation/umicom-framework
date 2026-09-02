@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise market data freshness policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEnterpriseMarketDataFreshnessPolicy { int64_t max_age_ms; } UmiEnterpriseMarketDataFreshnessPolicy;
 /* Initialise a non-negative maximum acceptable market-data age. */
 UmiStatus umi_enterprise_market_data_freshness_policy_init(UmiEnterpriseMarketDataFreshnessPolicy *policy, int64_t max_age_ms);

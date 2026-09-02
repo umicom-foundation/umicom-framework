@@ -59,6 +59,9 @@ extern "C" {
 
 #define UMI_WORKBENCH_LAYOUT_INDEX_NONE ((size_t)-1)
 
+/**
+ * List the named workbench layout node kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutNodeKind {
     UMI_WORKBENCH_LAYOUT_NODE_EMPTY = 1,
     UMI_WORKBENCH_LAYOUT_NODE_WINDOW = 2,
@@ -69,12 +72,18 @@ typedef enum UmiWorkbenchLayoutNodeKind {
     UMI_WORKBENCH_LAYOUT_NODE_FLOATING_WINDOW = 7
 } UmiWorkbenchLayoutNodeKind;
 
+/**
+ * List the named workbench layout orientation values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutOrientation {
     UMI_WORKBENCH_LAYOUT_ORIENTATION_NONE = 0,
     UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL = 1,
     UMI_WORKBENCH_LAYOUT_ORIENTATION_VERTICAL = 2
 } UmiWorkbenchLayoutOrientation;
 
+/**
+ * List the named workbench layout dock region values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutDockRegion {
     UMI_WORKBENCH_LAYOUT_DOCK_CANVAS = 1,
     UMI_WORKBENCH_LAYOUT_DOCK_DOCUMENT = 2,
@@ -85,18 +94,27 @@ typedef enum UmiWorkbenchLayoutDockRegion {
     UMI_WORKBENCH_LAYOUT_DOCK_FLOATING = 7
 } UmiWorkbenchLayoutDockRegion;
 
+/**
+ * List the named workbench layout visibility values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutVisibility {
     UMI_WORKBENCH_LAYOUT_VISIBILITY_VISIBLE = 1,
     UMI_WORKBENCH_LAYOUT_VISIBILITY_HIDDEN = 2,
     UMI_WORKBENCH_LAYOUT_VISIBILITY_AUTO = 3
 } UmiWorkbenchLayoutVisibility;
 
+/**
+ * List the named workbench layout severity values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutSeverity {
     UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_INFO = 1,
     UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_WARNING = 2,
     UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_ERROR = 3
 } UmiWorkbenchLayoutSeverity;
 
+/**
+ * List the named workbench layout operation kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutOperationKind {
     UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE = 1,
     UMI_WORKBENCH_LAYOUT_OPERATION_REMOVE_NODE = 2,
@@ -113,6 +131,9 @@ typedef enum UmiWorkbenchLayoutOperationKind {
     UMI_WORKBENCH_LAYOUT_OPERATION_SET_DIRTY = 13
 } UmiWorkbenchLayoutOperationKind;
 
+/**
+ * List the named workbench layout diff kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutDiffKind {
     UMI_WORKBENCH_LAYOUT_DIFF_METADATA_CHANGED = 1,
     UMI_WORKBENCH_LAYOUT_DIFF_NODE_ADDED = 2,
@@ -122,6 +143,9 @@ typedef enum UmiWorkbenchLayoutDiffKind {
     UMI_WORKBENCH_LAYOUT_DIFF_ORDER_CHANGED = 6
 } UmiWorkbenchLayoutDiffKind;
 
+/**
+ * List the named workbench layout conflict kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutConflictKind {
     UMI_WORKBENCH_LAYOUT_CONFLICT_METADATA = 1,
     UMI_WORKBENCH_LAYOUT_CONFLICT_NODE_ADDED_DIFFERENTLY = 2,
@@ -131,6 +155,10 @@ typedef enum UmiWorkbenchLayoutConflictKind {
     UMI_WORKBENCH_LAYOUT_CONFLICT_ORDER_CHANGED_DIFFERENTLY = 6
 } UmiWorkbenchLayoutConflictKind;
 
+/**
+ * List the named workbench layout migration action values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutMigrationAction {
     UMI_WORKBENCH_LAYOUT_MIGRATION_NONE = 0,
     UMI_WORKBENCH_LAYOUT_MIGRATION_NORMALISE_IDENTIFIERS = 1,
@@ -140,12 +168,18 @@ typedef enum UmiWorkbenchLayoutMigrationAction {
     UMI_WORKBENCH_LAYOUT_MIGRATION_REWRITE_SCHEMA_VERSION = 5
 } UmiWorkbenchLayoutMigrationAction;
 
+/**
+ * List the named workbench layout store kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutStoreKind {
     UMI_WORKBENCH_LAYOUT_STORE_MEMORY = 1,
     UMI_WORKBENCH_LAYOUT_STORE_DATA_SERVER = 2,
     UMI_WORKBENCH_LAYOUT_STORE_FILE = 3
 } UmiWorkbenchLayoutStoreKind;
 
+/**
+ * List the named workbench layout sort order values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutSortOrder {
     UMI_WORKBENCH_LAYOUT_SORT_NAME_ASCENDING = 1,
     UMI_WORKBENCH_LAYOUT_SORT_NAME_DESCENDING = 2,
@@ -153,6 +187,9 @@ typedef enum UmiWorkbenchLayoutSortOrder {
     UMI_WORKBENCH_LAYOUT_SORT_REVISION_DESCENDING = 4
 } UmiWorkbenchLayoutSortOrder;
 
+/**
+ * List the named workbench layout access action values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutAccessAction {
     UMI_WORKBENCH_LAYOUT_ACCESS_VIEW = 1,
     UMI_WORKBENCH_LAYOUT_ACCESS_CREATE = 2,
@@ -163,6 +200,9 @@ typedef enum UmiWorkbenchLayoutAccessAction {
     UMI_WORKBENCH_LAYOUT_ACCESS_ADMINISTER = 7
 } UmiWorkbenchLayoutAccessAction;
 
+/**
+ * List the named workbench layout role values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutRole {
     UMI_WORKBENCH_LAYOUT_ROLE_VIEWER = 1,
     UMI_WORKBENCH_LAYOUT_ROLE_EDITOR = 2,
@@ -170,6 +210,9 @@ typedef enum UmiWorkbenchLayoutRole {
     UMI_WORKBENCH_LAYOUT_ROLE_ADMINISTRATOR = 4
 } UmiWorkbenchLayoutRole;
 
+/**
+ * List the named workbench layout event kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutEventKind {
     UMI_WORKBENCH_LAYOUT_EVENT_CREATED = 1,
     UMI_WORKBENCH_LAYOUT_EVENT_UPDATED = 2,
@@ -183,6 +226,9 @@ typedef enum UmiWorkbenchLayoutEventKind {
     UMI_WORKBENCH_LAYOUT_EVENT_CONFLICT_DETECTED = 10
 } UmiWorkbenchLayoutEventKind;
 
+/**
+ * List the named workbench layout command kind values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutCommandKind {
     UMI_WORKBENCH_LAYOUT_COMMAND_CREATE = 1,
     UMI_WORKBENCH_LAYOUT_COMMAND_CLONE = 2,
@@ -199,6 +245,10 @@ typedef enum UmiWorkbenchLayoutCommandKind {
     UMI_WORKBENCH_LAYOUT_COMMAND_UNLOCK = 13
 } UmiWorkbenchLayoutCommandKind;
 
+/**
+ * List the named workbench layout controller state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutControllerState {
     UMI_WORKBENCH_LAYOUT_CONTROLLER_CREATED = 1,
     UMI_WORKBENCH_LAYOUT_CONTROLLER_INITIALISED = 2,
@@ -208,6 +258,9 @@ typedef enum UmiWorkbenchLayoutControllerState {
     UMI_WORKBENCH_LAYOUT_CONTROLLER_FAILED = 6
 } UmiWorkbenchLayoutControllerState;
 
+/**
+ * Represent the workbench layout rect data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutRect {
     int32_t x;
     int32_t y;
@@ -215,20 +268,33 @@ typedef struct UmiWorkbenchLayoutRect {
     int32_t height;
 } UmiWorkbenchLayoutRect;
 
+/**
+ * Represent the workbench layout size data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutSize {
     int32_t width;
     int32_t height;
 } UmiWorkbenchLayoutSize;
 
+/**
+ * Represent the workbench layout point data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutPoint {
     int32_t x;
     int32_t y;
 } UmiWorkbenchLayoutPoint;
 
+/**
+ * Represent the workbench layout tag data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutTag {
     char value[UMI_WORKBENCH_LAYOUT_TAG_CAPACITY];
 } UmiWorkbenchLayoutTag;
 
+/**
+ * Represent the workbench layout identity data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutIdentity {
     char layout_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
     char owner_user_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -236,6 +302,9 @@ typedef struct UmiWorkbenchLayoutIdentity {
     char workspace_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
 } UmiWorkbenchLayoutIdentity;
 
+/**
+ * Represent the workbench layout version data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutVersion {
     uint32_t schema_version;
     uint64_t revision;
@@ -243,6 +312,9 @@ typedef struct UmiWorkbenchLayoutVersion {
     uint64_t base_revision;
 } UmiWorkbenchLayoutVersion;
 
+/**
+ * Represent the workbench layout audit data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutAudit {
     char created_by[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
     char modified_by[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -251,42 +323,110 @@ typedef struct UmiWorkbenchLayoutAudit {
     char correlation_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
 } UmiWorkbenchLayoutAudit;
 
+/**
+ * Provide the workbench layout node kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_node_kind_text(
     UmiWorkbenchLayoutNodeKind kind);
+/**
+ * Provide the workbench layout orientation text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_orientation_text(
     UmiWorkbenchLayoutOrientation orientation);
+/**
+ * Provide the workbench layout dock region text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_dock_region_text(
     UmiWorkbenchLayoutDockRegion region);
+/**
+ * Provide the workbench layout visibility text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_visibility_text(
     UmiWorkbenchLayoutVisibility visibility);
+/**
+ * Provide the workbench layout severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_severity_text(
     UmiWorkbenchLayoutSeverity severity);
+/**
+ * Provide the workbench layout operation kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_operation_kind_text(
     UmiWorkbenchLayoutOperationKind kind);
+/**
+ * Provide the workbench layout diff kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_diff_kind_text(
     UmiWorkbenchLayoutDiffKind kind);
+/**
+ * Provide the workbench layout conflict kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_conflict_kind_text(
     UmiWorkbenchLayoutConflictKind kind);
+/**
+ * Provide the workbench layout store kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_store_kind_text(
     UmiWorkbenchLayoutStoreKind kind);
+/**
+ * Provide the workbench layout event kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_event_kind_text(
     UmiWorkbenchLayoutEventKind kind);
+/**
+ * Provide the workbench layout command kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_command_kind_text(
     UmiWorkbenchLayoutCommandKind kind);
+/**
+ * Provide the workbench layout controller state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_controller_state_text(
     UmiWorkbenchLayoutControllerState state);
 
+/**
+ * Check that workbench layout rect satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_workbench_layout_rect_is_valid(
     const UmiWorkbenchLayoutRect *rect);
+/**
+ * Provide the workbench layout rect contains operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_rect_contains(
     const UmiWorkbenchLayoutRect *outer,
     const UmiWorkbenchLayoutRect *inner);
+/**
+ * Provide the workbench layout rect intersects operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_rect_intersects(
     const UmiWorkbenchLayoutRect *left,
     const UmiWorkbenchLayoutRect *right);
+/**
+ * Provide the workbench layout rect intersection operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutRect umi_workbench_layout_rect_intersection(
     const UmiWorkbenchLayoutRect *left,
     const UmiWorkbenchLayoutRect *right);
+/**
+ * Provide the workbench layout rect area operation used by this module and its client
+ * applications.
+ */
 int64_t umi_workbench_layout_rect_area(
     const UmiWorkbenchLayoutRect *rect);
 

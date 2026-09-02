@@ -23,12 +23,18 @@
 #include "umicom/repository/path.h"
 #include "umicom/repository/ref.h"
 
+/* Provide the copy field operation used by this module and its client applications. */
 static UmiStatus copy_field(
     char *out, size_t capacity, const char *text, int allow_empty)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if ((!allow_empty && length == 0U) || length + 1U > capacity) {
         return length + 1U > capacity
             ? UMI_STATUS_CAPACITY_EXCEEDED
@@ -38,6 +44,10 @@ static UmiStatus copy_field(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise repository submodule from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_repository_submodule_init(
     UmiRepositorySubmodule *submodule,
     const char *name,
@@ -47,33 +57,54 @@ UmiStatus umi_repository_submodule_init(
     int required)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (submodule == NULL || name == NULL || path == NULL || url == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(submodule, 0, sizeof(*submodule));
     status = copy_field(submodule->name, sizeof(submodule->name), name, 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_repository_control_path_normalize(
         path, submodule->path, sizeof(submodule->path));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = copy_field(submodule->url, sizeof(submodule->url), url, 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (branch != NULL && branch[0] != '\0') {
         status = umi_repository_ref_copy(
             branch, submodule->branch, sizeof(submodule->branch));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     submodule->required = required != 0;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Check that repository submodule satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_repository_submodule_validate(
     const UmiRepositorySubmodule *submodule)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (submodule == NULL || submodule->name[0] == '\0' ||
         !umi_repository_control_path_is_safe_relative(submodule->path)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (submodule->branch[0] != '\0' &&
         !umi_repository_ref_is_valid(submodule->branch)) {
         return UMI_STATUS_INVALID_ARGUMENT;

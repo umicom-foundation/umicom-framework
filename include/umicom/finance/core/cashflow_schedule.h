@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the cashflow schedule data shared with callers of this public contract.
+ */
 typedef struct UmiCashflowSchedule { UmiCashflow items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiCashflowSchedule;
 /* Reset collection. */ void umi_cashflow_schedule_init(UmiCashflowSchedule *c);
 /* Append valid item. */ UmiStatus umi_cashflow_schedule_add(UmiCashflowSchedule *c,const UmiCashflow *item);

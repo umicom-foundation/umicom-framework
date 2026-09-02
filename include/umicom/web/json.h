@@ -24,7 +24,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the web json escape operation used by this module and its client applications.
+ */
 UmiStatus umi_web_json_escape(const char *text,char *out_text,size_t capacity);
+/**
+ * Provide the web json object1 operation used by this module and its client applications.
+ */
 UmiStatus umi_web_json_object1(const char *name,const char *value,char *out_text,size_t capacity);
 #ifdef __cplusplus
 }

@@ -20,8 +20,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise repository maintenance service from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_repository_maintenance_service_init(UmiRepositoryMaintenanceService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     (void)memset(service, 0, sizeof(*service));
     umi_repository_status_summary_init(&service->summary);
@@ -31,11 +39,20 @@ void umi_repository_maintenance_service_init(UmiRepositoryMaintenanceService *se
     service->revision = 1U;
 }
 
+/*
+ * Provide the repository maintenance service evaluate operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_repository_maintenance_service_evaluate(UmiRepositoryMaintenanceService *service)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_repository_status_summary_refresh(&service->summary);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_repository_doctor_evaluate(&service->summary, &service->policy, &service->report);
     }

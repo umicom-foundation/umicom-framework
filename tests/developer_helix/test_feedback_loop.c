@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/feedback_loop.h"
-int main(void){ UmiHelixFeedbackLoop l; umi_helix_feedback_loop_init(&l,2); UmiHelixFeedbackEvent e; umi_helix_feedback_event_init(&e,"build"); if(umi_helix_feedback_loop_observe(&l,&e,false)!=UMI_STATUS_OK){ return 1; } if(umi_helix_feedback_loop_decide(&l)!=UMI_HELIX_DECISION_ALLOW){ return 2; } if(umi_helix_feedback_loop_observe(&l,&e,false)!=UMI_STATUS_OK||umi_helix_feedback_loop_decide(&l)!=UMI_HELIX_DECISION_REVIEW){ return 3; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixFeedbackLoop l; umi_helix_feedback_loop_init(&l,2); UmiHelixFeedbackEvent e; umi_helix_feedback_event_init(&e,"build"); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_feedback_loop_observe(&l,&e,false)!=UMI_STATUS_OK){ return 1; } /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_feedback_loop_decide(&l)!=UMI_HELIX_DECISION_ALLOW){ return 2; } /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_feedback_loop_observe(&l,&e,false)!=UMI_STATUS_OK||umi_helix_feedback_loop_decide(&l)!=UMI_HELIX_DECISION_REVIEW){ return 3; } return 0; }

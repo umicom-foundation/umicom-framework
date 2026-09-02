@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_interest_rate_swap_init(UmiQuantInterestRateSwap *record, double notional, double fixed_rate, double floating_rate, double year_fraction)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(notional >= 0.0 && year_fraction >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->notional = notional;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_interest_rate_swap_init(UmiQuantInterestRateSwap *record, do
 /* Return receive-floating/pay-fixed period value. */
 double umi_quant_interest_rate_swap_period_value(const UmiQuantInterestRateSwap *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->notional * (record->floating_rate - record->fixed_rate) * record->year_fraction;
 }

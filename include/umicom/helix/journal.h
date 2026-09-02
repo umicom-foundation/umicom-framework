@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named helix journal kind values accepted by this public contract.
+ */
 typedef enum UmiHelixJournalKind {
     UMI_HELIX_JOURNAL_PLAN = 1,
     UMI_HELIX_JOURNAL_ACTION = 2,
@@ -32,6 +35,9 @@ typedef enum UmiHelixJournalKind {
     UMI_HELIX_JOURNAL_ROLLBACK = 5
 } UmiHelixJournalKind;
 
+/**
+ * Represent the helix journal entry data shared with callers of this public contract.
+ */
 typedef struct UmiHelixJournalEntry {
     uint64_t sequence;
     UmiHelixJournalKind kind;
@@ -41,17 +47,34 @@ typedef struct UmiHelixJournalEntry {
     uint64_t entry_hash;
 } UmiHelixJournalEntry;
 
+/**
+ * Represent the helix journal data shared with callers of this public contract.
+ */
 typedef struct UmiHelixJournal {
     UmiHelixJournalEntry entries[UMI_HELIX_RUNTIME_MAX_JOURNAL_ENTRIES];
     size_t count;
 } UmiHelixJournal;
 
+/**
+ * Initialise helix journal from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_helix_journal_init(UmiHelixJournal *journal);
+/**
+ * Add helix journal only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_helix_journal_append(UmiHelixJournal *journal,
                                      UmiHelixJournalKind kind,
                                      const char *operation_id,
                                      const char *summary);
+/**
+ * Provide the helix journal verify operation used by this module and its client
+ * applications.
+ */
 int umi_helix_journal_verify(const UmiHelixJournal *journal);
+/**
+ * Find helix journal while leaving the underlying catalogue or model owned by this module.
+ */
 const UmiHelixJournalEntry *umi_helix_journal_at(
     const UmiHelixJournal *journal,
     size_t index);

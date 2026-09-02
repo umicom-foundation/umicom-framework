@@ -31,6 +31,10 @@ typedef UmiStatus (*UmiWorkbenchLayoutMigrationApplyFunction)(
     UmiDataServer *server,
     void *context);
 
+/**
+ * Represent the workbench layout data migration step data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataMigrationStep {
     uint32_t structure_size;
     UmiWorkbenchLayoutMigrationDescriptor descriptor;
@@ -39,6 +43,10 @@ typedef struct UmiWorkbenchLayoutDataMigrationStep {
     void *context;
 } UmiWorkbenchLayoutDataMigrationStep;
 
+/**
+ * Represent the workbench layout data migration plan data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataMigrationPlan {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataMigrationStep
@@ -48,6 +56,10 @@ typedef struct UmiWorkbenchLayoutDataMigrationPlan {
     uint32_t target_version;
 } UmiWorkbenchLayoutDataMigrationPlan;
 
+/**
+ * Represent the workbench layout migration result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutMigrationResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -60,23 +72,43 @@ typedef struct UmiWorkbenchLayoutMigrationResult {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutMigrationResult;
 
+/**
+ * Initialise workbench layout migration plan from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_migration_plan_init(
     UmiWorkbenchLayoutDataMigrationPlan *plan,
     uint32_t source_version,
     uint32_t target_version);
 
+/**
+ * Add workbench layout migration plan only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_layout_migration_plan_add(
     UmiWorkbenchLayoutDataMigrationPlan *plan,
     const UmiWorkbenchLayoutDataMigrationStep *step);
 
+/**
+ * Provide the workbench layout migration read version operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_migration_read_version(
     const UmiDataServer *server,
     uint32_t *out_version);
 
+/**
+ * Provide the workbench layout migration write version operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_migration_write_version(
     UmiDataServer *server,
     uint32_t version);
 
+/**
+ * Perform workbench layout migration through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_migration_execute(
     UmiDataServer *server,
     UmiWorkbenchLayoutMigrationStoreRepository *records,

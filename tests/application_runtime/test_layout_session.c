@@ -15,4 +15,8 @@
 
 #include "test_fixture.h"
 #include "umicom/application/runtime/layout_session.h"
+/*
+ * Exercise test layout session and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_layout_session(void){ UmiApplicationLayoutSession s; assert(umi_application_layout_session_init(test_trader_experience(),&s)==UMI_STATUS_OK); assert(umi_application_layout_session_current(&s)!=NULL); assert(umi_application_layout_session_set_locked(&s,true)==UMI_STATUS_OK); return 0; }

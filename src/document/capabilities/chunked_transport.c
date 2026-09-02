@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/chunked_transport.h"
 
+/*
+ * Provide the document capability chunked transport operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_chunked_transport(void)
 {

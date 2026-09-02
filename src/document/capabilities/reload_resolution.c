@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/reload_resolution.h"
 
+/*
+ * Provide the document capability reload resolution operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_reload_resolution(void)
 {

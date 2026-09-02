@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Read debug runtime base64 into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_debug_runtime_base64_decode(
     const char *text,
     unsigned char *out_bytes,

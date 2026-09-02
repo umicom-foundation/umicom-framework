@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/problems.h"
 
+/*
+ * Provide the ide surface profile problems operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_problems(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

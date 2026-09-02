@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk dependency data shared with callers of this public contract.
+ */
 typedef struct UmiSdkDependency { const char *package_name; const char *minimum_version; int required; } UmiSdkDependency;
+/**
+ * Check that sdk dependency satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_sdk_dependency_validate(const UmiSdkDependency *dependency);
 #ifdef __cplusplus
 }

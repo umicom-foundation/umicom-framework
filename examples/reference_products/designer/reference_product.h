@@ -19,5 +19,9 @@
 #ifndef UMICOM_REFERENCE_DESIGNER_H
 #define UMICOM_REFERENCE_DESIGNER_H
 #include "umicom/product/product.h"
+/**
+ * Provide the example designer profile operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_example_designer_profile(void);
 #endif

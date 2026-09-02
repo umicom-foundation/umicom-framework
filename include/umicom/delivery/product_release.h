@@ -26,6 +26,9 @@ extern "C" {
 
 #define UMI_PRODUCT_RELEASE_MAX_INSTALLERS 4U
 
+/**
+ * Represent the product release data shared with callers of this public contract.
+ */
 typedef struct UmiProductRelease {
     char release_id[UMI_DELIVERY_ID_CAPACITY];
     UmiReleaseChannel channel;
@@ -36,14 +39,30 @@ typedef struct UmiProductRelease {
     UmiUpdateChannel update_channel;
 } UmiProductRelease;
 
+/**
+ * Initialise product release from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_product_release_init(UmiProductRelease *release,
                                        const char *release_id,
                                        UmiReleaseChannel channel,
                                        const UmiPackageManifest *package,
                                        const UmiUpdateChannel *update_channel);
+/**
+ * Provide the product release add installer operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_product_release_add_installer(UmiProductRelease *release,
                                                 const UmiInstallerPlan *installer);
+/**
+ * Return the number of records represented by product release blocker without changing
+ * their state.
+ */
 size_t umi_product_release_blocker_count(const UmiProductRelease *release);
+/**
+ * Provide the product release ready operation used by this module and its client
+ * applications.
+ */
 int umi_product_release_ready(const UmiProductRelease *release);
 
 #ifdef __cplusplus

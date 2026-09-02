@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include "umicom/knowledge/archive.h"
 
+/*
+ * Exercise create service and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiKnowledgeService *create_service(void)
 {
     UmiKnowledgeServiceConfig config = umi_knowledge_service_config_default();
@@ -23,6 +27,10 @@ static UmiKnowledgeService *create_service(void)
     return service;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const char *path = "umicom-knowledge-test.bin";

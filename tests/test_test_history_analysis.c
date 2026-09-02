@@ -26,6 +26,10 @@
 #include <string.h>
 #include "umicom/test_platform/history_analysis.h"
 
+/*
+ * Exercise result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiTestPlatformResultSnapshot result(const char *id, int outcome,
                                              uint64_t sequence, double duration)
 {
@@ -41,6 +45,10 @@ static UmiTestPlatformResultSnapshot result(const char *id, int outcome,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTestPlatformItemRegistry *items = NULL;

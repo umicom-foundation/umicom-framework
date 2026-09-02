@@ -24,11 +24,19 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_WORKSPACE_EDIT_VALIDATION_API_VERSION 1U
+/**
+ * List the named language intelligence workspace edit validation decision values accepted
+ * by this public contract.
+ */
 typedef enum UmiLanguageIntelligenceWorkspaceEditValidationDecision {
     UMI_LANGUAGE_INTELLIGENCE_WORKSPACE_EDIT_VALIDATION_DENY = 0,
     UMI_LANGUAGE_INTELLIGENCE_WORKSPACE_EDIT_VALIDATION_ALLOW = 1,
     UMI_LANGUAGE_INTELLIGENCE_WORKSPACE_EDIT_VALIDATION_ALLOW_WITH_REFRESH = 2
 } UmiLanguageIntelligenceWorkspaceEditValidationDecision;
+/**
+ * Represent the language intelligence workspace edit validation input data shared with
+ * callers of this public contract.
+ */
 typedef struct UmiLanguageIntelligenceWorkspaceEditValidationInput {
     UmiLanguageIntelligenceCapabilityFlags required_flags;
     UmiLanguageIntelligenceCapabilityFlags available_flags;
@@ -38,8 +46,16 @@ typedef struct UmiLanguageIntelligenceWorkspaceEditValidationInput {
     int hard_block;
     int explicit_override;
 } UmiLanguageIntelligenceWorkspaceEditValidationInput;
+/**
+ * Provide the language intelligence workspace edit validation evaluate operation used by
+ * this module and its client applications.
+ */
 UmiLanguageIntelligenceWorkspaceEditValidationDecision umi_language_intelligence_workspace_edit_validation_evaluate(
     const UmiLanguageIntelligenceWorkspaceEditValidationInput *input);
+/**
+ * Provide the language intelligence workspace edit validation capabilities satisfied
+ * operation used by this module and its client applications.
+ */
 int umi_language_intelligence_workspace_edit_validation_capabilities_satisfied(
     const UmiLanguageIntelligenceWorkspaceEditValidationInput *input);
 #ifdef __cplusplus

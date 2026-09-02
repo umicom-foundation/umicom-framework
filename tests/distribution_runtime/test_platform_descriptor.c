@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrPlatformDescriptor value; umi_dr_platform_descriptor_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"linux") == UMI_STATUS_OK); value.platform=UMI_DR_PLATFORM_LINUX; CHECK(umi_dr_platform_descriptor_valid(&value)); CHECK(umi_dr_platform_descriptor_fingerprint(&value) != 0U);
     return 0;

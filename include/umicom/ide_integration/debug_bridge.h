@@ -31,18 +31,29 @@ typedef UmiStatus (*UmiIdeDebugFrameLocationResolver)(
     uint64_t frame_id,
     UmiIdeLocation *out_location);
 
+/**
+ * Represent the ide debug bridge data shared with callers of this public contract.
+ */
 typedef struct UmiIdeDebugBridge {
     UmiDebugRuntimePlatform *runtime;
     UmiIdeDebugFrameLocationResolver resolve_frame;
     void *resolver_user_data;
 } UmiIdeDebugBridge;
 
+/**
+ * Initialise ide debug bridge from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ide_debug_bridge_init(
     UmiIdeDebugBridge *bridge,
     UmiDebugRuntimePlatform *runtime,
     UmiIdeDebugFrameLocationResolver resolver,
     void *user_data);
 
+/**
+ * Provide the ide debug active frame target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_debug_active_frame_target(
     UmiIdeDebugBridge *bridge,
     UmiIdeNavigationTarget *out_target);

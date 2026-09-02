@@ -15,6 +15,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/plugin/manifest.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     const char *text = "id=org.umicom.example\nname=Example\nversion=1.0.0\nabi=2\nlibrary=example.so\npermission=workspace.read\ncapability=example.run\n";
     UmiPluginManifest m; char reason[128];

@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/sdk/sdk.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiSdkConformance c={0};umi_sdk_conformance_record(&c,1);umi_sdk_conformance_record(&c,1);assert(umi_sdk_conformance_passed(&c));return 0;}

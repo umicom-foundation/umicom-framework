@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime decode disassembly operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_decode_disassembly(
     const char *json,
     UmiDebugRuntimeDisassembly *out_result);

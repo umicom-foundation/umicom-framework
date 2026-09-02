@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct memory semantics data shared with callers of this public contract.
+ */
 typedef struct UmiCtMemorySemantics { uint32_t page_size; uint32_t allocation_granularity; bool virtual_memory; bool guard_pages; bool executable_memory; bool huge_pages; } UmiCtMemorySemantics;
+/**
+ * Check that ct memory semantics satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ct_memory_semantics_validate(const UmiCtMemorySemantics *semantics);
+/**
+ * Provide the ct memory round up operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ct_memory_round_up(const UmiCtMemorySemantics *semantics,uint64_t bytes);
 
 #ifdef __cplusplus

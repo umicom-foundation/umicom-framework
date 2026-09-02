@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the delivery manifest data shared with callers of this public contract.
+ */
 typedef struct UmiDeliveryManifest {
     char application_id[UMI_DELIVERY_ID_CAPACITY];
     char release_id[UMI_DELIVERY_ID_CAPACITY];
@@ -38,15 +41,30 @@ typedef struct UmiDeliveryManifest {
     size_t artifact_count;
 } UmiDeliveryManifest;
 
+/**
+ * Initialise delivery manifest from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_delivery_manifest_init(UmiDeliveryManifest *manifest,
                                      const char *application_id,
                                      const char *release_id,
                                      const char *version,
                                      UmiReleaseChannel channel);
+/**
+ * Provide the delivery manifest set generation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_delivery_manifest_set_generation(UmiDeliveryManifest *manifest,
                                                const char *generation_id);
+/**
+ * Provide the delivery manifest set source revision operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_delivery_manifest_set_source_revision(UmiDeliveryManifest *manifest,
                                                     const char *revision);
+/**
+ * Check that delivery manifest satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_delivery_manifest_validate(const UmiDeliveryManifest *manifest);
 
 #ifdef __cplusplus

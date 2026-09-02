@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the web workbench timing data shared with callers of this public contract.
+ */
 typedef struct UmiWebWorkbenchTiming {
     uint64_t dns_us;
     uint64_t connect_us;
@@ -31,6 +34,9 @@ typedef struct UmiWebWorkbenchTiming {
     uint64_t total_us;
 } UmiWebWorkbenchTiming;
 
+/**
+ * Represent the web workbench response data shared with callers of this public contract.
+ */
 typedef struct UmiWebWorkbenchResponse {
     UmiWebWorkbenchPhase phase;
     UmiStatus status;
@@ -47,19 +53,39 @@ typedef struct UmiWebWorkbenchResponse {
     uint64_t revision;
 } UmiWebWorkbenchResponse;
 
+/**
+ * Initialise web workbench response from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_web_workbench_response_init(UmiWebWorkbenchResponse *response);
+/**
+ * Provide the web workbench response set header operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_web_workbench_response_set_header(
     UmiWebWorkbenchResponse *response,
     const char *name,
     const char *value);
+/**
+ * Provide the web workbench response header operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_response_header(
     const UmiWebWorkbenchResponse *response,
     const char *name);
+/**
+ * Provide the web workbench response set body operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_workbench_response_set_body(
     UmiWebWorkbenchResponse *response,
     const void *body,
     size_t length,
     size_t received_bytes);
+/**
+ * Provide the web workbench response complete operation used by this module and its client
+ * applications.
+ */
 void umi_web_workbench_response_complete(
     UmiWebWorkbenchResponse *response,
     UmiStatus status,

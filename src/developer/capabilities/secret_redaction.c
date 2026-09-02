@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/secret_redaction.h"
 
+/*
+ * Provide the developer capability secret redaction operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_secret_redaction(void)
 {

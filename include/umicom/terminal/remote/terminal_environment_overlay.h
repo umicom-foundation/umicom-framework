@@ -22,10 +22,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote terminal environment overlay data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiTerminalRemoteTerminalEnvironmentOverlay { UmiTerminalRemoteNamedEntry identity; uint64_t metric; uint64_t limit; } UmiTerminalRemoteTerminalEnvironmentOverlay;
+/**
+ * Initialise terminal remote terminal environment overlay from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_terminal_remote_terminal_environment_overlay_init(UmiTerminalRemoteTerminalEnvironmentOverlay *value,const char *id,uint64_t limit);
+/**
+ * Provide the terminal remote terminal environment overlay set metric operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_terminal_remote_terminal_environment_overlay_set_metric(UmiTerminalRemoteTerminalEnvironmentOverlay *value,uint64_t metric);
+/**
+ * Provide the terminal remote terminal environment overlay within limit operation used by
+ * this module and its client applications.
+ */
 bool umi_terminal_remote_terminal_environment_overlay_within_limit(const UmiTerminalRemoteTerminalEnvironmentOverlay *value);
+/**
+ * Provide the terminal remote terminal environment overlay score operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_terminal_remote_terminal_environment_overlay_score(const UmiTerminalRemoteTerminalEnvironmentOverlay *value);
 #ifdef __cplusplus
 }

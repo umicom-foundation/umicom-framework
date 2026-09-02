@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/ai_coding_runtime/validation_runner.h"
 
+/*
+ * Perform fake through the module contract so client applications do not duplicate its
+ * policy.
+ */
 static UmiStatus fake_execute(
     void *user_data,
     const UmiDeveloperOperationSnapshot *operation,
@@ -33,6 +37,10 @@ static UmiStatus fake_execute(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
 

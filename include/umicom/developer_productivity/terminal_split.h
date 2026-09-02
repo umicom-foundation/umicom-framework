@@ -23,11 +23,18 @@ extern "C" {
 
 #define UMI_DEVELOPER_TERMINAL_SPLIT_CAPACITY 32U
 
+/**
+ * List the named developer terminal split orientation values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperTerminalSplitOrientation {
     UMI_DEVELOPER_TERMINAL_SPLIT_HORIZONTAL = 1,
     UMI_DEVELOPER_TERMINAL_SPLIT_VERTICAL = 2
 } UmiDeveloperTerminalSplitOrientation;
 
+/**
+ * Represent the developer terminal split data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperTerminalSplit {
     char split_id[UMI_DEVELOPER_PRODUCTIVITY_ID_CAPACITY];
     char first_session_id[UMI_DEVELOPER_PRODUCTIVITY_ID_CAPACITY];
@@ -36,15 +43,27 @@ typedef struct UmiDeveloperTerminalSplit {
     double ratio;
 } UmiDeveloperTerminalSplit;
 
+/**
+ * Represent the developer terminal split model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperTerminalSplitModel {
     UmiDeveloperTerminalSplit splits[UMI_DEVELOPER_TERMINAL_SPLIT_CAPACITY];
     size_t count;
     uint64_t revision;
 } UmiDeveloperTerminalSplitModel;
 
+/**
+ * Initialise developer terminal split model from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_terminal_split_model_init(
     UmiDeveloperTerminalSplitModel *model);
 
+/**
+ * Add developer terminal split model only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_developer_terminal_split_model_add(
     UmiDeveloperTerminalSplitModel *model,
     const UmiDeveloperTerminalSplit *split);

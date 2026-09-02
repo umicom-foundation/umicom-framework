@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading spoofing evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingSpoofingEvidence { uint32_t submitted_orders; uint32_t cancelled_orders; uint32_t executed_orders; uint32_t near_touch_orders; } UmiTradingSpoofingEvidence;
 /* Flag evidence when cancellation and near-touch concentration exceed configured percentages. */
 bool umi_trading_spoofing_detector_detect(const UmiTradingSpoofingEvidence *evidence,uint32_t cancel_ratio_percent,uint32_t near_touch_percent);

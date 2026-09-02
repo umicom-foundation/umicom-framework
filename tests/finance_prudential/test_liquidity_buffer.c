@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/liquidity_buffer.h"
 
-int main(void) { UmiPrudentialLiquidityBuffer r; if(umi_pru_liquidity_buffer_calculate(&r,100.0,40.0)!=UMI_STATUS_OK)return 1; return r.usable_amount==60.0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialLiquidityBuffer r; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_liquidity_buffer_calculate(&r,100.0,40.0)!=UMI_STATUS_OK)return 1; return r.usable_amount==60.0?0:2; }

@@ -39,6 +39,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named module kind values accepted by this public contract.
+ */
 typedef enum UmiModuleKind {
     UMI_MODULE_CORE = 1,
     UMI_MODULE_SERVICE = 2,
@@ -48,6 +51,9 @@ typedef enum UmiModuleKind {
     UMI_MODULE_AGENT = 6
 } UmiModuleKind;
 
+/**
+ * List the named module state values accepted by this public contract.
+ */
 typedef enum UmiModuleState {
     UMI_MODULE_DISCOVERED = 0,
     UMI_MODULE_CONFIGURED = 1,
@@ -59,6 +65,9 @@ typedef enum UmiModuleState {
     UMI_MODULE_FAILED = 7
 } UmiModuleState;
 
+/**
+ * Represent the module context data shared with callers of this public contract.
+ */
 typedef struct UmiModuleContext {
     void *module_state;
     UmiEventBus *events;
@@ -80,6 +89,9 @@ typedef struct UmiModuleContext {
 typedef UmiStatus (*UmiModulePhaseFn)(UmiModuleContext *context);
 typedef void (*UmiModuleDestroyFn)(UmiModuleContext *context);
 
+/**
+ * Represent the module lifecycle data shared with callers of this public contract.
+ */
 typedef struct UmiModuleLifecycle {
     UmiModulePhaseFn configure;
     UmiModulePhaseFn initialise;
@@ -89,6 +101,9 @@ typedef struct UmiModuleLifecycle {
     UmiModuleDestroyFn destroy;
 } UmiModuleLifecycle;
 
+/**
+ * Represent the module descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiModuleDescriptor {
     uint32_t structure_size;
     uint32_t abi_version;

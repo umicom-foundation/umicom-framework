@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data pool health data shared with callers of this public contract.
+ */
 typedef struct UmiDataPoolHealth { size_t total; size_t healthy; size_t leased; size_t available; double utilisation_percent; UmiDataEnterpriseState state; } UmiDataPoolHealth;
 /* Compute pool health from slot evidence. */ UmiStatus umi_data_pool_health_compute(const UmiDataConnectionPool *pool,UmiDataPoolHealth *out_health);
 

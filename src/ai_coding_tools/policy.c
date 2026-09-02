@@ -16,8 +16,16 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_coding_tools/policy.h"
 
+/*
+ * Initialise ai coding tool policy from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_coding_tool_policy_init(UmiAiCodingToolPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return;
 
     policy->allowed_capabilities =
@@ -50,6 +58,10 @@ void umi_ai_coding_tool_policy_init(UmiAiCodingToolPolicy *policy)
     policy->allow_checkpoint_restore = 0;
 }
 
+/*
+ * Provide the ai coding tool policy check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_policy_check(
     const UmiAiCodingToolPolicy *policy,
     const UmiAiCodingToolDescriptor *descriptor,
@@ -58,6 +70,10 @@ UmiStatus umi_ai_coding_tool_policy_check(
 {
     int requires_approval;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL || descriptor == NULL ||
         out_approval_required == NULL ||
         descriptor->tool_id[0] == '\0') {
@@ -66,31 +82,37 @@ UmiStatus umi_ai_coding_tool_policy_check(
 
     *out_approval_required = 0;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!descriptor->enabled) return UMI_STATUS_UNAVAILABLE;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((descriptor->required_capabilities &
          ~policy->allowed_capabilities) != 0U) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((descriptor->required_capabilities &
          UMI_AI_CODING_TOOL_CAP_NETWORK) != 0U &&
         !policy->allow_network) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((descriptor->required_capabilities &
          UMI_AI_CODING_TOOL_CAP_PROCESS_EXECUTION) != 0U &&
         !policy->allow_process_execution) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((descriptor->required_capabilities &
          UMI_AI_CODING_TOOL_CAP_SOURCE_CONTROL_WRITE) != 0U &&
         !policy->allow_source_control_mutation) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((descriptor->required_capabilities &
          UMI_AI_CODING_TOOL_CAP_DEBUG_CONTROL) != 0U &&
         !policy->allow_debug_control) {
@@ -102,6 +124,7 @@ UmiStatus umi_ai_coding_tool_policy_check(
         (descriptor->required_capabilities &
          ~policy->auto_approved_capabilities) != 0U;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (requires_approval && !approved) {
         *out_approval_required = 1;
         return UMI_STATUS_PERMISSION_DENIED;

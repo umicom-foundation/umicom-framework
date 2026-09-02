@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel semantic search item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorIntelSemanticSearchItem { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelSemanticSearchItem;
+/**
+ * Initialise editor intel semantic search item from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_semantic_search_item_init(UmiEditorIntelSemanticSearchItem *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel semantic search item set score operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_semantic_search_item_set_score(UmiEditorIntelSemanticSearchItem *model,uint32_t score);
+/**
+ * Find editor intel semantic search item set while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_intel_semantic_search_item_set_selected(UmiEditorIntelSemanticSearchItem *model,bool selected);
+/**
+ * Check that editor intel semantic search item satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_semantic_search_item_valid(const UmiEditorIntelSemanticSearchItem *model);
 
 #ifdef __cplusplus

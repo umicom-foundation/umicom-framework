@@ -20,9 +20,18 @@
 #include "umicom/ui/design/list_spec.h"
 
 #include <string.h>
+/* Check that design list spec satisfies its contract before another service relies on it. */
 int umi_design_list_spec_valid(const UmiDesignListSpec *spec) { return spec!=NULL && (spec->density>=UMI_DESIGN_DENSITY_COMPACT && spec->density<=UMI_DESIGN_DENSITY_TOUCH && (spec->estimated_items==0U || spec->virtualised || spec->estimated_items<=1000U)) ? 1 : 0; }
+/*
+ * Initialise design list spec from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_design_list_spec_init(UmiDesignListSpec *spec, size_t estimated_items, UmiDesignDensity density, int virtualised, int multi_select)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (spec==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(spec,0,sizeof *spec);
     spec->estimated_items=estimated_items;spec->density=density;spec->virtualised=virtualised?1:0;spec->multi_select=multi_select?1:0;

@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test replacement replica and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_replacement_replica(void)
 {
     UmiDataServer *primary_server = test_create_data_server();
@@ -94,6 +98,10 @@ static int test_replacement_replica(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_replacement_replica() == 0,

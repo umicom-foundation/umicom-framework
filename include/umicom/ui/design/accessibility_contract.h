@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design accessibility contract data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignAccessibilityContract { char accessible_name[UMI_DESIGN_TEXT_CAPACITY]; int keyboard_operable; int focus_visible; int screen_reader_named; int32_t min_target_width; int32_t min_target_height; } UmiDesignAccessibilityContract;
 /* Initialise a reusable accessibility contract for an interactive semantic component. */
 UmiStatus umi_design_accessibility_contract_init(UmiDesignAccessibilityContract *contract, const char *accessible_name, int32_t min_target_width, int32_t min_target_height);

@@ -14,17 +14,29 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai_developer_experience/tool_loop_bridge.h"
 
+/*
+ * Provide the ai developer tool loop configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_tool_loop_configure(
     UmiAiDeveloperExperiencePlatform *platform,
     UmiAiCodingToolLoopConfig *config)
 {
     UmiAiDeveloperApprovalService *approvals;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || config == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     approvals = umi_ai_developer_experience_platform_approvals(platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (approvals == NULL) return UMI_STATUS_INVALID_STATE;
 
     config->approval = umi_ai_developer_tool_approval_callback;

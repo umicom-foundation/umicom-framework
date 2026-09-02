@@ -20,14 +20,26 @@
 #include "umicom/desktop/monitor_topology.h"
 #include "umicom/ui/workspace_customisation.h"
 
+/**
+ * Provide the desktop seed workspace customisation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_seed_workspace_customisation(
     UmiUiWorkspaceCustomisation *customisation,
     const UmiDesktopLayoutCatalogue *catalogue,
     const UmiDesktopMonitorTopology *topology,
     const char *preset_namespace);
+/**
+ * Provide the desktop seed workspace groups operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_seed_workspace_groups(
     UmiUiWindowGroupStore *groups,
     const UmiDesktopContextLinks *context_links);
+/**
+ * Provide the desktop seed window catalogue operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_seed_window_catalogue(
     UmiUiWindowCatalogue *catalogue);
 

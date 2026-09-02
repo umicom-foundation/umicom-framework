@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_aliases/view_debug.h"
 
+/*
+ * Provide the studio command alias view debug operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeCommandAliasDefinition *
 umi_studio_command_alias_view_debug(void)
 {

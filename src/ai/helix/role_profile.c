@@ -46,11 +46,17 @@ static const UmiAiHelixRoleProfile profiles[] = {
      ACTION_READ | ACTION_BUILD | ACTION_TEST}
 };
 
+/*
+ * Find ai helix role profile while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiHelixRoleProfile *umi_ai_helix_role_profile_find(
     UmiHelixAgentRole role)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(profiles) / sizeof(profiles[0]); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (profiles[index].role == role) {
             return &profiles[index];
         }
@@ -58,6 +64,10 @@ const UmiAiHelixRoleProfile *umi_ai_helix_role_profile_find(
     return NULL;
 }
 
+/*
+ * Provide the ai helix role allows action operation used by this module and its client
+ * applications.
+ */
 int umi_ai_helix_role_allows_action(UmiHelixAgentRole role,
                                     UmiHelixActionKind kind)
 {

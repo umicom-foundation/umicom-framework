@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant quant pricing result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiQuantQuantPricingResult {
     double present_value;
     double clean_price;

@@ -24,6 +24,10 @@ extern "C" {
 
 #define UMI_DIAGNOSTIC_PROBLEMS_VIEW_ROW_MAX 32U
 
+/**
+ * Initialise diagnostic problems view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_diagnostic_problems_view_create(const char *view_id,
                                               UmiDiagnosticPipeline *pipeline,
                                               UmiUiViewModel **out_view);

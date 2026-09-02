@@ -20,11 +20,16 @@
 
 #include "internal.h"
 
+/* Check that template satisfies its contract before another service relies on it. */
 static UmiStatus template_validate(
     const UmiWorkbenchLayoutTemplate *layout_template)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout_template == NULL ||
         layout_template->structure_size < sizeof(*layout_template) ||
         !umi_workbench_layout_text_present(
@@ -42,6 +47,7 @@ static UmiStatus template_validate(
     return status;
 }
 
+/* Provide the add node operation used by this module and its client applications. */
 static UmiStatus add_node(
     UmiWorkbenchLayoutDocument *document,
     const char *node_id,
@@ -69,12 +75,21 @@ static UmiStatus add_node(
         (uint32_t)UMI_WORKBENCH_LAYOUT_NODE_MOVABLE |
         (uint32_t)UMI_WORKBENCH_LAYOUT_NODE_RESIZABLE;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (title != NULL && title[0] != '\0') {
         status = umi_workbench_layout_node_set_title(&node, title);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (component_id != NULL && component_id[0] != '\0') {
         status = umi_workbench_layout_node_set_component(
             &node,
@@ -82,6 +97,7 @@ static UmiStatus add_node(
             owner_application_id != NULL
                 ? owner_application_id
                 : "org.umicom.desktop");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -89,25 +105,36 @@ static UmiStatus add_node(
 
     status = umi_workbench_layout_document_add_node(
         document, &node, &node_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (parent_id != NULL && parent_id[0] != '\0') {
         status = umi_workbench_layout_document_attach_child(
             document,
             parent_id,
             node_id,
             UMI_WORKBENCH_LAYOUT_INDEX_NONE);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_index != NULL) {
         *out_index = node_index;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the finish document operation used by this module and its client applications. */
 static UmiStatus finish_document(
     UmiWorkbenchLayoutDocument *document,
     const char *root_id,
@@ -116,6 +143,7 @@ static UmiStatus finish_document(
 {
     UmiStatus status = umi_workbench_layout_document_set_root(
         document, root_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_metadata(
             document,
@@ -123,18 +151,21 @@ static UmiStatus finish_document(
             category,
             description);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_flag(
             document,
             UMI_WORKBENCH_LAYOUT_DOCUMENT_BUILT_IN,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_flag(
             document,
             UMI_WORKBENCH_LAYOUT_DOCUMENT_LOCKED,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_flag(
             document,
@@ -144,6 +175,10 @@ static UmiStatus finish_document(
     return status;
 }
 
+/*
+ * Provide the make blank template operation used by this module and its client
+ * applications.
+ */
 static UmiStatus make_blank_template(
     UmiWorkbenchLayoutTemplate *layout_template)
 {
@@ -193,6 +228,7 @@ static UmiStatus make_blank_template(
         0.5,
         UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
         NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = finish_document(
             &layout_template->document,
@@ -206,6 +242,10 @@ static UmiStatus make_blank_template(
     return status;
 }
 
+/*
+ * Provide the make mosaic template operation used by this module and its client
+ * applications.
+ */
 static UmiStatus make_mosaic_template(
     UmiWorkbenchLayoutTemplate *layout_template)
 {
@@ -256,6 +296,7 @@ static UmiStatus make_mosaic_template(
         0.08,
         UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
         NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -270,6 +311,7 @@ static UmiStatus make_mosaic_template(
             UMI_WORKBENCH_LAYOUT_DOCK_TOP,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -284,6 +326,7 @@ static UmiStatus make_mosaic_template(
             UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -298,6 +341,7 @@ static UmiStatus make_mosaic_template(
             UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -312,6 +356,7 @@ static UmiStatus make_mosaic_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -326,6 +371,7 @@ static UmiStatus make_mosaic_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -340,6 +386,7 @@ static UmiStatus make_mosaic_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = finish_document(
             document,
@@ -353,6 +400,10 @@ static UmiStatus make_mosaic_template(
     return status;
 }
 
+/*
+ * Provide the make development template operation used by this module and its client
+ * applications.
+ */
 static UmiStatus make_development_template(
     UmiWorkbenchLayoutTemplate *layout_template)
 {
@@ -405,6 +456,7 @@ static UmiStatus make_development_template(
         0.20,
         UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
         NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -419,6 +471,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_LEFT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -433,6 +486,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -447,6 +501,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_DOCUMENT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -461,6 +516,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_DOCUMENT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -475,6 +531,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -489,6 +546,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -503,6 +561,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -517,6 +576,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_RIGHT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -531,6 +591,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_RIGHT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -545,6 +606,7 @@ static UmiStatus make_development_template(
             UMI_WORKBENCH_LAYOUT_DOCK_RIGHT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = finish_document(
             document,
@@ -558,6 +620,10 @@ static UmiStatus make_development_template(
     return status;
 }
 
+/*
+ * Provide the make operations template operation used by this module and its client
+ * applications.
+ */
 static UmiStatus make_operations_template(
     UmiWorkbenchLayoutTemplate *layout_template)
 {
@@ -610,6 +676,7 @@ static UmiStatus make_operations_template(
         0.62,
         UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
         NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -624,6 +691,7 @@ static UmiStatus make_operations_template(
             UMI_WORKBENCH_LAYOUT_DOCK_CANVAS,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -638,6 +706,7 @@ static UmiStatus make_operations_template(
             UMI_WORKBENCH_LAYOUT_DOCK_LEFT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -652,6 +721,7 @@ static UmiStatus make_operations_template(
             UMI_WORKBENCH_LAYOUT_DOCK_RIGHT,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -666,6 +736,7 @@ static UmiStatus make_operations_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -680,6 +751,7 @@ static UmiStatus make_operations_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_node(
             document,
@@ -694,6 +766,7 @@ static UmiStatus make_operations_template(
             UMI_WORKBENCH_LAYOUT_DOCK_BOTTOM,
             NULL);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = finish_document(
             document,
@@ -707,9 +780,17 @@ static UmiStatus make_operations_template(
     return status;
 }
 
+/*
+ * Initialise workbench layout template registry from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_layout_template_registry_init(
     UmiWorkbenchLayoutTemplateRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) {
         return;
     }
@@ -718,22 +799,33 @@ void umi_workbench_layout_template_registry_init(
     registry->revision = 1U;
 }
 
+/*
+ * Add workbench layout template registry only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_layout_template_registry_add(
     UmiWorkbenchLayoutTemplateRegistry *registry,
     const UmiWorkbenchLayoutTemplate *layout_template)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || layout_template == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = template_validate(layout_template);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_WORKBENCH_LAYOUT_MAX_TEMPLATES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_template_registry_find(
             registry, layout_template->template_id) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
@@ -747,25 +839,37 @@ UmiStatus umi_workbench_layout_template_registry_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove workbench layout template registry while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_workbench_layout_template_registry_remove(
     UmiWorkbenchLayoutTemplateRegistry *registry,
     const char *template_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(template_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->templates[index].template_id,
                 template_id) != 0) {
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->templates[index].built_in) {
             return UMI_STATUS_PERMISSION_DENIED;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (; index + 1U < registry->count; ++index) {
             registry->templates[index] =
                 registry->templates[index + 1U];
@@ -781,6 +885,10 @@ UmiStatus umi_workbench_layout_template_registry_remove(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Find workbench layout template registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchLayoutTemplate *
 umi_workbench_layout_template_registry_find(
     const UmiWorkbenchLayoutTemplateRegistry *registry,
@@ -788,11 +896,17 @@ umi_workbench_layout_template_registry_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(template_id)) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->templates[index].template_id,
                 template_id) == 0) {
@@ -802,17 +916,29 @@ umi_workbench_layout_template_registry_find(
     return NULL;
 }
 
+/*
+ * Find workbench layout template registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchLayoutTemplate *
 umi_workbench_layout_template_registry_at(
     const UmiWorkbenchLayoutTemplateRegistry *registry,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || index >= registry->count) {
         return NULL;
     }
     return &registry->templates[index];
 }
 
+/*
+ * Provide the workbench layout template registry clone operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_template_registry_clone(
     const UmiWorkbenchLayoutTemplateRegistry *registry,
     const char *template_id,
@@ -823,6 +949,10 @@ UmiStatus umi_workbench_layout_template_registry_clone(
     const UmiWorkbenchLayoutTemplate *layout_template;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || identity == NULL ||
         out_document == NULL ||
         !umi_workbench_layout_text_present(template_id) ||
@@ -834,16 +964,22 @@ UmiStatus umi_workbench_layout_template_registry_clone(
     layout_template =
         umi_workbench_layout_template_registry_find(
             registry, template_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout_template == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     status = umi_workbench_layout_document_copy(
         out_document, &layout_template->document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_document_set_identity(
             out_document, identity);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             out_document->name,
@@ -851,6 +987,7 @@ UmiStatus umi_workbench_layout_template_registry_clone(
             name,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         out_document->flags &=
             ~((uint32_t)UMI_WORKBENCH_LAYOUT_DOCUMENT_BUILT_IN |
@@ -870,6 +1007,10 @@ UmiStatus umi_workbench_layout_template_registry_clone(
     return status;
 }
 
+/*
+ * Provide the workbench layout template registry count category operation used by this
+ * module and its client applications.
+ */
 size_t umi_workbench_layout_template_registry_count_category(
     const UmiWorkbenchLayoutTemplateRegistry *registry,
     const char *category)
@@ -877,11 +1018,17 @@ size_t umi_workbench_layout_template_registry_count_category(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(category)) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->templates[index].category,
                 category) == 0) {
@@ -891,6 +1038,10 @@ size_t umi_workbench_layout_template_registry_count_category(
     return count;
 }
 
+/*
+ * Provide the workbench layout template registry count owner operation used by this module
+ * and its client applications.
+ */
 size_t umi_workbench_layout_template_registry_count_owner(
     const UmiWorkbenchLayoutTemplateRegistry *registry,
     const char *owner_application_id)
@@ -898,11 +1049,17 @@ size_t umi_workbench_layout_template_registry_count_owner(
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL ||
         !umi_workbench_layout_text_present(owner_application_id)) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 registry->templates[index].owner_application_id,
                 owner_application_id) == 0) {
@@ -912,44 +1069,59 @@ size_t umi_workbench_layout_template_registry_count_owner(
     return count;
 }
 
+/*
+ * Provide the workbench layout template registry seed framework operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_layout_template_registry_seed_framework(
     UmiWorkbenchLayoutTemplateRegistry *registry)
 {
     UmiWorkbenchLayoutTemplate layout_template;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = make_blank_template(&layout_template);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         umi_workbench_layout_template_registry_find(
             registry, layout_template.template_id) == NULL) {
         status = umi_workbench_layout_template_registry_add(
             registry, &layout_template);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = make_mosaic_template(&layout_template);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         umi_workbench_layout_template_registry_find(
             registry, layout_template.template_id) == NULL) {
         status = umi_workbench_layout_template_registry_add(
             registry, &layout_template);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = make_development_template(&layout_template);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         umi_workbench_layout_template_registry_find(
             registry, layout_template.template_id) == NULL) {
         status = umi_workbench_layout_template_registry_add(
             registry, &layout_template);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = make_operations_template(&layout_template);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         umi_workbench_layout_template_registry_find(
             registry, layout_template.template_id) == NULL) {

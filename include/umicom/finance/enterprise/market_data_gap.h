@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise market data gap data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataGap { uint64_t expected_sequence; uint64_t received_sequence; uint64_t missing_count; } UmiEnterpriseMarketDataGap;
 /* Derive missing sequence evidence when a feed jumps forward. */
 UmiStatus umi_enterprise_market_data_gap_detect(UmiEnterpriseMarketDataGap *gap, uint64_t expected_sequence, uint64_t received_sequence);

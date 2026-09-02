@@ -18,4 +18,5 @@
  */
 #include "umicom/sdk/dependency.h"
 #include <stddef.h>
-UmiStatus umi_sdk_dependency_validate(const UmiSdkDependency *d){if(d==NULL||d->package_name==NULL||d->package_name[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that sdk dependency satisfies its contract before another service relies on it. */
+UmiStatus umi_sdk_dependency_validate(const UmiSdkDependency *d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||d->package_name==NULL||d->package_name[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

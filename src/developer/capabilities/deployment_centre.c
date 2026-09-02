@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/deployment_centre.h"
 
+/*
+ * Provide the developer capability deployment centre operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_deployment_centre(void)
 {

@@ -17,6 +17,10 @@
 
 #include "umicom/application/experience_portfolio.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_application_experience_catalogue_count() > 0U);

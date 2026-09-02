@@ -30,8 +30,18 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct sysroot requirement data shared with callers of this public contract.
+ */
 typedef struct UmiCtSysrootRequirement { char sysroot_id[UMI_CT_ID_CAPACITY]; UmiCtTarget target; bool require_headers; bool require_libraries; bool require_crt; } UmiCtSysrootRequirement;
+/**
+ * Represent the ct sysroot evidence data shared with callers of this public contract.
+ */
 typedef struct UmiCtSysrootEvidence { char sysroot_id[UMI_CT_ID_CAPACITY]; UmiCtTarget target; bool headers; bool libraries; bool crt; } UmiCtSysrootEvidence;
+/**
+ * Provide the ct sysroot requirement satisfied operation used by this module and its
+ * client applications.
+ */
 bool umi_ct_sysroot_requirement_satisfied(const UmiCtSysrootRequirement *requirement,const UmiCtSysrootEvidence *evidence);
 
 #ifdef __cplusplus

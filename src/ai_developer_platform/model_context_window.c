@@ -17,7 +17,15 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/developer_platform/model_context_window.h"
+/*
+ * Initialise ai dev model context window from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_model_context_window_init(UmiAiDevModelContextWindow *budget, uint64_t limit) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (budget == NULL) {
         return;
     }
@@ -26,18 +34,35 @@ void umi_ai_dev_model_context_window_init(UmiAiDevModelContextWindow *budget, ui
     budget->consumed = 0U;
     budget->revision = 1U;
 }
+/*
+ * Provide the ai dev model context window remaining operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_ai_dev_model_context_window_remaining(const UmiAiDevModelContextWindow *budget) {
     uint64_t used;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (budget == NULL) {
         return 0U;
     }
     used = budget->reserved + budget->consumed;
     return used >= budget->limit ? 0U : budget->limit - used;
 }
+/*
+ * Provide the ai dev model context window reserve operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_context_window_reserve(UmiAiDevModelContextWindow *budget, uint64_t amount) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (budget == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (amount > umi_ai_dev_model_context_window_remaining(budget)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -45,23 +70,41 @@ UmiStatus umi_ai_dev_model_context_window_reserve(UmiAiDevModelContextWindow *bu
     ++budget->revision;
     return UMI_STATUS_OK;
 }
+/*
+ * Provide the ai dev model context window consume operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_model_context_window_consume(UmiAiDevModelContextWindow *budget, uint64_t amount) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (budget == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (amount > budget->reserved + umi_ai_dev_model_context_window_remaining(budget)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (amount <= budget->reserved) {
         budget->reserved -= amount;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         budget->reserved = 0U;
     }
     budget->consumed += amount;
     ++budget->revision;
     return UMI_STATUS_OK;
 }
+/*
+ * Provide the ai dev model context window utilisation operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_ai_dev_model_context_window_utilisation(const UmiAiDevModelContextWindow *budget) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (budget == NULL) {
         return 0U;
     }

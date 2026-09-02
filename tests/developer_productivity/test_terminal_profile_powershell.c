@@ -15,6 +15,10 @@
 #include <assert.h>
 #include "umicom/developer_productivity/terminal_profiles/powershell.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_developer_terminal_profile_validate(

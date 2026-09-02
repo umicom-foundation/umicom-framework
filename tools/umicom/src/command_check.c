@@ -20,31 +20,43 @@
 
 #include "umicom/platform/filesystem.h"
 
+/* Provide the cli has option operation used by this module and its client applications. */
 static int umi_cli_has_option(int argc, char **argv, const char *option)
 {
     int index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], option) == 0) return 1;
     }
     return 0;
 }
 
+/*
+ * Provide the cli check option value operation used by this module and its client
+ * applications.
+ */
 static const char *umi_cli_check_option_value(
     int argc,
     char **argv,
     const char *option)
 {
     int index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index + 1 < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], option) == 0) return argv[index + 1];
     }
     return NULL;
 }
 
+/* Check that cli check options satisfies its contract before another service relies on it. */
 static int umi_cli_check_options_valid(int argc, char **argv)
 {
     int index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], "--gtk") == 0 ||
             strcmp(argv[index], "--github") == 0 ||
             strcmp(argv[index], "--all") == 0 ||
@@ -52,7 +64,9 @@ static int umi_cli_check_options_valid(int argc, char **argv)
             strcmp(argv[index], "-h") == 0) {
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], "--project") == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
                 strncmp(argv[index + 1], "--", 2U) == 0) {
                 (void)fprintf(stderr, "--project requires a path.\n");
@@ -67,18 +81,31 @@ static int umi_cli_check_options_valid(int argc, char **argv)
     return 1;
 }
 
+/*
+ * Provide the cli check require tool operation used by this module and its client
+ * applications.
+ */
 static void umi_cli_check_require_tool(
     UmiToolchainProfile *profile,
     UmiToolKind kind,
     int *missing_count)
 {
     UmiToolInfo *tool = umi_toolchain_profile_tool_mutable(profile, kind);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool == NULL) return;
     tool->required = 1;
+    /* Apply this operation only while the related capability or state is available. */
     if (tool->state != UMI_TOOL_VALIDATED) *missing_count += 1;
 }
 
 #ifdef _WIN32
+/*
+ * Provide the cli check msys bash operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_check_msys_bash(
     const UmiToolchainProfile *profile,
     char *out_path,
@@ -87,6 +114,10 @@ static int umi_cli_check_msys_bash(
     char root[UMI_PATH_CAPACITY];
     char *separator;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || out_path == NULL || capacity == 0U ||
         profile->root[0] == '\0' ||
         strlen(profile->root) >= sizeof(root)) {
@@ -94,9 +125,18 @@ static int umi_cli_check_msys_bash(
     }
     (void)snprintf(root, sizeof(root), "%s", profile->root);
     separator = strrchr(root, '\\');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (separator == NULL) separator = strrchr(root, '/');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (separator == NULL) return 0;
     *separator = '\0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (umi_fs_join(out_path, capacity, root, "usr/bin/bash.exe") !=
         UMI_STATUS_OK) {
         return 0;
@@ -105,6 +145,7 @@ static int umi_cli_check_msys_bash(
 }
 #endif
 
+/* Provide the cli command check operation used by this module and its client applications. */
 int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
 {
     static const UmiDependencyRequirement base_requirements[] = {
@@ -138,7 +179,9 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
     int required_path_missing = 0;
     int supplemental_tools_missing = 0;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_cli_check_options_valid(argc, argv)) return 2;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_cli_has_option(argc, argv, "--help") ||
         umi_cli_has_option(argc, argv, "-h")) {
         (void)puts(
@@ -164,6 +207,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
         &context->discovery.profile,
         UMI_TOOL_PKG_CONFIG,
         &supplemental_tools_missing);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (check_all) {
         umi_cli_check_require_tool(
             &context->discovery.profile,
@@ -173,6 +217,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
             &context->discovery.profile,
             UMI_TOOL_GDB,
             &supplemental_tools_missing);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (context->discovery.profile.selected_cpp_compiler < UMI_TOOL_COUNT) {
             umi_cli_check_require_tool(
                 &context->discovery.profile,
@@ -194,8 +239,10 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
     (void)puts("Tools:");
     (void)printf("%-20s %-10s %-38s %s\n",
                  "Tool", "State", "Version", "Path");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < context->discovery.profile.tool_count; ++index) {
         const UmiToolInfo *tool = &context->discovery.profile.tools[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (tool->required || tool->state != UMI_TOOL_MISSING) {
             (void)printf("%-20s %-10s %-38s %s\n",
                          umi_tool_kind_name(tool->kind),
@@ -206,6 +253,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
     }
 
     (void)puts("\nOptional analysis tools:");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < sizeof(analysis_tools) / sizeof(analysis_tools[0]);
          ++index) {
@@ -229,9 +277,14 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
         (void)printf("%-10s %s\n",
                      bash_found ? "PASS" : "MISSING",
                      bash_found ? bash_path : "MSYS2 usr/bin/bash.exe");
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!bash_found) required_path_missing = 1;
     }
 #endif
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (project_root != NULL) {
         char preset_path[UMI_PATH_CAPACITY];
         int preset_found =
@@ -242,6 +295,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
                      preset_found ? "PASS" : "MISSING",
                      preset_found ? preset_path :
                          "Project CMakePresets.json");
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!preset_found) required_path_missing = 1;
     }
     (void)printf("\nCompile probe: %s\n",
@@ -251,6 +305,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
     (void)printf("Runtime probe: %s\n",
                  context->discovery.runtime_probe_passed ? "PASS" : "FAIL");
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || required_path_missing ||
         supplemental_tools_missing > 0) {
         (void)fprintf(stderr,
@@ -273,6 +328,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
         &dependencies
     );
     (void)puts("\nPackages:");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < dependencies.count; ++index) {
         const UmiDependencyStatus *item = &dependencies.items[index];
         const UmiDependencyRequirement *requirement = require_gtk
@@ -289,6 +345,7 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
                          ? requirement->minimum_version
                          : "any validated version");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr,
                       "\nMissing required packages: %zu\n",
@@ -299,14 +356,20 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
     return 0;
 }
 
+/*
+ * Provide the cli command environment operation used by this module and its client
+ * applications.
+ */
 int umi_cli_command_environment(UmiCliContext *context, int argc, char **argv)
 {
     size_t index;
     (void)argc;
     (void)argv;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_cli_context_prepare(context, NULL, 0, 0) != UMI_STATUS_OK) {
         return 1;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < context->environment.count; ++index) {
         (void)printf("%s=%s\n",
                      context->environment.entries[index].name,

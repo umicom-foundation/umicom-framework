@@ -30,10 +30,29 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher mastery model data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherMasteryModel { uint32_t mastery; uint32_t confidence; uint32_t evidence_count; uint64_t revision; } UmiTeacherMasteryModel;
+/**
+ * Initialise teacher mastery model from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_teacher_mastery_model_init(UmiTeacherMasteryModel *model);
+/**
+ * Provide the teacher mastery model observe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_mastery_model_observe(UmiTeacherMasteryModel *model, uint32_t score, uint32_t evidence_weight);
+/**
+ * Provide the teacher mastery model value operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_mastery_model_value(const UmiTeacherMasteryModel *model);
+/**
+ * Provide the teacher mastery model meets operation used by this module and its client
+ * applications.
+ */
 int umi_teacher_mastery_model_meets(const UmiTeacherMasteryModel *model, uint32_t threshold, uint32_t confidence_threshold);
 
 #ifdef __cplusplus

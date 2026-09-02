@@ -18,4 +18,8 @@
  */
 #include "umicom/product/capability.h"
 #include <stddef.h>
-UmiStatus umi_product_capability_validate(const UmiProductCapability *c){if(c==NULL||c->capability_id==NULL||c->capability_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/*
+ * Check that product capability satisfies its contract before another service relies on
+ * it.
+ */
+UmiStatus umi_product_capability_validate(const UmiProductCapability *c){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||c->capability_id==NULL||c->capability_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

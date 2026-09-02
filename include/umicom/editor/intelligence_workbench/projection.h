@@ -49,6 +49,10 @@ enum {
     UMI_EDITOR_INTEL_PROJECTION_CYCLE = 1U << 12
 };
 
+/**
+ * Provide the editor intel projection entry from source operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_intel_projection_entry_from_source(
     UmiEditorIntelEntry *entry,
     const char *id,
@@ -59,6 +63,10 @@ UmiStatus umi_editor_intel_projection_entry_from_source(
     UmiEditorIntelProjectionFlags flags,
     uint64_t revision);
 
+/**
+ * Provide the editor intel projection entry without source operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_projection_entry_without_source(
     UmiEditorIntelEntry *entry,
     const char *id,
@@ -68,7 +76,15 @@ UmiStatus umi_editor_intel_projection_entry_without_source(
     UmiEditorIntelProjectionFlags flags,
     uint64_t revision);
 
+/**
+ * Provide the editor intel projection hash text operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_intel_projection_hash_text(const char *text);
+/**
+ * Provide the editor intel projection score from rank operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_editor_intel_projection_score_from_rank(int32_t rank);
 
 #ifdef __cplusplus

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime decode scopes operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_decode_scopes(
     const char *json,
     UmiDebugRuntimeScopeList *out_result);

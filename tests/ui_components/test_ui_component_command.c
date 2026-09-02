@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/command.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiUiComponentCommandBinding b;return umi_ui_component_command_bind(&b,"save","file.save")==UMI_STATUS_OK?0:1;}

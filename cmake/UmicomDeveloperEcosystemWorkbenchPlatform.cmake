@@ -18,6 +18,7 @@ include_guard(GLOBAL)
 
 set(UMICOM_DEVELOPER_ECOSYSTEM_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_developer OR NOT TARGET umicom_plugin OR
    NOT TARGET umicom_sdk_runtime OR NOT TARGET umicom_distribution OR
    NOT TARGET umicom_sdk OR NOT TARGET umicom_designer)
@@ -49,22 +50,29 @@ target_link_libraries(umicom_developer PUBLIC
     Umicom::designer
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add developer ecosystem test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_developer_ecosystem_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_DEVELOPER_ECOSYSTEM_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::Framework)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()
         add_test(NAME "${test_name}" COMMAND "${target}")
         set_tests_properties("${test_name}" PROPERTIES
             LABELS "framework;developer-ecosystem;packages;sdk;extensions")
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target("${target}")
         endif()

@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test key capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_key_capacity(void)
 {
     char key[16];
@@ -27,6 +31,10 @@ static int test_key_capacity(void)
     return 0;
 }
 
+/*
+ * Exercise test value capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_value_capacity(void)
 {
     UmiWorkbenchLayoutDataFieldSet fields;
@@ -44,12 +52,17 @@ static int test_value_capacity(void)
     return 0;
 }
 
+/*
+ * Exercise test field capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_field_capacity(void)
 {
     UmiWorkbenchLayoutDataFieldSet fields;
     size_t index;
     char key[32];
     umi_workbench_layout_data_field_set_init(&fields);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < sizeof(fields.fields) / sizeof(fields.fields[0]);
          ++index) {
@@ -63,6 +76,10 @@ static int test_field_capacity(void)
     return 0;
 }
 
+/*
+ * Exercise test chunk capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_chunk_capacity(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -87,6 +104,10 @@ static int test_chunk_capacity(void)
     return 0;
 }
 
+/*
+ * Exercise test issue capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_issue_capacity(void)
 {
     UmiWorkbenchLayoutReconciliationReport report;
@@ -94,6 +115,7 @@ static int test_issue_capacity(void)
     char key[64];
     (void)memset(&report, 0, sizeof(report));
     report.structure_size = sizeof(report);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES;
          ++index) {
@@ -109,6 +131,10 @@ static int test_issue_capacity(void)
     return 0;
 }
 
+/*
+ * Exercise test sync plan capacity and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_sync_plan_capacity(void)
 {
     UmiWorkbenchLayoutSyncPlan plan;
@@ -121,6 +147,7 @@ static int test_sync_plan_capacity(void)
                    sizeof(plan.local_replica_id), "local");
     test_copy_text(plan.remote_replica_id,
                    sizeof(plan.remote_replica_id), "remote");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_LAYOUT_DATA_MAX_SYNC_ITEMS;
          ++index) {
@@ -142,6 +169,10 @@ static int test_sync_plan_capacity(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_key_capacity() == 0, "key capacity");

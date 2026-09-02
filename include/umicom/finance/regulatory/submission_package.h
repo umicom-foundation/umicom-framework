@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the submission package data shared with callers of this public contract.
+ */
 typedef struct UmiSubmissionPackage {
     char package_id[UMI_REG_ID_CAPACITY];
     char report_id[UMI_REG_ID_CAPACITY];

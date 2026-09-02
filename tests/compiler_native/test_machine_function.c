@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/machine_function.h"
-int main(void){UmiNativeMachineFunction f;if(umi_nc_machine_function_init(&f,"main",UMI_NC_ARCH_RISCV64)!=UMI_STATUS_OK)return 1;if(umi_nc_machine_function_add_block(&f,1U,"entry")!=UMI_STATUS_OK)return 2;if(umi_nc_machine_function_block(&f,1U)==NULL||umi_nc_machine_function_next_instruction(&f)!=1U)return 3;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeMachineFunction f;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_machine_function_init(&f,"main",UMI_NC_ARCH_RISCV64)!=UMI_STATUS_OK)return 1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_machine_function_add_block(&f,1U,"entry")!=UMI_STATUS_OK)return 2;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_nc_machine_function_block(&f,1U)==NULL||umi_nc_machine_function_next_instruction(&f)!=1U)return 3;return 0;}

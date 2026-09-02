@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix plan validation data shared with callers of this public contract.
+ */
 typedef struct UmiHelixPlanValidation { bool graph_valid; bool scope_valid; bool risk_valid; bool approval_valid; size_t blockers; UmiHelixDecision decision; } UmiHelixPlanValidation;
 /* Evaluate independent pre-execution gates and reject cyclic plans. */
 UmiStatus umi_helix_plan_validator_evaluate(const UmiHelixPlanGraph *graph,bool scope_valid,double risk,double max_risk,bool approval_valid,UmiHelixPlanValidation *out);

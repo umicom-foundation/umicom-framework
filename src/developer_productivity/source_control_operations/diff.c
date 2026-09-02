@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operations/diff.h"
 
+/*
+ * Provide the developer source control operation diff operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_diff(void)
 {
     static const UmiDeveloperSourceControlOperationDefinition definition = {

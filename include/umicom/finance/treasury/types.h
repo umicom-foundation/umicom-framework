@@ -27,16 +27,49 @@ extern "C" {
 #define UMI_TREASURY_MAX_ITEMS 64U
 #define UMI_TREASURY_MAX_BUCKETS 32U
 
+/**
+ * List the named treasury direction values accepted by this public contract.
+ */
 typedef enum UmiTreasuryDirection { UMI_TREASURY_INFLOW=1, UMI_TREASURY_OUTFLOW=-1 } UmiTreasuryDirection;
+/**
+ * List the named treasury settlement state values accepted by this public contract.
+ */
 typedef enum UmiTreasurySettlementState { UMI_TREASURY_SETTLEMENT_NEW=0, UMI_TREASURY_SETTLEMENT_MATCHED=1, UMI_TREASURY_SETTLEMENT_INSTRUCTED=2, UMI_TREASURY_SETTLEMENT_SETTLED=3, UMI_TREASURY_SETTLEMENT_FAILED=4, UMI_TREASURY_SETTLEMENT_CANCELLED=5 } UmiTreasurySettlementState;
+/**
+ * List the named treasury risk class values accepted by this public contract.
+ */
 typedef enum UmiTreasuryRiskClass { UMI_TREASURY_RISK_MARKET=1, UMI_TREASURY_RISK_CREDIT=2, UMI_TREASURY_RISK_LIQUIDITY=3, UMI_TREASURY_RISK_COUNTERPARTY=4 } UmiTreasuryRiskClass;
+/**
+ * List the named treasury collateral kind values accepted by this public contract.
+ */
 typedef enum UmiTreasuryCollateralKind { UMI_TREASURY_COLLATERAL_CASH=1, UMI_TREASURY_COLLATERAL_SECURITY=2 } UmiTreasuryCollateralKind;
+/**
+ * List the named treasury margin state values accepted by this public contract.
+ */
 typedef enum UmiTreasuryMarginState { UMI_TREASURY_MARGIN_OPEN=0, UMI_TREASURY_MARGIN_AGREED=1, UMI_TREASURY_MARGIN_DISPUTED=2, UMI_TREASURY_MARGIN_SETTLED=3 } UmiTreasuryMarginState;
 
+/**
+ * Check that treasury id satisfies its contract before another service relies on it.
+ */
 bool umi_treasury_id_valid(const char *value);
+/**
+ * Copy treasury id into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_treasury_id_copy(char *destination, size_t capacity, const char *value);
+/**
+ * Provide the treasury currency from code operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_treasury_currency_from_code(const char *code, UmiCurrency *out_currency);
+/**
+ * Provide the treasury currency equal operation used by this module and its client
+ * applications.
+ */
 bool umi_treasury_currency_equal(UmiCurrency left, UmiCurrency right);
+/**
+ * Provide the treasury abs i64 operation used by this module and its client applications.
+ */
 int64_t umi_treasury_abs_i64(int64_t value);
 #ifdef __cplusplus
 }

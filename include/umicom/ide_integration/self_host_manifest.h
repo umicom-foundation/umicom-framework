@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide self host manifest data shared with callers of this public contract.
+ */
 typedef struct UmiIdeSelfHostManifest {
     const char *const *required_surface_ids;
     size_t required_surface_count;
@@ -32,8 +35,16 @@ typedef struct UmiIdeSelfHostManifest {
     size_t required_capability_count;
 } UmiIdeSelfHostManifest;
 
+/**
+ * Provide the ide self host manifest operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSelfHostManifest *umi_ide_self_host_manifest(void);
 
+/**
+ * Check that ide self host manifest satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ide_self_host_manifest_validate(
     const UmiIdeSelfHostManifest *manifest);
 

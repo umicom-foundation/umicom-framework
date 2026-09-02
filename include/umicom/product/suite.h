@@ -24,8 +24,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product suite data shared with callers of this public contract.
+ */
 typedef struct UmiProductSuite { const char *suite_id; const UmiProductProfile *const *products; size_t product_count; } UmiProductSuite;
+/**
+ * Check that product suite satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_product_suite_validate(const UmiProductSuite *suite);
+/**
+ * Find product suite while leaving the underlying catalogue or model owned by this module.
+ */
 const UmiProductProfile *umi_product_suite_find(const UmiProductSuite *suite,const char *product_id);
 #ifdef __cplusplus
 }

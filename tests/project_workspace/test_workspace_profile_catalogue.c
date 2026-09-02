@@ -16,6 +16,10 @@
 #include "umicom/project/workspace/workspace_profile_catalogue.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspaceWorkspaceProfileCatalogue v;
     const char *id = NULL;

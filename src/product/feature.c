@@ -18,4 +18,5 @@
  */
 #include "umicom/product/feature.h"
 #include <stddef.h>
-UmiStatus umi_product_feature_validate(const UmiProductFeature *f){if(f==NULL||f->feature_id==NULL||f->feature_id[0]=='\0'||f->description==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that product feature satisfies its contract before another service relies on it. */
+UmiStatus umi_product_feature_validate(const UmiProductFeature *f){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(f==NULL||f->feature_id==NULL||f->feature_id[0]=='\0'||f->description==NULL)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

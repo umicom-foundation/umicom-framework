@@ -99,6 +99,10 @@ typedef struct UmiDebugAdvancedBreakpoint {
     int stop_on_hit;
 } UmiDebugAdvancedBreakpoint;
 
+/**
+ * Represent the debug advanced breakpoint filter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugAdvancedBreakpointFilter {
     uint32_t struct_size;
     uint32_t api_version;
@@ -109,6 +113,10 @@ typedef struct UmiDebugAdvancedBreakpointFilter {
     int verified_only;
 } UmiDebugAdvancedBreakpointFilter;
 
+/**
+ * Represent the debug advanced breakpoint snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugAdvancedBreakpointSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -122,49 +130,105 @@ typedef struct UmiDebugAdvancedBreakpointSnapshot {
     uint64_t revision;
 } UmiDebugAdvancedBreakpointSnapshot;
 
+/**
+ * Represent the debug advanced breakpoint registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugAdvancedBreakpointRegistry
     UmiDebugAdvancedBreakpointRegistry;
 
+/**
+ * Initialise debug advanced breakpoint registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_create(
     size_t initial_capacity,
     UmiDebugAdvancedBreakpointRegistry **out_registry);
+/**
+ * Release or reset state held by debug advanced breakpoint registry so the same storage
+ * can be reused safely.
+ */
 void umi_debug_advanced_breakpoint_registry_destroy(
     UmiDebugAdvancedBreakpointRegistry *registry);
+/**
+ * Release or reset state held by debug advanced breakpoint registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_clear(
     UmiDebugAdvancedBreakpointRegistry *registry);
+/**
+ * Provide the debug advanced breakpoint registry upsert operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_upsert(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const UmiDebugAdvancedBreakpoint *breakpoint);
+/**
+ * Remove debug advanced breakpoint registry while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_remove(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id);
+/**
+ * Provide the debug advanced breakpoint registry remove session operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_remove_session(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const char *session_id,
     size_t *out_removed_count);
+/**
+ * Provide the debug advanced breakpoint registry set enabled operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_set_enabled(
     UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id,
     int enabled);
+/**
+ * Find debug advanced breakpoint registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_find(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     const char *breakpoint_id,
     UmiDebugAdvancedBreakpoint *out_breakpoint);
+/**
+ * Find debug advanced breakpoint registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_at(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     size_t index,
     UmiDebugAdvancedBreakpoint *out_breakpoint);
+/**
+ * Provide the debug advanced breakpoint registry query operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_query(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     const UmiDebugAdvancedBreakpointFilter *filter,
     UmiDebugAdvancedBreakpoint *out_breakpoints,
     size_t breakpoint_capacity,
     size_t *out_breakpoint_count);
+/**
+ * Provide the debug advanced breakpoint registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_advanced_breakpoint_registry_snapshot(
     const UmiDebugAdvancedBreakpointRegistry *registry,
     UmiDebugAdvancedBreakpointSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by debug advanced breakpoint registry without
+ * changing their state.
+ */
 size_t umi_debug_advanced_breakpoint_registry_count(
     const UmiDebugAdvancedBreakpointRegistry *registry);
+/**
+ * Provide the debug advanced breakpoint registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_debug_advanced_breakpoint_registry_revision(
     const UmiDebugAdvancedBreakpointRegistry *registry);
 

@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_TEST_WORKBENCH_TEXT_CAPACITY 256U
 #define UMI_TEST_WORKBENCH_DETAIL_CAPACITY 384U
 #define UMI_TEST_WORKBENCH_MAX_ITEMS 128U
+/**
+ * List the named test workbench state values accepted by this public contract.
+ */
 typedef enum UmiTestWorkbenchState {
     UMI_TEST_WORKBENCH_STATE_IDLE = 0,
     UMI_TEST_WORKBENCH_STATE_DISCOVERING = 1,
@@ -39,6 +42,9 @@ typedef enum UmiTestWorkbenchState {
     UMI_TEST_WORKBENCH_STATE_SKIPPED = 6,
     UMI_TEST_WORKBENCH_STATE_CANCELLED = 7
 } UmiTestWorkbenchState;
+/**
+ * Represent the test workbench entry data shared with callers of this public contract.
+ */
 typedef struct UmiTestWorkbenchEntry {
     char id[UMI_TEST_WORKBENCH_ID_CAPACITY];
     char label[UMI_TEST_WORKBENCH_TEXT_CAPACITY];
@@ -49,10 +55,30 @@ typedef struct UmiTestWorkbenchEntry {
     uint64_t duration_us;
     uint64_t revision;
 } UmiTestWorkbenchEntry;
+/**
+ * Exercise test workbench copy text and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 UmiStatus umi_test_workbench_copy_text(char *destination,size_t capacity,const char *source);
+/**
+ * Initialise test workbench entry from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_workbench_entry_init(UmiTestWorkbenchEntry *entry,const char *id,const char *label);
+/**
+ * Exercise test workbench entry set detail and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_workbench_entry_set_detail(UmiTestWorkbenchEntry *entry,const char *detail);
+/**
+ * Exercise test workbench entry set state and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_workbench_entry_set_state(UmiTestWorkbenchEntry *entry,UmiTestWorkbenchState state);
+/**
+ * Check that test workbench entry satisfies its contract before another service relies on
+ * it.
+ */
 int umi_test_workbench_entry_valid(const UmiTestWorkbenchEntry *entry);
 #ifdef __cplusplus
 }

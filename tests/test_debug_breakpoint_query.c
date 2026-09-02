@@ -28,6 +28,10 @@
 
 #include "umicom/debug/breakpoint_query.h"
 
+/*
+ * Exercise breakpoint and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugBreakpointSnapshot breakpoint(const char *id, const char *uri,
                                               uint32_t line, int verified)
 {
@@ -41,6 +45,10 @@ static UmiDebugBreakpointSnapshot breakpoint(const char *id, const char *uri,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugBreakpointRegistry *registry = NULL;

@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrUpdateTransaction t; umi_dr_update_transaction_init(&t); t.checkpoint_ready=true; CHECK(umi_dr_update_transaction_stage(&t)==UMI_STATUS_OK); CHECK(umi_dr_update_transaction_commit(&t)==UMI_STATUS_INVALID_STATE); t.health_verified=true; CHECK(umi_dr_update_transaction_commit(&t)==UMI_STATUS_OK);
     return 0;

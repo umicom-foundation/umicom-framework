@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix candidate data shared with callers of this public contract.
+ */
 typedef struct UmiHelixCandidate {
     char candidate_id[UMI_HELIX_ID_CAPACITY];
     char plan_id[UMI_HELIX_ID_CAPACITY];
@@ -36,6 +39,10 @@ typedef struct UmiHelixCandidate {
     uint64_t created_at_ns;
 } UmiHelixCandidate;
 
+/**
+ * Initialise helix candidate from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_candidate_init(UmiHelixCandidate *value);
 
 #ifdef __cplusplus

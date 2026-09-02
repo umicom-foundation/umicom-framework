@@ -51,22 +51,40 @@ static const UmiVcsWorkbenchCommand COMMANDS[] = {
 
 #undef COMMAND
 
+/*
+ * Return the number of records represented by vcs workbench command without changing their
+ * state.
+ */
 size_t umi_vcs_workbench_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find vcs workbench command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiVcsWorkbenchCommand *umi_vcs_workbench_command_at(size_t index)
 {
     return index < umi_vcs_workbench_command_count() ? &COMMANDS[index] : NULL;
 }
 
+/*
+ * Find vcs workbench command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiVcsWorkbenchCommand *umi_vcs_workbench_command_find(
     const char *command_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_vcs_workbench_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].command_id, command_id) == 0) {
             return &COMMANDS[index];
         }

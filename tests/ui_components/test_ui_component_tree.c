@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/tree.h"
-int main(void){UmiUiComponentTree t;umi_ui_component_tree_init(&t);UmiUiComponentSpec a=umi_ui_component_spec_default(UMI_UI_COMPONENT_BOX);UmiUiComponentSpec b=umi_ui_component_spec_default(UMI_UI_COMPONENT_BUTTON);(void)umi_ui_component_spec_set_id(&a,"root");(void)umi_ui_component_spec_set_id(&b,"child");size_t root=0;if(umi_ui_component_tree_add(&t,&a,-1,&root)!=UMI_STATUS_OK)return 1;if(umi_ui_component_tree_add(&t,&b,(int32_t)root,NULL)!=UMI_STATUS_OK)return 2;return umi_ui_component_tree_child_count(&t,root)==1U?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiComponentTree t;umi_ui_component_tree_init(&t);UmiUiComponentSpec a=umi_ui_component_spec_default(UMI_UI_COMPONENT_BOX);UmiUiComponentSpec b=umi_ui_component_spec_default(UMI_UI_COMPONENT_BUTTON);(void)umi_ui_component_spec_set_id(&a,"root");(void)umi_ui_component_spec_set_id(&b,"child");size_t root=0;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_tree_add(&t,&a,-1,&root)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_tree_add(&t,&b,(int32_t)root,NULL)!=UMI_STATUS_OK)return 2;return umi_ui_component_tree_child_count(&t,root)==1U?0:3;}

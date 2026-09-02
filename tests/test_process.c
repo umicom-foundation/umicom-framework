@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Exercise verify capture and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int verify_capture(void)
 {
     char output[1024];
@@ -29,6 +33,7 @@ static int verify_capture(void)
     const char *arguments[] = {"-c", "printf umicom-process-ok"};
     const char *program = "/bin/sh";
 #endif
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_process_capture(program,
                             arguments,
                             sizeof(arguments) / sizeof(arguments[0]),
@@ -36,11 +41,19 @@ static int verify_capture(void)
                             sizeof(output),
                             &exit_code) != UMI_STATUS_OK)
         return 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (exit_code != 0 || strstr(output, "umicom-process-ok") == NULL)
         return 0;
     return 1;
 }
 
+/*
+ * Exercise verify hidden request and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int verify_hidden_request(void)
 {
     UmiProcessRequest request;
@@ -61,11 +74,17 @@ static int verify_hidden_request(void)
     request.capture_stderr = 1;
     request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_process_execute(&request, &result) != UMI_STATUS_OK) return 0;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!result.launched || result.exit_code != 0) return 0;
     return strstr(result.output, "umicom-hidden-ok") != NULL;
 }
 
+/*
+ * Exercise verify window mode validation and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int verify_window_mode_validation(void)
 {
     UmiProcessRequest request;
@@ -78,6 +97,10 @@ static int verify_window_mode_validation(void)
         UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Exercise verify long output keeps final diagnostic and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int verify_long_output_keeps_final_diagnostic(void)
 {
     UmiProcessRequest request;
@@ -107,16 +130,26 @@ static int verify_long_output_keeps_final_diagnostic(void)
     request.capture_stderr = 1;
     request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_process_execute(&request, &result) != UMI_STATUS_OK) return 0;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result.exit_code != 0 || !result.output_truncated) return 0;
     return strstr(result.output, "umicom-final-diagnostic") != NULL;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!verify_capture()) return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!verify_hidden_request()) return EXIT_FAILURE;
+    /* Apply this operation only while the related capability or state is available. */
     if (!verify_window_mode_validation()) return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!verify_long_output_keeps_final_diagnostic()) return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

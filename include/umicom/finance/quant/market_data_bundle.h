@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant market data bundle data shared with callers of this public contract.
+ */
 typedef struct UmiQuantMarketDataBundle { UmiQuantNamedValue values[128]; size_t count; } UmiQuantMarketDataBundle;
 /* Initialise an empty valuation market-data bundle. */
 void umi_quant_market_data_bundle_init(UmiQuantMarketDataBundle *bundle);

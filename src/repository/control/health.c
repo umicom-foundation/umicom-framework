@@ -20,10 +20,18 @@
 
 #include <string.h>
 
+/*
+ * Provide the repository health from plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_health_from_plan(
     const UmiRepositoryLockPlan *plan,
     UmiRepositoryHealth *out_health)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || out_health == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

@@ -15,4 +15,8 @@
 
 #include <assert.h>
 #include "umicom/ai/mcp/json.h"
+/*
+ * Exercise test ai mcp json invalid string and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_ai_mcp_json_invalid_string(void){char value[64];assert(umi_ai_mcp_json_string("{\"name\":123}","name",value,sizeof(value))==UMI_STATUS_PARSE_ERROR);return 0;}

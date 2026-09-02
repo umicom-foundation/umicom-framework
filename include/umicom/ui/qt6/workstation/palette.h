@@ -23,7 +23,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the qt6 ws palette descriptor operation used by this module and its client
+ * applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_ws_palette_descriptor(void);
+/**
+ * Initialise qt6 ws palette from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiQt6WidgetHandle umi_qt6_ws_palette_create(const UmiWsPaletteModel *model);
 
 #ifdef __cplusplus

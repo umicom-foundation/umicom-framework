@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dap source breakpoint data shared with callers of this public contract.
+ */
 typedef struct UmiDapSourceBreakpoint {
     int line;
     int column;
@@ -31,54 +34,121 @@ typedef struct UmiDapSourceBreakpoint {
     const char *log_message;
 } UmiDapSourceBreakpoint;
 
+/**
+ * Provide the dap attach operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_attach(UmiDapClient *client, int process_id,
                          const char *working_directory,
                          int64_t *out_request_id);
+/**
+ * Provide the dap configuration done operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dap_configuration_done(UmiDapClient *client,
                                      int64_t *out_request_id);
+/**
+ * Provide the dap set breakpoints operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dap_set_breakpoints(UmiDapClient *client,
                                   const char *source_path,
                                   const UmiDapSourceBreakpoint *items,
                                   size_t count,
                                   int64_t *out_request_id);
+/**
+ * Provide the dap pause operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_pause(UmiDapClient *client, int thread_id,
                         int64_t *out_request_id);
+/**
+ * Provide the dap next operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_next(UmiDapClient *client, int thread_id,
                        int64_t *out_request_id);
+/**
+ * Provide the dap step in operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_step_in(UmiDapClient *client, int thread_id,
                           int64_t *out_request_id);
+/**
+ * Provide the dap step out operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_step_out(UmiDapClient *client, int thread_id,
                            int64_t *out_request_id);
+/**
+ * Provide the dap threads operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_threads(UmiDapClient *client, int64_t *out_request_id);
+/**
+ * Provide the dap stack trace operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_stack_trace(UmiDapClient *client, int thread_id,
                               int start_frame, int levels,
                               int64_t *out_request_id);
+/**
+ * Provide the dap scopes operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_scopes(UmiDapClient *client, int frame_id,
                          int64_t *out_request_id);
+/**
+ * Provide the dap variables operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_variables(UmiDapClient *client, int variables_reference,
                             int start, int count,
                             int64_t *out_request_id);
+/**
+ * Provide the dap evaluate operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_evaluate(UmiDapClient *client, const char *expression,
                            int frame_id, const char *context,
                            int64_t *out_request_id);
+/**
+ * Provide the dap set variable operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_set_variable(UmiDapClient *client, int variables_reference,
                                const char *name, const char *value,
                                int64_t *out_request_id);
+/**
+ * Provide the dap restart operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_restart(UmiDapClient *client, int64_t *out_request_id);
+/**
+ * Provide the dap terminate operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_terminate(UmiDapClient *client, int restart,
                             int64_t *out_request_id);
+/**
+ * Provide the dap source operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_source(UmiDapClient *client, int source_reference,
                          int64_t *out_request_id);
+/**
+ * Provide the dap modules operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_modules(UmiDapClient *client, int start, int count,
                           int64_t *out_request_id);
+/**
+ * Provide the dap exception info operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dap_exception_info(UmiDapClient *client, int thread_id,
                                  int64_t *out_request_id);
+/**
+ * Provide the dap loaded sources operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dap_loaded_sources(UmiDapClient *client,
                                  int64_t *out_request_id);
+/**
+ * Provide the dap read memory operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_read_memory(UmiDapClient *client,
                               const char *memory_reference,
                               int offset, int count,
                               int64_t *out_request_id);
+/**
+ * Provide the dap disassemble operation used by this module and its client applications.
+ */
 UmiStatus umi_dap_disassemble(UmiDapClient *client,
                               const char *memory_reference,
                               int offset, int instruction_count,

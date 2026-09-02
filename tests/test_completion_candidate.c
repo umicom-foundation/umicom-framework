@@ -18,6 +18,10 @@
 
 #include "umicom/editor/completion_candidate.h"
 
+/*
+ * Initialise candidate from caller-provided values so later operations receive a known
+ * state.
+ */
 static void candidate_init(UmiEditorCompletionCandidate *candidate,
                            const char *provider,
                            const char *id,
@@ -50,6 +54,10 @@ static void candidate_init(UmiEditorCompletionCandidate *candidate,
     candidate->source = UMI_EDITOR_COMPLETION_SOURCE_NATIVE_ANALYSER;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorCompletionCandidateCollection *collection = NULL;

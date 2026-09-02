@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test capability status and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_capability_status(void){ UmiApplicationCapabilityStatus s; assert(umi_application_capability_status_build(test_trader_experience(),test_capability_probe,NULL,&s)==UMI_STATUS_OK); assert(s.entry_count>0U); return 0; }

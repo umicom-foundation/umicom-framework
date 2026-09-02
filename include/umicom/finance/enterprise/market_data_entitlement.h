@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise market data entitlement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataEntitlement { char principal_id[UMI_ENTERPRISE_ID_CAPACITY]; char topic_prefix[UMI_ENTERPRISE_ID_CAPACITY]; int can_read; } UmiEnterpriseMarketDataEntitlement;
 /* Initialise one reusable market-data read entitlement. */
 UmiStatus umi_enterprise_market_data_entitlement_init(UmiEnterpriseMarketDataEntitlement *entitlement,const char *principal_id,const char *topic_prefix,int can_read);

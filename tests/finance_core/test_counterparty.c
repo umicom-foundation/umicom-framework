@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/counterparty.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCounterparty x; CHECK(umi_counterparty_init(&x,"ID","Name","PARENT","CODE")==UMI_STATUS_OK); CHECK(umi_counterparty_is_valid(&x));

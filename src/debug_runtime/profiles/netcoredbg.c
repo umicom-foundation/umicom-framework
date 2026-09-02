@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/profiles/netcoredbg.h"
 
+/*
+ * Provide the debug runtime profile netcoredbg operation used by this module and its
+ * client applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_netcoredbg(void)
 {
     static const UmiDebugAdapterProfile profile = {

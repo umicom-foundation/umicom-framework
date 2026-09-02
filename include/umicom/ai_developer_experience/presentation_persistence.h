@@ -20,11 +20,19 @@
 extern "C" {
 #endif
 
+/**
+ * Write ai developer presentation in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_ai_developer_presentation_save(
     UmiSessionStore *store,
     const char *key_prefix,
     const UmiAiDeveloperPresentationState *state);
 
+/**
+ * Provide the ai developer presentation restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_presentation_restore(
     const UmiSessionStore *store,
     const char *key_prefix,

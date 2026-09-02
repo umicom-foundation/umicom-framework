@@ -20,6 +20,10 @@
 #include "umicom/application/component/recipe_catalogue.h"
 #include "umicom/application/presentation/panel_catalogue.h"
 
+/*
+ * Provide the application presentation project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_presentation_project(
     const char *recipe_id,
     UmiApplicationPresentationPlan *out_plan)
@@ -28,24 +32,42 @@ UmiStatus umi_application_presentation_project(
     const UmiApplicationPresentationWindowSpec *window;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recipe_id == NULL || recipe_id[0] == '\0' || out_plan == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_plan, 0, sizeof(*out_plan));
     recipe = umi_application_component_recipe_catalogue_find(recipe_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recipe == NULL) return UMI_STATUS_NOT_FOUND;
     window = umi_application_presentation_window_catalogue_find(recipe_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (recipe->slot_count > UMI_APPLICATION_PRESENTATION_PLAN_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     out_plan->recipe = recipe;
     out_plan->window = window;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < recipe->slot_count; ++index) {
         const UmiApplicationComponentRecipeSlot *slot = &recipe->slots[index];
         const UmiApplicationPresentationPanelSpec *panel =
             umi_application_presentation_panel_catalogue_find(slot->component_id);
         UmiApplicationPresentationPanelPlacement *placement;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (panel == NULL) {
             (void)memset(out_plan, 0, sizeof(*out_plan));
             return UMI_STATUS_NOT_FOUND;
@@ -54,7 +76,9 @@ UmiStatus umi_application_presentation_project(
         placement->panel = panel;
         placement->slot = slot;
         placement->order = index;
+        /* Apply this operation only while the related capability or state is available. */
         if (slot->visible) out_plan->visible_count += 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (slot->locked) out_plan->locked_count += 1U;
     }
     return UMI_STATUS_OK;

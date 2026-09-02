@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/resilience/circuit_breaker.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiCircuitBreakerConfig c = {2U,1U,100U}; UmiCircuitBreaker *b = NULL;
     assert(umi_circuit_breaker_create(&c, &b) == UMI_STATUS_OK);

@@ -34,6 +34,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_TASK_PLAN_API_VERSION 1U
 
+/**
+ * Represent the developer task plan request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperTaskPlanRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -45,6 +49,10 @@ typedef struct UmiDeveloperTaskPlanRequest {
     uint32_t max_attempts;
 } UmiDeveloperTaskPlanRequest;
 
+/**
+ * Represent the developer task plan snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperTaskPlanSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -55,6 +63,10 @@ typedef struct UmiDeveloperTaskPlanSnapshot {
     int background;
 } UmiDeveloperTaskPlanSnapshot;
 
+/**
+ * Provide the developer task plan submit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_task_plan_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperTaskPlanRequest *request,

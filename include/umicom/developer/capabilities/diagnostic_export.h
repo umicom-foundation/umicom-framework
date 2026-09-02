@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_DIAGNOSTIC_EXPORT "umicom.developer.diagnostics.diagnostic_export"
 
+/**
+ * Provide the developer capability diagnostic export operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_diagnostic_export(void);
 

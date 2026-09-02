@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/language_runtime/decoders/completion.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiLanguageRuntimeCompletionResult x; assert(umi_language_runtime_decode_completion("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":[{\"label\":\"printf\",\"kind\":3}]}",&x)==UMI_STATUS_OK); assert(x.count==1U);return 0;}

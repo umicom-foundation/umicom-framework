@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design text input spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTextInputSpec {
     char placeholder[UMI_DESIGN_TEXT_CAPACITY];
     uint32_t max_length;

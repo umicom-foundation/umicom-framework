@@ -19,10 +19,18 @@
 
 #include <assert.h>
 #include "umicom/delivery/signing.h"
+/*
+ * Exercise fake sign and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_sign(void *instance, const char *artifact_id, const char *digest, UmiSignatureRecord *record) {
     (void)instance; (void)digest;
     return umi_signature_record_init(record, artifact_id, "tester", "test", "signed");
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiSigningProvider provider;
     UmiSignatureRecord record;

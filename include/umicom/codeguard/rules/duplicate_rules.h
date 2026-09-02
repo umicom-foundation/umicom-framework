@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the codeguard rules duplicate rules operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_duplicate_rules(size_t *out_count);
 #ifdef __cplusplus
 }

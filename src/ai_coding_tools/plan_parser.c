@@ -24,6 +24,7 @@ typedef enum ParseMode {
     MODE_ARGUMENTS = 2
 } ParseMode;
 
+/* Provide the line equals operation used by this module and its client applications. */
 static int line_equals(const char *line, size_t length, const char *value)
 {
     const size_t value_length = strlen(value);
@@ -31,6 +32,7 @@ static int line_equals(const char *line, size_t length, const char *value)
         strncmp(line, value, length) == 0;
 }
 
+/* Provide the append line operation used by this module and its client applications. */
 static UmiStatus append_line(
     char *buffer,
     size_t capacity,
@@ -38,10 +40,12 @@ static UmiStatus append_line(
     const char *line,
     size_t length)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*used + length + 2U > capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         (void)memcpy(buffer + *used, line, length);
         *used += length;
@@ -52,6 +56,7 @@ static UmiStatus append_line(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse plan line operation used by this module and its client applications. */
 static UmiStatus parse_plan_line(
     const char *line,
     size_t length,
@@ -65,17 +70,23 @@ static UmiStatus parse_plan_line(
     size_t id_length;
     size_t title_length;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length <= 5U || strncmp(line, "PLAN|", 5U) != 0) {
         return UMI_STATUS_PARSE_ERROR;
     }
 
     id = line + 5U;
     separator = memchr(id, '|', length - 5U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (separator == NULL) return UMI_STATUS_PARSE_ERROR;
 
     id_length = (size_t)(separator - id);
     title_length = length - 5U - id_length - 1U;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (id_length == 0U || id_length >= id_capacity ||
         title_length == 0U || title_length >= title_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -88,6 +99,7 @@ static UmiStatus parse_plan_line(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse step line operation used by this module and its client applications. */
 static UmiStatus parse_step_line(
     const char *line,
     size_t length,
@@ -99,11 +111,13 @@ static UmiStatus parse_step_line(
     size_t part_count = 0U;
     size_t copy_length;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length <= 11U || strncmp(line, "STEP-BEGIN|", 11U) != 0) {
         return UMI_STATUS_PARSE_ERROR;
     }
 
     copy_length = length - 11U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (copy_length >= sizeof(buffer)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -113,16 +127,25 @@ static UmiStatus parse_step_line(
 
     cursor = buffer;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (part_count < 4U) {
         char *separator = strchr(cursor, '|');
 
         parts[part_count++] = cursor;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (separator == NULL) break;
         *separator = '\0';
         cursor = separator + 1;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (part_count != 4U ||
         parts[0][0] == '\0' ||
         parts[1][0] == '\0' ||
@@ -142,6 +165,10 @@ static UmiStatus parse_step_line(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Read ai coding tool plan into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_ai_coding_tool_plan_parse(
     const char *text,
     uint64_t first_call_id,
@@ -162,6 +189,10 @@ UmiStatus umi_ai_coding_tool_plan_parse(
     int step_active = 0;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_plan == NULL || first_call_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -173,43 +204,54 @@ UmiStatus umi_ai_coding_tool_plan_parse(
 
     cursor = text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         const char *end = strchr(cursor, '\n');
         size_t length =
             end != NULL ? (size_t)(end - cursor) : strlen(cursor);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length > 0U && cursor[length - 1U] == '\r') --length;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!header_seen) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (!line_equals(cursor, length, PLAN_HEADER)) {
                 return UMI_STATUS_PARSE_ERROR;
             }
             header_seen = 1;
-        } else if (mode == MODE_RATIONALE) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (mode == MODE_RATIONALE) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (line_equals(cursor, length, "RATIONALE-END")) {
                 mode = MODE_NORMAL;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = append_line(
                     rationale,
                     sizeof(rationale),
                     &rationale_length,
                     cursor,
                     length);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
-        } else if (mode == MODE_ARGUMENTS) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (mode == MODE_ARGUMENTS) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (line_equals(cursor, length, "ARGUMENTS-END")) {
                 mode = MODE_NORMAL;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 status = append_line(
                     step.call.arguments_json,
                     sizeof(step.call.arguments_json),
                     &argument_length,
                     cursor,
                     length);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
-        } else if (!plan_line_seen &&
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (!plan_line_seen &&
                    length > 5U &&
                    strncmp(cursor, "PLAN|", 5U) == 0) {
             status = parse_plan_line(
@@ -219,18 +261,21 @@ UmiStatus umi_ai_coding_tool_plan_parse(
                 sizeof(plan_id),
                 title,
                 sizeof(title));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             plan_line_seen = 1;
-        } else if (line_equals(cursor, length, "RATIONALE-BEGIN")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "RATIONALE-BEGIN")) {
             mode = MODE_RATIONALE;
-        } else if (length > 11U &&
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (length > 11U &&
                    strncmp(cursor, "STEP-BEGIN|", 11U) == 0) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (step_active) return UMI_STATUS_PARSE_ERROR;
 
             (void)memset(&step, 0, sizeof(step));
             argument_length = 0U;
 
             status = parse_step_line(cursor, length, &step);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
             step.call.call_id = first_call_id + parsed_steps;
@@ -240,48 +285,62 @@ UmiStatus umi_ai_coding_tool_plan_parse(
             step.depends_on_index =
                 parsed_steps > 0U ? parsed_steps - 1U : 0U;
             step_active = 1;
-        } else if (line_equals(cursor, length, "ARGUMENTS-BEGIN")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "ARGUMENTS-BEGIN")) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (!step_active) return UMI_STATUS_PARSE_ERROR;
             mode = MODE_ARGUMENTS;
-        } else if (line_equals(cursor, length, "STEP-END")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "STEP-END")) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (!step_active) return UMI_STATUS_PARSE_ERROR;
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (argument_length > 0U &&
                 step.call.arguments_json[argument_length - 1U] == '\n') {
                 step.call.arguments_json[argument_length - 1U] = '\0';
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (step.call.arguments_json[0] == '\0') {
                 (void)strcpy(step.call.arguments_json, "{}");
             }
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (parsed_steps == 0U) {
                 status = umi_ai_coding_tool_plan_init(
                     out_plan,
                     plan_id,
                     title,
                     rationale);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
 
             status = umi_ai_coding_tool_plan_add(out_plan, &step);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
             parsed_steps += 1U;
             step_active = 0;
-        } else if (line_equals(cursor, length, "PLAN-END")) {
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (line_equals(cursor, length, "PLAN-END")) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (step_active) return UMI_STATUS_PARSE_ERROR;
             plan_end_seen = 1;
         }
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (end == NULL) break;
         cursor = end + 1;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!header_seen || !plan_line_seen || !plan_end_seen ||
         mode != MODE_NORMAL || step_active || parsed_steps == 0U) {
         return UMI_STATUS_PARSE_ERROR;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (rationale_length > 0U &&
         rationale[rationale_length - 1U] == '\n') {
         rationale[rationale_length - 1U] = '\0';

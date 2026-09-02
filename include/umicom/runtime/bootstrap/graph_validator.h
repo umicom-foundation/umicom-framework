@@ -22,6 +22,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Check that bootstrap graph satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_bootstrap_graph_validate(
     const UmiBootstrapServiceGraph *graph,
     UmiBootstrapIssueReport *out_report);

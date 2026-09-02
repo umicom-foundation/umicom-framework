@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws perspective template data shared with callers of this public contract.
+ */
 typedef struct UmiWsPerspectiveTemplate {
     char perspective_id[UMI_UI_ID_CAPACITY];
     char label[UMI_UI_TEXT_CAPACITY];
@@ -32,12 +35,24 @@ typedef struct UmiWsPerspectiveTemplate {
     UmiWsApplicationDomain domain;
 } UmiWsPerspectiveTemplate;
 
+/**
+ * Initialise ws perspective template from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ws_perspective_template_init(UmiWsPerspectiveTemplate *perspective,
                                            const char *perspective_id,
                                            const char *label,
                                            UmiWsApplicationDomain domain);
+/**
+ * Provide the ws perspective template set default layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ws_perspective_template_set_default_layout(UmiWsPerspectiveTemplate *perspective,
                                                          const char *layout_id);
+/**
+ * Provide the ws perspective template add surface operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ws_perspective_template_add_surface(UmiWsPerspectiveTemplate *perspective,
                                                   const char *surface_id);
 

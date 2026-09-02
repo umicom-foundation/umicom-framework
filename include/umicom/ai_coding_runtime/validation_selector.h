@@ -23,12 +23,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding validation selection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingValidationSelection {
     char profile_id[64];
     char marker_path[256];
     int detected;
 } UmiAiCodingValidationSelection;
 
+/**
+ * Provide the ai coding validation select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_validation_select(
     const UmiAiCodingWorkspaceAdapter *workspace,
     const char *workspace_root,

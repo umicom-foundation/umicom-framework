@@ -23,6 +23,12 @@
 #define UMICOM_UI_COMPONENTS_EVENT_H
 #include <stdint.h>
 #include "umicom/ui/components/component.h"
+/**
+ * List the named ui component event kind values accepted by this public contract.
+ */
 typedef enum UmiUiComponentEventKind { UMI_UI_COMPONENT_EVENT_ACTIVATE=1, UMI_UI_COMPONENT_EVENT_CHANGED=2, UMI_UI_COMPONENT_EVENT_SELECTED=3, UMI_UI_COMPONENT_EVENT_CLOSED=4 } UmiUiComponentEventKind;
+/**
+ * Represent the ui component event data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentEvent { UmiUiComponentEventKind kind; char component_id[UMI_UI_COMPONENT_ID_CAPACITY]; int64_t integer_value; double real_value; } UmiUiComponentEvent;
 #endif

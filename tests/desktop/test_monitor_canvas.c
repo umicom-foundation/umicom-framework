@@ -20,6 +20,10 @@
 
 #include "umicom/desktop/monitor_canvas.h"
 
+/*
+ * Exercise monitor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDesktopMonitor monitor(const char *id, int32_t x, int32_t width,
                                  bool primary)
 {
@@ -35,6 +39,10 @@ static UmiDesktopMonitor monitor(const char *id, int32_t x, int32_t width,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesktopMonitorTopology topology;

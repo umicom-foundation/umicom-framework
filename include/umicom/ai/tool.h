@@ -33,6 +33,9 @@ typedef UmiStatus (*UmiAiToolInvoke)(const char *arguments_json,
                                      size_t output_capacity,
                                      void *user_data);
 
+/**
+ * Represent the ai tool data shared with callers of this public contract.
+ */
 typedef struct UmiAiTool {
     char tool_id[UMI_AI_ID_CAPACITY];
     char description[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -42,6 +45,10 @@ typedef struct UmiAiTool {
     void *user_data;
 } UmiAiTool;
 
+/**
+ * Initialise ai tool from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_tool_init(UmiAiTool *tool,
                            const char *tool_id,
                            const char *description,

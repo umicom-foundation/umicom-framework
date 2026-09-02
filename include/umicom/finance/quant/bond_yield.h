@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant bond yield data shared with callers of this public contract.
+ */
 typedef struct UmiQuantBondYield {
     double price;
     double face_value;

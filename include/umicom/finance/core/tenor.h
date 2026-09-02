@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the tenor data shared with callers of this public contract.
+ */
 typedef struct UmiTenor { uint32_t amount; UmiTenorUnit unit; } UmiTenor;
 /* Parse compact tenor. */ UmiStatus umi_tenor_parse(const char *text,UmiTenor *out);
 /* Add tenor with month-end clamping. */ UmiStatus umi_tenor_add(UmiFinancialDate d,UmiTenor t,UmiFinancialDate *out);

@@ -99,6 +99,11 @@ contracts and decisions that do not yet have enough explanation. This makes a
 file-by-file improvement practical: older code can be documented carefully
 without filling the repository with generated pages or guessed descriptions.
 
+`REPOSITORY_SOURCE_DOCUMENTATION.md` describes the complete checkout audit.
+Run that read-only audit before generating HTML so a missing file header,
+function explanation or decision comment is repaired at its source rather than
+hidden by a generated page.
+
 Two complete public areas are now protected by structured-comment audits:
 
 - `SUITE_LAYOUT_ARCHITECTURE.md` maps 52 layout functions in 14 headers;

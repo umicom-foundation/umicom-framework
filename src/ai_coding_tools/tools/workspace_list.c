@@ -25,6 +25,7 @@ typedef struct ListContext {
     uint64_t count;
 } ListContext;
 
+/* Provide the visit file operation used by this module and its client applications. */
 static UmiStatus visit_file(
     void *user_data,
     const UmiAiCodingScanEntry *entry,
@@ -32,21 +33,32 @@ static UmiStatus visit_file(
 {
     ListContext *context = (ListContext *)user_data;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || entry == NULL || out_descend == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_descend = 1;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (entry->directory) return UMI_STATUS_OK;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (context->count >= context->limit) return UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context->contains != NULL &&
         context->contains[0] != '\0' &&
         strstr(entry->relative_path, context->contains) == NULL) {
         return UMI_STATUS_OK;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (context->count > 0U) {
         (void)umi_language_runtime_json_writer_raw(context->writer, ",");
     }
@@ -61,6 +73,7 @@ static UmiStatus visit_file(
         context->writer, entry->byte_size);
     (void)umi_language_runtime_json_writer_raw(context->writer, "}");
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (context->writer->status != UMI_STATUS_OK) {
         return context->writer->status;
     }
@@ -69,6 +82,10 @@ static UmiStatus visit_file(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding tool workspace list descriptor operation used by this module and
+ * its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_workspace_list_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -85,6 +102,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_workspace_list_descriptor(vo
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool workspace list invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_workspace_list_invoke(
     const char *arguments_json,
     char *output,
@@ -102,19 +123,27 @@ UmiStatus umi_ai_coding_tool_workspace_list_invoke(
     size_t scanned = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_ai_coding_tool_json_parse_object(arguments_json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_json_optional_string(
         &document, "contains", "", contains, sizeof(contains));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_uint64(
             &document, "limit", 100U, &limit);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (limit == 0U || limit > UMI_AI_CODING_TOOL_MAX_FILE_RESULTS) {
         limit = UMI_AI_CODING_TOOL_MAX_FILE_RESULTS;
     }
@@ -123,6 +152,7 @@ UmiStatus umi_ai_coding_tool_workspace_list_invoke(
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"files\":[");
@@ -138,6 +168,7 @@ UmiStatus umi_ai_coding_tool_workspace_list_invoke(
         visit_file,
         &context,
         &scanned);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(&writer, "],\"count\":");

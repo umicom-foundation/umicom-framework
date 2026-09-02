@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation job data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseValuationJob { char job_id[UMI_ENTERPRISE_ID_CAPACITY]; char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; int64_t as_of_ms; int priority; UmiEnterpriseWorkState state; } UmiEnterpriseValuationJob;
 /* Initialise a pending valuation job with bounded priority. */
 UmiStatus umi_enterprise_valuation_job_init(UmiEnterpriseValuationJob *job,const char *job_id,const char *portfolio_id,int64_t as_of_ms,int priority);

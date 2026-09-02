@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity transport cost data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityTransportCost {
     UmiCommodityId route_id;
     int64_t base_minor_units;

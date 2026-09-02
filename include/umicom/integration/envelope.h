@@ -25,6 +25,9 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/types.h"
 
+/**
+ * Represent the integration envelope data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationEnvelope {
     UmiIntegrationMessageKind kind;
     char source_application[UMI_INTEGRATION_ID_CAPACITY];
@@ -34,7 +37,15 @@ typedef struct UmiIntegrationEnvelope {
     char payload[UMI_INTEGRATION_PAYLOAD_CAPACITY];
 } UmiIntegrationEnvelope;
 
+/**
+ * Initialise integration envelope from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_integration_envelope_init(UmiIntegrationEnvelope *envelope);
+/**
+ * Check that integration envelope satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_integration_envelope_validate(
     const UmiIntegrationEnvelope *envelope);
 

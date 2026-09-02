@@ -29,16 +29,25 @@ typedef struct WatchState {
     uint64_t last_sequence;
 } WatchState;
 
+/*
+ * Exercise watch sink and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void watch_sink(const UmiWatchEvent *event, void *user_data)
 {
     WatchState *state = (WatchState *)user_data;
     assert(event->sequence > state->last_sequence);
     state->last_sequence = event->sequence;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (event->kind == UMI_WATCH_CREATED) state->created += 1U;
-    else if (event->kind == UMI_WATCH_MODIFIED) state->modified += 1U;
-    else if (event->kind == UMI_WATCH_DELETED) state->deleted += 1U;
+    else /* Apply this branch only when its contract condition is satisfied. */ if (event->kind == UMI_WATCH_MODIFIED) state->modified += 1U;
+    else /* Apply this branch only when its contract condition is satisfied. */ if (event->kind == UMI_WATCH_DELETED) state->deleted += 1U;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char temporary[UMI_PATH_CAPACITY];

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime profile cppvsdbg operation used by this module and its client
+ * applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_cppvsdbg(void);
 #ifdef __cplusplus
 }

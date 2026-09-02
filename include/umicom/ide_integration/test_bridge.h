@@ -21,11 +21,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide test item target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_test_item_target(
     UmiTestPlatformService *tests,
     const char *item_id,
     UmiIdeNavigationTarget *out_target);
 
+/**
+ * Provide the ide test result summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_test_result_summary(
     UmiTestPlatformService *tests,
     const char *result_id,

@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/reconciliation_run.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiReconciliationRun r; CHECK(umi_reg_reconciliation_run_init(&r,"run")==UMI_STATUS_OK); CHECK(umi_reg_reconciliation_run_record(&r,10.0,10.01,0.02)==UMI_STATUS_OK); CHECK(r.matched==1U); return 0; }

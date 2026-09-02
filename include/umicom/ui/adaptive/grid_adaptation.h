@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive grid decision data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveGridDecision { size_t visible_columns; int horizontal_scroll; int condensed_headers; } UmiAdaptiveGridDecision;
 /* Resolve high-density grid presentation without changing the logical data model. */
 UmiAdaptiveGridDecision umi_adaptive_grid_adaptation_resolve(size_t column_count, UmiDesignSizeClass size_class);

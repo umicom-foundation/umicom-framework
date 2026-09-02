@@ -25,8 +25,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-SEC-002", "CWE-798", UMI_CODEGUARD_CRITICAL, UMI_CODEGUARD_CATEGORY_SECRET, 92U, UMI_CODEGUARD_MATCH_RAW, "api_key = \"", "Possible hard-coded API key literal.", "Move API credentials outside source control and resolve them via a secret provider."}
 };
 
+/*
+ * Provide the codeguard rules secret operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_secret(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

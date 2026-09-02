@@ -23,11 +23,13 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_developer)
     message(FATAL_ERROR
         "Studio Runtime requires the canonical umicom_developer target")
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET Umicom::document)
     message(FATAL_ERROR
         "Studio Runtime requires the canonical Umicom::document target")
@@ -156,15 +158,18 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/window_title.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_executable(
         umicom-studio-runtime-activation-catalogue-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_catalogue.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-catalogue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-catalogue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-catalogue-test)
     endif()
@@ -175,9 +180,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_ai_approvals.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-ai-approvals-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-ai-approvals-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-ai-approvals-test)
     endif()
@@ -188,9 +195,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_ai_chat.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-ai-chat-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-ai-chat-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-ai-chat-test)
     endif()
@@ -201,9 +210,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_ai_review.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-ai-review-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-ai-review-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-ai-review-test)
     endif()
@@ -214,9 +225,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_ai_tools.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-ai-tools-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-ai-tools-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-ai-tools-test)
     endif()
@@ -227,9 +240,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_ai_validation.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-ai-validation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-ai-validation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-ai-validation-test)
     endif()
@@ -240,9 +255,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_build.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-build-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-build-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-build-test)
     endif()
@@ -253,9 +270,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_debug.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-debug-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-debug-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-debug-test)
     endif()
@@ -266,9 +285,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_editor.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-editor-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-editor-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-editor-test)
     endif()
@@ -279,9 +300,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_explorer.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-explorer-test)
     endif()
@@ -292,9 +315,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_outline.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-outline-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-outline-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-outline-test)
     endif()
@@ -305,9 +330,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_output.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-output-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-output-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-output-test)
     endif()
@@ -318,9 +345,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_problems.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-problems-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-problems-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-problems-test)
     endif()
@@ -331,9 +360,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_search.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-search-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-search-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-search-test)
     endif()
@@ -344,9 +375,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_source_control.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-source-control-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-source-control-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-source-control-test)
     endif()
@@ -357,9 +390,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_terminal.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-terminal-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-terminal-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-terminal-test)
     endif()
@@ -370,9 +405,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_activation_profile_test_explorer.c"
     )
     target_link_libraries(umicom-studio-runtime-activation-profile-test-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-activation-profile-test-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-activation-profile-test-explorer-test)
     endif()
@@ -383,9 +420,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_ai_context_sync.c"
     )
     target_link_libraries(umicom-studio-runtime-ai-context-sync-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-ai-context-sync-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-ai-context-sync-test)
     endif()
@@ -396,9 +435,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_bindings.c"
     )
     target_link_libraries(umicom-studio-runtime-bindings-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-bindings-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-bindings-test)
     endif()
@@ -409,9 +450,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_close_guard.c"
     )
     target_link_libraries(umicom-studio-runtime-close-guard-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-close-guard-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-close-guard-test)
     endif()
@@ -422,9 +465,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_ai_assistant_open.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-ai-assistant-open-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-ai-assistant-open-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-ai-assistant-open-test)
     endif()
@@ -435,9 +480,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_catalogue.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-catalogue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-catalogue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-catalogue-test)
     endif()
@@ -448,9 +495,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_document_save.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-document-save-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-document-save-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-document-save-test)
     endif()
@@ -461,9 +510,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_file_save.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-file-save-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-file-save-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-file-save-test)
     endif()
@@ -474,9 +525,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_layout_manager.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-layout-manager-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-layout-manager-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-layout-manager-test)
     endif()
@@ -487,9 +540,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_layout_restore.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-layout-restore-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-layout-restore-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-layout-restore-test)
     endif()
@@ -500,9 +555,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_layout_save.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-layout-save-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-layout-save-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-layout-save-test)
     endif()
@@ -513,9 +570,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_navigate_back.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-navigate-back-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-navigate-back-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-navigate-back-test)
     endif()
@@ -526,9 +585,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_navigate_forward.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-navigate-forward-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-navigate-forward-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-navigate-forward-test)
     endif()
@@ -539,9 +600,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_registry.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-registry-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-registry-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-registry-test)
     endif()
@@ -552,9 +615,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_ai_approvals.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-ai-approvals-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-ai-approvals-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-ai-approvals-test)
     endif()
@@ -565,9 +630,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_ai_review.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-ai-review-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-ai-review-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-ai-review-test)
     endif()
@@ -578,9 +645,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_ai_tools.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-ai-tools-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-ai-tools-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-ai-tools-test)
     endif()
@@ -591,9 +660,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_ai_validation.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-ai-validation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-ai-validation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-ai-validation-test)
     endif()
@@ -604,9 +675,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_build_dashboard.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-build-dashboard-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-build-dashboard-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-build-dashboard-test)
     endif()
@@ -617,9 +690,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_debug.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-debug-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-debug-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-debug-test)
     endif()
@@ -630,9 +705,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_explorer.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-explorer-test)
     endif()
@@ -643,9 +720,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_outline.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-outline-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-outline-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-outline-test)
     endif()
@@ -656,9 +735,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_output.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-output-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-output-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-output-test)
     endif()
@@ -669,9 +750,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_problems.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-problems-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-problems-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-problems-test)
     endif()
@@ -682,9 +765,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_search.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-search-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-search-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-search-test)
     endif()
@@ -695,9 +780,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_source_control.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-source-control-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-source-control-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-source-control-test)
     endif()
@@ -708,9 +795,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_terminal.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-terminal-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-terminal-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-terminal-test)
     endif()
@@ -721,9 +810,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_alias_view_test_explorer.c"
     )
     target_link_libraries(umicom-studio-runtime-command-alias-view-test-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-alias-view-test-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-alias-view-test-explorer-test)
     endif()
@@ -734,9 +825,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_command_search.c"
     )
     target_link_libraries(umicom-studio-runtime-command-search-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-command-search-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-command-search-test)
     endif()
@@ -747,9 +840,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_contract.c"
     )
     target_link_libraries(umicom-studio-runtime-contract-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-contract-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-contract-test)
     endif()
@@ -760,9 +855,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_contract_closure_missing.c"
     )
     target_link_libraries(umicom-studio-runtime-contract-closure-missing-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-contract-closure-missing-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-contract-closure-missing-test)
     endif()
@@ -773,9 +870,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_document_tabs.c"
     )
     target_link_libraries(umicom-studio-runtime-document-tabs-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-document-tabs-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-document-tabs-test)
     endif()
@@ -786,9 +885,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_host_adapter.c"
     )
     target_link_libraries(umicom-studio-runtime-host-adapter-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-host-adapter-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-host-adapter-test)
     endif()
@@ -799,9 +900,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_catalogue.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-catalogue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-catalogue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-catalogue-test)
     endif()
@@ -812,9 +915,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_ai_development.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-ai-development-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-ai-development-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-ai-development-test)
     endif()
@@ -825,9 +930,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_apply.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-apply-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-apply-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-apply-test)
     endif()
@@ -838,9 +945,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_debugging.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-debugging-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-debugging-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-debugging-test)
     endif()
@@ -851,9 +960,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_default.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-default-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-default-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-default-test)
     endif()
@@ -864,9 +975,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_review.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-review-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-review-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-review-test)
     endif()
@@ -877,9 +990,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_source_control.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-source-control-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-source-control-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-source-control-test)
     endif()
@@ -890,9 +1005,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_testing.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-testing-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-testing-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-testing-test)
     endif()
@@ -903,9 +1020,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_preset_zen.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-preset-zen-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-preset-zen-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-preset-zen-test)
     endif()
@@ -916,9 +1035,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_layout_session.c"
     )
     target_link_libraries(umicom-studio-runtime-layout-session-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-layout-session-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-layout-session-test)
     endif()
@@ -929,9 +1050,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_navigation_activation_precedence.c"
     )
     target_link_libraries(umicom-studio-runtime-navigation-activation-precedence-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-navigation-activation-precedence-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-navigation-activation-precedence-test)
     endif()
@@ -942,9 +1065,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_runtime_command_inventory.c"
     )
     target_link_libraries(umicom-studio-runtime-runtime-command-inventory-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-runtime-command-inventory-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-runtime-command-inventory-test)
     endif()
@@ -955,9 +1080,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_selection_router.c"
     )
     target_link_libraries(umicom-studio-runtime-selection-router-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-selection-router-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-selection-router-test)
     endif()
@@ -968,9 +1095,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_selection_state.c"
     )
     target_link_libraries(umicom-studio-runtime-selection-state-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-selection-state-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-selection-state-test)
     endif()
@@ -981,9 +1110,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_status_model.c"
     )
     target_link_libraries(umicom-studio-runtime-status-model-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-status-model-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-status-model-test)
     endif()
@@ -994,9 +1125,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_activation.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-activation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-activation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-activation-test)
     endif()
@@ -1007,9 +1140,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_catalogue.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-catalogue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-catalogue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-catalogue-test)
     endif()
@@ -1020,9 +1155,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_install.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-install-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-install-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-install-test)
     endif()
@@ -1033,9 +1170,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_ai_approvals.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-ai-approvals-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-ai-approvals-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-ai-approvals-test)
     endif()
@@ -1046,9 +1185,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_ai_chat.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-ai-chat-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-ai-chat-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-ai-chat-test)
     endif()
@@ -1059,9 +1200,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_ai_review.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-ai-review-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-ai-review-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-ai-review-test)
     endif()
@@ -1072,9 +1215,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_ai_tools.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-ai-tools-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-ai-tools-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-ai-tools-test)
     endif()
@@ -1085,9 +1230,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_ai_validation.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-ai-validation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-ai-validation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-ai-validation-test)
     endif()
@@ -1098,9 +1245,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_build.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-build-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-build-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-build-test)
     endif()
@@ -1111,9 +1260,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_debug.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-debug-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-debug-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-debug-test)
     endif()
@@ -1124,9 +1275,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_editor.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-editor-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-editor-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-editor-test)
     endif()
@@ -1137,9 +1290,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_explorer.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-explorer-test)
     endif()
@@ -1150,9 +1305,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_outline.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-outline-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-outline-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-outline-test)
     endif()
@@ -1163,9 +1320,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_output.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-output-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-output-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-output-test)
     endif()
@@ -1176,9 +1335,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_problems.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-problems-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-problems-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-problems-test)
     endif()
@@ -1189,9 +1350,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_search.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-search-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-search-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-search-test)
     endif()
@@ -1202,9 +1365,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_source_control.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-source-control-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-source-control-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-source-control-test)
     endif()
@@ -1215,9 +1380,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_terminal.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-terminal-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-terminal-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-terminal-test)
     endif()
@@ -1228,9 +1395,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_surface_profile_test_explorer.c"
     )
     target_link_libraries(umicom-studio-runtime-surface-profile-test-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-surface-profile-test-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-surface-profile-test-explorer-test)
     endif()
@@ -1241,9 +1410,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_types.c"
     )
     target_link_libraries(umicom-studio-runtime-types-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-types-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-types-test)
     endif()
@@ -1254,9 +1425,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_view_ids.c"
     )
     target_link_libraries(umicom-studio-runtime-view-ids-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-view-ids-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-view-ids-test)
     endif()
@@ -1267,9 +1440,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_view_ids_unique.c"
     )
     target_link_libraries(umicom-studio-runtime-view-ids-unique-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-view-ids-unique-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-view-ids-unique-test)
     endif()
@@ -1280,9 +1455,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_window_title.c"
     )
     target_link_libraries(umicom-studio-runtime-window-title-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-studio-runtime-window-title-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-studio-runtime-window-title-test)
     endif()
@@ -1302,10 +1479,12 @@ if(BUILD_TESTING)
         PRIVATE
             Umicom::developer
     )
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(
             umicom-studio-runtime-document-link-closure-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(
             umicom-studio-runtime-document-link-closure-test)

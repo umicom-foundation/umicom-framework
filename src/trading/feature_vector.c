@@ -19,20 +19,34 @@
 
 #include "umicom/trading/feature_vector.h"
 
+/*
+ * Initialise feature vector from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_feature_vector_init(UmiFeatureVector *vector)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (vector != NULL) {
         vector->count = 0U;
     }
 }
 
+/* Add feature vector only after its inputs and available capacity have been checked. */
 UmiStatus umi_feature_vector_add(UmiFeatureVector *vector,
                                  const UmiMarketFactor *factor)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (vector == NULL || factor == NULL || factor->name[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (vector->count >= UMI_TRADING_MAX_FACTORS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

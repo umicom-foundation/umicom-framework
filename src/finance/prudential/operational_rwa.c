@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/operational_rwa.h"
 
-UmiStatus umi_pru_operational_rwa_calculate(UmiPrudentialOperationalRwa *result,double bic,double lm,double factor) { double charge; if(result==NULL||!umi_pru_number_valid(bic)||!umi_pru_number_valid(lm)||!umi_pru_number_valid(factor)||bic<0.0||lm<0.0||factor<0.0)return UMI_STATUS_INVALID_ARGUMENT; charge=bic*lm; result->business_indicator_component=bic; result->loss_multiplier=lm; result->conversion_factor=factor; result->rwa=charge*factor; return umi_pru_number_valid(result->rwa)?UMI_STATUS_OK:UMI_STATUS_INVALID_STATE; }
+/*
+ * Provide the pru operational rwa calculate operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_pru_operational_rwa_calculate(UmiPrudentialOperationalRwa *result,double bic,double lm,double factor) { double charge; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(result==NULL||!umi_pru_number_valid(bic)||!umi_pru_number_valid(lm)||!umi_pru_number_valid(factor)||bic<0.0||lm<0.0||factor<0.0)return UMI_STATUS_INVALID_ARGUMENT; charge=bic*lm; result->business_indicator_component=bic; result->loss_multiplier=lm; result->conversion_factor=factor; result->rwa=charge*factor; return umi_pru_number_valid(result->rwa)?UMI_STATUS_OK:UMI_STATUS_INVALID_STATE; }

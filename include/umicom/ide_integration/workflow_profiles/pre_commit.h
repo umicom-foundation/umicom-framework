@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ide workflow profile pre commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_profile_pre_commit(
     UmiIdeWorkflowPolicy *out_policy);
 #ifdef __cplusplus

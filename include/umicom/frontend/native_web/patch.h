@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/types.h"
+/**
+ * Represent the native web patch data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebPatch { UmiNativeWebPatchKind kind; char target_id[UMI_NATIVE_WEB_ID_CAPACITY]; char name[64]; char value[UMI_NATIVE_WEB_VALUE_CAPACITY]; int32_t order; uint64_t revision; } UmiNativeWebPatch;
 /* Initialise one validated DOM patch. */
 UmiStatus umi_native_web_patch_init(UmiNativeWebPatch *patch, UmiNativeWebPatchKind kind, const char *target_id, const char *name, const char *value, uint64_t revision);

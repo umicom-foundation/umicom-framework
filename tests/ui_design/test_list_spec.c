@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/list_spec.h"
 
-int main(void){UmiDesignListSpec s;if(umi_design_list_spec_init(&s,50000U,UMI_DESIGN_DENSITY_COMPACT,1,1)!=UMI_STATUS_OK)return 1;return s.virtualised?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignListSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_list_spec_init(&s,50000U,UMI_DESIGN_DENSITY_COMPACT,1,1)!=UMI_STATUS_OK)return 1;return s.virtualised?0:2;}

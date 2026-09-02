@@ -18,13 +18,22 @@
 #include "internal.h"
 
 
+/*
+ * Initialise workbench designer command context from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_command_context_init(
     UmiWorkbenchDesignerCommandContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return;
     (void)memset(context, 0, sizeof(*context));
 }
 
+/* Add command context only after its inputs and available capacity have been checked. */
 static UmiStatus command_context_add(
     UmiWorkbenchDesignerCommandContext *context,
     UmiWorkbenchDesignerCommandKind kind,
@@ -36,6 +45,7 @@ static UmiStatus command_context_add(
     const char *disabled_reason)
 {
     UmiWorkbenchDesignerCommandState *state;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (context->count >= UMI_WORKBENCH_DESIGNER_MAX_COMMAND_STATES) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -46,6 +56,10 @@ static UmiStatus command_context_add(
         state->command_id, sizeof(state->command_id), command_id);
     (void)umi_workbench_designer_copy_text(
         state->label, sizeof(state->label), label);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (disabled_reason != NULL) {
         (void)umi_workbench_designer_copy_text(
             state->disabled_reason, sizeof(state->disabled_reason),
@@ -57,6 +71,10 @@ static UmiStatus command_context_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer command context build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_command_context_build(
     UmiWorkbenchDesignerCommandContext *context,
     UmiWorkbenchDesignerMode mode,
@@ -72,6 +90,10 @@ UmiStatus umi_workbench_designer_command_context_build(
     const bool design_mode = mode == UMI_WORKBENCH_DESIGNER_MODE_DESIGN;
     const bool mutable = design_mode && !locked;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_designer_command_context_init(context);
     context->mode = mode;
@@ -121,13 +143,23 @@ UmiStatus umi_workbench_designer_command_context_build(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench designer command context while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerCommandState *umi_workbench_designer_command_context_find(
     const UmiWorkbenchDesignerCommandContext *context,
     UmiWorkbenchDesignerCommandKind kind)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < context->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (context->states[index].kind == kind) return &context->states[index];
     }
     return NULL;

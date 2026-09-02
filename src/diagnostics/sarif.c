@@ -57,75 +57,108 @@ typedef struct JsonParser {
     int parent;
 } JsonParser;
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the parse hex u64 operation used by this module and its client applications. */
 static uint64_t parse_hex_u64(const char *text)
 {
     uint64_t value = 0U;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; text[index] != '\0'; ++index) {
         unsigned int digit;
         unsigned char character = (unsigned char)text[index];
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (character >= (unsigned char)'0' && character <= (unsigned char)'9') {
             digit = (unsigned int)(character - (unsigned char)'0');
-        } else if (character >= (unsigned char)'a' &&
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (character >= (unsigned char)'a' &&
                    character <= (unsigned char)'f') {
             digit = 10U + (unsigned int)(character - (unsigned char)'a');
-        } else if (character >= (unsigned char)'A' &&
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (character >= (unsigned char)'A' &&
                    character <= (unsigned char)'F') {
             digit = 10U + (unsigned int)(character - (unsigned char)'A');
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             return 0U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value > (UINT64_MAX - (uint64_t)digit) / UINT64_C(16)) return 0U;
         value = value * UINT64_C(16) + (uint64_t)digit;
     }
     return value;
 }
 
+/* Provide the builder reserve operation used by this module and its client applications. */
 static UmiStatus builder_reserve(SarifBuilder *builder, size_t additional)
 {
     size_t required;
     size_t capacity;
     char *replacement;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (additional > SIZE_MAX - builder->count - 1U) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     required = builder->count + additional + 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= builder->capacity) return UMI_STATUS_OK;
     capacity = builder->capacity > 0U ? builder->capacity : SARIF_INITIAL_CAPACITY;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
     replacement = (char *)realloc(builder->bytes, capacity);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     builder->bytes = replacement;
     builder->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the builder append n operation used by this module and its client applications. */
 static UmiStatus builder_append_n(SarifBuilder *builder,
                                   const char *text,
                                   size_t length)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL || (text == NULL && length > 0U)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = builder_reserve(builder, length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(builder->bytes + builder->count, text, length);
     builder->count += length;
     builder->bytes[builder->count] = '\0';
     return UMI_STATUS_OK;
 }
 
+/* Add builder only after its inputs and available capacity have been checked. */
 static UmiStatus builder_append(SarifBuilder *builder, const char *text)
 {
     return text != NULL
@@ -133,6 +166,10 @@ static UmiStatus builder_append(SarifBuilder *builder, const char *text)
         : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Provide the builder append format operation used by this module and its client
+ * applications.
+ */
 static UmiStatus builder_append_format(SarifBuilder *builder,
                                        const char *format,
                                        ...)
@@ -141,49 +178,70 @@ static UmiStatus builder_append_format(SarifBuilder *builder,
     va_list copy;
     int required;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL || format == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     va_start(arguments, format);
     va_copy(copy, arguments);
     required = vsnprintf(NULL, 0, format, copy);
     va_end(copy);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (required < 0) {
         va_end(arguments);
         return UMI_STATUS_INTERNAL_ERROR;
     }
     status = builder_reserve(builder, (size_t)required);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         int written = vsnprintf(builder->bytes + builder->count,
                                 builder->capacity - builder->count,
                                 format,
                                 arguments);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (written != required) status = UMI_STATUS_INTERNAL_ERROR;
+        /* Use this fallback path when the earlier condition does not apply. */
         else builder->count += (size_t)written;
     }
     va_end(arguments);
     return status;
 }
 
+/* Provide the builder indent operation used by this module and its client applications. */
 static UmiStatus builder_indent(SarifBuilder *builder, size_t depth)
 {
     size_t index;
     UmiStatus status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!builder->pretty) return UMI_STATUS_OK;
     status = builder_append(builder, "\n");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < depth && status == UMI_STATUS_OK; ++index) {
         status = builder_append(builder, "  ");
     }
     return status;
 }
 
+/*
+ * Provide the builder append json string operation used by this module and its client
+ * applications.
+ */
 static UmiStatus builder_append_json_string(SarifBuilder *builder,
                                             const char *text)
 {
     const unsigned char *cursor;
     UmiStatus status = builder_append(builder, "\"");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     cursor = (const unsigned char *)(text != NULL ? text : "");
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U && status == UMI_STATUS_OK) {
         unsigned char character = *cursor++;
+        /* Select the behaviour associated with the requested command or state value. */
         switch (character) {
             case '"': status = builder_append(builder, "\\\""); break;
             case '\\': status = builder_append(builder, "\\\\"); break;
@@ -193,10 +251,11 @@ static UmiStatus builder_append_json_string(SarifBuilder *builder,
             case '\r': status = builder_append(builder, "\\r"); break;
             case '\t': status = builder_append(builder, "\\t"); break;
             default:
+                /* Apply this branch only when its contract condition is satisfied. */
                 if (character < 0x20U) {
                     status = builder_append_format(builder, "\\u%04x",
                                                    (unsigned int)character);
-                } else {
+                } /* Use this fallback path when the earlier condition does not apply. */ else {
                     status = builder_append_n(builder,
                                               (const char *)&character,
                                               1U);
@@ -204,12 +263,15 @@ static UmiStatus builder_append_json_string(SarifBuilder *builder,
                 break;
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"");
     return status;
 }
 
+/* Provide the sarif level operation used by this module and its client applications. */
 static const char *sarif_level(UmiDiagnosticSeverity severity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
         case UMI_DIAGNOSTIC_TRACE:
         case UMI_DIAGNOSTIC_INFO: return "note";
@@ -220,8 +282,13 @@ static const char *sarif_level(UmiDiagnosticSeverity severity)
     }
 }
 
+/*
+ * Provide the baseline state text operation used by this module and its client
+ * applications.
+ */
 static const char *baseline_state_text(UmiDiagnosticBaselineState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_DIAGNOSTIC_BASELINE_NEW: return "new";
         case UMI_DIAGNOSTIC_BASELINE_UNCHANGED: return "unchanged";
@@ -231,14 +298,23 @@ static const char *baseline_state_text(UmiDiagnosticBaselineState state)
     }
 }
 
+/*
+ * Provide the suppression kind text operation used by this module and its client
+ * applications.
+ */
 static const char *suppression_kind_text(UmiDiagnosticSuppressionKind kind)
 {
     return kind == UMI_DIAGNOSTIC_SUPPRESSION_IN_SOURCE
         ? "inSource" : "external";
 }
 
+/*
+ * Provide the suppression status text operation used by this module and its client
+ * applications.
+ */
 static const char *suppression_status_text(UmiDiagnosticSuppressionStatus status)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (status) {
         case UMI_DIAGNOSTIC_SUPPRESSION_ACCEPTED: return "accepted";
         case UMI_DIAGNOSTIC_SUPPRESSION_UNDER_REVIEW: return "underReview";
@@ -247,29 +323,49 @@ static const char *suppression_status_text(UmiDiagnosticSuppressionStatus status
     }
 }
 
+/*
+ * Provide the problem is exported operation used by this module and its client
+ * applications.
+ */
 static int problem_is_exported(const UmiDiagnosticProblem *problem,
                                const UmiDiagnosticSarifExportOptions *options)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!options->include_suppressed && problem->suppression.suppressed) return 0;
+    /* Apply this operation only while the related capability or state is available. */
     if (!options->include_resolved && !problem->active) return 0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!options->include_disabled && problem->policy_disabled) return 0;
     return 1;
 }
 
+/*
+ * Provide the append result location operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_result_location(SarifBuilder *builder,
                                         const UmiDiagnosticProblem *problem,
                                         size_t depth)
 {
     const UmiDiagnosticSnapshot *diagnostic = &problem->finding.diagnostic;
     UmiStatus status = builder_indent(builder, depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"locations\":[{");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"physicalLocation\":{");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 2U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"artifactLocation\":{\"uri\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder, diagnostic->uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "},");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 2U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append_format(builder,
             "\"region\":{\"startLine\":%" PRIu32
@@ -283,41 +379,59 @@ static UmiStatus append_result_location(SarifBuilder *builder,
             diagnostic->end_column > 0U ? diagnostic->end_column
                                          : (diagnostic->column > 0U ? diagnostic->column : 1U));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && problem->finding.snippet[0] != '\0') {
         status = builder_append(builder, ",\"snippet\":{\"text\":");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = builder_append_json_string(builder,
                                                  problem->finding.snippet);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append(builder, "}");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && problem->finding.logical_location[0] != '\0') {
         status = builder_append(builder, ",\"logicalLocations\":[{\"name\":");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = builder_append_json_string(
                 builder, problem->finding.logical_location);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append(builder, "}]");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "}]");
     return status;
 }
 
+/* Provide the append result fix operation used by this module and its client applications. */
 static UmiStatus append_result_fix(SarifBuilder *builder,
                                    const UmiDiagnosticProblem *problem,
                                    size_t depth)
 {
     const UmiDiagnosticProviderFinding *finding = &problem->finding;
     UmiStatus status = builder_append(builder, ",");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"fixes\":[{\"description\":{\"text\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder, finding->fix_description);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "},\"artifactChanges\":[{\"artifactLocation\":{\"uri\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder, finding->diagnostic.uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "},\"replacements\":[{\"deletedRegion\":{");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append_format(builder,
             "\"startLine\":%" PRIu32 ",\"startColumn\":%" PRIu32
@@ -331,36 +445,55 @@ static UmiStatus append_result_fix(SarifBuilder *builder,
             finding->replacement_end_column > 0U
                 ? finding->replacement_end_column : finding->diagnostic.end_column);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"insertedContent\":{\"text\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder, finding->replacement_text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "}}]}]}]");
     return status;
 }
 
+/*
+ * Provide the append result suppression operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_result_suppression(SarifBuilder *builder,
                                            const UmiDiagnosticProblem *problem,
                                            size_t depth)
 {
     UmiStatus status = builder_append(builder, ",");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"suppressions\":[{\"kind\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append_json_string(
             builder, suppression_kind_text(problem->suppression.kind));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, ",\"status\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append_json_string(
             builder, suppression_status_text(problem->suppression.status));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, ",\"justification\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append_json_string(builder, problem->suppression.reason);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "}]");
     return status;
 }
 
+/*
+ * Provide the append result properties operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_result_properties(SarifBuilder *builder,
                                           const UmiDiagnosticProblem *problem,
                                           size_t depth)
@@ -368,7 +501,9 @@ static UmiStatus append_result_properties(SarifBuilder *builder,
     const UmiDiagnosticProviderFinding *finding = &problem->finding;
     const UmiDiagnosticSnapshot *diagnostic = &finding->diagnostic;
     UmiStatus status = builder_append(builder, ",");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"properties\":{");
 #define APPEND_STRING_PROPERTY(name, value)                                    \
     do {                                                                        \
@@ -386,6 +521,7 @@ static UmiStatus append_result_properties(SarifBuilder *builder,
     APPEND_STRING_PROPERTY(",\"umicomSeverityRuleId\":",
                            problem->severity_rule_id);
 #undef APPEND_STRING_PROPERTY
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append_format(builder,
             ",\"umicomKind\":%d,\"umicomOriginalSeverity\":%d"
@@ -405,6 +541,10 @@ static UmiStatus append_result_properties(SarifBuilder *builder,
     return status;
 }
 
+/*
+ * Provide the append problem result operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_problem_result(SarifBuilder *builder,
                                        const UmiDiagnosticProblem *problem,
                                        const UmiDiagnosticSarifExportOptions *options,
@@ -413,59 +553,94 @@ static UmiStatus append_problem_result(SarifBuilder *builder,
     const UmiDiagnosticProviderFinding *finding = &problem->finding;
     const char *baseline = baseline_state_text(problem->baseline_state);
     UmiStatus status = builder_indent(builder, depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "{");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"ruleId\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder,
         finding->diagnostic.code[0] != '\0' ? finding->diagnostic.code : "UMICOM");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, ",");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"level\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder,
         sarif_level(problem->effective_severity));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && baseline != NULL) {
         status = builder_append(builder, ",");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append(builder, "\"baselineState\":");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append_json_string(builder, baseline);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, ",");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "\"message\":{\"text\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(builder,
         finding->diagnostic.message);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && finding->diagnostic.detail[0] != '\0') {
         status = builder_append(builder, ",\"markdown\":");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append_json_string(builder,
             finding->diagnostic.detail);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "},");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = append_result_location(builder, problem,
                                                                   depth + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = builder_append(builder, ",");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_indent(builder, depth + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append_format(builder,
             "\"partialFingerprints\":{\"umicomFingerprint/v1\":\"%016" PRIx64
             "\",\"umicomContentFingerprint/v1\":\"%016" PRIx64 "\"}",
             finding->fingerprint,
             finding->content_fingerprint);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && problem->suppression.suppressed) {
         status = append_result_suppression(builder, problem, depth + 1U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && options->include_fixes && problem->fixable &&
         finding->has_fix) {
         status = append_result_fix(builder, problem, depth + 1U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append_result_properties(builder, problem, depth + 1U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(builder, depth);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(builder, "}");
     return status;
 }
 
+/*
+ * Provide the diagnostic sarif run default operation used by this module and its client
+ * applications.
+ */
 UmiDiagnosticSarifRunDescriptor umi_diagnostic_sarif_run_default(
     const char *tool_name)
 {
@@ -475,8 +650,13 @@ UmiDiagnosticSarifRunDescriptor umi_diagnostic_sarif_run_default(
     descriptor.struct_size = (uint32_t)sizeof(descriptor);
     descriptor.api_version = UMI_DIAGNOSTIC_SARIF_API_VERSION;
     descriptor.successful = 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool_name != NULL) {
         length = strlen(tool_name);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= sizeof(descriptor.tool_name)) {
             length = sizeof(descriptor.tool_name) - 1U;
         }
@@ -486,6 +666,10 @@ UmiDiagnosticSarifRunDescriptor umi_diagnostic_sarif_run_default(
     return descriptor;
 }
 
+/*
+ * Provide the diagnostic sarif export options default operation used by this module and
+ * its client applications.
+ */
 UmiDiagnosticSarifExportOptions umi_diagnostic_sarif_export_options_default(void)
 {
     UmiDiagnosticSarifExportOptions options;
@@ -496,6 +680,10 @@ UmiDiagnosticSarifExportOptions umi_diagnostic_sarif_export_options_default(void
     return options;
 }
 
+/*
+ * Provide the diagnostic sarif export operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_sarif_export(
     const UmiDiagnosticProblemModel *model,
     const UmiDiagnosticSarifRunDescriptor *run,
@@ -508,6 +696,10 @@ UmiStatus umi_diagnostic_sarif_export(
     size_t position;
     size_t emitted = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || run == NULL || out_json == NULL ||
         run->struct_size != (uint32_t)sizeof(*run) ||
         run->api_version != UMI_DIAGNOSTIC_SARIF_API_VERSION ||
@@ -519,6 +711,10 @@ UmiStatus umi_diagnostic_sarif_export(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_json = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_size != NULL) *out_size = 0U;
     effective = options != NULL ? *options
                                 : umi_diagnostic_sarif_export_options_default();
@@ -527,33 +723,49 @@ UmiStatus umi_diagnostic_sarif_export(
     status = builder_append(&builder,
         "{\"$schema\":\"https://json.schemastore.org/sarif-2.1.0.json\","
         "\"version\":\"2.1.0\",\"runs\":[{");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(&builder, 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder,
         "\"tool\":{\"driver\":{\"name\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(&builder,
         run->tool_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && run->tool_version[0] != '\0') {
         status = builder_append(&builder, ",\"version\":");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append_json_string(&builder,
             run->tool_version);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && run->information_uri[0] != '\0') {
         status = builder_append(&builder, ",\"informationUri\":");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) status = builder_append_json_string(&builder,
             run->information_uri);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder, "}},");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(&builder, 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder,
         "\"automationDetails\":{\"id\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_json_string(&builder,
         run->automation_id[0] != '\0' ? run->automation_id : run->tool_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder, "},");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(&builder, 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder,
         "\"invocations\":[{\"executionSuccessful\":");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder,
         run->successful ? "true" : "false");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append_format(&builder,
         ",\"exitCode\":%" PRId32
         ",\"properties\":{\"umicomRunId\":%" PRIu64
@@ -563,42 +775,64 @@ UmiStatus umi_diagnostic_sarif_export(
         run->run_id,
         run->started_timestamp_ns,
         run->ended_timestamp_ns);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(&builder, 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder, "\"results\":[");
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U;
          status == UMI_STATUS_OK && position < umi_diagnostic_problem_model_count(model);
          ++position) {
         UmiDiagnosticProblem problem;
         status = umi_diagnostic_problem_model_at(model, position, &problem);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!problem_is_exported(&problem, &effective)) continue;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (effective.maximum_results > 0U && emitted >= effective.maximum_results) {
             break;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (emitted > 0U) status = builder_append(&builder, ",");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = append_problem_result(&builder, &problem, &effective, 2U);
         }
         ++emitted;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(&builder, 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder, "]");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_indent(&builder, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = builder_append(&builder, "}]}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(builder.bytes);
         return status;
     }
     *out_json = builder.bytes;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_size != NULL) *out_size = builder.count;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the json allocate token operation used by this module and its client
+ * applications.
+ */
 static JsonToken *json_allocate_token(JsonParser *parser,
                                       JsonToken *tokens,
                                       size_t capacity)
 {
     JsonToken *token;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->next_token >= capacity) return NULL;
     token = &tokens[parser->next_token++];
     (void)memset(token, 0, sizeof(*token));
@@ -606,6 +840,7 @@ static JsonToken *json_allocate_token(JsonParser *parser,
     return token;
 }
 
+/* Provide the json parse string operation used by this module and its client applications. */
 static UmiStatus json_parse_string(JsonParser *parser,
                                    const char *json,
                                    size_t size,
@@ -613,30 +848,47 @@ static UmiStatus json_parse_string(JsonParser *parser,
                                    size_t capacity)
 {
     size_t start = ++parser->position;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (parser->position < size) {
         unsigned char character = (unsigned char)json[parser->position];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character == (unsigned char)'"') {
             JsonToken *token = json_allocate_token(parser, tokens, capacity);
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (token == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
             token->type = JSON_TOKEN_STRING;
             token->start = start;
             token->end = parser->position;
             token->parent = parser->parent;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (parser->parent >= 0) {
                 ++tokens[(size_t)parser->parent].child_count;
             }
             return UMI_STATUS_OK;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (character < 0x20U) return UMI_STATUS_PARSE_ERROR;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character == (unsigned char)'\\') {
             size_t escape = ++parser->position;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (escape >= size) return UMI_STATUS_PARSE_ERROR;
             character = (unsigned char)json[escape];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (character == (unsigned char)'u') {
                 size_t digit;
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (escape + 4U >= size) return UMI_STATUS_PARSE_ERROR;
+                /* Visit each bounded item once so every record receives the same rule. */
                 for (digit = 1U; digit <= 4U; ++digit) {
                     unsigned char value = (unsigned char)json[escape + digit];
+                    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                     if (!((value >= (unsigned char)'0' && value <= (unsigned char)'9') ||
                           (value >= (unsigned char)'a' && value <= (unsigned char)'f') ||
                           (value >= (unsigned char)'A' && value <= (unsigned char)'F'))) {
@@ -644,7 +896,7 @@ static UmiStatus json_parse_string(JsonParser *parser,
                     }
                 }
                 parser->position += 4U;
-            } else if (strchr("\"\\/bfnrt", (int)character) == NULL) {
+            } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strchr("\"\\/bfnrt", (int)character) == NULL) {
                 return UMI_STATUS_PARSE_ERROR;
             }
         }
@@ -653,6 +905,10 @@ static UmiStatus json_parse_string(JsonParser *parser,
     return UMI_STATUS_PARSE_ERROR;
 }
 
+/*
+ * Provide the primitive delimiter operation used by this module and its client
+ * applications.
+ */
 static int primitive_delimiter(unsigned char character)
 {
     return character == (unsigned char)',' || character == (unsigned char)']' ||
@@ -661,6 +917,10 @@ static int primitive_delimiter(unsigned char character)
            character == (unsigned char)'\n';
 }
 
+/*
+ * Provide the json parse primitive operation used by this module and its client
+ * applications.
+ */
 static UmiStatus json_parse_primitive(JsonParser *parser,
                                       const char *json,
                                       size_t size,
@@ -669,26 +929,39 @@ static UmiStatus json_parse_primitive(JsonParser *parser,
 {
     size_t start = parser->position;
     JsonToken *token;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (parser->position < size &&
            !primitive_delimiter((unsigned char)json[parser->position])) {
         unsigned char character = (unsigned char)json[parser->position];
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (character < 0x20U || character >= 0x7fU || character == (unsigned char)':') {
             return UMI_STATUS_PARSE_ERROR;
         }
         ++parser->position;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser->position == start) return UMI_STATUS_PARSE_ERROR;
     token = json_allocate_token(parser, tokens, capacity);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (token == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
     token->type = JSON_TOKEN_PRIMITIVE;
     token->start = start;
     token->end = parser->position;
     token->parent = parser->parent;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parser->parent >= 0) ++tokens[(size_t)parser->parent].child_count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parser->position > 0U) --parser->position;
     return UMI_STATUS_OK;
 }
 
+/* Read json into validated module state and return a status when input cannot be used. */
 static UmiStatus json_parse(const char *json,
                             size_t size,
                             JsonToken *tokens,
@@ -697,24 +970,35 @@ static UmiStatus json_parse(const char *json,
 {
     JsonParser parser;
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || size == 0U || tokens == NULL || capacity == 0U ||
         out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(&parser, 0, sizeof(parser));
     parser.parent = -1;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (parser.position = 0U; parser.position < size; ++parser.position) {
         unsigned char character = (unsigned char)json[parser.position];
         UmiStatus status = UMI_STATUS_OK;
+        /* Select the behaviour associated with the requested command or state value. */
         switch (character) {
             case '{':
             case '[': {
                 JsonToken *token = json_allocate_token(&parser, tokens, capacity);
+                /*
+                 * Protect caller-owned memory by checking that required state is available before it is
+                 * used.
+                 */
                 if (token == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
                 token->type = character == (unsigned char)'{'
                     ? JSON_TOKEN_OBJECT : JSON_TOKEN_ARRAY;
                 token->start = parser.position;
                 token->parent = parser.parent;
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (parser.parent >= 0) {
                     ++tokens[(size_t)parser.parent].child_count;
                 }
@@ -726,6 +1010,7 @@ static UmiStatus json_parse(const char *json,
                 JsonTokenType expected = character == (unsigned char)'}'
                     ? JSON_TOKEN_OBJECT : JSON_TOKEN_ARRAY;
                 int open = parser.parent;
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (open < 0 || tokens[(size_t)open].type != expected ||
                     tokens[(size_t)open].end != 0U) {
                     return UMI_STATUS_PARSE_ERROR;
@@ -736,6 +1021,7 @@ static UmiStatus json_parse(const char *json,
             }
             case '"':
                 status = json_parse_string(&parser, json, size, tokens, capacity);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
                 break;
             case ' ':
@@ -747,14 +1033,18 @@ static UmiStatus json_parse(const char *json,
                 break;
             default:
                 status = json_parse_primitive(&parser, json, size, tokens, capacity);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
                 break;
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parser.parent != -1 || parser.next_token == 0U) {
         return UMI_STATUS_PARSE_ERROR;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < parser.next_token; ++position) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if ((tokens[position].type == JSON_TOKEN_OBJECT ||
              tokens[position].type == JSON_TOKEN_ARRAY) &&
             tokens[position].end == 0U) {
@@ -765,21 +1055,32 @@ static UmiStatus json_parse(const char *json,
     return UMI_STATUS_OK;
 }
 
+/* Provide the json token next operation used by this module and its client applications. */
 static size_t json_token_next(const JsonToken *tokens,
                               size_t count,
                               size_t position)
 {
     size_t next = position + 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= count) return count;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (next < count && tokens[next].start < tokens[position].end) ++next;
     return next;
 }
 
+/* Provide the json token equals operation used by this module and its client applications. */
 static int json_token_equals(const char *json,
                              const JsonToken *token,
                              const char *text)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || token == NULL || text == NULL ||
         token->type != JSON_TOKEN_STRING) return 0;
     length = strlen(text);
@@ -787,6 +1088,7 @@ static int json_token_equals(const char *json,
            memcmp(json + token->start, text, length) == 0;
 }
 
+/* Provide the json object get operation used by this module and its client applications. */
 static size_t json_object_get(const char *json,
                               const JsonToken *tokens,
                               size_t count,
@@ -794,21 +1096,29 @@ static size_t json_object_get(const char *json,
                               const char *name)
 {
     size_t position;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (object >= count || tokens[object].type != JSON_TOKEN_OBJECT) return SIZE_MAX;
     position = object + 1U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (position < count && tokens[position].start < tokens[object].end) {
         size_t value = position + 1U;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (tokens[position].parent == (int)object && value < count &&
             tokens[value].parent == (int)object &&
             json_token_equals(json, &tokens[position], name)) {
             return value;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (value >= count) break;
         position = json_token_next(tokens, count, value);
     }
     return SIZE_MAX;
 }
 
+/* Provide the json array item operation used by this module and its client applications. */
 static size_t json_array_item(const JsonToken *tokens,
                               size_t count,
                               size_t array,
@@ -816,53 +1126,72 @@ static size_t json_array_item(const JsonToken *tokens,
 {
     size_t position;
     size_t index = 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (array >= count || tokens[array].type != JSON_TOKEN_ARRAY) return SIZE_MAX;
     position = array + 1U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (position < count && tokens[position].start < tokens[array].end) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (tokens[position].parent == (int)array) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index == wanted) return position;
             ++index;
             position = json_token_next(tokens, count, position);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             ++position;
         }
     }
     return SIZE_MAX;
 }
 
+/* Return the number of records represented by json array without changing their state. */
 static size_t json_array_count(const JsonToken *tokens,
                                size_t count,
                                size_t array)
 {
     size_t position;
     size_t result = 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (array >= count || tokens[array].type != JSON_TOKEN_ARRAY) return 0U;
     position = array + 1U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (position < count && tokens[position].start < tokens[array].end) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (tokens[position].parent == (int)array) {
             ++result;
             position = json_token_next(tokens, count, position);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             ++position;
         }
     }
     return result;
 }
 
+/* Provide the hex digit operation used by this module and its client applications. */
 static int hex_digit(unsigned char character)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= (unsigned char)'0' && character <= (unsigned char)'9') {
         return (int)(character - (unsigned char)'0');
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= (unsigned char)'a' && character <= (unsigned char)'f') {
         return 10 + (int)(character - (unsigned char)'a');
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (character >= (unsigned char)'A' && character <= (unsigned char)'F') {
         return 10 + (int)(character - (unsigned char)'A');
     }
     return -1;
 }
 
+/* Provide the append utf8 operation used by this module and its client applications. */
 static UmiStatus append_utf8(char *destination,
                              size_t capacity,
                              size_t *position,
@@ -870,25 +1199,28 @@ static UmiStatus append_utf8(char *destination,
 {
     unsigned char bytes[3];
     size_t count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (codepoint <= 0x7fU) {
         bytes[0] = (unsigned char)codepoint;
         count = 1U;
-    } else if (codepoint <= 0x7ffU) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (codepoint <= 0x7ffU) {
         bytes[0] = (unsigned char)(0xc0U | (codepoint >> 6U));
         bytes[1] = (unsigned char)(0x80U | (codepoint & 0x3fU));
         count = 2U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         bytes[0] = (unsigned char)(0xe0U | (codepoint >> 12U));
         bytes[1] = (unsigned char)(0x80U | ((codepoint >> 6U) & 0x3fU));
         bytes[2] = (unsigned char)(0x80U | (codepoint & 0x3fU));
         count = 3U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count >= capacity - *position) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination + *position, bytes, count);
     *position += count;
     return UMI_STATUS_OK;
 }
 
+/* Provide the json copy string operation used by this module and its client applications. */
 static UmiStatus json_copy_string(const char *json,
                                   const JsonToken *token,
                                   char *destination,
@@ -896,34 +1228,49 @@ static UmiStatus json_copy_string(const char *json,
 {
     size_t source;
     size_t output = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || token == NULL || destination == NULL || capacity == 0U ||
         token->type != JSON_TOKEN_STRING) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (source = token->start; source < token->end; ++source) {
         unsigned char character = (unsigned char)json[source];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character != (unsigned char)'\\') {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (output + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
             destination[output++] = (char)character;
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (++source >= token->end) return UMI_STATUS_PARSE_ERROR;
         character = (unsigned char)json[source];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character == (unsigned char)'u') {
             uint32_t codepoint = 0U;
             size_t digit;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (source + 4U >= token->end) return UMI_STATUS_PARSE_ERROR;
+            /* Visit each bounded item once so every record receives the same rule. */
             for (digit = 0U; digit < 4U; ++digit) {
                 int value = hex_digit((unsigned char)json[++source]);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (value < 0) return UMI_STATUS_PARSE_ERROR;
                 codepoint = codepoint * 16U + (uint32_t)value;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (codepoint >= 0xd800U && codepoint <= 0xdfffU) codepoint = 0xfffdU;
             {
                 UmiStatus status = append_utf8(destination, capacity, &output,
                                                codepoint);
+                /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (status != UMI_STATUS_OK) return status;
             }
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             char value;
+            /* Select the behaviour associated with the requested command or state value. */
             switch (character) {
                 case '"': value = '"'; break;
                 case '\\': value = '\\'; break;
@@ -935,6 +1282,7 @@ static UmiStatus json_copy_string(const char *json,
                 case 't': value = '\t'; break;
                 default: return UMI_STATUS_PARSE_ERROR;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (output + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
             destination[output++] = value;
         }
@@ -943,6 +1291,10 @@ static UmiStatus json_copy_string(const char *json,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the json copy optional string operation used by this module and its client
+ * applications.
+ */
 static int json_copy_optional_string(const char *json,
                                      const JsonToken *tokens,
                                      size_t count,
@@ -952,18 +1304,31 @@ static int json_copy_optional_string(const char *json,
                                      size_t capacity)
 {
     size_t value = json_object_get(json, tokens, count, object, name);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return 0;
     destination[0] = '\0';
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (value == SIZE_MAX || tokens[value].type != JSON_TOKEN_STRING) return 0;
     return json_copy_string(json, &tokens[value], destination, capacity) ==
            UMI_STATUS_OK;
 }
 
+/*
+ * Provide the json primitive equals operation used by this module and its client
+ * applications.
+ */
 static int json_primitive_equals(const char *json,
                                  const JsonToken *token,
                                  const char *text)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || token == NULL || text == NULL ||
         token->type != JSON_TOKEN_PRIMITIVE) return 0;
     length = strlen(text);
@@ -971,21 +1336,29 @@ static int json_primitive_equals(const char *json,
            memcmp(json + token->start, text, length) == 0;
 }
 
+/* Provide the json u64 operation used by this module and its client applications. */
 static uint64_t json_u64(const char *json,
                          const JsonToken *token,
                          uint64_t fallback)
 {
     uint64_t value = 0U;
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || token == NULL || token->type != JSON_TOKEN_PRIMITIVE ||
         token->start >= token->end) return fallback;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = token->start; position < token->end; ++position) {
         unsigned char character = (unsigned char)json[position];
         unsigned int digit;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character < (unsigned char)'0' || character > (unsigned char)'9') {
             return fallback;
         }
         digit = (unsigned int)(character - (unsigned char)'0');
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value > (UINT64_MAX - (uint64_t)digit) / UINT64_C(10)) {
             return fallback;
         }
@@ -994,39 +1367,54 @@ static uint64_t json_u64(const char *json,
     return value;
 }
 
+/* Provide the json int operation used by this module and its client applications. */
 static int json_int(const char *json, const JsonToken *token, int fallback)
 {
     int sign = 1;
     uint64_t value = 0U;
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || token == NULL || token->type != JSON_TOKEN_PRIMITIVE ||
         token->start >= token->end) return fallback;
     position = token->start;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (json[position] == '-') {
         sign = -1;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (++position >= token->end) return fallback;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (; position < token->end; ++position) {
         unsigned char character = (unsigned char)json[position];
         unsigned int digit;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (character < (unsigned char)'0' || character > (unsigned char)'9') {
             return fallback;
         }
         digit = (unsigned int)(character - (unsigned char)'0');
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value > (uint64_t)INT_MAX) return fallback;
         value = value * UINT64_C(10) + (uint64_t)digit;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value > (uint64_t)INT_MAX) return fallback;
     return sign * (int)value;
 }
 
+/* Provide the json bool operation used by this module and its client applications. */
 static int json_bool(const char *json, const JsonToken *token, int fallback)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (json_primitive_equals(json, token, "true")) return 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (json_primitive_equals(json, token, "false")) return 0;
     return fallback;
 }
 
+/* Provide the tokenize json operation used by this module and its client applications. */
 static UmiStatus tokenize_json(const char *json,
                                size_t size,
                                JsonToken **out_tokens,
@@ -1035,12 +1423,24 @@ static UmiStatus tokenize_json(const char *json,
     size_t capacity = 256U;
     JsonToken *tokens = NULL;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_tokens == NULL || out_count == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_tokens = NULL;
     *out_count = 0U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity <= SARIF_MAX_JSON_TOKENS) {
         JsonToken *replacement = (JsonToken *)realloc(tokens,
             capacity * sizeof(*tokens));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (replacement == NULL) {
             free(tokens);
             return UMI_STATUS_OUT_OF_MEMORY;
@@ -1048,14 +1448,17 @@ static UmiStatus tokenize_json(const char *json,
         tokens = replacement;
         (void)memset(tokens, 0, capacity * sizeof(*tokens));
         status = json_parse(json, size, tokens, capacity, out_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             *out_tokens = tokens;
             return UMI_STATUS_OK;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_CAPACITY_EXCEEDED) {
             free(tokens);
             return status;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SARIF_MAX_JSON_TOKENS / 2U) break;
         capacity *= 2U;
     }
@@ -1063,6 +1466,7 @@ static UmiStatus tokenize_json(const char *json,
     return UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Check that diagnostic sarif satisfies its contract before another service relies on it. */
 UmiStatus umi_diagnostic_sarif_validate(
     const char *json,
     size_t json_size,
@@ -1075,11 +1479,16 @@ UmiStatus umi_diagnostic_sarif_validate(
     size_t runs;
     UmiStatus status;
     const char *message = "valid SARIF 2.1.0 document";
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || json_size == 0U) {
         status = UMI_STATUS_INVALID_ARGUMENT;
         message = "SARIF JSON is empty";
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = tokenize_json(json, json_size, &tokens, &count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK &&
             (count == 0U || tokens[0].type != JSON_TOKEN_OBJECT)) {
             status = UMI_STATUS_PARSE_ERROR;
@@ -1087,6 +1496,7 @@ UmiStatus umi_diagnostic_sarif_validate(
         }
         version = status == UMI_STATUS_OK
             ? json_object_get(json, tokens, count, 0U, "version") : SIZE_MAX;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK &&
             (version == SIZE_MAX ||
              !json_token_equals(json, &tokens[version], "2.1.0"))) {
@@ -1095,12 +1505,17 @@ UmiStatus umi_diagnostic_sarif_validate(
         }
         runs = status == UMI_STATUS_OK
             ? json_object_get(json, tokens, count, 0U, "runs") : SIZE_MAX;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK &&
             (runs == SIZE_MAX || tokens[runs].type != JSON_TOKEN_ARRAY)) {
             status = UMI_STATUS_PARSE_ERROR;
             message = "SARIF runs must be an array";
         }
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(out_message, message_capacity, "%s", message);
     }
@@ -1108,31 +1523,55 @@ UmiStatus umi_diagnostic_sarif_validate(
     return status;
 }
 
+/*
+ * Provide the severity from level operation used by this module and its client
+ * applications.
+ */
 static UmiDiagnosticSeverity severity_from_level(const char *level)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (level == NULL) return UMI_DIAGNOSTIC_WARNING;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (strcmp(level, "error") == 0) return UMI_DIAGNOSTIC_ERROR;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(level, "warning") == 0) return UMI_DIAGNOSTIC_WARNING;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(level, "note") == 0) return UMI_DIAGNOSTIC_INFO;
     return UMI_DIAGNOSTIC_INFO;
 }
 
+/*
+ * Provide the baseline hint from text operation used by this module and its client
+ * applications.
+ */
 static UmiDiagnosticProviderBaselineHint baseline_hint_from_text(const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return UMI_DIAGNOSTIC_PROVIDER_BASELINE_NONE;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "new") == 0) return UMI_DIAGNOSTIC_PROVIDER_BASELINE_NEW;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "unchanged") == 0) {
         return UMI_DIAGNOSTIC_PROVIDER_BASELINE_UNCHANGED;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "updated") == 0) {
         return UMI_DIAGNOSTIC_PROVIDER_BASELINE_UPDATED;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "absent") == 0) {
         return UMI_DIAGNOSTIC_PROVIDER_BASELINE_ABSENT;
     }
     return UMI_DIAGNOSTIC_PROVIDER_BASELINE_NONE;
 }
 
+/* Provide the import location operation used by this module and its client applications. */
 static void import_location(const char *json,
                             const JsonToken *tokens,
                             size_t count,
@@ -1154,15 +1593,19 @@ static void import_location(const char *json,
                                     finding->diagnostic.uri,
                                     sizeof(finding->diagnostic.uri));
     value = json_object_get(json, tokens, count, region, "startLine");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->diagnostic.line =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, region, "startColumn");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->diagnostic.column =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, region, "endLine");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->diagnostic.end_line =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, region, "endColumn");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->diagnostic.end_column =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     {
@@ -1176,6 +1619,7 @@ static void import_location(const char *json,
                                     sizeof(finding->logical_location));
 }
 
+/* Provide the import properties operation used by this module and its client applications. */
 static void import_properties(const char *json,
                               const JsonToken *tokens,
                               size_t count,
@@ -1204,31 +1648,41 @@ static void import_properties(const char *json,
                                     "umicomHelpUri", finding->help_uri,
                                     sizeof(finding->help_uri));
     value = json_object_get(json, tokens, count, properties, "umicomKind");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) {
         int kind = json_int(json, &tokens[value], (int)UMI_DIAGNOSTIC_KIND_GENERAL);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (kind >= (int)UMI_DIAGNOSTIC_KIND_GENERAL &&
             kind <= (int)UMI_DIAGNOSTIC_KIND_SECURITY) {
             finding->diagnostic.kind = (UmiDiagnosticKind)kind;
         }
     }
     value = json_object_get(json, tokens, count, properties, "umicomRunId");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (value != SIZE_MAX) finding->run_id = json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, properties,
                             "umicomSourceRevision");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) {
         finding->source_revision = json_u64(json, &tokens[value], 0U);
     }
     value = json_object_get(json, tokens, count, properties,
                             "umicomTimestampNs");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) {
         finding->diagnostic.timestamp_ns = json_u64(json, &tokens[value], 0U);
     }
     value = json_object_get(json, tokens, count, properties, "umicomActive");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) {
         finding->diagnostic.resolved = !json_bool(json, &tokens[value], 1);
     }
 }
 
+/*
+ * Provide the import suppression operation used by this module and its client
+ * applications.
+ */
 static void import_suppression(const char *json,
                                const JsonToken *tokens,
                                size_t count,
@@ -1240,6 +1694,7 @@ static void import_suppression(const char *json,
     size_t suppressions = json_object_get(json, tokens, count, result,
                                           "suppressions");
     size_t suppression = json_array_item(tokens, count, suppressions, 0U);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (suppression == SIZE_MAX) return;
     kind[0] = '\0';
     status_text[0] = '\0';
@@ -1255,17 +1710,22 @@ static void import_suppression(const char *json,
     finding->suppression_kind = strcmp(kind, "inSource") == 0
         ? UMI_DIAGNOSTIC_PROVIDER_SUPPRESSION_IN_SOURCE
         : UMI_DIAGNOSTIC_PROVIDER_SUPPRESSION_EXTERNAL;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (strcmp(status_text, "underReview") == 0) {
         finding->suppression_status =
             UMI_DIAGNOSTIC_PROVIDER_SUPPRESSION_UNDER_REVIEW;
-    } else if (strcmp(status_text, "rejected") == 0) {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (strcmp(status_text, "rejected") == 0) {
         finding->suppression_status =
             UMI_DIAGNOSTIC_PROVIDER_SUPPRESSION_REJECTED;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         finding->suppression_status = UMI_DIAGNOSTIC_PROVIDER_SUPPRESSION_ACCEPTED;
     }
 }
 
+/*
+ * Provide the import fingerprints operation used by this module and its client
+ * applications.
+ */
 static void import_fingerprints(const char *json,
                                 const JsonToken *tokens,
                                 size_t count,
@@ -1276,12 +1736,14 @@ static void import_fingerprints(const char *json,
     size_t fingerprints = json_object_get(json, tokens, count, result,
                                           "partialFingerprints");
     text[0] = '\0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (json_copy_optional_string(json, tokens, count, fingerprints,
                                   "umicomFingerprint/v1",
                                   text, sizeof(text))) {
         finding->fingerprint = parse_hex_u64(text);
     }
     text[0] = '\0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (json_copy_optional_string(json, tokens, count, fingerprints,
                                   "umicomContentFingerprint/v1",
                                   text, sizeof(text))) {
@@ -1289,6 +1751,7 @@ static void import_fingerprints(const char *json,
     }
 }
 
+/* Provide the import fix operation used by this module and its client applications. */
 static void import_fix(const char *json,
                        const JsonToken *tokens,
                        size_t count,
@@ -1308,6 +1771,7 @@ static void import_fix(const char *json,
     size_t inserted = json_object_get(json, tokens, count, replacement,
                                       "insertedContent");
     size_t value;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (fix == SIZE_MAX) return;
     (void)json_copy_optional_string(json, tokens, count, description, "text",
                                     finding->fix_description,
@@ -1316,20 +1780,25 @@ static void import_fix(const char *json,
                                     finding->replacement_text,
                                     sizeof(finding->replacement_text));
     value = json_object_get(json, tokens, count, deleted, "startLine");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->replacement_start_line =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, deleted, "startColumn");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->replacement_start_column =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, deleted, "endLine");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->replacement_end_line =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     value = json_object_get(json, tokens, count, deleted, "endColumn");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value != SIZE_MAX) finding->replacement_end_column =
         (uint32_t)json_u64(json, &tokens[value], 0U);
     finding->has_fix = finding->fix_description[0] != '\0';
 }
 
+/* Provide the import result operation used by this module and its client applications. */
 static UmiStatus import_result(const char *json,
                                const JsonToken *tokens,
                                size_t count,
@@ -1364,6 +1833,7 @@ static UmiStatus import_result(const char *json,
                                     message, sizeof(message));
     (void)json_copy_optional_string(json, tokens, count, message_object,
                                     "markdown", detail, sizeof(detail));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (message[0] == '\0') return UMI_STATUS_PARSE_ERROR;
     (void)snprintf(identifier, sizeof(identifier), "sarif-%" PRIu64 "-%zu",
                    default_run_id, result_index + 1U);
@@ -1373,15 +1843,19 @@ static UmiStatus import_result(const char *json,
                                           UMI_DIAGNOSTIC_KIND_GENERAL,
                                           provider_id,
                                           message);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (rule_id[0] != '\0') (void)snprintf(diagnostic.code,
                                            sizeof(diagnostic.code), "%s",
                                            rule_id);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (detail[0] != '\0') (void)snprintf(diagnostic.detail,
                                           sizeof(diagnostic.detail), "%s",
                                           detail);
     status = umi_diagnostic_provider_finding_init(&finding, provider_id,
                                                    &diagnostic);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     import_properties(json, tokens, count, result, &finding);
     import_location(json, tokens, count, result, &finding);
@@ -1389,27 +1863,38 @@ static UmiStatus import_result(const char *json,
     import_fingerprints(json, tokens, count, result, &finding);
     import_fix(json, tokens, count, result, &finding);
     finding.baseline_hint = baseline_hint_from_text(baseline);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (finding.run_id == 0U) finding.run_id = default_run_id;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (finding.diagnostic.id[0] == '\0') {
         (void)snprintf(finding.diagnostic.id, sizeof(finding.diagnostic.id),
                        "%s", identifier);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (finding.fingerprint == 0U) {
         finding.fingerprint = umi_diagnostic_provider_fingerprint(&finding);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (finding.content_fingerprint == 0U) {
         finding.content_fingerprint =
             umi_diagnostic_provider_content_fingerprint(&finding);
     }
     status = umi_diagnostic_provider_batch_upsert(batch, &finding);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         ++summary->result_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (finding.suppressed) ++summary->suppressed_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (finding.has_fix) ++summary->fix_count;
     }
     return status;
 }
 
+/*
+ * Provide the diagnostic sarif import operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_sarif_import(
     const char *json,
     size_t json_size,
@@ -1425,22 +1910,33 @@ UmiStatus umi_diagnostic_sarif_import(
     size_t run_index;
     UmiDiagnosticSarifImportSummary summary;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || json_size == 0U || provider_id == NULL ||
         provider_id[0] == '\0' || out_batch == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_diagnostic_sarif_validate(json, json_size, NULL, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = tokenize_json(json, json_size, &tokens, &token_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&summary, 0, sizeof(summary));
     summary.struct_size = (uint32_t)sizeof(summary);
     summary.api_version = UMI_DIAGNOSTIC_SARIF_API_VERSION;
     status = umi_diagnostic_provider_batch_clear(out_batch);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(tokens);
         return status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_provider != NULL) {
         (void)memset(out_provider, 0, sizeof(*out_provider));
         out_provider->struct_size = (uint32_t)sizeof(*out_provider);
@@ -1458,6 +1954,7 @@ UmiStatus umi_diagnostic_sarif_import(
     runs = json_object_get(json, tokens, token_count, 0U, "runs");
     run_count = json_array_count(tokens, token_count, runs);
     summary.run_count = run_count;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (run_index = 0U; run_index < run_count; ++run_index) {
         size_t run = json_array_item(tokens, token_count, runs, run_index);
         size_t tool = json_object_get(json, tokens, token_count, run, "tool");
@@ -1475,7 +1972,12 @@ UmiStatus umi_diagnostic_sarif_import(
         uint64_t run_id = run_value != SIZE_MAX
             ? json_u64(json, &tokens[run_value], (uint64_t)(run_index + 1U))
             : (uint64_t)(run_index + 1U);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (run_id > summary.run_id) summary.run_id = run_id;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_provider != NULL && run_index == 0U) {
             (void)json_copy_optional_string(json, tokens, token_count, driver,
                                             "name", out_provider->tool_name,
@@ -1487,16 +1989,19 @@ UmiStatus umi_diagnostic_sarif_import(
                                             "informationUri",
                                             out_provider->information_uri,
                                             sizeof(out_provider->information_uri));
+            /* Apply this branch only when its contract condition is satisfied. */
             if (out_provider->tool_name[0] != '\0') {
                 (void)snprintf(out_provider->label, sizeof(out_provider->label),
                                "%s", out_provider->tool_name);
             }
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (result_index = 0U; result_index < result_count; ++result_index) {
             size_t result = json_array_item(tokens, token_count, results,
                                             result_index);
             status = import_result(json, tokens, token_count, result, provider_id,
                                    run_id, result_index, out_batch, &summary);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 ++summary.skipped_count;
                 status = UMI_STATUS_OK;
@@ -1504,10 +2009,18 @@ UmiStatus umi_diagnostic_sarif_import(
         }
     }
     free(tokens);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_summary != NULL) *out_summary = summary;
     return status;
 }
 
+/*
+ * Provide the diagnostic sarif free operation used by this module and its client
+ * applications.
+ */
 void umi_diagnostic_sarif_free(void *memory)
 {
     free(memory);

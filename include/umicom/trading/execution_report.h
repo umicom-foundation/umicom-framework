@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that execution report satisfies its contract before another service relies on it.
+ */
 int umi_execution_report_valid(const UmiExecutionReport *report);
 #ifdef __cplusplus
 }

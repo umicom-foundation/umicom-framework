@@ -25,7 +25,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital plan item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalPlanItem { char action_id[UMI_PRU_ID_CAPACITY]; int32_t period; double amount; } UmiPrudentialCapitalPlanItem;
+/**
+ * Represent the prudential capital plan data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialCapitalPlan { UmiPrudentialCapitalPlanItem items[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialCapitalPlan;
 /* Add a period-tagged action to a bounded prudential plan. */
 UmiStatus umi_pru_capital_plan_add(UmiPrudentialCapitalPlan *plan, const char *action_id, int32_t period, double amount);

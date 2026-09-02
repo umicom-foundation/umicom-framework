@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise studio document tabs view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_document_tabs_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,

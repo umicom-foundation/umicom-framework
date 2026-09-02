@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/market_data_snapshot.h"
-int umi_market_data_snapshot_aligned(const UmiQuote *q,const UmiBar *b,int64_t tolerance_ms){if(q==NULL||b==NULL||tolerance_ms<0)return 0;int64_t delta=q->event_time_ms-b->end_time_ms;if(delta<0)delta=-delta;return delta<=tolerance_ms;}
+/*
+ * Provide the market data snapshot aligned operation used by this module and its client
+ * applications.
+ */
+int umi_market_data_snapshot_aligned(const UmiQuote *q,const UmiBar *b,int64_t tolerance_ms){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(q==NULL||b==NULL||tolerance_ms<0)return 0;int64_t delta=q->event_time_ms-b->end_time_ms;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(delta<0)delta=-delta;return delta<=tolerance_ms;}

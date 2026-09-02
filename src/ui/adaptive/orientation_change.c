@@ -21,16 +21,21 @@ UmiStatus umi_adaptive_orientation_change_rotate(UmiAdaptiveViewport viewport,
                                                  UmiAdaptiveOrientationChange *out_change)
 {
     UmiAdaptiveInsets rotated;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_change == NULL || viewport.width <= 0 || viewport.height <= 0) return UMI_STATUS_INVALID_ARGUMENT;
     out_change->from = umi_adaptive_orientation_from_viewport(viewport);
     out_change->viewport.width = viewport.height;
     out_change->viewport.height = viewport.width;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (clockwise != 0) {
         rotated.top = safe_area.left;
         rotated.right = safe_area.top;
         rotated.bottom = safe_area.right;
         rotated.left = safe_area.bottom;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         rotated.top = safe_area.right;
         rotated.right = safe_area.bottom;
         rotated.bottom = safe_area.left;

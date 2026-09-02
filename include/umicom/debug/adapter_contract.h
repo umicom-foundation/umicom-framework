@@ -55,6 +55,9 @@ extern "C" {
 #define UMI_DEBUG_ADAPTER_PAYLOAD_CAPACITY 8192U
 #define UMI_DEBUG_ADAPTER_MESSAGE_CAPACITY 512U
 
+/**
+ * List the named debug adapter operation values accepted by this public contract.
+ */
 typedef enum UmiDebugAdapterOperation {
     UMI_DEBUG_ADAPTER_INITIALIZE = 1,
     UMI_DEBUG_ADAPTER_LAUNCH = 2,
@@ -101,6 +104,10 @@ enum {
     UMI_DEBUG_ADAPTER_ALL_FLAGS = (1U << 7) - 1U
 };
 
+/**
+ * Represent the debug adapter cancellation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugAdapterCancellation {
     uint32_t struct_size;
     uint32_t api_version;
@@ -131,6 +138,9 @@ typedef struct UmiDebugAdapterRequest {
     unsigned char payload[UMI_DEBUG_ADAPTER_PAYLOAD_CAPACITY];
 } UmiDebugAdapterRequest;
 
+/**
+ * Represent the debug adapter response data shared with callers of this public contract.
+ */
 typedef struct UmiDebugAdapterResponse {
     uint32_t struct_size;
     uint32_t api_version;
@@ -147,6 +157,9 @@ typedef struct UmiDebugAdapterResponse {
     unsigned char payload[UMI_DEBUG_ADAPTER_PAYLOAD_CAPACITY];
 } UmiDebugAdapterResponse;
 
+/**
+ * Represent the debug adapter functions data shared with callers of this public contract.
+ */
 typedef struct UmiDebugAdapterFunctions {
     uint32_t struct_size;
     uint32_t api_version;
@@ -160,6 +173,9 @@ typedef struct UmiDebugAdapterFunctions {
                         size_t message_capacity);
 } UmiDebugAdapterFunctions;
 
+/**
+ * Represent the debug adapter descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiDebugAdapterDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -176,6 +192,10 @@ typedef struct UmiDebugAdapterDescriptor {
     UmiDebugAdapterFunctions functions;
 } UmiDebugAdapterDescriptor;
 
+/**
+ * Represent the debug adapter registry snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugAdapterRegistrySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -186,54 +206,117 @@ typedef struct UmiDebugAdapterRegistrySnapshot {
     uint64_t revision;
 } UmiDebugAdapterRegistrySnapshot;
 
+/**
+ * Represent the debug adapter registry data shared with callers of this public contract.
+ */
 typedef struct UmiDebugAdapterRegistry UmiDebugAdapterRegistry;
 
+/**
+ * Initialise debug adapter registry from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_adapter_registry_create(
     size_t initial_capacity,
     UmiDebugAdapterRegistry **out_registry);
+/**
+ * Release or reset state held by debug adapter registry so the same storage can be reused
+ * safely.
+ */
 void umi_debug_adapter_registry_destroy(UmiDebugAdapterRegistry *registry);
+/**
+ * Release or reset state held by debug adapter registry so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_debug_adapter_registry_clear(UmiDebugAdapterRegistry *registry);
+/**
+ * Add debug adapter registry only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_debug_adapter_registry_register(
     UmiDebugAdapterRegistry *registry,
     const UmiDebugAdapterDescriptor *descriptor);
+/**
+ * Remove debug adapter registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_debug_adapter_registry_unregister(
     UmiDebugAdapterRegistry *registry,
     const char *adapter_id);
+/**
+ * Provide the debug adapter registry set enabled operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_adapter_registry_set_enabled(
     UmiDebugAdapterRegistry *registry,
     const char *adapter_id,
     int enabled);
+/**
+ * Find debug adapter registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_adapter_registry_find(
     const UmiDebugAdapterRegistry *registry,
     const char *adapter_id,
     UmiDebugAdapterDescriptor *out_descriptor);
+/**
+ * Find debug adapter registry while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_debug_adapter_registry_at(
     const UmiDebugAdapterRegistry *registry,
     size_t index,
     UmiDebugAdapterDescriptor *out_descriptor);
+/**
+ * Provide the debug adapter registry select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_adapter_registry_select(
     const UmiDebugAdapterRegistry *registry,
     const char *debugger_kind,
     uint64_t required_capabilities,
     int allow_remote,
     UmiDebugAdapterDescriptor *out_descriptor);
+/**
+ * Provide the debug adapter registry invoke operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_adapter_registry_invoke(
     UmiDebugAdapterRegistry *registry,
     const char *adapter_id,
     const UmiDebugAdapterRequest *request,
     const UmiDebugAdapterCancellation *cancellation,
     UmiDebugAdapterResponse *out_response);
+/**
+ * Provide the debug adapter registry cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_adapter_registry_cancel(
     UmiDebugAdapterRegistry *registry,
     const char *adapter_id,
     uint64_t request_id);
+/**
+ * Provide the debug adapter registry snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_adapter_registry_snapshot(
     const UmiDebugAdapterRegistry *registry,
     UmiDebugAdapterRegistrySnapshot *out_snapshot);
+/**
+ * Return the number of records represented by debug adapter registry without changing
+ * their state.
+ */
 size_t umi_debug_adapter_registry_count(
     const UmiDebugAdapterRegistry *registry);
+/**
+ * Provide the debug adapter registry revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_adapter_registry_revision(
     const UmiDebugAdapterRegistry *registry);
+/**
+ * Provide the debug adapter operation required capability operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_debug_adapter_operation_required_capability(
     UmiDebugAdapterOperation operation);
 

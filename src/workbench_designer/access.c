@@ -18,6 +18,10 @@
 #include "internal.h"
 
 
+/*
+ * Provide the workbench designer access evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_access_evaluate(
     const UmiWorkbenchLayoutDocument *document,
     UmiWorkbenchLayoutRole role,
@@ -34,6 +38,10 @@ UmiStatus umi_workbench_designer_access_evaluate(
         document, UMI_WORKBENCH_LAYOUT_DOCUMENT_LOCKED);
     const bool read_only = umi_workbench_layout_document_has_flag(
         document, UMI_WORKBENCH_LAYOUT_DOCUMENT_READ_ONLY);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || user_id == NULL || client_id == NULL ||
         out_decision == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_decision, 0, sizeof(*out_decision));
@@ -41,6 +49,7 @@ UmiStatus umi_workbench_designer_access_evaluate(
     out_decision->can_share = administrator || owner;
     out_decision->can_delete = administrator || owner;
     out_decision->can_lock = administrator || owner;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (administrator_override && administrator) {
         out_decision->can_edit = true;
         out_decision->administrator_override_used = true;
@@ -50,6 +59,7 @@ UmiStatus umi_workbench_designer_access_evaluate(
             "Administrator override grants temporary designer edit authority.");
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (read_only) {
         out_decision->reason = UMI_WORKBENCH_DESIGNER_ACCESS_READ_ONLY;
         (void)umi_workbench_designer_copy_text(
@@ -57,6 +67,7 @@ UmiStatus umi_workbench_designer_access_evaluate(
             "The layout document is marked read-only.");
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (locked && !(administrator || owner)) {
         out_decision->reason = UMI_WORKBENCH_DESIGNER_ACCESS_LAYOUT_LOCKED;
         (void)umi_workbench_designer_copy_text(
@@ -64,6 +75,7 @@ UmiStatus umi_workbench_designer_access_evaluate(
             "The layout is locked and the user cannot unlock it.");
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!(administrator || owner || editor)) {
         out_decision->reason = UMI_WORKBENCH_DESIGNER_ACCESS_PERMISSION_MISSING;
         (void)umi_workbench_designer_copy_text(
@@ -71,7 +83,12 @@ UmiStatus umi_workbench_designer_access_evaluate(
             "The current role does not grant layout editing permission.");
         return UMI_STATUS_OK;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lease != NULL) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (lease->state == UMI_WORKBENCH_DESIGNER_LEASE_NONE ||
             lease->state == UMI_WORKBENCH_DESIGNER_LEASE_EXPIRED ||
             lease->state == UMI_WORKBENCH_DESIGNER_LEASE_REJECTED) {
@@ -81,6 +98,7 @@ UmiStatus umi_workbench_designer_access_evaluate(
                 "An active edit lease is required before modifying this layout.");
             return UMI_STATUS_OK;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (lease->state != UMI_WORKBENCH_DESIGNER_LEASE_HELD_LOCALLY ||
             strcmp(lease->holder_user_id, user_id) != 0 ||
             strcmp(lease->holder_client_id, client_id) != 0) {

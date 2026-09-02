@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise risk report data shared with callers of this public contract.
+ */
 typedef struct UmiEnterpriseRiskReport { char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; int64_t as_of_ms; double var; double expected_shortfall; double stress_loss; double pnl; } UmiEnterpriseRiskReport;
 /* Initialise a coherent portfolio risk report with non-negative risk losses. */
 UmiStatus umi_enterprise_risk_report_init(UmiEnterpriseRiskReport *report,const char *portfolio_id,int64_t as_of_ms,double var,double expected_shortfall,double stress_loss,double pnl);

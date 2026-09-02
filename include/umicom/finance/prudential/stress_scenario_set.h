@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress scenario set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressScenarioSet { UmiPrudentialStressScenario scenarios[UMI_PRU_MAX_SCENARIOS]; size_t count; } UmiPrudentialStressScenarioSet;
 /* Add a unique stress scenario to the bounded catalogue. */
 UmiStatus umi_pru_stress_scenario_set_add(UmiPrudentialStressScenarioSet *set, const UmiPrudentialStressScenario *scenario);

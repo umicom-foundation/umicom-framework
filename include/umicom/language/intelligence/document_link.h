@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_LANGUAGE_INTELLIGENCE_DOCUMENT_LINK_API_VERSION 1U
 
+/**
+ * Represent the language intelligence document link data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceDocumentLink {
     uint32_t struct_size;
     uint32_t api_version;
@@ -41,18 +45,42 @@ typedef struct UmiLanguageIntelligenceDocumentLink {
     int enabled;
 } UmiLanguageIntelligenceDocumentLink;
 
+/**
+ * Initialise language intelligence document link from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_document_link_init(
     UmiLanguageIntelligenceDocumentLink *value,
     const char *id);
+/**
+ * Check that language intelligence document link satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_language_intelligence_document_link_validate(
     const UmiLanguageIntelligenceDocumentLink *value);
+/**
+ * Provide the language intelligence document link set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_document_link_set_subject(
     UmiLanguageIntelligenceDocumentLink *value,
     const char *subject_id);
+/**
+ * Provide the language intelligence document link set detail operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_language_intelligence_document_link_set_detail(
     UmiLanguageIntelligenceDocumentLink *value,
     const char *detail);
+/**
+ * Provide the language intelligence document link touch operation used by this module and
+ * its client applications.
+ */
 void umi_language_intelligence_document_link_touch(UmiLanguageIntelligenceDocumentLink *value);
+/**
+ * Provide the language intelligence document link same identity operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_document_link_same_identity(
     const UmiLanguageIntelligenceDocumentLink *left,
     const UmiLanguageIntelligenceDocumentLink *right);

@@ -279,45 +279,75 @@ static const UmiApplicationDefinition APPLICATIONS[] = {
         CAP_AUTHOR, OPTIONAL_TRADING, DOMAIN_EDUCATION, PROFILE_EDUCATION)
 };
 
+/*
+ * Return the number of records represented by application portfolio without changing their
+ * state.
+ */
 size_t umi_application_portfolio_count(void)
 {
     return COUNT_OF(APPLICATIONS);
 }
 
+/*
+ * Find application portfolio while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiApplicationDefinition *umi_application_portfolio_at(size_t index)
 {
     return index < umi_application_portfolio_count() ? &APPLICATIONS[index]
                                                      : NULL;
 }
 
+/*
+ * Find application portfolio while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiApplicationDefinition *umi_application_portfolio_find(
     const char *application_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_portfolio_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(APPLICATIONS[index].application_id, application_id) == 0)
             return &APPLICATIONS[index];
     }
     return NULL;
 }
 
+/*
+ * Return the number of records represented by application portfolio family without
+ * changing their state.
+ */
 size_t umi_application_portfolio_family_count(UmiApplicationFamily family)
 {
     size_t index;
     size_t count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_portfolio_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (APPLICATIONS[index].family == family) count += 1U;
     }
     return count;
 }
 
+/*
+ * Return the number of records represented by application portfolio maturity without
+ * changing their state.
+ */
 size_t umi_application_portfolio_maturity_count(
     UmiApplicationMaturity maturity)
 {
     size_t index;
     size_t count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_portfolio_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (APPLICATIONS[index].maturity == maturity) count += 1U;
     }
     return count;

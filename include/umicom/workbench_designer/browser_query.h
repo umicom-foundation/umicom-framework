@@ -23,6 +23,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer browser query data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerBrowserQuery {
     char text[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
     char category[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -35,7 +39,15 @@ typedef struct UmiWorkbenchDesignerBrowserQuery {
     bool shared_only;
 } UmiWorkbenchDesignerBrowserQuery;
 
+/**
+ * Initialise workbench designer browser query from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_browser_query_init(UmiWorkbenchDesignerBrowserQuery *query);
+/**
+ * Read workbench designer browser query into validated module state and return a status
+ * when input cannot be used.
+ */
 UmiStatus umi_workbench_designer_browser_query_parse(const char *text, UmiWorkbenchDesignerBrowserQuery *out_query);
 
 #ifdef __cplusplus

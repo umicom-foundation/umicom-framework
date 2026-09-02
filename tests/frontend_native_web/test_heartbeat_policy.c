@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/heartbeat_policy.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebHeartbeatPolicy p={1000U,5000U}; CHECK(!umi_native_web_heartbeat_expired(&p,1000U,5000U)); CHECK(umi_native_web_heartbeat_expired(&p,1000U,7000U));

@@ -15,6 +15,10 @@
 #include "test_support.h"
 #include <assert.h>
 
+/*
+ * Exercise test simulation environment gate and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 void test_simulation_environment_gate(void)
 {
     UmiTradingUiTestFixture fixture;

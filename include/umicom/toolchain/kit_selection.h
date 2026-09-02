@@ -23,6 +23,9 @@ extern "C" {
 #define UMI_TOOLCHAIN_KIT_SELECTION_API_VERSION 1U
 #define UMI_TOOLCHAIN_KIT_SELECTION_REASON_CAPACITY 256U
 
+/**
+ * List the named toolchain kit selection source values accepted by this public contract.
+ */
 typedef enum UmiToolchainKitSelectionSource {
     UMI_TOOLCHAIN_KIT_SELECTION_NONE = 0,
     UMI_TOOLCHAIN_KIT_SELECTION_PREFERRED = 1,
@@ -30,6 +33,10 @@ typedef enum UmiToolchainKitSelectionSource {
     UMI_TOOLCHAIN_KIT_SELECTION_RANKED = 3
 } UmiToolchainKitSelectionSource;
 
+/**
+ * Represent the toolchain kit selection request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainKitSelectionRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -42,6 +49,10 @@ typedef struct UmiToolchainKitSelectionRequest {
     int allow_cross_compile;
 } UmiToolchainKitSelectionRequest;
 
+/**
+ * Represent the toolchain kit selection snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainKitSelectionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,12 +62,24 @@ typedef struct UmiToolchainKitSelectionSnapshot {
     char reason[UMI_TOOLCHAIN_KIT_SELECTION_REASON_CAPACITY];
 } UmiToolchainKitSelectionSnapshot;
 
+/**
+ * Initialise toolchain kit selection request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_toolchain_kit_selection_request_init(
     UmiToolchainKitSelectionRequest *request);
+/**
+ * Provide the toolchain kit select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_select(
     const UmiToolchainKitCatalogue *catalogue,
     const UmiToolchainKitSelectionRequest *request,
     UmiToolchainKitSelectionSnapshot *out_selection);
+/**
+ * Provide the toolchain kit selection source text operation used by this module and its
+ * client applications.
+ */
 const char *umi_toolchain_kit_selection_source_text(
     UmiToolchainKitSelectionSource source);
 

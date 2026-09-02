@@ -24,8 +24,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc conformance case data shared with callers of this public contract.
+ */
 typedef struct UmiFcConformanceCase { char id[UMI_FC_ID_CAPACITY]; uint64_t required; uint64_t actual; bool degradation_allowed; } UmiFcConformanceCase;
+/**
+ * Provide the fc conformance case make operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fc_conformance_case_make(const char *id,uint64_t required,uint64_t actual,bool degradation_allowed,UmiFcConformanceCase *out_case);
+/**
+ * Provide the fc conformance case missing operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_fc_conformance_case_missing(const UmiFcConformanceCase *item);
 
 #ifdef __cplusplus

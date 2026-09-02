@@ -22,9 +22,21 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap lifecycle plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_bootstrap_lifecycle_plan_init(UmiBootstrapLifecyclePlan *plan);
+/**
+ * Add bootstrap lifecycle plan only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_bootstrap_lifecycle_plan_add(UmiBootstrapLifecyclePlan *plan,
                                            const UmiBootstrapLifecycleHook *hook);
+/**
+ * Provide the bootstrap lifecycle plan sort operation used by this module and its client
+ * applications.
+ */
 void umi_bootstrap_lifecycle_plan_sort(UmiBootstrapLifecyclePlan *plan);
 
 #ifdef __cplusplus

@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the market data quality score operation used by this module and its client
+ * applications.
+ */
 double umi_market_data_quality_score(const UmiQuote *quote, int64_t now_ms, int64_t max_age_ms);
 #ifdef __cplusplus
 }

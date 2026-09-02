@@ -38,6 +38,10 @@ extern "C" {
 #define UMI_DEVELOPER_WORKBENCH_MAX_SURFACES 32U
 #define UMI_DEVELOPER_WORKBENCH_HISTORY_CAPACITY 256U
 
+/**
+ * List the named developer workbench command action values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperWorkbenchCommandAction {
     UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL = 0,
     UMI_DEVELOPER_WORKBENCH_ACTION_CONFIGURE = 1,
@@ -61,6 +65,10 @@ enum {
     UMI_DEVELOPER_WORKBENCH_COMMAND_AUDITED = 1U << 4
 };
 
+/**
+ * Represent the developer workbench command definition data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperWorkbenchCommandDefinition {
     const char *command_id;
     const char *title;
@@ -70,9 +78,17 @@ typedef struct UmiDeveloperWorkbenchCommandDefinition {
     UmiDeveloperWorkbenchCommandFlags flags;
 } UmiDeveloperWorkbenchCommandDefinition;
 
+/**
+ * Provide the developer workbench command action text operation used by this module and
+ * its client applications.
+ */
 const char *umi_developer_workbench_command_action_text(
     UmiDeveloperWorkbenchCommandAction action);
 
+/**
+ * Check that developer workbench command definition satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_command_definition_validate(
     const UmiDeveloperWorkbenchCommandDefinition *definition);
 

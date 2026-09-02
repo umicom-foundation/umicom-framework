@@ -20,4 +20,8 @@
 #include "umicom/ui/design/density.h"
 
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { return strcmp(umi_design_density_name(UMI_DESIGN_DENSITY_TOUCH),"touch")==0 ? 0 : 1; }

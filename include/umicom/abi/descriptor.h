@@ -27,7 +27,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the abi descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiAbiDescriptor { uint32_t structure_size; const char *abi_id; uint32_t abi_version; UmiAbiPlatform platform; const UmiAbiFeature *features; size_t feature_count; const UmiAbiSymbol *symbols; size_t symbol_count; const UmiAbiStructLayout *layouts; size_t layout_count; } UmiAbiDescriptor;
+/**
+ * Check that abi descriptor satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_abi_descriptor_validate(const UmiAbiDescriptor *descriptor);
 #ifdef __cplusplus
 }

@@ -18,11 +18,17 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the list profiles operation used by this module and its client applications. */
 static int list_profiles(const char *application_id) {
   size_t index;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_application_experience_profile_catalogue_count(); ++index) {
     const UmiApplicationExperienceProfile *profile =
         umi_application_experience_profile_catalogue_at(index);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id != NULL && strcmp(profile->application_id, application_id) != 0)
       continue;
     (void)printf("%s | %s | %s\n", profile->profile_id, profile->application_id,
@@ -31,9 +37,14 @@ static int list_profiles(const char *application_id) {
   return 0;
 }
 
+/* Provide the show profile operation used by this module and its client applications. */
 static int show_profile(const char *profile_id) {
   const UmiApplicationExperienceProfile *profile =
       umi_application_experience_profile_catalogue_find(profile_id);
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile == NULL) {
     (void)fprintf(stderr, "Experience profile not found: %s\n", profile_id);
     return 2;
@@ -51,6 +62,7 @@ static int show_profile(const char *profile_id) {
   return 0;
 }
 
+/* Provide the print help operation used by this module and its client applications. */
 static void print_help(void) {
   (void)printf("Usage:\n");
   (void)printf("  umicom-experience-profiles list [application-id]\n");
@@ -58,13 +70,21 @@ static void print_help(void) {
   (void)printf("  umicom-experience-profiles validate\n");
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(int argc, char **argv) {
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (argc == 1 || (argc >= 2 && strcmp(argv[1], "list") == 0))
     return list_profiles(argc >= 3 ? argv[2] : NULL);
+  /* Use the stable identifier comparison to choose the matching record or policy. */
   if (argc == 3 && strcmp(argv[1], "show") == 0)
     return show_profile(argv[2]);
+  /* Use the stable identifier comparison to choose the matching record or policy. */
   if (argc == 2 && strcmp(argv[1], "validate") == 0) {
     UmiStatus status = umi_application_experience_profile_catalogue_validate();
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
       (void)fprintf(stderr, "Experience catalogue validation failed: %s\n",
                     umi_status_text(status));

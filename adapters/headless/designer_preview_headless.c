@@ -19,6 +19,10 @@
  */
 
 #include "umicom/designer/preview.h"
+/*
+ * Provide the designer headless preview operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_headless_preview(const UmiDesignerDocument *document,const UmiDeclSchema *schema,char *out_text,size_t capacity,UmiDeclDiagnosticList *diagnostics)
 {
     return umi_designer_preview(document,schema,out_text,capacity,diagnostics);

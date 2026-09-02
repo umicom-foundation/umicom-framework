@@ -33,6 +33,10 @@ typedef struct FakeAdapter {
     UmiApplicationLaunchPlan last_plan;
 } FakeAdapter;
 
+/*
+ * Exercise fake start and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_start(
     void *context,
     const UmiApplicationLaunchPlan *plan,
@@ -45,6 +49,10 @@ static UmiStatus fake_start(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake activate and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus fake_activate(
     void *context,
     const char *application_id,
@@ -57,6 +65,10 @@ static UmiStatus fake_activate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake stop and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_stop(
     void *context,
     const char *application_id,
@@ -71,6 +83,10 @@ static UmiStatus fake_stop(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationRuntimeCatalogue *catalogue = NULL;

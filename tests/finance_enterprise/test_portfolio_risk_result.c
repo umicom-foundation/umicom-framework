@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/portfolio_risk_result.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterprisePortfolioRiskResult r; CHECK(umi_enterprise_portfolio_risk_result_init(&r,"p",10.0,12.0,20.0)==UMI_STATUS_OK); CHECK(umi_enterprise_portfolio_risk_result_init(&r,"p",12.0,10.0,20.0)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the deployment data shared with callers of this public contract.
+ */
 typedef struct UmiDeployment {
     char deployment_id[UMI_DELIVERY_ID_CAPACITY];
     char release_id[UMI_DELIVERY_ID_CAPACITY];
@@ -34,6 +37,10 @@ typedef struct UmiDeployment {
     uint64_t generation;
     UmiEvidenceStatus status;
 } UmiDeployment;
+/**
+ * Initialise deployment from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_deployment_init(UmiDeployment *deployment,
                               const char *deployment_id,
                               const char *release_id,

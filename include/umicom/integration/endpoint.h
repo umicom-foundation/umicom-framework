@@ -25,6 +25,9 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/types.h"
 
+/**
+ * Represent the integration endpoint data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationEndpoint {
     char application_id[UMI_INTEGRATION_ID_CAPACITY];
     char endpoint_id[UMI_INTEGRATION_ID_CAPACITY];
@@ -33,6 +36,10 @@ typedef struct UmiIntegrationEndpoint {
     bool local_only;
 } UmiIntegrationEndpoint;
 
+/**
+ * Check that integration endpoint satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_integration_endpoint_validate(
     const UmiIntegrationEndpoint *endpoint);
 

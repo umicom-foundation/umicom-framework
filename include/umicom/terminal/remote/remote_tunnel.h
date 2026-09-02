@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote remote tunnel ready operation used by this module and its
+ * client applications.
+ */
 bool umi_terminal_remote_remote_tunnel_ready(bool endpoint_ready,bool authenticated,UmiTerminalRemoteHealth health);
 #ifdef __cplusplus
 }

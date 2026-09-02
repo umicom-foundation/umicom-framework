@@ -17,6 +17,10 @@
 
 #include "umicom/workbench_selection_provider/identity.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char first[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];

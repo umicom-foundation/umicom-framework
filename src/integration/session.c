@@ -24,6 +24,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise integration session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_integration_session_init(
     UmiIntegrationSession *session,
     const char *session_id,
@@ -32,6 +36,10 @@ UmiStatus umi_integration_session_init(
     int session_written;
     int identity_written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || session_id == NULL || identity_id == NULL ||
         session_id[0] == '\0' || identity_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -46,6 +54,7 @@ UmiStatus umi_integration_session_init(
                                 sizeof(session->identity_id),
                                 "%s",
                                 identity_id);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (session_written < 0 || identity_written < 0 ||
         (size_t)session_written >= sizeof(session->session_id) ||
         (size_t)identity_written >= sizeof(session->identity_id)) {
@@ -56,12 +65,20 @@ UmiStatus umi_integration_session_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the integration session next correlation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_session_next_correlation(
     UmiIntegrationSession *session,
     char *output,
     size_t capacity)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || output == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -70,6 +87,7 @@ UmiStatus umi_integration_session_next_correlation(
                        "%s-%llu",
                        session->session_id,
                        (unsigned long long)session->next_correlation);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }

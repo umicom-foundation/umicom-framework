@@ -28,11 +28,21 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the rollback history data shared with callers of this public contract.
+ */
 typedef struct UmiRollbackHistory {
     UmiRollbackPlan items[UMI_DELIVERY_MAX_RELEASES];
     size_t count;
 } UmiRollbackHistory;
+/**
+ * Initialise rollback history from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_rollback_history_init(UmiRollbackHistory *history);
+/**
+ * Add rollback history only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_rollback_history_add(UmiRollbackHistory *history,
                                    const UmiRollbackPlan *plan);
 

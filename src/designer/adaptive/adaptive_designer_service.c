@@ -20,6 +20,10 @@ UmiStatus umi_designer_adaptive_service_snapshot(const UmiDesignerAdaptiveVarian
                                                   const UmiDesignerAdaptiveValidation *validation,
                                                   UmiDesignerAdaptiveServiceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(variants==NULL||previews==NULL||validation==NULL||out_snapshot==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     out_snapshot->variant_count=variants->count;
     out_snapshot->preview_count=previews->count;

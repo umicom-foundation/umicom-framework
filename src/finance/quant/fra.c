@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_fra_init(UmiQuantFra *record, double notional, double fixed_rate, double forward_rate, int32_t days, int32_t day_basis)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(notional >= 0.0 && umi_quant_number_valid(fixed_rate) && umi_quant_number_valid(forward_rate) && days > 0 && day_basis > 0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->notional = notional;
@@ -38,6 +43,10 @@ UmiStatus umi_quant_fra_init(UmiQuantFra *record, double notional, double fixed_
 /* Calculate the undiscounted FRA rate-difference payoff. */
 double umi_quant_fra_undiscounted_payoff(const UmiQuantFra *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->notional * (record->forward_rate - record->fixed_rate) * ((double)record->days / (double)record->day_basis);
 }

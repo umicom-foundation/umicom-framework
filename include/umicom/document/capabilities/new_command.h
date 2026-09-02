@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_NEW_COMMAND "umicom.document.command.new_command"
 
+/**
+ * Provide the document capability new command operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_new_command(void);
 

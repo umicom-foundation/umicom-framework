@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web request data shared with callers of this public contract.
+ */
 typedef struct UmiWebRequest {
     UmiHttpMethod method;
     char path[UMI_WEB_PATH_CAPACITY];
@@ -33,8 +36,20 @@ typedef struct UmiWebRequest {
     char body[UMI_WEB_BODY_CAPACITY];
     size_t body_length;
 } UmiWebRequest;
+/**
+ * Initialise web request from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_web_request_init(UmiWebRequest *request);
+/**
+ * Provide the web request set target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_request_set_target(UmiWebRequest *request,const char *target);
+/**
+ * Provide the web request header operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_request_header(const UmiWebRequest *request,const char *name);
 #ifdef __cplusplus
 }

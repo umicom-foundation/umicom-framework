@@ -30,11 +30,13 @@ typedef struct WizardState {
     const char *template_root;
 } WizardState;
 
+/* Provide the show status operation used by this module and its client applications. */
 static void show_status(WizardState *state, const char *message)
 {
     gtk_label_set_text(GTK_LABEL(state->status), message);
 }
 
+/* Provide the create clicked operation used by this module and its client applications. */
 static void create_clicked(GtkButton *button, gpointer user_data)
 {
     WizardState *state = (WizardState *)user_data;
@@ -47,23 +49,33 @@ static void create_clicked(GtkButton *button, gpointer user_data)
     char message[1024];
     (void)button;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || destination[0] == '\0' || name == NULL || name[0] == '\0') {
         show_status(state, "Enter a destination folder and application name.");
         return;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (gtk_check_button_get_active(GTK_CHECK_BUTTON(state->console_check)))
         frontends |= UMI_SCAFFOLD_FRONTEND_CONSOLE;
+    /* Apply this operation only while the related capability or state is available. */
     if (gtk_check_button_get_active(GTK_CHECK_BUTTON(state->gtk_check)))
         frontends |= UMI_SCAFFOLD_FRONTEND_GTK4;
+    /* Apply this operation only while the related capability or state is available. */
     if (gtk_check_button_get_active(GTK_CHECK_BUTTON(state->web_check)))
         frontends |= UMI_SCAFFOLD_FRONTEND_WEB;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (frontends == 0U) {
         show_status(state, "Select at least one frontend.");
         return;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_scaffold_is_workspace(destination)) {
         status = umi_scaffold_copy_workspace_template(state->template_root, destination);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             (void)snprintf(message, sizeof(message), "Workspace creation failed: %s",
                            umi_status_text(status));
@@ -76,6 +88,7 @@ static void create_clicked(GtkButton *button, gpointer user_data)
     request.application_name = name;
     request.frontends = frontends;
     status = umi_scaffold_create_application(&request, &report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)snprintf(message, sizeof(message), "Application creation failed: %s",
                        umi_status_text(status));
@@ -89,6 +102,7 @@ static void create_clicked(GtkButton *button, gpointer user_data)
     show_status(state, message);
 }
 
+/* Provide the labelled entry operation used by this module and its client applications. */
 static GtkWidget *labelled_entry(GtkWidget *box, const char *label_text, const char *default_text)
 {
     GtkWidget *label = gtk_label_new(label_text);
@@ -100,6 +114,7 @@ static GtkWidget *labelled_entry(GtkWidget *box, const char *label_text, const c
     return entry;
 }
 
+/* Provide the activate operation used by this module and its client applications. */
 static void activate(GtkApplication *application, gpointer user_data)
 {
     WizardState *state = (WizardState *)user_data;
@@ -154,6 +169,10 @@ static void activate(GtkApplication *application, gpointer user_data)
     gtk_window_present(GTK_WINDOW(state->window));
 }
 
+/*
+ * Perform wizard through the module contract so client applications do not duplicate its
+ * policy.
+ */
 int umi_wizard_run(int argc, char **argv, const char *template_root)
 {
     GtkApplication *application;

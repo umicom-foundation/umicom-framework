@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/business_day_convention.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiHolidayCalendar c; UmiFinancialDate o; CHECK(umi_holiday_calendar_init(&c,"W")==UMI_STATUS_OK); CHECK(umi_business_day_adjust((UmiFinancialDate){2026,8U,29U},&c,UMI_BUSINESS_DAY_FOLLOWING,&o)==UMI_STATUS_OK);

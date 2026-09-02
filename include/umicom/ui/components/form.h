@@ -23,6 +23,13 @@
 #define UMICOM_UI_COMPONENTS_FORM_H
 #include <stdbool.h>
 #include "umicom/ui/components/component.h"
+/**
+ * Represent the ui form field data shared with callers of this public contract.
+ */
 typedef struct UmiUiFormField { char id[UMI_UI_COMPONENT_ID_CAPACITY]; char label[UMI_UI_COMPONENT_TEXT_CAPACITY]; char placeholder[UMI_UI_COMPONENT_TEXT_CAPACITY]; bool required; bool secret; } UmiUiFormField;
+/**
+ * Initialise ui form field from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ui_form_field_init(UmiUiFormField *field,const char *id,const char *label);
 #endif

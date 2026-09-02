@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_volatility_point_init(UmiQuantVolatilityPoint *record, double expiry_years, double strike, double volatility)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(expiry_years >= 0.0 && strike >= 0.0 && volatility >= 0.0 && volatility < 10.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->expiry_years = expiry_years;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_volatility_point_init(UmiQuantVolatilityPoint *record, doubl
 /* Return total variance volatility squared times expiry. */
 double umi_quant_volatility_point_variance(const UmiQuantVolatilityPoint *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->volatility * record->volatility * record->expiry_years;
 }

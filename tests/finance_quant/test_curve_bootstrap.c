@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/curve_bootstrap.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double df = 0.0;

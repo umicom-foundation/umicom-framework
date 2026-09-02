@@ -17,4 +17,8 @@
 #include "umicom/compiler/compiler.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiCompilerTarget target; UmiCompilerSysrootCatalogue sysroots = {0}; UmiCompilerSysroot sysroot = {0}; UmiCompilerRuntimeCatalogue runtimes = {0}; UmiCompilerRuntimeLibrary runtime = {0}; assert(umi_compiler_target_host(&target) == UMI_STATUS_OK); (void)strcpy(sysroot.sysroot_id,"host"); (void)strcpy(sysroot.path,"/sdk/sysroot"); sysroot.target = target; sysroot.available = true; assert(umi_compiler_sysroot_register(&sysroots,&sysroot) == UMI_STATUS_OK); assert(umi_compiler_sysroot_resolve(&sysroots,&target) != NULL); (void)strcpy(runtime.runtime_id,"c-runtime"); (void)strcpy(runtime.path,"/sdk/lib/runtime.a"); runtime.language = UMI_COMPILER_LANGUAGE_C; runtime.available = true; assert(umi_compiler_abi_init(&runtime.abi,"stable-c",UMI_COMPILER_ABI_C,&target) == UMI_STATUS_OK); assert(umi_compiler_runtime_register(&runtimes,&runtime) == UMI_STATUS_OK); assert(umi_compiler_runtime_resolve(&runtimes,UMI_COMPILER_LANGUAGE_C,&runtime.abi) != NULL); return 0; }

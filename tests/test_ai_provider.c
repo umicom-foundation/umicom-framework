@@ -23,6 +23,10 @@
 #include <string.h>
 #include "umicom/umicom.h"
 
+/*
+ * Exercise generate and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus generate(void *instance, const UmiAiRequest *request, UmiAiResponse *response)
 {
     (void)instance;
@@ -31,13 +35,25 @@ static UmiStatus generate(void *instance, const UmiAiRequest *request, UmiAiResp
     return umi_ai_response_set_text(response, "ok");
 }
 
+/*
+ * Exercise destroy provider and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void destroy_provider(void *instance)
 {
     /* The counter verifies runtime shutdown invokes adapter cleanup once. */
     int *destroy_count = (int *)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destroy_count != NULL) ++(*destroy_count);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiRuntime runtime;

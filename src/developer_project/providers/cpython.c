@@ -20,10 +20,15 @@
 #include "umicom/developer_project/run_plan.h"
 
 
+/*
+ * Perform plan through the module contract so client applications do not duplicate its
+ * policy.
+ */
 static UmiStatus plan_run(
     const UmiDeveloperProjectModel *model,
     UmiDeveloperProjectRunPlan *out_plan)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (model->entry_point[0] == '\0') return UMI_STATUS_NOT_FOUND;
 
     return umi_developer_project_run_plan_interpreter(
@@ -35,6 +40,10 @@ static UmiStatus plan_run(
 }
 
 
+/*
+ * Provide the developer project provider cpython operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_cpython(void)
 {
     static const UmiDeveloperProjectLanguageProvider provider = {

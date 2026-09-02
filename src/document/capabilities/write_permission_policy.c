@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/write_permission_policy.h"
 
+/*
+ * Provide the document capability write permission policy operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_write_permission_policy(void)
 {

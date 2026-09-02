@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap condition evaluate operation used by this module and its client
+ * applications.
+ */
 bool umi_bootstrap_condition_evaluate(
     const UmiBootstrapCondition *condition,
     const UmiBootstrapPropertySet *properties,
@@ -29,6 +33,10 @@ bool umi_bootstrap_condition_evaluate(
     const UmiBootstrapIdList *features,
     const UmiBootstrapIdList *capabilities,
     const char *platform_id);
+/**
+ * Provide the bootstrap condition set evaluate operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_condition_set_evaluate(
     const UmiBootstrapConditionSet *set,
     const UmiBootstrapPropertySet *properties,

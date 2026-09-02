@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide ai request from selection runtime operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_ai_request_from_selection_runtime(
     const UmiIdeEditorSelection *selection,
     UmiAiCodingTaskKind task_kind,
@@ -38,6 +42,10 @@ UmiStatus umi_ide_ai_request_from_selection_runtime(
     const char *instruction,
     UmiAiCodingRequest *out_request);
 
+/**
+ * Provide the ide ai request from selection operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_ai_request_from_selection(
     const UmiIdeEditorSelection *selection,
     UmiAiCodingTaskKind task_kind,

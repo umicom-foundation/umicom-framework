@@ -27,6 +27,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout retention policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutRetentionPolicy {
     uint32_t structure_size;
     size_t revisions_per_layout;
@@ -38,6 +42,10 @@ typedef struct UmiWorkbenchLayoutRetentionPolicy {
     bool dry_run;
 } UmiWorkbenchLayoutRetentionPolicy;
 
+/**
+ * Represent the workbench layout retention result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutRetentionResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -49,9 +57,17 @@ typedef struct UmiWorkbenchLayoutRetentionResult {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutRetentionResult;
 
+/**
+ * Provide the workbench layout retention policy default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutRetentionPolicy
 umi_workbench_layout_retention_policy_default(void);
 
+/**
+ * Perform workbench layout retention through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_retention_apply(
     UmiDataServer *server,
     const UmiWorkbenchLayoutRetentionPolicy *policy,

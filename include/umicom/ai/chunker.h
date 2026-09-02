@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai chunk text operation used by this module and its client applications.
+ */
 size_t umi_ai_chunk_text(const char *document_id,
                          const char *text,
                          size_t chunk_characters,

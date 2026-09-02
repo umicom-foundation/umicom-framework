@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_cancel(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t request_id,

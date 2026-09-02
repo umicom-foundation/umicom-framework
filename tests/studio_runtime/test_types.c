@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/studio_runtime/types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(strcmp(umi_studio_runtime_surface_kind_text(

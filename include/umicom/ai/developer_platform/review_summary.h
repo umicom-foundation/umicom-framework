@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev review summary data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevReviewSummary {
     UmiAiDevState state;
     uint32_t successes;
@@ -37,10 +40,30 @@ typedef struct UmiAiDevReviewSummary {
     uint64_t revision;
 } UmiAiDevReviewSummary;
 
+/**
+ * Initialise ai dev review summary from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_review_summary_init(UmiAiDevReviewSummary *value);
+/**
+ * Provide the ai dev review summary record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_review_summary_record(UmiAiDevReviewSummary *value, int success);
+/**
+ * Provide the ai dev review summary set pending operation used by this module and its
+ * client applications.
+ */
 void umi_ai_dev_review_summary_set_pending(UmiAiDevReviewSummary *value, uint32_t pending);
+/**
+ * Provide the ai dev review summary health score operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_dev_review_summary_health_score(const UmiAiDevReviewSummary *value);
+/**
+ * Provide the ai dev review summary ready operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_review_summary_ready(const UmiAiDevReviewSummary *value);
 
 #ifdef __cplusplus

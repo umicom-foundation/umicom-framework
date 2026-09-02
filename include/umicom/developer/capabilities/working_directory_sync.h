@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_WORKING_DIRECTORY_SYNC "umicom.developer.terminal.working_directory_sync"
 
+/**
+ * Provide the developer capability working directory sync operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_working_directory_sync(void);
 

@@ -34,11 +34,13 @@ struct UmiEditorPeekNavigationSession {
     int stale;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the peek query kind operation used by this module and its client applications. */
 static int peek_query_kind(UmiEditorNavigationQueryKind query_kind)
 {
     return query_kind == UMI_EDITOR_NAVIGATION_QUERY_DEFINITION ||
@@ -47,6 +49,7 @@ static int peek_query_kind(UmiEditorNavigationQueryKind query_kind)
            query_kind == UMI_EDITOR_NAVIGATION_QUERY_IMPLEMENTATION;
 }
 
+/* Provide the refresh preview operation used by this module and its client applications. */
 static UmiStatus refresh_preview(UmiEditorPeekNavigationSession *session)
 {
     UmiEditorNavigationResult result;
@@ -59,6 +62,7 @@ static UmiStatus refresh_preview(UmiEditorPeekNavigationSession *session)
     (void)memset(&session->active_preview, 0, sizeof(session->active_preview));
     status = umi_editor_navigation_query_session_selected(session->query,
                                                           &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     session->stale =
         strcmp(session->request.origin.uri, result.location.uri) == 0 &&
@@ -77,20 +81,27 @@ static UmiStatus refresh_preview(UmiEditorPeekNavigationSession *session)
         result.location.document_revision,
         result.location.line > 3U ? result.location.line - 3U : 0U,
         end_line);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_navigation_source_preview_cache_resolve(
         session->previews, &request, &session->active_preview);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         session->has_preview = 1;
         session->stale = session->stale || session->active_preview.stale;
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND || status == UMI_STATUS_UNAVAILABLE) {
         return UMI_STATUS_OK;
     }
     return status;
 }
 
+/*
+ * Initialise editor peek navigation session from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_peek_navigation_session_create(
     UmiEditorNavigationProviderRegistry *registry,
     UmiEditorPeekNavigationSession **out_session)
@@ -98,18 +109,28 @@ UmiStatus umi_editor_peek_navigation_session_create(
     UmiEditorPeekNavigationSession *session;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_session = NULL;
     session = (UmiEditorPeekNavigationSession *)calloc(1U, sizeof(*session));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_editor_navigation_query_session_create(registry,
                                                         &session->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_navigation_source_preview_cache_create(
             registry, NULL, &session->previews);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_editor_navigation_query_session_destroy(session->query);
         free(session);
@@ -122,9 +143,17 @@ UmiStatus umi_editor_peek_navigation_session_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor peek navigation session so the same storage can be
+ * reused safely.
+ */
 void umi_editor_peek_navigation_session_destroy(
     UmiEditorPeekNavigationSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return;
     umi_editor_navigation_query_session_destroy(session->query);
     umi_editor_navigation_source_preview_cache_destroy(session->previews);
@@ -133,6 +162,10 @@ void umi_editor_peek_navigation_session_destroy(
     free(session);
 }
 
+/*
+ * Provide the editor peek navigation session open operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_open(
     UmiEditorPeekNavigationSession *session,
     const UmiEditorNavigationRequest *request)
@@ -140,6 +173,10 @@ UmiStatus umi_editor_peek_navigation_session_open(
     UmiEditorNavigationQueryOptions options;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || request == NULL || !peek_query_kind(request->query_kind)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -156,11 +193,13 @@ UmiStatus umi_editor_peek_navigation_session_open(
     status = umi_editor_navigation_query_session_execute(session->query,
                                                          request,
                                                          &options);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CANCELLED) {
         session->state = UMI_EDITOR_PEEK_NAVIGATION_CANCELLED;
         session->revision = next_revision(session->revision);
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         umi_editor_navigation_query_session_count(session->query) == 0U) {
         session->state = UMI_EDITOR_PEEK_NAVIGATION_FAILED;
@@ -168,6 +207,7 @@ UmiStatus umi_editor_peek_navigation_session_open(
         return status != UMI_STATUS_OK ? status : UMI_STATUS_NOT_FOUND;
     }
     status = refresh_preview(session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         session->state = UMI_EDITOR_PEEK_NAVIGATION_FAILED;
         session->revision = next_revision(session->revision);
@@ -179,21 +219,39 @@ UmiStatus umi_editor_peek_navigation_session_open(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_refresh(
     UmiEditorPeekNavigationSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session->has_request) return UMI_STATUS_INVALID_STATE;
     return umi_editor_peek_navigation_session_open(session, &session->request);
 }
 
+/*
+ * Provide the editor peek navigation session cancel operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_cancel(
     UmiEditorPeekNavigationSession *session)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_navigation_query_session_cancel(session->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK && status != UMI_STATUS_INVALID_STATE) {
         return status;
     }
@@ -202,11 +260,20 @@ UmiStatus umi_editor_peek_navigation_session_cancel(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session close operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_close(
     UmiEditorPeekNavigationSession *session,
     int force)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (session->pinned && !force) return UMI_STATUS_BUSY;
     (void)umi_editor_navigation_query_session_clear(session->query);
     session->state = UMI_EDITOR_PEEK_NAVIGATION_CLOSED;
@@ -222,42 +289,70 @@ UmiStatus umi_editor_peek_navigation_session_close(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session set pinned operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_set_pinned(
     UmiEditorPeekNavigationSession *session,
     int pinned)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session->visible) return UMI_STATUS_INVALID_STATE;
     session->pinned = pinned != 0;
     session->revision = next_revision(session->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session set focus operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_set_focus(
     UmiEditorPeekNavigationSession *session,
     UmiEditorPeekNavigationFocus focus)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL ||
         (focus != UMI_EDITOR_PEEK_NAVIGATION_FOCUS_RESULTS &&
          focus != UMI_EDITOR_PEEK_NAVIGATION_FOCUS_SOURCE)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session->visible) return UMI_STATUS_INVALID_STATE;
     session->focus = focus;
     session->revision = next_revision(session->revision);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_select(
     UmiEditorPeekNavigationSession *session,
     size_t position)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_navigation_query_session_select(session->query, position);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = refresh_preview(session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     session->state = session->stale ? UMI_EDITOR_PEEK_NAVIGATION_STALE
                                     : UMI_EDITOR_PEEK_NAVIGATION_OPEN;
@@ -265,6 +360,10 @@ UmiStatus umi_editor_peek_navigation_session_select(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session select next operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_select_next(
     UmiEditorPeekNavigationSession *session,
     int wrap)
@@ -272,17 +371,26 @@ UmiStatus umi_editor_peek_navigation_session_select_next(
     UmiEditorNavigationQuerySessionSnapshot snapshot;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_navigation_query_session_snapshot(session->query,
                                                           &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!snapshot.has_selection) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!wrap && snapshot.selected_index + 1U >= snapshot.result_count) {
         return UMI_STATUS_NOT_FOUND;
     }
     status = umi_editor_navigation_query_session_select_next(session->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = refresh_preview(session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     session->state = session->stale ? UMI_EDITOR_PEEK_NAVIGATION_STALE
                                     : UMI_EDITOR_PEEK_NAVIGATION_OPEN;
@@ -290,6 +398,10 @@ UmiStatus umi_editor_peek_navigation_session_select_next(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session select previous operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_select_previous(
     UmiEditorPeekNavigationSession *session,
     int wrap)
@@ -297,15 +409,24 @@ UmiStatus umi_editor_peek_navigation_session_select_previous(
     UmiEditorNavigationQuerySessionSnapshot snapshot;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_navigation_query_session_snapshot(session->query,
                                                           &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!snapshot.has_selection) return UMI_STATUS_NOT_FOUND;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!wrap && snapshot.selected_index == 0U) return UMI_STATUS_NOT_FOUND;
     status = umi_editor_navigation_query_session_select_previous(session->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = refresh_preview(session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     session->state = session->stale ? UMI_EDITOR_PEEK_NAVIGATION_STALE
                                     : UMI_EDITOR_PEEK_NAVIGATION_OPEN;
@@ -313,27 +434,48 @@ UmiStatus umi_editor_peek_navigation_session_select_previous(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session active result operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_active_result(
     const UmiEditorPeekNavigationSession *session,
     UmiEditorNavigationResult *out_result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_editor_navigation_query_session_selected(session->query,
                                                         out_result);
 }
 
+/*
+ * Provide the editor peek navigation session active preview operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_active_preview(
     const UmiEditorPeekNavigationSession *session,
     UmiEditorNavigationSourcePreview *out_preview)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_preview == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!session->has_preview) return UMI_STATUS_NOT_FOUND;
     *out_preview = session->active_preview;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_peek_navigation_session_snapshot(
     const UmiEditorPeekNavigationSession *session,
     UmiEditorPeekNavigationSnapshot *out_snapshot)
@@ -341,11 +483,16 @@ UmiStatus umi_editor_peek_navigation_session_snapshot(
     UmiEditorNavigationQuerySessionSnapshot query_snapshot;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_navigation_query_session_snapshot(session->query,
                                                           &query_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
@@ -370,12 +517,20 @@ UmiStatus umi_editor_peek_navigation_session_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor peek navigation session query operation used by this module and its
+ * client applications.
+ */
 UmiEditorNavigationQuerySession *umi_editor_peek_navigation_session_query(
     UmiEditorPeekNavigationSession *session)
 {
     return session != NULL ? session->query : NULL;
 }
 
+/*
+ * Provide the editor peek navigation session revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_editor_peek_navigation_session_revision(
     const UmiEditorPeekNavigationSession *session)
 {

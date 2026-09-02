@@ -16,6 +16,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the project workspace model plan refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_model_plan_refresh(
     const UmiProjectWorkspaceModel *model,
     const UmiProjectWorkspaceDiscoveryOptions *options,
@@ -25,40 +29,53 @@ UmiStatus umi_project_workspace_model_plan_refresh(
     UmiStatus status;
     size_t discovered;
     size_t member_index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_refresh == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_refresh, 0, sizeof(*out_refresh));
     out_refresh->struct_size = (uint32_t)sizeof(*out_refresh);
     out_refresh->api_version = UMI_PROJECT_WORKSPACE_REFRESH_API_VERSION;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_project_workspace_model_snapshot(model, &model_snapshot) != UMI_STATUS_OK)
         return UMI_STATUS_INTERNAL_ERROR;
     out_refresh->source_revision = model_snapshot.revision;
     out_refresh->existing_project_count = model_snapshot.member_count;
     status = umi_project_workspace_model_discover(
         model, options, &out_refresh->discovery);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (discovered = 0U; discovered < out_refresh->discovery.project_count;
          ++discovered) {
         int found = 0;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (member_index = 0U;
              member_index < umi_project_workspace_model_member_count(model);
              ++member_index) {
             UmiProjectWorkspaceMemberSnapshot member;
             UmiProjectDescriptorSnapshot project;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (umi_project_workspace_model_member_at(
                     model, member_index, &member) != UMI_STATUS_OK ||
                 umi_project_descriptor_registry_find(
                     umi_project_workspace_descriptor(
                         umi_project_workspace_model_projects(model)),
                     member.project_id, &project) != UMI_STATUS_OK) continue;
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (umi_path_equal(project.root_uri,
                     out_refresh->discovery.projects[discovered].project_directory)) {
                 found = 1;
                 break;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (found) out_refresh->unchanged_project_count += 1U;
+        /* Use this fallback path when the earlier condition does not apply. */
         else out_refresh->import_candidate_count += 1U;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_refresh->existing_project_count > out_refresh->unchanged_project_count)
         out_refresh->missing_project_count = out_refresh->existing_project_count -
                                              out_refresh->unchanged_project_count;

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution acceptance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionAcceptance {
     int all_items_terminal;
     int no_failures;

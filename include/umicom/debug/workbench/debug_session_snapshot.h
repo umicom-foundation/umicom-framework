@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench debug session snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchDebugSessionSnapshot {
     char active_session_id[UMI_DEBUG_WORKBENCH_ID_CAPACITY];
     char active_item_id[UMI_DEBUG_WORKBENCH_ID_CAPACITY];
@@ -36,8 +40,20 @@ typedef struct UmiDebugWorkbenchDebugSessionSnapshot {
     uint64_t generation;
 } UmiDebugWorkbenchDebugSessionSnapshot;
 
+/**
+ * Initialise debug workbench debug session snapshot from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_debug_workbench_debug_session_snapshot_init(UmiDebugWorkbenchDebugSessionSnapshot *model);
+/**
+ * Provide the debug workbench debug session snapshot capture operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_session_snapshot_capture(UmiDebugWorkbenchDebugSessionSnapshot *model, const char *session_id, const char *item_id, uint32_t sessions, uint32_t breakpoints, uint32_t threads, uint32_t watches);
+/**
+ * Check that debug workbench debug session snapshot satisfies its contract before another
+ * service relies on it.
+ */
 int umi_debug_workbench_debug_session_snapshot_valid(const UmiDebugWorkbenchDebugSessionSnapshot *model);
 
 #ifdef __cplusplus

@@ -33,14 +33,29 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_SERVICE_NAME "service"
+/**
+ * Represent the context service state data shared with callers of this public contract.
+ */
 typedef struct UmiContextServiceState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextServiceState;
+/**
+ * Initialise context service state from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_context_service_state_init(UmiContextServiceState *state);
+/**
+ * Provide the context service state record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_service_state_record(UmiContextServiceState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context service operation without changing
+ * their state.
+ */
 uint64_t umi_context_service_operation_count(const UmiContextServiceState *state);
 #ifdef __cplusplus
 }

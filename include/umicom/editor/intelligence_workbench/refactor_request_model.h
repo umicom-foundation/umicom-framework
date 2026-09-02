@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel refactor request model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelRefactorRequestModel { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelRefactorRequestModel;
+/**
+ * Initialise editor intel refactor request model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_refactor_request_model_init(UmiEditorIntelRefactorRequestModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel refactor request model set score operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_refactor_request_model_set_score(UmiEditorIntelRefactorRequestModel *model,uint32_t score);
+/**
+ * Find editor intel refactor request model set while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_intel_refactor_request_model_set_selected(UmiEditorIntelRefactorRequestModel *model,bool selected);
+/**
+ * Check that editor intel refactor request model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_refactor_request_model_valid(const UmiEditorIntelRefactorRequestModel *model);
 
 #ifdef __cplusplus

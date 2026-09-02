@@ -36,6 +36,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_PROJECT_BOOTSTRAP_API_VERSION 1U
 
+/**
+ * Represent the developer project bootstrap request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectBootstrapRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -48,6 +52,10 @@ typedef struct UmiDeveloperProjectBootstrapRequest {
     int include_configure;
 } UmiDeveloperProjectBootstrapRequest;
 
+/**
+ * Represent the developer project bootstrap snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectBootstrapSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -57,6 +65,10 @@ typedef struct UmiDeveloperProjectBootstrapSnapshot {
     int workflow_prepared;
 } UmiDeveloperProjectBootstrapSnapshot;
 
+/**
+ * Provide the developer project bootstrap operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_project_bootstrap(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperProjectBootstrapRequest *request,

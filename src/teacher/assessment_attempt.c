@@ -19,12 +19,28 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/assessment_attempt.h"
 #include <string.h>
+/*
+ * Copy teacher assessment attempt into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 static void umi_teacher_assessment_attempt_copy(char *destination, size_t capacity, const char *source) {
     size_t i = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) {
         return;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source != NULL) {
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (i + 1U < capacity && source[i] != '\0') {
             destination[i] = source[i];
             ++i;
@@ -33,22 +49,42 @@ static void umi_teacher_assessment_attempt_copy(char *destination, size_t capaci
     destination[i] = '\0';
 }
 
-void umi_teacher_assessment_attempt_init(UmiTeacherAssessmentAttempt *attempt) { if(attempt!=NULL) memset(attempt,0,sizeof(*attempt));
+/*
+ * Initialise teacher assessment attempt from caller-provided values so later operations
+ * receive a known state.
+ */
+void umi_teacher_assessment_attempt_init(UmiTeacherAssessmentAttempt *attempt) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(attempt!=NULL) memset(attempt,0,sizeof(*attempt));
     }
-UmiStatus umi_teacher_assessment_attempt_begin(UmiTeacherAssessmentAttempt *attempt,const char *activity_id,uint32_t attempt_number) { if(attempt==NULL||activity_id==NULL||activity_id[0]=='\0'||attempt_number==0U) return UMI_STATUS_INVALID_ARGUMENT;
+/*
+ * Provide the teacher assessment attempt begin operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_teacher_assessment_attempt_begin(UmiTeacherAssessmentAttempt *attempt,const char *activity_id,uint32_t attempt_number) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(attempt==NULL||activity_id==NULL||activity_id[0]=='\0'||attempt_number==0U) return UMI_STATUS_INVALID_ARGUMENT;
     umi_teacher_assessment_attempt_init(attempt);
     umi_teacher_assessment_attempt_copy(attempt->activity_id,sizeof(attempt->activity_id),activity_id);
     attempt->attempt_number=attempt_number;
     return UMI_STATUS_OK;
     }
-UmiStatus umi_teacher_assessment_attempt_finish(UmiTeacherAssessmentAttempt *attempt,uint32_t score,uint32_t hints_used,uint32_t elapsed_seconds,uint32_t pass_score) { if(attempt==NULL||attempt->activity_id[0]=='\0'||score>100U||pass_score>100U) return UMI_STATUS_INVALID_ARGUMENT;
+/*
+ * Provide the teacher assessment attempt finish operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_teacher_assessment_attempt_finish(UmiTeacherAssessmentAttempt *attempt,uint32_t score,uint32_t hints_used,uint32_t elapsed_seconds,uint32_t pass_score) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(attempt==NULL||attempt->activity_id[0]=='\0'||score>100U||pass_score>100U) return UMI_STATUS_INVALID_ARGUMENT;
     attempt->score=score;
     attempt->hints_used=hints_used;
     attempt->elapsed_seconds=elapsed_seconds;
     attempt->passed=score>=pass_score;
     return UMI_STATUS_OK;
     }
+/*
+ * Provide the teacher assessment attempt effective score operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_teacher_assessment_attempt_effective_score(const UmiTeacherAssessmentAttempt *attempt,uint32_t hint_penalty) { uint64_t penalty;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(attempt==NULL) return 0U;
     penalty=(uint64_t)attempt->hints_used*hint_penalty;
     return penalty>=attempt->score?0U:(uint32_t)((uint64_t)attempt->score-penalty);

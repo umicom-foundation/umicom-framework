@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/replay_event.h"
+/* Check that replay event satisfies its contract before another service relies on it. */
 int umi_replay_event_valid(const UmiReplayEvent *e){return e!=NULL&&e->sequence>0U&&e->event_time_ms>=0&&e->type[0]!='\0';}

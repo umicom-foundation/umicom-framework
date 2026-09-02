@@ -25,12 +25,18 @@ UmiStatus umi_designer_layout_rule_init(UmiDesignerAdaptiveLayoutRule *rule,
                                         UmiAdaptivePresentation presentation)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (rule == NULL || rule_id == NULL || component_id == NULL || minimum_class > maximum_class || column_span == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
     memset(rule, 0, sizeof *rule);
     status = umi_designer_adaptive_copy_text(rule->rule_id, sizeof rule->rule_id, rule_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_designer_adaptive_copy_text(rule->component_id, sizeof rule->component_id, component_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     rule->minimum_class = minimum_class;
     rule->maximum_class = maximum_class;

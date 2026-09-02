@@ -17,4 +17,8 @@
 #include <limits.h>
 
 
-UmiStatus umi_fabric_snapshot_build(size_t sc,size_t si,size_t ep,size_t co,size_t api,size_t routes,UmiFabricState health,uint64_t revision,UmiFabricSnapshot *out){if(out==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(out,0,sizeof(*out));out->service_contracts=sc;out->service_instances=si;out->endpoints=ep;out->connectors=co;out->api_operations=api;out->routes=routes;out->health=health;out->revision=revision;out->fingerprint=umi_fabric_hash64(out,offsetof(UmiFabricSnapshot,fingerprint),0U);return UMI_STATUS_OK;}
+/*
+ * Provide the fabric snapshot build operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_fabric_snapshot_build(size_t sc,size_t si,size_t ep,size_t co,size_t api,size_t routes,UmiFabricState health,uint64_t revision,UmiFabricSnapshot *out){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(out==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(out,0,sizeof(*out));out->service_contracts=sc;out->service_instances=si;out->endpoints=ep;out->connectors=co;out->api_operations=api;out->routes=routes;out->health=health;out->revision=revision;out->fingerprint=umi_fabric_hash64(out,offsetof(UmiFabricSnapshot,fingerprint),0U);return UMI_STATUS_OK;}

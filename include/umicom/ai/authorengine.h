@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai author engine config data shared with callers of this public contract.
+ */
 typedef struct UmiAiAuthorEngineConfig {
     /* Executable identifies the independently installed Author Engine tool. */
     char executable[UMI_AI_TEXT_CAPACITY];
@@ -39,6 +42,9 @@ typedef struct UmiAiAuthorEngineConfig {
 
 #define UMI_AI_AUTHOR_ENGINE_ARGUMENT_MAX 16U
 
+/**
+ * List the named ai author engine command values accepted by this public contract.
+ */
 typedef enum UmiAiAuthorEngineCommand {
     UMI_AI_AUTHOR_ENGINE_HEALTH = 1,
     UMI_AI_AUTHOR_ENGINE_CATALOGUE = 2,

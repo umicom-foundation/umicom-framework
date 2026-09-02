@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/sdk_runtime/dependency_manifest.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSdkRuntimeDependencyManifest value; UmiSdkRuntimeDependencyManifest same; uint64_t revision;

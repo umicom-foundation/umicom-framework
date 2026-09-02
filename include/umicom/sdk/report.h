@@ -25,6 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the sdk report format operation used by this module and its client applications.
+ */
 UmiStatus umi_sdk_report_format(const UmiSdkProbeResult *probe,const UmiSdkConformance *conformance,char *buffer,size_t capacity);
 #ifdef __cplusplus
 }

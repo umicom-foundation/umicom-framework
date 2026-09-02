@@ -18,7 +18,9 @@
 int32_t umi_adaptive_touch_target_policy_minimum(UmiAdaptiveInputMode input_mode,
                                                  UmiDesignDensity density)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (input_mode == UMI_ADAPTIVE_INPUT_TOUCH || input_mode == UMI_ADAPTIVE_INPUT_HYBRID) return 44;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (density == UMI_DESIGN_DENSITY_COMPACT) return 28;
     return 32;
 }

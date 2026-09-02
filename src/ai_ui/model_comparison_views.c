@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the set string operation used by this module and its client applications. */
 static UmiStatus set_string(UmiUiViewModel *view,
                             const char *key,
                             const char *text)
@@ -34,6 +35,7 @@ static UmiStatus set_string(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Provide the set integer operation used by this module and its client applications. */
 static UmiStatus set_integer(UmiUiViewModel *view,
                              const char *key,
                              int64_t number)
@@ -44,6 +46,10 @@ static UmiStatus set_integer(UmiUiViewModel *view,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/*
+ * Initialise ai ui model comparison view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_model_comparison_view_create(
     const char *view_id,
     const UmiAiModelEnsembleReport *report,
@@ -52,6 +58,10 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || report == NULL || out_view == NULL ||
         report->structure_size < sizeof(*report) ||
         report->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
@@ -65,26 +75,35 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
     *out_view = NULL;
     status = umi_ui_view_model_create(
         view_id, "umicom.ai-model-comparison", UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "umicom.view-kind", "ai-model-comparison");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "title", "Model Comparison");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "summary",
         "Compare approved local and remote model answers to the same request.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(
         *out_view, "ai-models.request-id", report->request_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-models.result-count", (int64_t)report->result_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-models.success-count", (int64_t)report->success_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-models.selected-index",
         report->selected_index < report->result_count
             ? (int64_t)report->selected_index : -1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(
         *out_view, "ai-models.revision", (int64_t)report->revision);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; status == UMI_STATUS_OK &&
          index < report->result_count; ++index) {
         const UmiAiModelResult *result = &report->results[index];
@@ -119,6 +138,10 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
             result->status == UMI_STATUS_OK ? result->response.text : "");
         status = set_string(*out_view, key, row);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;

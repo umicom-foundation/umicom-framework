@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws panel chrome data shared with callers of this public contract.
+ */
 typedef struct UmiWsPanelChrome {
     char title[UMI_UI_TEXT_CAPACITY];
     char subtitle[UMI_UI_TEXT_CAPACITY];
@@ -46,6 +49,9 @@ typedef struct UmiWsPanelChrome {
     bool maximised;
 } UmiWsPanelChrome;
 
+/**
+ * List the named ws panel action values accepted by this public contract.
+ */
 typedef enum UmiWsPanelAction {
     UMI_WS_PANEL_ACTION_PIN_TOGGLE = 1,
     UMI_WS_PANEL_ACTION_CONTEXT_GROUP = 2,
@@ -56,17 +62,41 @@ typedef enum UmiWsPanelAction {
     UMI_WS_PANEL_ACTION_CLOSE = 7
 } UmiWsPanelAction;
 
+/**
+ * Initialise ws panel chrome from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_panel_chrome_init(UmiWsPanelChrome *chrome, const char *title);
+/**
+ * Provide the ws panel chrome set badge operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_panel_chrome_set_badge(UmiWsPanelChrome *chrome, const char *badge);
+/**
+ * Provide the ws panel chrome set identity operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_panel_chrome_set_identity(
     UmiWsPanelChrome *chrome,
     const char *panel_id,
     const char *placement_id);
+/**
+ * Provide the ws panel chrome set context operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_panel_chrome_set_context(
     UmiWsPanelChrome *chrome,
     const char *group_id,
     const char *colour_token);
+/**
+ * Provide the ws panel chrome set compact operation used by this module and its client
+ * applications.
+ */
 void umi_ws_panel_chrome_set_compact(UmiWsPanelChrome *chrome, bool compact);
+/**
+ * Provide the ws panel action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_panel_action_text(UmiWsPanelAction action);
 
 #ifdef __cplusplus

@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char temporary[UMI_PATH_CAPACITY];
@@ -42,20 +46,25 @@ int main(void)
         "  - umicom.diagnostics\n"
         "  - umicom.configuration\n";
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_temp_directory(temporary, sizeof(temporary)) != UMI_STATUS_OK ||
         umi_fs_join(path,
                     sizeof(path),
                     temporary,
                     "umicom-application-manifest-test.yaml") != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_fs_write_text(path, document) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_application_manifest_load(path, &manifest) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_application_manifest_validate(&manifest,
                                           message,
                                           sizeof(message)) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(manifest.id, "org.umicom.designer") != 0 ||
         (manifest.frontends & UMI_FRONTEND_GTK4) == 0U ||
         manifest.capability_count != 2U ||

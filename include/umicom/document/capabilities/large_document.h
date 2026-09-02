@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_LARGE_DOCUMENT "umicom.document.lifecycle.large_document"
 
+/**
+ * Provide the document capability large document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_large_document(void);
 

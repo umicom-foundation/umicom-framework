@@ -37,6 +37,10 @@
 
 #include "umicom/editor/navigation_experience.h"
 
+/*
+ * Exercise provider query and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus provider_query(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -74,6 +78,10 @@ static UmiStatus provider_query(
     return sink(&result, sink_user_data);
 }
 
+/*
+ * Exercise provider symbols and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus provider_symbols(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -107,6 +115,10 @@ static UmiStatus provider_symbols(
     return sink(&symbol, sink_user_data);
 }
 
+/*
+ * Exercise provider hierarchy and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiStatus provider_hierarchy(
     void *instance,
     const UmiEditorNavigationHierarchyRequest *request,
@@ -132,6 +144,10 @@ static UmiStatus provider_hierarchy(
     return sink(&node, sink_user_data);
 }
 
+/*
+ * Exercise provider preview and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus provider_preview(
     void *instance,
     const UmiEditorNavigationPreviewRequest *request,
@@ -158,6 +174,10 @@ static UmiStatus provider_preview(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationExperience *experience = NULL;

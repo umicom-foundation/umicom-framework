@@ -15,6 +15,10 @@
 #ifndef UMICOM_DEBUG_RUNTIME_INSTRUCTION_BREAKPOINT_H
 #define UMICOM_DEBUG_RUNTIME_INSTRUCTION_BREAKPOINT_H
 #include "umicom/debug_runtime/types.h"
+/**
+ * Represent the debug runtime instruction breakpoint data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugRuntimeInstructionBreakpoint {
     char instruction_reference[128];
     int64_t offset;

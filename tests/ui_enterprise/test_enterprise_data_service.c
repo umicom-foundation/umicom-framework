@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/enterprise_data_service.h"
 #include <stdio.h>
-int main(void){UmiUiEntEnterpriseDataService s;umi_ui_ent_enterprise_data_service_init(&s);umi_ui_ent_enterprise_data_service_update(&s,1U,1U,1U,100U,20U);if(!umi_ui_ent_enterprise_data_service_ready(&s)||s.active_grids!=1U)return 1;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntEnterpriseDataService s;umi_ui_ent_enterprise_data_service_init(&s);umi_ui_ent_enterprise_data_service_update(&s,1U,1U,1U,100U,20U);/* Apply this operation only while the related capability or state is available. */ if(!umi_ui_ent_enterprise_data_service_ready(&s)||s.active_grids!=1U)return 1;puts("ok");return 0;}

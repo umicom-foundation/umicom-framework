@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/liquidity_ratio.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiLiquidityRatio r; CHECK(umi_reg_liquidity_ratio_compute(&r,120.0,100.0)==UMI_STATUS_OK); CHECK(r.ratio>1.19&&r.ratio<1.21); return 0; }

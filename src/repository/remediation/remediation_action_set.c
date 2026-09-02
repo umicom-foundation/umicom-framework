@@ -21,6 +21,6 @@
 #include "umicom/repository/remediation_action_set.h"
 #include <string.h>
 /* Initialise a deterministic empty proposal collection. */
-void umi_repository_remediation_action_set_init(UmiRepositoryRemediationActionSet *set){if(set)(void)memset(set,0,sizeof(*set));}
+void umi_repository_remediation_action_set_init(UmiRepositoryRemediationActionSet *set){/* Apply this branch only when its contract condition is satisfied. */ if(set)(void)memset(set,0,sizeof(*set));}
 /* Append one proposal while preserving caller-supplied ordering. */
-UmiStatus umi_repository_remediation_action_set_add(UmiRepositoryRemediationActionSet *set,const UmiRepositoryRemediationAction *action){if(!set||!action)return UMI_STATUS_INVALID_ARGUMENT;if(set->count>=UMI_REPOSITORY_REMEDIATION_ACTION_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;set->items[set->count++]=*action;return UMI_STATUS_OK;}
+UmiStatus umi_repository_remediation_action_set_add(UmiRepositoryRemediationActionSet *set,const UmiRepositoryRemediationAction *action){/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(!set||!action)return UMI_STATUS_INVALID_ARGUMENT;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(set->count>=UMI_REPOSITORY_REMEDIATION_ACTION_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;set->items[set->count++]=*action;return UMI_STATUS_OK;}

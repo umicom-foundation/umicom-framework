@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode signature operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_signature(const char*json,UmiLanguageRuntimeSignatureResult*out);
 #ifdef __cplusplus
 }

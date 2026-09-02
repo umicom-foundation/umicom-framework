@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity transport mode data shared with callers of this public contract.
+ */
 typedef struct UmiCommodityTransportMode {
     char code[UMI_COMMODITY_CODE_CAPACITY];
     char name[UMI_COMMODITY_NAME_CAPACITY];

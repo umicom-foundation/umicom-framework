@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the performance profiler sample buffer data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPerformanceProfilerSampleBuffer {
     uint32_t structure_size;
     uint32_t api_version;

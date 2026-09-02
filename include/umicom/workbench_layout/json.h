@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout json options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutJsonOptions {
     uint32_t structure_size;
     bool pretty;
@@ -32,6 +36,10 @@ typedef struct UmiWorkbenchLayoutJsonOptions {
     uint32_t indent_width;
 } UmiWorkbenchLayoutJsonOptions;
 
+/**
+ * Represent the workbench layout json result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutJsonResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -41,9 +49,17 @@ typedef struct UmiWorkbenchLayoutJsonResult {
     char message[UMI_WORKBENCH_LAYOUT_ERROR_CAPACITY];
 } UmiWorkbenchLayoutJsonResult;
 
+/**
+ * Provide the workbench layout json options default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutJsonOptions
 umi_workbench_layout_json_options_default(void);
 
+/**
+ * Write workbench layout json in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_workbench_layout_json_encode(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutJsonOptions *options,
@@ -51,24 +67,40 @@ UmiStatus umi_workbench_layout_json_encode(
     size_t capacity,
     UmiWorkbenchLayoutJsonResult *out_result);
 
+/**
+ * Read workbench layout json into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_workbench_layout_json_decode(
     const char *json,
     size_t length,
     UmiWorkbenchLayoutDocument *out_document,
     UmiWorkbenchLayoutJsonResult *out_result);
 
+/**
+ * Check that workbench layout json satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_workbench_layout_json_validate(
     const char *json,
     size_t length,
     UmiWorkbenchLayoutValidationReport *out_report,
     UmiWorkbenchLayoutJsonResult *out_result);
 
+/**
+ * Provide the workbench layout json escape operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_json_escape(
     const char *text,
     char *buffer,
     size_t capacity,
     size_t *out_required);
 
+/**
+ * Provide the workbench layout json unescape operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_json_unescape(
     const char *text,
     size_t length,

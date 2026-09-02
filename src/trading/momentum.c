@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/momentum.h"
+/* Provide the price momentum operation used by this module and its client applications. */
 double umi_price_momentum(double previous,double current){return previous>0.0?(current-previous)/previous:0.0;}

@@ -27,6 +27,10 @@ extern "C" {
     ((UMI_SESSION_VALUE_CAPACITY - 4U) / 2U)
 #define UMI_AI_DEVELOPER_PERSISTENCE_MAX_CHUNKS 32U
 
+/**
+ * Provide the ai developer persistence save text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_persistence_save_text(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -34,6 +38,10 @@ UmiStatus umi_ai_developer_persistence_save_text(
     size_t length,
     size_t *out_chunk_count);
 
+/**
+ * Provide the ai developer persistence load text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_persistence_load_text(
     const UmiSessionStore *store,
     const char *key_prefix,
@@ -42,16 +50,28 @@ UmiStatus umi_ai_developer_persistence_load_text(
     size_t capacity,
     size_t *out_length);
 
+/**
+ * Provide the ai developer persistence remove text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_persistence_remove_text(
     UmiSessionStore *store,
     const char *key_prefix,
     size_t chunk_count);
 
+/**
+ * Provide the ai developer persistence set uint64 operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_persistence_set_uint64(
     UmiSessionStore *store,
     const char *key,
     uint64_t value);
 
+/**
+ * Provide the ai developer persistence get uint64 operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_persistence_get_uint64(
     const UmiSessionStore *store,
     const char *key,

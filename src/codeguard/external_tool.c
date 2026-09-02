@@ -22,5 +22,13 @@
 
 #include "umicom/codeguard/external_tool.h"
 #include <stdio.h>
-const char *umi_codeguard_external_tool_name(UmiCodeGuardExternalTool t){switch(t){case UMI_CODEGUARD_TOOL_CLANG_ANALYZER:return "clang --analyze";case UMI_CODEGUARD_TOOL_CLANG_TIDY:return "clang-tidy";case UMI_CODEGUARD_TOOL_ADDRESS_SANITIZER:return "AddressSanitizer";case UMI_CODEGUARD_TOOL_UB_SANITIZER:return "UndefinedBehaviorSanitizer";case UMI_CODEGUARD_TOOL_LEAK_SANITIZER:return "LeakSanitizer";default:return "unknown";}}
-int umi_codeguard_external_tool_command(UmiCodeGuardExternalTool t,const char *src,char *buf,size_t cap){int n;if(src==NULL||buf==NULL||cap==0U)return 0;switch(t){case UMI_CODEGUARD_TOOL_CLANG_ANALYZER:n=snprintf(buf,cap,"clang --analyze -std=c23 -Wall -Wextra %s",src);break;case UMI_CODEGUARD_TOOL_CLANG_TIDY:n=snprintf(buf,cap,"clang-tidy %s -- -std=c23",src);break;case UMI_CODEGUARD_TOOL_ADDRESS_SANITIZER:n=snprintf(buf,cap,"clang -fsanitize=address -fno-omit-frame-pointer %s",src);break;case UMI_CODEGUARD_TOOL_UB_SANITIZER:n=snprintf(buf,cap,"clang -fsanitize=undefined -fno-omit-frame-pointer %s",src);break;case UMI_CODEGUARD_TOOL_LEAK_SANITIZER:n=snprintf(buf,cap,"clang -fsanitize=leak -fno-omit-frame-pointer %s",src);break;default:return 0;}return n>0&&(size_t)n<cap;}
+/*
+ * Provide the codeguard external tool name operation used by this module and its client
+ * applications.
+ */
+const char *umi_codeguard_external_tool_name(UmiCodeGuardExternalTool t){/* Select the behaviour associated with the requested command or state value. */ switch(t){case UMI_CODEGUARD_TOOL_CLANG_ANALYZER:return "clang --analyze";case UMI_CODEGUARD_TOOL_CLANG_TIDY:return "clang-tidy";case UMI_CODEGUARD_TOOL_ADDRESS_SANITIZER:return "AddressSanitizer";case UMI_CODEGUARD_TOOL_UB_SANITIZER:return "UndefinedBehaviorSanitizer";case UMI_CODEGUARD_TOOL_LEAK_SANITIZER:return "LeakSanitizer";default:return "unknown";}}
+/*
+ * Provide the codeguard external tool command operation used by this module and its client
+ * applications.
+ */
+int umi_codeguard_external_tool_command(UmiCodeGuardExternalTool t,const char *src,char *buf,size_t cap){int n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(src==NULL||buf==NULL||cap==0U)return 0;/* Select the behaviour associated with the requested command or state value. */ switch(t){case UMI_CODEGUARD_TOOL_CLANG_ANALYZER:n=snprintf(buf,cap,"clang --analyze -std=c23 -Wall -Wextra %s",src);break;case UMI_CODEGUARD_TOOL_CLANG_TIDY:n=snprintf(buf,cap,"clang-tidy %s -- -std=c23",src);break;case UMI_CODEGUARD_TOOL_ADDRESS_SANITIZER:n=snprintf(buf,cap,"clang -fsanitize=address -fno-omit-frame-pointer %s",src);break;case UMI_CODEGUARD_TOOL_UB_SANITIZER:n=snprintf(buf,cap,"clang -fsanitize=undefined -fno-omit-frame-pointer %s",src);break;case UMI_CODEGUARD_TOOL_LEAK_SANITIZER:n=snprintf(buf,cap,"clang -fsanitize=leak -fno-omit-frame-pointer %s",src);break;default:return 0;}return n>0&&(size_t)n<cap;}

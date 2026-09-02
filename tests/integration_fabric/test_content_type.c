@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     CHECK(umi_fabric_content_type_classify("application/json; charset=utf-8")==UMI_FABRIC_CONTENT_JSON); CHECK(umi_fabric_content_type_compatible(UMI_FABRIC_CONTENT_JSON,UMI_FABRIC_CONTENT_JSON));
     return 0;

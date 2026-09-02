@@ -21,8 +21,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced diff summary from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_diff_summary_init(UmiVcsAdvancedDiffSummary *summary)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (summary == NULL) {
         return;
     }
@@ -31,16 +39,25 @@ void umi_vcs_advanced_diff_summary_init(UmiVcsAdvancedDiffSummary *summary)
     summary->api_version = UMI_VCS_ADVANCED_API_VERSION;
 }
 
+/*
+ * Add vcs advanced diff summary only after its inputs and available capacity have been
+ * checked.
+ */
 void umi_vcs_advanced_diff_summary_add(
     UmiVcsAdvancedDiffSummary *summary,
     const UmiVcsAdvancedDiffLine *line)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (summary == NULL ||
         umi_vcs_advanced_diff_line_validate(line) != UMI_STATUS_OK) {
         return;
     }
 
     summary->total_lines += 1U;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (line->kind) {
         case UMI_VCS_DIFF_CONTEXT:
             summary->context_lines += 1U;
@@ -62,9 +79,17 @@ void umi_vcs_advanced_diff_summary_add(
     }
 }
 
+/*
+ * Return the number of records represented by vcs advanced diff summary change without
+ * changing their state.
+ */
 size_t umi_vcs_advanced_diff_summary_change_count(
     const UmiVcsAdvancedDiffSummary *summary)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (summary == NULL) {
         return 0U;
     }
@@ -74,10 +99,18 @@ size_t umi_vcs_advanced_diff_summary_change_count(
            summary->moved_lines;
 }
 
+/*
+ * Provide the vcs advanced diff summary change percent operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_vcs_advanced_diff_summary_change_percent(
     const UmiVcsAdvancedDiffSummary *summary)
 {
     size_t changes;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (summary == NULL || summary->total_lines == 0U) {
         return 0U;
     }

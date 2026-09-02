@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository doctor report data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryDoctorReport {
     UmiRepositoryStatusSummary summary;
     UmiRepositoryDoctorIssueList issues;
@@ -32,7 +35,15 @@ typedef struct UmiRepositoryDoctorReport {
     int healthy;
 } UmiRepositoryDoctorReport;
 
+/**
+ * Initialise repository doctor report from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_repository_doctor_report_init(UmiRepositoryDoctorReport *report);
+/**
+ * Provide the repository doctor report finalize operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_repository_doctor_report_finalize(UmiRepositoryDoctorReport *report);
 
 #ifdef __cplusplus

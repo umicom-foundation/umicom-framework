@@ -27,6 +27,10 @@ extern "C" {
 
 #define UMI_EDITOR_INTEL_REFACTOR_PROJECTION_API_VERSION 1U
 
+/**
+ * Represent the editor intel refactor projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorIntelRefactorProjection {
     uint32_t struct_size;
     uint32_t api_version;
@@ -43,21 +47,45 @@ typedef struct UmiEditorIntelRefactorProjection {
     int has_conflict;
 } UmiEditorIntelRefactorProjection;
 
+/**
+ * Initialise editor intel refactor projection from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_refactor_projection_init(
     UmiEditorIntelRefactorProjection *projection);
+/**
+ * Provide the editor intel refactor projection refresh operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_intel_refactor_projection_refresh(
     UmiEditorIntelRefactorProjection *projection,
     UmiEditorCodeActionOrchestration *orchestration);
+/**
+ * Provide the editor intel refactor projection set included operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_refactor_projection_set_included(
     UmiEditorIntelRefactorProjection *projection,
     UmiEditorCodeActionOrchestration *orchestration,
     size_t index,
     int included);
+/**
+ * Provide the editor intel refactor projection record history operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_intel_refactor_projection_record_history(
     UmiEditorIntelRefactorProjection *projection,
     const char *label);
+/**
+ * Find editor intel refactor projection while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_refactor_projection_selected(
     const UmiEditorIntelRefactorProjection *projection);
+/**
+ * Check that editor intel refactor projection satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_refactor_projection_valid(
     const UmiEditorIntelRefactorProjection *projection);
 

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding build provider request operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_build_provider_request(
     const UmiAiCodingTaskPlan *plan,
     const UmiAiCodingMaterializedContext *context,

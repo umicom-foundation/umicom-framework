@@ -19,7 +19,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the market data observation data shared with callers of this public contract.
+ */
 typedef struct UmiMarketDataObservation { UmiMarketDataKey key; double value; int64_t timestamp; } UmiMarketDataObservation;
+/**
+ * Represent the market data snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiMarketDataSnapshot { UmiFinancialId snapshot_id; UmiMarketDataObservation items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiMarketDataSnapshot;
 /* Initialize snapshot. */ UmiStatus umi_market_data_snapshot_init(UmiMarketDataSnapshot *s,const char *id);
 /* Add observation. */ UmiStatus umi_market_data_snapshot_add(UmiMarketDataSnapshot *s,const UmiMarketDataObservation *o);

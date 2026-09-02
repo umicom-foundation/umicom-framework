@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/heatmap_spec.h"
 
-int main(void){UmiDesignHeatmapSpec s;if(umi_design_heatmap_spec_init(&s,10U,12U,-1.0,1.0,1)!=UMI_STATUS_OK)return 1;return s.columns==12U?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignHeatmapSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_heatmap_spec_init(&s,10U,12U,-1.0,1.0,1)!=UMI_STATUS_OK)return 1;return s.columns==12U?0:2;}

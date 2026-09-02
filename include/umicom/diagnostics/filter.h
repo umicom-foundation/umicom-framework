@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the diagnostic filter data shared with callers of this public contract.
+ */
 typedef struct UmiDiagnosticFilter {
     uint32_t severity_mask;
     uint32_t kind_mask;
@@ -31,9 +34,21 @@ typedef struct UmiDiagnosticFilter {
     int include_transient;
 } UmiDiagnosticFilter;
 
+/**
+ * Initialise diagnostic filter from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_diagnostic_filter_init(UmiDiagnosticFilter *filter);
+/**
+ * Provide the diagnostic filter set minimum severity operation used by this module and its
+ * client applications.
+ */
 void umi_diagnostic_filter_set_minimum_severity(UmiDiagnosticFilter *filter,
                                                 UmiDiagnosticSeverity severity);
+/**
+ * Provide the diagnostic filter matches operation used by this module and its client
+ * applications.
+ */
 int umi_diagnostic_filter_matches(const UmiDiagnosticFilter *filter,
                                   const UmiDiagnosticSnapshot *snapshot);
 

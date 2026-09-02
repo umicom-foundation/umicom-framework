@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/go_to_line_command.h"
 
+/*
+ * Provide the document capability go to line command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_go_to_line_command(void)
 {

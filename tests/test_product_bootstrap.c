@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/product/product.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiProductBootstrapResult r;assert(umi_product_bootstrap(umi_reference_product_tms(),&r)==UMI_STATUS_OK);assert(r.ready);return 0;}

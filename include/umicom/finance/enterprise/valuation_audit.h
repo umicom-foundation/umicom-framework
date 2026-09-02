@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation audit event data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationAuditEvent { uint64_t sequence; char job_id[UMI_ENTERPRISE_ID_CAPACITY]; char action[UMI_ENTERPRISE_NAME_CAPACITY]; int64_t event_time_ms; UmiStatus status; } UmiEnterpriseValuationAuditEvent;
+/**
+ * Represent the enterprise valuation audit data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationAudit { UmiEnterpriseValuationAuditEvent events[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiEnterpriseValuationAudit;
 /* Initialise an empty valuation audit. */
 void umi_enterprise_valuation_audit_init(UmiEnterpriseValuationAudit *audit);

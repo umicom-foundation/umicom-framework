@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/css_buffer.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebCssBuffer b; umi_native_web_css_buffer_init(&b);

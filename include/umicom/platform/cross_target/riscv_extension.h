@@ -31,7 +31,15 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/cpu_feature.h"
+/**
+ * Provide the ct riscv extension feature operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_riscv_extension_feature(const char *extension,UmiCtCpuFeature *out_feature);
+/**
+ * Provide the ct riscv extension known operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_riscv_extension_known(const char *extension);
 
 #ifdef __cplusplus

@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics category value data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsCategoryValue { char category[UMI_ANALYTICS_TEXT_CAPACITY]; double value; } UmiAnalyticsCategoryValue;
+/**
+ * Initialise analytics category value from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_category_value_init(UmiAnalyticsCategoryValue *item, const char *category, double value);
 
 #ifdef __cplusplus

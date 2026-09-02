@@ -20,6 +20,10 @@
 #include "umicom/integration/field_mapping.h"
 #include "umicom/integration/workflow.h"
 #include "umicom/integration/run_history.h"
+/**
+ * Represent the integration designer fabric data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIntegrationDesignerFabric {
     UmiIntegrationConnectionCatalogue connections;
     UmiIntegrationSchemaCatalogue schemas;
@@ -32,6 +36,10 @@ typedef struct UmiIntegrationDesignerFabric {
     UmiIntegrationRunHistory runs;
     uint64_t revision;
 } UmiIntegrationDesignerFabric;
+/**
+ * Represent the integration designer snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIntegrationDesignerSnapshot {
     size_t connections;
     size_t schemas;
@@ -41,11 +49,39 @@ typedef struct UmiIntegrationDesignerSnapshot {
     UmiIntegrationRunMetrics runs;
     uint64_t revision;
 } UmiIntegrationDesignerSnapshot;
+/**
+ * Initialise integration designer fabric from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_integration_designer_fabric_init(UmiIntegrationDesignerFabric *fabric);
+/**
+ * Provide the integration designer fabric add contract operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_integration_designer_fabric_add_contract(UmiIntegrationDesignerFabric *fabric,const UmiIntegrationApiContract *contract);
+/**
+ * Provide the integration designer fabric add mapping operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_integration_designer_fabric_add_mapping(UmiIntegrationDesignerFabric *fabric,const UmiIntegrationFieldMapping *mapping);
+/**
+ * Provide the integration designer fabric add workflow operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_integration_designer_fabric_add_workflow(UmiIntegrationDesignerFabric *fabric,const UmiIntegrationWorkflow *workflow);
+/**
+ * Provide the integration designer fabric find workflow operation used by this module and
+ * its client applications.
+ */
 const UmiIntegrationWorkflow *umi_integration_designer_fabric_find_workflow(const UmiIntegrationDesignerFabric *fabric,const char *id);
+/**
+ * Perform integration designer fabric record through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_integration_designer_fabric_record_run(UmiIntegrationDesignerFabric *fabric,const UmiIntegrationSimulation *simulation);
+/**
+ * Provide the integration designer fabric snapshot operation used by this module and its
+ * client applications.
+ */
 void umi_integration_designer_fabric_snapshot(const UmiIntegrationDesignerFabric *fabric,UmiIntegrationDesignerSnapshot *out_snapshot);
 #endif

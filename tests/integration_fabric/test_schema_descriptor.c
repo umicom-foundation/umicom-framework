@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricSchemaDescriptor item;
     CHECK(umi_fabric_schema_descriptor_init(&item,"trade","Trade",(UmiFabricVersion){1U,0U,0U},123U,true,false)==UMI_STATUS_OK);

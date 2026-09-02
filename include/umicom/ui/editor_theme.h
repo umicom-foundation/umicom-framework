@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_UI_EDITOR_THEME_SCHEME_CAPACITY 4U
 #define UMI_UI_EDITOR_THEME_SCHEME_ID_CAPACITY 48U
 
+/**
+ * Represent the ui editor theme snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiUiEditorThemeSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -55,13 +58,24 @@ typedef struct UmiUiEditorThemeSnapshot {
                              [UMI_UI_EDITOR_THEME_SCHEME_ID_CAPACITY];
 } UmiUiEditorThemeSnapshot;
 
+/**
+ * Provide the ui editor theme resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_editor_theme_resolve(
     const UmiUiAppearanceProfile *appearance,
     UmiUiEditorThemeSnapshot *out_theme);
+/**
+ * Check that ui editor theme satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ui_editor_theme_validate(
     const UmiUiEditorThemeSnapshot *theme,
     char *out_reason,
     size_t capacity);
+/**
+ * Provide the ui editor theme preferred scheme operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_editor_theme_preferred_scheme(
     const UmiUiEditorThemeSnapshot *theme,
     size_t index,

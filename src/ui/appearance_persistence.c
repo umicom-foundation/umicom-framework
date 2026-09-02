@@ -32,20 +32,27 @@
 #define FIELD_COUNT 33U
 #define FIELD_CAPACITY 512U
 
+/* Provide the unreserved operation used by this module and its client applications. */
 static int unreserved(unsigned char value)
 {
     return isalnum(value) || value == '-' || value == '_' || value == '.' ||
            value == ' ' || value == ',' || value == '#' || value == '/';
 }
 
+/* Provide the append raw operation used by this module and its client applications. */
 static UmiStatus append_raw(char *out, size_t capacity, size_t *used,
                             const char *text)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || used == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*used + length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(out + *used, text, length);
     *used += length;
@@ -53,51 +60,67 @@ static UmiStatus append_raw(char *out, size_t capacity, size_t *used,
     return UMI_STATUS_OK;
 }
 
+/* Provide the append field operation used by this module and its client applications. */
 static UmiStatus append_field(char *out, size_t capacity, size_t *used,
                               const char *text)
 {
     static const char HEX[] = "0123456789ABCDEF";
     const unsigned char *cursor = (const unsigned char *)text;
     UmiStatus status = append_raw(out, capacity, used, "|");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
         char encoded[4] = {0};
+        /* Apply this branch only when its contract condition is satisfied. */
         if (unreserved(*cursor) && *cursor != '|') {
             encoded[0] = (char)*cursor;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             encoded[0] = '%';
             encoded[1] = HEX[*cursor >> 4U];
             encoded[2] = HEX[*cursor & 15U];
         }
         status = append_raw(out, capacity, used, encoded);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         ++cursor;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the append integer operation used by this module and its client applications. */
 static UmiStatus append_integer(char *out, size_t capacity, size_t *used,
                                 int64_t value)
 {
     char text[64U];
     int written = snprintf(text, sizeof(text), "|%" PRId64, value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(text)) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
     return append_raw(out, capacity, used, text);
 }
 
+/* Provide the append double operation used by this module and its client applications. */
 static UmiStatus append_double(char *out, size_t capacity, size_t *used,
                                double value)
 {
     char text[64U];
     int written = snprintf(text, sizeof(text), "|%.3f", value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(text)) {
         return UMI_STATUS_INTERNAL_ERROR;
     }
     return append_raw(out, capacity, used, text);
 }
 
+/*
+ * Write ui appearance profile in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ui_appearance_profile_encode(
     const UmiUiAppearanceProfile *profile,
     char *out_text,
@@ -111,15 +134,21 @@ UmiStatus umi_ui_appearance_profile_encode(
 #define INTEGER(value) do { status = append_integer(out_text, capacity, &used, (int64_t)(value)); if (status != UMI_STATUS_OK) return status; } while (0)
 #define DECIMAL(value) do { status = append_double(out_text, capacity, &used, value); if (status != UMI_STATUS_OK) return status; } while (0)
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_ui_appearance_profile_validate(profile, reason, sizeof(reason)) !=
         UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_STATE;
     }
     out_text[0] = '\0';
     status = append_raw(out_text, capacity, &used, "appearance-v1");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     TEXT(profile->profile_id); TEXT(profile->label); TEXT(profile->description);
     INTEGER(profile->mode); INTEGER(profile->density);
@@ -144,30 +173,43 @@ UmiStatus umi_ui_appearance_profile_encode(
 #undef DECIMAL
 }
 
+/* Provide the hex value operation used by this module and its client applications. */
 static int hex_value(char value)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= '0' && value <= '9') return value - '0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= 'a' && value <= 'f') return value - 'a' + 10;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value >= 'A' && value <= 'F') return value - 'A' + 10;
     return -1;
 }
 
+/* Provide the decode field operation used by this module and its client applications. */
 static UmiStatus decode_field(const char *begin, const char *end,
                               char *out, size_t capacity)
 {
     size_t used = 0U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (begin < end) {
         unsigned char value = (unsigned char)*begin++;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (value == '%') {
             int high;
             int low;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (end - begin < 2) return UMI_STATUS_INVALID_STATE;
             high = hex_value(begin[0]);
             low = hex_value(begin[1]);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (high < 0 || low < 0) return UMI_STATUS_INVALID_STATE;
             value = (unsigned char)((high << 4) | low);
             begin += 2;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
         out[used++] = (char)value;
     }
@@ -175,6 +217,7 @@ static UmiStatus decode_field(const char *begin, const char *end,
     return UMI_STATUS_OK;
 }
 
+/* Provide the split fields operation used by this module and its client applications. */
 static UmiStatus split_fields(const char *text,
                               char fields[FIELD_COUNT][FIELD_CAPACITY])
 {
@@ -182,27 +225,40 @@ static UmiStatus split_fields(const char *text,
     const char *separator;
     size_t index = 0U;
     UmiStatus status;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index < FIELD_COUNT) {
         separator = strchr(begin, '|');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (separator == NULL) separator = begin + strlen(begin);
         status = decode_field(begin, separator, fields[index], FIELD_CAPACITY);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         ++index;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*separator == '\0') break;
         begin = separator + 1;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index != FIELD_COUNT || *separator != '\0') {
         return UMI_STATUS_INVALID_STATE;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse integer operation used by this module and its client applications. */
 static UmiStatus parse_integer(const char *text, int64_t *out_value)
 {
     char *end = NULL;
     long long value;
     errno = 0;
     value = strtoll(text, &end, 10);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (errno != 0 || end == text || *end != '\0') {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -210,12 +266,14 @@ static UmiStatus parse_integer(const char *text, int64_t *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse double operation used by this module and its client applications. */
 static UmiStatus parse_double(const char *text, double *out_value)
 {
     char *end = NULL;
     double value;
     errno = 0;
     value = strtod(text, &end);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (errno != 0 || end == text || *end != '\0') {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -223,14 +281,20 @@ static UmiStatus parse_double(const char *text, double *out_value)
     return UMI_STATUS_OK;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity,
                            const char *source)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(source) >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)snprintf(destination, capacity, "%s", source);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Read ui appearance profile into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_ui_appearance_profile_decode(
     const char *text,
     UmiUiAppearanceProfile *out_profile)
@@ -244,11 +308,17 @@ UmiStatus umi_ui_appearance_profile_decode(
     char reason[192U];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = split_fields(text, fields);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || strcmp(fields[0], "appearance-v1") != 0) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (parse_integer(fields[4], &values[0]) != UMI_STATUS_OK ||
         parse_integer(fields[5], &values[1]) != UMI_STATUS_OK ||
         parse_double(fields[11], &interface_size) != UMI_STATUS_OK ||
@@ -264,8 +334,10 @@ UmiStatus umi_ui_appearance_profile_decode(
     status = umi_ui_appearance_profile_init(
         &profile, fields[1], fields[2], (UmiUiThemeMode)values[0],
         (UmiUiDensity)values[1]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy_text(profile.description, sizeof(profile.description), fields[3]) !=
             UMI_STATUS_OK ||
         copy_text(profile.brand_name, sizeof(profile.brand_name), fields[6]) !=
@@ -283,6 +355,7 @@ UmiStatus umi_ui_appearance_profile_decode(
     profile.interface_font_size = interface_size;
     profile.editor_font_size = editor_size;
     profile.font_scale = font_scale;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy_text(profile.background, sizeof(profile.background), fields[14]) !=
             UMI_STATUS_OK ||
         copy_text(profile.surface, sizeof(profile.surface), fields[15]) !=
@@ -320,6 +393,7 @@ UmiStatus umi_ui_appearance_profile_decode(
     profile.reduce_motion = values[5] != 0;
     profile.revision = (uint64_t)values[6];
 
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_ui_appearance_profile_validate(&profile, reason, sizeof(reason)) !=
         UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_STATE;

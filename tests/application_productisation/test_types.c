@@ -17,6 +17,10 @@
 
 #include "umicom/application/productisation/types.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_productisation_asset_kind_valid(

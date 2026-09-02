@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the business date adjustment data shared with callers of this public contract.
+ */
 typedef struct UmiBusinessDateAdjustment { uint32_t flags; uint32_t limit; bool strict; } UmiBusinessDateAdjustment;
 /* Initialize conservative defaults. */ void umi_business_date_adjustment_default(UmiBusinessDateAdjustment *p);
 /* Evaluate a bounded numeric request. */ bool umi_business_date_adjustment_allows(const UmiBusinessDateAdjustment *p,uint32_t value,uint32_t required_flags);

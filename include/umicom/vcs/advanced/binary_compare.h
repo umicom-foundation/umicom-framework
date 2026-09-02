@@ -22,10 +22,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced binary compare data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedBinaryCompare {
     uint32_t struct_size; uint32_t api_version; uint64_t left_size,right_size,left_hash,right_hash;
     int same_size,same_content;
 } UmiVcsAdvancedBinaryCompare;
+/**
+ * Provide the vcs advanced binary compare values operation used by this module and its
+ * client applications.
+ */
 void umi_vcs_advanced_binary_compare_values(uint64_t left_size,uint64_t left_hash,uint64_t right_size,uint64_t right_hash,
                                              UmiVcsAdvancedBinaryCompare *out_result);
 #ifdef __cplusplus

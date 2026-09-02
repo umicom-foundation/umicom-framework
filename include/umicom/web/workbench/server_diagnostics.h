@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the web workbench server diagnostics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWebWorkbenchServerDiagnostics {
     UmiWebServerPhase phase;
     uint16_t port;
@@ -40,8 +44,16 @@ typedef struct UmiWebWorkbenchServerDiagnostics {
     uint64_t revision;
 } UmiWebWorkbenchServerDiagnostics;
 
+/**
+ * Initialise web workbench server diagnostics from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_web_workbench_server_diagnostics_init(
     UmiWebWorkbenchServerDiagnostics *diagnostics);
+/**
+ * Provide the web workbench server diagnostics capture operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_web_workbench_server_diagnostics_capture(
     UmiWebWorkbenchServerDiagnostics *diagnostics,
     const UmiWebServerState *state,

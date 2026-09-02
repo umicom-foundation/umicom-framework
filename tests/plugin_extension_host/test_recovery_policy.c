@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/recovery_policy.h"
-int main(void) { UmiPluginExtensionHostRecoveryPolicy p; umi_plugin_extension_host_recovery_policy_init(&p); if(umi_plugin_extension_host_recovery_policy_evaluate(&p,1U,1,1)!=UMI_PLUGIN_EXTENSION_HOST_ALLOW) return 1; if(umi_plugin_extension_host_recovery_policy_backoff_ms(&p,2U)!=2000U) return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostRecoveryPolicy p; umi_plugin_extension_host_recovery_policy_init(&p); /* Apply this branch only when its contract condition is satisfied. */ if(umi_plugin_extension_host_recovery_policy_evaluate(&p,1U,1,1)!=UMI_PLUGIN_EXTENSION_HOST_ALLOW) return 1; /* Apply this branch only when its contract condition is satisfied. */ if(umi_plugin_extension_host_recovery_policy_backoff_ms(&p,2U)!=2000U) return 2; return 0; }

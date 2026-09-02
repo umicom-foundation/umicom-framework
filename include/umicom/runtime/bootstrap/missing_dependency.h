@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Return the number of records represented by bootstrap graph missing dependency without
+ * changing their state.
+ */
 size_t umi_bootstrap_graph_missing_dependency_count(
     const UmiBootstrapServiceGraph *graph,
     char *out_first_missing,

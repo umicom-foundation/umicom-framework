@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive navigation model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveNavigationModel {
     UmiAdaptiveNavigationItem items[UMI_ADAPTIVE_MAX_ITEMS];
     size_t count;

@@ -36,6 +36,10 @@ static const UmiEditorFeatureDescriptor FEATURE = {
     .revision = 1U
 };
 
+/*
+ * Provide the editor feature save participants operation used by this module and its
+ * client applications.
+ */
 const UmiEditorFeatureDescriptor *umi_editor_feature_save_participants(void)
 {
     return &FEATURE;

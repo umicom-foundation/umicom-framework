@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial book data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialBook { UmiFinancialId book_id; UmiFinancialId parent_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; bool active; } UmiFinancialBook;
 /* Initialize the typed financial record. */ UmiStatus umi_book_init(UmiFinancialBook *item,const char *id,const char *name,const char *parent_id);
 /* Validate the typed financial record. */ bool umi_book_is_valid(const UmiFinancialBook *item);

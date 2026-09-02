@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/curve_calibration_plan.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseCurveCalibrationPlan p; CHECK(umi_enterprise_curve_calibration_plan_init(&p,"USD-OIS",20U,1e-10,100U)==UMI_STATUS_OK); CHECK(p.max_iterations==100U); return 0; }

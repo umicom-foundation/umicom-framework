@@ -30,8 +30,20 @@
 extern "C" {
 #endif
 
+/**
+ * Read ct target triple into validated module state and return a status when input cannot
+ * be used.
+ */
 UmiStatus umi_ct_target_triple_parse(const char *triple, UmiCtTarget *out_target);
+/**
+ * Provide the ct target triple format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_target_triple_format(const UmiCtTarget *target, char *out_text, size_t capacity);
+/**
+ * Provide the ct target compatible operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_target_compatible(const UmiCtTarget *left, const UmiCtTarget *right);
 
 #ifdef __cplusplus

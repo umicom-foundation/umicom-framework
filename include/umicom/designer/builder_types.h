@@ -30,12 +30,18 @@ extern "C" {
 #define UMI_DESIGNER_MAX_GENERATED_FILES 4U
 #define UMI_DESIGNER_GENERATED_CONTENT_CAPACITY 65536U
 
+/**
+ * List the named designer binding mode values accepted by this public contract.
+ */
 typedef enum UmiDesignerBindingMode {
     UMI_DESIGNER_BIND_ONE_WAY = 1,
     UMI_DESIGNER_BIND_TWO_WAY = 2,
     UMI_DESIGNER_BIND_ONE_TIME = 3
 } UmiDesignerBindingMode;
 
+/**
+ * List the named designer interaction kind values accepted by this public contract.
+ */
 typedef enum UmiDesignerInteractionKind {
     UMI_DESIGNER_INTERACTION_SIGNAL = 1,
     UMI_DESIGNER_INTERACTION_ACTION = 2,
@@ -43,12 +49,18 @@ typedef enum UmiDesignerInteractionKind {
     UMI_DESIGNER_INTERACTION_COMMAND = 4
 } UmiDesignerInteractionKind;
 
+/**
+ * List the named designer drop position values accepted by this public contract.
+ */
 typedef enum UmiDesignerDropPosition {
     UMI_DESIGNER_DROP_INTO = 1,
     UMI_DESIGNER_DROP_BEFORE = 2,
     UMI_DESIGNER_DROP_AFTER = 3
 } UmiDesignerDropPosition;
 
+/**
+ * List the named designer transaction state values accepted by this public contract.
+ */
 typedef enum UmiDesignerTransactionState {
     UMI_DESIGNER_TRANSACTION_DRAFT = 1,
     UMI_DESIGNER_TRANSACTION_APPLIED = 2,
@@ -56,6 +68,9 @@ typedef enum UmiDesignerTransactionState {
     UMI_DESIGNER_TRANSACTION_FAILED = 4
 } UmiDesignerTransactionState;
 
+/**
+ * List the named designer preview health values accepted by this public contract.
+ */
 typedef enum UmiDesignerPreviewHealth {
     UMI_DESIGNER_PREVIEW_IDLE = 1,
     UMI_DESIGNER_PREVIEW_CURRENT = 2,
@@ -63,12 +78,32 @@ typedef enum UmiDesignerPreviewHealth {
     UMI_DESIGNER_PREVIEW_INVALID = 4
 } UmiDesignerPreviewHealth;
 
+/**
+ * Provide the designer binding mode text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_binding_mode_text(UmiDesignerBindingMode mode);
+/**
+ * Provide the designer interaction kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_interaction_kind_text(
     UmiDesignerInteractionKind kind);
+/**
+ * Provide the designer drop position text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_drop_position_text(UmiDesignerDropPosition position);
+/**
+ * Provide the designer transaction state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_transaction_state_text(
     UmiDesignerTransactionState state);
+/**
+ * Provide the designer preview health text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_preview_health_text(UmiDesignerPreviewHealth health);
 
 #ifdef __cplusplus

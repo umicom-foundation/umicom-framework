@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise create backup and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int create_backup(
     UmiDataServer *source,
     char **out_backup,
@@ -38,6 +42,10 @@ static int create_backup(
         source, "restore-backup", "source", 1000U,
         &options, NULL, 0U, &sizing);
     buffer = (char *)calloc(sizing.bytes_required + 1U, sizeof(char));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL) return 1;
     TEST_STATUS_OK(umi_workbench_layout_backup_create(
         source, "restore-backup", "source", 1000U,
@@ -47,6 +55,10 @@ static int create_backup(
     return 0;
 }
 
+/*
+ * Exercise test validation only and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_validation_only(void)
 {
     UmiDataServer *source = test_create_data_server();
@@ -79,6 +91,10 @@ static int test_validation_only(void)
     return 0;
 }
 
+/*
+ * Exercise test restore new records and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_restore_new_records(void)
 {
     UmiDataServer *source = test_create_data_server();
@@ -109,6 +125,10 @@ static int test_restore_new_records(void)
     return 0;
 }
 
+/*
+ * Exercise test existing record policy and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_existing_record_policy(void)
 {
     UmiDataServer *source = test_create_data_server();
@@ -153,6 +173,10 @@ static int test_existing_record_policy(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid backup rollback and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_invalid_backup_rollback(void)
 {
     UmiDataServer *destination = test_create_data_server();
@@ -170,6 +194,10 @@ static int test_invalid_backup_rollback(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_validation_only() == 0, "validation only");

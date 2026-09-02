@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_INCREMENTAL_FINGERPRINT "umicom.document.performance.incremental_fingerprint"
 
+/**
+ * Provide the document capability incremental fingerprint operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_incremental_fingerprint(void);
 

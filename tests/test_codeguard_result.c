@@ -21,4 +21,8 @@
  */
 #include <assert.h>
 #include "umicom/codeguard/codeguard.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCodeGuardResult *r=NULL;UmiCodeGuardFinding f={0};assert(umi_codeguard_result_create(1U,&r)==UMI_STATUS_OK);f.severity=UMI_CODEGUARD_HIGH;f.category=UMI_CODEGUARD_CATEGORY_MEMORY;assert(umi_codeguard_result_add(r,&f)==UMI_STATUS_OK);assert(umi_codeguard_result_count(r)==1U);assert(umi_codeguard_result_count_severity(r,UMI_CODEGUARD_HIGH)==1U);umi_codeguard_result_destroy(r);return 0;}

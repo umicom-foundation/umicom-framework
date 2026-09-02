@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance text scale policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceTextScalePolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     double minimum_scale;

@@ -20,4 +20,5 @@
 #include "umicom/finance/account.h"
 #include "umicom/finance/identifier.h"
 #include "umicom/finance/currency.h"
+/* Check that financial account satisfies its contract before another service relies on it. */
 int umi_financial_account_valid(const UmiFinancialAccount *account){return account!=NULL && umi_financial_id_valid(&account->account_id) && umi_financial_id_valid(&account->party_id) && umi_currency_valid(&account->currency);}

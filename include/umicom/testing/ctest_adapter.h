@@ -26,9 +26,16 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ctest discover operation used by this module and its client applications.
+ */
 UmiStatus umi_ctest_discover(const char *build_directory,
                              UmiTestSuite *suite,
                              size_t *out_discovered);
+/**
+ * Perform ctest through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_ctest_run(const char *build_directory,
                         const char *test_name,
                         UmiTestResult *out_result);

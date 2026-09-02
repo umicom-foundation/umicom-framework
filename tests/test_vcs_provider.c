@@ -17,6 +17,10 @@
 #include "umicom/vcs/git_cli.h"
 #include "umicom/vcs/provider.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiVcsProvider provider;
@@ -26,6 +30,10 @@ int main(void)
     assert(strcmp(provider.provider_id, "umicom.vcs.git-cli") == 0);
     assert(umi_vcs_git_cli_is_repository(NULL, &is_repository) ==
            UMI_STATUS_INVALID_ARGUMENT);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider.destroy != NULL) { provider.destroy(provider.instance); }
     return 0;
 }

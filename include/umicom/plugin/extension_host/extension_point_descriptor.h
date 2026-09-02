@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host extension point descriptor data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiPluginExtensionHostExtensionPointDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,9 +44,25 @@ typedef struct UmiPluginExtensionHostExtensionPointDescriptor {
     uint64_t revision;
 } UmiPluginExtensionHostExtensionPointDescriptor;
 
+/**
+ * Initialise plugin extension host extension point descriptor from caller-provided values
+ * so later operations receive a known state.
+ */
 void umi_plugin_extension_host_extension_point_descriptor_init(UmiPluginExtensionHostExtensionPointDescriptor *value);
+/**
+ * Provide the plugin extension host extension point descriptor configure operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_extension_point_descriptor_configure(UmiPluginExtensionHostExtensionPointDescriptor *value, const char *id, const char *subject, uint32_t version, uint32_t risk, uint64_t flags);
+/**
+ * Check that plugin extension host extension point descriptor satisfies its contract
+ * before another service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_extension_point_descriptor_validate(const UmiPluginExtensionHostExtensionPointDescriptor *value);
+/**
+ * Provide the plugin extension host extension point descriptor fingerprint operation used
+ * by this module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_extension_point_descriptor_fingerprint(const UmiPluginExtensionHostExtensionPointDescriptor *value);
 
 #ifdef __cplusplus

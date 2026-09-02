@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise language runtime request from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_language_runtime_request_initialize(UmiLanguageRuntimeServer*s,const char*root_uri,uint64_t*out_id);
 #ifdef __cplusplus
 }

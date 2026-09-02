@@ -26,6 +26,10 @@
 
 static size_t generate_calls;
 
+/*
+ * Exercise generate answer and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus generate_answer(void *instance,
                                  const UmiAiRequest *request,
                                  UmiAiResponse *response)
@@ -41,6 +45,10 @@ static UmiStatus generate_answer(void *instance,
     return umi_ai_response_set_text(response, provider_id);
 }
 
+/*
+ * Exercise add provider and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_provider(UmiAiRuntime *runtime,
                          const char *provider_id,
                          UmiAiProviderKind kind)
@@ -56,6 +64,10 @@ static void add_provider(UmiAiRuntime *runtime,
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAiRuntime runtime;

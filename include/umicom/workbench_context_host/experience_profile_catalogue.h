@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context host experience profile summary data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiWorkbenchContextHostExperienceProfileSummary {
     size_t application_count;
     size_t group_count;
@@ -32,6 +36,10 @@ typedef struct UmiWorkbenchContextHostExperienceProfileSummary {
     size_t passive_endpoint_count;
 } UmiWorkbenchContextHostExperienceProfileSummary;
 
+/**
+ * Add workbench context host experience profiles only after its inputs and available
+ * capacity have been checked.
+ */
 UmiStatus umi_workbench_context_host_experience_profiles_register(
     UmiWorkbenchContextHostProfileCatalogue *catalogue,
     const UmiWorkbenchContextHostExperienceProfileOptions *options,

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance keyboard access policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceKeyboardAccessPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     bool require_all_interactive;

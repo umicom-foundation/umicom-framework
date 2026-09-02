@@ -19,6 +19,10 @@
 #include "umicom/distribution_ui/distribution_ui.h"
 #include "umicom/ui/command_view.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDistributionService *service = NULL;

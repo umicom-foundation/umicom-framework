@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the market data key data shared with callers of this public contract.
+ */
 typedef struct UmiMarketDataKey { UmiFinancialId key_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; uint32_t state; bool active; } UmiMarketDataKey;
 /* Initialize the typed financial record. */ UmiStatus umi_market_data_key_init(UmiMarketDataKey *item,const char *id,const char *name,const char *code,uint32_t state);
 /* Validate the typed financial record. */ bool umi_market_data_key_is_valid(const UmiMarketDataKey *item);

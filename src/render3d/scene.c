@@ -40,7 +40,12 @@ static UmiRender3dNode *find_mutable(
     UmiRender3dNodeId node_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || node_id == 0U) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scene->capacity; ++index) {
         /* Active state prevents a removed identity from resolving through reuse. */
         if (scene->slots[index].active &&
@@ -55,6 +60,10 @@ static UmiRender3dNode *find_mutable(
 static UmiStatus copy_text(char *destination, size_t capacity, const char *text)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -77,6 +86,10 @@ UmiStatus umi_render3d_scene_create(
     }
     *out_scene = NULL;
     scene = (UmiRender3dScene *)calloc(1U, sizeof(*scene));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     scene->slots = (UmiRender3dSceneSlot *)calloc(
         node_capacity, sizeof(*scene->slots));
@@ -95,6 +108,10 @@ UmiStatus umi_render3d_scene_create(
 /* Release slot storage and its owner; NULL destruction is intentionally safe. */
 void umi_render3d_scene_destroy(UmiRender3dScene *scene)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL) return;
     free(scene->slots);
     free(scene);
@@ -111,6 +128,10 @@ UmiStatus umi_render3d_scene_add_node(
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || name == NULL || name[0] == '\0' ||
         mesh_resource_id == NULL || material_resource_id == NULL ||
         out_node_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -118,9 +139,11 @@ UmiStatus umi_render3d_scene_add_node(
     if (parent_id != 0U && find_mutable(scene, parent_id) == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (scene->count >= scene->capacity || scene->next_node_id == UINT64_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scene->capacity; ++index) {
         UmiRender3dSceneSlot *slot = &scene->slots[index];
         /* Free slots are cleared before text fields and transforms are assigned. */
@@ -128,9 +151,11 @@ UmiStatus umi_render3d_scene_add_node(
             (void)memset(slot, 0, sizeof(*slot));
             status = copy_text(slot->node.name,
                                sizeof(slot->node.name), name);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) status = copy_text(
                 slot->node.mesh_resource_id,
                 sizeof(slot->node.mesh_resource_id), mesh_resource_id);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) status = copy_text(
                 slot->node.material_resource_id,
                 sizeof(slot->node.material_resource_id), material_resource_id);
@@ -158,9 +183,18 @@ UmiStatus umi_render3d_scene_remove_node(
 {
     size_t index;
     UmiRender3dNode *node;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || node_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     node = find_mutable(scene, node_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scene->capacity; ++index) {
         /* Parent removal is blocked until children are reparented or removed. */
         if (scene->slots[index].active &&
@@ -168,6 +202,7 @@ UmiStatus umi_render3d_scene_remove_node(
             return UMI_STATUS_INVALID_STATE;
         }
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scene->capacity; ++index) {
         /* Identity comparison locates the owning slot for complete clearing. */
         if (scene->slots[index].active &&
@@ -189,6 +224,10 @@ UmiStatus umi_render3d_scene_set_transform(
 {
     UmiRender3dNode *node;
     double quaternion_size;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || node_id == 0U || transform == NULL ||
         transform->scale_x == 0.0 || transform->scale_y == 0.0 ||
         transform->scale_z == 0.0) return UMI_STATUS_INVALID_ARGUMENT;
@@ -199,6 +238,10 @@ UmiStatus umi_render3d_scene_set_transform(
     /* An all-zero quaternion has no valid rotation interpretation. */
     if (quaternion_size == 0.0) return UMI_STATUS_INVALID_ARGUMENT;
     node = find_mutable(scene, node_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) return UMI_STATUS_NOT_FOUND;
     node->transform = *transform;
     scene->revision += 1U;
@@ -212,8 +255,16 @@ UmiStatus umi_render3d_scene_set_visible(
     bool visible)
 {
     UmiRender3dNode *node;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || node_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     node = find_mutable(scene, node_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) return UMI_STATUS_NOT_FOUND;
     node->visible = visible;
     scene->revision += 1U;
@@ -227,10 +278,16 @@ UmiStatus umi_render3d_scene_find(
     UmiRender3dNode *out_node)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || node_id == 0U || out_node == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scene->capacity; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (scene->slots[index].active &&
             scene->slots[index].node.node_id == node_id) {
             *out_node = scene->slots[index].node;
@@ -248,9 +305,16 @@ UmiStatus umi_render3d_scene_at(
 {
     size_t slot;
     size_t active_index = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || out_node == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= scene->count) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (slot = 0U; slot < scene->capacity; ++slot) {
+        /* Apply this operation only while the related capability or state is available. */
         if (scene->slots[slot].active) {
             /* Public indexes count only active nodes. */
             if (active_index == index) {
@@ -269,6 +333,10 @@ UmiStatus umi_render3d_scene_snapshot(
     UmiRender3dSceneSnapshot *out_snapshot)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scene == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
@@ -276,12 +344,15 @@ UmiStatus umi_render3d_scene_snapshot(
     out_snapshot->node_count = scene->count;
     out_snapshot->node_capacity = scene->capacity;
     out_snapshot->revision = scene->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scene->capacity; ++index) {
         /* Only active nodes contribute to public scene statistics. */
         if (scene->slots[index].active) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (scene->slots[index].node.parent_id == 0U) {
                 out_snapshot->root_count += 1U;
             }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (scene->slots[index].node.visible) {
                 out_snapshot->visible_count += 1U;
             }

@@ -19,4 +19,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/product/product.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){char b[512];assert(umi_product_manifest_format(umi_reference_product_trader(),b,sizeof(b))==UMI_STATUS_OK);assert(strstr(b,"org.umicom.trader")!=NULL);return 0;}

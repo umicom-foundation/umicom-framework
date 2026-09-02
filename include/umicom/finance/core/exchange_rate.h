@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the exchange rate data shared with callers of this public contract.
+ */
 typedef struct UmiExchangeRate { UmiCurrencyPair pair; double rate; int64_t timestamp; } UmiExchangeRate;
 /* Initialize rate. */ UmiStatus umi_exchange_rate_init(UmiExchangeRate *r,const UmiCurrencyPair *p,double rate,int64_t ts);
 /* Validate rate. */ bool umi_exchange_rate_is_valid(const UmiExchangeRate *r);

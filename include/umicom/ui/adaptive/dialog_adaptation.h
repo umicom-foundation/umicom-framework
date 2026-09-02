@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive dialog decision data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveDialogDecision { int full_screen; int modal; int32_t max_width; } UmiAdaptiveDialogDecision;
 /* Resolve dialog modality and width for a size class. */
 UmiAdaptiveDialogDecision umi_adaptive_dialog_adaptation_resolve(UmiDesignSizeClass size_class, int destructive);

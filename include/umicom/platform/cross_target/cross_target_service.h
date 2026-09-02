@@ -32,10 +32,29 @@ extern "C" {
 
 #include "umicom/platform/cross_target/target_catalogue.h"
 #include "umicom/platform/cross_target/cross_target_snapshot.h"
+/**
+ * Represent the ct cross target service data shared with callers of this public contract.
+ */
 typedef struct UmiCtCrossTargetService { UmiCtTargetCatalogue targets; UmiCtCrossTargetSnapshot active; bool active_set; uint64_t revision; } UmiCtCrossTargetService;
+/**
+ * Initialise ct cross target service from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ct_cross_target_service_init(UmiCtCrossTargetService *service);
+/**
+ * Add ct cross target service only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ct_cross_target_service_register(UmiCtCrossTargetService *service,const UmiCtTargetProfile *profile);
+/**
+ * Provide the ct cross target service activate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ct_cross_target_service_activate(UmiCtCrossTargetService *service,const char *profile_id,const UmiCtCrossTargetSnapshot *snapshot);
+/**
+ * Provide the ct cross target service active operation used by this module and its client
+ * applications.
+ */
 const UmiCtCrossTargetSnapshot *umi_ct_cross_target_service_active(const UmiCtCrossTargetService *service);
 
 #ifdef __cplusplus

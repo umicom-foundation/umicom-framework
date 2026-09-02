@@ -25,11 +25,17 @@
 UmiStatus umi_commodity_physical_exposure_init(UmiCommodityPhysicalExposure *value, const char *commodity_id, int32_t scale, const char *unit_code)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || scale < 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_commodity_copy_text(value->commodity_id.value, sizeof value->commodity_id.value, commodity_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_commodity_copy_text(value->unit_code, sizeof value->unit_code, unit_code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->scale = scale;
     return UMI_STATUS_OK;
@@ -38,7 +44,12 @@ UmiStatus umi_commodity_physical_exposure_init(UmiCommodityPhysicalExposure *val
 /* Keep buy and sell commitments separately so gross exposure remains observable. */
 UmiStatus umi_commodity_physical_exposure_add(UmiCommodityPhysicalExposure *value, int64_t purchase_units, int64_t sale_units)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || purchase_units < 0 || sale_units < 0) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (purchase_units > INT64_MAX - value->purchase_units || sale_units > INT64_MAX - value->sale_units) return UMI_STATUS_CAPACITY_EXCEEDED;
     value->purchase_units += purchase_units;
     value->sale_units += sale_units;
@@ -48,6 +59,10 @@ UmiStatus umi_commodity_physical_exposure_add(UmiCommodityPhysicalExposure *valu
 /* Net exposure is derived from gross commitments. */
 int64_t umi_commodity_physical_exposure_net(const UmiCommodityPhysicalExposure *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return 0;
     return value->purchase_units - value->sale_units;
 }

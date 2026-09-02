@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/monte_carlo_path.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double terminal=0.0; CHECK(umi_quant_monte_carlo_path_terminal(100.0,0.05,0.0,1.0,0.0,&terminal)==UMI_STATUS_OK); CHECK(terminal>105.1&&terminal<105.2);

@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the productisation release gate data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductisationReleaseGate {
     size_t application_count;
     size_t blocker_count;

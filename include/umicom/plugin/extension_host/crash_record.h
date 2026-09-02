@@ -29,9 +29,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host crash record data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPluginExtensionHostCrashRecord { char plugin_id[UMI_PLUGIN_EXTENSION_HOST_ID_CAPACITY]; uint64_t timestamp_ms; int32_t exit_code; uint32_t signal_code; uint32_t restart_count; uint64_t evidence; } UmiPluginExtensionHostCrashRecord;
+/**
+ * Initialise plugin extension host crash record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_crash_record_init(UmiPluginExtensionHostCrashRecord *record);
+/**
+ * Provide the plugin extension host crash record capture operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_plugin_extension_host_crash_record_capture(UmiPluginExtensionHostCrashRecord *record, const char *plugin_id, uint64_t timestamp_ms, int32_t exit_code, uint32_t signal_code, uint32_t restart_count);
+/**
+ * Provide the plugin extension host crash record severe operation used by this module and
+ * its client applications.
+ */
 int umi_plugin_extension_host_crash_record_severe(const UmiPluginExtensionHostCrashRecord *record);
 
 #ifdef __cplusplus

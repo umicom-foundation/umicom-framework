@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/toolchain/operation_types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ assert(strcmp(umi_toolchain_operation_kind_text(UMI_TOOLCHAIN_OPERATION_REPOSITORY_READ), "repository-read") == 0); assert(umi_toolchain_operation_is_repository(UMI_TOOLCHAIN_OPERATION_REPOSITORY_WRITE)); return 0; }

@@ -28,6 +28,10 @@
 
 #include "umicom/editor/snippet_session.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSnippetSession *session = NULL;

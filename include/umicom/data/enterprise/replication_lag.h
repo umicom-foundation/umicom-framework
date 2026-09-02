@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data replication lag data shared with callers of this public contract.
+ */
 typedef struct UmiDataReplicationLag { char replica_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; uint64_t lag_ms; uint64_t sequence_gap; UmiDataEnterpriseState state; } UmiDataReplicationLag;
 /* Compute replica lag state against caller-provided warning/failure thresholds. */ UmiStatus umi_data_replication_lag_compute(UmiDataReplicationLag *lag,const char *replica_id,uint64_t lag_ms,uint64_t sequence_gap,uint64_t warning_ms,uint64_t failure_ms);
 

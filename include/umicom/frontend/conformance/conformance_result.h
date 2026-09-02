@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc conformance result data shared with callers of this public contract.
+ */
 typedef struct UmiFcConformanceResult { char case_id[UMI_FC_ID_CAPACITY]; UmiFcOutcome outcome; uint64_t missing; double score; } UmiFcConformanceResult;
+/**
+ * Provide the fc conformance result from case operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fc_conformance_result_from_case(const UmiFcConformanceCase *item,UmiFcConformanceResult *out_result);
 
 #ifdef __cplusplus

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix safety gate data shared with callers of this public contract.
+ */
 typedef struct UmiHelixSafetyGate { uint32_t structure_size; uint32_t api_version; double maximum_risk; bool allow_destructive; } UmiHelixSafetyGate;
 /* Initialise conservative gate defaults. */
 void umi_helix_safety_gate_init(UmiHelixSafetyGate *gate);

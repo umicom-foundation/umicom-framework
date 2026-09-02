@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_batch.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationBatch b; UmiEnterpriseValuationTask t; CHECK(umi_enterprise_valuation_batch_init(&b,"b")==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_task_init(&t,"t","j","p",1.0)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_batch_add(&b,&t)==UMI_STATUS_OK); CHECK(b.count==1U); return 0; }

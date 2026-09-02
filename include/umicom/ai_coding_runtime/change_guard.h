@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding change guard policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingChangeGuardPolicy {
     size_t maximum_files;
     uint32_t maximum_changed_lines;
@@ -29,15 +33,27 @@ typedef struct UmiAiCodingChangeGuardPolicy {
     int allow_dependency_paths;
 } UmiAiCodingChangeGuardPolicy;
 
+/**
+ * Represent the ai coding change guard result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingChangeGuardResult {
     int accepted;
     size_t rejected_files;
     char reason[1024];
 } UmiAiCodingChangeGuardResult;
 
+/**
+ * Initialise ai coding change guard policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_change_guard_policy_init(
     UmiAiCodingChangeGuardPolicy *policy);
 
+/**
+ * Provide the ai coding change guard check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_change_guard_check(
     const UmiAiCodingPatch *patch,
     const UmiAiCodingChangeGuardPolicy *policy,

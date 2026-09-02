@@ -25,6 +25,10 @@ extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_WORKSPACE_ROUTING_API_VERSION 1U
 
+/**
+ * Represent the language intelligence workspace routing data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceWorkspaceRouting {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,14 +40,30 @@ typedef struct UmiLanguageIntelligenceWorkspaceRouting {
     uint64_t revision;
 } UmiLanguageIntelligenceWorkspaceRouting;
 
+/**
+ * Initialise language intelligence workspace routing from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_workspace_routing_init(UmiLanguageIntelligenceWorkspaceRouting *mapping);
+/**
+ * Copy language intelligence workspace routing into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_language_intelligence_workspace_routing_set(
     UmiLanguageIntelligenceWorkspaceRouting *mapping,
     const char *source_id,
     const char *target_id,
     const char *scope_id);
+/**
+ * Check that language intelligence workspace routing satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_language_intelligence_workspace_routing_validate(
     const UmiLanguageIntelligenceWorkspaceRouting *mapping);
+/**
+ * Provide the language intelligence workspace routing matches operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_workspace_routing_matches(
     const UmiLanguageIntelligenceWorkspaceRouting *mapping,
     const char *source_id,

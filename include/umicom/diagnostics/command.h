@@ -26,6 +26,9 @@ extern "C" {
 
 #define UMI_DIAGNOSTIC_COMMAND_API_VERSION 1U
 
+/**
+ * List the named diagnostic command kind values accepted by this public contract.
+ */
 typedef enum UmiDiagnosticCommandKind {
     UMI_DIAGNOSTIC_COMMAND_OPEN_PROBLEMS = 1,
     UMI_DIAGNOSTIC_COMMAND_REFRESH = 2,
@@ -55,6 +58,10 @@ typedef enum UmiDiagnosticCommandKind {
     UMI_DIAGNOSTIC_COMMAND_PROVIDER_DETAILS = 26
 } UmiDiagnosticCommandKind;
 
+/**
+ * Represent the diagnostic command descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -70,10 +77,26 @@ typedef struct UmiDiagnosticCommandDescriptor {
     int mutates_workspace;
 } UmiDiagnosticCommandDescriptor;
 
+/**
+ * Return the number of records represented by diagnostic command without changing their
+ * state.
+ */
 size_t umi_diagnostic_command_count(void);
+/**
+ * Find diagnostic command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_at(size_t position);
+/**
+ * Find diagnostic command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_find(
     const char *command_id);
+/**
+ * Provide the diagnostic command for kind operation used by this module and its client
+ * applications.
+ */
 const UmiDiagnosticCommandDescriptor *umi_diagnostic_command_for_kind(
     UmiDiagnosticCommandKind kind);
 

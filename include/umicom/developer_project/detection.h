@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project detection report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectDetectionReport {
     UmiDeveloperProjectBuildSystem build_system;
     char primary_language_id[UMI_DEVELOPER_PROJECT_ID_CAPACITY];
@@ -37,11 +41,19 @@ typedef struct UmiDeveloperProjectDetectionReport {
     uint64_t source_revision;
 } UmiDeveloperProjectDetectionReport;
 
+/**
+ * Provide the developer project detect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_project_detect(
     const UmiFileIndex *file_index,
     const UmiDeveloperProjectLanguageRegistry *languages,
     UmiDeveloperProjectDetectionReport *out_report);
 
+/**
+ * Provide the developer project detection to model operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_detection_to_model(
     const UmiDeveloperProjectDetectionReport *report,
     const char *project_id,

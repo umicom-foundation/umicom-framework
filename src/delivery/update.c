@@ -19,12 +19,15 @@
 
 #include "umicom/delivery/update.h"
 
+/* Provide the update decide operation used by this module and its client applications. */
 UmiUpdateDecision umi_update_decide(uint64_t installed_generation,
                                     uint64_t available_generation,
                                     int compatible,
                                     int policy_allows)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (available_generation <= installed_generation) return UMI_UPDATE_NONE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!compatible || !policy_allows) return UMI_UPDATE_BLOCKED;
     return UMI_UPDATE_AVAILABLE;
 }

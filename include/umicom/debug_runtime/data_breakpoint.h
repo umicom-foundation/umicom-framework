@@ -15,6 +15,10 @@
 #ifndef UMICOM_DEBUG_RUNTIME_DATA_BREAKPOINT_H
 #define UMICOM_DEBUG_RUNTIME_DATA_BREAKPOINT_H
 #include "umicom/debug_runtime/types.h"
+/**
+ * Represent the debug runtime data breakpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimeDataBreakpoint {
     char data_id[512];
     char access_type[64];

@@ -15,17 +15,33 @@
 #include <math.h>
 #include <string.h>
 
+/*
+ * Initialise knowledge embedding registry from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_knowledge_embedding_registry_init(
     UmiKnowledgeEmbeddingRegistry *registry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry != NULL) (void)memset(registry, 0, sizeof(*registry));
 }
 
+/*
+ * Add knowledge embedding registry only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_knowledge_embedding_registry_add(
     UmiKnowledgeEmbeddingRegistry *registry,
     const UmiKnowledgeEmbeddingProvider *provider)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider == NULL || provider->provider_id == NULL ||
         provider->provider_id[0] == '\0' || provider->embed_text == NULL ||
         provider->structure_size < sizeof(*provider) ||
@@ -34,10 +50,13 @@ UmiStatus umi_knowledge_embedding_registry_add(
         provider->dimension > UMI_KNOWLEDGE_EMBEDDING_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->providers[index].provider_id,
                    provider->provider_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_KNOWLEDGE_PROVIDER_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -45,13 +64,23 @@ UmiStatus umi_knowledge_embedding_registry_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find knowledge embedding registry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiKnowledgeEmbeddingProvider *umi_knowledge_embedding_registry_find(
     const UmiKnowledgeEmbeddingRegistry *registry,
     const char *provider_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || provider_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->providers[index].provider_id, provider_id) == 0) {
             return &registry->providers[index];
         }
@@ -59,6 +88,7 @@ const UmiKnowledgeEmbeddingProvider *umi_knowledge_embedding_registry_find(
     return NULL;
 }
 
+/* Provide the hash embed operation used by this module and its client applications. */
 static UmiStatus hash_embed(void *instance, const char *text,
                             UmiKnowledgeEmbedding *out_value)
 {
@@ -66,11 +96,19 @@ static UmiStatus hash_embed(void *instance, const char *text,
     double sum = 0.0;
     size_t previous = 0U;
     (void)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || text[0] == '\0' || out_value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_value, 0, sizeof(*out_value));
     out_value->dimension = 64U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
         size_t current = (size_t)(unsigned char)tolower((int)*cursor);
         size_t bucket = (current * 33U + previous * 17U) % 64U;
@@ -79,12 +117,15 @@ static UmiStatus hash_embed(void *instance, const char *text,
         previous = current;
         ++cursor;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < out_value->dimension; ++index) {
         sum += (double)out_value->values[index] *
                (double)out_value->values[index];
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (sum > 0.0) {
         double magnitude = sqrt(sum);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (size_t index = 0U; index < out_value->dimension; ++index) {
             out_value->values[index] =
                 (float)((double)out_value->values[index] / magnitude);
@@ -93,11 +134,19 @@ static UmiStatus hash_embed(void *instance, const char *text,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the knowledge hash embedding provider operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_knowledge_hash_embedding_provider(
     const char *provider_id,
     size_t dimension,
     UmiKnowledgeEmbeddingProvider *out_provider)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider_id == NULL || provider_id[0] == '\0' ||
         dimension != 64U || out_provider == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;

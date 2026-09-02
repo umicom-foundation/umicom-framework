@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Read developer location link into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_developer_location_link_parse(
     const char *text,
     UmiDeveloperProductivityLocation *out_location,
@@ -28,6 +32,10 @@ UmiStatus umi_developer_location_link_parse(
     unsigned long column_number = 0UL;
     int parsed;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_location == NULL || out_matched == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -35,6 +43,7 @@ UmiStatus umi_developer_location_link_parse(
     *out_matched = 0;
     (void)memset(out_location, 0, sizeof(*out_location));
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (isalpha((unsigned char)text[0]) && text[1] == ':') {
         char drive = '\0';
         char tail[UMI_DEVELOPER_PRODUCTIVITY_PATH_CAPACITY - 2U];
@@ -47,11 +56,12 @@ UmiStatus umi_developer_location_link_parse(
             &line_number,
             &column_number);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (parsed >= 3) {
             (void)snprintf(path, sizeof(path), "%c:%s", drive, tail);
             parsed -= 1;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         parsed = sscanf(
             text,
             "%2047[^:]:%lu:%lu",
@@ -60,6 +70,7 @@ UmiStatus umi_developer_location_link_parse(
             &column_number);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed < 2) {
         return UMI_STATUS_OK;
     }

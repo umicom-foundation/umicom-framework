@@ -19,25 +19,46 @@
 #include <stdlib.h>
 
 
+/*
+ * Initialise workbench designer browser from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_browser_init(UmiWorkbenchDesignerBrowser *browser)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL) return;
     (void)memset(browser, 0, sizeof(*browser));
     browser->sort = UMI_WORKBENCH_DESIGNER_BROWSER_SORT_NAME;
 }
 
+/*
+ * Provide the browser item matches operation used by this module and its client
+ * applications.
+ */
 static bool browser_item_matches(
     const UmiWorkbenchDesignerBrowserItem *item,
     const UmiWorkbenchDesignerBrowserQuery *query)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (query->category[0] != '\0' && strcmp(item->category, query->category) != 0) return false;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (query->owner[0] != '\0' && strcmp(item->owner, query->owner) != 0) return false;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (query->workspace[0] != '\0' && strcmp(item->workspace, query->workspace) != 0) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->tag[0] != '\0' && !umi_workbench_designer_text_contains_case_insensitive(item->tags, query->tag)) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->built_in_only && !item->built_in) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->user_only && item->built_in) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->locked_only && !item->locked) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->shared_only && !item->shared) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->text[0] != '\0' &&
         !umi_workbench_designer_text_contains_case_insensitive(item->name, query->text) &&
         !umi_workbench_designer_text_contains_case_insensitive(item->description, query->text) &&
@@ -48,6 +69,10 @@ static bool browser_item_matches(
 
 static const UmiWorkbenchDesignerBrowser *browser_sort_context;
 
+/*
+ * Provide the browser compare indices operation used by this module and its client
+ * applications.
+ */
 static int browser_compare_indices(const void *left_pointer, const void *right_pointer)
 {
     size_t left_index = *(const size_t *)left_pointer;
@@ -55,6 +80,7 @@ static int browser_compare_indices(const void *left_pointer, const void *right_p
     const UmiWorkbenchDesignerBrowserItem *left = &browser_sort_context->items[left_index];
     const UmiWorkbenchDesignerBrowserItem *right = &browser_sort_context->items[right_index];
     int comparison = 0;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (browser_sort_context->sort) {
         case UMI_WORKBENCH_DESIGNER_BROWSER_SORT_RECENT:
             comparison = left->modified_at_ms < right->modified_at_ms ? -1 :
@@ -72,15 +98,19 @@ static int browser_compare_indices(const void *left_pointer, const void *right_p
             comparison = strcmp(left->name, right->name);
             break;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (comparison == 0) comparison = strcmp(left->layout_id, right->layout_id);
     return browser_sort_context->descending ? -comparison : comparison;
 }
 
+/* Provide the browser refresh operation used by this module and its client applications. */
 static void browser_refresh(UmiWorkbenchDesignerBrowser *browser)
 {
     size_t index;
     browser->visible_count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < browser->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (browser_item_matches(&browser->items[index], &browser->query)) {
             browser->visible_indices[browser->visible_count++] = index;
         }
@@ -92,6 +122,10 @@ static void browser_refresh(UmiWorkbenchDesignerBrowser *browser)
     browser->revision += 1U;
 }
 
+/*
+ * Provide the workbench designer browser add summary operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_add_summary(
     UmiWorkbenchDesignerBrowser *browser,
     const UmiWorkbenchLayoutRecordSummary *summary,
@@ -100,9 +134,14 @@ UmiStatus umi_workbench_designer_browser_add_summary(
     bool active)
 {
     UmiWorkbenchDesignerBrowserItem *item;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || summary == NULL || summary->layout_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (browser->count >= UMI_WORKBENCH_DESIGNER_MAX_BROWSER_ITEMS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -127,21 +166,37 @@ UmiStatus umi_workbench_designer_browser_add_summary(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer browser set query operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_set_query(
     UmiWorkbenchDesignerBrowser *browser,
     const UmiWorkbenchDesignerBrowserQuery *query)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || query == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     browser->query = *query;
     browser_refresh(browser);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer browser set sort operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_set_sort(
     UmiWorkbenchDesignerBrowser *browser,
     UmiWorkbenchDesignerBrowserSort sort,
     bool descending)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || sort < UMI_WORKBENCH_DESIGNER_BROWSER_SORT_NAME ||
         sort > UMI_WORKBENCH_DESIGNER_BROWSER_SORT_OWNER) return UMI_STATUS_INVALID_ARGUMENT;
     browser->sort = sort;
@@ -150,17 +205,28 @@ UmiStatus umi_workbench_designer_browser_set_sort(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer browser select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_browser_select(
     UmiWorkbenchDesignerBrowser *browser,
     const char *layout_id)
 {
     size_t index;
     bool found = false;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || layout_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < browser->count; ++index) {
         browser->items[index].selected = strcmp(browser->items[index].layout_id, layout_id) == 0;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (browser->items[index].selected) found = true;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!found) return UMI_STATUS_NOT_FOUND;
     (void)umi_workbench_designer_copy_text(
         browser->selected_layout_id, sizeof(browser->selected_layout_id), layout_id);
@@ -168,20 +234,38 @@ UmiStatus umi_workbench_designer_browser_select(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench designer browser visible while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerBrowserItem *umi_workbench_designer_browser_visible_at(
     const UmiWorkbenchDesignerBrowser *browser,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL || index >= browser->visible_count) return NULL;
     return &browser->items[browser->visible_indices[index]];
 }
 
+/*
+ * Find workbench designer browser while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchDesignerBrowserItem *umi_workbench_designer_browser_selected(
     const UmiWorkbenchDesignerBrowser *browser)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (browser == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < browser->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (browser->items[index].selected) return &browser->items[index];
     }
     return NULL;

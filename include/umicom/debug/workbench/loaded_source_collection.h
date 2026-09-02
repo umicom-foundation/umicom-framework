@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench loaded source collection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchLoadedSourceCollection {
     UmiDebugWorkbenchEntry items[UMI_DEBUG_WORKBENCH_MAX_ITEMS];
     size_t count;
@@ -33,11 +37,35 @@ typedef struct UmiDebugWorkbenchLoadedSourceCollection {
     uint64_t revision;
 } UmiDebugWorkbenchLoadedSourceCollection;
 
+/**
+ * Initialise debug workbench loaded source collection from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_debug_workbench_loaded_source_collection_init(UmiDebugWorkbenchLoadedSourceCollection *model);
+/**
+ * Add debug workbench loaded source collection only after its inputs and available
+ * capacity have been checked.
+ */
 UmiStatus umi_debug_workbench_loaded_source_collection_add(UmiDebugWorkbenchLoadedSourceCollection *model, const UmiDebugWorkbenchEntry *entry);
+/**
+ * Remove debug workbench loaded source collection while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_debug_workbench_loaded_source_collection_remove(UmiDebugWorkbenchLoadedSourceCollection *model, const char *id);
+/**
+ * Provide the debug workbench loaded source collection select operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_loaded_source_collection_select(UmiDebugWorkbenchLoadedSourceCollection *model, const char *id);
+/**
+ * Find debug workbench loaded source collection while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiDebugWorkbenchEntry *umi_debug_workbench_loaded_source_collection_find(const UmiDebugWorkbenchLoadedSourceCollection *model, const char *id);
+/**
+ * Check that debug workbench loaded source collection satisfies its contract before
+ * another service relies on it.
+ */
 int umi_debug_workbench_loaded_source_collection_valid(const UmiDebugWorkbenchLoadedSourceCollection *model);
 
 #ifdef __cplusplus

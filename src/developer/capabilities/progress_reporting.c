@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/progress_reporting.h"
 
+/*
+ * Provide the developer capability progress reporting operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_progress_reporting(void)
 {

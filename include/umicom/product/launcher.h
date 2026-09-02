@@ -24,7 +24,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named product launch mode values accepted by this public contract.
+ */
 typedef enum UmiProductLaunchMode { UMI_PRODUCT_LAUNCH_CONSOLE=1, UMI_PRODUCT_LAUNCH_GUI=2, UMI_PRODUCT_LAUNCH_WEB=3 } UmiProductLaunchMode;
+/**
+ * Provide the product launcher select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_product_launcher_select(const UmiProductProfile *profile,UmiProductLaunchMode preferred,UmiProductFrontendKind *out_frontend);
 #ifdef __cplusplus
 }

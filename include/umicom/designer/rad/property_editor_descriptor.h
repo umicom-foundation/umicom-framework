@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad property editor descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRadPropertyEditorDescriptor {
     char property_id[UMI_RAD_ID_CAPACITY];
     char editor_type[UMI_RAD_ID_CAPACITY];
@@ -25,7 +29,15 @@ typedef struct UmiRadPropertyEditorDescriptor {
     bool required;
     bool read_only;
 } UmiRadPropertyEditorDescriptor;
+/**
+ * Initialise rad property editor descriptor from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_rad_property_editor_descriptor_init(UmiRadPropertyEditorDescriptor *item);
+/**
+ * Check that rad property editor descriptor satisfies its contract before another service
+ * relies on it.
+ */
 int umi_rad_property_editor_descriptor_is_valid(const UmiRadPropertyEditorDescriptor *item);
 #ifdef __cplusplus
 }

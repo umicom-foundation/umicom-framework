@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtSyscallCatalogue c;UmiCtSyscallDescriptor d={7U,"clock.read",0U,1U};umi_ct_syscall_catalogue_init(&c);CHECK(umi_ct_syscall_catalogue_add(&c,&d)==UMI_STATUS_OK);CHECK(umi_ct_syscall_catalogue_add(&c,&d)==UMI_STATUS_ALREADY_EXISTS);CHECK(umi_ct_syscall_catalogue_find_number(&c,7U)!=NULL);return 0;}

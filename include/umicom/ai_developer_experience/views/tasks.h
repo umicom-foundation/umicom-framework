@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_developer_experience/task_registry.h"
+/**
+ * Initialise ai developer tasks view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_tasks_view_create(
     const char *view_id,
     const UmiAiDeveloperTaskRegistry *tasks,

@@ -21,6 +21,7 @@
 
 #include "internal.h"
 
+/* Provide the severity is error operation used by this module and its client applications. */
 static bool severity_is_error(
     UmiWorkbenchLayoutSeverity severity,
     const UmiWorkbenchLayoutValidationOptions *options)
@@ -30,6 +31,7 @@ static bool severity_is_error(
             options != NULL && options->warnings_as_errors);
 }
 
+/* Provide the finalise report operation used by this module and its client applications. */
 static void finalise_report(
     UmiWorkbenchLayoutValidationReport *report,
     const UmiWorkbenchLayoutValidationOptions *options)
@@ -37,10 +39,16 @@ static void finalise_report(
     size_t index;
     bool valid = true;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL) {
         return;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < report->diagnostic_count; ++index) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (severity_is_error(
                 report->diagnostics[index].severity, options)) {
             valid = false;
@@ -50,6 +58,7 @@ static void finalise_report(
     report->valid = valid;
 }
 
+/* Provide the make node path operation used by this module and its client applications. */
 static UmiStatus make_node_path(
     const UmiWorkbenchLayoutDocument *document,
     size_t node_index,
@@ -62,15 +71,24 @@ static UmiStatus make_node_path(
     size_t index;
     size_t used = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || buffer == NULL || capacity == 0U ||
         !umi_workbench_layout_index_valid(
             node_index, document->node_count)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (current != UMI_WORKBENCH_LAYOUT_INDEX_NONE &&
            count < UMI_WORKBENCH_LAYOUT_MAX_NODES) {
         ancestors[count++] = current;
+        /* Apply this operation only while the related capability or state is available. */
         if (!umi_workbench_layout_index_valid(
                 current, document->node_count)) {
             break;
@@ -79,6 +97,7 @@ static UmiStatus make_node_path(
     }
 
     buffer[0] = '\0';
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = count; index > 0U; --index) {
         const char *node_id =
             document->nodes[ancestors[index - 1U]].node_id;
@@ -88,9 +107,11 @@ static UmiStatus make_node_path(
             "%s%s",
             used > 0U ? "/" : "",
             node_id);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0) {
             return UMI_STATUS_INTERNAL_ERROR;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if ((size_t)written >= capacity - used) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -99,6 +120,10 @@ static UmiStatus make_node_path(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the add node diagnostic operation used by this module and its client
+ * applications.
+ */
 static UmiStatus add_node_diagnostic(
     const UmiWorkbenchLayoutDocument *document,
     size_t node_index,
@@ -112,6 +137,10 @@ static UmiStatus add_node_diagnostic(
     const char *node_id = "";
 
     path[0] = '\0';
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document != NULL &&
         umi_workbench_layout_index_valid(
             node_index, document->node_count)) {
@@ -129,6 +158,7 @@ static UmiStatus add_node_diagnostic(
         remediation);
 }
 
+/* Provide the detect cycle from operation used by this module and its client applications. */
 static bool detect_cycle_from(
     const UmiWorkbenchLayoutDocument *document,
     size_t node_index,
@@ -137,17 +167,21 @@ static bool detect_cycle_from(
     const UmiWorkbenchLayoutNode *node;
     size_t child;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state[node_index] == 1U) {
         return true;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state[node_index] == 2U) {
         return false;
     }
 
     state[node_index] = 1U;
     node = &document->nodes[node_index];
+    /* Visit each bounded item once so every record receives the same rule. */
     for (child = 0U; child < node->child_count; ++child) {
         size_t child_index = node->child_indices[child];
+        /* Apply this operation only while the related capability or state is available. */
         if (umi_workbench_layout_index_valid(
                 child_index, document->node_count) &&
             detect_cycle_from(document, child_index, state)) {
@@ -158,6 +192,7 @@ static bool detect_cycle_from(
     return false;
 }
 
+/* Provide the mark reachable operation used by this module and its client applications. */
 static void mark_reachable(
     const UmiWorkbenchLayoutDocument *document,
     size_t node_index,
@@ -166,6 +201,7 @@ static void mark_reachable(
     const UmiWorkbenchLayoutNode *node;
     size_t child;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_layout_index_valid(
             node_index, document->node_count) ||
         reachable[node_index]) {
@@ -174,17 +210,23 @@ static void mark_reachable(
 
     reachable[node_index] = true;
     node = &document->nodes[node_index];
+    /* Visit each bounded item once so every record receives the same rule. */
     for (child = 0U; child < node->child_count; ++child) {
         mark_reachable(document, node->child_indices[child], reachable);
     }
 }
 
+/*
+ * Provide the validate document metadata operation used by this module and its client
+ * applications.
+ */
 static void validate_document_metadata(
     const UmiWorkbenchLayoutDocument *document,
     UmiWorkbenchLayoutValidationReport *report)
 {
     size_t index;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_text_present(
             document->identity.layout_id)) {
         (void)umi_workbench_layout_validation_report_add(
@@ -196,6 +238,7 @@ static void validate_document_metadata(
             "The layout document has no stable layout identifier.",
             "Assign a non-empty layout_id before saving or sharing.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_text_present(document->name)) {
         (void)umi_workbench_layout_validation_report_add(
             report,
@@ -206,6 +249,7 @@ static void validate_document_metadata(
             "The layout document has no display name.",
             "Assign a user-facing name before saving the layout.");
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_layout_schema_is_supported(
             document->version.schema_version)) {
         (void)umi_workbench_layout_validation_report_add(
@@ -217,6 +261,7 @@ static void validate_document_metadata(
             "The layout schema version is not supported by this Framework.",
             "Migrate the document through the layout migration service.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (document->node_count == 0U ||
         document->root_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         (void)umi_workbench_layout_validation_report_add(
@@ -227,7 +272,7 @@ static void validate_document_metadata(
             "",
             "The layout document does not contain a root node.",
             "Create a root window or empty node before activation.");
-    } else if (!umi_workbench_layout_index_valid(
+    } else /* Apply this operation only while the related capability or state is available. */ if (!umi_workbench_layout_index_valid(
                    document->root_index, document->node_count)) {
         (void)umi_workbench_layout_validation_report_add(
             report,
@@ -238,6 +283,7 @@ static void validate_document_metadata(
             "The root index points outside the document node array.",
             "Repair the root index or rebuild the document from a template.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_document_has_flag(
             document, UMI_WORKBENCH_LAYOUT_DOCUMENT_LOCKED) &&
         umi_workbench_layout_document_has_flag(
@@ -252,7 +298,9 @@ static void validate_document_metadata(
             "Save the final locked revision or clear the dirty state.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < document->tag_count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_workbench_layout_text_present(
                 document->tags[index].value)) {
             (void)umi_workbench_layout_validation_report_add(
@@ -267,14 +315,21 @@ static void validate_document_metadata(
     }
 }
 
+/*
+ * Provide the validate duplicate node ids operation used by this module and its client
+ * applications.
+ */
 static void validate_duplicate_node_ids(
     const UmiWorkbenchLayoutDocument *document,
     UmiWorkbenchLayoutValidationReport *report)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < document->node_count; ++index) {
         size_t other;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U; other < document->node_count; ++other) {
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (umi_workbench_layout_text_equal(
                     document->nodes[index].node_id,
                     document->nodes[other].node_id)) {
@@ -291,6 +346,10 @@ static void validate_duplicate_node_ids(
     }
 }
 
+/*
+ * Provide the validate node structure operation used by this module and its client
+ * applications.
+ */
 static void validate_node_structure(
     const UmiWorkbenchLayoutDocument *document,
     size_t node_index,
@@ -301,6 +360,7 @@ static void validate_node_structure(
     size_t child;
     UmiStatus status = umi_workbench_layout_node_validate(node);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)add_node_diagnostic(
             document,
@@ -313,6 +373,7 @@ static void validate_node_structure(
             "ownership.");
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node_index == document->root_index &&
         node->parent_index != UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         (void)add_node_diagnostic(
@@ -324,6 +385,7 @@ static void validate_node_structure(
             "The root node has a parent.",
             "Detach the root from its parent before activation.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node_index != document->root_index &&
         node->parent_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE &&
         options->require_connected_tree) {
@@ -336,6 +398,7 @@ static void validate_node_structure(
             "A non-root node has no parent.",
             "Attach the node to a container or remove it from the document.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node->parent_index != UMI_WORKBENCH_LAYOUT_INDEX_NONE &&
         !umi_workbench_layout_index_valid(
             node->parent_index, document->node_count)) {
@@ -349,6 +412,7 @@ static void validate_node_structure(
             "Repair the parent relation before loading the layout.");
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_node_is_container(node) &&
         node->child_count == 0U &&
         options->require_non_empty_containers) {
@@ -362,6 +426,7 @@ static void validate_node_structure(
             "Add a panel, editor group or explicit empty placeholder.");
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (node->kind == UMI_WORKBENCH_LAYOUT_NODE_SPLIT &&
         (node->split_ratio < 0.05 || node->split_ratio > 0.95)) {
         (void)add_node_diagnostic(
@@ -374,6 +439,7 @@ static void validate_node_structure(
             "Use a split ratio between 0.05 and 0.95.");
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (options->require_components_for_leaf_nodes &&
         (node->kind == UMI_WORKBENCH_LAYOUT_NODE_PANEL ||
          node->kind == UMI_WORKBENCH_LAYOUT_NODE_EDITOR_GROUP) &&
@@ -388,6 +454,7 @@ static void validate_node_structure(
             "Assign a stable component_id provided by a registered panel.");
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (options->require_owner_for_components &&
         umi_workbench_layout_text_present(node->component_id) &&
         !umi_workbench_layout_text_present(
@@ -402,6 +469,7 @@ static void validate_node_structure(
             "Assign owner_application_id from the application manifest.");
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (options->validate_geometry &&
         !umi_workbench_layout_rect_is_valid(&node->bounds)) {
         (void)add_node_diagnostic(
@@ -414,6 +482,7 @@ static void validate_node_structure(
             "Normalise geometry before saving the layout.");
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (node->active_child_index != UMI_WORKBENCH_LAYOUT_INDEX_NONE &&
         node->active_child_index >= node->child_count) {
         (void)add_node_diagnostic(
@@ -426,8 +495,10 @@ static void validate_node_structure(
             "Select an existing child or clear the active child.");
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (child = 0U; child < node->child_count; ++child) {
         const size_t child_index = node->child_indices[child];
+        /* Apply this operation only while the related capability or state is available. */
         if (!umi_workbench_layout_index_valid(
                 child_index, document->node_count)) {
             (void)add_node_diagnostic(
@@ -440,6 +511,7 @@ static void validate_node_structure(
                 "Remove the invalid child reference or restore the node.");
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (document->nodes[child_index].parent_index != node_index) {
             (void)add_node_diagnostic(
                 document,
@@ -450,6 +522,7 @@ static void validate_node_structure(
                 "The parent and child relations disagree.",
                 "Repair both sides of the topology in one transaction.");
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_workbench_layout_node_accepts_child_kind(
                 node, document->nodes[child_index].kind)) {
             (void)add_node_diagnostic(
@@ -464,6 +537,10 @@ static void validate_node_structure(
     }
 }
 
+/*
+ * Provide the validate cycles and reachability operation used by this module and its
+ * client applications.
+ */
 static void validate_cycles_and_reachability(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutValidationOptions *options,
@@ -476,7 +553,9 @@ static void validate_cycles_and_reachability(
     (void)memset(state, 0, sizeof(state));
     (void)memset(reachable, 0, sizeof(reachable));
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < document->node_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (state[index] == 0U &&
             detect_cycle_from(document, index, state)) {
             (void)add_node_diagnostic(
@@ -491,13 +570,17 @@ static void validate_cycles_and_reachability(
         }
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (umi_workbench_layout_index_valid(
             document->root_index, document->node_count)) {
         mark_reachable(document, document->root_index, reachable);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (options->require_connected_tree) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < document->node_count; ++index) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (!reachable[index]) {
                 (void)add_node_diagnostic(
                     document,
@@ -512,17 +595,20 @@ static void validate_cycles_and_reachability(
     }
 }
 
+/* Provide the validate hash operation used by this module and its client applications. */
 static void validate_hash(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutValidationOptions *options,
     UmiWorkbenchLayoutValidationReport *report)
 {
     uint64_t calculated;
+    /* Apply this operation only while the related capability or state is available. */
     if (!options->validate_hash || document->content_hash == 0U) {
         return;
     }
     calculated =
         umi_workbench_layout_document_calculate_hash(document);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (calculated != document->content_hash) {
         (void)umi_workbench_layout_validation_report_add(
             report,
@@ -535,6 +621,10 @@ static void validate_hash(
     }
 }
 
+/*
+ * Provide the workbench layout validation options default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutValidationOptions
 umi_workbench_layout_validation_options_default(void)
 {
@@ -551,9 +641,17 @@ umi_workbench_layout_validation_options_default(void)
     return options;
 }
 
+/*
+ * Initialise workbench layout validation report from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_layout_validation_report_init(
     UmiWorkbenchLayoutValidationReport *report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL) {
         return;
     }
@@ -562,6 +660,7 @@ void umi_workbench_layout_validation_report_init(
     report->valid = true;
 }
 
+/* Check that workbench layout satisfies its contract before another service relies on it. */
 UmiStatus umi_workbench_layout_validate(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutValidationOptions *options,
@@ -570,12 +669,17 @@ UmiStatus umi_workbench_layout_validate(
     UmiWorkbenchLayoutValidationOptions effective;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     effective = options != NULL
         ? *options
         : umi_workbench_layout_validation_options_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -584,6 +688,7 @@ UmiStatus umi_workbench_layout_validate(
     validate_document_metadata(document, out_report);
     validate_duplicate_node_ids(document, out_report);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < document->node_count; ++index) {
         validate_node_structure(
             document, index, &effective, out_report);
@@ -598,6 +703,10 @@ UmiStatus umi_workbench_layout_validate(
         : UMI_STATUS_INVALID_STATE;
 }
 
+/*
+ * Add workbench layout validation report only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_layout_validation_report_add(
     UmiWorkbenchLayoutValidationReport *report,
     UmiWorkbenchLayoutSeverity severity,
@@ -610,11 +719,16 @@ UmiStatus umi_workbench_layout_validation_report_add(
     UmiWorkbenchLayoutDiagnostic *diagnostic;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL || message == NULL || remediation == NULL ||
         severity < UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_INFO ||
         severity > UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_ERROR) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (report->diagnostic_count >=
         UMI_WORKBENCH_LAYOUT_MAX_DIAGNOSTICS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -631,6 +745,7 @@ UmiStatus umi_workbench_layout_validation_report_add(
         sizeof(diagnostic->node_id),
         node_id != NULL ? node_id : "",
         true);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             diagnostic->path,
@@ -638,6 +753,7 @@ UmiStatus umi_workbench_layout_validation_report_add(
             path != NULL ? path : "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             diagnostic->message,
@@ -645,6 +761,7 @@ UmiStatus umi_workbench_layout_validation_report_add(
             message,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             diagnostic->remediation,
@@ -652,11 +769,13 @@ UmiStatus umi_workbench_layout_validation_report_add(
             remediation,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
     report->diagnostic_count += 1U;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
     case UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_INFO:
         report->info_count += 1U;
@@ -674,9 +793,14 @@ UmiStatus umi_workbench_layout_validation_report_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout diagnostic code text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_diagnostic_code_text(
     UmiWorkbenchLayoutDiagnosticCode code)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (code) {
     case UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_NONE: return "none";
     case UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_MISSING_LAYOUT_ID:
@@ -726,15 +850,25 @@ const char *umi_workbench_layout_diagnostic_code_text(
     }
 }
 
+/*
+ * Provide the workbench layout validation report has code operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_layout_validation_report_has_code(
     const UmiWorkbenchLayoutValidationReport *report,
     UmiWorkbenchLayoutDiagnosticCode code)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL) {
         return false;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < report->diagnostic_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (report->diagnostics[index].code == code) {
             return true;
         }

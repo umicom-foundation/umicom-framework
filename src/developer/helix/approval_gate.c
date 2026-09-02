@@ -17,6 +17,10 @@
 /* Initialise conservative policy values so omitted configuration cannot widen autonomy. */
 void umi_developer_helix_approval_gate_init(
     UmiDeveloperHelixApprovalGate *g) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (g == NULL) {
     return;
   }
@@ -29,9 +33,14 @@ void umi_developer_helix_approval_gate_init(
 /* Evaluate gate evidence deterministically. */
 UmiHelixDecision umi_developer_helix_approval_gate_evaluate(
     const UmiDeveloperHelixApprovalGate *g) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (g == NULL || g->structure_size != sizeof(*g) || g->api_version != UMI_HELIX_API_VERSION) {
     return UMI_HELIX_DECISION_DENY;
   }
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!g->required) {
     return UMI_HELIX_DECISION_ALLOW;
   }

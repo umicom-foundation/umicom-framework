@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer shell designer data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerShellDesigner {
     UmiAdaptiveShellProfile profile;
     char selected_region_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

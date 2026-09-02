@@ -39,6 +39,10 @@ extern "C" {
 #define UMI_APPLICATION_COMPOSITION_MAX_CAPABILITIES 160U
 #define UMI_APPLICATION_COMPOSITION_MAX_COMPONENTS 192U
 
+/**
+ * Represent the application composition request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationCompositionRequest {
     uint32_t structure_size;
     uint32_t api_version;
@@ -55,6 +59,10 @@ typedef struct UmiApplicationCompositionRequest {
     int include_definition_domains;
 } UmiApplicationCompositionRequest;
 
+/**
+ * Represent the application composition plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationCompositionPlan {
     uint32_t structure_size;
     uint32_t api_version;
@@ -90,22 +98,42 @@ typedef struct UmiApplicationCompositionPlan {
     uint64_t revision;
 } UmiApplicationCompositionPlan;
 
+/**
+ * Initialise application composition request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_composition_request_init(
     UmiApplicationCompositionRequest *request,
     const UmiApplicationDefinition *definition);
 
+/**
+ * Provide the application composition build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_composition_build(
     const UmiApplicationCompositionRequest *request,
     UmiApplicationCompositionPlan *out_plan);
 
+/**
+ * Provide the application composition has pack operation used by this module and its
+ * client applications.
+ */
 int umi_application_composition_has_pack(
     const UmiApplicationCompositionPlan *plan,
     const char *pack_id);
 
+/**
+ * Provide the application composition has capability operation used by this module and its
+ * client applications.
+ */
 int umi_application_composition_has_capability(
     const UmiApplicationCompositionPlan *plan,
     const char *capability_id);
 
+/**
+ * Provide the application composition has component operation used by this module and its
+ * client applications.
+ */
 int umi_application_composition_has_component(
     const UmiApplicationCompositionPlan *plan,
     const char *component_id);

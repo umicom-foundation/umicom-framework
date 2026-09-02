@@ -15,6 +15,10 @@
 
 #include <assert.h>
 #include "umicom/developer/language_support_matrix.h"
+/*
+ * Exercise test language support find missing and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_language_support_find_missing(void)
 {
     UmiDeveloperLanguageSupportMatrix matrix={0};

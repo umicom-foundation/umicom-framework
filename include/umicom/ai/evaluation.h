@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai evaluation data shared with callers of this public contract.
+ */
 typedef struct UmiAiEvaluation {
     char evaluation_id[UMI_AI_ID_CAPACITY];
     char metric[UMI_AI_ID_CAPACITY];
@@ -37,6 +40,10 @@ typedef struct UmiAiEvaluation {
     int passed;
 } UmiAiEvaluation;
 
+/**
+ * Initialise ai evaluation from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_evaluation_init(UmiAiEvaluation *value);
 
 #ifdef __cplusplus

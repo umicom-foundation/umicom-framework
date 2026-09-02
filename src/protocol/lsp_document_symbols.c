@@ -15,4 +15,8 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework LSP documentSymbol. Sammy Hegab, Umicom Foundation, MIT. */
 #include "lsp_request_internal.h"
+/*
+ * Provide the lsp document symbols operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_lsp_document_symbols(UmiLspClient *c,const char *u,int64_t *id){return umi_lsp_request_document(c,"textDocument/documentSymbol",u,id);}

@@ -13,12 +13,17 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/consolidated_quote.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiFinancialId i,v;
     UmiTradingConsolidatedQuote q;
     umi_trading_core_id_assign(&i,"i");
     umi_trading_core_id_assign(&v,"v");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_consolidated_quote_init(&q,&i,&v,99,10,101,12,1)!=UMI_STATUS_OK)return 1;
     return umi_trading_consolidated_quote_valid(&q)?0:2;
 }

@@ -22,8 +22,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote remote endpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTerminalRemoteRemoteEndpoint { char host[UMI_TERMINAL_REMOTE_TEXT_CAPACITY]; uint16_t port; bool secure; } UmiTerminalRemoteRemoteEndpoint;
+/**
+ * Initialise terminal remote remote endpoint from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_remote_endpoint_init(UmiTerminalRemoteRemoteEndpoint *value,const char *host,uint16_t port,bool secure);
+/**
+ * Check that terminal remote remote endpoint satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_terminal_remote_remote_endpoint_valid(const UmiTerminalRemoteRemoteEndpoint *value);
 #ifdef __cplusplus
 }

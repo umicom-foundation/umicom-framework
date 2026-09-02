@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the execution fee operation used by this module and its client applications.
+ */
 double umi_execution_fee(double quantity, double per_unit_fee, double minimum_fee);
 #ifdef __cplusplus
 }

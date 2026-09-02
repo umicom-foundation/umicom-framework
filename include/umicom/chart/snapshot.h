@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the chart snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiChartSnapshot { char title[UMI_CHART_NAME_CAPACITY]; size_t series_count; size_t point_count; uint64_t revision; } UmiChartSnapshot;
+/**
+ * Provide the chart snapshot operation used by this module and its client applications.
+ */
 UmiStatus umi_chart_snapshot(const UmiChartModel *model,UmiChartSnapshot *out_snapshot);
 #ifdef __cplusplus
 }

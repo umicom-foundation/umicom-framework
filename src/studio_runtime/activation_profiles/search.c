@@ -20,6 +20,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "search.", .surface = UMI_STUDIO_SURFACE_SEARCH, .prefix_match = 1, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile search operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_search(void)
 {

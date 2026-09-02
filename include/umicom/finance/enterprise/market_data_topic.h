@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise market data topic data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataTopic {
     char topic_id[UMI_ENTERPRISE_ID_CAPACITY];
     UmiFinancialId instrument_id;

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime close report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeCloseReport {
     UmiStudioRuntimeCloseDecision decision;
     size_t open_document_count;
@@ -34,6 +38,10 @@ typedef struct UmiStudioRuntimeCloseReport {
     uint64_t revision;
 } UmiStudioRuntimeCloseReport;
 
+/**
+ * Provide the studio close guard evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_close_guard_evaluate(
     UmiDocumentCoordinator *documents,
     const UmiIdeActiveContext *context,

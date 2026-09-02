@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/dependency_graph.h"
 
+/*
+ * Provide the developer capability dependency graph operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_dependency_graph(void)
 {

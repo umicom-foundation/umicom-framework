@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix diversity policy data shared with callers of this public contract.
+ */
 typedef struct UmiHelixDiversityPolicy { double minimum_distance; } UmiHelixDiversityPolicy;
 /* Estimate normalized bit distance between two deterministic variant fingerprints. */
 double umi_helix_diversity_policy_distance(uint64_t left,uint64_t right);

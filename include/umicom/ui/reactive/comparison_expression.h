@@ -18,12 +18,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive comparison expression data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveComparisonExpression {
     double left;
     double right;
     int comparison;
     bool result;
 } UmiUiReactiveComparisonExpression;
+/**
+ * Provide the ui reactive comparison expression eval operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_reactive_comparison_expression_eval(UmiUiReactiveComparisonExpression *item);
 #ifdef __cplusplus
 }

@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/policy.h"
 #include "umicom/delivery/report.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDeliveryPolicy policy = umi_delivery_policy_default();
     UmiBuildEvidence evidence;

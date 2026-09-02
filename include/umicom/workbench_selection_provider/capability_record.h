@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider capability record data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderCapabilityRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_SELECTION_PROVIDER_ID_CAPACITY];
@@ -42,31 +46,71 @@ typedef struct UmiWorkbenchSelectionProviderCapabilityRecord {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderCapabilityRecord;
 
+/**
+ * Initialise workbench selection provider capability record from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_capability_record_init(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *record_id);
+/**
+ * Check that workbench selection provider capability record satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_validate(
     const UmiWorkbenchSelectionProviderCapabilityRecord *record);
+/**
+ * Provide the workbench selection provider capability record set provider operation used
+ * by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_set_provider(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider capability record set source operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_set_source(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench selection provider capability record set subject operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_set_subject(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench selection provider capability record set related operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_set_related(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *related_id);
+/**
+ * Provide the workbench selection provider capability record set group operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_set_group(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench selection provider capability record set description operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_capability_record_set_description(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     const char *description);
+/**
+ * Provide the workbench selection provider capability record hash operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_workbench_selection_provider_capability_record_hash(
     const UmiWorkbenchSelectionProviderCapabilityRecord *record);
+/**
+ * Provide the workbench selection provider capability record touch operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_capability_record_touch(
     UmiWorkbenchSelectionProviderCapabilityRecord *record,
     uint64_t sequence,

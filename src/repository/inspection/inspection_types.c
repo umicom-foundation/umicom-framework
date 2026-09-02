@@ -28,6 +28,10 @@ void umi_repository_inspection_context_init(
     UmiRepositoryInspectionContext *context,
     const char *repository_root)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL) return;
     context->git_program = "git";
     context->repository_root =
@@ -41,6 +45,10 @@ void umi_repository_inspection_context_init(
 void umi_repository_inspection_snapshot_init(
     UmiRepositoryInspectionSnapshot *snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (snapshot == NULL) return;
     (void)memset(snapshot, 0, sizeof(*snapshot));
     umi_repository_status_summary_init(&snapshot->maintenance);
@@ -53,11 +61,17 @@ UmiStatus umi_repository_inspection_copy_text(
     const char *source)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     written = snprintf(destination, capacity, "%s", source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (written < 0) return UMI_STATUS_IO_ERROR;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if ((size_t)written >= capacity) {
         destination[capacity - 1U] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;

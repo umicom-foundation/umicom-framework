@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap capability condition match operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_capability_condition_match(
     const UmiBootstrapIdList *capabilities,
     const char *capability_id);

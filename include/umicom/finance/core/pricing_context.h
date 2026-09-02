@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the pricing context data shared with callers of this public contract.
+ */
 typedef struct UmiPricingContext { UmiFinancialId context_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; UmiFinancialDate effective_date; bool active; } UmiPricingContext;
 /* Initialize the typed financial record. */ UmiStatus umi_pricing_context_init(UmiPricingContext *item,const char *id,const char *name,const char *code,UmiFinancialDate effective_date);
 /* Validate the typed financial record. */ bool umi_pricing_context_is_valid(const UmiPricingContext *item);

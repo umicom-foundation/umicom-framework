@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime ui requirement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeUiRequirement
 {
     uint32_t structure_size;
@@ -29,11 +33,35 @@ typedef struct UmiTestRuntimeUiRequirement
     uint64_t revision;
     bool enabled;
     } UmiTestRuntimeUiRequirement;
+/**
+ * Initialise test runtime ui requirement from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_runtime_ui_requirement_init(UmiTestRuntimeUiRequirement *value,const char *id);
+/**
+ * Check that test runtime ui requirement satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_ui_requirement_validate(const UmiTestRuntimeUiRequirement *value);
+/**
+ * Provide the test runtime ui requirement set detail operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_ui_requirement_set_detail(UmiTestRuntimeUiRequirement *value,const char *detail);
+/**
+ * Provide the test runtime ui requirement set required operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_ui_requirement_set_required(UmiTestRuntimeUiRequirement *value,uint64_t number);
+/**
+ * Provide the test runtime ui requirement set display available operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_ui_requirement_set_display_available(UmiTestRuntimeUiRequirement *value,uint64_t number);
+/**
+ * Provide the test runtime ui requirement same identity operation used by this module and
+ * its client applications.
+ */
 bool umi_test_runtime_ui_requirement_same_identity(const UmiTestRuntimeUiRequirement *left,const UmiTestRuntimeUiRequirement *right);
 #ifdef __cplusplus
 }

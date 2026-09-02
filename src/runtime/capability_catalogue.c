@@ -362,11 +362,19 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Package, installer, update, rollback and provenance foundations for a separately governed OS distribution."}
 };
 
+/*
+ * Return the number of records represented by framework capability catalogue without
+ * changing their state.
+ */
 size_t umi_framework_capability_catalogue_count(void)
 {
     return sizeof(UMI_CAPABILITIES) / sizeof(UMI_CAPABILITIES[0]);
 }
 
+/*
+ * Find framework capability catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiFrameworkCapabilityDefinition *umi_framework_capability_catalogue_at(
     size_t index)
 {
@@ -375,20 +383,35 @@ const UmiFrameworkCapabilityDefinition *umi_framework_capability_catalogue_at(
         : NULL;
 }
 
+/*
+ * Find framework capability catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiFrameworkCapabilityDefinition *umi_framework_capability_catalogue_find(
     const char *capability_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (capability_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_framework_capability_catalogue_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(UMI_CAPABILITIES[index].capability_id, capability_id) == 0)
             return &UMI_CAPABILITIES[index];
     }
     return NULL;
 }
 
+/*
+ * Provide the capability maturity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_capability_maturity_text(UmiCapabilityMaturity maturity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (maturity) {
         case UMI_CAPABILITY_IMPLEMENTED: return "implemented";
         case UMI_CAPABILITY_FOUNDATION: return "foundation";

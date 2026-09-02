@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 
+/* Provide the make prefix operation used by this module and its client applications. */
 static UmiStatus make_prefix(
     const char *root,
     const char *suffix,
@@ -35,6 +36,7 @@ static UmiStatus make_prefix(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the schema key operation used by this module and its client applications. */
 static UmiStatus schema_key(
     const char *root,
     char *out_key,
@@ -43,6 +45,10 @@ static UmiStatus schema_key(
     return make_prefix(root, "schema", out_key, capacity);
 }
 
+/*
+ * Write ai developer session bundle in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_ai_developer_session_bundle_save(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -56,6 +62,10 @@ UmiStatus umi_ai_developer_session_bundle_save(
     char key[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         chats == NULL || tasks == NULL || approvals == NULL ||
         presentation == NULL || preferences == NULL) {
@@ -63,49 +73,64 @@ UmiStatus umi_ai_developer_session_bundle_save(
     }
 
     status = schema_key(key_prefix, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_set_uint64(
             store,
             key,
             UMI_AI_DEVELOPER_STATE_SCHEMA_VERSION);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_prefix(key_prefix, "chat", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_chat_registry_save(
             store, prefix, chats);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_prefix(key_prefix, "task", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_tasks_save(
             store, prefix, tasks);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_prefix(key_prefix, "approval", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_approvals_save(
             store, prefix, approvals);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_prefix(key_prefix, "presentation", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_presentation_save(
             store, prefix, presentation);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_prefix(key_prefix, "preferences", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_developer_preferences_save(
         store, prefix, preferences);
 }
 
+/*
+ * Provide the ai developer session bundle restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_session_bundle_restore(
     const UmiSessionStore *store,
     const char *key_prefix,
@@ -122,6 +147,10 @@ UmiStatus umi_ai_developer_session_bundle_restore(
     int restored = 0;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         chats == NULL || tasks == NULL || approvals == NULL ||
         presentation == NULL || preferences == NULL ||
@@ -132,17 +161,21 @@ UmiStatus umi_ai_developer_session_bundle_restore(
     umi_ai_developer_restore_report_init(out_report);
 
     status = schema_key(key_prefix, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, key, 0U, &schema);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto done;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (schema == 0U) {
         status = UMI_STATUS_OK;
         goto done;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (schema > UMI_AI_DEVELOPER_STATE_SCHEMA_VERSION) {
         status = UMI_STATUS_NOT_IMPLEMENTED;
         goto done;
@@ -151,42 +184,52 @@ UmiStatus umi_ai_developer_session_bundle_restore(
     out_report->schema_version = (uint32_t)schema;
 
     status = make_prefix(key_prefix, "chat", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_chat_registry_restore(
             store, prefix, chats, &out_report->chat_sessions);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto done;
 
     status = make_prefix(key_prefix, "task", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_tasks_restore(
             store, prefix, tasks, &out_report->tasks);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto done;
 
     status = make_prefix(key_prefix, "approval", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_approvals_restore(
             store, prefix, approvals, &out_report->approvals);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto done;
 
     status = make_prefix(
         key_prefix, "presentation", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_presentation_restore(
             store, prefix, presentation, &restored);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto done;
     out_report->presentation_restored = restored;
 
     restored = 0;
     status = make_prefix(
         key_prefix, "preferences", prefix, sizeof(prefix));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_preferences_restore(
             store, prefix, preferences, &restored);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto done;
     out_report->preferences_restored = restored;
 

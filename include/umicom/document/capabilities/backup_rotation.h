@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_BACKUP_ROTATION "umicom.document.recovery.backup_rotation"
 
+/**
+ * Provide the document capability backup rotation operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_backup_rotation(void);
 

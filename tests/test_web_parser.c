@@ -20,4 +20,8 @@
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){const char *wire="POST /api?q=1 HTTP/1.1\r\nHost: local\r\nContent-Type: text/plain\r\n\r\nabc";UmiWebRequest r;assert(umi_web_parse_request(wire,strlen(wire),&r)==UMI_STATUS_OK);assert(r.method==UMI_HTTP_METHOD_POST);assert(strcmp(r.path,"/api")==0);assert(strcmp(r.body,"abc")==0);return 0;}

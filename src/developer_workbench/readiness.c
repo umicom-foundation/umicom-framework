@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the developer workbench readiness evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_workbench_readiness_evaluate(
     const UmiDeveloperWorkbenchConfiguration *configuration,
     const UmiToolchainProfile *profile,
@@ -24,6 +28,10 @@ UmiStatus umi_developer_workbench_readiness_evaluate(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (configuration == NULL || profile == NULL || out_readiness == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -38,10 +46,12 @@ UmiStatus umi_developer_workbench_readiness_evaluate(
         profile->complete &&
         umi_toolchain_profile_c_compiler(profile) != NULL;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!out_readiness->configuration_valid) {
         return UMI_STATUS_OK;
     }
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!out_readiness->toolchain_ready) {
         (void)snprintf(out_readiness->reason,
                        sizeof(out_readiness->reason),

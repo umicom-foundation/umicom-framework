@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_DEVELOPER_ARGUMENT_CAPACITY 256U
 #define UMI_DEVELOPER_MAX_ARGUMENTS 16U
 
+/**
+ * List the named developer operation kind values accepted by this public contract.
+ */
 typedef enum UmiDeveloperOperationKind {
     UMI_DEVELOPER_OPERATION_CUSTOM = 0,
     UMI_DEVELOPER_OPERATION_CONFIGURE = 1,
@@ -51,6 +54,9 @@ typedef enum UmiDeveloperOperationKind {
     UMI_DEVELOPER_OPERATION_AI = 9
 } UmiDeveloperOperationKind;
 
+/**
+ * List the named developer operation state values accepted by this public contract.
+ */
 typedef enum UmiDeveloperOperationState {
     UMI_DEVELOPER_OPERATION_QUEUED = 0,
     UMI_DEVELOPER_OPERATION_RUNNING = 1,
@@ -60,6 +66,9 @@ typedef enum UmiDeveloperOperationState {
     UMI_DEVELOPER_OPERATION_BLOCKED = 5
 } UmiDeveloperOperationState;
 
+/**
+ * List the named developer event kind values accepted by this public contract.
+ */
 typedef enum UmiDeveloperEventKind {
     UMI_DEVELOPER_EVENT_SUBMITTED = 0,
     UMI_DEVELOPER_EVENT_DEPENDENCY_ADDED = 1,
@@ -72,8 +81,20 @@ typedef enum UmiDeveloperEventKind {
     UMI_DEVELOPER_EVENT_CONTEXT_CHANGED = 8
 } UmiDeveloperEventKind;
 
+/**
+ * Provide the developer operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_operation_kind_text(UmiDeveloperOperationKind kind);
+/**
+ * Provide the developer operation state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_operation_state_text(UmiDeveloperOperationState state);
+/**
+ * Provide the developer event kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_event_kind_text(UmiDeveloperEventKind kind);
 
 #ifdef __cplusplus

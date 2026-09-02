@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai coding context summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_context_summary(
     const UmiAiCodingMaterializedContext *context,
     char *out_text,

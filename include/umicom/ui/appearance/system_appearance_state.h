@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance system appearance state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceSystemAppearanceState {
     char system_id[UMI_APPEARANCE_ID_CAPACITY];
     bool dark_mode;

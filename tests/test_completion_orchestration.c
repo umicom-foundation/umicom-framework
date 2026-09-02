@@ -27,6 +27,10 @@ typedef struct MockProvider {
     size_t cancel_calls;
 } MockProvider;
 
+/*
+ * Exercise provide and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus provide(const UmiEditorCompletionRequest *request,
                          UmiEditorCompletionCandidateSink sink,
                          void *sink_user_data,
@@ -37,6 +41,7 @@ static UmiStatus provide(const UmiEditorCompletionRequest *request,
     UmiEditorCompletionCandidate candidate;
 
     ++mock->provide_calls;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (mock->provide_status != UMI_STATUS_OK) return mock->provide_status;
     (void)memset(&candidate, 0, sizeof(candidate));
     candidate.struct_size = (uint32_t)sizeof(candidate);
@@ -61,6 +66,10 @@ static UmiStatus provide(const UmiEditorCompletionRequest *request,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise resolve and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus resolve(const UmiEditorCompletionRequest *request,
                          UmiEditorCompletionCandidate *candidate,
                          void *provider_user_data)
@@ -73,6 +82,10 @@ static UmiStatus resolve(const UmiEditorCompletionRequest *request,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise cancel and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus cancel(uint64_t request_id, void *provider_user_data)
 {
     MockProvider *mock = (MockProvider *)provider_user_data;
@@ -81,6 +94,10 @@ static UmiStatus cancel(uint64_t request_id, void *provider_user_data)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise register provider and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void register_provider(UmiEditorCompletionProviderRegistry *registry,
                               const char *id,
                               int32_t priority,
@@ -118,6 +135,10 @@ static void register_provider(UmiEditorCompletionProviderRegistry *registry,
            UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorCompletionProviderRegistry *registry = NULL;

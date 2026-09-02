@@ -18,7 +18,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix plan graph edge data shared with callers of this public contract.
+ */
 typedef struct UmiHelixPlanGraphEdge { uint16_t from; uint16_t to; } UmiHelixPlanGraphEdge;
+/**
+ * Represent the helix plan graph data shared with callers of this public contract.
+ */
 typedef struct UmiHelixPlanGraph { char ids[UMI_HELIX_MAX_ITEMS][UMI_HELIX_ID_CAPACITY]; size_t count; UmiHelixPlanGraphEdge edges[UMI_HELIX_MAX_EDGES]; size_t edge_count; } UmiHelixPlanGraph;
 /* Initialise an empty bounded graph. */
 void umi_helix_plan_graph_init(UmiHelixPlanGraph *graph);

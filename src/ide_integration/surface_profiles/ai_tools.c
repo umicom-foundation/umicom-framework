@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/ai_tools.h"
 
+/*
+ * Provide the ide surface profile ai tools operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_ai_tools(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

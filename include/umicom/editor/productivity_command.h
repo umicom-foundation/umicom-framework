@@ -28,6 +28,9 @@ extern "C" {
 #define UMI_EDITOR_PRODUCTIVITY_COMMAND_LABEL_CAPACITY 128U
 #define UMI_EDITOR_PRODUCTIVITY_COMMAND_KEY_CAPACITY 48U
 
+/**
+ * List the named editor productivity command kind values accepted by this public contract.
+ */
 typedef enum UmiEditorProductivityCommandKind {
     UMI_EDITOR_PRODUCTIVITY_COMMAND_FORMAT_DOCUMENT = 1,
     UMI_EDITOR_PRODUCTIVITY_COMMAND_FORMAT_SELECTION = 2,
@@ -47,6 +50,10 @@ typedef enum UmiEditorProductivityCommandKind {
     UMI_EDITOR_PRODUCTIVITY_COMMAND_CANCEL_LINKED_EDITING = 16
 } UmiEditorProductivityCommandKind;
 
+/**
+ * Represent the editor productivity command descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorProductivityCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -60,11 +67,27 @@ typedef struct UmiEditorProductivityCommandDescriptor {
     int opens_view;
 } UmiEditorProductivityCommandDescriptor;
 
+/**
+ * Return the number of records represented by editor productivity command without changing
+ * their state.
+ */
 size_t umi_editor_productivity_command_count(void);
+/**
+ * Find editor productivity command while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiEditorProductivityCommandDescriptor *
 umi_editor_productivity_command_at(size_t index);
+/**
+ * Find editor productivity command while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiEditorProductivityCommandDescriptor *
 umi_editor_productivity_command_find(const char *id);
+/**
+ * Provide the editor productivity command for kind operation used by this module and its
+ * client applications.
+ */
 const UmiEditorProductivityCommandDescriptor *
 umi_editor_productivity_command_for_kind(UmiEditorProductivityCommandKind kind);
 

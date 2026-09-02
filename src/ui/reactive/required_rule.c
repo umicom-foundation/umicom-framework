@@ -17,6 +17,10 @@
 
 /* Initialise the required rule contract to deterministic zero/default state. */
 void umi_ui_reactive_required_rule_init(UmiUiReactiveRequiredRule *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item != NULL) memset(item, 0, sizeof *item);
 }
 

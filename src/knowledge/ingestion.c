@@ -14,6 +14,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Provide the knowledge ingest text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_ingest_text(
     UmiKnowledgeCatalogue *catalogue,
     UmiKnowledgeVectorIndex *index,
@@ -35,6 +39,10 @@ UmiStatus umi_knowledge_ingest_text(
     UmiStatus status;
     UmiKnowledgeRefreshDecision decision;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || index == NULL || provider == NULL ||
         provider->embed_text == NULL || policy == NULL || source == NULL ||
         text == NULL || text[0] == '\0' || out_report == NULL) {
@@ -47,68 +55,87 @@ UmiStatus umi_knowledge_ingest_text(
     candidate.size_bytes = (uint64_t)text_length;
     status = umi_knowledge_catalogue_find(catalogue, source->source_id,
                                           &current);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         candidate.revision = current.revision + 1U;
         decision = umi_knowledge_source_refresh_decision(&current, &candidate);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (decision == UMI_KNOWLEDGE_REFRESH_UNCHANGED) {
             out_report->decision = decision;
             out_report->content_hash = candidate.content_hash;
             out_report->index_revision = current.revision;
             return UMI_STATUS_OK;
         }
-    } else if (status == UMI_STATUS_NOT_FOUND) {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_NOT_FOUND) {
         decision = UMI_KNOWLEDGE_REFRESH_NEW;
         candidate.revision = source->revision != 0U ? source->revision : 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         return status;
     }
     step = policy->target_bytes - policy->overlap_bytes;
     capacity = text_length / step + 2U;
     entries = (UmiKnowledgeVectorEntry *)calloc(capacity, sizeof(*entries));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entries == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     /* Chunks and embeddings are interleaved in UmiKnowledgeVectorEntry, so a
      * temporary contiguous chunk array is needed for more than one record. */
     {
         UmiKnowledgeChunk *chunks = (UmiKnowledgeChunk *)calloc(
             capacity, sizeof(*chunks));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (chunks == NULL) {
             free(entries);
             return UMI_STATUS_OUT_OF_MEMORY;
         }
         status = umi_knowledge_chunk_text(&candidate, text, policy, chunks,
                                           capacity, &chunk_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
+            /* Visit each bounded item once so every record receives the same rule. */
             for (position = 0U; position < chunk_count; ++position) {
                 entries[position].chunk = chunks[position];
             }
         }
         free(chunks);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(entries);
         return status;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < chunk_count; ++position) {
         status = provider->embed_text(provider->instance,
                                       entries[position].chunk.text,
                                       &entries[position].embedding);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK ||
             entries[position].embedding.dimension != provider->dimension) {
             free(entries);
             return status != UMI_STATUS_OK ? status : UMI_STATUS_INVALID_STATE;
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (decision == UMI_KNOWLEDGE_REFRESH_REPLACE) {
         status = umi_knowledge_vector_index_remove_source(
             index, candidate.source_id, &removed);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             free(entries);
             return status;
         }
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < chunk_count; ++position) {
         status = umi_knowledge_vector_index_upsert(
             index, &entries[position].chunk, &entries[position].embedding);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             free(entries);
             return status;
@@ -116,6 +143,7 @@ UmiStatus umi_knowledge_ingest_text(
     }
     status = umi_knowledge_catalogue_upsert(catalogue, &candidate);
     free(entries);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     out_report->decision = decision;
     out_report->chunks_created = chunk_count;

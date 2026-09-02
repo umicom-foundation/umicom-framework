@@ -22,6 +22,10 @@ static const char *const SURFACES[] = {
     "umicom.ai.chat"
 };
 
+/*
+ * Provide the developer workbench perspective coding operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *umi_developer_workbench_perspective_coding(void)
 {
     static const UmiDeveloperWorkbenchPerspectiveDefinition perspective = {

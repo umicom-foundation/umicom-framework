@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host publication guard data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextHostPublicationGuard {
     char source_panel_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
     char group_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
@@ -28,8 +32,16 @@ typedef struct UmiWorkbenchContextHostPublicationGuard {
     uint64_t accepted_count;
     uint64_t revision;
 } UmiWorkbenchContextHostPublicationGuard;
+/**
+ * Initialise workbench context host publication guard from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_host_publication_guard_init(
     UmiWorkbenchContextHostPublicationGuard *guard);
+/**
+ * Provide the workbench context host publication guard accept operation used by this
+ * module and its client applications.
+ */
 bool umi_workbench_context_host_publication_guard_accept(
     UmiWorkbenchContextHostPublicationGuard *guard,
     const char *source_panel_id,const char *group_id,

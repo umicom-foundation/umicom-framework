@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_MERGE_RESOLUTION "umicom.document.conflict.merge_resolution"
 
+/**
+ * Provide the document capability merge resolution operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_merge_resolution(void);
 

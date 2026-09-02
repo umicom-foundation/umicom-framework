@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named terminal link kind values accepted by this public contract.
+ */
 typedef enum UmiTerminalLinkKind {
     UMI_TERMINAL_LINK_WEB = 0,
     UMI_TERMINAL_LINK_FILE = 1,
@@ -32,6 +35,9 @@ typedef enum UmiTerminalLinkKind {
     UMI_TERMINAL_LINK_EMAIL = 3
 } UmiTerminalLinkKind;
 
+/**
+ * Represent the terminal link data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalLink {
     UmiTerminalLinkKind kind;
     size_t byte_offset;
@@ -41,14 +47,25 @@ typedef struct UmiTerminalLink {
     uint32_t column;
 } UmiTerminalLink;
 
+/**
+ * Represent the terminal link result data shared with callers of this public contract.
+ */
 typedef struct UmiTerminalLinkResult {
     UmiTerminalLink links[UMI_TERMINAL_LINK_MAX];
     size_t count;
     int truncated;
 } UmiTerminalLinkResult;
 
+/**
+ * Provide the terminal links detect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_links_detect(const char *text,
                                     UmiTerminalLinkResult *out_result);
+/**
+ * Provide the terminal link kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_terminal_link_kind_text(UmiTerminalLinkKind kind);
 
 #ifdef __cplusplus

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/adaptive/visibility_policy.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAdaptiveVisibilityPolicy policy = { UMI_DESIGN_SIZE_EXPANDED, 50U, 1 };

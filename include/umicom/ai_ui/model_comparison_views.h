@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise ai ui model comparison view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_model_comparison_view_create(
     const char *view_id,
     const UmiAiModelEnsembleReport *report,

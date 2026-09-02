@@ -28,14 +28,26 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the designer layout align operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_layout_align(UmiDesignerDocument *document,
                                        UmiDesignerTransactionHistory *history,
                                        const UmiDesignerSelection *selection,
                                        UmiDesignerAlignment alignment);
+/**
+ * Provide the designer layout distribute operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_layout_distribute(UmiDesignerDocument *document,
                                             UmiDesignerTransactionHistory *history,
                                             const UmiDesignerSelection *selection,
                                             UmiDesignerDistribution distribution);
+/**
+ * Provide the designer layout snap operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_layout_snap(UmiDesignerDocument *document,
                                       UmiDesignerTransactionHistory *history,
                                       const UmiDesignerSelection *selection,

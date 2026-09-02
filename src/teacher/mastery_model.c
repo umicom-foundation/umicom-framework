@@ -19,9 +19,21 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/mastery_model.h"
 #include <string.h>
-void umi_teacher_mastery_model_init(UmiTeacherMasteryModel *model) { if(model!=NULL) memset(model,0,sizeof(*model));
+/*
+ * Initialise teacher mastery model from caller-provided values so later operations receive
+ * a known state.
+ */
+void umi_teacher_mastery_model_init(UmiTeacherMasteryModel *model) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(model!=NULL) memset(model,0,sizeof(*model));
     }
+/*
+ * Provide the teacher mastery model observe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_mastery_model_observe(UmiTeacherMasteryModel *model,uint32_t score,uint32_t evidence_weight) { uint64_t weighted,total_weight;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(model==NULL||score>100U||evidence_weight==0U) return UMI_STATUS_INVALID_ARGUMENT;
     weighted=(uint64_t)model->mastery*model->confidence + (uint64_t)score*evidence_weight;
     total_weight=(uint64_t)model->confidence+evidence_weight;
@@ -31,7 +43,15 @@ UmiStatus umi_teacher_mastery_model_observe(UmiTeacherMasteryModel *model,uint32
     ++model->revision;
     return UMI_STATUS_OK;
     }
+/*
+ * Provide the teacher mastery model value operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_teacher_mastery_model_value(const UmiTeacherMasteryModel *model) { return model==NULL?0U:model->mastery;
     }
+/*
+ * Provide the teacher mastery model meets operation used by this module and its client
+ * applications.
+ */
 int umi_teacher_mastery_model_meets(const UmiTeacherMasteryModel *model,uint32_t threshold,uint32_t confidence_threshold) { return model!=NULL && model->mastery>=threshold && model->confidence>=confidence_threshold;
     }

@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/distributed_job.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseDistributedJob j;CHECK(umi_enterprise_distributed_job_init(&j,"j","valuation",5,1U)==UMI_STATUS_OK);CHECK(umi_enterprise_distributed_job_retry(&j)==UMI_STATUS_OK);CHECK(umi_enterprise_distributed_job_retry(&j)==UMI_STATUS_CAPACITY_EXCEEDED);return 0;}

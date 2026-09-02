@@ -32,21 +32,40 @@ struct UmiDesignerAuthoringSession {
     uint64_t revision;
 };
 
+/*
+ * Initialise designer authoring session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_designer_authoring_session_create(UmiDesignerAuthoringSession **out_service)
 {
     UmiDesignerAuthoringSession *service;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_service = NULL;
     service = (UmiDesignerAuthoringSession *)calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     service->revision = 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_designer_signal_binding_registry_create(&service->signals);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_designer_action_binding_registry_create(&service->actions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_designer_property_schema_registry_create(&service->properties);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_designer_alignment_registry_create(&service->alignments);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_designer_clipboard_registry_create(&service->clipboard);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_designer_template_palette_registry_create(&service->templates);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_designer_authoring_session_destroy(service);
         return status;
@@ -55,8 +74,16 @@ UmiStatus umi_designer_authoring_session_create(UmiDesignerAuthoringSession **ou
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by designer authoring session so the same storage can be
+ * reused safely.
+ */
 void umi_designer_authoring_session_destroy(UmiDesignerAuthoringSession *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     umi_designer_template_palette_registry_destroy(service->templates);
     umi_designer_clipboard_registry_destroy(service->clipboard);
@@ -67,8 +94,16 @@ void umi_designer_authoring_session_destroy(UmiDesignerAuthoringSession *service
     free(service);
 }
 
+/*
+ * Provide the designer authoring session snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_designer_authoring_session_snapshot(const UmiDesignerAuthoringSession *service, UmiDesignerAuthoringSessionSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
@@ -83,31 +118,55 @@ UmiStatus umi_designer_authoring_session_snapshot(const UmiDesignerAuthoringSess
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the designer authoring session signals operation used by this module and its
+ * client applications.
+ */
 UmiDesignerSignalBindingRegistry *umi_designer_authoring_session_signals(UmiDesignerAuthoringSession *service)
 {
     return service != NULL ? service->signals : NULL;
 }
 
+/*
+ * Provide the designer authoring session actions operation used by this module and its
+ * client applications.
+ */
 UmiDesignerActionBindingRegistry *umi_designer_authoring_session_actions(UmiDesignerAuthoringSession *service)
 {
     return service != NULL ? service->actions : NULL;
 }
 
+/*
+ * Provide the designer authoring session properties operation used by this module and its
+ * client applications.
+ */
 UmiDesignerPropertySchemaRegistry *umi_designer_authoring_session_properties(UmiDesignerAuthoringSession *service)
 {
     return service != NULL ? service->properties : NULL;
 }
 
+/*
+ * Provide the designer authoring session alignments operation used by this module and its
+ * client applications.
+ */
 UmiDesignerAlignmentRegistry *umi_designer_authoring_session_alignments(UmiDesignerAuthoringSession *service)
 {
     return service != NULL ? service->alignments : NULL;
 }
 
+/*
+ * Provide the designer authoring session clipboard operation used by this module and its
+ * client applications.
+ */
 UmiDesignerClipboardItemRegistry *umi_designer_authoring_session_clipboard(UmiDesignerAuthoringSession *service)
 {
     return service != NULL ? service->clipboard : NULL;
 }
 
+/*
+ * Provide the designer authoring session templates operation used by this module and its
+ * client applications.
+ */
 UmiDesignerTemplatePaletteRegistry *umi_designer_authoring_session_templates(UmiDesignerAuthoringSession *service)
 {
     return service != NULL ? service->templates : NULL;

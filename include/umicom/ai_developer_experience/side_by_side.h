@@ -23,6 +23,9 @@ extern "C" {
 #define UMI_AI_DEVELOPER_SIDE_BY_SIDE_CAPACITY \
     UMI_AI_DEVELOPER_DIFF_LINE_CAPACITY
 
+/**
+ * List the named ai developer side by side kind values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperSideBySideKind {
     UMI_AI_DEVELOPER_SIDE_EQUAL = 0,
     UMI_AI_DEVELOPER_SIDE_CHANGED = 1,
@@ -30,6 +33,10 @@ typedef enum UmiAiDeveloperSideBySideKind {
     UMI_AI_DEVELOPER_SIDE_RIGHT_ONLY = 3
 } UmiAiDeveloperSideBySideKind;
 
+/**
+ * Represent the ai developer side by side row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperSideBySideRow {
     UmiAiDeveloperSideBySideKind kind;
     uint32_t left_line;
@@ -38,6 +45,10 @@ typedef struct UmiAiDeveloperSideBySideRow {
     char right_text[UMI_AI_DEVELOPER_DIFF_TEXT_CAPACITY];
 } UmiAiDeveloperSideBySideRow;
 
+/**
+ * Represent the ai developer side by side diff data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperSideBySideDiff {
     UmiAiDeveloperSideBySideRow rows[UMI_AI_DEVELOPER_SIDE_BY_SIDE_CAPACITY];
     size_t row_count;
@@ -45,6 +56,10 @@ typedef struct UmiAiDeveloperSideBySideDiff {
     int truncated;
 } UmiAiDeveloperSideBySideDiff;
 
+/**
+ * Provide the ai developer side by side build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_side_by_side_build(
     const UmiAiDeveloperFileDiff *diff,
     UmiAiDeveloperSideBySideDiff *out_split);

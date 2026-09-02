@@ -14,6 +14,10 @@
 #include <string.h>
 #include "umicom/web/workbench/cloud_object.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWebWorkbenchCloudProfile profile;

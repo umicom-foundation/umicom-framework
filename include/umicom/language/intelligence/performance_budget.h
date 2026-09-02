@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_PERFORMANCE_BUDGET_API_VERSION 1U
+/**
+ * Represent the language intelligence performance budget data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligencePerformanceBudget {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,9 +37,25 @@ typedef struct UmiLanguageIntelligencePerformanceBudget {
     uint64_t revision;
     int exhausted;
 } UmiLanguageIntelligencePerformanceBudget;
+/**
+ * Initialise language intelligence performance budget from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_performance_budget_init(UmiLanguageIntelligencePerformanceBudget *budget, uint64_t limit);
+/**
+ * Provide the language intelligence performance budget consume operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_performance_budget_consume(UmiLanguageIntelligencePerformanceBudget *budget, uint64_t amount);
+/**
+ * Provide the language intelligence performance budget remaining operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_language_intelligence_performance_budget_remaining(const UmiLanguageIntelligencePerformanceBudget *budget);
+/**
+ * Release or reset state held by language intelligence performance budget so the same
+ * storage can be reused safely.
+ */
 void umi_language_intelligence_performance_budget_reset(UmiLanguageIntelligencePerformanceBudget *budget);
 #ifdef __cplusplus
 }

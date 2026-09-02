@@ -16,8 +16,16 @@
 #include <string.h>
 /* Initialise and validate describe a cancellable order request with version control and reason code.. */
 UmiStatus umi_trading_order_cancel_init(UmiTradingOrderCancel *value,const UmiFinancialId * client_order_id, uint64_t expected_version, uint32_t reason_code) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(client_order_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->client_order_id=*client_order_id;
     value->expected_version=expected_version;

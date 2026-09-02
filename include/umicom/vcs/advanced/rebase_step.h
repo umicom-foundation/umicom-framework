@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced rebase step data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedRebaseStep {
     uint32_t struct_size;
     uint32_t api_version;
@@ -34,8 +37,19 @@ typedef struct UmiVcsAdvancedRebaseStep {
     uint32_t action;
 } UmiVcsAdvancedRebaseStep;
 
+/**
+ * Initialise vcs advanced rebase step from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_rebase_step_init(UmiVcsAdvancedRebaseStep *value);
+/**
+ * Check that vcs advanced rebase step satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_rebase_step_validate(const UmiVcsAdvancedRebaseStep *value);
+/**
+ * List the named vcs advanced rebase action values accepted by this public contract.
+ */
 typedef enum UmiVcsAdvancedRebaseAction {
     UMI_VCS_REBASE_PICK = 0,
     UMI_VCS_REBASE_REWORD = 1,
@@ -45,6 +59,10 @@ typedef enum UmiVcsAdvancedRebaseAction {
     UMI_VCS_REBASE_DROP = 5,
     UMI_VCS_REBASE_EXEC = 6
 } UmiVcsAdvancedRebaseAction;
+/**
+ * Copy vcs advanced rebase step into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_rebase_step_set(UmiVcsAdvancedRebaseStep *value,
                                              const char *commit_oid,
                                              const char *subject,

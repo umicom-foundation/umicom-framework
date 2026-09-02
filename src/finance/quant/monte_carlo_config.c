@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_monte_carlo_config_init(UmiQuantMonteCarloConfig *record, uint32_t path_count, uint32_t time_steps, uint64_t seed)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(path_count > 0U && path_count <= 10000000U && time_steps > 0U && time_steps <= 4096U && seed != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->path_count = path_count;
@@ -36,6 +41,10 @@ UmiStatus umi_quant_monte_carlo_config_init(UmiQuantMonteCarloConfig *record, ui
 /* Return path-count times time-steps as execution work units. */
 double umi_quant_monte_carlo_config_work_units(const UmiQuantMonteCarloConfig *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return (double)record->path_count * (double)record->time_steps;
 }

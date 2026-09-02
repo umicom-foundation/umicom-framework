@@ -22,16 +22,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data transaction data shared with callers of this public contract.
+ */
 typedef struct UmiDataTransaction {
     UmiDataServer *server;
     int active;
     int committed;
 } UmiDataTransaction;
 
+/**
+ * Provide the data transaction begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_transaction_begin(UmiDataServer *server,
                                      UmiDataTransaction *out_transaction);
+/**
+ * Provide the data transaction commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_transaction_commit(UmiDataTransaction *transaction);
+/**
+ * Provide the data transaction rollback operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_transaction_rollback(UmiDataTransaction *transaction);
+/**
+ * Release or reset state held by data transaction so the same storage can be reused
+ * safely.
+ */
 void umi_data_transaction_dispose(UmiDataTransaction *transaction);
 
 #ifdef __cplusplus

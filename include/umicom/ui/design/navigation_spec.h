@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design navigation spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignNavigationSpec {
     UmiUiPlacement placement;
     uint16_t item_count;

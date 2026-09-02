@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_reduced_motion_mode_init(UmiAppearanceReducedMotionMode *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(item, 0, sizeof *item);
     (void)umi_appearance_copy_text(item->mode_id,sizeof item->mode_id,"motion.reduced");
@@ -28,6 +32,10 @@ UmiStatus umi_appearance_reduced_motion_mode_init(UmiAppearanceReducedMotionMode
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_reduced_motion_mode_is_valid(const UmiAppearanceReducedMotionMode *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->mode_id) && item->maximum_duration_ms <= 500U);
 }

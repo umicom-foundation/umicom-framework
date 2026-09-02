@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ELEVATION_POLICY "umicom.developer.execution.elevation_policy"
 
+/**
+ * Provide the developer capability elevation policy operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_elevation_policy(void);
 

@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive variant data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveVariant {
     char variant_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     char parent_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

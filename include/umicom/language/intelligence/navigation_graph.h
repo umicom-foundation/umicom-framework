@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_NAVIGATION_GRAPH_API_VERSION 1U
+/**
+ * Represent the language intelligence navigation graph edge data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceNavigationGraphEdge {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,14 +37,30 @@ typedef struct UmiLanguageIntelligenceNavigationGraphEdge {
     uint32_t weight;
     int enabled;
 } UmiLanguageIntelligenceNavigationGraphEdge;
+/**
+ * Initialise language intelligence navigation graph edge from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_navigation_graph_edge_init(UmiLanguageIntelligenceNavigationGraphEdge *edge);
+/**
+ * Copy language intelligence navigation graph edge into module-owned storage so callers
+ * keep ownership of their input values.
+ */
 UmiStatus umi_language_intelligence_navigation_graph_edge_set(
     UmiLanguageIntelligenceNavigationGraphEdge *edge,
     const char *source_id,
     const char *target_id,
     const char *relation,
     uint32_t weight);
+/**
+ * Check that language intelligence navigation graph edge satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_language_intelligence_navigation_graph_edge_validate(const UmiLanguageIntelligenceNavigationGraphEdge *edge);
+/**
+ * Provide the language intelligence navigation graph edge matches source operation used by
+ * this module and its client applications.
+ */
 int umi_language_intelligence_navigation_graph_edge_matches_source(
     const UmiLanguageIntelligenceNavigationGraphEdge *edge,
     const char *source_id);

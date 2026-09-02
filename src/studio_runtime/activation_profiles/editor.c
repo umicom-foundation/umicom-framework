@@ -23,6 +23,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "navigate.references", .surface = UMI_STUDIO_SURFACE_EDITOR, .prefix_match = 0, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile editor operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_editor(void)
 {

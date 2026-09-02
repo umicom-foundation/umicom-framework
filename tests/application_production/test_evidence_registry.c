@@ -16,6 +16,10 @@
 /* Umicom Framework application production test | evidence_registry | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "test_fixture.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiApplicationProductionEvidenceRegistry registry;
     umi_application_production_evidence_registry_init(&registry);

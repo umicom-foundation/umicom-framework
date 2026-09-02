@@ -18,6 +18,10 @@
 
 #include "umicom/ai/mcp/protocol.h"
 
+/*
+ * Initialise test ai mcp protocol from caller-provided values so later operations receive
+ * a known state.
+ */
 int test_ai_mcp_protocol_initialize(void)
 {
     assert(strcmp(umi_ai_mcp_method_initialize(), "initialize") == 0);

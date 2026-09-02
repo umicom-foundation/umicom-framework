@@ -17,5 +17,13 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/resource_budget.h"
-void umi_plugin_extension_host_resource_budget_init(UmiPluginExtensionHostResourceBudget *b) { if(b!=NULL) { b->memory_bytes=UINT64_C(536870912); b->cpu_time_ms=UINT64_C(60000); b->process_count=4U; b->thread_count=32U; } }
-UmiPluginExtensionHostDecision umi_plugin_extension_host_resource_budget_evaluate(const UmiPluginExtensionHostResourceBudget *b,const UmiPluginExtensionHostResourceBudgetUsage *u) { if(b==NULL||u==NULL) return UMI_PLUGIN_EXTENSION_HOST_DENY; if(u->memory_bytes>b->memory_bytes||u->cpu_time_ms>b->cpu_time_ms||u->process_count>b->process_count||u->thread_count>b->thread_count) return UMI_PLUGIN_EXTENSION_HOST_DENY; if(u->memory_bytes>b->memory_bytes*8U/10U||u->cpu_time_ms>b->cpu_time_ms*8U/10U) return UMI_PLUGIN_EXTENSION_HOST_REQUIRE_APPROVAL; return UMI_PLUGIN_EXTENSION_HOST_ALLOW; }
+/*
+ * Initialise plugin extension host resource budget from caller-provided values so later
+ * operations receive a known state.
+ */
+void umi_plugin_extension_host_resource_budget_init(UmiPluginExtensionHostResourceBudget *b) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(b!=NULL) { b->memory_bytes=UINT64_C(536870912); b->cpu_time_ms=UINT64_C(60000); b->process_count=4U; b->thread_count=32U; } }
+/*
+ * Provide the plugin extension host resource budget evaluate operation used by this module
+ * and its client applications.
+ */
+UmiPluginExtensionHostDecision umi_plugin_extension_host_resource_budget_evaluate(const UmiPluginExtensionHostResourceBudget *b,const UmiPluginExtensionHostResourceBudgetUsage *u) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(b==NULL||u==NULL) return UMI_PLUGIN_EXTENSION_HOST_DENY; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(u->memory_bytes>b->memory_bytes||u->cpu_time_ms>b->cpu_time_ms||u->process_count>b->process_count||u->thread_count>b->thread_count) return UMI_PLUGIN_EXTENSION_HOST_DENY; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(u->memory_bytes>b->memory_bytes*8U/10U||u->cpu_time_ms>b->cpu_time_ms*8U/10U) return UMI_PLUGIN_EXTENSION_HOST_REQUIRE_APPROVAL; return UMI_PLUGIN_EXTENSION_HOST_ALLOW; }

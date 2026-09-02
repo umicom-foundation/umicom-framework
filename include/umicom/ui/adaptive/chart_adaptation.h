@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive chart decision data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveChartDecision { int legend_visible; int axis_labels_compact; int32_t minimum_height; } UmiAdaptiveChartDecision;
 /* Resolve chart chrome and minimum height for the active viewport class. */
 UmiAdaptiveChartDecision umi_adaptive_chart_adaptation_resolve(UmiDesignSizeClass size_class);

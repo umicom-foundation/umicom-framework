@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host trust level evidence data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiPluginExtensionHostTrustLevelEvidence { int signature_valid; int publisher_known; int checksum_valid; int provenance_complete; uint32_t risk; } UmiPluginExtensionHostTrustLevelEvidence;
+/**
+ * Provide the plugin extension host trust level score operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_plugin_extension_host_trust_level_score(const UmiPluginExtensionHostTrustLevelEvidence *evidence);
+/**
+ * Provide the plugin extension host trust level classify operation used by this module and
+ * its client applications.
+ */
 UmiPluginExtensionHostTrust umi_plugin_extension_host_trust_level_classify(const UmiPluginExtensionHostTrustLevelEvidence *evidence);
 
 #ifdef __cplusplus

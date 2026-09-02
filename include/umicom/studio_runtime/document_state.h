@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime document state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeDocumentState {
     UmiDocumentWorkingCopySnapshot active;
     size_t open_document_count;
@@ -31,9 +35,17 @@ typedef struct UmiStudioRuntimeDocumentState {
     int external_change_detected;
 } UmiStudioRuntimeDocumentState;
 
+/**
+ * Initialise studio document state from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_studio_document_state_init(
     UmiStudioRuntimeDocumentState *state);
 
+/**
+ * Provide the studio document state refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_document_state_refresh(
     UmiStudioRuntimeDocumentState *state,
     UmiDocumentCoordinator *documents);

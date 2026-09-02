@@ -22,16 +22,39 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test keymap context data shared with callers of this public contract.
+ */
 typedef struct UmiTestKeymapContext {
     UmiTestWorkbenchEntry value;
     uint64_t generation;
     uint32_t item_count;
     bool active;
 } UmiTestKeymapContext;
+/**
+ * Initialise test keymap context from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_keymap_context_init(UmiTestKeymapContext *model,const char *id,const char *label);
+/**
+ * Exercise test keymap context set active and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_keymap_context_set_active(UmiTestKeymapContext *model,bool active);
+/**
+ * Return the number of records represented by test keymap context set without changing
+ * their state.
+ */
 UmiStatus umi_test_keymap_context_set_count(UmiTestKeymapContext *model,uint32_t item_count);
+/**
+ * Exercise test keymap context set state and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_keymap_context_set_state(UmiTestKeymapContext *model,UmiTestWorkbenchState state);
+/**
+ * Check that test keymap context satisfies its contract before another service relies on
+ * it.
+ */
 int umi_test_keymap_context_valid(const UmiTestKeymapContext *model);
 #ifdef __cplusplus
 }

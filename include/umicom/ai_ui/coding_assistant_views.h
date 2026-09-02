@@ -28,14 +28,26 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise ai ui coding assistant view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_coding_assistant_view_create(
     const char *view_id,
     UmiAiCodingAssistantService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui coding repository view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_coding_repository_view_create(
     const char *view_id,
     UmiAiCodingAssistantService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui coding patch view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_coding_patch_view_create(
     const char *view_id,
     UmiAiCodingAssistantService *service,

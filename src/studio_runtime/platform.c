@@ -33,6 +33,10 @@ struct UmiStudioRuntimePlatform {
     uint64_t revision;
 };
 
+/*
+ * Provide the sync command contexts operation used by this module and its client
+ * applications.
+ */
 static UmiStatus sync_command_contexts(UmiStudioRuntimePlatform *platform)
 {
     UmiAiDeveloperCommandContext ai_context;
@@ -41,13 +45,19 @@ static UmiStatus sync_command_contexts(UmiStudioRuntimePlatform *platform)
     status = umi_ide_command_registry_bridge_set_context(
         platform->ide_commands,
         &platform->selection.command_context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform->ai_commands != NULL) {
         status = umi_studio_ai_context_sync(
             &platform->selection,
             platform->actor_id,
             &ai_context);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_ai_developer_command_registry_bridge_set_context(
@@ -58,6 +68,10 @@ static UmiStatus sync_command_contexts(UmiStudioRuntimePlatform *platform)
     return status;
 }
 
+/*
+ * Initialise studio runtime platform from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_runtime_platform_create(
     const UmiStudioRuntimeBindings *bindings,
     const char *workspace_name,
@@ -71,17 +85,23 @@ UmiStatus umi_studio_runtime_platform_create(
     size_t actor_length;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || workspace_name == NULL ||
         actor_id == NULL || out_platform == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_studio_runtime_bindings_validate(bindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     workspace_length = strlen(workspace_name);
     actor_length = strlen(actor_id);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (workspace_length >= 256U ||
         actor_length >= UMI_AI_ID_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -90,6 +110,10 @@ UmiStatus umi_studio_runtime_platform_create(
     *out_platform = NULL;
 
     platform = (UmiStudioRuntimePlatform *)calloc(1U, sizeof(*platform));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     platform->bindings = *bindings;
@@ -110,17 +134,20 @@ UmiStatus umi_studio_runtime_platform_create(
     status = umi_studio_document_sync_init(
         &platform->document_sync,
         workspace_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_studio_surface_catalogue_install(
             platform->bindings.shell_registry,
             platform->bindings.shell_layout);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ide_command_registry_bridge_create(
             platform->bindings.commands,
             platform->bindings.ide,
             &platform->ide_commands);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ide_command_registry_bridge_register(
             platform->ide_commands);
@@ -129,6 +156,7 @@ UmiStatus umi_studio_runtime_platform_create(
     ide_bindings = umi_ide_integration_platform_bindings(
         platform->bindings.ide);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         ide_bindings != NULL &&
         ide_bindings->ai_developer != NULL) {
@@ -136,17 +164,20 @@ UmiStatus umi_studio_runtime_platform_create(
             platform->bindings.commands,
             ide_bindings->ai_developer,
             &platform->ai_commands);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_ai_developer_command_registry_bridge_register(
                 platform->ai_commands);
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_studio_command_alias_registry_create(
             &platform->bindings,
             &platform->aliases);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_studio_command_alias_registry_install(
             platform->aliases);
@@ -155,11 +186,16 @@ UmiStatus umi_studio_runtime_platform_create(
     default_layout = umi_studio_layout_catalogue_find(
         "umicom.studio.layout.default");
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && default_layout != NULL) {
         status = umi_studio_layout_preset_apply(
             &platform->bindings,
             default_layout);
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             (void)strcpy(
                 platform->active_layout_preset_id,
@@ -167,13 +203,16 @@ UmiStatus umi_studio_runtime_platform_create(
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = sync_command_contexts(platform);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_studio_runtime_platform_refresh(platform);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_studio_runtime_platform_destroy(platform);
         return status;
@@ -183,9 +222,17 @@ UmiStatus umi_studio_runtime_platform_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by studio runtime platform so the same storage can be reused
+ * safely.
+ */
 void umi_studio_runtime_platform_destroy(
     UmiStudioRuntimePlatform *platform)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return;
 
     umi_studio_command_alias_registry_destroy(platform->aliases);
@@ -194,72 +241,98 @@ void umi_studio_runtime_platform_destroy(
     free(platform);
 }
 
+/*
+ * Provide the studio runtime platform refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_platform_refresh(
     UmiStudioRuntimePlatform *platform)
 {
     UmiIdeIntegrationPlatformSnapshot ide_snapshot;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_ide_integration_platform_refresh(
         platform->bindings.ide);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_document_sync_refresh(
         &platform->document_sync,
         &platform->bindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_document_tabs_refresh(
         &platform->tabs,
         platform->bindings.documents);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ide_integration_platform_snapshot(
         platform->bindings.ide,
         &ide_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_status_model_build(
         &platform->status,
         &ide_snapshot,
         &platform->selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_status_sync(
         &platform->bindings,
         &platform->status);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_badge_sync(
         &platform->bindings,
         &ide_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = sync_command_contexts(platform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_runtime_sync_commands(
         &platform->bindings,
         &platform->command_sync);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     platform->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio runtime platform set actor operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_set_actor(
     UmiStudioRuntimePlatform *platform,
     const char *actor_id)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || actor_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(actor_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(platform->actor_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -269,6 +342,10 @@ UmiStatus umi_studio_runtime_platform_set_actor(
     return sync_command_contexts(platform);
 }
 
+/*
+ * Provide the studio runtime platform select layout operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_select_layout(
     UmiStudioRuntimePlatform *platform,
     const char *preset_id)
@@ -276,18 +353,28 @@ UmiStatus umi_studio_runtime_platform_select_layout(
     const UmiStudioRuntimeLayoutPresetDefinition *preset;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || preset_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     preset = umi_studio_layout_catalogue_find(preset_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preset == NULL) return UMI_STATUS_NOT_FOUND;
 
     status = umi_studio_layout_preset_apply(
         &platform->bindings,
         preset);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(preset_id) >= sizeof(platform->active_layout_preset_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -297,10 +384,18 @@ UmiStatus umi_studio_runtime_platform_select_layout(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio runtime platform set selection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_set_selection(
     UmiStudioRuntimePlatform *platform,
     const UmiStudioRuntimeSelectionRouter *selection)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || selection == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -310,6 +405,10 @@ UmiStatus umi_studio_runtime_platform_set_selection(
     return sync_command_contexts(platform);
 }
 
+/*
+ * Provide the studio runtime platform execute command operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_studio_runtime_platform_execute_command(
     UmiStudioRuntimePlatform *platform,
     const char *command_id,
@@ -319,9 +418,14 @@ UmiStatus umi_studio_runtime_platform_execute_command(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = sync_command_contexts(platform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_runtime_execute_command(
@@ -331,6 +435,7 @@ UmiStatus umi_studio_runtime_platform_execute_command(
         out_message,
         message_capacity);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_studio_runtime_platform_refresh(platform);
     }
@@ -338,6 +443,10 @@ UmiStatus umi_studio_runtime_platform_execute_command(
     return status;
 }
 
+/*
+ * Provide the studio runtime platform execute contribution operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_studio_runtime_platform_execute_contribution(
     UmiStudioRuntimePlatform *platform,
     const char *contribution_id,
@@ -347,9 +456,14 @@ UmiStatus umi_studio_runtime_platform_execute_contribution(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = sync_command_contexts(platform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_runtime_execute_contribution(
@@ -359,6 +473,7 @@ UmiStatus umi_studio_runtime_platform_execute_contribution(
         out_message,
         message_capacity);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_studio_runtime_platform_refresh(platform);
     }
@@ -366,12 +481,20 @@ UmiStatus umi_studio_runtime_platform_execute_contribution(
     return status;
 }
 
+/*
+ * Provide the studio runtime platform snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_snapshot(
     UmiStudioRuntimePlatform *platform,
     UmiStudioRuntimeSnapshot *out_snapshot)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -381,6 +504,7 @@ UmiStatus umi_studio_runtime_platform_snapshot(
     status = umi_ide_integration_platform_snapshot(
         platform->bindings.ide,
         &out_snapshot->ide);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_snapshot->document_sync = platform->document_sync;
@@ -403,24 +527,40 @@ UmiStatus umi_studio_runtime_platform_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio runtime platform bindings operation used by this module and its
+ * client applications.
+ */
 UmiStudioRuntimeBindings *umi_studio_runtime_platform_bindings(
     UmiStudioRuntimePlatform *platform)
 {
     return platform != NULL ? &platform->bindings : NULL;
 }
 
+/*
+ * Provide the studio runtime platform selection operation used by this module and its
+ * client applications.
+ */
 UmiStudioRuntimeSelectionRouter *umi_studio_runtime_platform_selection(
     UmiStudioRuntimePlatform *platform)
 {
     return platform != NULL ? &platform->selection : NULL;
 }
 
+/*
+ * Provide the studio runtime platform status operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeStatusModel *umi_studio_runtime_platform_status(
     const UmiStudioRuntimePlatform *platform)
 {
     return platform != NULL ? &platform->status : NULL;
 }
 
+/*
+ * Provide the studio runtime platform tabs operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeDocumentTabs *umi_studio_runtime_platform_tabs(
     const UmiStudioRuntimePlatform *platform)
 {

@@ -19,10 +19,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive cycle detection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveCycleDetection {
     bool has_cycle;
     size_t visited_nodes;
 } UmiUiReactiveCycleDetection;
+/**
+ * Perform ui reactive cycle detection through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_ui_reactive_cycle_detection_run(const UmiUiReactiveDependencyGraph *graph,UmiUiReactiveCycleDetection *out);
 #ifdef __cplusplus
 }

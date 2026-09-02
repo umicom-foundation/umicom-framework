@@ -35,19 +35,27 @@ struct UmiDesktopComponentDragDrop {
     uint64_t revision;
 };
 
+/* Provide the find entry operation used by this module and its client applications. */
 static size_t find_entry(
     const UmiDesktopComponentDragDrop *drag_drop,
     const char *session_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL || session_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < drag_drop->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(drag_drop->entries[index].snapshot.session_id,
                    session_id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(
     char *destination,
     size_t capacity,
@@ -55,14 +63,20 @@ static UmiStatus copy_text(
     int required)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL ||
         (required && source[0] == '\0')) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the sync registry operation used by this module and its client applications. */
 static UmiStatus sync_registry(
     UmiDesktopComponentDragDrop *drag_drop,
     const UmiDesktopComponentDragSnapshot *snapshot)
@@ -78,6 +92,7 @@ static UmiStatus sync_registry(
     target_id = snapshot->operation == UMI_DESKTOP_COMPONENT_DRAG_LINK
         ? snapshot->target.target_window_id
         : snapshot->target.monitor_id;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (target_id[0] != '\0')
         (void)snprintf(item.target_id, sizeof(item.target_id), "%s", target_id);
     (void)snprintf(item.mime_type, sizeof(item.mime_type), "%s",
@@ -91,6 +106,7 @@ static UmiStatus sync_registry(
     return umi_ui_drag_drop_registry_upsert(drag_drop->registry, &item);
 }
 
+/* Provide the mark entry operation used by this module and its client applications. */
 static UmiStatus mark_entry(
     UmiDesktopComponentDragDrop *drag_drop,
     UmiDesktopComponentDragEntry *entry,
@@ -106,6 +122,7 @@ static UmiStatus mark_entry(
     return sync_registry(drag_drop, &entry->snapshot);
 }
 
+/* Provide the validate target operation used by this module and its client applications. */
 static UmiStatus validate_target(
     UmiDesktopComponentDragDrop *drag_drop,
     const UmiDesktopComponentDragSnapshot *snapshot,
@@ -113,9 +130,12 @@ static UmiStatus validate_target(
 {
     const UmiApplicationComponentDefinition *component;
     const UmiDesktopWindow *target_window;
+    /* Configure the optional target only when its feature has created it. */
     if (target->structure_size < sizeof(*target))
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot->operation == UMI_DESKTOP_COMPONENT_DRAG_LINK) {
+        /* Configure the optional target only when its feature has created it. */
         if (target->target_window_id[0] == '\0' ||
             strcmp(target->target_window_id,
                    snapshot->source_window_id) == 0)
@@ -123,35 +143,52 @@ static UmiStatus validate_target(
         target_window = umi_desktop_window_manager_find(
             umi_desktop_runtime_windows(drag_drop->desktop),
             target->target_window_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (target_window == NULL) return UMI_STATUS_NOT_FOUND;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (target_window->context_group_id[0] == '\0')
             return UMI_STATUS_INVALID_STATE;
+        /* Configure the optional target only when its feature has created it. */
         if (target->context_role < UMI_UI_WINDOW_GROUP_SOURCE ||
             target->context_role > UMI_UI_WINDOW_GROUP_BIDIRECTIONAL)
             return UMI_STATUS_INVALID_ARGUMENT;
         return UMI_STATUS_OK;
     }
+    /* Configure the optional target only when its feature has created it. */
     if (target->monitor_id[0] == '\0' || target->bounds.width <= 0 ||
         target->bounds.height <= 0 ||
         target->placement < UMI_DESKTOP_DOCK_CANVAS ||
         target->placement > UMI_DESKTOP_DOCK_FLOATING)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_desktop_monitor_topology_find(
             umi_desktop_runtime_monitors(drag_drop->desktop),
             target->monitor_id) == NULL)
         return UMI_STATUS_NOT_FOUND;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot->operation == UMI_DESKTOP_COMPONENT_DRAG_COPY) {
         component = umi_application_component_catalogue_find(
             snapshot->source_component_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (component == NULL) return UMI_STATUS_NOT_FOUND;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (!component->multi_instance) return UMI_STATUS_PERMISSION_DENIED;
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_ui_id_is_valid(target->new_window_id) ||
             !umi_ui_id_is_valid(target->new_view_id) ||
             target->title[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_desktop_window_manager_find(
                 umi_desktop_runtime_windows(drag_drop->desktop),
                 target->new_window_id) != NULL)
             return UMI_STATUS_ALREADY_EXISTS;
+        /* Configure the optional target only when its feature has created it. */
         if (target->context_role < UMI_UI_WINDOW_GROUP_SOURCE ||
             target->context_role > UMI_UI_WINDOW_GROUP_BIDIRECTIONAL)
             return UMI_STATUS_INVALID_ARGUMENT;
@@ -159,6 +196,10 @@ static UmiStatus validate_target(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise desktop component drag drop from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_component_drag_drop_create(
     UmiDesktopRuntime *desktop,
     UmiDesktopContentRuntime *content,
@@ -166,14 +207,23 @@ UmiStatus umi_desktop_component_drag_drop_create(
 {
     UmiDesktopComponentDragDrop *drag_drop;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desktop == NULL || content == NULL || out_drag_drop == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     *out_drag_drop = NULL;
     drag_drop = (UmiDesktopComponentDragDrop *)calloc(1U, sizeof(*drag_drop));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     drag_drop->desktop = desktop;
     drag_drop->content = content;
     status = umi_ui_drag_drop_registry_create(&drag_drop->registry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(drag_drop);
         return status;
@@ -182,20 +232,36 @@ UmiStatus umi_desktop_component_drag_drop_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by desktop component drag drop so the same storage can be
+ * reused safely.
+ */
 void umi_desktop_component_drag_drop_destroy(
     UmiDesktopComponentDragDrop *drag_drop)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL) return;
     umi_ui_drag_drop_registry_destroy(drag_drop->registry);
     free(drag_drop);
 }
 
+/*
+ * Provide the desktop component drag drop registry operation used by this module and its
+ * client applications.
+ */
 UmiUiDragDropRegistry *umi_desktop_component_drag_drop_registry(
     UmiDesktopComponentDragDrop *drag_drop)
 {
     return drag_drop != NULL ? drag_drop->registry : NULL;
 }
 
+/*
+ * Provide the desktop component drag begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_component_drag_begin(
     UmiDesktopComponentDragDrop *drag_drop,
     const char *session_id,
@@ -205,17 +271,24 @@ UmiStatus umi_desktop_component_drag_begin(
     UmiDesktopContentSnapshot content;
     UmiDesktopComponentDragEntry *entry;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL || !umi_ui_id_is_valid(session_id) ||
         !umi_ui_id_is_valid(source_window_id) ||
         operation < UMI_DESKTOP_COMPONENT_DRAG_MOVE ||
         operation > UMI_DESKTOP_COMPONENT_DRAG_LINK)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (find_entry(drag_drop, session_id) != SIZE_MAX)
         return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (drag_drop->count >= UMI_DESKTOP_COMPONENT_DRAG_MAX)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_desktop_content_runtime_snapshot(
         drag_drop->content, source_window_id, &content);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     entry = &drag_drop->entries[drag_drop->count];
     (void)memset(entry, 0, sizeof(*entry));
@@ -226,22 +299,27 @@ UmiStatus umi_desktop_component_drag_begin(
     entry->snapshot.revision = 1U;
     status = copy_text(entry->snapshot.session_id,
                        sizeof(entry->snapshot.session_id), session_id, 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(entry->snapshot.source_window_id,
                            sizeof(entry->snapshot.source_window_id),
                            source_window_id, 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(entry->snapshot.source_component_id,
                            sizeof(entry->snapshot.source_component_id),
                            content.window.component_id, 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(entry->snapshot.source_application_id,
                            sizeof(entry->snapshot.source_application_id),
                            content.window.owner_application_id, 1);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     drag_drop->count += 1U;
     drag_drop->revision += 1U;
     status = sync_registry(drag_drop, &entry->snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         drag_drop->count -= 1U;
         (void)memset(entry, 0, sizeof(*entry));
@@ -249,6 +327,10 @@ UmiStatus umi_desktop_component_drag_begin(
     return status;
 }
 
+/*
+ * Provide the desktop component drag target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_component_drag_target(
     UmiDesktopComponentDragDrop *drag_drop,
     const char *session_id,
@@ -256,10 +338,16 @@ UmiStatus umi_desktop_component_drag_target(
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL || session_id == NULL || target == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_entry(drag_drop, session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (drag_drop->entries[index].snapshot.state !=
         UMI_DESKTOP_COMPONENT_DRAG_STARTED)
         return UMI_STATUS_INVALID_STATE;
@@ -274,6 +362,7 @@ UmiStatus umi_desktop_component_drag_target(
     return status;
 }
 
+/* Provide the commit move operation used by this module and its client applications. */
 static UmiStatus commit_move(
     UmiDesktopComponentDragDrop *drag_drop,
     const UmiDesktopComponentDragSnapshot *snapshot)
@@ -284,6 +373,7 @@ static UmiStatus commit_move(
         snapshot->target.placement);
 }
 
+/* Copy commit into module-owned storage so callers keep ownership of their input values. */
 static UmiStatus commit_copy(
     UmiDesktopComponentDragDrop *drag_drop,
     const UmiDesktopComponentDragSnapshot *snapshot)
@@ -292,6 +382,7 @@ static UmiStatus commit_copy(
     UmiDesktopContentMountRequest mount;
     UmiStatus status = umi_desktop_content_runtime_snapshot(
         drag_drop->content, snapshot->source_window_id, &source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&mount, 0, sizeof(mount));
     mount.structure_size = (uint32_t)sizeof(mount);
@@ -315,6 +406,7 @@ static UmiStatus commit_copy(
     return umi_desktop_content_runtime_mount(drag_drop->content, &mount);
 }
 
+/* Provide the commit link operation used by this module and its client applications. */
 static UmiStatus commit_link(
     UmiDesktopComponentDragDrop *drag_drop,
     const UmiDesktopComponentDragSnapshot *snapshot)
@@ -322,12 +414,17 @@ static UmiStatus commit_link(
     const UmiDesktopWindow *target = umi_desktop_window_manager_find(
         umi_desktop_runtime_windows(drag_drop->desktop),
         snapshot->target.target_window_id);
+    /* Configure the optional target only when its feature has created it. */
     if (target == NULL) return UMI_STATUS_NOT_FOUND;
     return umi_desktop_content_runtime_link_context(
         drag_drop->content, snapshot->source_window_id,
         target->context_group_id, snapshot->target.context_role);
 }
 
+/*
+ * Provide the desktop component drag commit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_component_drag_commit(
     UmiDesktopComponentDragDrop *drag_drop,
     const char *session_id)
@@ -335,13 +432,20 @@ UmiStatus umi_desktop_component_drag_commit(
     UmiDesktopComponentDragEntry *entry;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL || session_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_entry(drag_drop, session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     entry = &drag_drop->entries[index];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (entry->snapshot.state != UMI_DESKTOP_COMPONENT_DRAG_TARGETED ||
         !entry->snapshot.allowed) return UMI_STATUS_INVALID_STATE;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (entry->snapshot.operation) {
         case UMI_DESKTOP_COMPONENT_DRAG_MOVE:
             status = commit_move(drag_drop, &entry->snapshot);
@@ -364,15 +468,25 @@ UmiStatus umi_desktop_component_drag_commit(
     return status;
 }
 
+/*
+ * Provide the desktop component drag cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_component_drag_cancel(
     UmiDesktopComponentDragDrop *drag_drop,
     const char *session_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL || session_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_entry(drag_drop, session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (drag_drop->entries[index].snapshot.state ==
             UMI_DESKTOP_COMPONENT_DRAG_COMMITTED ||
         drag_drop->entries[index].snapshot.state ==
@@ -384,20 +498,33 @@ UmiStatus umi_desktop_component_drag_cancel(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop component drag snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_component_drag_snapshot(
     const UmiDesktopComponentDragDrop *drag_drop,
     const char *session_id,
     UmiDesktopComponentDragSnapshot *out_snapshot)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (drag_drop == NULL || session_id == NULL || out_snapshot == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_entry(drag_drop, session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_snapshot = drag_drop->entries[index].snapshot;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by desktop component drag without changing
+ * their state.
+ */
 size_t umi_desktop_component_drag_count(
     const UmiDesktopComponentDragDrop *drag_drop)
 {

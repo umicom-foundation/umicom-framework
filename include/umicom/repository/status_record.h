@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named repository status record kind values accepted by this public contract.
+ */
 typedef enum UmiRepositoryStatusRecordKind {
     UMI_REPOSITORY_STATUS_ORDINARY = 1,
     UMI_REPOSITORY_STATUS_RENAMED = 2,
@@ -35,6 +38,9 @@ typedef enum UmiRepositoryStatusRecordKind {
     UMI_REPOSITORY_STATUS_UNTRACKED = 4,
     UMI_REPOSITORY_STATUS_IGNORED = 5
 } UmiRepositoryStatusRecordKind;
+/**
+ * Represent the repository status record data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryStatusRecord {
     UmiRepositoryStatusRecordKind kind;
     char index_state;

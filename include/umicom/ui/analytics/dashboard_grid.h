@@ -28,8 +28,19 @@ extern "C" {
 #endif
 
 #include "umicom/ui/analytics/dashboard_tile.h"
+/**
+ * Represent the analytics dashboard grid data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsDashboardGrid { uint16_t rows; uint16_t columns; UmiAnalyticsDashboardTile tiles[UMI_ANALYTICS_MAX_ITEMS]; size_t count; } UmiAnalyticsDashboardGrid;
+/**
+ * Initialise analytics dashboard grid from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_dashboard_grid_init(UmiAnalyticsDashboardGrid *g,uint16_t rows,uint16_t columns);
+/**
+ * Add analytics dashboard grid only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_analytics_dashboard_grid_add(UmiAnalyticsDashboardGrid *g,const UmiAnalyticsDashboardTile *tile);
 
 #ifdef __cplusplus

@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading order identity data shared with callers of this public contract.
+ */
 typedef struct UmiTradingOrderIdentity { UmiFinancialId client_order_id; UmiFinancialId broker_order_id; UmiFinancialId venue_order_id; } UmiTradingOrderIdentity;
 /* Initialise a client identity with optional downstream identifiers empty. */
 UmiStatus umi_trading_order_identity_init(UmiTradingOrderIdentity *identity,const char *client_order_id);

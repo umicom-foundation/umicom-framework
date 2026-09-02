@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide workflow report data shared with callers of this public contract.
+ */
 typedef struct UmiIdeWorkflowReport {
     UmiIdeWorkflowGate gates[UMI_IDE_INTEGRATION_GATE_CAPACITY];
     size_t gate_count;
@@ -30,8 +33,15 @@ typedef struct UmiIdeWorkflowReport {
     int ready;
 } UmiIdeWorkflowReport;
 
+/**
+ * Initialise ide workflow report from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ide_workflow_report_init(UmiIdeWorkflowReport *report);
 
+/**
+ * Add ide workflow report only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ide_workflow_report_add(
     UmiIdeWorkflowReport *report,
     const char *gate_id,

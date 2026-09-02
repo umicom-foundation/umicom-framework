@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the trade capture reference operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trade_capture_reference(const UmiExecutionReport *report, char *buffer, size_t capacity);
 #ifdef __cplusplus
 }

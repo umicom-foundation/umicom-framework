@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform product validation profile data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTestPlatformProductValidationProfile {
     uint32_t structure_size;
     uint32_t api_version;
@@ -33,6 +37,10 @@ typedef struct UmiTestPlatformProductValidationProfile {
     bool requires_all_modules;
 } UmiTestPlatformProductValidationProfile;
 
+/**
+ * Initialise test platform product validation profile from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_test_platform_product_validation_profile_init(
     UmiTestPlatformProductValidationProfile *profile,
     const char *product_id,
@@ -41,6 +49,10 @@ UmiStatus umi_test_platform_product_validation_profile_init(
     const char *test_regex,
     bool enabled_in_default_preset,
     bool requires_all_modules);
+/**
+ * Check that test platform product validation profile satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_test_platform_product_validation_profile_validate(
     const UmiTestPlatformProductValidationProfile *profile);
 

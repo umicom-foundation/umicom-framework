@@ -22,8 +22,16 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise vcs advanced patch builder from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_patch_builder_init(UmiVcsAdvancedPatchBuilder *builder)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL) {
         return;
     }
@@ -32,15 +40,24 @@ void umi_vcs_advanced_patch_builder_init(UmiVcsAdvancedPatchBuilder *builder)
     builder->api_version = UMI_VCS_ADVANCED_API_VERSION;
 }
 
+/*
+ * Add vcs advanced patch builder only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_vcs_advanced_patch_builder_append(
     UmiVcsAdvancedPatchBuilder *builder,
     const char *text)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (builder->length + length >= sizeof(builder->text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -50,6 +67,10 @@ UmiStatus umi_vcs_advanced_patch_builder_append(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced patch builder begin file operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_patch_builder_begin_file(
     UmiVcsAdvancedPatchBuilder *builder,
     const char *left,
@@ -59,6 +80,10 @@ UmiStatus umi_vcs_advanced_patch_builder_begin_file(
     int written;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL ||
         !umi_vcs_advanced_text_present(left) ||
         !umi_vcs_advanced_text_present(right)) {
@@ -73,11 +98,13 @@ UmiStatus umi_vcs_advanced_patch_builder_begin_file(
         right,
         left,
         right);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(header)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     status = umi_vcs_advanced_patch_builder_append(builder, header);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -85,21 +112,34 @@ UmiStatus umi_vcs_advanced_patch_builder_begin_file(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced patch builder add hunk operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_patch_builder_add_hunk(
     UmiVcsAdvancedPatchBuilder *builder,
     const char *hunk_text)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (builder == NULL || !umi_vcs_advanced_text_present(hunk_text)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_vcs_advanced_patch_builder_append(builder, hunk_text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         builder->hunk_count += 1U;
     }
     return status;
 }
 
+/*
+ * Provide the vcs advanced patch builder text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_advanced_patch_builder_text(
     const UmiVcsAdvancedPatchBuilder *builder)
 {

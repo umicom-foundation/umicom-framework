@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer workbench readiness data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkbenchReadiness {
     int configuration_valid;
     int toolchain_ready;
@@ -35,6 +39,10 @@ typedef struct UmiDeveloperWorkbenchReadiness {
     char reason[UMI_DEVELOPER_WORKBENCH_TEXT_CAPACITY];
 } UmiDeveloperWorkbenchReadiness;
 
+/**
+ * Provide the developer workbench readiness evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_workbench_readiness_evaluate(
     const UmiDeveloperWorkbenchConfiguration *configuration,
     const UmiToolchainProfile *profile,

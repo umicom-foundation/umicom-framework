@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 #include "umicom/diagnostics/parser.h"
+/*
+ * Exercise parse custom and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus parse_custom(const UmiOutputRecord *output,
                               UmiDiagnosticSnapshot *item,
                               int *matched,
@@ -25,6 +29,10 @@ static UmiStatus parse_custom(const UmiOutputRecord *output,
     return umi_diagnostic_snapshot_init(item, "custom", UMI_DIAGNOSTIC_INFO,
         UMI_DIAGNOSTIC_KIND_GENERAL, "custom", "matched");
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDiagnosticParserRegistry *registry = NULL;

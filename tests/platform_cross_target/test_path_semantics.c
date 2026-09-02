@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtPathSemantics w=umi_ct_path_semantics_default(UMI_CT_OS_WINDOWS),u=umi_ct_path_semantics_default(UMI_CT_OS_UMICOM);CHECK(umi_ct_path_is_absolute(&w,"C:\\umicom"));CHECK(umi_ct_path_is_absolute(&u,"/usr/bin"));CHECK(!umi_ct_path_is_absolute(&u,"tmp/x"));return 0;}

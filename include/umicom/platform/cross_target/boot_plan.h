@@ -31,9 +31,22 @@ extern "C" {
 #endif
 
 #include "umicom/platform/cross_target/boot_service.h"
+/**
+ * Represent the ct boot plan data shared with callers of this public contract.
+ */
 typedef struct UmiCtBootPlan { UmiCtBootService services[UMI_CT_MAX_ITEMS]; size_t count; } UmiCtBootPlan;
+/**
+ * Initialise ct boot plan from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ct_boot_plan_init(UmiCtBootPlan *plan);
+/**
+ * Add ct boot plan only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ct_boot_plan_add(UmiCtBootPlan *plan,const UmiCtBootService *service);
+/**
+ * Provide the ct boot plan sort operation used by this module and its client applications.
+ */
 UmiStatus umi_ct_boot_plan_sort(UmiCtBootPlan *plan);
 
 #ifdef __cplusplus

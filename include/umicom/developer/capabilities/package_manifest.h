@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PACKAGE_MANIFEST "umicom.developer.delivery.package_manifest"
 
+/**
+ * Provide the developer capability package manifest operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_package_manifest(void);
 

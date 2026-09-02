@@ -23,6 +23,10 @@
 /* Initialise bounded schedule storage for deterministic delivery planning. */
 UmiStatus umi_commodity_delivery_schedule_init(UmiCommodityDeliverySchedule *value, const char *contract_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     return umi_commodity_copy_text(value->contract_id.value, sizeof value->contract_id.value, contract_id);
@@ -31,8 +35,14 @@ UmiStatus umi_commodity_delivery_schedule_init(UmiCommodityDeliverySchedule *val
 /* Keep obligations time ordered so downstream planning can iterate without sorting. */
 UmiStatus umi_commodity_delivery_schedule_add(UmiCommodityDeliverySchedule *value, const UmiCommodityDeliveryObligation *obligation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || obligation == NULL || !umi_commodity_delivery_obligation_valid(obligation)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value->count >= UMI_COMMODITY_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value->count > 0U && obligation->due_time_ms < value->obligations[value->count - 1U].due_time_ms) return UMI_STATUS_INVALID_STATE;
     value->obligations[value->count++] = *obligation;
     return UMI_STATUS_OK;

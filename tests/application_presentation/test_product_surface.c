@@ -18,6 +18,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Exercise test controller and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus test_controller(
     void *context,
     const UmiApplicationPresentationPanelPlacement *placement,
@@ -38,6 +42,10 @@ static UmiStatus test_controller(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise register test controllers and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static UmiStatus register_test_controllers(
     UmiApplicationPresentationSurfaceRuntime *runtime,
     void *context)
@@ -46,6 +54,10 @@ static UmiStatus register_test_controllers(
         runtime, test_controller, context);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationPresentationProductSurface surface;

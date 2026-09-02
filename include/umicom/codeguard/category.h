@@ -24,6 +24,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named code guard category values accepted by this public contract.
+ */
 typedef enum UmiCodeGuardCategory {
     UMI_CODEGUARD_CATEGORY_MEMORY = 0,
     UMI_CODEGUARD_CATEGORY_BUFFER,
@@ -43,6 +46,10 @@ typedef enum UmiCodeGuardCategory {
     UMI_CODEGUARD_CATEGORY_PORTABILITY,
     UMI_CODEGUARD_CATEGORY_QUALITY
 } UmiCodeGuardCategory;
+/**
+ * Provide the codeguard category text operation used by this module and its client
+ * applications.
+ */
 const char *umi_codeguard_category_text(UmiCodeGuardCategory category);
 #ifdef __cplusplus
 }

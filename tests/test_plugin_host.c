@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/plugin/host.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiPluginHost *h = NULL; UmiPluginManifest m = {0}; UmiPluginPermissionDecision d;
     (void)strcpy(m.plugin_id,"org.umicom.example"); (void)strcpy(m.display_name,"Example"); (void)strcpy(m.library_path,"example.so"); (void)strcpy(m.permissions[0],"workspace.read"); m.permission_count=1U; m.required_abi=2U;

@@ -18,6 +18,10 @@
 
 #include <stdio.h>
 
+/*
+ * Provide the gtk4 output widget operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_output_widget(const UmiUiViewPresentation *presentation)
 {
     UmiUiPropertySnapshot count_property;
@@ -26,7 +30,12 @@ GtkWidget *umi_gtk4_output_widget(const UmiUiViewPresentation *presentation)
     GtkTextBuffer *buffer;
     int64_t count = 0;
     int64_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (presentation == NULL) return NULL;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_view_presentation_find_property(presentation, "output.count", &count_property) ==
             UMI_STATUS_OK && count_property.value.kind == UMI_UI_VALUE_INTEGER) {
         count = count_property.value.integer_value;
@@ -37,11 +46,13 @@ GtkWidget *umi_gtk4_output_widget(const UmiUiViewPresentation *presentation)
     gtk_text_view_set_monospace(GTK_TEXT_VIEW(text_view), TRUE);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
     buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index < count; ++index) {
         char key[64];
         UmiUiPropertySnapshot row;
         GtkTextIter end;
         (void)snprintf(key, sizeof(key), "output.row.%lld", (long long)index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (umi_ui_view_presentation_find_property(presentation, key, &row) != UMI_STATUS_OK ||
             row.value.kind != UMI_UI_VALUE_STRING) continue;
         gtk_text_buffer_get_end_iter(buffer, &end);

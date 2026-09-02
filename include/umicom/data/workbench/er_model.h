@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data er entity data shared with callers of this public contract.
+ */
 typedef struct UmiDataErEntity {
     char table_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char label[UMI_DATA_ENTERPRISE_ID_CAPACITY];
@@ -33,12 +36,18 @@ typedef struct UmiDataErEntity {
     int selected;
 } UmiDataErEntity;
 
+/**
+ * Represent the data er relation data shared with callers of this public contract.
+ */
 typedef struct UmiDataErRelation {
     UmiDataSchemaForeignKey foreign_key;
     size_t source_entity;
     size_t target_entity;
 } UmiDataErRelation;
 
+/**
+ * Represent the data er model data shared with callers of this public contract.
+ */
 typedef struct UmiDataErModel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,16 +60,36 @@ typedef struct UmiDataErModel {
     uint64_t revision;
 } UmiDataErModel;
 
+/**
+ * Initialise data er model from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_data_er_model_init(UmiDataErModel *model);
+/**
+ * Provide the data er model build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_er_model_build(
     UmiDataErModel *model,
     const UmiDataSchemaSnapshot *schema);
+/**
+ * Provide the data er model add relation operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_er_model_add_relation(
     UmiDataErModel *model,
     const UmiDataSchemaForeignKey *foreign_key);
+/**
+ * Provide the data er model select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_er_model_select(
     UmiDataErModel *model,
     size_t entity_index);
+/**
+ * Find data er model entity while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiDataErEntity *umi_data_er_model_entity_at(
     const UmiDataErModel *model,
     size_t entity_index);

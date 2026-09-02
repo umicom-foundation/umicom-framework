@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/reporting_audit.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiReportingAudit a; umi_reg_reporting_audit_init(&a); CHECK(umi_reg_reporting_audit_append(&a,1U,"validate",123U)==UMI_STATUS_OK); CHECK(umi_reg_reporting_audit_append(&a,1U,"submit",124U)==UMI_STATUS_INVALID_STATE); return 0; }

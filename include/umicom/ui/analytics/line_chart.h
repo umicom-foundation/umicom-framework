@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics line chart data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsLineChart { int smooth; int markers; double stroke_width; } UmiAnalyticsLineChart;
+/**
+ * Initialise analytics line chart from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_analytics_line_chart_init(UmiAnalyticsLineChart *item);
+/**
+ * Check that analytics line chart satisfies its contract before another service relies on
+ * it.
+ */
 int umi_analytics_line_chart_valid(const UmiAnalyticsLineChart *item);
 
 #ifdef __cplusplus

@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital asset wallet data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalAssetWallet {
     UmiDigitalAssetId id;
     char label[UMI_DIGITAL_ASSET_NAME_CAPACITY];

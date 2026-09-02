@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/stress_scenario.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseStressScenario s;CHECK(umi_enterprise_stress_scenario_init(&s,"rates+200","USD",0.02,4)==UMI_STATUS_OK);CHECK(s.severity==4);return 0;}

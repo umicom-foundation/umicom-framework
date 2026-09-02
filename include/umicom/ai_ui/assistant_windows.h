@@ -35,6 +35,10 @@ extern "C" {
 #define UMI_AI_UI_WINDOW_MODEL_COMPARISON "umicom.ai.model-comparison"
 #define UMI_AI_UI_WINDOW_RESEARCH_CONTEXT "umicom.ai.research-context"
 
+/**
+ * Add ai ui assistant windows only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_ui_assistant_windows_register(
     UmiUiWindowCatalogue *catalogue);
 

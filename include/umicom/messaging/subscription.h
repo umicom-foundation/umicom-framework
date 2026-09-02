@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the subscription data shared with callers of this public contract.
+ */
 typedef struct UmiSubscription {
     uint32_t structure_size;
     UmiMessageKind kind;
@@ -33,7 +36,14 @@ typedef struct UmiSubscription {
     int prefix_match;
 } UmiSubscription;
 
+/**
+ * Provide the subscription all operation used by this module and its client applications.
+ */
 UmiSubscription umi_subscription_all(void);
+/**
+ * Provide the subscription matches operation used by this module and its client
+ * applications.
+ */
 int umi_subscription_matches(const UmiSubscription *subscription,
                              const UmiMessageEnvelope *message);
 

@@ -32,31 +32,55 @@ extern "C" {
 #define UMI_TEST_UI_VIEW_COVERAGE "umicom.test.workspace.coverage"
 #define UMI_TEST_UI_VIEW_RUNS "umicom.test.workspace.runs"
 
+/**
+ * Initialise test ui explorer view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_explorer_view_create(
     const char *view_id,
     UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view
 );
+/**
+ * Initialise test ui results view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_results_view_create(
     const char *view_id,
     UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view
 );
+/**
+ * Initialise test ui failures view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_failures_view_create(
     const char *view_id,
     UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view
 );
+/**
+ * Initialise test ui output view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_ui_output_view_create(
     const char *view_id,
     UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view
 );
+/**
+ * Initialise test ui coverage view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_test_ui_coverage_view_create(
     const char *view_id,
     UmiTestWorkspace *workspace,
     UmiUiViewModel **out_view
 );
+/**
+ * Initialise test ui runs view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_ui_runs_view_create(
     const char *view_id,
     UmiTestWorkspace *workspace,

@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/repository/submodule_status.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiRepositorySubmoduleStatus s; umi_repository_submodule_status_init(&s); s.configured=1U; s.initialised=2U; assert(umi_repository_submodule_status_validate(&s)==UMI_STATUS_INVALID_STATE); return 0; }

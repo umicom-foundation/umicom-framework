@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricTraceContext p,c; CHECK(umi_fabric_trace_context_root(&p,"t","s1","c",true)==UMI_STATUS_OK); CHECK(umi_fabric_trace_context_child(&p,"s2",&c)==UMI_STATUS_OK); CHECK(strcmp(c.parent_span_id,"s1")==0&&strcmp(c.trace_id,"t")==0);
     return 0;

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise studio status view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_studio_status_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,

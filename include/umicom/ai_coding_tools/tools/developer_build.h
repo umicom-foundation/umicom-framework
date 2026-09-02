@@ -18,7 +18,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ai coding tool developer build descriptor operation used by this module and
+ * its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_developer_build_descriptor(void);
+/**
+ * Provide the ai coding tool developer build invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_developer_build_invoke(
     const char *arguments_json,
     char *output,

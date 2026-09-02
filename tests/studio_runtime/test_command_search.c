@@ -16,8 +16,16 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/studio_runtime/command_search.h"
+/*
+ * Exercise handler and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus handler(void*u,const char*a,char*m,size_t c)
-{(void)u;(void)a;if(m&&c)m[0]='\0';return UMI_STATUS_OK;}
+{(void)u;(void)a;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(m&&c)m[0]='\0';return UMI_STATUS_OK;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommandRegistry *commands=NULL;

@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_debug_bridge.h"
-int main(void) { UmiTerminalRemoteRemoteDebugBridge v; umi_terminal_remote_remote_debug_bridge_init(&v,"left","right"); if(!umi_terminal_remote_remote_debug_bridge_valid(&v)) return 1; if(umi_terminal_remote_remote_debug_bridge_fingerprint(&v)==0U) return 2; umi_terminal_remote_remote_debug_bridge_init(&v,"same","same"); return umi_terminal_remote_remote_debug_bridge_valid(&v)?3:0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteRemoteDebugBridge v; umi_terminal_remote_remote_debug_bridge_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_debug_bridge_valid(&v)) return 1; /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_remote_debug_bridge_fingerprint(&v)==0U) return 2; umi_terminal_remote_remote_debug_bridge_init(&v,"same","same"); return umi_terminal_remote_remote_debug_bridge_valid(&v)?3:0; }

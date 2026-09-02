@@ -26,10 +26,15 @@
 #include <string.h>
 #include "umicom/test_platform/command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index;
     assert(umi_test_platform_command_count() == 40U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_command_count(); ++index) {
         const UmiTestPlatformCommandDescriptor *command =
             umi_test_platform_command_at(index);
@@ -40,6 +45,7 @@ int main(void)
         assert(command->id[0] != '\0' && command->label[0] != '\0');
         assert(umi_test_platform_command_find(command->id) == command);
         assert(umi_test_platform_command_for_kind(command->kind) == command);
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = index + 1U;
              comparison < umi_test_platform_command_count(); ++comparison) {
             assert(strcmp(command->id,

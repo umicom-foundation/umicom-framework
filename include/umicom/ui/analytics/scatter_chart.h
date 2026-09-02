@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics scatter chart data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsScatterChart { double point_radius; int trendline; } UmiAnalyticsScatterChart;
+/**
+ * Initialise analytics scatter chart from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_scatter_chart_init(UmiAnalyticsScatterChart *item);
+/**
+ * Check that analytics scatter chart satisfies its contract before another service relies
+ * on it.
+ */
 int umi_analytics_scatter_chart_valid(const UmiAnalyticsScatterChart *item);
 
 #ifdef __cplusplus

@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer diff build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_diff_build(
     const char *path,
     UmiAiCodingPatchOperation operation,

@@ -37,27 +37,39 @@ struct UmiEditorWorkspaceSearchIndex {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static int copy_text(char *destination,
                      size_t capacity,
                      const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) return 0;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return 0;
     (void)memcpy(destination, source, length + 1U);
     return 1;
 }
 
+/*
+ * Provide the fingerprint content operation used by this module and its client
+ * applications.
+ */
 static uint64_t fingerprint_content(const char *content, size_t length)
 {
     uint64_t value = UINT64_C(1469598103934665603);
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < length; ++index) {
         value ^= (uint64_t)(unsigned char)content[index];
         value *= UINT64_C(1099511628211);
@@ -67,28 +79,48 @@ static uint64_t fingerprint_content(const char *content, size_t length)
     return value;
 }
 
+/*
+ * Provide the content looks binary operation used by this module and its client
+ * applications.
+ */
 static int content_looks_binary(const char *content, size_t length)
 {
     size_t index;
     size_t limit = length < 4096U ? length : 4096U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < limit; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (content[index] == '\0') return 1;
     }
     return 0;
 }
 
+/* Provide the last separator operation used by this module and its client applications. */
 static const char *last_separator(const char *path)
 {
     const char *last_forward;
     const char *last_backward;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL) return NULL;
     last_forward = strrchr(path, '/');
     last_backward = strrchr(path, '\\');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (last_forward == NULL) return last_backward;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (last_backward == NULL) return last_forward;
     return last_forward > last_backward ? last_forward : last_backward;
 }
 
+/* Provide the derive file name operation used by this module and its client applications. */
 static int derive_file_name(char *out_name,
                             size_t capacity,
                             const char *relative_path,
@@ -96,6 +128,10 @@ static int derive_file_name(char *out_name,
 {
     const char *separator;
     const char *source;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (explicit_name != NULL && explicit_name[0] != '\0') {
         return copy_text(out_name, capacity, explicit_name);
     }
@@ -105,16 +141,25 @@ static int derive_file_name(char *out_name,
            copy_text(out_name, capacity, source);
 }
 
+/* Provide the derive extension operation used by this module and its client applications. */
 static int derive_extension(char *out_extension,
                             size_t capacity,
                             const char *file_name,
                             const char *explicit_extension)
 {
     const char *dot;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (explicit_extension != NULL && explicit_extension[0] != '\0') {
         return copy_text(out_extension, capacity, explicit_extension);
     }
     dot = strrchr(file_name, '.');
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dot == NULL || dot == file_name || dot[1] == '\0') {
         out_extension[0] = '\0';
         return 1;
@@ -122,9 +167,14 @@ static int derive_extension(char *out_extension,
     return copy_text(out_extension, capacity, dot + 1);
 }
 
+/* Provide the validate config operation used by this module and its client applications. */
 static UmiStatus validate_config(
     const UmiEditorWorkspaceSearchIndexConfig *config)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL ||
         config->struct_size != (uint32_t)sizeof(*config) ||
         config->api_version != UMI_EDITOR_WORKSPACE_SEARCH_INDEX_API_VERSION ||
@@ -137,10 +187,15 @@ static UmiStatus validate_config(
     return UMI_STATUS_OK;
 }
 
+/* Provide the validate input operation used by this module and its client applications. */
 static UmiStatus validate_input(
     const UmiEditorWorkspaceSearchIndex *index,
     const UmiEditorWorkspaceSearchDocumentInput *input)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || input == NULL ||
         input->struct_size != (uint32_t)sizeof(*input) ||
         input->api_version != UMI_EDITOR_WORKSPACE_SEARCH_INDEX_API_VERSION ||
@@ -149,6 +204,7 @@ static UmiStatus validate_input(
         input->language_id == NULL || input->content == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(input->uri) >= UMI_EDITOR_WORKSPACE_SEARCH_URI_CAPACITY ||
         strlen(input->relative_path) >=
             UMI_EDITOR_WORKSPACE_SEARCH_PATH_CAPACITY ||
@@ -162,6 +218,7 @@ static UmiStatus validate_input(
              UMI_EDITOR_WORKSPACE_SEARCH_EXTENSION_CAPACITY)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (input->content_length == SIZE_MAX ||
         input->content_length > index->config.maximum_document_bytes) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -169,12 +226,19 @@ static UmiStatus validate_input(
     return UMI_STATUS_OK;
 }
 
+/* Provide the find document operation used by this module and its client applications. */
 static size_t find_document(const UmiEditorWorkspaceSearchIndex *index,
                             const char *uri)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || uri == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < index->count; ++position) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(index->documents[position].view.uri, uri) == 0) {
             return position;
         }
@@ -182,46 +246,67 @@ static size_t find_document(const UmiEditorWorkspaceSearchIndex *index,
     return SIZE_MAX;
 }
 
+/* Provide the reserve documents operation used by this module and its client applications. */
 static UmiStatus reserve_documents(UmiEditorWorkspaceSearchIndex *index,
                                    size_t required)
 {
     size_t capacity;
     StoredDocument *replacement;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= index->capacity) return UMI_STATUS_OK;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required > index->config.maximum_documents) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     capacity = index->capacity > 0U ? index->capacity : 32U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > index->config.maximum_documents) {
         capacity = index->config.maximum_documents;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity < required || capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (StoredDocument *)realloc(
         index->documents, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     index->documents = replacement;
     index->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the compare documents operation used by this module and its client applications. */
 static int compare_documents(const void *left_pointer,
                              const void *right_pointer)
 {
     const StoredDocument *left = (const StoredDocument *)left_pointer;
     const StoredDocument *right = (const StoredDocument *)right_pointer;
     int order = strcmp(left->view.relative_path, right->view.relative_path);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (order != 0) return order;
     return strcmp(left->view.uri, right->view.uri);
 }
 
+/* Provide the release document operation used by this module and its client applications. */
 static void release_document(StoredDocument *document)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) return;
     free(document->owned_content);
     document->owned_content = NULL;
@@ -229,9 +314,17 @@ static void release_document(StoredDocument *document)
     document->view.content_length = 0U;
 }
 
+/*
+ * Initialise editor workspace search index config from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_editor_workspace_search_index_config_init(
     UmiEditorWorkspaceSearchIndexConfig *config)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL) return;
     (void)memset(config, 0, sizeof(*config));
     config->struct_size = (uint32_t)sizeof(*config);
@@ -241,22 +334,39 @@ void umi_editor_workspace_search_index_config_init(
     config->maximum_total_bytes = DEFAULT_MAXIMUM_TOTAL_BYTES;
 }
 
+/*
+ * Initialise editor workspace search index from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_index_create(
     const UmiEditorWorkspaceSearchIndexConfig *config,
     UmiEditorWorkspaceSearchIndex **out_index)
 {
     UmiEditorWorkspaceSearchIndexConfig effective;
     UmiEditorWorkspaceSearchIndex *index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_index = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL) {
         umi_editor_workspace_search_index_config_init(&effective);
         config = &effective;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (validate_config(config) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = (UmiEditorWorkspaceSearchIndex *)calloc(1U, sizeof(*index));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     index->config = *config;
     index->revision = 1U;
@@ -264,11 +374,20 @@ UmiStatus umi_editor_workspace_search_index_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor workspace search index so the same storage can be
+ * reused safely.
+ */
 void umi_editor_workspace_search_index_destroy(
     UmiEditorWorkspaceSearchIndex *index)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < index->count; ++position) {
         release_document(&index->documents[position]);
     }
@@ -277,11 +396,20 @@ void umi_editor_workspace_search_index_destroy(
     free(index);
 }
 
+/*
+ * Release or reset state held by editor workspace search index so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_workspace_search_index_clear(
     UmiEditorWorkspaceSearchIndex *index)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < index->count; ++position) {
         release_document(&index->documents[position]);
     }
@@ -291,6 +419,10 @@ UmiStatus umi_editor_workspace_search_index_clear(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search index upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_index_upsert(
     UmiEditorWorkspaceSearchIndex *index,
     const UmiEditorWorkspaceSearchDocumentInput *input)
@@ -302,22 +434,31 @@ UmiStatus umi_editor_workspace_search_index_upsert(
     UmiStatus status;
 
     status = validate_input(index, input);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     position = find_document(index, input->uri);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position != SIZE_MAX) {
         existing_length = index->documents[position].view.content_length;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (input->content_length > SIZE_MAX - (index->total_bytes - existing_length)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     projected_total = index->total_bytes - existing_length +
                       input->content_length;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (projected_total > index->config.maximum_total_bytes) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memset(&replacement, 0, sizeof(replacement));
     replacement.owned_content = (char *)malloc(input->content_length + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement.owned_content == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (input->content_length > 0U) {
         (void)memcpy(replacement.owned_content,
                      input->content,
@@ -327,6 +468,7 @@ UmiStatus umi_editor_workspace_search_index_upsert(
     replacement.view.struct_size = (uint32_t)sizeof(replacement.view);
     replacement.view.api_version =
         UMI_EDITOR_WORKSPACE_SEARCH_INDEX_API_VERSION;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!copy_text(replacement.view.uri,
                    sizeof(replacement.view.uri),
                    input->uri) ||
@@ -359,18 +501,21 @@ UmiStatus umi_editor_workspace_search_index_upsert(
         content_looks_binary(replacement.owned_content, input->content_length);
     replacement.view.read_only = input->read_only != 0;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position == SIZE_MAX) {
         status = reserve_documents(index, index->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             release_document(&replacement);
             return status;
         }
         position = index->count++;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         release_document(&index->documents[position]);
     }
     index->documents[position] = replacement;
     index->total_bytes = projected_total;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index->count > 1U) {
         qsort(index->documents,
               index->count,
@@ -381,19 +526,29 @@ UmiStatus umi_editor_workspace_search_index_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove editor workspace search index while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_workspace_search_index_remove(
     UmiEditorWorkspaceSearchIndex *index,
     const char *uri)
 {
     size_t position;
     size_t removed_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || uri == NULL || uri[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_document(index, uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     removed_length = index->documents[position].view.content_length;
     release_document(&index->documents[position]);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position + 1U < index->count) {
         (void)memmove(&index->documents[position],
                       &index->documents[position + 1U],
@@ -406,40 +561,66 @@ UmiStatus umi_editor_workspace_search_index_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor workspace search index while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_workspace_search_index_at(
     const UmiEditorWorkspaceSearchIndex *index,
     size_t position,
     UmiEditorWorkspaceSearchDocumentView *out_document)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= index->count) return UMI_STATUS_NOT_FOUND;
     *out_document = index->documents[position].view;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search index find uri operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_index_find_uri(
     const UmiEditorWorkspaceSearchIndex *index,
     const char *uri,
     UmiEditorWorkspaceSearchDocumentView *out_document)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || uri == NULL || uri[0] == '\0' ||
         out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     position = find_document(index, uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_document = index->documents[position].view;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search index snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_index_snapshot(
     const UmiEditorWorkspaceSearchIndex *index,
     UmiEditorWorkspaceSearchIndexSnapshot *out_snapshot)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -454,26 +635,38 @@ UmiStatus umi_editor_workspace_search_index_snapshot(
         index->config.maximum_document_bytes;
     out_snapshot->maximum_total_bytes = index->config.maximum_total_bytes;
     out_snapshot->revision = index->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < index->count; ++position) {
         const UmiEditorWorkspaceSearchDocumentView *view =
             &index->documents[position].view;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (view->binary) {
             ++out_snapshot->binary_document_count;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             ++out_snapshot->text_document_count;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (view->generated) ++out_snapshot->generated_document_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (view->read_only) ++out_snapshot->read_only_document_count;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by editor workspace search index without
+ * changing their state.
+ */
 size_t umi_editor_workspace_search_index_count(
     const UmiEditorWorkspaceSearchIndex *index)
 {
     return index != NULL ? index->count : 0U;
 }
 
+/*
+ * Provide the editor workspace search index revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_workspace_search_index_revision(
     const UmiEditorWorkspaceSearchIndex *index)
 {

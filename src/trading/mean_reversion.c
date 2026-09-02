@@ -18,4 +18,8 @@
  */
 
 #include "umicom/trading/mean_reversion.h"
+/*
+ * Provide the mean reversion distance operation used by this module and its client
+ * applications.
+ */
 double umi_mean_reversion_distance(double price,double reference){return reference!=0.0?price-reference:0.0;}

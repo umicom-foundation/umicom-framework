@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test complete lifecycle and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_complete_lifecycle(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -95,6 +99,10 @@ static int test_complete_lifecycle(void)
     return 0;
 }
 
+/*
+ * Exercise test stale update preserves authority and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_stale_update_preserves_authority(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -127,6 +135,10 @@ static int test_stale_update_preserves_authority(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_complete_lifecycle() == 0,

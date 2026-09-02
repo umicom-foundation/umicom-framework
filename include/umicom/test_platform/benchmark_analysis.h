@@ -28,11 +28,17 @@ extern "C" {
 
 #define UMI_TEST_BENCHMARK_ANALYSIS_API_VERSION 1U
 
+/**
+ * List the named test benchmark direction values accepted by this public contract.
+ */
 typedef enum UmiTestBenchmarkDirection {
     UMI_TEST_BENCHMARK_LOWER_IS_BETTER = 1,
     UMI_TEST_BENCHMARK_HIGHER_IS_BETTER = 2
 } UmiTestBenchmarkDirection;
 
+/**
+ * List the named test benchmark gate state values accepted by this public contract.
+ */
 typedef enum UmiTestBenchmarkGateState {
     UMI_TEST_BENCHMARK_GATE_UNKNOWN = 0,
     UMI_TEST_BENCHMARK_GATE_PASSED = 1,
@@ -40,6 +46,9 @@ typedef enum UmiTestBenchmarkGateState {
     UMI_TEST_BENCHMARK_GATE_REGRESSED = 3
 } UmiTestBenchmarkGateState;
 
+/**
+ * Represent the test benchmark policy data shared with callers of this public contract.
+ */
 typedef struct UmiTestBenchmarkPolicy {
     uint32_t struct_size;
     uint32_t api_version;
@@ -50,6 +59,10 @@ typedef struct UmiTestBenchmarkPolicy {
     int honour_provider_regression;
 } UmiTestBenchmarkPolicy;
 
+/**
+ * Represent the test benchmark metric analysis data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestBenchmarkMetricAnalysis {
     uint32_t struct_size;
     uint32_t api_version;
@@ -70,6 +83,10 @@ typedef struct UmiTestBenchmarkMetricAnalysis {
     size_t provider_regression_count;
 } UmiTestBenchmarkMetricAnalysis;
 
+/**
+ * Represent the test benchmark analysis snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestBenchmarkAnalysisSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -82,30 +99,69 @@ typedef struct UmiTestBenchmarkAnalysisSnapshot {
     uint64_t revision;
 } UmiTestBenchmarkAnalysisSnapshot;
 
+/**
+ * Represent the test benchmark analysis data shared with callers of this public contract.
+ */
 typedef struct UmiTestBenchmarkAnalysis UmiTestBenchmarkAnalysis;
 
+/**
+ * Initialise test benchmark policy from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_test_benchmark_policy_init(UmiTestBenchmarkPolicy *policy);
+/**
+ * Initialise test benchmark analysis from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_test_benchmark_analysis_create(
     UmiTestBenchmarkAnalysis **out_analysis);
+/**
+ * Release or reset state held by test benchmark analysis so the same storage can be reused
+ * safely.
+ */
 void umi_test_benchmark_analysis_destroy(UmiTestBenchmarkAnalysis *analysis);
+/**
+ * Provide the test benchmark analysis build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_benchmark_analysis_build(
     UmiTestBenchmarkAnalysis *analysis,
     const UmiTestPlatformBenchmarkRegistry *benchmarks,
     const UmiTestBenchmarkPolicy *policy);
+/**
+ * Find test benchmark analysis while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_test_benchmark_analysis_at(
     const UmiTestBenchmarkAnalysis *analysis,
     size_t position,
     UmiTestBenchmarkMetricAnalysis *out_metric);
+/**
+ * Find test benchmark analysis while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_test_benchmark_analysis_find(
     const UmiTestBenchmarkAnalysis *analysis,
     const char *metric,
     const char *unit,
     UmiTestBenchmarkMetricAnalysis *out_metric);
+/**
+ * Provide the test benchmark analysis snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_benchmark_analysis_snapshot(
     const UmiTestBenchmarkAnalysis *analysis,
     UmiTestBenchmarkAnalysisSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by test benchmark analysis without changing
+ * their state.
+ */
 size_t umi_test_benchmark_analysis_count(
     const UmiTestBenchmarkAnalysis *analysis);
+/**
+ * Provide the test benchmark gate state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_test_benchmark_gate_state_text(UmiTestBenchmarkGateState state);
 
 #ifdef __cplusplus

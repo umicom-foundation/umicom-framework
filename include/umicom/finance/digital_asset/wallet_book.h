@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital asset wallet book data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalAssetWalletBook {
     UmiDigitalAssetWallet items[UMI_DIGITAL_ASSET_MAX_ITEMS];
     size_t count;

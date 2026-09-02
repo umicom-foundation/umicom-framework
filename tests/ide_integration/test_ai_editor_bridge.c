@@ -18,6 +18,10 @@
 
 #include "umicom/ide_integration/ai_editor_bridge.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIdeEditorSelection selection;

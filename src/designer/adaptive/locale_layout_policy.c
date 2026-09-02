@@ -22,6 +22,10 @@ UmiStatus umi_designer_locale_layout_policy_init(UmiDesignerLocaleLayoutPolicy *
                                                  int mirror_navigation,
                                                  uint16_t text_expansion_percent)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(policy==NULL||text_expansion_percent>100U)return UMI_STATUS_INVALID_ARGUMENT;
     policy->right_to_left=right_to_left!=0;
     policy->mirror_navigation=mirror_navigation!=0;
@@ -33,6 +37,10 @@ int32_t umi_designer_locale_layout_policy_expand_width(const UmiDesignerLocaleLa
                                                        int32_t width)
 {
     int64_t expanded;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(policy==NULL||width<0)return -1;
     expanded=(int64_t)width+((int64_t)width*(int64_t)policy->text_expansion_percent)/100;
     return expanded>INT32_MAX?INT32_MAX:(int32_t)expanded;

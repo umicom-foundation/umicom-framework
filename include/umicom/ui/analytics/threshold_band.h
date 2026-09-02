@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics threshold band data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsThresholdBand { double lower; double upper; UmiAnalyticsSeverity severity; } UmiAnalyticsThresholdBand;
+/**
+ * Initialise analytics threshold band from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_threshold_band_init(UmiAnalyticsThresholdBand *item);
+/**
+ * Check that analytics threshold band satisfies its contract before another service relies
+ * on it.
+ */
 int umi_analytics_threshold_band_valid(const UmiAnalyticsThresholdBand *item);
 
 #ifdef __cplusplus

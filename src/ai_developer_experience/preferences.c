@@ -16,9 +16,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai developer preferences from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_developer_preferences_init(
     UmiAiDeveloperPreferences *preferences)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferences == NULL) return;
 
     (void)memset(preferences, 0, sizeof(*preferences));
@@ -33,9 +41,17 @@ void umi_ai_developer_preferences_init(
     preferences->revision = 1U;
 }
 
+/*
+ * Check that ai developer preferences satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ai_developer_preferences_validate(
     const UmiAiDeveloperPreferences *preferences)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferences == NULL ||
         preferences->diff_layout < UMI_AI_DEVELOPER_DIFF_LAYOUT_UNIFIED ||
         preferences->diff_layout > UMI_AI_DEVELOPER_DIFF_LAYOUT_SIDE_BY_SIDE ||

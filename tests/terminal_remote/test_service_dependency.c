@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/service_dependency.h"
-int main(void) { if(umi_terminal_remote_service_dependency_ready(3U,2U,false)) return 1; return umi_terminal_remote_service_dependency_ready(3U,3U,true)?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_service_dependency_ready(3U,2U,false)) return 1; return umi_terminal_remote_service_dependency_ready(3U,3U,true)?0:2; }

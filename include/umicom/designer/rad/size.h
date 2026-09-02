@@ -18,11 +18,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad designer size data shared with callers of this public contract.
+ */
 typedef struct UmiRadDesignerSize {
     int32_t width;
     int32_t height;
 } UmiRadDesignerSize;
+/**
+ * Provide the rad size make operation used by this module and its client applications.
+ */
 UmiRadDesignerSize umi_rad_size_make(int32_t width,int32_t height);
+/**
+ * Provide the rad size clamp operation used by this module and its client applications.
+ */
 UmiRadDesignerSize umi_rad_size_clamp(UmiRadDesignerSize value,UmiRadDesignerSize minimum,UmiRadDesignerSize maximum);
 #ifdef __cplusplus
 }

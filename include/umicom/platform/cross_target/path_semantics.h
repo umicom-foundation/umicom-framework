@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct path semantics data shared with callers of this public contract.
+ */
 typedef struct UmiCtPathSemantics { char separator; char alternate_separator; bool case_sensitive; bool drive_letters; bool unc_paths; uint32_t max_path_hint; } UmiCtPathSemantics;
+/**
+ * Provide the ct path semantics default operation used by this module and its client
+ * applications.
+ */
 UmiCtPathSemantics umi_ct_path_semantics_default(UmiCtOperatingSystem os);
+/**
+ * Provide the ct path is absolute operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_path_is_absolute(const UmiCtPathSemantics *semantics,const char *path);
 
 #ifdef __cplusplus

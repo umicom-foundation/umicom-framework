@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the position apply fill operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_position_apply_fill(UmiPosition *position, UmiSide side, double quantity, double price);
 #ifdef __cplusplus
 }

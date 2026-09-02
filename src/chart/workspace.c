@@ -34,23 +34,44 @@ struct UmiChartWorkspace {
     uint64_t revision;
 };
 
+/*
+ * Initialise chart workspace from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_chart_workspace_create(UmiChartWorkspace **out_service)
 {
     UmiChartWorkspace *service;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_service = NULL;
     service = (UmiChartWorkspace *)calloc(1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     service->revision = 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_pane_registry_create(&service->panes);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_scale_registry_create(&service->scales);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_crosshair_registry_create(&service->crosshairs);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_marker_registry_create(&service->markers);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_annotation_registry_create(&service->annotations);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_drawing_registry_create(&service->drawings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_stream_registry_create(&service->streams);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_chart_extension_registry_create(&service->extensions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_chart_workspace_destroy(service);
         return status;
@@ -59,8 +80,13 @@ UmiStatus umi_chart_workspace_create(UmiChartWorkspace **out_service)
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by chart workspace so the same storage can be reused safely. */
 void umi_chart_workspace_destroy(UmiChartWorkspace *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return;
     umi_chart_extension_registry_destroy(service->extensions);
     umi_chart_stream_registry_destroy(service->streams);
@@ -73,8 +99,16 @@ void umi_chart_workspace_destroy(UmiChartWorkspace *service)
     free(service);
 }
 
+/*
+ * Provide the chart workspace snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_workspace_snapshot(const UmiChartWorkspace *service, UmiChartWorkspaceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
@@ -91,41 +125,73 @@ UmiStatus umi_chart_workspace_snapshot(const UmiChartWorkspace *service, UmiChar
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the chart workspace panes operation used by this module and its client
+ * applications.
+ */
 UmiChartPaneRegistry *umi_chart_workspace_panes(UmiChartWorkspace *service)
 {
     return service != NULL ? service->panes : NULL;
 }
 
+/*
+ * Provide the chart workspace scales operation used by this module and its client
+ * applications.
+ */
 UmiChartScaleRegistry *umi_chart_workspace_scales(UmiChartWorkspace *service)
 {
     return service != NULL ? service->scales : NULL;
 }
 
+/*
+ * Provide the chart workspace crosshairs operation used by this module and its client
+ * applications.
+ */
 UmiChartCrosshairRegistry *umi_chart_workspace_crosshairs(UmiChartWorkspace *service)
 {
     return service != NULL ? service->crosshairs : NULL;
 }
 
+/*
+ * Provide the chart workspace markers operation used by this module and its client
+ * applications.
+ */
 UmiChartMarkerRegistry *umi_chart_workspace_markers(UmiChartWorkspace *service)
 {
     return service != NULL ? service->markers : NULL;
 }
 
+/*
+ * Provide the chart workspace annotations operation used by this module and its client
+ * applications.
+ */
 UmiChartAnnotationRegistry *umi_chart_workspace_annotations(UmiChartWorkspace *service)
 {
     return service != NULL ? service->annotations : NULL;
 }
 
+/*
+ * Provide the chart workspace drawings operation used by this module and its client
+ * applications.
+ */
 UmiChartDrawingRegistry *umi_chart_workspace_drawings(UmiChartWorkspace *service)
 {
     return service != NULL ? service->drawings : NULL;
 }
 
+/*
+ * Provide the chart workspace streams operation used by this module and its client
+ * applications.
+ */
 UmiChartStreamRegistry *umi_chart_workspace_streams(UmiChartWorkspace *service)
 {
     return service != NULL ? service->streams : NULL;
 }
 
+/*
+ * Provide the chart workspace extensions operation used by this module and its client
+ * applications.
+ */
 UmiChartExtensionRegistry *umi_chart_workspace_extensions(UmiChartWorkspace *service)
 {
     return service != NULL ? service->extensions : NULL;

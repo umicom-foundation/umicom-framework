@@ -24,6 +24,9 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer drag phase values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerDragPhase {
     UMI_WORKBENCH_DESIGNER_DRAG_IDLE = 1,
     UMI_WORKBENCH_DESIGNER_DRAG_ARMED = 2,
@@ -32,6 +35,10 @@ typedef enum UmiWorkbenchDesignerDragPhase {
     UMI_WORKBENCH_DESIGNER_DRAG_CANCELLED = 5
 } UmiWorkbenchDesignerDragPhase;
 
+/**
+ * Represent the workbench designer drag session data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerDragSession {
     UmiWorkbenchDesignerDragPhase phase;
     char node_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -47,11 +54,35 @@ typedef struct UmiWorkbenchDesignerDragSession {
     uint64_t revision;
 } UmiWorkbenchDesignerDragSession;
 
+/**
+ * Initialise workbench designer drag from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_drag_init(UmiWorkbenchDesignerDragSession *drag);
+/**
+ * Provide the workbench designer drag begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_drag_begin(UmiWorkbenchDesignerDragSession *drag, const char *node_id, UmiWorkbenchDesignerPoint pointer, UmiWorkbenchDesignerRect bounds, uint64_t timestamp_ms);
+/**
+ * Provide the workbench designer drag update operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_drag_update(UmiWorkbenchDesignerDragSession *drag, UmiWorkbenchDesignerPoint pointer, uint64_t timestamp_ms);
+/**
+ * Provide the workbench designer drag set target operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_drag_set_target(UmiWorkbenchDesignerDragSession *drag, const char *target_node_id, UmiWorkbenchDesignerDropZone zone);
+/**
+ * Provide the workbench designer drag complete operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_drag_complete(UmiWorkbenchDesignerDragSession *drag);
+/**
+ * Provide the workbench designer drag cancel operation used by this module and its client
+ * applications.
+ */
 void umi_workbench_designer_drag_cancel(UmiWorkbenchDesignerDragSession *drag);
 
 #ifdef __cplusplus

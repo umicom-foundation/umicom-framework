@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced blame document data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedBlameDocument {
     uint32_t struct_size;
     uint32_t api_version;
@@ -31,14 +35,34 @@ typedef struct UmiVcsAdvancedBlameDocument {
     size_t line_count;
     uint64_t revision_number;
 } UmiVcsAdvancedBlameDocument;
+/**
+ * Initialise vcs advanced blame document from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_blame_document_init(UmiVcsAdvancedBlameDocument *document);
+/**
+ * Provide the vcs advanced blame document set identity operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_advanced_blame_document_set_identity(UmiVcsAdvancedBlameDocument *document,
                                                         const char *path,
                                                         const char *revision);
+/**
+ * Add vcs advanced blame document only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_vcs_advanced_blame_document_add(UmiVcsAdvancedBlameDocument *document,
                                                const UmiVcsAdvancedBlameLine *line);
+/**
+ * Provide the vcs advanced blame document line operation used by this module and its
+ * client applications.
+ */
 const UmiVcsAdvancedBlameLine *umi_vcs_advanced_blame_document_line(
     const UmiVcsAdvancedBlameDocument *document, size_t line_number);
+/**
+ * Return the number of records represented by vcs advanced blame document distinct commit
+ * without changing their state.
+ */
 size_t umi_vcs_advanced_blame_document_distinct_commit_count(
     const UmiVcsAdvancedBlameDocument *document);
 #ifdef __cplusplus

@@ -20,6 +20,10 @@
 
 #include "internal.h"
 
+/*
+ * Initialise workbench layout command from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_command_init(
     UmiWorkbenchLayoutCommand *command,
     UmiWorkbenchLayoutCommandKind kind,
@@ -27,6 +31,7 @@ void umi_workbench_layout_command_init(
     const char *actor_id,
     const char *correlation_id)
 {
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL) {
         return;
     }
@@ -38,6 +43,10 @@ void umi_workbench_layout_command_init(
         &command->operation,
         UMI_WORKBENCH_LAYOUT_OPERATION_SET_DIRTY,
         "embedded-operation");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id != NULL) {
         (void)umi_workbench_layout_copy_text(
             command->command_id,
@@ -45,6 +54,10 @@ void umi_workbench_layout_command_init(
             command_id,
             true);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (actor_id != NULL) {
         (void)umi_workbench_layout_copy_text(
             command->actor_id,
@@ -52,6 +65,10 @@ void umi_workbench_layout_command_init(
             actor_id,
             true);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (correlation_id != NULL) {
         (void)umi_workbench_layout_copy_text(
             command->correlation_id,
@@ -61,6 +78,10 @@ void umi_workbench_layout_command_init(
     }
 }
 
+/*
+ * Provide the workbench layout command mutates state operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_command_mutates_state(
     const UmiWorkbenchLayoutCommand *command)
 {
@@ -69,9 +90,14 @@ bool umi_workbench_layout_command_mutates_state(
            command->kind <= UMI_WORKBENCH_LAYOUT_COMMAND_UNLOCK;
 }
 
+/*
+ * Provide the workbench layout command requires layout operation used by this module and
+ * its client applications.
+ */
 bool umi_workbench_layout_command_requires_layout(
     const UmiWorkbenchLayoutCommand *command)
 {
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL) {
         return true;
     }
@@ -80,13 +106,19 @@ bool umi_workbench_layout_command_requires_layout(
            command->kind != UMI_WORKBENCH_LAYOUT_COMMAND_IMPORT;
 }
 
+/*
+ * Provide the workbench layout command requires unlocked layout operation used by this
+ * module and its client applications.
+ */
 bool umi_workbench_layout_command_requires_unlocked_layout(
     const UmiWorkbenchLayoutCommand *command)
 {
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL) {
         return true;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (command->kind) {
     case UMI_WORKBENCH_LAYOUT_COMMAND_ACTIVATE:
     case UMI_WORKBENCH_LAYOUT_COMMAND_RESTORE:
@@ -98,9 +130,14 @@ bool umi_workbench_layout_command_requires_unlocked_layout(
     }
 }
 
+/*
+ * Check that workbench layout command satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_workbench_layout_command_validate(
     const UmiWorkbenchLayoutCommand *command)
 {
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL ||
         command->structure_size < sizeof(*command) ||
         command->kind < UMI_WORKBENCH_LAYOUT_COMMAND_CREATE ||
@@ -110,13 +147,16 @@ UmiStatus umi_workbench_layout_command_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_command_requires_layout(command) &&
         !umi_workbench_layout_text_present(command->layout_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (command->kind) {
     case UMI_WORKBENCH_LAYOUT_COMMAND_CREATE:
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_workbench_layout_text_present(command->layout_id) ||
             !umi_workbench_layout_text_present(command->name)) {
             return UMI_STATUS_INVALID_ARGUMENT;
@@ -124,6 +164,7 @@ UmiStatus umi_workbench_layout_command_validate(
         break;
 
     case UMI_WORKBENCH_LAYOUT_COMMAND_CLONE:
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_workbench_layout_text_present(
                 command->template_id) ||
             !umi_workbench_layout_text_present(command->layout_id) ||
@@ -137,6 +178,7 @@ UmiStatus umi_workbench_layout_command_validate(
             &command->operation);
 
     case UMI_WORKBENCH_LAYOUT_COMMAND_IMPORT:
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_workbench_layout_text_present(command->text) ||
             !umi_workbench_layout_text_present(command->layout_id)) {
             return UMI_STATUS_INVALID_ARGUMENT;
@@ -144,6 +186,7 @@ UmiStatus umi_workbench_layout_command_validate(
         break;
 
     case UMI_WORKBENCH_LAYOUT_COMMAND_EXPORT:
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_workbench_layout_text_present(command->layout_id)) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
@@ -155,10 +198,18 @@ UmiStatus umi_workbench_layout_command_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise workbench layout command result from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_layout_command_result_init(
     UmiWorkbenchLayoutCommandResult *result,
     const UmiWorkbenchLayoutCommand *command)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) {
         return;
     }
@@ -166,6 +217,7 @@ void umi_workbench_layout_command_result_init(
     (void)memset(result, 0, sizeof(*result));
     result->structure_size = sizeof(*result);
     result->status = UMI_STATUS_OK;
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL) {
         return;
     }

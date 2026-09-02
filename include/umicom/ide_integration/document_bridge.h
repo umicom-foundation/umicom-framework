@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide document open location operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_document_open_location(
     UmiDocumentCoordinator *documents,
     const UmiIdeLocation *location,

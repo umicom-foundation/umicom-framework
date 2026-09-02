@@ -28,6 +28,10 @@ struct UmiDeveloperWorkbenchLifecycle {
     _Atomic int running;
 };
 
+/*
+ * Initialise developer workbench lifecycle from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_developer_workbench_lifecycle_create(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -38,6 +42,10 @@ UmiStatus umi_developer_workbench_lifecycle_create(
     UmiDeveloperWorkbenchLifecycle *lifecycle;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || configurations == NULL ||
         history == NULL || out_lifecycle == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -46,6 +54,10 @@ UmiStatus umi_developer_workbench_lifecycle_create(
     *out_lifecycle = NULL;
     lifecycle = (UmiDeveloperWorkbenchLifecycle *)calloc(
         1U, sizeof(*lifecycle));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lifecycle == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     lifecycle->profile = profile;
@@ -54,6 +66,7 @@ UmiStatus umi_developer_workbench_lifecycle_create(
     lifecycle->history = history;
 
     status = umi_cancellation_token_create(&lifecycle->cancellation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(lifecycle);
         return status;
@@ -63,14 +76,26 @@ UmiStatus umi_developer_workbench_lifecycle_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer workbench lifecycle so the same storage can be
+ * reused safely.
+ */
 void umi_developer_workbench_lifecycle_destroy(
     UmiDeveloperWorkbenchLifecycle *lifecycle)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lifecycle == NULL) return;
     umi_cancellation_token_destroy(lifecycle->cancellation);
     free(lifecycle);
 }
 
+/*
+ * Provide the execute build action operation used by this module and its client
+ * applications.
+ */
 static UmiStatus execute_build_action(
     UmiDeveloperWorkbenchLifecycle *lifecycle,
     const UmiDeveloperWorkbenchConfiguration *configuration,
@@ -87,6 +112,7 @@ static UmiStatus execute_build_action(
 
     status = umi_developer_workbench_configuration_to_build_request(
         configuration, &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_cancellation_token_reset(lifecycle->cancellation);
@@ -113,6 +139,10 @@ static UmiStatus execute_build_action(
     return status;
 }
 
+/*
+ * Perform developer workbench lifecycle through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_developer_workbench_lifecycle_execute(
     UmiDeveloperWorkbenchLifecycle *lifecycle,
     const char *command_id,
@@ -122,10 +152,15 @@ UmiStatus umi_developer_workbench_lifecycle_execute(
     UmiDeveloperWorkbenchConfiguration configuration;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lifecycle == NULL || command_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_DEVELOPER_WORKBENCH_ACTION_CANCEL) {
         umi_developer_workbench_lifecycle_cancel(lifecycle);
         return UMI_STATUS_OK;
@@ -133,8 +168,10 @@ UmiStatus umi_developer_workbench_lifecycle_execute(
 
     status = umi_developer_workbench_configuration_registry_active(
         lifecycle->configurations, &configuration);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_DEVELOPER_WORKBENCH_ACTION_CONFIGURE:
             return execute_build_action(
@@ -152,11 +189,13 @@ UmiStatus umi_developer_workbench_lifecycle_execute(
             status = execute_build_action(
                 lifecycle, &configuration, command_id,
                 UMI_BUILD_CLEAN, 0, &clean_report);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
             status = execute_build_action(
                 lifecycle, &configuration, command_id,
                 UMI_BUILD_CONFIGURE, 0, out_report);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
 
             return execute_build_action(
@@ -196,14 +235,26 @@ UmiStatus umi_developer_workbench_lifecycle_execute(
     }
 }
 
+/*
+ * Provide the developer workbench lifecycle cancel operation used by this module and its
+ * client applications.
+ */
 void umi_developer_workbench_lifecycle_cancel(
     UmiDeveloperWorkbenchLifecycle *lifecycle)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lifecycle != NULL) {
         umi_cancellation_token_request(lifecycle->cancellation);
     }
 }
 
+/*
+ * Provide the developer workbench lifecycle is cancel requested operation used by this
+ * module and its client applications.
+ */
 int umi_developer_workbench_lifecycle_is_cancel_requested(
     const UmiDeveloperWorkbenchLifecycle *lifecycle)
 {
@@ -211,9 +262,17 @@ int umi_developer_workbench_lifecycle_is_cancel_requested(
         umi_cancellation_token_is_requested(lifecycle->cancellation);
 }
 
+/*
+ * Provide the developer workbench lifecycle is running operation used by this module and
+ * its client applications.
+ */
 int umi_developer_workbench_lifecycle_is_running(
     const UmiDeveloperWorkbenchLifecycle *lifecycle)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lifecycle == NULL) return 0;
 
     return atomic_load_explicit(

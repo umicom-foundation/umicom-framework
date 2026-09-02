@@ -15,6 +15,10 @@
 #include "umicom/ai_coding_tools/tools/agent_apply.h"
 #include "../tool_support.h"
 
+/*
+ * Provide the ai coding tool agent apply descriptor operation used by this module and its
+ * client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_agent_apply_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -31,6 +35,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_agent_apply_descriptor(void)
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool agent apply invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_agent_apply_invoke(
     const char *arguments_json,
     char *output,
@@ -43,11 +51,16 @@ UmiStatus umi_ai_coding_tool_agent_apply_invoke(
 
     (void)arguments_json;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->coding_runtime == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
 
     status = umi_ai_coding_runtime_platform_apply(environment->coding_runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_coding_tool_json_status(

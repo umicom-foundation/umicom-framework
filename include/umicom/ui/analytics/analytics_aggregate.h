@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the analytics aggregate compute operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_aggregate_compute(UmiAnalyticsAggregateKind kind,const double *values,size_t count,double *out_value);
 
 #ifdef __cplusplus

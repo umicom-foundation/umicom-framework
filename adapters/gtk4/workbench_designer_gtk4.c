@@ -17,6 +17,7 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/* Provide the designer scrolled operation used by this module and its client applications. */
 static GtkWidget *designer_scrolled(GtkWidget *child)
 {
     GtkWidget *scrolled = gtk_scrolled_window_new();
@@ -30,6 +31,10 @@ static GtkWidget *designer_scrolled(GtkWidget *child)
     return scrolled;
 }
 
+/*
+ * Initialise workbench designer gtk4 from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_designer_gtk4_create(
     const UmiWorkbenchDesignerGtk4Config *config,
     UmiWorkbenchDesignerGtk4 **out_designer)
@@ -42,11 +47,19 @@ UmiStatus umi_workbench_designer_gtk4_create(
     GtkWidget *side_notebook;
     GtkWidget *review_notebook;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || out_designer == NULL || config->controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_designer = NULL;
     designer = g_new0(UmiWorkbenchDesignerGtk4, 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     designer->config = *config;
     umi_workbench_designer_model_bundle_init(&designer->bundle);
@@ -57,6 +70,7 @@ UmiStatus umi_workbench_designer_gtk4_create(
 
     status = umi_workbench_layout_browser_gtk4_create(
         config->controller, &designer->browser);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_workbench_designer_gtk4_destroy(designer);
         return status;
@@ -128,10 +142,22 @@ UmiStatus umi_workbench_designer_gtk4_create(
     return umi_workbench_designer_gtk4_refresh(designer, 0U);
 }
 
+/*
+ * Release or reset state held by workbench designer gtk4 so the same storage can be reused
+ * safely.
+ */
 void umi_workbench_designer_gtk4_destroy(
     UmiWorkbenchDesignerGtk4 *designer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer->browser != NULL) {
         umi_workbench_layout_browser_gtk4_destroy(designer->browser);
         designer->browser = NULL;
@@ -139,23 +165,36 @@ void umi_workbench_designer_gtk4_destroy(
     g_free(designer);
 }
 
+/*
+ * Provide the workbench designer gtk4 widget operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_widget(
     UmiWorkbenchDesignerGtk4 *designer)
 {
     return designer != NULL ? designer->root : NULL;
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_designer_gtk4_refresh(
     UmiWorkbenchDesignerGtk4 *designer,
     uint64_t timestamp_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_designer_model_bundle_capture(
         &designer->bundle,
         designer->config.controller,
         designer->config.keymap,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_workbench_designer_gtk4_refresh_toolbar(designer);
     umi_workbench_designer_gtk4_refresh_palette(designer);
@@ -165,6 +204,10 @@ UmiStatus umi_workbench_designer_gtk4_refresh(
     umi_workbench_designer_gtk4_refresh_status(designer);
     umi_workbench_designer_gtk4_refresh_command_palette(designer);
     gtk_widget_queue_draw(designer->canvas_area);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer->minimap_area != NULL) {
         gtk_widget_queue_draw(designer->minimap_area);
     }
@@ -172,10 +215,18 @@ UmiStatus umi_workbench_designer_gtk4_refresh(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer gtk4 show browser operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_gtk4_show_browser(
     UmiWorkbenchDesignerGtk4 *designer,
     bool visible)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->browser_revealer == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -186,9 +237,17 @@ UmiStatus umi_workbench_designer_gtk4_show_browser(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer gtk4 focus canvas operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_gtk4_focus_canvas(
     UmiWorkbenchDesignerGtk4 *designer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->canvas_area == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -196,11 +255,23 @@ UmiStatus umi_workbench_designer_gtk4_focus_canvas(
         ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
 }
 
+/*
+ * Perform workbench designer gtk4 through the module contract so client applications do
+ * not duplicate its policy.
+ */
 void umi_workbench_designer_gtk4_dispatch(
     UmiWorkbenchDesignerGtk4 *designer,
     const char *command_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || command_id == NULL || command_id[0] == '\0') return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer->config.command_handler != NULL) {
         designer->config.command_handler(
             command_id,
@@ -209,11 +280,23 @@ void umi_workbench_designer_gtk4_dispatch(
     }
 }
 
+/*
+ * Provide the workbench designer gtk4 clear box operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_clear_box(GtkWidget *box)
 {
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (box == NULL) return;
     child = gtk_widget_get_first_child(box);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_box_remove(GTK_BOX(box), child);

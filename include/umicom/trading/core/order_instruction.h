@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/order_identity.h"
+/**
+ * Represent the trading order instruction data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingOrderInstruction { UmiTradingOrderIdentity identity; UmiInstrument instrument; UmiSide side; UmiOrderType order_type; UmiTimeInForce tif; UmiTradingQuantityLots quantity_lots; UmiTradingPriceTicks limit_ticks; UmiTradingPriceTicks stop_ticks; bool reduce_only; } UmiTradingOrderInstruction;
 /* Initialise a normalised order instruction. */
 UmiStatus umi_trading_order_instruction_init(UmiTradingOrderInstruction *instruction,const UmiTradingOrderIdentity *identity,const UmiInstrument *instrument,UmiSide side,UmiOrderType type,UmiTimeInForce tif,UmiTradingQuantityLots quantity_lots,UmiTradingPriceTicks limit_ticks,UmiTradingPriceTicks stop_ticks);

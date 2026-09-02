@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced staging selection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedStagingSelection {
     uint32_t struct_size;
     uint32_t api_version;
@@ -36,11 +40,27 @@ typedef struct UmiVcsAdvancedStagingSelection {
     int staged_side;
 } UmiVcsAdvancedStagingSelection;
 
+/**
+ * Initialise vcs advanced staging selection from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_staging_selection_init(UmiVcsAdvancedStagingSelection *value);
+/**
+ * Check that vcs advanced staging selection satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_staging_selection_validate(const UmiVcsAdvancedStagingSelection *value);
+/**
+ * Provide the vcs advanced staging selection file operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_staging_selection_file(UmiVcsAdvancedStagingSelection *value,
                                                     const char *path,
                                                     int staged_side);
+/**
+ * Provide the vcs advanced staging selection lines operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_staging_selection_lines(UmiVcsAdvancedStagingSelection *value,
                                                      const char *path,
                                                      size_t hunk_index,

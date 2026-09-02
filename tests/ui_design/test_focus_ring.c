@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/focus_ring.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiDesignFocusRing r;return umi_design_focus_ring_init(&r,2.0,2.0,UMI_DESIGN_COLOR_ACCENT,1.0)==UMI_STATUS_OK?0:1;}

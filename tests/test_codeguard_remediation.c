@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/codeguard/remediation_plan.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCodeGuardEvidenceStore evidence = {0};

@@ -43,6 +43,9 @@ extern "C" {
 #define UMI_WEB_WORKBENCH_MAX_CLOUD_ITEMS 128U
 #define UMI_WEB_WORKBENCH_MAX_COMMANDS 48U
 
+/**
+ * List the named web workbench phase values accepted by this public contract.
+ */
 typedef enum UmiWebWorkbenchPhase {
     UMI_WEB_WORKBENCH_IDLE = 0,
     UMI_WEB_WORKBENCH_PREPARING = 1,
@@ -52,6 +55,9 @@ typedef enum UmiWebWorkbenchPhase {
     UMI_WEB_WORKBENCH_FAILED = 5
 } UmiWebWorkbenchPhase;
 
+/**
+ * List the named web workbench auth kind values accepted by this public contract.
+ */
 typedef enum UmiWebWorkbenchAuthKind {
     UMI_WEB_WORKBENCH_AUTH_NONE = 0,
     UMI_WEB_WORKBENCH_AUTH_BEARER = 1,
@@ -61,6 +67,9 @@ typedef enum UmiWebWorkbenchAuthKind {
     UMI_WEB_WORKBENCH_AUTH_OAUTH_ACCESS_TOKEN = 5
 } UmiWebWorkbenchAuthKind;
 
+/**
+ * List the named web workbench body kind values accepted by this public contract.
+ */
 typedef enum UmiWebWorkbenchBodyKind {
     UMI_WEB_WORKBENCH_BODY_NONE = 0,
     UMI_WEB_WORKBENCH_BODY_TEXT = 1,
@@ -70,16 +79,25 @@ typedef enum UmiWebWorkbenchBodyKind {
     UMI_WEB_WORKBENCH_BODY_BINARY_REFERENCE = 5
 } UmiWebWorkbenchBodyKind;
 
+/**
+ * List the named web workbench stream kind values accepted by this public contract.
+ */
 typedef enum UmiWebWorkbenchStreamKind {
     UMI_WEB_WORKBENCH_STREAM_WEBSOCKET = 0,
     UMI_WEB_WORKBENCH_STREAM_SSE = 1
 } UmiWebWorkbenchStreamKind;
 
+/**
+ * List the named web workbench message direction values accepted by this public contract.
+ */
 typedef enum UmiWebWorkbenchMessageDirection {
     UMI_WEB_WORKBENCH_MESSAGE_INBOUND = 0,
     UMI_WEB_WORKBENCH_MESSAGE_OUTBOUND = 1
 } UmiWebWorkbenchMessageDirection;
 
+/**
+ * List the named web workbench cloud provider values accepted by this public contract.
+ */
 typedef enum UmiWebWorkbenchCloudProvider {
     UMI_WEB_WORKBENCH_CLOUD_GENERIC = 0,
     UMI_WEB_WORKBENCH_CLOUD_AWS = 1,
@@ -89,14 +107,38 @@ typedef enum UmiWebWorkbenchCloudProvider {
     UMI_WEB_WORKBENCH_CLOUD_LOCAL = 5
 } UmiWebWorkbenchCloudProvider;
 
+/**
+ * Provide the web workbench copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_web_workbench_copy_text(
     char *destination,
     size_t capacity,
     const char *source);
+/**
+ * Provide the web workbench phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_phase_text(UmiWebWorkbenchPhase phase);
+/**
+ * Provide the web workbench auth kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_auth_kind_text(UmiWebWorkbenchAuthKind kind);
+/**
+ * Provide the web workbench body kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_body_kind_text(UmiWebWorkbenchBodyKind kind);
+/**
+ * Provide the web workbench stream kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_web_workbench_stream_kind_text(UmiWebWorkbenchStreamKind kind);
+/**
+ * Provide the web workbench cloud provider text operation used by this module and its
+ * client applications.
+ */
 const char *umi_web_workbench_cloud_provider_text(
     UmiWebWorkbenchCloudProvider provider);
 

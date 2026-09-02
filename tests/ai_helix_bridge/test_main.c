@@ -15,6 +15,10 @@
 #include "test_cases.h"
 #include <stdio.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     int failures = 0;
@@ -79,6 +83,7 @@ int main(void)
     failures += test_validator_source_control_default_denied();
     failures += test_validator_source_control_explicit();
     failures += test_validator_target_required();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (failures != 0) {
         (void)fprintf(stderr, "AI Helix bridge tests failed: %d\n", failures);
         return 1;

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_RUN_HISTORY "umicom.developer.execution.run_history"
 
+/**
+ * Provide the developer capability run history operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_run_history(void);
 

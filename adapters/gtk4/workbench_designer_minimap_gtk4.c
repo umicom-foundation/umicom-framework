@@ -17,6 +17,10 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the workbench designer gtk4 minimap draw operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_minimap_draw(
     GtkDrawingArea *area,
     cairo_t *cr,
@@ -34,19 +38,33 @@ void umi_workbench_designer_gtk4_minimap_draw(
     cairo_set_source_rgba(cr, 0.04, 0.05, 0.06, 0.92);
     cairo_rectangle(cr, 0.0, 0.0, (double)width, (double)height);
     cairo_fill(cr);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return;
     session = umi_workbench_designer_service_active(
         designer->config.controller->service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return;
     canvas = umi_workbench_designer_session_canvas(session);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (canvas == NULL) return;
     size.width = (double)width;
     size.height = (double)height;
     umi_workbench_designer_minimap_init(&minimap);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_designer_minimap_build(
             &minimap, canvas,
             umi_workbench_designer_session_viewport(session), size) !=
         UMI_STATUS_OK) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < minimap.count; ++index) {
         const UmiWorkbenchDesignerMinimapItem *item = &minimap.items[index];
         cairo_set_source_rgba(

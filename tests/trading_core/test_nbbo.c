@@ -13,6 +13,10 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading/core/nbbo.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
 
     UmiFinancialId i,v1,v2;
@@ -23,6 +27,7 @@ int main(void) {
     umi_trading_core_id_assign(&v2,"v2");
     umi_trading_consolidated_quote_init(&q[0],&i,&v1,99,1,103,1,1);
     umi_trading_consolidated_quote_init(&q[1],&i,&v2,100,2,102,2,2);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_trading_nbbo_compute(q,2U,&n)!=UMI_STATUS_OK)return 1;
     return n.best_bid_ticks==100&&n.best_ask_ticks==102?0:2;
 }

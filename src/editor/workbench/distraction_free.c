@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/distraction_free.h"
 
-void umi_editor_wb_distraction_free_resolve(UmiEditorWbDistractionFree *s,bool enabled){if(s==NULL)return;s->enabled=enabled;s->show_tabs=!enabled;s->show_breadcrumbs=!enabled;s->show_minimap=!enabled;s->show_status=true;}
+/*
+ * Provide the editor wb distraction free resolve operation used by this module and its
+ * client applications.
+ */
+void umi_editor_wb_distraction_free_resolve(UmiEditorWbDistractionFree *s,bool enabled){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL)return;s->enabled=enabled;s->show_tabs=!enabled;s->show_breadcrumbs=!enabled;s->show_minimap=!enabled;s->show_status=true;}

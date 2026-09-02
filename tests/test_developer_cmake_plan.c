@@ -19,16 +19,26 @@
 
 #include "umicom/developer/cmake_plan.h"
 
+/*
+ * Exercise operation has argument and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int operation_has_argument(
     const UmiDeveloperOperationSnapshot *operation,
     const char *argument)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation == NULL || argument == NULL) {
         return 0;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < operation->argument_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(operation->arguments[index], argument) == 0) {
             return 1;
         }
@@ -36,6 +46,10 @@ static int operation_has_argument(
     return 0;
 }
 
+/*
+ * Exercise verify delivery plan and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static void verify_delivery_plan(void)
 {
     UmiDeveloperPipeline *pipeline = NULL;
@@ -120,6 +134,7 @@ static void verify_delivery_plan(void)
     expected_order[3] = plan.install_operation_id;
     expected_order[4] = plan.package_operation_id;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 5U; ++index) {
         assert(umi_developer_pipeline_next_ready(pipeline, &operation) ==
                UMI_STATUS_OK);
@@ -160,6 +175,10 @@ static void verify_delivery_plan(void)
     umi_developer_pipeline_destroy(pipeline);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperPipeline *pipeline = NULL;

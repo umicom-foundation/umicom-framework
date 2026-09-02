@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/abi/abi.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiAbiDescriptor d={sizeof(UmiAbiDescriptor),"umicom.test",2U,umi_abi_platform_current(),NULL,0U,NULL,0U,NULL,0U};UmiAbiCompatibility r;assert(umi_abi_compatibility_check(&d,&d,&r)==UMI_STATUS_OK);assert(r.compatible);return 0;}

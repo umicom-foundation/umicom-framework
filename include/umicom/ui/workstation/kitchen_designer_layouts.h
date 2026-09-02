@@ -22,8 +22,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ws kitchen layout design operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_kitchen_layout_design(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws kitchen layout review operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_kitchen_layout_review(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws kitchen layout catalogue operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_kitchen_layout_catalogue(UmiWsLayoutTemplate *layout);
 
 #ifdef __cplusplus

@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the add requirement operation used by this module and its client applications. */
 static UmiStatus add_requirement(
     UmiApplicationProductionEvidenceRequirements *requirements,
     UmiApplicationProductionEvidenceKind kind, int required,
@@ -25,6 +26,7 @@ static UmiStatus add_requirement(
 {
     UmiApplicationProductionEvidenceRequirement *entry;
     int written;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (requirements->count >= UMI_APPLICATION_PRODUCTION_MAX_EVIDENCE)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     entry = &requirements->entries[requirements->count];
@@ -33,6 +35,7 @@ static UmiStatus add_requirement(
                    "%s:%s", application_id, category)
         : snprintf(entry->evidence_id, sizeof(entry->evidence_id),
                    "%s:%s:%s", application_id, category, asset_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(entry->evidence_id))
         return UMI_STATUS_CAPACITY_EXCEEDED;
     entry->kind = kind;
@@ -42,27 +45,40 @@ static UmiStatus add_requirement(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application production evidence requirements build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_evidence_requirements_build(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionEvidenceRequirements *out_requirements)
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_requirements == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_application_production_binding_validate(binding);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(out_requirements, 0, sizeof(*out_requirements));
     status = add_requirement(out_requirements,
         UMI_APPLICATION_PRODUCTION_EVIDENCE_MANIFEST, 1,
         binding->experience->application_id, "manifest", NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < binding->experience->layout_count; ++index) {
         status = add_requirement(out_requirements,
             UMI_APPLICATION_PRODUCTION_EVIDENCE_LAYOUT, 1,
             binding->experience->application_id, "layout",
             binding->experience->layouts[index].layout_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < binding->experience->feature_count; ++index) {
         const UmiExperienceFeatureDefinition *feature =
             &binding->experience->features[index];
@@ -72,25 +88,37 @@ UmiStatus umi_application_production_evidence_requirements_build(
             feature->priority == UMI_EXPERIENCE_PRIORITY_P1,
             binding->experience->application_id, "feature",
             feature->feature_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     status = add_requirement(out_requirements,
         UMI_APPLICATION_PRODUCTION_EVIDENCE_TEST, 1,
         binding->experience->application_id, "tests", NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return add_requirement(out_requirements,
         UMI_APPLICATION_PRODUCTION_EVIDENCE_ACCEPTANCE, 1,
         binding->experience->application_id, "acceptance", NULL);
 }
 
+/*
+ * Find application production evidence requirements while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 const UmiApplicationProductionEvidenceRequirement *
 umi_application_production_evidence_requirements_find(
     const UmiApplicationProductionEvidenceRequirements *requirements,
     const char *evidence_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (requirements == NULL || evidence_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < requirements->count; ++index)
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(requirements->entries[index].evidence_id,
                    evidence_id) == 0)
             return &requirements->entries[index];

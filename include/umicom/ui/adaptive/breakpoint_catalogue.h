@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive breakpoint catalogue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveBreakpointCatalogue {
     UmiDesignBreakpoint items[UMI_ADAPTIVE_MAX_BREAKPOINTS];
     size_t count;

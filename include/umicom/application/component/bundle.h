@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application component bundle data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationComponentBundle {
   const char *bundle_id;
   const char *title;
@@ -31,11 +35,27 @@ typedef struct UmiApplicationComponentBundle {
   size_t component_count;
 } UmiApplicationComponentBundle;
 
+/**
+ * Return the number of records represented by application component bundle without
+ * changing their state.
+ */
 size_t umi_application_component_bundle_count(void);
+/**
+ * Find application component bundle while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationComponentBundle *umi_application_component_bundle_at(
     size_t index);
+/**
+ * Find application component bundle while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationComponentBundle *umi_application_component_bundle_find(
     const char *bundle_id);
+/**
+ * Provide the application component bundle layout operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_component_bundle_layout(
     const UmiApplicationComponentBundle *bundle,
     UmiApplicationComponentLayout *out_layout);

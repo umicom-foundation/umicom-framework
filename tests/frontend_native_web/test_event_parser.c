@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/frontend/native_web/event_parser.h"
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s at %s:%d\n", #expr, __FILE__, __LINE__); return 1; } } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiNativeWebUiEvent e; CHECK(umi_native_web_event_parse("command|build|id|Build",7U,&e)==UMI_STATUS_OK); CHECK(e.kind==UMI_NATIVE_WEB_EVENT_COMMAND); CHECK(strcmp(e.target_id,"build")==0);

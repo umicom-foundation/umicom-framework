@@ -15,10 +15,18 @@
 
 #include "umicom/application_ui/session_view.h"
 
+/*
+ * Provide the application ui session row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_session_row(
     const UmiApplicationSession *session,
     UmiApplicationUiSessionRow *out_row)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_row == NULL ||
         umi_application_session_validate(session) != UMI_STATUS_OK)
         return UMI_STATUS_INVALID_ARGUMENT;

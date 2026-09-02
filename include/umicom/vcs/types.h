@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_VCS_MAX_DIFF_LINES 16384U
 #define UMI_VCS_MAX_OPERATIONS 512U
 
+/**
+ * List the named vcs change state values accepted by this public contract.
+ */
 typedef enum UmiVcsChangeState {
     UMI_VCS_CHANGE_UNMODIFIED = 0,
     UMI_VCS_CHANGE_ADDED = 1,
@@ -49,6 +52,9 @@ typedef enum UmiVcsChangeState {
     UMI_VCS_CHANGE_CONFLICTED = 8
 } UmiVcsChangeState;
 
+/**
+ * Represent the vcs change data shared with callers of this public contract.
+ */
 typedef struct UmiVcsChange {
     char path[UMI_VCS_PATH_CAPACITY];
     char original_path[UMI_VCS_PATH_CAPACITY];
@@ -57,6 +63,9 @@ typedef struct UmiVcsChange {
     int staged;
 } UmiVcsChange;
 
+/**
+ * Represent the vcs branch data shared with callers of this public contract.
+ */
 typedef struct UmiVcsBranch {
     char name[UMI_VCS_NAME_CAPACITY];
     char upstream[UMI_VCS_NAME_CAPACITY];
@@ -66,6 +75,9 @@ typedef struct UmiVcsBranch {
     int behind;
 } UmiVcsBranch;
 
+/**
+ * Represent the vcs commit data shared with callers of this public contract.
+ */
 typedef struct UmiVcsCommit {
     char commit_id[UMI_VCS_ID_CAPACITY];
     char author[UMI_VCS_NAME_CAPACITY];
@@ -74,6 +86,9 @@ typedef struct UmiVcsCommit {
     int64_t timestamp;
 } UmiVcsCommit;
 
+/**
+ * Represent the vcs diff stat data shared with callers of this public contract.
+ */
 typedef struct UmiVcsDiffStat {
     char path[UMI_VCS_PATH_CAPACITY];
     size_t insertions;
@@ -81,18 +96,27 @@ typedef struct UmiVcsDiffStat {
     int binary;
 } UmiVcsDiffStat;
 
+/**
+ * Represent the vcs remote data shared with callers of this public contract.
+ */
 typedef struct UmiVcsRemote {
     char name[UMI_VCS_NAME_CAPACITY];
     char fetch_url[UMI_VCS_URL_CAPACITY];
     char push_url[UMI_VCS_URL_CAPACITY];
 } UmiVcsRemote;
 
+/**
+ * Represent the vcs tag data shared with callers of this public contract.
+ */
 typedef struct UmiVcsTag {
     char name[UMI_VCS_NAME_CAPACITY];
     char target_id[UMI_VCS_ID_CAPACITY];
     char subject[UMI_VCS_MESSAGE_CAPACITY];
 } UmiVcsTag;
 
+/**
+ * List the named vcs conflict kind values accepted by this public contract.
+ */
 typedef enum UmiVcsConflictKind {
     UMI_VCS_CONFLICT_NONE = 0,
     UMI_VCS_CONFLICT_BOTH_ADDED = 1,
@@ -105,12 +129,18 @@ typedef enum UmiVcsConflictKind {
     UMI_VCS_CONFLICT_UNKNOWN = 8
 } UmiVcsConflictKind;
 
+/**
+ * Represent the vcs conflict data shared with callers of this public contract.
+ */
 typedef struct UmiVcsConflict {
     char path[UMI_VCS_PATH_CAPACITY];
     UmiVcsConflictKind kind;
     char index_code[3];
 } UmiVcsConflict;
 
+/**
+ * List the named vcs diff line kind values accepted by this public contract.
+ */
 typedef enum UmiVcsDiffLineKind {
     UMI_VCS_DIFF_CONTEXT = 0,
     UMI_VCS_DIFF_ADDITION = 1,
@@ -120,6 +150,9 @@ typedef enum UmiVcsDiffLineKind {
     UMI_VCS_DIFF_NOTICE = 5
 } UmiVcsDiffLineKind;
 
+/**
+ * Represent the vcs diff line data shared with callers of this public contract.
+ */
 typedef struct UmiVcsDiffLine {
     UmiVcsDiffLineKind kind;
     size_t old_line;
@@ -127,6 +160,9 @@ typedef struct UmiVcsDiffLine {
     char text[UMI_VCS_DIFF_TEXT_CAPACITY];
 } UmiVcsDiffLine;
 
+/**
+ * List the named vcs operation kind values accepted by this public contract.
+ */
 typedef enum UmiVcsOperationKind {
     UMI_VCS_OPERATION_REFRESH = 0,
     UMI_VCS_OPERATION_STAGE = 1,
@@ -142,6 +178,9 @@ typedef enum UmiVcsOperationKind {
     UMI_VCS_OPERATION_DIFF = 11
 } UmiVcsOperationKind;
 
+/**
+ * List the named vcs operation state values accepted by this public contract.
+ */
 typedef enum UmiVcsOperationState {
     UMI_VCS_OPERATION_PENDING = 0,
     UMI_VCS_OPERATION_RUNNING = 1,
@@ -150,6 +189,9 @@ typedef enum UmiVcsOperationState {
     UMI_VCS_OPERATION_CANCELLED = 4
 } UmiVcsOperationState;
 
+/**
+ * List the named vcs capability values accepted by this public contract.
+ */
 typedef enum UmiVcsCapability {
     UMI_VCS_CAPABILITY_STATUS = UINT64_C(1) << 0,
     UMI_VCS_CAPABILITY_HISTORY = UINT64_C(1) << 1,
@@ -169,6 +211,9 @@ typedef enum UmiVcsCapability {
     UMI_VCS_CAPABILITY_BRANCH_DELETE = UINT64_C(1) << 15
 } UmiVcsCapability;
 
+/**
+ * Represent the vcs operation data shared with callers of this public contract.
+ */
 typedef struct UmiVcsOperation {
     uint64_t operation_id;
     UmiVcsOperationKind kind;
@@ -180,6 +225,9 @@ typedef struct UmiVcsOperation {
     char summary[UMI_VCS_MESSAGE_CAPACITY];
 } UmiVcsOperation;
 
+/**
+ * Represent the vcs workspace snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiVcsWorkspaceSnapshot {
     char root[UMI_VCS_PATH_CAPACITY];
     char provider_id[UMI_VCS_ID_CAPACITY];
@@ -202,10 +250,30 @@ typedef struct UmiVcsWorkspaceSnapshot {
     uint64_t capabilities;
 } UmiVcsWorkspaceSnapshot;
 
+/**
+ * Provide the vcs change state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_change_state_text(UmiVcsChangeState state);
+/**
+ * Provide the vcs conflict kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_conflict_kind_text(UmiVcsConflictKind kind);
+/**
+ * Provide the vcs diff line kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_diff_line_kind_text(UmiVcsDiffLineKind kind);
+/**
+ * Provide the vcs operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_operation_kind_text(UmiVcsOperationKind kind);
+/**
+ * Provide the vcs operation state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_operation_state_text(UmiVcsOperationState state);
 
 #ifdef __cplusplus

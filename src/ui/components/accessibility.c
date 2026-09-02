@@ -22,12 +22,18 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     const size_t length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -35,16 +41,25 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy ui component accessibility into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_ui_component_accessibility_set(UmiUiComponentAccessibility *value,
                                              const char *name,
                                              const char *description)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     UmiStatus status = copy_text(value->name,
                                  sizeof(value->name),
                                  name != NULL ? name : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

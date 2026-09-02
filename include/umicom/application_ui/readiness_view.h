@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application ui readiness row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationUiReadinessRow {
     const char *label;
     size_t count;
@@ -29,6 +33,10 @@ typedef struct UmiApplicationUiReadinessRow {
 
 #define UMI_APPLICATION_UI_READINESS_ROW_COUNT 6U
 
+/**
+ * Provide the application ui readiness rows operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_readiness_rows(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationUiReadinessRow rows[UMI_APPLICATION_UI_READINESS_ROW_COUNT]);

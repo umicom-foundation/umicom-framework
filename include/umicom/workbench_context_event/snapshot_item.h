@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context event snapshot item data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextEventSnapshotItem {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_EVENT_ID_CAPACITY];
@@ -39,25 +43,57 @@ typedef struct UmiWorkbenchContextEventSnapshotItem {
     uint64_t revision;
 } UmiWorkbenchContextEventSnapshotItem;
 
+/**
+ * Initialise workbench context event snapshot item from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_event_snapshot_item_init(
     UmiWorkbenchContextEventSnapshotItem *record,
     const char *record_id);
+/**
+ * Check that workbench context event snapshot item satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_event_snapshot_item_validate(
     const UmiWorkbenchContextEventSnapshotItem *record);
+/**
+ * Provide the workbench context event snapshot item set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_snapshot_item_set_source(
     UmiWorkbenchContextEventSnapshotItem *record,
     const char *source_id);
+/**
+ * Provide the workbench context event snapshot item set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_snapshot_item_set_subject(
     UmiWorkbenchContextEventSnapshotItem *record,
     const char *subject_id);
+/**
+ * Provide the workbench context event snapshot item set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_snapshot_item_set_group(
     UmiWorkbenchContextEventSnapshotItem *record,
     const char *group_id);
+/**
+ * Provide the workbench context event snapshot item set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_snapshot_item_set_label(
     UmiWorkbenchContextEventSnapshotItem *record,
     const char *label);
+/**
+ * Provide the workbench context event snapshot item hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_event_snapshot_item_hash(
     const UmiWorkbenchContextEventSnapshotItem *record);
+/**
+ * Provide the workbench context event snapshot item touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_event_snapshot_item_touch(
     UmiWorkbenchContextEventSnapshotItem *record,
     uint64_t sequence,

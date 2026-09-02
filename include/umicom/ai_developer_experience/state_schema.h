@@ -24,7 +24,15 @@ extern "C" {
 #define UMI_AI_DEVELOPER_STATE_SCHEMA_VERSION 1U
 #define UMI_AI_DEVELOPER_STATE_ROOT "ai.developer"
 
+/**
+ * Provide the ai developer state schema root operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_developer_state_schema_root(void);
+/**
+ * Provide the ai developer state schema version operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_ai_developer_state_schema_version(void);
 
 #ifdef __cplusplus

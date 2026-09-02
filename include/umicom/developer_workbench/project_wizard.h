@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer workbench project wizard data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperWorkbenchProjectWizard {
     char application_name[UMI_DEVELOPER_WORKBENCH_TITLE_CAPACITY];
     char application_id[UMI_DEVELOPER_WORKBENCH_ID_CAPACITY];
@@ -37,13 +41,25 @@ typedef struct UmiDeveloperWorkbenchProjectWizard {
     uint64_t revision;
 } UmiDeveloperWorkbenchProjectWizard;
 
+/**
+ * Initialise developer workbench project wizard from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_workbench_project_wizard_init(
     UmiDeveloperWorkbenchProjectWizard *wizard);
 
+/**
+ * Provide the developer workbench project wizard select preset operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_workbench_project_wizard_select_preset(
     UmiDeveloperWorkbenchProjectWizard *wizard,
     const char *preset_id);
 
+/**
+ * Provide the developer workbench project wizard set identity operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_developer_workbench_project_wizard_set_identity(
     UmiDeveloperWorkbenchProjectWizard *wizard,
     const char *application_name,
@@ -51,9 +67,17 @@ UmiStatus umi_developer_workbench_project_wizard_set_identity(
     const char *repository_name,
     const char *destination);
 
+/**
+ * Check that developer workbench project wizard satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_project_wizard_validate(
     UmiDeveloperWorkbenchProjectWizard *wizard);
 
+/**
+ * Provide the developer workbench project wizard preset operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationPresetDefinition *
 umi_developer_workbench_project_wizard_preset(
     const UmiDeveloperWorkbenchProjectWizard *wizard);

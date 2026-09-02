@@ -40,6 +40,9 @@ extern "C" {
 #define UMI_REPOSITORY_CONTROL_EVENT_CAPACITY 128U
 #define UMI_REPOSITORY_CONTROL_ISSUE_CAPACITY 64U
 
+/**
+ * List the named repository control state values accepted by this public contract.
+ */
 typedef enum UmiRepositoryControlState {
     UMI_REPOSITORY_CONTROL_IDLE = 0,
     UMI_REPOSITORY_CONTROL_INSPECTING = 1,
@@ -49,13 +52,24 @@ typedef enum UmiRepositoryControlState {
     UMI_REPOSITORY_CONTROL_FAILED = 5
 } UmiRepositoryControlState;
 
+/**
+ * List the named repository control severity values accepted by this public contract.
+ */
 typedef enum UmiRepositoryControlSeverity {
     UMI_REPOSITORY_CONTROL_INFO = 0,
     UMI_REPOSITORY_CONTROL_WARNING = 1,
     UMI_REPOSITORY_CONTROL_ERROR = 2
 } UmiRepositoryControlSeverity;
 
+/**
+ * Provide the repository control state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_repository_control_state_text(UmiRepositoryControlState state);
+/**
+ * Provide the repository control severity text operation used by this module and its
+ * client applications.
+ */
 const char *umi_repository_control_severity_text(
     UmiRepositoryControlSeverity severity);
 

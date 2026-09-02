@@ -18,14 +18,23 @@
 #include "internal.h"
 
 
+/*
+ * Initialise workbench designer command palette from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_command_palette_init(
     UmiWorkbenchDesignerCommandPalette *palette)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette == NULL) return;
     (void)memset(palette, 0, sizeof(*palette));
     palette->selected_index = UMI_WORKBENCH_DESIGNER_INDEX_NONE;
 }
 
+/* Add command palette only after its inputs and available capacity have been checked. */
 static UmiStatus command_palette_add(
     UmiWorkbenchDesignerCommandPalette *palette,
     const char *command_id,
@@ -36,11 +45,13 @@ static UmiStatus command_palette_add(
     uint32_t order)
 {
     UmiWorkbenchDesignerCommandPaletteItem *item;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (palette->count >= UMI_WORKBENCH_DESIGNER_MAX_COMMANDS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     item = &palette->items[palette->count++];
     (void)memset(item, 0, sizeof(*item));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_designer_copy_text(
             item->command_id, sizeof(item->command_id), command_id) !=
         UMI_STATUS_OK ||
@@ -61,17 +72,28 @@ static UmiStatus command_palette_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the command palette apply shortcuts operation used by this module and its client
+ * applications.
+ */
 static void command_palette_apply_shortcuts(
     UmiWorkbenchDesignerCommandPalette *palette,
     const UmiWorkbenchDesignerKeymap *keymap)
 {
     size_t item_index;
     size_t binding_index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (keymap == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (item_index = 0U; item_index < palette->count; ++item_index) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (binding_index = 0U; binding_index < keymap->count; ++binding_index) {
             const UmiWorkbenchDesignerKeybinding *binding =
                 &keymap->bindings[binding_index];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(binding->command_id,
                        palette->items[item_index].command_id) == 0) {
                 (void)umi_workbench_designer_copy_text(
@@ -84,11 +106,19 @@ static void command_palette_apply_shortcuts(
     }
 }
 
+/*
+ * Provide the workbench designer command palette seed operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_command_palette_seed(
     UmiWorkbenchDesignerCommandPalette *palette,
     const UmiWorkbenchDesignerKeymap *keymap)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_designer_command_palette_init(palette);
 #define ADD_COMMAND(id, label, category, description, kind, order) \
@@ -141,17 +171,27 @@ UmiStatus umi_workbench_designer_command_palette_seed(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer command palette filter operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_command_palette_filter(
     UmiWorkbenchDesignerCommandPalette *palette,
     const char *query)
 {
     size_t index;
     size_t first_visible = UMI_WORKBENCH_DESIGNER_INDEX_NONE;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette == NULL || query == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_designer_copy_text(
             palette->query, sizeof(palette->query), query) != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < palette->count; ++index) {
         UmiWorkbenchDesignerCommandPaletteItem *item = &palette->items[index];
         item->visible = query[0] == '\0' ||
@@ -163,6 +203,7 @@ UmiStatus umi_workbench_designer_command_palette_filter(
                 item->description, query) ||
             umi_workbench_designer_text_contains_case_insensitive(
                 item->command_id, query);
+        /* Apply this operation only while the related capability or state is available. */
         if (item->visible && first_visible == UMI_WORKBENCH_DESIGNER_INDEX_NONE) {
             first_visible = index;
         }
@@ -172,25 +213,38 @@ UmiStatus umi_workbench_designer_command_palette_filter(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench designer command palette move selection operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_designer_command_palette_move_selection(
     UmiWorkbenchDesignerCommandPalette *palette,
     int direction)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette == NULL || (direction != -1 && direction != 1)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (palette->selected_index == UMI_WORKBENCH_DESIGNER_INDEX_NONE) {
         return UMI_STATUS_NOT_FOUND;
     }
     index = palette->selected_index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (direction > 0) {
             index = index + 1U < palette->count ? index + 1U : 0U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             index = index > 0U ? index - 1U : palette->count - 1U;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (palette->items[index].visible) break;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index == palette->selected_index) return UMI_STATUS_NOT_FOUND;
     }
     palette->selected_index = index;
@@ -198,6 +252,10 @@ UmiStatus umi_workbench_designer_command_palette_move_selection(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench designer command palette while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerCommandPaletteItem *umi_workbench_designer_command_palette_selected(
     const UmiWorkbenchDesignerCommandPalette *palette)
 {
@@ -205,13 +263,23 @@ const UmiWorkbenchDesignerCommandPaletteItem *umi_workbench_designer_command_pal
         ? &palette->items[palette->selected_index] : NULL;
 }
 
+/*
+ * Return the number of records represented by workbench designer command palette visible
+ * without changing their state.
+ */
 size_t umi_workbench_designer_command_palette_visible_count(
     const UmiWorkbenchDesignerCommandPalette *palette)
 {
     size_t count = 0U;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (palette == NULL) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < palette->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (palette->items[index].visible) count += 1U;
     }
     return count;

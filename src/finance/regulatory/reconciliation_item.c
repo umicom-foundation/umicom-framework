@@ -20,12 +20,21 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg reconciliation item from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_reg_reconciliation_item_init(UmiReconciliationItem *record, const char *item_id, double left_value, double right_value, double tolerance)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(umi_reg_number_valid(left_value) && umi_reg_number_valid(right_value) && umi_reg_number_valid(tolerance) && tolerance >= 0.0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->item_id, sizeof record->item_id, item_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->left_value = left_value;
     record->right_value = right_value;

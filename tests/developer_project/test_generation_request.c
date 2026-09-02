@@ -17,6 +17,10 @@
 
 #include "umicom/developer_project/generation_request.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperProjectGenerationRequest request;

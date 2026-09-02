@@ -17,25 +17,44 @@
 #include <ctype.h>
 #include <string.h>
 
+/*
+ * Provide the text contains case insensitive operation used by this module and its client
+ * applications.
+ */
 static int text_contains_case_insensitive(const char *text, const char *needle)
 {
     const char *candidate;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (needle == NULL || needle[0] == '\0') return 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (candidate = text; *candidate != '\0'; ++candidate) {
         const char *left = candidate;
         const char *right = needle;
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*left != '\0' && *right != '\0' &&
                tolower((unsigned char)*left) ==
                    tolower((unsigned char)*right)) {
             ++left;
             ++right;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*right == '\0') return 1;
     }
     return 0;
 }
 
+/* Provide the is test item operation used by this module and its client applications. */
 static int is_test_item(const UmiTestPlatformItemSnapshot *item)
 {
     return item != NULL &&
@@ -43,6 +62,10 @@ static int is_test_item(const UmiTestPlatformItemSnapshot *item)
             strcmp(item->kind, "case") == 0);
 }
 
+/*
+ * Provide the latest result for item operation used by this module and its client
+ * applications.
+ */
 static int latest_result_for_item(
     const UmiTestPlatformResultRegistry *results,
     const char *item_id,
@@ -53,14 +76,21 @@ static int latest_result_for_item(
     uint64_t best_revision = 0U;
     size_t index;
     int found = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (results == NULL || item_id == NULL || out_result == NULL) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_test_platform_result_registry_count(results);
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_test_platform_result_registry_at(results, index, &candidate) !=
             UMI_STATUS_OK) {
             continue;
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(candidate.item_id, item_id) == 0 &&
             (!found || candidate.sequence > best_sequence ||
              (candidate.sequence == best_sequence &&
@@ -74,39 +104,61 @@ static int latest_result_for_item(
     return found;
 }
 
+/*
+ * Initialise test platform filter from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_test_platform_filter_init(UmiTestPlatformFilter *filter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (filter == NULL) return;
     (void)memset(filter, 0, sizeof(*filter));
     filter->outcome = -1;
 }
 
+/*
+ * Provide the test platform filter matches operation used by this module and its client
+ * applications.
+ */
 int umi_test_platform_filter_matches(
     const UmiTestPlatformItemSnapshot *item,
     const UmiTestPlatformResultSnapshot *latest_result,
     const UmiTestPlatformFilter *filter)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL || filter == NULL || !is_test_item(item)) return 0;
+    /* Apply this operation only while the related capability or state is available. */
     if (!filter->include_disabled && !item->enabled) return 0;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (filter->suite_id[0] != '\0' &&
         strcmp(item->suite_id, filter->suite_id) != 0) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (filter->label[0] != '\0' &&
         !text_contains_case_insensitive(item->labels, filter->label)) {
         return 0;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (filter->text[0] != '\0' &&
         !text_contains_case_insensitive(item->id, filter->text) &&
         !text_contains_case_insensitive(item->name, filter->text) &&
         !text_contains_case_insensitive(item->labels, filter->text)) {
         return 0;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (filter->failed_only &&
         (latest_result == NULL ||
          latest_result->outcome != UMI_TEST_PLATFORM_OUTCOME_FAILED)) {
         return 0;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (filter->outcome >= 0 &&
         (latest_result == NULL || latest_result->outcome != filter->outcome)) {
         return 0;
@@ -114,6 +166,10 @@ int umi_test_platform_filter_matches(
     return 1;
 }
 
+/*
+ * Provide the test platform filter select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_filter_select(
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results,
@@ -123,25 +179,34 @@ UmiStatus umi_test_platform_filter_select(
     UmiTestPlatformItemSnapshot item;
     UmiTestPlatformResultSnapshot latest;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (items == NULL || filter == NULL || out_selection == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_selection, 0, sizeof(*out_selection));
     out_selection->source_revision =
         umi_test_platform_item_registry_revision(items);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_test_platform_item_registry_count(items);
          ++index) {
         const UmiTestPlatformResultSnapshot *latest_pointer = NULL;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_test_platform_item_registry_at(items, index, &item) !=
             UMI_STATUS_OK) {
             continue;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (latest_result_for_item(results, item.id, &latest)) {
             latest_pointer = &latest;
         }
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_test_platform_filter_matches(&item, latest_pointer, filter)) {
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (out_selection->count >= UMI_TEST_PLATFORM_SELECTION_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }

@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_bond_init(UmiQuantBond *record, double face_value, double coupon_rate, int32_t payments_per_year, int32_t maturity_days)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(face_value > 0.0 && coupon_rate >= 0.0 && payments_per_year > 0 && maturity_days > 0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->face_value = face_value;
@@ -37,6 +42,10 @@ UmiStatus umi_quant_bond_init(UmiQuantBond *record, double face_value, double co
 /* Return one scheduled fixed coupon payment. */
 double umi_quant_bond_coupon_payment(const UmiQuantBond *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->face_value * record->coupon_rate / (double)record->payments_per_year;
 }

@@ -16,6 +16,14 @@
 #include "umicom/frontend/native_web/patch_batch.h"
 
 #include <string.h>
-void umi_native_web_patch_batch_init(UmiNativeWebPatchBatch *batch,uint64_t revision){if(batch!=NULL){(void)memset(batch,0,sizeof(*batch));batch->revision=revision;}}
-UmiStatus umi_native_web_patch_batch_add(UmiNativeWebPatchBatch *batch,const UmiNativeWebPatch *patch){if(batch==NULL||patch==NULL)return UMI_STATUS_INVALID_ARGUMENT;if(batch->count>=UMI_NATIVE_WEB_MAX_PATCHES)return UMI_STATUS_CAPACITY_EXCEEDED;batch->items[batch->count++]=*patch;return UMI_STATUS_OK;}
+/*
+ * Initialise native web patch batch from caller-provided values so later operations
+ * receive a known state.
+ */
+void umi_native_web_patch_batch_init(UmiNativeWebPatchBatch *batch,uint64_t revision){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(batch!=NULL){(void)memset(batch,0,sizeof(*batch));batch->revision=revision;}}
+/*
+ * Add native web patch batch only after its inputs and available capacity have been
+ * checked.
+ */
+UmiStatus umi_native_web_patch_batch_add(UmiNativeWebPatchBatch *batch,const UmiNativeWebPatch *patch){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(batch==NULL||patch==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(batch->count>=UMI_NATIVE_WEB_MAX_PATCHES)return UMI_STATUS_CAPACITY_EXCEEDED;batch->items[batch->count++]=*patch;return UMI_STATUS_OK;}
 

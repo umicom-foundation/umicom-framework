@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience command policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationExperienceCommandPolicy {
   int confirm_destructive;
   int enable_undo;
@@ -30,6 +34,10 @@ typedef struct UmiApplicationExperienceCommandPolicy {
   uint32_t history_limit;
 } UmiApplicationExperienceCommandPolicy;
 
+/**
+ * Represent the application experience form policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceFormPolicy {
   UmiApplicationExperienceValidationTiming validation_timing;
   int autosave;
@@ -37,6 +45,10 @@ typedef struct UmiApplicationExperienceFormPolicy {
   int preserve_draft;
 } UmiApplicationExperienceFormPolicy;
 
+/**
+ * Represent the application experience state policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationExperienceStatePolicy {
   UmiApplicationExperienceDensity density;
   int show_empty_guidance;
@@ -44,6 +56,10 @@ typedef struct UmiApplicationExperienceStatePolicy {
   uint32_t notification_limit;
 } UmiApplicationExperienceStatePolicy;
 
+/**
+ * Represent the application experience profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceProfile {
   uint32_t struct_size;
   uint32_t api_version;
@@ -58,8 +74,16 @@ typedef struct UmiApplicationExperienceProfile {
   UmiApplicationExperienceStatePolicy state_policy;
 } UmiApplicationExperienceProfile;
 
+/**
+ * Check that application experience profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus
 umi_application_experience_profile_validate(const UmiApplicationExperienceProfile *profile);
+/**
+ * Provide the application experience profile matches recipe operation used by this module
+ * and its client applications.
+ */
 int umi_application_experience_profile_matches_recipe(
     const UmiApplicationExperienceProfile *profile, const UmiApplicationComponentRecipe *recipe);
 

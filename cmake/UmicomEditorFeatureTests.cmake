@@ -1,4 +1,20 @@
 #-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomEditorFeatureTests.cmake
+#
+# PURPOSE:
+#   Configure the umicom editor feature tests build rules without duplicating
+#   product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
 # Umicom Framework editor feature conformance tests.
 # Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
 #-----------------------------------------------------------------------------

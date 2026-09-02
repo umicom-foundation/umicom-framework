@@ -16,8 +16,16 @@
 #include "umicom/diagnostics/snapshot.h"
 
 #include <stddef.h>
+/*
+ * Provide the observability snapshot capture operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_observability_snapshot_capture(const UmiMetricsRegistry *metrics, const UmiTraceStore *traces, const UmiAuditLog *audit, const UmiReadinessRegistry *readiness, const UmiOperationalEventLog *events, UmiObservabilitySnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (metrics == NULL || traces == NULL || audit == NULL || readiness == NULL || events == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     out_snapshot->metrics = umi_metrics_registry_count(metrics); out_snapshot->spans = umi_trace_store_count(traces); out_snapshot->audit_records = umi_audit_log_count(audit); out_snapshot->readiness_checks = umi_readiness_registry_count(readiness); out_snapshot->operational_events = umi_operational_event_log_count(events); out_snapshot->ready = umi_readiness_registry_ready(readiness); return UMI_STATUS_OK;
 }

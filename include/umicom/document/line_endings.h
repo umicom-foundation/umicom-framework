@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the document line ending analysis data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDocumentLineEndingAnalysis {
     UmiDocumentLineEnding dominant;
     size_t lf_count;
@@ -32,10 +36,18 @@ typedef struct UmiDocumentLineEndingAnalysis {
     int final_newline;
 } UmiDocumentLineEndingAnalysis;
 
+/**
+ * Provide the document line endings analyse operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_line_endings_analyse(
     const char *text,
     size_t length,
     UmiDocumentLineEndingAnalysis *out_analysis);
+/**
+ * Provide the document line endings normalise operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_line_endings_normalise(
     const char *text,
     size_t length,
@@ -43,6 +55,10 @@ UmiStatus umi_document_line_endings_normalise(
     int ensure_final_newline,
     char **out_text,
     size_t *out_length);
+/**
+ * Provide the document line endings free operation used by this module and its client
+ * applications.
+ */
 void umi_document_line_endings_free(char *text);
 
 #ifdef __cplusplus

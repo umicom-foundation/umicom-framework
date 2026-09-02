@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test protocol action invalid and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_protocol_action_invalid(void){UmiHelixActionKind k=(UmiHelixActionKind)0;TEST_CHECK(umi_ai_helix_protocol_parse_action("erase_everything",&k)==UMI_STATUS_PARSE_ERROR);return 0;}

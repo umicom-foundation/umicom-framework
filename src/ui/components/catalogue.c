@@ -53,19 +53,33 @@ static const UmiUiComponentKind KINDS[] = {
     UMI_UI_COMPONENT_DRAWING_SURFACE
 };
 
+/*
+ * Return the number of records represented by ui component catalogue without changing
+ * their state.
+ */
 size_t umi_ui_component_catalogue_count(void)
 {
     return sizeof(KINDS) / sizeof(KINDS[0]);
 }
 
+/*
+ * Provide the ui component catalogue kind operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentKind umi_ui_component_catalogue_kind(size_t index)
 {
     return index < umi_ui_component_catalogue_count() ? KINDS[index] : 0;
 }
 
+/*
+ * Provide the ui component catalogue contains operation used by this module and its client
+ * applications.
+ */
 int umi_ui_component_catalogue_contains(UmiUiComponentKind kind)
 {
+    /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < umi_ui_component_catalogue_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (KINDS[index] == kind) {
             return 1;
         }

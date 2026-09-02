@@ -18,9 +18,17 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise codeguard dependency audit request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_codeguard_dependency_audit_request_init(
     UmiCodeGuardDependencyAuditRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL) return;
     (void)memset(request, 0, sizeof(*request));
     request->project_root = ".";
@@ -29,17 +37,30 @@ void umi_codeguard_dependency_audit_request_init(
     request->recursive = 1;
 }
 
+/*
+ * Initialise codeguard dependency audit report from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_codeguard_dependency_audit_report_init(
     UmiCodeGuardDependencyAuditReport *report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (report == NULL) return;
     (void)memset(report, 0, sizeof(*report));
     report->outcome = UMI_CODEGUARD_DEPENDENCY_NOT_RUN;
 }
 
+/*
+ * Provide the codeguard dependency report format text operation used by this module and
+ * its client applications.
+ */
 const char *umi_codeguard_dependency_report_format_text(
     UmiCodeGuardDependencyReportFormat format)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (format) {
         case UMI_CODEGUARD_DEPENDENCY_FORMAT_VERTICAL: return "vertical";
         case UMI_CODEGUARD_DEPENDENCY_FORMAT_JSON: return "json";
@@ -48,25 +69,40 @@ const char *umi_codeguard_dependency_report_format_text(
     }
 }
 
+/*
+ * Read codeguard dependency report format into validated module state and return a status
+ * when input cannot be used.
+ */
 int umi_codeguard_dependency_report_format_parse(
     const char *text,
     UmiCodeGuardDependencyReportFormat *out_format)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || out_format == NULL) return 0;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(text, "vertical") == 0)
         *out_format = UMI_CODEGUARD_DEPENDENCY_FORMAT_VERTICAL;
-    else if (strcmp(text, "json") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "json") == 0)
         *out_format = UMI_CODEGUARD_DEPENDENCY_FORMAT_JSON;
-    else if (strcmp(text, "sarif") == 0)
+    else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(text, "sarif") == 0)
         *out_format = UMI_CODEGUARD_DEPENDENCY_FORMAT_SARIF;
+    /* Use this fallback path when the earlier condition does not apply. */
     else
         return 0;
     return 1;
 }
 
+/*
+ * Provide the codeguard dependency audit outcome text operation used by this module and
+ * its client applications.
+ */
 const char *umi_codeguard_dependency_audit_outcome_text(
     UmiCodeGuardDependencyAuditOutcome outcome)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (outcome) {
         case UMI_CODEGUARD_DEPENDENCY_PLANNED: return "planned";
         case UMI_CODEGUARD_DEPENDENCY_SKIPPED: return "skipped";
@@ -76,14 +112,26 @@ const char *umi_codeguard_dependency_audit_outcome_text(
     }
 }
 
+/*
+ * Provide the dependency copy text operation used by this module and its client
+ * applications.
+ */
 static void dependency_copy_text(char *destination,
                                  size_t capacity,
                                  const char *source)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
     (void)snprintf(destination, capacity, "%s", source != NULL ? source : "");
 }
 
+/*
+ * Perform codeguard dependency audit through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_codeguard_dependency_audit_execute(
     const UmiToolchainProfile *profile,
     const UmiCodeGuardDependencyAuditRequest *request,
@@ -97,6 +145,10 @@ UmiStatus umi_codeguard_dependency_audit_execute(
     UmiProcessResult process_result;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || request == NULL || out_report == NULL ||
         request->project_root == NULL || request->project_root[0] == '\0' ||
         request->format < UMI_CODEGUARD_DEPENDENCY_FORMAT_VERTICAL ||
@@ -107,6 +159,10 @@ UmiStatus umi_codeguard_dependency_audit_execute(
 
     umi_codeguard_dependency_audit_report_init(out_report);
     scanner = umi_toolchain_profile_tool(profile, UMI_TOOL_OSV_SCANNER);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (scanner != NULL && scanner->state == UMI_TOOL_VALIDATED) {
         out_report->scanner_available = 1;
         dependency_copy_text(out_report->scanner_path,
@@ -115,15 +171,18 @@ UmiStatus umi_codeguard_dependency_audit_execute(
                              sizeof(out_report->scanner_version),
                              scanner->version);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->dry_run) {
         out_report->outcome = UMI_CODEGUARD_DEPENDENCY_PLANNED;
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!out_report->scanner_available) {
         out_report->outcome = UMI_CODEGUARD_DEPENDENCY_SKIPPED;
         return request->strict ? UMI_STATUS_UNAVAILABLE : UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snprintf(format_argument, sizeof(format_argument), "--format=%s",
                  umi_codeguard_dependency_report_format_text(
                      request->format)) < 0)
@@ -132,6 +191,7 @@ UmiStatus umi_codeguard_dependency_audit_execute(
     arguments[argument_count++] = "source";
     arguments[argument_count++] = format_argument;
     arguments[argument_count++] = "--verbosity=error";
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->recursive) arguments[argument_count++] = "--recursive";
     arguments[argument_count++] = ".";
 
@@ -155,6 +215,7 @@ UmiStatus umi_codeguard_dependency_audit_execute(
     out_report->exit_code = process_result.exit_code;
     dependency_copy_text(out_report->output, sizeof(out_report->output),
                          process_result.output);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || process_result.exit_code != 0) {
         out_report->outcome = UMI_CODEGUARD_DEPENDENCY_FAILED;
         return status != UMI_STATUS_OK ? status : UMI_STATUS_INVALID_STATE;

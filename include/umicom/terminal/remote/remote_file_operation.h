@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named terminal remote remote file operation kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiTerminalRemoteRemoteFileOperationKind { UMI_TERMINAL_REMOTE_REMOTE_FILE_OPERATION_READ=1, UMI_TERMINAL_REMOTE_REMOTE_FILE_OPERATION_WRITE=2, UMI_TERMINAL_REMOTE_REMOTE_FILE_OPERATION_DELETE=3 } UmiTerminalRemoteRemoteFileOperationKind;
+/**
+ * Provide the terminal remote remote file operation allowed operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_remote_file_operation_allowed(UmiTerminalRemoteRemoteFileOperationKind kind,bool trusted,bool read_only_mount);
 #ifdef __cplusplus
 }

@@ -26,13 +26,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named code guard report format values accepted by this public contract.
+ */
 typedef enum UmiCodeGuardReportFormat {
     UMI_CODEGUARD_REPORT_TEXT = 0,
     UMI_CODEGUARD_REPORT_JSON = 1,
     UMI_CODEGUARD_REPORT_SARIF = 2
 } UmiCodeGuardReportFormat;
+/**
+ * Write codeguard report in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_codeguard_report_write(FILE *stream, UmiCodeGuardReportFormat format,
                                      const UmiCodeGuardResult *result);
+/**
+ * Provide the codeguard report file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_report_file(const char *path, UmiCodeGuardReportFormat format,
                                     const UmiCodeGuardResult *result);
 #ifdef __cplusplus

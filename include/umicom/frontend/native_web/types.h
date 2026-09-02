@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_NATIVE_WEB_MAX_RENDERERS 96U
 #define UMI_NATIVE_WEB_MAX_ASSETS 32U
 
+/**
+ * List the named native web transport kind values accepted by this public contract.
+ */
 typedef enum UmiNativeWebTransportKind {
     UMI_NATIVE_WEB_TRANSPORT_NONE = 0,
     UMI_NATIVE_WEB_TRANSPORT_WEBSOCKET = 1,
@@ -45,6 +48,9 @@ typedef enum UmiNativeWebTransportKind {
     UMI_NATIVE_WEB_TRANSPORT_POLLING = 3
 } UmiNativeWebTransportKind;
 
+/**
+ * List the named native web patch kind values accepted by this public contract.
+ */
 typedef enum UmiNativeWebPatchKind {
     UMI_NATIVE_WEB_PATCH_SET_TEXT = 1,
     UMI_NATIVE_WEB_PATCH_SET_ATTRIBUTE = 2,
@@ -55,6 +61,9 @@ typedef enum UmiNativeWebPatchKind {
     UMI_NATIVE_WEB_PATCH_FOCUS = 7
 } UmiNativeWebPatchKind;
 
+/**
+ * List the named native web event kind values accepted by this public contract.
+ */
 typedef enum UmiNativeWebEventKind {
     UMI_NATIVE_WEB_EVENT_CLICK = 1,
     UMI_NATIVE_WEB_EVENT_INPUT = 2,
@@ -69,6 +78,9 @@ typedef enum UmiNativeWebEventKind {
     UMI_NATIVE_WEB_EVENT_CONTEXT = 11
 } UmiNativeWebEventKind;
 
+/**
+ * List the named native web capability flag values accepted by this public contract.
+ */
 typedef enum UmiNativeWebCapabilityFlag {
     UMI_NATIVE_WEB_CAP_DOM_PATCH = 1ULL << 0,
     UMI_NATIVE_WEB_CAP_WEBSOCKET = 1ULL << 1,

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_READ_ONLY_DOCUMENT "umicom.document.lifecycle.read_only_document"
 
+/**
+ * Provide the document capability read only document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_read_only_document(void);
 

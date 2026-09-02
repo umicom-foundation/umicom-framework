@@ -28,14 +28,24 @@
 
 #include "umicom/document/fingerprint.h"
 
+/*
+ * Provide the document file info operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_file_info(const char *path,
                                  UmiDocumentFileInfo *out_info)
 {
     struct stat information;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || out_info == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_info, 0, sizeof(*out_info));
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(path) >= sizeof(out_info->path)) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)snprintf(out_info->path, sizeof(out_info->path), "%s", path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (stat(path, &information) != 0) return UMI_STATUS_NOT_FOUND;
     out_info->exists = 1;
     out_info->regular_file = S_ISREG(information.st_mode);
@@ -46,6 +56,10 @@ UmiStatus umi_document_file_info(const char *path,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the document file changed operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_file_changed(const char *path,
                                     const UmiDocumentFingerprint *baseline,
                                     int *out_changed,
@@ -53,16 +67,26 @@ UmiStatus umi_document_file_changed(const char *path,
 {
     UmiDocumentFingerprint current;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || baseline == NULL || out_changed == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_document_fingerprint_file(path, &current);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND || status == UMI_STATUS_IO_ERROR) {
         *out_changed = baseline->valid;
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     *out_changed = !umi_document_fingerprint_equal(baseline, &current);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_current != NULL) *out_current = current;
     return UMI_STATUS_OK;
 }

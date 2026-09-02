@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_SUBSCRIPTION_MAX_ITEMS 256U
+/**
+ * Represent the context subscription data shared with callers of this public contract.
+ */
 typedef struct UmiContextSubscription {
     uint32_t structure_size;
     char subscription_id[UMI_CONTEXT_TEXT_CAPACITY];
@@ -31,19 +34,59 @@ typedef struct UmiContextSubscription {
     uint64_t last_sequence;
     uint64_t revision;
 } UmiContextSubscription;
+/**
+ * Represent the context subscription store data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiContextSubscriptionStore {
     UmiContextSubscription items[UMI_CONTEXT_SUBSCRIPTION_MAX_ITEMS];
     size_t count;
     uint64_t revision;
 } UmiContextSubscriptionStore;
+/**
+ * Initialise context subscription from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_context_subscription_init(UmiContextSubscription *record);
+/**
+ * Check that context subscription satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_context_subscription_validate(const UmiContextSubscription *record);
+/**
+ * Initialise context subscription store from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_context_subscription_store_init(UmiContextSubscriptionStore *store);
+/**
+ * Provide the context subscription store put operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_subscription_store_put(UmiContextSubscriptionStore *store,const UmiContextSubscription *record);
+/**
+ * Remove context subscription store while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_context_subscription_store_remove(UmiContextSubscriptionStore *store,const char *identity);
+/**
+ * Find context subscription store while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiContextSubscription *umi_context_subscription_store_find(UmiContextSubscriptionStore *store,const char *identity);
+/**
+ * Provide the context subscription store find const operation used by this module and its
+ * client applications.
+ */
 const UmiContextSubscription *umi_context_subscription_store_find_const(const UmiContextSubscriptionStore *store,const char *identity);
+/**
+ * Return the number of records represented by context subscription store without changing
+ * their state.
+ */
 size_t umi_context_subscription_store_count(const UmiContextSubscriptionStore *store);
+/**
+ * Provide the context subscription store snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_context_subscription_store_snapshot(const UmiContextSubscriptionStore *store,UmiContextSubscription *out_records,size_t capacity,size_t *out_count);
 #ifdef __cplusplus
 }

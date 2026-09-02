@@ -24,11 +24,17 @@
 UmiStatus umi_digital_asset_custody_account_init(UmiDigitalCustodyAccount *value, const char *id, const UmiFinancialId *owner_party_id, const char *wallet_id, bool segregated)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || owner_party_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_digital_asset_copy_text(value->id.value, sizeof value->id.value, id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_digital_asset_copy_text(value->wallet_id.value, sizeof value->wallet_id.value, wallet_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->owner_party_id = *owner_party_id;
     value->segregated = segregated;

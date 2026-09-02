@@ -55,6 +55,7 @@ typedef struct UmiNameList {
     size_t capacity;
 } UmiNameList;
 
+/* Provide the compare names operation used by this module and its client applications. */
 static int compare_names(const void *left, const void *right)
 {
     const char *const *a = (const char *const *)left;
@@ -66,10 +67,16 @@ static int compare_names(const void *left, const void *right)
 #endif
 }
 
+/* Release or reset state held by name list so the same storage can be reused safely. */
 static void name_list_dispose(UmiNameList *list)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < list->count; ++index) {
         free(list->items[index]);
     }
@@ -77,32 +84,51 @@ static void name_list_dispose(UmiNameList *list)
     (void)memset(list, 0, sizeof(*list));
 }
 
+/* Add name list only after its inputs and available capacity have been checked. */
 static UmiStatus name_list_add(UmiNameList *list, const char *name)
 {
     char *copy;
     char **resized;
     size_t capacity;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (list->count == list->capacity) {
         capacity = list->capacity == 0U ? 32U : list->capacity * 2U;
         resized = (char **)realloc(list->items, capacity * sizeof(*resized));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (resized == NULL) return UMI_STATUS_OUT_OF_MEMORY;
         list->items = resized;
         list->capacity = capacity;
     }
     copy = (char *)malloc(strlen(name) + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     (void)strcpy(copy, name);
     list->items[list->count++] = copy;
     return UMI_STATUS_OK;
 }
 
+/* Provide the is hidden name operation used by this module and its client applications. */
 static int is_hidden_name(const char *name)
 {
     return name != NULL && name[0] == '.' &&
            strcmp(name, ".") != 0 && strcmp(name, "..") != 0;
 }
 
+/*
+ * Provide the directory walk options default operation used by this module and its client
+ * applications.
+ */
 UmiDirectoryWalkOptions umi_directory_walk_options_default(void)
 {
     UmiDirectoryWalkOptions options;
@@ -115,13 +141,19 @@ UmiDirectoryWalkOptions umi_directory_walk_options_default(void)
     return options;
 }
 
+/* Provide the directory stat operation used by this module and its client applications. */
 UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info)
 {
     char name[UMI_PATH_CAPACITY];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || out_info == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_info, 0, sizeof(*out_info));
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_path_normalise(path,
                            out_info->path,
                            sizeof(out_info->path)) != UMI_STATUS_OK ||
@@ -135,14 +167,16 @@ UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info)
         WIN32_FILE_ATTRIBUTE_DATA data;
         ULARGE_INTEGER size;
         ULARGE_INTEGER time;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!GetFileAttributesExA(path, GetFileExInfoStandard, &data)) {
             return UMI_STATUS_NOT_FOUND;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
             out_info->kind = UMI_FILE_KIND_SYMBOLIC_LINK;
-        } else if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
             out_info->kind = UMI_FILE_KIND_DIRECTORY;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             out_info->kind = UMI_FILE_KIND_REGULAR;
         }
         size.HighPart = data.nFileSizeHigh;
@@ -157,12 +191,15 @@ UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info)
 #else
     {
         struct stat info;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (lstat(path, &info) != 0) {
             return UMI_STATUS_NOT_FOUND;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (S_ISREG(info.st_mode)) out_info->kind = UMI_FILE_KIND_REGULAR;
-        else if (S_ISDIR(info.st_mode)) out_info->kind = UMI_FILE_KIND_DIRECTORY;
-        else if (S_ISLNK(info.st_mode)) out_info->kind = UMI_FILE_KIND_SYMBOLIC_LINK;
+        else /* Apply this branch only when its contract condition is satisfied. */ if (S_ISDIR(info.st_mode)) out_info->kind = UMI_FILE_KIND_DIRECTORY;
+        else /* Apply this branch only when its contract condition is satisfied. */ if (S_ISLNK(info.st_mode)) out_info->kind = UMI_FILE_KIND_SYMBOLIC_LINK;
+        /* Use this fallback path when the earlier condition does not apply. */
         else out_info->kind = UMI_FILE_KIND_OTHER;
         out_info->size = info.st_size > 0 ? (uint64_t)info.st_size : 0U;
 #if defined(__APPLE__)
@@ -179,6 +216,7 @@ UmiStatus umi_directory_stat(const char *path, UmiFileInfo *out_info)
     return UMI_STATUS_OK;
 }
 
+/* Provide the collect names operation used by this module and its client applications. */
 static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
 {
 #ifdef _WIN32
@@ -186,24 +224,28 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
     WIN32_FIND_DATAA data;
     HANDLE handle;
     UmiStatus status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_path_join(directory, "*", pattern, sizeof(pattern)) != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     handle = FindFirstFileA(pattern, &data);
+    /* Apply this operation only while the related capability or state is available. */
     if (handle == INVALID_HANDLE_VALUE) {
         return UMI_STATUS_IO_ERROR;
     }
     do {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(data.cFileName, ".") == 0 ||
             strcmp(data.cFileName, "..") == 0) {
             continue;
         }
         status = name_list_add(out_list, data.cFileName);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             FindClose(handle);
             return status;
         }
-    } while (FindNextFileA(handle, &data));
+    } /* Continue only while work remains available; the loop body advances the state on each pass. */ while (FindNextFileA(handle, &data));
     FindClose(handle);
     return UMI_STATUS_OK;
 #else
@@ -211,15 +253,25 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
     struct dirent *entry;
     UmiStatus status;
     stream = opendir(directory);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stream == NULL) {
         return UMI_STATUS_IO_ERROR;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while ((entry = readdir(stream)) != NULL) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(entry->d_name, ".") == 0 ||
             strcmp(entry->d_name, "..") == 0) {
             continue;
         }
         status = name_list_add(out_list, entry->d_name);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             (void)closedir(stream);
             return status;
@@ -230,6 +282,7 @@ static UmiStatus collect_names(const char *directory, UmiNameList *out_list)
 #endif
 }
 
+/* Provide the walk directory operation used by this module and its client applications. */
 static UmiStatus walk_directory(const char *directory,
                                 size_t depth,
                                 const UmiDirectoryWalkOptions *options,
@@ -241,14 +294,17 @@ static UmiStatus walk_directory(const char *directory,
     UmiStatus status;
     (void)memset(&names, 0, sizeof(names));
     status = collect_names(directory, &names);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         name_list_dispose(&names);
         return status;
     }
     qsort(names.items, names.count, sizeof(*names.items), compare_names);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < names.count; ++index) {
         char path[UMI_PATH_CAPACITY];
         UmiFileInfo info;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!options->include_hidden && is_hidden_name(names.items[index])) {
             continue;
         }
@@ -256,18 +312,23 @@ static UmiStatus walk_directory(const char *directory,
                                names.items[index],
                                path,
                                sizeof(path));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         status = umi_directory_stat(path, &info);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         info.depth = depth;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((info.kind == UMI_FILE_KIND_REGULAR && options->include_files) ||
             (info.kind == UMI_FILE_KIND_DIRECTORY &&
              options->include_directories) ||
             (info.kind == UMI_FILE_KIND_SYMBOLIC_LINK &&
              options->follow_symbolic_links && options->include_files)) {
             status = visitor(&info, user_data);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) break;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (options->recursive && depth < options->max_depth &&
             info.kind == UMI_FILE_KIND_DIRECTORY) {
             status = walk_directory(path,
@@ -275,6 +336,7 @@ static UmiStatus walk_directory(const char *directory,
                                     options,
                                     visitor,
                                     user_data);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) break;
         }
     }
@@ -282,6 +344,7 @@ static UmiStatus walk_directory(const char *directory,
     return status;
 }
 
+/* Provide the directory walk operation used by this module and its client applications. */
 UmiStatus umi_directory_walk(const char *root,
                              const UmiDirectoryWalkOptions *options,
                              UmiDirectoryVisitor visitor,
@@ -290,6 +353,10 @@ UmiStatus umi_directory_walk(const char *root,
     UmiDirectoryWalkOptions effective;
     UmiFileInfo root_info;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || visitor == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -297,7 +364,9 @@ UmiStatus umi_directory_walk(const char *root,
         ? *options
         : umi_directory_walk_options_default();
     status = umi_directory_stat(root, &root_info);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (root_info.kind != UMI_FILE_KIND_DIRECTORY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -306,6 +375,7 @@ UmiStatus umi_directory_walk(const char *root,
 
 typedef struct UmiCountContext { size_t count; } UmiCountContext;
 
+/* Provide the count visitor operation used by this module and its client applications. */
 static UmiStatus count_visitor(const UmiFileInfo *info, void *user_data)
 {
     UmiCountContext *context = (UmiCountContext *)user_data;
@@ -314,15 +384,21 @@ static UmiStatus count_visitor(const UmiFileInfo *info, void *user_data)
     return UMI_STATUS_OK;
 }
 
+/* Return the number of records represented by directory without changing their state. */
 UmiStatus umi_directory_count(const char *root,
                               const UmiDirectoryWalkOptions *options,
                               size_t *out_count)
 {
     UmiCountContext context;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     context.count = 0U;
     status = umi_directory_walk(root, options, count_visitor, &context);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (status == UMI_STATUS_OK) *out_count = context.count;
     return status;
 }

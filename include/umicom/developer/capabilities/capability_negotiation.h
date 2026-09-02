@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CAPABILITY_NEGOTIATION "umicom.developer.portability.capability_negotiation"
 
+/**
+ * Provide the developer capability capability negotiation operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_capability_negotiation(void);
 

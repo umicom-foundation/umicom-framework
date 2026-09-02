@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CONTAINER_RUNNER "umicom.developer.integration.container_runner"
 
+/**
+ * Provide the developer capability container runner operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_container_runner(void);
 

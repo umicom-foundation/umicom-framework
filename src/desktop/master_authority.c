@@ -38,6 +38,7 @@ typedef struct UmiPublishedDesktopCapability {
     void *provider;
 } UmiPublishedDesktopCapability;
 
+/* Provide the desktop authority operation used by this module and its client applications. */
 static UmiDesktopMasterAuthority *desktop_authority(
     UmiMasterController *controller)
 {
@@ -45,10 +46,18 @@ static UmiDesktopMasterAuthority *desktop_authority(
         controller, UMI_DESKTOP_MASTER_AUTHORITY_ID);
 }
 
+/*
+ * Provide the destroy desktop authority operation used by this module and its client
+ * applications.
+ */
 static void destroy_desktop_authority(void *value)
 {
     UmiDesktopMasterAuthority *authority =
         (UmiDesktopMasterAuthority *)value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (authority == NULL) return;
     umi_desktop_monitor_interaction_destroy(authority->monitor_interaction);
     umi_desktop_session_recovery_destroy(authority->session_recovery);
@@ -61,6 +70,10 @@ static void destroy_desktop_authority(void *value)
     free(authority);
 }
 
+/*
+ * Provide the publish capability operation used by this module and its client
+ * applications.
+ */
 static UmiStatus publish_capability(
     UmiMasterController *controller,
     const UmiPublishedDesktopCapability *capability)
@@ -77,11 +90,19 @@ static UmiStatus publish_capability(
         umi_master_controller_capabilities(controller), &descriptor);
 }
 
+/*
+ * Provide the rollback capabilities operation used by this module and its client
+ * applications.
+ */
 static void rollback_capabilities(
     UmiMasterController *controller,
     const UmiPublishedDesktopCapability *capabilities,
     size_t published_count)
 {
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (published_count > 0U) {
         published_count -= 1U;
         (void)umi_capability_registry_unregister(
@@ -91,6 +112,10 @@ static void rollback_capabilities(
     }
 }
 
+/*
+ * Provide the master controller install desktop authority operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_master_controller_install_desktop_authority(
     UmiMasterController *controller)
 {
@@ -100,40 +125,65 @@ UmiStatus umi_master_controller_install_desktop_authority(
     UmiFederationRouter *federation;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (desktop_authority(controller) != NULL)
         return UMI_STATUS_ALREADY_EXISTS;
     context_hub = umi_master_controller_application_context(controller);
     federation = umi_master_controller_application_federation(controller);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context_hub == NULL || federation == NULL)
         return UMI_STATUS_INVALID_STATE;
     authority = (UmiDesktopMasterAuthority *)calloc(1U, sizeof(*authority));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (authority == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_desktop_runtime_create(context_hub, &authority->runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_desktop_runtime_seed(authority->runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_shell_model_create(
             authority->runtime, &authority->shell);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_content_runtime_create(
             authority->runtime, federation, &authority->content);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_component_drag_drop_create(
             authority->runtime, authority->content,
             &authority->component_drag_drop);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_context_synchronizer_create(
             authority->runtime, authority->content,
             &authority->context_synchronizer);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_layout_history_create(
             authority->runtime, &authority->layout_history);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_session_recovery_create(
             authority->runtime, &authority->session_recovery);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_desktop_monitor_interaction_create(
             authority->runtime, &authority->monitor_interaction);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         destroy_desktop_authority(authority);
         return status;
@@ -179,9 +229,11 @@ UmiStatus umi_master_controller_install_desktop_authority(
         "umicom.desktop.session-recovery", authority->session_recovery};
     capabilities[16] = (UmiPublishedDesktopCapability){
         "umicom.desktop.monitor-interaction", authority->monitor_interaction};
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(capabilities) / sizeof(capabilities[0]);
          ++index) {
         status = publish_capability(controller, &capabilities[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             rollback_capabilities(controller, capabilities, index);
             destroy_desktop_authority(authority);
@@ -191,6 +243,7 @@ UmiStatus umi_master_controller_install_desktop_authority(
     status = umi_master_controller_register_authority(
         controller, UMI_DESKTOP_MASTER_AUTHORITY_ID, authority,
         destroy_desktop_authority);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         rollback_capabilities(
             controller, capabilities,
@@ -200,6 +253,10 @@ UmiStatus umi_master_controller_install_desktop_authority(
     return status;
 }
 
+/*
+ * Provide the master controller desktop runtime operation used by this module and its
+ * client applications.
+ */
 UmiDesktopRuntime *umi_master_controller_desktop_runtime(
     UmiMasterController *controller)
 {
@@ -207,6 +264,10 @@ UmiDesktopRuntime *umi_master_controller_desktop_runtime(
     return authority != NULL ? authority->runtime : NULL;
 }
 
+/*
+ * Provide the master controller desktop shell operation used by this module and its client
+ * applications.
+ */
 UmiDesktopShellModel *umi_master_controller_desktop_shell(
     UmiMasterController *controller)
 {
@@ -214,6 +275,10 @@ UmiDesktopShellModel *umi_master_controller_desktop_shell(
     return authority != NULL ? authority->shell : NULL;
 }
 
+/*
+ * Provide the master controller desktop content operation used by this module and its
+ * client applications.
+ */
 UmiDesktopContentRuntime *umi_master_controller_desktop_content(
     UmiMasterController *controller)
 {
@@ -221,6 +286,10 @@ UmiDesktopContentRuntime *umi_master_controller_desktop_content(
     return authority != NULL ? authority->content : NULL;
 }
 
+/*
+ * Provide the master controller desktop component host operation used by this module and
+ * its client applications.
+ */
 UmiUiComponentHostService *umi_master_controller_desktop_component_host(
     UmiMasterController *controller)
 {
@@ -230,6 +299,10 @@ UmiUiComponentHostService *umi_master_controller_desktop_component_host(
         : NULL;
 }
 
+/*
+ * Provide the master controller desktop component drag drop operation used by this module
+ * and its client applications.
+ */
 UmiDesktopComponentDragDrop *umi_master_controller_desktop_component_drag_drop(
     UmiMasterController *controller)
 {
@@ -237,6 +310,10 @@ UmiDesktopComponentDragDrop *umi_master_controller_desktop_component_drag_drop(
     return authority != NULL ? authority->component_drag_drop : NULL;
 }
 
+/*
+ * Provide the master controller desktop context synchronizer operation used by this module
+ * and its client applications.
+ */
 UmiDesktopContextSynchronizer *umi_master_controller_desktop_context_synchronizer(
     UmiMasterController *controller)
 {
@@ -244,6 +321,10 @@ UmiDesktopContextSynchronizer *umi_master_controller_desktop_context_synchronize
     return authority != NULL ? authority->context_synchronizer : NULL;
 }
 
+/*
+ * Provide the master controller desktop layout history operation used by this module and
+ * its client applications.
+ */
 UmiDesktopLayoutHistory *umi_master_controller_desktop_layout_history(
     UmiMasterController *controller)
 {
@@ -251,6 +332,10 @@ UmiDesktopLayoutHistory *umi_master_controller_desktop_layout_history(
     return authority != NULL ? authority->layout_history : NULL;
 }
 
+/*
+ * Provide the master controller desktop session recovery operation used by this module and
+ * its client applications.
+ */
 UmiDesktopSessionRecovery *umi_master_controller_desktop_session_recovery(
     UmiMasterController *controller)
 {
@@ -258,6 +343,10 @@ UmiDesktopSessionRecovery *umi_master_controller_desktop_session_recovery(
     return authority != NULL ? authority->session_recovery : NULL;
 }
 
+/*
+ * Provide the master controller desktop monitor interaction operation used by this module
+ * and its client applications.
+ */
 UmiDesktopMonitorInteraction *umi_master_controller_desktop_monitor_interaction(
     UmiMasterController *controller)
 {

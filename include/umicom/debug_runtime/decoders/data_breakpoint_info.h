@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime decode data breakpoint info operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_decode_data_breakpoint_info(
     const char *json,
     UmiDebugRuntimeDataBreakpointInfo *out_result);

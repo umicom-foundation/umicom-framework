@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Read test create and into validated module state and return a status when input cannot
+ * be used.
+ */
 static int test_create_and_load(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -43,6 +47,10 @@ static int test_create_and_load(void)
     return 0;
 }
 
+/*
+ * Exercise test optimistic update and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_optimistic_update(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -72,6 +80,10 @@ static int test_optimistic_update(void)
     return 0;
 }
 
+/*
+ * Exercise test list and query and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_list_and_query(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -110,6 +122,10 @@ static int test_list_and_query(void)
     return 0;
 }
 
+/*
+ * Exercise test verify and delete and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_verify_and_delete(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -138,6 +154,10 @@ static int test_verify_and_delete(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid document rejected and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_invalid_document_rejected(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -156,6 +176,10 @@ static int test_invalid_document_rejected(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_create_and_load() == 0, "create load");

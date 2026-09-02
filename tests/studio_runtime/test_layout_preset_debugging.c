@@ -16,6 +16,10 @@
 #include "umicom/studio_runtime/layout_presets/debugging.h"
 #include "umicom/test_runtime/check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiStudioRuntimeLayoutPresetDefinition *preset =

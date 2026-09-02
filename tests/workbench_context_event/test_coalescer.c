@@ -17,6 +17,10 @@
 
 #include "umicom/workbench_context_event/coalescer.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextEventCoalescer coalescer;

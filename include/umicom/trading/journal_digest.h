@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the replay event digest operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_replay_event_digest(const UmiReplayEvent *event);
 #ifdef __cplusplus
 }

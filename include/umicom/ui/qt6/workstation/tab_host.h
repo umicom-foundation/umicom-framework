@@ -23,8 +23,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the qt6 ws tab host descriptor operation used by this module and its client
+ * applications.
+ */
 const UmiQt6SurfaceDescriptor *umi_qt6_ws_tab_host_descriptor(void);
+/**
+ * Initialise qt6 ws tab host from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiQt6WidgetHandle umi_qt6_ws_tab_host_create(const UmiWsTabStack *stack);
+/**
+ * Add qt6 ws tab host only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_qt6_ws_tab_host_append(UmiQt6WidgetHandle host, const char *label, UmiQt6WidgetHandle child);
 
 #ifdef __cplusplus

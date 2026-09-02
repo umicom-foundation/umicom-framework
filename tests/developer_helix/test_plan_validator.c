@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/helix/plan_validator.h"
-int main(void){ UmiHelixPlanGraph g; umi_helix_plan_graph_init(&g); (void)umi_helix_plan_graph_add(&g,"compile"); UmiHelixPlanValidation v; if(umi_helix_plan_validator_evaluate(&g,true,0.2,0.5,true,&v)!=UMI_STATUS_OK||v.decision!=UMI_HELIX_DECISION_ALLOW){ return 1; } if(umi_helix_plan_validator_evaluate(&g,false,0.8,0.5,false,&v)!=UMI_STATUS_OK||v.blockers<2U){ return 2; } return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiHelixPlanGraph g; umi_helix_plan_graph_init(&g); (void)umi_helix_plan_graph_add(&g,"compile"); UmiHelixPlanValidation v; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_plan_validator_evaluate(&g,true,0.2,0.5,true,&v)!=UMI_STATUS_OK||v.decision!=UMI_HELIX_DECISION_ALLOW){ return 1; } /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_helix_plan_validator_evaluate(&g,false,0.8,0.5,false,&v)!=UMI_STATUS_OK||v.blockers<2U){ return 2; } return 0; }

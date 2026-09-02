@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer preview snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerPreviewSnapshot {
     UmiWorkbenchLayoutDocument document;
     UmiWorkbenchDesignerCanvas canvas;
@@ -36,7 +40,15 @@ typedef struct UmiWorkbenchDesignerPreviewSnapshot {
     uint64_t content_hash;
 } UmiWorkbenchDesignerPreviewSnapshot;
 
+/**
+ * Provide the workbench designer preview build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_preview_build(const UmiWorkbenchLayoutDocument *document, const UmiWorkbenchDesignerResponsiveProfile *profile, UmiWorkbenchDesignerPreviewSnapshot *out_snapshot);
+/**
+ * Provide the workbench designer preview item operation used by this module and its client
+ * applications.
+ */
 const UmiWorkbenchDesignerCanvasItem *umi_workbench_designer_preview_item(const UmiWorkbenchDesignerPreviewSnapshot *snapshot, size_t index);
 
 #ifdef __cplusplus

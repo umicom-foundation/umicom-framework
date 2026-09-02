@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/validation.h"
-int main(void){if(umi_ui_component_validate_parent_child(UMI_UI_COMPONENT_BUTTON,UMI_UI_COMPONENT_LABEL)==UMI_STATUS_OK)return 1;return umi_ui_component_validate_parent_child(UMI_UI_COMPONENT_BOX,UMI_UI_COMPONENT_LABEL)==UMI_STATUS_OK?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_component_validate_parent_child(UMI_UI_COMPONENT_BUTTON,UMI_UI_COMPONENT_LABEL)==UMI_STATUS_OK)return 1;return umi_ui_component_validate_parent_child(UMI_UI_COMPONENT_BOX,UMI_UI_COMPONENT_LABEL)==UMI_STATUS_OK?0:2;}

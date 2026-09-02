@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DISPLAY_NAME "umicom.document.identity.display_name"
 
+/**
+ * Provide the document capability display name operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_display_name(void);
 

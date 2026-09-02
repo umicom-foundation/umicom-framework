@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential liquidity bucket data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialLiquidityBucket { int32_t horizon_day; double opening_liquidity; double inflows; double outflows; double closing_liquidity; } UmiPrudentialLiquidityBucket;
 /* Calculate one liquidity horizon bucket from opening stock and flows. */
 UmiStatus umi_pru_liquidity_bucket_calculate(UmiPrudentialLiquidityBucket *bucket, int32_t horizon_day, double opening_liquidity, double inflows, double outflows);

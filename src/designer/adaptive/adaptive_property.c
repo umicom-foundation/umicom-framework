@@ -22,11 +22,17 @@ UmiStatus umi_designer_adaptive_property_init(UmiDesignerAdaptiveProperty *prope
                                               int inheritable)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (property == NULL || property_path == NULL || base_text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(property, 0, sizeof *property);
     status = umi_designer_adaptive_copy_text(property->property_path, sizeof property->property_path, property_path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_designer_adaptive_copy_text(property->base_value.text, sizeof property->base_value.text, base_text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     property->inheritable = inheritable != 0;
     return UMI_STATUS_OK;

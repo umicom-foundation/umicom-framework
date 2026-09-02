@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/financial_account.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFinancialCoreAccount x; CHECK(umi_financial_account_init(&x,"ID","Name","PARENT","CODE")==UMI_STATUS_OK); CHECK(umi_financial_account_is_valid(&x));

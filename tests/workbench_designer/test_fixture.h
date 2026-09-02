@@ -50,20 +50,33 @@
 #define TEST_UNUSED
 #endif
 
+/**
+ * Exercise test copy text and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static TEST_UNUSED UmiStatus test_copy_text(
     char *destination,
     size_t capacity,
     const char *source)
 {
     const size_t length = source != NULL ? strlen(source) : 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/**
+ * Exercise test add node and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static TEST_UNUSED UmiStatus test_add_node(
     UmiWorkbenchLayoutDocument *document,
     const char *node_id,
@@ -75,23 +88,36 @@ static TEST_UNUSED UmiStatus test_add_node(
     UmiWorkbenchLayoutNode node;
     UmiStatus status;
     umi_workbench_layout_node_init(&node, node_id, kind);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WORKBENCH_LAYOUT_NODE_SPLIT) {
         status = umi_workbench_layout_node_set_split(
             &node, UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL, 0.5);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     status = umi_workbench_layout_node_set_title(&node, title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (component_id != NULL && component_id[0] != '\0') {
         status = umi_workbench_layout_node_set_component(
             &node, component_id, "org.umicom.studio");
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     status = umi_workbench_layout_node_set_bounds(&node, &bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_layout_document_add_node(document, &node, NULL);
 }
 
+/**
+ * Exercise test make document and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static TEST_UNUSED UmiStatus test_make_document(UmiWorkbenchLayoutDocument *document)
 {
     UmiWorkbenchLayoutIdentity identity;
@@ -107,6 +133,10 @@ static TEST_UNUSED UmiStatus test_make_document(UmiWorkbenchLayoutDocument *docu
     UmiWorkbenchLayoutNode *right;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_layout_document_init(
         document, "layout.fixture", "Fixture Layout");
@@ -121,6 +151,7 @@ static TEST_UNUSED UmiStatus test_make_document(UmiWorkbenchLayoutDocument *docu
     (void)test_copy_text(
         identity.workspace_id, sizeof(identity.workspace_id), "workspace.fixture");
     status = umi_workbench_layout_document_set_identity(document, &identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&audit, 0, sizeof(audit));
     (void)test_copy_text(audit.created_by, sizeof(audit.created_by), "user.sammy");
@@ -128,62 +159,84 @@ static TEST_UNUSED UmiStatus test_make_document(UmiWorkbenchLayoutDocument *docu
     audit.created_at_ms = 1000U;
     audit.modified_at_ms = 1000U;
     status = umi_workbench_layout_document_set_audit(document, &audit);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_set_metadata(
         document, "Fixture Layout", "development",
         "Deterministic workbench layout used by focused designer tests.");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = test_add_node(document, "root", "Root Split",
         UMI_WORKBENCH_LAYOUT_NODE_SPLIT, "", root_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = test_add_node(document, "project", "Project Explorer",
         UMI_WORKBENCH_LAYOUT_NODE_PANEL, "studio.project-explorer", left_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = test_add_node(document, "right", "Work Area",
         UMI_WORKBENCH_LAYOUT_NODE_SPLIT, "", right_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = test_add_node(document, "editor", "Editor",
         UMI_WORKBENCH_LAYOUT_NODE_EDITOR_GROUP, "studio.editor", editor_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = test_add_node(document, "bottom", "Bottom Tabs",
         UMI_WORKBENCH_LAYOUT_NODE_TAB_GROUP, "", bottom_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = test_add_node(document, "output", "Output",
         UMI_WORKBENCH_LAYOUT_NODE_PANEL, "studio.output", output_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = test_add_node(document, "terminal", "Terminal",
         UMI_WORKBENCH_LAYOUT_NODE_PANEL, "studio.terminal", terminal_bounds);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     root = umi_workbench_layout_document_find_node_mutable(document, "root");
     right = umi_workbench_layout_document_find_node_mutable(document, "right");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (root == NULL || right == NULL) return UMI_STATUS_INTERNAL_ERROR;
     status = umi_workbench_layout_node_set_split(
         root, UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL, 0.22);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_node_set_split(
         right, UMI_WORKBENCH_LAYOUT_ORIENTATION_VERTICAL, 0.74);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_attach_child(
         document, "root", "project", 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_attach_child(
         document, "root", "right", 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_attach_child(
         document, "right", "editor", 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_attach_child(
         document, "right", "bottom", 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_attach_child(
         document, "bottom", "output", 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_attach_child(
         document, "bottom", "terminal", 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_document_set_root(document, "root");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     document->nodes[
         umi_workbench_layout_document_find_node_index(document, "bottom")]
@@ -192,6 +245,10 @@ static TEST_UNUSED UmiStatus test_make_document(UmiWorkbenchLayoutDocument *docu
     return UMI_STATUS_OK;
 }
 
+/**
+ * Exercise test make service and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static TEST_UNUSED UmiStatus test_make_service(
     UmiWorkbenchDesignerService **out_service,
     UmiWorkbenchDesignerSession **out_session)
@@ -200,17 +257,24 @@ static TEST_UNUSED UmiStatus test_make_service(
         umi_workbench_designer_service_config_default();
     UmiWorkbenchLayoutDocument document;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_service == NULL || out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_service = NULL;
     *out_session = NULL;
     status = test_make_document(&document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_designer_service_create(&config, out_service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_designer_service_open(
         *out_service, "session.fixture", &document, NULL, out_session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_workbench_designer_service_destroy(*out_service);
         *out_service = NULL;
@@ -219,16 +283,22 @@ static TEST_UNUSED UmiStatus test_make_service(
     return UMI_STATUS_OK;
 }
 
+/**
+ * Exercise test make controller and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static TEST_UNUSED UmiStatus test_make_controller(
     UmiWorkbenchDesignerService **out_service,
     UmiWorkbenchDesignerController *out_controller,
     UmiWorkbenchDesignerSession **out_session)
 {
     UmiStatus status = test_make_service(out_service, out_session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_workbench_designer_controller_init(
         out_controller, "layout-designer", *out_service);
     status = umi_workbench_designer_controller_initialise(out_controller);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_designer_controller_start(out_controller);
 }

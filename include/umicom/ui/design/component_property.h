@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the design component property data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignComponentProperty { char id[UMI_DESIGN_ID_CAPACITY]; UmiDesignValueKind value_kind; int required; char default_token_id[UMI_DESIGN_ID_CAPACITY]; } UmiDesignComponentProperty;
 /* Initialise a typed semantic component property descriptor. */
 UmiStatus umi_design_component_property_init(UmiDesignComponentProperty *property, const char *id, UmiDesignValueKind value_kind, int required, const char *default_token_id);

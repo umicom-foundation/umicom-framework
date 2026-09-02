@@ -40,6 +40,10 @@ typedef struct FakeQueryProvider {
     int provider_number;
 } FakeQueryProvider;
 
+/*
+ * Exercise emit result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus emit_result(UmiEditorNavigationResultSink sink,
                              void *sink_user_data,
                              const char *uri,
@@ -65,6 +69,10 @@ static UmiStatus emit_result(UmiEditorNavigationResultSink sink,
     return sink(&result, sink_user_data);
 }
 
+/*
+ * Exercise fake query and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_query(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -76,6 +84,7 @@ static UmiStatus fake_query(
     FakeQueryProvider *provider = (FakeQueryProvider *)instance;
     (void)request;
     (void)out_report;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (cancellation->is_cancelled(cancellation->user_data)) {
         return UMI_STATUS_CANCELLED;
     }
@@ -83,6 +92,7 @@ static UmiStatus fake_query(
                        10U, 7U,
                        provider->provider_number == 2 ? 50 : 10,
                        provider->provider_number == 2) == UMI_STATUS_OK);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (provider->provider_number == 1) {
         /* A revision from another document is independent and must remain. */
         assert(emit_result(sink, sink_user_data,
@@ -96,6 +106,10 @@ static UmiStatus fake_query(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise registration for and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiEditorNavigationProviderRegistration registration_for(
     FakeQueryProvider *provider,
     const char *id,
@@ -118,6 +132,10 @@ static UmiEditorNavigationProviderRegistration registration_for(
     return registration;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;

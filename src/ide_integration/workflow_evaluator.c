@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the add workspace operation used by this module and its client applications. */
 static UmiStatus add_workspace(
     const UmiIdeActiveContext *context,
     const UmiIdeWorkflowPolicy *policy,
@@ -32,6 +33,7 @@ static UmiStatus add_workspace(
         policy->require_workspace);
 }
 
+/* Provide the add document operation used by this module and its client applications. */
 static UmiStatus add_document(
     const UmiIdeActiveContext *context,
     const UmiIdeWorkflowPolicy *policy,
@@ -40,6 +42,7 @@ static UmiStatus add_document(
     char detail[512];
     UmiIdeWorkflowGateState state;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!context->has_document) {
         return umi_ide_workflow_report_add(
             report,
@@ -77,6 +80,7 @@ static UmiStatus add_document(
         policy->require_document || !policy->allow_dirty_document);
 }
 
+/* Provide the add problems operation used by this module and its client applications. */
 static UmiStatus add_problems(
     const UmiIdeActiveContext *context,
     const UmiIdeWorkflowPolicy *policy,
@@ -85,6 +89,7 @@ static UmiStatus add_problems(
     char detail[256];
     UmiIdeWorkflowGateState state = UMI_IDE_GATE_PASS;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!context->has_problems) {
         return umi_ide_workflow_report_add(
             report,
@@ -104,10 +109,11 @@ static UmiStatus add_problems(
         context->problems.warnings,
         context->problems.count);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((policy->require_no_fatals && context->problems.fatals > 0U) ||
         (policy->require_no_errors && context->problems.errors > 0U)) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (context->problems.warnings > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (context->problems.warnings > 0U) {
         state = UMI_IDE_GATE_WARN;
     }
 
@@ -120,6 +126,7 @@ static UmiStatus add_problems(
         policy->require_no_errors || policy->require_no_fatals);
 }
 
+/* Provide the add tests operation used by this module and its client applications. */
 static UmiStatus add_tests(
     const UmiIdeIntegrationBindings *bindings,
     const UmiIdeActiveContext *context,
@@ -133,6 +140,10 @@ static UmiStatus add_tests(
     char detail[256];
     UmiIdeWorkflowGateState state;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!context->has_tests || bindings->tests == NULL) {
         return umi_ide_workflow_report_add(
             report,
@@ -145,20 +156,27 @@ static UmiStatus add_tests(
 
     results = umi_test_platform_service_result(bindings->tests);
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (results != NULL) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U;
              index < umi_test_platform_result_registry_count(results);
              ++index) {
             UmiTestPlatformResultSnapshot item;
 
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (umi_test_platform_result_registry_at(
                     results, index, &item) != UMI_STATUS_OK) {
                 continue;
             }
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (item.outcome == UMI_TEST_PLATFORM_OUTCOME_PASSED) {
                 passed += 1U;
-            } else if (item.outcome == UMI_TEST_PLATFORM_OUTCOME_FAILED ||
+            } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (item.outcome == UMI_TEST_PLATFORM_OUTCOME_FAILED ||
                        item.outcome == UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT) {
                 failed += 1U;
             }
@@ -175,13 +193,14 @@ static UmiStatus add_tests(
         failed,
         context->tests.operation_running);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (policy->require_tests && context->tests.result_count == 0U) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (policy->require_all_tests_passed && failed > 0U) {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (policy->require_all_tests_passed && failed > 0U) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (context->tests.operation_running) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (context->tests.operation_running) {
         state = UMI_IDE_GATE_WARN;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         state = UMI_IDE_GATE_PASS;
     }
 
@@ -194,6 +213,10 @@ static UmiStatus add_tests(
         policy->require_tests || policy->require_all_tests_passed);
 }
 
+/*
+ * Provide the add source control operation used by this module and its client
+ * applications.
+ */
 static UmiStatus add_source_control(
     const UmiIdeActiveContext *context,
     const UmiIdeWorkflowPolicy *policy,
@@ -202,6 +225,7 @@ static UmiStatus add_source_control(
     char detail[256];
     UmiIdeWorkflowGateState state;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!context->has_source_control) {
         return umi_ide_workflow_report_add(
             report,
@@ -223,14 +247,15 @@ static UmiStatus add_source_control(
         context->source_control.staged_count,
         context->source_control.available);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!context->source_control.available && policy->require_source_control) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (policy->require_clean_source_control &&
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (policy->require_clean_source_control &&
                context->source_control.change_count > 0U) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (context->source_control.change_count > 0U) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (context->source_control.change_count > 0U) {
         state = UMI_IDE_GATE_WARN;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         state = UMI_IDE_GATE_PASS;
     }
 
@@ -244,6 +269,7 @@ static UmiStatus add_source_control(
             policy->require_clean_source_control);
 }
 
+/* Provide the add debug operation used by this module and its client applications. */
 static UmiStatus add_debug(
     const UmiIdeActiveContext *context,
     const UmiIdeWorkflowPolicy *policy,
@@ -252,6 +278,7 @@ static UmiStatus add_debug(
     char detail[256];
     UmiIdeWorkflowGateState state;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!context->has_debug) {
         return umi_ide_workflow_report_add(
             report,
@@ -288,6 +315,7 @@ static UmiStatus add_debug(
         policy->require_debugger_idle);
 }
 
+/* Provide the add ai operation used by this module and its client applications. */
 static UmiStatus add_ai(
     const UmiIdeActiveContext *context,
     const UmiIdeWorkflowPolicy *policy,
@@ -296,6 +324,7 @@ static UmiStatus add_ai(
     char detail[256];
     UmiIdeWorkflowGateState state;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!context->has_ai) {
         return umi_ide_workflow_report_add(
             report,
@@ -314,16 +343,17 @@ static UmiStatus add_ai(
         context->ai.pending_approval_count,
         context->ai.review_loaded);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (policy->require_no_pending_ai_approval &&
         context->ai.pending_approval_count > 0U) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (policy->require_ai_idle &&
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (policy->require_ai_idle &&
                context->ai.coding.agent.state != UMI_AI_CODING_RUNTIME_IDLE &&
                context->ai.coding.agent.state != UMI_AI_CODING_RUNTIME_COMPLETED) {
         state = UMI_IDE_GATE_BLOCK;
-    } else if (context->ai.coding.agent.state == UMI_AI_CODING_RUNTIME_FAILED) {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (context->ai.coding.agent.state == UMI_AI_CODING_RUNTIME_FAILED) {
         state = UMI_IDE_GATE_WARN;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         state = UMI_IDE_GATE_PASS;
     }
 
@@ -336,6 +366,10 @@ static UmiStatus add_ai(
         policy->require_no_pending_ai_approval || policy->require_ai_idle);
 }
 
+/*
+ * Provide the ide workflow evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_evaluate(
     const UmiIdeIntegrationBindings *bindings,
     const UmiIdeActiveContext *context,
@@ -344,6 +378,10 @@ UmiStatus umi_ide_workflow_evaluate(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || context == NULL ||
         policy == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -352,16 +390,22 @@ UmiStatus umi_ide_workflow_evaluate(
     umi_ide_workflow_report_init(out_report);
 
     status = add_workspace(context, policy, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = add_document(context, policy, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = add_problems(context, policy, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = add_tests(bindings, context, policy, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = add_source_control(context, policy, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = add_debug(context, policy, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = add_ai(context, policy, out_report);
 

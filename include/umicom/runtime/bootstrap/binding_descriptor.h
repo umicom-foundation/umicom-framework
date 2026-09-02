@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap binding descriptor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_binding_descriptor_init(
     UmiBootstrapBindingDescriptor *binding,
     const UmiBootstrapServiceKey *key,
@@ -29,6 +33,10 @@ UmiStatus umi_bootstrap_binding_descriptor_init(
     const char *implementation_id,
     const char *target_id,
     int32_t priority);
+/**
+ * Check that bootstrap binding descriptor satisfies its contract before another service
+ * relies on it.
+ */
 bool umi_bootstrap_binding_descriptor_valid(
     const UmiBootstrapBindingDescriptor *binding);
 

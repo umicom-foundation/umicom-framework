@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/pricing_result.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiPricingResult x; UmiMoney m={10,2U,{{'U','S','D','\0'}}}; CHECK(umi_pricing_result_init(&x,"ID",m,(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_pricing_result_is_valid(&x));

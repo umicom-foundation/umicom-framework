@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product feature data shared with callers of this public contract.
+ */
 typedef struct UmiProductFeature { const char *feature_id; const char *description; int enabled; } UmiProductFeature;
+/**
+ * Check that product feature satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_product_feature_validate(const UmiProductFeature *feature);
 #ifdef __cplusplus
 }

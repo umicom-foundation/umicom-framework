@@ -18,6 +18,10 @@
 #include "umicom/workbench_context_link/payload_builder.h"
 #include "umicom/workbench_context_link/service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextLinkService service;

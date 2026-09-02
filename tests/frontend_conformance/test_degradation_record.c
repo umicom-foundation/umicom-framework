@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcDegradationRecord r; CHECK(umi_fc_degradation_record_make("dock",1U,UMI_FC_BLOCKER,"missing",&r)==UMI_STATUS_OK); CHECK(umi_fc_degradation_record_is_blocker(&r));
     return 0;

@@ -21,6 +21,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the vcs advanced binary compare values operation used by this module and its
+ * client applications.
+ */
 void umi_vcs_advanced_binary_compare_values(
     uint64_t left_size,
     uint64_t left_hash,
@@ -28,6 +32,10 @@ void umi_vcs_advanced_binary_compare_values(
     uint64_t right_hash,
     UmiVcsAdvancedBinaryCompare *out_result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result == NULL) {
         return;
     }

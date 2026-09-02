@@ -18,17 +18,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the profile index operation used by this module and its client applications. */
 static size_t profile_index(
     const UmiWebWorkbenchAuthCatalogue *catalogue,
     const char *profile_id)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue->profile_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(catalogue->profiles[index].profile_id, profile_id) == 0) return index;
     }
     return catalogue->profile_count;
 }
 
+/*
+ * Initialise web workbench auth profile from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_web_workbench_auth_profile_init(
     UmiWebWorkbenchAuthProfile *profile,
     const char *profile_id,
@@ -36,6 +43,10 @@ void umi_web_workbench_auth_profile_init(
     UmiWebWorkbenchAuthKind kind,
     const char *secret_reference)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) return;
     memset(profile, 0, sizeof(*profile));
     (void)umi_web_workbench_copy_text(profile->profile_id,
@@ -46,52 +57,82 @@ void umi_web_workbench_auth_profile_init(
         sizeof(profile->secret_reference), secret_reference != NULL ? secret_reference : "");
     profile->kind = kind;
     profile->enabled = true;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WEB_WORKBENCH_AUTH_API_KEY_HEADER) {
         (void)umi_web_workbench_copy_text(profile->field_name,
             sizeof(profile->field_name), "X-API-Key");
-    } else if (kind == UMI_WEB_WORKBENCH_AUTH_API_KEY_QUERY) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (kind == UMI_WEB_WORKBENCH_AUTH_API_KEY_QUERY) {
         (void)umi_web_workbench_copy_text(profile->field_name,
             sizeof(profile->field_name), "api_key");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         (void)umi_web_workbench_copy_text(profile->field_name,
             sizeof(profile->field_name), "Authorization");
     }
 }
 
+/*
+ * Check that web workbench auth profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_web_workbench_auth_profile_validate(
     const UmiWebWorkbenchAuthProfile *profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || profile->profile_id[0] == '\0' || profile->name[0] == '\0' ||
         profile->kind > UMI_WEB_WORKBENCH_AUTH_OAUTH_ACCESS_TOKEN) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->kind != UMI_WEB_WORKBENCH_AUTH_NONE &&
         (profile->secret_reference[0] == '\0' || profile->field_name[0] == '\0')) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->kind == UMI_WEB_WORKBENCH_AUTH_BASIC &&
         profile->public_identity[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise web workbench auth catalogue from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_web_workbench_auth_catalogue_init(
     UmiWebWorkbenchAuthCatalogue *catalogue)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) return;
     memset(catalogue, 0, sizeof(*catalogue));
     catalogue->revision = 1U;
 }
 
+/*
+ * Provide the web workbench auth catalogue upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_web_workbench_auth_catalogue_upsert(
     UmiWebWorkbenchAuthCatalogue *catalogue,
     const UmiWebWorkbenchAuthProfile *profile)
 {
     size_t index;
     UmiStatus status = umi_web_workbench_auth_profile_validate(profile);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     index = profile_index(catalogue, profile->profile_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == catalogue->profile_count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index >= UMI_WEB_WORKBENCH_MAX_AUTH_PROFILES) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -102,16 +143,25 @@ UmiStatus umi_web_workbench_auth_catalogue_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find web workbench auth catalogue while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiWebWorkbenchAuthProfile *umi_web_workbench_auth_catalogue_find(
     const UmiWebWorkbenchAuthCatalogue *catalogue,
     const char *profile_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalogue == NULL || profile_id == NULL) return NULL;
     index = profile_index(catalogue, profile_id);
     return index < catalogue->profile_count ? &catalogue->profiles[index] : NULL;
 }
 
+/* Provide the encode base64 operation used by this module and its client applications. */
 static UmiStatus encode_base64(
     const unsigned char *source,
     size_t length,
@@ -122,15 +172,22 @@ static UmiStatus encode_base64(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     size_t input = 0U;
     size_t output = 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity < ((length + 2U) / 3U) * 4U + 1U) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (input < length) {
         uint32_t value = (uint32_t)source[input++] << 16U;
         bool have_second = input < length;
         bool have_third;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (have_second) value |= (uint32_t)source[input++] << 8U;
         have_third = input < length;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (have_third) value |= (uint32_t)source[input++];
         out_text[output++] = alphabet[(value >> 18U) & 63U];
         out_text[output++] = alphabet[(value >> 12U) & 63U];
@@ -141,6 +198,7 @@ static UmiStatus encode_base64(
     return UMI_STATUS_OK;
 }
 
+/* Provide the query safe operation used by this module and its client applications. */
 static int query_safe(unsigned char value)
 {
     return (value >= (unsigned char)'a' && value <= (unsigned char)'z') ||
@@ -150,6 +208,10 @@ static int query_safe(unsigned char value)
            value == (unsigned char)'.' || value == (unsigned char)'~';
 }
 
+/*
+ * Provide the append query secret operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_query_secret(
     UmiWebWorkbenchRequest *request,
     const char *name,
@@ -160,11 +222,18 @@ static UmiStatus append_query_secret(
     size_t output = 0U;
     const unsigned char *cursor = (const unsigned char *)secret;
     size_t url_length = strlen(request->url);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (query_safe(*cursor)) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (output + 1U >= sizeof(encoded)) return UMI_STATUS_CAPACITY_EXCEEDED;
             encoded[output++] = (char)*cursor;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (output + 3U >= sizeof(encoded)) return UMI_STATUS_CAPACITY_EXCEEDED;
             encoded[output++] = '%';
             encoded[output++] = hex[(*cursor >> 4U) & 15U];
@@ -173,6 +242,7 @@ static UmiStatus append_query_secret(
         ++cursor;
     }
     encoded[output] = '\0';
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (url_length + 1U + strlen(name) + 1U + output >= sizeof(request->url)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -185,6 +255,10 @@ static UmiStatus append_query_secret(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform web workbench auth through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_web_workbench_auth_apply(
     const UmiWebWorkbenchAuthProfile *profile,
     const char *transient_secret,
@@ -192,43 +266,60 @@ UmiStatus umi_web_workbench_auth_apply(
 {
     char value[UMI_WEB_HEADER_VALUE_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || profile == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_web_workbench_auth_profile_validate(profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this operation only while the related capability or state is available. */
     if (!profile->enabled || profile->kind == UMI_WEB_WORKBENCH_AUTH_NONE) {
         return UMI_STATUS_OK;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transient_secret == NULL || transient_secret[0] == '\0') {
         return UMI_STATUS_PERMISSION_DENIED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->kind == UMI_WEB_WORKBENCH_AUTH_API_KEY_QUERY) {
         return append_query_secret(request, profile->field_name, transient_secret);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->kind == UMI_WEB_WORKBENCH_AUTH_BASIC) {
         char credentials[UMI_WEB_HEADER_VALUE_CAPACITY];
         char encoded[UMI_WEB_HEADER_VALUE_CAPACITY];
         int written = snprintf(credentials, sizeof(credentials), "%s:%s",
             profile->public_identity, transient_secret);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(credentials)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         status = encode_base64((const unsigned char *)credentials,
             (size_t)written, encoded, sizeof(encoded));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         written = snprintf(value, sizeof(value), "Basic %s", encoded);
         memset(credentials, 0, sizeof(credentials));
         memset(encoded, 0, sizeof(encoded));
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(value)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
-    } else if (profile->kind == UMI_WEB_WORKBENCH_AUTH_BEARER ||
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (profile->kind == UMI_WEB_WORKBENCH_AUTH_BEARER ||
                profile->kind == UMI_WEB_WORKBENCH_AUTH_OAUTH_ACCESS_TOKEN) {
         int written = snprintf(value, sizeof(value), "Bearer %s", transient_secret);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(value)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_web_workbench_copy_text(value, sizeof(value), transient_secret);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     status = umi_web_workbench_request_set_header(request, profile->field_name, value);

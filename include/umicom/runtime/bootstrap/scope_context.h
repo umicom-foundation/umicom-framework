@@ -22,9 +22,21 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap scope context from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_bootstrap_scope_context_init(UmiBootstrapScopeContext *context);
+/**
+ * Provide the bootstrap scope context push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_scope_context_push(UmiBootstrapScopeContext *context,
                                            UmiBootstrapScopeKind scope);
+/**
+ * Provide the bootstrap scope context pop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_scope_context_pop(UmiBootstrapScopeContext *context,
                                           UmiBootstrapScopeKind *out_scope);
 

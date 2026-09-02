@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository control snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryControlSnapshot {
     UmiRepositoryControlState state;
     UmiStatus last_status;
@@ -31,7 +35,15 @@ typedef struct UmiRepositoryControlSnapshot {
     uint64_t revision;
     int dry_run;
 } UmiRepositoryControlSnapshot;
+/**
+ * Initialise repository snapshot from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_repository_snapshot_init(UmiRepositoryControlSnapshot *snapshot);
+/**
+ * Provide the repository snapshot from plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_snapshot_from_plan(
     UmiRepositoryControlState state,
     UmiStatus last_status,

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime request references operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_request_references(UmiLanguageRuntimeServer*s,const char*d,const char*u,uint32_t l,uint32_t c,int include_decl,uint64_t*out);
 #ifdef __cplusplus
 }

@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/workflow_profiles/autonomous_ai.h"
 
+/*
+ * Provide the ide workflow profile autonomous ai operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ide_workflow_profile_autonomous_ai(
     UmiIdeWorkflowPolicy *out_policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_policy == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_ide_workflow_policy_init(out_policy);
     out_policy->require_document = 0;

@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/portfolio_position.h"
+/**
+ * Represent the enterprise portfolio snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePortfolioSnapshot { char portfolio_id[UMI_ENTERPRISE_ID_CAPACITY]; int64_t as_of_ms; UmiEnterprisePortfolioPosition positions[UMI_ENTERPRISE_MAX_POSITIONS]; size_t count; } UmiEnterprisePortfolioSnapshot;
 /* Initialise an empty portfolio snapshot. */
 UmiStatus umi_enterprise_portfolio_snapshot_init(UmiEnterprisePortfolioSnapshot *snapshot,const char *portfolio_id,int64_t as_of_ms);

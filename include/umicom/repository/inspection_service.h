@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the repository inspection service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryInspectionService {
     UmiRepositoryInspectionSnapshot snapshot;
     UmiRepositoryMaintenanceService maintenance;

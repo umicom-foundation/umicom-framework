@@ -15,6 +15,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/security/authorisation.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiPolicyEngine *p = NULL; UmiRoleRegistry *roles = NULL; UmiAuthorisationService *a = NULL; UmiAuthorisationDecision d;
     UmiPolicyRule rule = {"service.builder", "process.execute", "workspace/*", UMI_POLICY_ALLOW};

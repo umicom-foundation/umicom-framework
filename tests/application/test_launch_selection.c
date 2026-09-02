@@ -32,6 +32,10 @@ typedef struct FakeProcesses {
     size_t activations;
 } FakeProcesses;
 
+/*
+ * Exercise fake start and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_start(void *context,
                             const UmiApplicationLaunchPlan *plan,
                             uint64_t *out_process_token)
@@ -43,6 +47,10 @@ static UmiStatus fake_start(void *context,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake activate and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus fake_activate(void *context,
                                const char *application_id,
                                uint64_t process_token)
@@ -54,6 +62,10 @@ static UmiStatus fake_activate(void *context,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise registration and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiApplicationRuntimeRegistration registration(
     const char *application_id,
     const char *display_name,
@@ -77,6 +89,10 @@ static UmiApplicationRuntimeRegistration registration(
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationRuntimeCatalogue *catalogue = NULL;

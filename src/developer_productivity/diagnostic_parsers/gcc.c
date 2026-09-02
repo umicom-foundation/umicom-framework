@@ -16,6 +16,7 @@
 
 #include "umicom/developer_productivity/diagnostic_parser_support.h"
 
+/* Provide the parse line operation used by this module and its client applications. */
 static UmiStatus parse_line(
     const char *line,
     UmiDeveloperProblem *out_problem,
@@ -30,6 +31,10 @@ static UmiStatus parse_line(
         out_matched);
 }
 
+/*
+ * Provide the developer diagnostic parser gcc operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperDiagnosticParser *umi_developer_diagnostic_parser_gcc(void)
 {
     static const UmiDeveloperDiagnosticParser parser = {

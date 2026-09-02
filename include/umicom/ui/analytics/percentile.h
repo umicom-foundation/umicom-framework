@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the analytics percentile operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_percentile(const double *values,size_t count,double percentile,double *out_value);
 
 #ifdef __cplusplus

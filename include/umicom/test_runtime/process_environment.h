@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test runtime process environment data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeProcessEnvironment {
     uint32_t structure_size;
     char id[UMI_TEST_RUNTIME_ID_CAPACITY];
@@ -34,13 +38,45 @@ typedef struct UmiTestRuntimeProcessEnvironment {
     bool enabled;
 } UmiTestRuntimeProcessEnvironment;
 
+/**
+ * Initialise test runtime process environment from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_test_runtime_process_environment_init(UmiTestRuntimeProcessEnvironment *value, const char *id);
+/**
+ * Check that test runtime process environment satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_test_runtime_process_environment_validate(const UmiTestRuntimeProcessEnvironment *value);
+/**
+ * Provide the test runtime process environment set name operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_process_environment_set_name(UmiTestRuntimeProcessEnvironment *value, const char *name);
+/**
+ * Provide the test runtime process environment set detail operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_test_runtime_process_environment_set_detail(UmiTestRuntimeProcessEnvironment *value, const char *detail);
+/**
+ * Return the number of records represented by test runtime process environment set entry
+ * without changing their state.
+ */
 UmiStatus umi_test_runtime_process_environment_set_entry_count(UmiTestRuntimeProcessEnvironment *value, uint64_t number);
+/**
+ * Return the number of records represented by test runtime process environment set path
+ * entry without changing their state.
+ */
 UmiStatus umi_test_runtime_process_environment_set_path_entry_count(UmiTestRuntimeProcessEnvironment *value, uint64_t number);
+/**
+ * Provide the test runtime process environment touch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_process_environment_touch(UmiTestRuntimeProcessEnvironment *value, uint64_t updated_at_ms);
+/**
+ * Provide the test runtime process environment same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_test_runtime_process_environment_same_identity(const UmiTestRuntimeProcessEnvironment *left, const UmiTestRuntimeProcessEnvironment *right);
 
 #ifdef __cplusplus

@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/evidence_requirement.h"
 
+/**
+ * Represent the application production evidence record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionEvidenceRecord {
     char evidence_id[UMI_APPLICATION_PRODUCTION_ID_CAPACITY];
     char reference[UMI_APPLICATION_PRODUCTION_REFERENCE_CAPACITY];
@@ -32,11 +36,19 @@ typedef struct UmiApplicationProductionEvidenceRecord {
     uint64_t revision;
 } UmiApplicationProductionEvidenceRecord;
 
+/**
+ * Copy application production evidence record into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_application_production_evidence_record_set(
     UmiApplicationProductionEvidenceRecord *record,
     const char *evidence_id, UmiApplicationProductionEvidenceKind kind,
     UmiApplicationProductionEvidenceState state, const char *reference,
     uint64_t revision);
+/**
+ * Check that application production evidence record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_application_production_evidence_record_validate(
     const UmiApplicationProductionEvidenceRecord *record);
 

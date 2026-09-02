@@ -16,8 +16,16 @@
 #include <string.h>
 /* Initialise and validate describe a replacement request with optimistic order-version control.. */
 UmiStatus umi_trading_order_replace_init(UmiTradingOrderReplace *value,const UmiFinancialId * client_order_id, uint64_t expected_version, UmiTradingQuantityLots new_quantity_lots, UmiTradingPriceTicks new_limit_ticks) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value,0,sizeof *value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(client_order_id==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     value->client_order_id=*client_order_id;
     value->expected_version=expected_version;

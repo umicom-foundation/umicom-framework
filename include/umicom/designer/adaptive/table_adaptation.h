@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer table adaptation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerTableAdaptation {
     size_t preferred_columns;
     size_t required_columns;

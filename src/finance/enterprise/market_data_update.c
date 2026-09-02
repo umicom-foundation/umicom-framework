@@ -20,12 +20,21 @@
 
 #include <string.h>
 
+/*
+ * Initialise enterprise market data update from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_enterprise_market_data_update_init(UmiEnterpriseMarketDataUpdate *update, const char *topic_id, double value, uint64_t sequence, int64_t event_time_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (update == NULL || !umi_quant_number_valid(value) || sequence == 0U || event_time_ms < 0) return UMI_STATUS_INVALID_ARGUMENT;
     memset(update, 0, sizeof *update);
     status = umi_quant_copy_text(update->topic_id, sizeof update->topic_id, topic_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     update->value = value;
     update->sequence = sequence;

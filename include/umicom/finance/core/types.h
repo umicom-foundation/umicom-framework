@@ -26,14 +26,41 @@ extern "C" {
 #define UMI_FINANCIAL_CORE_NAME_CAPACITY 96U
 #define UMI_FINANCIAL_CORE_CODE_CAPACITY 32U
 #define UMI_FINANCIAL_CORE_MAX_ITEMS 64U
+/**
+ * Represent the financial date data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialDate { int32_t year; uint8_t month; uint8_t day; } UmiFinancialDate;
+/**
+ * List the named financial direction values accepted by this public contract.
+ */
 typedef enum UmiFinancialDirection { UMI_FINANCIAL_DIRECTION_NONE=0, UMI_FINANCIAL_DIRECTION_PAY=1, UMI_FINANCIAL_DIRECTION_RECEIVE=2 } UmiFinancialDirection;
+/**
+ * List the named financial lifecycle state values accepted by this public contract.
+ */
 typedef enum UmiFinancialLifecycleState { UMI_FINANCIAL_LIFECYCLE_DRAFT=0, UMI_FINANCIAL_LIFECYCLE_ACTIVE=1, UMI_FINANCIAL_LIFECYCLE_MATURED=2, UMI_FINANCIAL_LIFECYCLE_CANCELLED=3 } UmiFinancialLifecycleState;
+/**
+ * List the named settlement state values accepted by this public contract.
+ */
 typedef enum UmiSettlementState { UMI_SETTLEMENT_PENDING=0, UMI_SETTLEMENT_MATCHED=1, UMI_SETTLEMENT_SETTLED=2, UMI_SETTLEMENT_FAILED=3, UMI_SETTLEMENT_CANCELLED=4 } UmiSettlementState;
+/**
+ * List the named product class values accepted by this public contract.
+ */
 typedef enum UmiProductClass { UMI_PRODUCT_UNKNOWN=0, UMI_PRODUCT_CASH=1, UMI_PRODUCT_FX=2, UMI_PRODUCT_FIXED_INCOME=3, UMI_PRODUCT_EQUITY=4, UMI_PRODUCT_DERIVATIVE=5, UMI_PRODUCT_COMMODITY=6, UMI_PRODUCT_DIGITAL_ASSET=7 } UmiProductClass;
+/**
+ * List the named day count convention values accepted by this public contract.
+ */
 typedef enum UmiDayCountConvention { UMI_DAY_COUNT_ACT_360=0, UMI_DAY_COUNT_ACT_365F=1, UMI_DAY_COUNT_THIRTY_360=2 } UmiDayCountConvention;
+/**
+ * List the named business day convention values accepted by this public contract.
+ */
 typedef enum UmiBusinessDayConvention { UMI_BUSINESS_DAY_FOLLOWING=0, UMI_BUSINESS_DAY_MODIFIED_FOLLOWING=1, UMI_BUSINESS_DAY_PRECEDING=2, UMI_BUSINESS_DAY_MODIFIED_PRECEDING=3, UMI_BUSINESS_DAY_UNADJUSTED=4 } UmiBusinessDayConvention;
+/**
+ * List the named tenor unit values accepted by this public contract.
+ */
 typedef enum UmiTenorUnit { UMI_TENOR_DAYS=0, UMI_TENOR_WEEKS=1, UMI_TENOR_MONTHS=2, UMI_TENOR_YEARS=3 } UmiTenorUnit;
+/**
+ * List the named quote side values accepted by this public contract.
+ */
 typedef enum UmiQuoteSide { UMI_QUOTE_MID=0, UMI_QUOTE_BID=1, UMI_QUOTE_ASK=2, UMI_QUOTE_LAST=3 } UmiQuoteSide;
 /* Copy text into a bounded caller-owned buffer. */ UmiStatus umi_financial_core_copy(char *dst,size_t cap,const char *src);
 /* Assign a reusable existing financial identifier. */ UmiStatus umi_financial_id_assign(UmiFinancialId *id,const char *value);

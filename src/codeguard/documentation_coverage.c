@@ -35,7 +35,7 @@ static unsigned coverage_percent(size_t documented, size_t total)
         if (accumulator >= total - documented) {
             accumulator -= total - documented;
             percent += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             accumulator += documented;
         }
     }

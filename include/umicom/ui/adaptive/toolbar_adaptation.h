@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive toolbar decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveToolbarDecision { size_t visible_commands; int overflow; int labels_visible; } UmiAdaptiveToolbarDecision;
 /* Resolve visible command budget and label presentation for one size class. */
 UmiAdaptiveToolbarDecision umi_adaptive_toolbar_adaptation_resolve(size_t command_count, UmiDesignSizeClass size_class);

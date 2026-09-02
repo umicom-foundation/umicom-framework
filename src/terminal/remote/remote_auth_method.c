@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_auth_method.h"
-uint32_t umi_terminal_remote_remote_auth_method_risk(UmiTerminalRemoteRemoteAuthMethodMethod method,bool interactive) { uint32_t risk; switch(method) { case UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_AGENT:risk=1U;break; case UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_KEY:risk=2U;break; case UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_PASSWORD:risk=5U;break; default:risk=10U;break; } if(interactive&&risk>0U) risk--; return risk; }
+/*
+ * Provide the terminal remote remote auth method risk operation used by this module and
+ * its client applications.
+ */
+uint32_t umi_terminal_remote_remote_auth_method_risk(UmiTerminalRemoteRemoteAuthMethodMethod method,bool interactive) { uint32_t risk; /* Select the behaviour associated with the requested command or state value. */ switch(method) { case UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_AGENT:risk=1U;break; case UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_KEY:risk=2U;break; case UMI_TERMINAL_REMOTE_REMOTE_AUTH_METHOD_PASSWORD:risk=5U;break; default:risk=10U;break; } /* Apply this operation only while the related capability or state is available. */ if(interactive&&risk>0U) risk--; return risk; }

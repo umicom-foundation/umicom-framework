@@ -16,14 +16,31 @@
 #include <string.h>
 #include <limits.h>
 
+/*
+ * Initialise fabric transport profile from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_transport_profile_init(UmiFabricTransportProfile *item, const char *profile_id, uint64_t max_frame_bytes, uint32_t heartbeat_ms, uint32_t idle_timeout_ms, bool compression_allowed, bool tls_required) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(item,0,sizeof(*item));
-    UmiStatus s=umi_fabric_copy_text(item->profile_id,sizeof(item->profile_id),profile_id);if(s!=UMI_STATUS_OK)return s;item->max_frame_bytes=max_frame_bytes;item->heartbeat_ms=heartbeat_ms;item->idle_timeout_ms=idle_timeout_ms;item->compression_allowed=compression_allowed;item->tls_required=tls_required;
+    UmiStatus s=umi_fabric_copy_text(item->profile_id,sizeof(item->profile_id),profile_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->max_frame_bytes=max_frame_bytes;item->heartbeat_ms=heartbeat_ms;item->idle_timeout_ms=idle_timeout_ms;item->compression_allowed=compression_allowed;item->tls_required=tls_required;
     return umi_fabric_transport_profile_validate(item);
 }
+/*
+ * Check that fabric transport profile satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_fabric_transport_profile_validate(const UmiFabricTransportProfile *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(item->profile_id[0]!='\0' && item->max_frame_bytes>0U && item->heartbeat_ms>0U && item->idle_timeout_ms>=item->heartbeat_ms)) return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }

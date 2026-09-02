@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience permission set data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationExperiencePermissionSet {
   char items[UMI_APPLICATION_EXPERIENCE_PERMISSION_CAPACITY]
             [UMI_APPLICATION_EXPERIENCE_ID_CAPACITY];
@@ -29,13 +33,29 @@ typedef struct UmiApplicationExperiencePermissionSet {
   uint64_t revision;
 } UmiApplicationExperiencePermissionSet;
 
+/**
+ * Initialise application experience permission set from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_experience_permission_set_init(
     UmiApplicationExperiencePermissionSet *permissions);
+/**
+ * Provide the application experience permission set grant operation used by this module
+ * and its client applications.
+ */
 UmiStatus
 umi_application_experience_permission_set_grant(UmiApplicationExperiencePermissionSet *permissions,
                                                 const char *permission_id);
+/**
+ * Provide the application experience permission set has operation used by this module and
+ * its client applications.
+ */
 int umi_application_experience_permission_set_has(
     const UmiApplicationExperiencePermissionSet *permissions, const char *permission_id);
+/**
+ * Provide the application experience permission set allows operation used by this module
+ * and its client applications.
+ */
 int umi_application_experience_permission_set_allows(
     const UmiApplicationExperiencePermissionSet *permissions,
     const UmiApplicationExperienceCommand *command);

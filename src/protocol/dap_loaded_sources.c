@@ -15,4 +15,8 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework DAP loadedSources. Sammy Hegab, Umicom Foundation, MIT. */
 #include "dap_request_internal.h"
+/*
+ * Provide the dap loaded sources operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dap_loaded_sources(UmiDapClient*c,int64_t*id){return umi_dap_request(c,"loadedSources","{}",id);}

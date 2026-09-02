@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Write language runtime request did in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_language_runtime_request_did_save(UmiLanguageRuntimeServer*s,const char*u,const char*text);
 #ifdef __cplusplus
 }

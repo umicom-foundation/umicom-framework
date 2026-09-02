@@ -21,6 +21,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_NATIVE_WEB_FRONTEND_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_frontend OR NOT TARGET umicom_web OR NOT TARGET umicom_ui)
     message(FATAL_ERROR "UmicomNativeWebFrontendPlatform.cmake requires canonical umicom_frontend, umicom_web and umicom_ui targets")
 endif()
@@ -97,16 +98,22 @@ target_sources(umicom_frontend PRIVATE
 # Native-web presentation consumes the canonical toolkit-neutral UI/workstation contracts.
 target_link_libraries(umicom_frontend PUBLIC Umicom::ui)
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add native web frontend test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_native_web_frontend_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_NATIVE_WEB_FRONTEND_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::frontend)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

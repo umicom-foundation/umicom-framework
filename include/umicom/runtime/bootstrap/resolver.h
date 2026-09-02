@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap resolver select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_resolver_select(
     const UmiBootstrapBindingRegistry *registry,
     const UmiBootstrapResolutionRequest *request,

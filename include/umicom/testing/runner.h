@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test run summary data shared with callers of this public contract.
+ */
 typedef struct UmiTestRunSummary {
     size_t total;
     size_t passed;
@@ -37,9 +40,17 @@ typedef struct UmiTestRunSummary {
     uint64_t duration_ms;
 } UmiTestRunSummary;
 
+/**
+ * Provide the test runner run case operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_runner_run_case(const UmiTestCase *test_case,
                                    UmiCancellationToken *cancellation,
                                    UmiTestResult *out_result);
+/**
+ * Provide the test runner run suite operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_runner_run_suite(const UmiTestSuite *suite,
                                     UmiCancellationToken *cancellation,
                                     UmiTestResult *results,

@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/trust_level.h"
-int main(void) { UmiPluginExtensionHostTrustLevelEvidence e={1,1,1,1,0U}; if(umi_plugin_extension_host_trust_level_score(&e)!=100U) return 1; if(umi_plugin_extension_host_trust_level_classify(&e)!=UMI_PLUGIN_EXTENSION_HOST_TRUST_SYSTEM) return 2; e.signature_valid=0; e.publisher_known=0; e.risk=100U; if(umi_plugin_extension_host_trust_level_classify(&e)==UMI_PLUGIN_EXTENSION_HOST_TRUST_TRUSTED) return 3; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostTrustLevelEvidence e={1,1,1,1,0U}; /* Apply this operation only while the related capability or state is available. */ if(umi_plugin_extension_host_trust_level_score(&e)!=100U) return 1; /* Apply this operation only while the related capability or state is available. */ if(umi_plugin_extension_host_trust_level_classify(&e)!=UMI_PLUGIN_EXTENSION_HOST_TRUST_SYSTEM) return 2; e.signature_valid=0; e.publisher_known=0; e.risk=100U; /* Apply this operation only while the related capability or state is available. */ if(umi_plugin_extension_host_trust_level_classify(&e)==UMI_PLUGIN_EXTENSION_HOST_TRUST_TRUSTED) return 3; return 0; }

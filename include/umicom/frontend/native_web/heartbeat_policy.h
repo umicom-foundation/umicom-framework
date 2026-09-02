@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/types.h"
+/**
+ * Represent the native web heartbeat policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebHeartbeatPolicy { uint64_t interval_ms; uint64_t timeout_ms; } UmiNativeWebHeartbeatPolicy;
 /* Return true when a connection has exceeded its liveness deadline. */
 bool umi_native_web_heartbeat_expired(const UmiNativeWebHeartbeatPolicy *policy, uint64_t last_activity_ms, uint64_t now_ms);

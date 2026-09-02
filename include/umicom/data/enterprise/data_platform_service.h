@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data platform service data shared with callers of this public contract.
+ */
 typedef struct UmiDataPlatformService { char service_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; UmiDataServerProfile profile; UmiDataHealth health; UmiDataOperationQueue queue; bool started; bool maintenance_mode; uint64_t revision; } UmiDataPlatformService;
 /* Initialise the aggregate service around an existing Data Server profile. */ UmiStatus umi_data_data_platform_service_init(UmiDataPlatformService *service,const char *service_id,const UmiDataServerProfile *profile);
 /* Start the service only when profile invariants are valid. */ UmiStatus umi_data_data_platform_service_start(UmiDataPlatformService *service);

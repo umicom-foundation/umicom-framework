@@ -18,6 +18,10 @@
 
 #include "umicom/workbench_context_event/coalescing_policy.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextEventCoalescingPolicy record;

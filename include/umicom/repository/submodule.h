@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository submodule data shared with callers of this public contract.
+ */
 typedef struct UmiRepositorySubmodule {
     char name[UMI_REPOSITORY_CONTROL_NAME_CAPACITY];
     char path[UMI_REPOSITORY_CONTROL_PATH_CAPACITY];
@@ -29,6 +32,10 @@ typedef struct UmiRepositorySubmodule {
     char branch[UMI_REPOSITORY_CONTROL_REF_CAPACITY];
     int required;
 } UmiRepositorySubmodule;
+/**
+ * Initialise repository submodule from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_repository_submodule_init(
     UmiRepositorySubmodule *submodule,
     const char *name,
@@ -36,6 +43,10 @@ UmiStatus umi_repository_submodule_init(
     const char *url,
     const char *branch,
     int required);
+/**
+ * Check that repository submodule satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_repository_submodule_validate(
     const UmiRepositorySubmodule *submodule);
 #ifdef __cplusplus

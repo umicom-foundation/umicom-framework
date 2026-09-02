@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     double v[3]={-1.0,0.5,2.0}; int32_t o[3]={3,1,2}; umi_fc_layout_normalizer_ratios(v,3U,0.0,1.0); umi_fc_layout_normalizer_orders(o,3U); CHECK(v[0]==0.0&&v[2]==1.0); CHECK(o[0]==1&&o[2]==3);
     return 0;

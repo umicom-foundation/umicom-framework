@@ -16,6 +16,10 @@
 /* Umicom Framework Tests | Schema catalogue | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/integration/schema_catalogue.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIntegrationSchemaCatalogue catalogue = {0};

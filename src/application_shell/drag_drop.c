@@ -17,24 +17,34 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static int copy_text(char *destination,
                      size_t capacity,
                      const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U ||
         source == NULL || source[0] == '\0') {
         return 0;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return 0;
 
     (void)memcpy(destination, source, length + 1U);
     return 1;
 }
 
+/*
+ * Provide the application shell drop prepare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_shell_drop_prepare(
     UmiApplicationShellDropTransaction *transaction,
     const char *transaction_id,
@@ -44,6 +54,10 @@ UmiStatus umi_application_shell_drop_prepare(
     UmiApplicationShellDropOperation operation,
     size_t target_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL ||
         target_region < UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR ||
         target_region > UMI_APPLICATION_SHELL_REGION_WINDOW ||
@@ -54,6 +68,7 @@ UmiStatus umi_application_shell_drop_prepare(
 
     (void)memset(transaction, 0, sizeof(*transaction));
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!copy_text(transaction->transaction_id,
                    sizeof(transaction->transaction_id),
                    transaction_id) ||
@@ -73,9 +88,17 @@ UmiStatus umi_application_shell_drop_prepare(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application shell drop accept operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_shell_drop_accept(
     UmiApplicationShellDropTransaction *transaction)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL || transaction->transaction_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -86,20 +109,33 @@ UmiStatus umi_application_shell_drop_accept(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application shell drop reject operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_shell_drop_reject(
     UmiApplicationShellDropTransaction *transaction,
     const char *reason)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL || transaction->transaction_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     transaction->accepted = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (reason == NULL) reason = "Drop rejected.";
 
     length = strlen(reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(transaction->reason)) {
         length = sizeof(transaction->reason) - 1U;
     }

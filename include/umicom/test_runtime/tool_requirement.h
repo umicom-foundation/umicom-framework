@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime tool requirement data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeToolRequirement
 {
     uint32_t structure_size;
@@ -29,11 +33,35 @@ typedef struct UmiTestRuntimeToolRequirement
     uint64_t revision;
     bool enabled;
     } UmiTestRuntimeToolRequirement;
+/**
+ * Initialise test runtime tool requirement from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_runtime_tool_requirement_init(UmiTestRuntimeToolRequirement *value,const char *id);
+/**
+ * Check that test runtime tool requirement satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_tool_requirement_validate(const UmiTestRuntimeToolRequirement *value);
+/**
+ * Provide the test runtime tool requirement set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_tool_requirement_set_detail(UmiTestRuntimeToolRequirement *value,const char *detail);
+/**
+ * Provide the test runtime tool requirement set minimum version operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_tool_requirement_set_minimum_version(UmiTestRuntimeToolRequirement *value,uint64_t number);
+/**
+ * Provide the test runtime tool requirement set available operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_test_runtime_tool_requirement_set_available(UmiTestRuntimeToolRequirement *value,uint64_t number);
+/**
+ * Provide the test runtime tool requirement same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_test_runtime_tool_requirement_same_identity(const UmiTestRuntimeToolRequirement *left,const UmiTestRuntimeToolRequirement *right);
 #ifdef __cplusplus
 }

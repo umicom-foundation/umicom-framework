@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the debug runtime profile health data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugRuntimeProfileHealth {
     char profile_id[UMI_DEBUG_RUNTIME_ID_CAPACITY];
     char executable[UMI_DEBUG_RUNTIME_PATH_CAPACITY];
@@ -28,6 +32,10 @@ typedef struct UmiDebugRuntimeProfileHealth {
     UmiStatus status;
 } UmiDebugRuntimeProfileHealth;
 
+/**
+ * Provide the debug runtime profile health probe operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_profile_health_probe(
     const UmiDebugAdapterProfile *profile,
     UmiDebugRuntimeProfileHealth *out_health);

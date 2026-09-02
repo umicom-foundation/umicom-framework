@@ -26,8 +26,19 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named fabric content kind values accepted by this public contract.
+ */
 typedef enum UmiFabricContentKind { UMI_FABRIC_CONTENT_UNKNOWN=0,UMI_FABRIC_CONTENT_JSON=1,UMI_FABRIC_CONTENT_TEXT=2,UMI_FABRIC_CONTENT_BINARY=3,UMI_FABRIC_CONTENT_XML=4 } UmiFabricContentKind;
+/**
+ * Provide the fabric content type classify operation used by this module and its client
+ * applications.
+ */
 UmiFabricContentKind umi_fabric_content_type_classify(const char *content_type);
+/**
+ * Provide the fabric content type compatible operation used by this module and its client
+ * applications.
+ */
 bool umi_fabric_content_type_compatible(UmiFabricContentKind producer,UmiFabricContentKind consumer);
 
 #ifdef __cplusplus

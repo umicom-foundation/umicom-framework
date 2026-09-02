@@ -26,7 +26,15 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/valuation_cache_key.h"
+/**
+ * Represent the enterprise valuation cache entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationCacheEntry { UmiEnterpriseValuationCacheKey key; double present_value; int64_t stored_ms; } UmiEnterpriseValuationCacheEntry;
+/**
+ * Represent the enterprise valuation cache data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationCache { UmiEnterpriseValuationCacheEntry entries[UMI_ENTERPRISE_MAX_ITEMS]; size_t count; } UmiEnterpriseValuationCache;
 /* Initialise an empty valuation result cache. */
 void umi_enterprise_valuation_cache_init(UmiEnterpriseValuationCache *cache);

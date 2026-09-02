@@ -21,9 +21,17 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced operation journal from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_operation_journal_init(
     UmiVcsAdvancedOperationJournal *journal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) {
         return;
     }
@@ -33,6 +41,10 @@ void umi_vcs_advanced_operation_journal_init(
     journal->revision = 1U;
 }
 
+/*
+ * Add vcs advanced operation journal only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_vcs_advanced_operation_journal_append(
     UmiVcsAdvancedOperationJournal *journal,
     UmiVcsAdvancedOperationKind kind,
@@ -44,9 +56,14 @@ UmiStatus umi_vcs_advanced_operation_journal_append(
     UmiVcsAdvancedOperationJournalEntry *entry;
     UmiStatus copy_status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || kind == UMI_VCS_ADVANCED_OPERATION_NONE) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (journal->count >= UMI_VCS_ADVANCED_LIST_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -58,6 +75,7 @@ UmiStatus umi_vcs_advanced_operation_journal_append(
     entry->status = status;
     copy_status = umi_vcs_advanced_copy_text(
         entry->reference, sizeof(entry->reference), reference);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (copy_status != UMI_STATUS_OK) {
         return copy_status;
     }
@@ -67,10 +85,18 @@ UmiStatus umi_vcs_advanced_operation_journal_append(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced operation journal latest operation used by this module and its
+ * client applications.
+ */
 const UmiVcsAdvancedOperationJournalEntry *
 umi_vcs_advanced_operation_journal_latest(
     const UmiVcsAdvancedOperationJournal *journal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL || journal->count == 0U) {
         return NULL;
     }

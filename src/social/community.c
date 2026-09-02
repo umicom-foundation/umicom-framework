@@ -35,6 +35,10 @@ struct UmiSocialCommunity {
 static UmiStatus copy_text(char *destination, size_t capacity, const char *text)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -49,8 +53,14 @@ static UmiSocialMemberRecord *find_member_mutable(
     const char *member_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || member_id == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < community->member_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(community->members[index].member_id, member_id) == 0) {
             return &community->members[index];
         }
@@ -64,8 +74,14 @@ static UmiSocialMessageRecord *find_message_mutable(
     uint64_t message_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || message_id == 0U) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < community->message_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (community->messages[index].message_id == message_id) {
             return &community->messages[index];
         }
@@ -89,6 +105,10 @@ UmiStatus umi_social_community_create(
     }
     *out_community = NULL;
     community = (UmiSocialCommunity *)calloc(1U, sizeof(*community));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     community->members = (UmiSocialMemberRecord *)calloc(
         member_capacity, sizeof(*community->members));
@@ -112,6 +132,10 @@ UmiStatus umi_social_community_create(
 /* Release message and member storage before their common community owner. */
 void umi_social_community_destroy(UmiSocialCommunity *community)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL) return;
     free(community->messages);
     free(community->members);
@@ -128,6 +152,10 @@ UmiStatus umi_social_community_join(
 {
     UmiSocialMemberRecord *member;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || member_id == NULL || member_id[0] == '\0' ||
         display_name == NULL || display_name[0] == '\0' ||
         role < UMI_SOCIAL_MEMBER || role > UMI_SOCIAL_ADMINISTRATOR) {
@@ -137,12 +165,14 @@ UmiStatus umi_social_community_join(
     if (find_member_mutable(community, member_id) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (community->member_count >= community->member_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     member = &community->members[community->member_count];
     (void)memset(member, 0, sizeof(*member));
     status = copy_text(member->member_id, sizeof(member->member_id), member_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = copy_text(
         member->display_name, sizeof(member->display_name), display_name);
     /* The member is counted only after all text has copied without truncation. */
@@ -161,10 +191,18 @@ UmiStatus umi_social_community_leave(
     const char *member_id)
 {
     UmiSocialMemberRecord *member;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || member_id == NULL || member_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     member = find_member_mutable(community, member_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (member == NULL) return UMI_STATUS_NOT_FOUND;
     member->state = UMI_SOCIAL_MEMBER_LEFT;
     community->revision += 1U;
@@ -178,11 +216,19 @@ UmiStatus umi_social_community_set_member_state(
     UmiSocialMemberState state)
 {
     UmiSocialMemberRecord *member;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || member_id == NULL || member_id[0] == '\0' ||
         state < UMI_SOCIAL_MEMBER_ACTIVE || state > UMI_SOCIAL_MEMBER_LEFT) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     member = find_member_mutable(community, member_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (member == NULL) return UMI_STATUS_NOT_FOUND;
     member->state = state;
     community->revision += 1U;
@@ -201,17 +247,26 @@ UmiStatus umi_social_community_post(
     UmiSocialMemberRecord *member;
     UmiSocialMessageRecord *message;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || member_id == NULL || member_id[0] == '\0' ||
         channel_id == NULL || channel_id[0] == '\0' || content == NULL ||
         content[0] == '\0' || out_message_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     member = find_member_mutable(community, member_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (member == NULL) return UMI_STATUS_NOT_FOUND;
     /* Suspended and departed members retain history but cannot create messages. */
     if (member->state != UMI_SOCIAL_MEMBER_ACTIVE) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (community->message_count >= community->message_capacity ||
         community->next_message_id == UINT64_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -220,8 +275,10 @@ UmiStatus umi_social_community_post(
     (void)memset(message, 0, sizeof(*message));
     status = copy_text(message->member_id,
                        sizeof(message->member_id), member_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = copy_text(
         message->channel_id, sizeof(message->channel_id), channel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = copy_text(
         message->content, sizeof(message->content), content);
     /* A partially copied message is never assigned an identity or counted. */
@@ -242,8 +299,16 @@ UmiStatus umi_social_community_set_message_hidden(
     bool hidden)
 {
     UmiSocialMessageRecord *message;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || message_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     message = find_message_mutable(community, message_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message == NULL) return UMI_STATUS_NOT_FOUND;
     message->hidden = hidden;
     community->revision += 1U;
@@ -257,9 +322,15 @@ UmiStatus umi_social_community_find_member(
     UmiSocialMemberRecord *out_member)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || member_id == NULL || member_id[0] == '\0' ||
         out_member == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < community->member_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(community->members[index].member_id, member_id) == 0) {
             *out_member = community->members[index];
             return UMI_STATUS_OK;
@@ -274,7 +345,12 @@ UmiStatus umi_social_community_message_at(
     size_t index,
     UmiSocialMessageRecord *out_message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || out_message == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= community->message_count) return UMI_STATUS_NOT_FOUND;
     *out_message = community->messages[index];
     return UMI_STATUS_OK;
@@ -286,22 +362,29 @@ UmiStatus umi_social_community_snapshot(
     UmiSocialCommunitySnapshot *out_snapshot)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (community == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
     out_snapshot->api_version = 1U;
     out_snapshot->messages = community->message_count;
     out_snapshot->revision = community->revision;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < community->member_count; ++index) {
         /* Left members remain historical records but not current member counts. */
         if (community->members[index].state == UMI_SOCIAL_MEMBER_ACTIVE) {
             out_snapshot->active_members += 1U;
-        } else if (community->members[index].state ==
+        } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (community->members[index].state ==
                    UMI_SOCIAL_MEMBER_SUSPENDED) {
             out_snapshot->suspended_members += 1U;
         }
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < community->message_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!community->messages[index].hidden) {
             out_snapshot->visible_messages += 1U;
         }

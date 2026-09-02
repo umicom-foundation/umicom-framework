@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution cancellation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionCancellation {
     uint64_t revision;
     int requested;

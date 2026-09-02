@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design table spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTableSpec {
     uint16_t columns;
     uint16_t frozen_columns;

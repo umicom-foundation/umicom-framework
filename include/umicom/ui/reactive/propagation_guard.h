@@ -18,12 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive propagation guard data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactivePropagationGuard {
     size_t depth;
     size_t max_depth;
     bool blocked;
 } UmiUiReactivePropagationGuard;
+/**
+ * Provide the ui reactive propagation guard enter operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_reactive_propagation_guard_enter(UmiUiReactivePropagationGuard *item);
+/**
+ * Provide the ui reactive propagation guard leave operation used by this module and its
+ * client applications.
+ */
 void umi_ui_reactive_propagation_guard_leave(UmiUiReactivePropagationGuard *item);
 #ifdef __cplusplus
 }

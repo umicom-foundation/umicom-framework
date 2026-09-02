@@ -23,20 +23,36 @@ extern "C" {
 
 #define UMI_TEST_PLATFORM_VALIDATION_PLAN_CAPACITY 4U
 
+/**
+ * Represent the test platform validation step data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformValidationStep {
     UmiTestPlatformValidationStepKind kind;
     char command[512];
 } UmiTestPlatformValidationStep;
 
+/**
+ * Represent the test platform validation plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformValidationPlan {
     UmiTestPlatformValidationStep
         steps[UMI_TEST_PLATFORM_VALIDATION_PLAN_CAPACITY];
     size_t count;
 } UmiTestPlatformValidationPlan;
 
+/**
+ * Initialise test platform validation plan from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_test_platform_validation_plan_create(
     const UmiTestPlatformProductValidationProfile *profile,
     UmiTestPlatformValidationPlan *plan);
+/**
+ * Provide the test platform validation plan step operation used by this module and its
+ * client applications.
+ */
 const UmiTestPlatformValidationStep *umi_test_platform_validation_plan_step(
     const UmiTestPlatformValidationPlan *plan,
     size_t index);

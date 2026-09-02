@@ -20,6 +20,10 @@
 #include "umicom/debug/workbench/debug_command_set.h"
 #define UMI_TEST_CHECK(expression) do { if (!(expression)) return 1; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugWorkbenchDebugCommandSet model;

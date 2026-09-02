@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/stress_path.h"
 
-int main(void) { UmiPrudentialStressPath p={0}; if(umi_pru_stress_path_add(&p,0.9)!=UMI_STATUS_OK)return 1; if(umi_pru_stress_path_add(&p,0.8)!=UMI_STATUS_OK)return 2; return p.count==2U&&p.multipliers[1]==0.8?0:3; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialStressPath p={0}; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_pru_stress_path_add(&p,0.9)!=UMI_STATUS_OK)return 1; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_pru_stress_path_add(&p,0.8)!=UMI_STATUS_OK)return 2; return p.count==2U&&p.multipliers[1]==0.8?0:3; }

@@ -18,29 +18,50 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the find case folded operation used by this module and its client applications. */
 static const char *find_case_folded(const char *text, const char *needle)
 {
     const char *start;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || needle == NULL || needle[0] == '\0') return text;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (start = text; *start != '\0'; ++start) {
         const char *a = start;
         const char *b = needle;
 
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*a != '\0' && *b != '\0' &&
                tolower((unsigned char)*a) ==
                    tolower((unsigned char)*b)) {
@@ -48,26 +69,47 @@ static const char *find_case_folded(const char *text, const char *needle)
             ++b;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*b == '\0') return start;
     }
 
     return NULL;
 }
 
+/*
+ * Provide the developer diagnostic severity from text operation used by this module and
+ * its client applications.
+ */
 UmiDeveloperProductivitySeverity
 umi_developer_diagnostic_severity_from_text(const char *text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (find_case_folded(text, "fatal") != NULL) {
         return UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_FATAL;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (find_case_folded(text, "error") != NULL ||
         find_case_folded(text, "failed") != NULL ||
         find_case_folded(text, "undefined reference") != NULL) {
         return UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_ERROR;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (find_case_folded(text, "warning") != NULL) {
         return UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_WARNING;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (find_case_folded(text, "note") != NULL ||
         find_case_folded(text, "info") != NULL) {
         return UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_INFO;
@@ -76,6 +118,7 @@ umi_developer_diagnostic_severity_from_text(const char *text)
     return UMI_DEVELOPER_PRODUCTIVITY_SEVERITY_INFO;
 }
 
+/* Provide the init problem operation used by this module and its client applications. */
 static void init_problem(UmiDeveloperProblem *problem,
                          const char *source_id,
                          const char *line)
@@ -88,6 +131,10 @@ static void init_problem(UmiDeveloperProblem *problem,
     problem->revision = 1U;
 }
 
+/*
+ * Provide the parse colon location operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parse_colon_location(
     const char *source_id,
     const char *line,
@@ -119,10 +166,11 @@ static UmiStatus parse_colon_location(
             severity,
             message);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (parsed == 6) {
             (void)snprintf(path, sizeof(path), "%c:%s", drive, tail);
             parsed = 5;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             parsed = sscanf(
                 line,
                 "%c:%2045[^:]:%lu: %63[^:]: %1023[^\n]",
@@ -133,12 +181,13 @@ static UmiStatus parse_colon_location(
                 message);
             column_number = 0UL;
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (parsed == 5) {
                 (void)snprintf(path, sizeof(path), "%c:%s", drive, tail);
                 parsed = 4;
             }
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         parsed = sscanf(
             line,
             "%2047[^:]:%lu:%lu: %63[^:]: %1023[^\n]",
@@ -148,6 +197,7 @@ static UmiStatus parse_colon_location(
             severity,
             message);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (parsed != 5) {
             parsed = sscanf(
                 line,
@@ -160,6 +210,7 @@ static UmiStatus parse_colon_location(
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed != 5 && parsed != 4) {
         *out_matched = 0;
         return UMI_STATUS_OK;
@@ -176,6 +227,10 @@ static UmiStatus parse_colon_location(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the parse paren location operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parse_paren_location(
     const char *source_id,
     const char *line,
@@ -198,6 +253,7 @@ static UmiStatus parse_paren_location(
         code,
         message);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed < 5) {
         parsed = sscanf(
             line,
@@ -210,6 +266,7 @@ static UmiStatus parse_paren_location(
         column_number = 0UL;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed < 5) {
         *out_matched = 0;
         return UMI_STATUS_OK;
@@ -227,6 +284,7 @@ static UmiStatus parse_paren_location(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse cmake operation used by this module and its client applications. */
 static UmiStatus parse_cmake(
     const char *source_id,
     const char *line,
@@ -238,6 +296,7 @@ static UmiStatus parse_cmake(
     unsigned long line_number = 0UL;
     int parsed;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(line, "CMake ", 6U) != 0) {
         *out_matched = 0;
         return UMI_STATUS_OK;
@@ -251,6 +310,7 @@ static UmiStatus parse_cmake(
         &line_number);
 
     init_problem(problem, source_id, line);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (parsed >= 3) {
         copy_text(problem->location.uri, sizeof(problem->location.uri), path);
         problem->location.line = (size_t)line_number;
@@ -262,6 +322,7 @@ static UmiStatus parse_cmake(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse prefix operation used by this module and its client applications. */
 static UmiStatus parse_prefix(
     const char *source_id,
     const char *required_token,
@@ -269,6 +330,10 @@ static UmiStatus parse_prefix(
     UmiDeveloperProblem *problem,
     int *out_matched)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (required_token != NULL &&
         find_case_folded(line, required_token) == NULL) {
         *out_matched = 0;
@@ -280,6 +345,10 @@ static UmiStatus parse_prefix(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the parse python trace operation used by this module and its client
+ * applications.
+ */
 static UmiStatus parse_python_trace(
     const char *source_id,
     const char *line,
@@ -294,6 +363,7 @@ static UmiStatus parse_python_trace(
         path,
         &line_number);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed != 2) {
         parsed = sscanf(
             line,
@@ -302,6 +372,7 @@ static UmiStatus parse_python_trace(
             &line_number);
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed != 2) {
         *out_matched = 0;
         return UMI_STATUS_OK;
@@ -319,6 +390,7 @@ static UmiStatus parse_python_trace(
     return UMI_STATUS_OK;
 }
 
+/* Provide the parse typescript operation used by this module and its client applications. */
 static UmiStatus parse_typescript(
     const char *source_id,
     const char *line,
@@ -341,6 +413,7 @@ static UmiStatus parse_typescript(
         code,
         message);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (parsed != 6) {
         *out_matched = 0;
         return UMI_STATUS_OK;
@@ -358,6 +431,10 @@ static UmiStatus parse_typescript(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer diagnostic parse pattern operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_diagnostic_parse_pattern(
     UmiDeveloperDiagnosticPattern pattern,
     const char *source_id,
@@ -366,6 +443,10 @@ UmiStatus umi_developer_diagnostic_parse_pattern(
     UmiDeveloperProblem *out_problem,
     int *out_matched)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source_id == NULL || line == NULL ||
         out_problem == NULL || out_matched == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -373,6 +454,7 @@ UmiStatus umi_developer_diagnostic_parse_pattern(
 
     *out_matched = 0;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (pattern) {
         case UMI_DEVELOPER_DIAGNOSTIC_COLON_LOCATION:
             return parse_colon_location(

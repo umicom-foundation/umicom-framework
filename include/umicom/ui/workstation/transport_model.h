@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ws transport state values accepted by this public contract.
+ */
 typedef enum UmiWsTransportState {
     UMI_WS_TRANSPORT_STOPPED = 0,
     UMI_WS_TRANSPORT_PLAYING = 1,
@@ -31,6 +34,9 @@ typedef enum UmiWsTransportState {
     UMI_WS_TRANSPORT_SCRUBBING = 3
 } UmiWsTransportState;
 
+/**
+ * Represent the ws transport model data shared with callers of this public contract.
+ */
 typedef struct UmiWsTransportModel {
     UmiWsTransportState state;
     int64_t position_ms;
@@ -39,10 +45,30 @@ typedef struct UmiWsTransportModel {
     bool loop;
 } UmiWsTransportModel;
 
+/**
+ * Initialise ws transport model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_transport_model_init(UmiWsTransportModel *model, int64_t duration_ms);
+/**
+ * Provide the ws transport model play operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_play(UmiWsTransportModel *model);
+/**
+ * Provide the ws transport model pause operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_pause(UmiWsTransportModel *model);
+/**
+ * Provide the ws transport model seek operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_seek(UmiWsTransportModel *model, int64_t position_ms);
+/**
+ * Provide the ws transport model set rate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_transport_model_set_rate(UmiWsTransportModel *model, double rate);
 
 #ifdef __cplusplus

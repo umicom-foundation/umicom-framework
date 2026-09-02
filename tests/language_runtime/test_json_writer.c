@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){char b[128];UmiLanguageRuntimeJsonWriter w;umi_language_runtime_json_writer_init(&w,b,sizeof(b));assert(umi_language_runtime_json_writer_string(&w,"a\"b\n")==UMI_STATUS_OK);assert(strcmp(b,"\"a\\\"b\\n\"")==0);return 0;}

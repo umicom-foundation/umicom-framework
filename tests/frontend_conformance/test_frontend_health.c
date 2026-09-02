@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcFrontendHealth h={10U,1U,0U,0U,0.95}; CHECK(umi_fc_frontend_health_outcome(&h)==UMI_FC_DEGRADED); CHECK(umi_fc_frontend_health_healthy(&h,0.9));
     return 0;

@@ -19,6 +19,10 @@
 
 #include "umicom/finance/regulatory/data_lineage_node.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDataLineageNode record;

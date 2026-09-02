@@ -14,4 +14,5 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/event_contract.h"
 
-bool umi_fc_event_contract_validate(const UmiFcEventContract *item){if(item==NULL)return false;return item->required_families!=0U && item->ordered;}
+/* Check that fc event contract satisfies its contract before another service relies on it. */
+bool umi_fc_event_contract_validate(const UmiFcEventContract *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return false;return item->required_families!=0U && item->ordered;}

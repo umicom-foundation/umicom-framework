@@ -28,6 +28,10 @@ typedef UmiStatus (*UmiGtk4ViewModelActionHandler)(
     const char *action_id,
     void *user_data);
 
+/**
+ * Initialise gtk4 view model panel from caller-provided values so later operations receive
+ * a known state.
+ */
 GtkWidget *umi_gtk4_view_model_panel_create(
     UmiUiViewModel *view,
     UmiGtk4ViewModelActionHandler action_handler,

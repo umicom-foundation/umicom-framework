@@ -20,6 +20,10 @@ static const char *const EXTENSIONS[] = {
     ".sql"
 };
 
+/*
+ * Provide the developer project language sql operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_sql(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

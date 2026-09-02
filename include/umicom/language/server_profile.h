@@ -40,6 +40,9 @@ enum UmiLanguageServerCapability {
     UMI_LANGUAGE_CAP_FOLDING = 1ULL << 11
 };
 
+/**
+ * Represent the language server profile data shared with callers of this public contract.
+ */
 typedef struct UmiLanguageServerProfile {
     char id[128];
     char display_name[256];
@@ -52,22 +55,54 @@ typedef struct UmiLanguageServerProfile {
     uint64_t revision;
 } UmiLanguageServerProfile;
 
+/**
+ * Represent the language server profile registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageServerProfileRegistry UmiLanguageServerProfileRegistry;
+/**
+ * Initialise language server profile registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_language_server_profile_registry_create(
     UmiLanguageServerProfileRegistry **out_registry);
+/**
+ * Release or reset state held by language server profile registry so the same storage can
+ * be reused safely.
+ */
 void umi_language_server_profile_registry_destroy(
     UmiLanguageServerProfileRegistry *registry);
+/**
+ * Provide the language server profile registry upsert operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_server_profile_registry_upsert(
     UmiLanguageServerProfileRegistry *registry,
     const UmiLanguageServerProfile *profile);
+/**
+ * Find language server profile registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_language_server_profile_registry_find(
     const UmiLanguageServerProfileRegistry *registry, const char *id,
     UmiLanguageServerProfile *out_profile);
+/**
+ * Find language server profile registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_language_server_profile_registry_at(
     const UmiLanguageServerProfileRegistry *registry, size_t index,
     UmiLanguageServerProfile *out_profile);
+/**
+ * Return the number of records represented by language server profile registry without
+ * changing their state.
+ */
 size_t umi_language_server_profile_registry_count(
     const UmiLanguageServerProfileRegistry *registry);
+/**
+ * Provide the language server profile supports operation used by this module and its
+ * client applications.
+ */
 int umi_language_server_profile_supports(
     const UmiLanguageServerProfile *profile, uint64_t capability);
 

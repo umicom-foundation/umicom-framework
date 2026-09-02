@@ -22,8 +22,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ws os layout desktop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_os_layout_desktop(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws os layout systems operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_os_layout_systems(UmiWsLayoutTemplate *layout);
+/**
+ * Provide the ws os layout monitor operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_os_layout_monitor(UmiWsLayoutTemplate *layout);
 
 #ifdef __cplusplus

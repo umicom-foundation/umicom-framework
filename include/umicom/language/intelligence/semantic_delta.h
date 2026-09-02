@@ -24,11 +24,19 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_SEMANTIC_DELTA_API_VERSION 1U
+/**
+ * List the named language intelligence semantic delta decision values accepted by this
+ * public contract.
+ */
 typedef enum UmiLanguageIntelligenceSemanticDeltaDecision {
     UMI_LANGUAGE_INTELLIGENCE_SEMANTIC_DELTA_DENY = 0,
     UMI_LANGUAGE_INTELLIGENCE_SEMANTIC_DELTA_ALLOW = 1,
     UMI_LANGUAGE_INTELLIGENCE_SEMANTIC_DELTA_ALLOW_WITH_REFRESH = 2
 } UmiLanguageIntelligenceSemanticDeltaDecision;
+/**
+ * Represent the language intelligence semantic delta input data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiLanguageIntelligenceSemanticDeltaInput {
     UmiLanguageIntelligenceCapabilityFlags required_flags;
     UmiLanguageIntelligenceCapabilityFlags available_flags;
@@ -38,8 +46,16 @@ typedef struct UmiLanguageIntelligenceSemanticDeltaInput {
     int hard_block;
     int explicit_override;
 } UmiLanguageIntelligenceSemanticDeltaInput;
+/**
+ * Provide the language intelligence semantic delta evaluate operation used by this module
+ * and its client applications.
+ */
 UmiLanguageIntelligenceSemanticDeltaDecision umi_language_intelligence_semantic_delta_evaluate(
     const UmiLanguageIntelligenceSemanticDeltaInput *input);
+/**
+ * Provide the language intelligence semantic delta capabilities satisfied operation used
+ * by this module and its client applications.
+ */
 int umi_language_intelligence_semantic_delta_capabilities_satisfied(
     const UmiLanguageIntelligenceSemanticDeltaInput *input);
 #ifdef __cplusplus

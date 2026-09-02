@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_WINDOWS_UCRT "umicom.developer.portability.windows_ucrt"
 
+/**
+ * Provide the developer capability windows ucrt operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_windows_ucrt(void);
 

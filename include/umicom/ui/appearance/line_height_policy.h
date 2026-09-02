@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance line height policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceLineHeightPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     double minimum_multiplier;

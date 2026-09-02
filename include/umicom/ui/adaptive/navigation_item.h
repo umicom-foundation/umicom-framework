@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive navigation item data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveNavigationItem {
     char item_id[UMI_ADAPTIVE_ID_CAPACITY];
     char label[UMI_ADAPTIVE_TEXT_CAPACITY];

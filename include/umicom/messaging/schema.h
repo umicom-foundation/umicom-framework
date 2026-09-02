@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named schema compatibility values accepted by this public contract.
+ */
 typedef enum UmiSchemaCompatibility {
     UMI_SCHEMA_EXACT = 1,
     UMI_SCHEMA_BACKWARD = 2,
@@ -32,6 +35,9 @@ typedef enum UmiSchemaCompatibility {
     UMI_SCHEMA_FULL = 4
 } UmiSchemaCompatibility;
 
+/**
+ * Represent the schema descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiSchemaDescriptor {
     uint32_t structure_size;
     const char *schema_id;
@@ -41,18 +47,42 @@ typedef struct UmiSchemaDescriptor {
     UmiSchemaCompatibility compatibility;
 } UmiSchemaDescriptor;
 
+/**
+ * Represent the schema registry data shared with callers of this public contract.
+ */
 typedef struct UmiSchemaRegistry UmiSchemaRegistry;
 
+/**
+ * Initialise schema registry from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_schema_registry_create(UmiSchemaRegistry **out_registry);
+/**
+ * Release or reset state held by schema registry so the same storage can be reused safely.
+ */
 void umi_schema_registry_destroy(UmiSchemaRegistry *registry);
+/**
+ * Add schema registry only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_schema_registry_register(UmiSchemaRegistry *registry,
                                        const UmiSchemaDescriptor *schema);
+/**
+ * Find schema registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiSchemaDescriptor *umi_schema_registry_find(
     const UmiSchemaRegistry *registry,
     const char *schema_id,
     uint32_t version);
+/**
+ * Check that schema registry satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_schema_registry_validate(const UmiSchemaRegistry *registry,
                                        const UmiMessageEnvelope *message);
+/**
+ * Return the number of records represented by schema registry without changing their
+ * state.
+ */
 size_t umi_schema_registry_count(const UmiSchemaRegistry *registry);
 
 #ifdef __cplusplus

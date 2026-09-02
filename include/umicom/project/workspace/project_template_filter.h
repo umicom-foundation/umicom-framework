@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace template candidate data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceTemplateCandidate {
         const char*id;
         const char*language;

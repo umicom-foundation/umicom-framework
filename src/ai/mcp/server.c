@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(
     char *destination,
     size_t capacity,
@@ -24,6 +25,10 @@ static UmiStatus copy_text(
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL ||
         capacity == 0U ||
         source == NULL) {
@@ -31,6 +36,7 @@ static UmiStatus copy_text(
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -39,6 +45,10 @@ static UmiStatus copy_text(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise ai mcp server from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_mcp_server_init(
     UmiAiMcpServerDescriptor *server,
     const char *server_id,
@@ -48,6 +58,10 @@ UmiStatus umi_ai_mcp_server_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -58,18 +72,21 @@ UmiStatus umi_ai_mcp_server_init(
         server->server_id,
         sizeof(server->server_id),
         server_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = copy_text(
         server->display_name,
         sizeof(server->display_name),
         display_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = copy_text(
         server->endpoint,
         sizeof(server->endpoint),
         endpoint);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     server->trust = trust;
@@ -78,9 +95,14 @@ UmiStatus umi_ai_mcp_server_init(
     return umi_ai_mcp_server_validate(server);
 }
 
+/* Check that ai mcp server satisfies its contract before another service relies on it. */
 UmiStatus umi_ai_mcp_server_validate(
     const UmiAiMcpServerDescriptor *server)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL ||
         server->server_id[0] == '\0' ||
         server->display_name[0] == '\0' ||

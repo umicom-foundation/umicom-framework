@@ -25,11 +25,19 @@ extern "C" {
 #include "umicom/application/production/capability_requirement.h"
 #include "umicom/application/runtime/types.h"
 
+/**
+ * Represent the application production capability probe result data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiApplicationProductionCapabilityProbeResult {
     const UmiApplicationProductionCapabilityRequirement *requirement;
     int available;
 } UmiApplicationProductionCapabilityProbeResult;
 
+/**
+ * Represent the application production capability probe results data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiApplicationProductionCapabilityProbeResults {
     UmiApplicationProductionCapabilityProbeResult
         entries[UMI_APPLICATION_PRODUCTION_MAX_CAPABILITIES];
@@ -39,6 +47,10 @@ typedef struct UmiApplicationProductionCapabilityProbeResults {
     size_t critical_unavailable_count;
 } UmiApplicationProductionCapabilityProbeResults;
 
+/**
+ * Perform application production capability probe through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_application_production_capability_probe_run(
     const UmiApplicationProductionCapabilityRequirements *requirements,
     UmiApplicationCapabilityProbe probe, void *user_data,

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test runtime regression baseline data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeRegressionBaseline {
     uint32_t structure_size;
     char id[UMI_TEST_RUNTIME_ID_CAPACITY];
@@ -34,13 +38,45 @@ typedef struct UmiTestRuntimeRegressionBaseline {
     bool enabled;
 } UmiTestRuntimeRegressionBaseline;
 
+/**
+ * Initialise test runtime regression baseline from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_test_runtime_regression_baseline_init(UmiTestRuntimeRegressionBaseline *value, const char *id);
+/**
+ * Check that test runtime regression baseline satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_test_runtime_regression_baseline_validate(const UmiTestRuntimeRegressionBaseline *value);
+/**
+ * Provide the test runtime regression baseline set name operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_regression_baseline_set_name(UmiTestRuntimeRegressionBaseline *value, const char *name);
+/**
+ * Provide the test runtime regression baseline set detail operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_test_runtime_regression_baseline_set_detail(UmiTestRuntimeRegressionBaseline *value, const char *detail);
+/**
+ * Provide the test runtime regression baseline set expected passed operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_regression_baseline_set_expected_passed(UmiTestRuntimeRegressionBaseline *value, uint64_t number);
+/**
+ * Provide the test runtime regression baseline set expected failed operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_regression_baseline_set_expected_failed(UmiTestRuntimeRegressionBaseline *value, uint64_t number);
+/**
+ * Provide the test runtime regression baseline touch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_runtime_regression_baseline_touch(UmiTestRuntimeRegressionBaseline *value, uint64_t updated_at_ms);
+/**
+ * Provide the test runtime regression baseline same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_test_runtime_regression_baseline_same_identity(const UmiTestRuntimeRegressionBaseline *left, const UmiTestRuntimeRegressionBaseline *right);
 
 #ifdef __cplusplus

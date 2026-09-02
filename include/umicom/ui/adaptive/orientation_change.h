@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive orientation change data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveOrientationChange {
     UmiAdaptiveDisplayOrientation from;
     UmiAdaptiveDisplayOrientation to;

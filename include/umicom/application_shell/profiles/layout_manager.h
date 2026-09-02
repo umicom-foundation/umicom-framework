@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the application shell profile layout manager operation used by this module and
+ * its client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_layout_manager(void);
 
 #ifdef __cplusplus

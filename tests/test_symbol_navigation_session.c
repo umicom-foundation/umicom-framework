@@ -36,6 +36,10 @@
 
 #include "umicom/editor/symbol_navigation_session.h"
 
+/*
+ * Exercise emit symbol and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus emit_symbol(UmiEditorNavigationSymbolSink sink,
                              void *user_data,
                              const char *id,
@@ -73,6 +77,10 @@ static UmiStatus emit_symbol(UmiEditorNavigationSymbolSink sink,
     return sink(&symbol, user_data);
 }
 
+/*
+ * Exercise fake symbols and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_symbols(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -94,6 +102,10 @@ static UmiStatus fake_symbols(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;

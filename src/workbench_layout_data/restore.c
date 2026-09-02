@@ -23,6 +23,10 @@
 
 
 
+/*
+ * Provide the workbench layout restore options default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutRestoreOptions
 umi_workbench_layout_restore_options_default(void)
 {
@@ -37,22 +41,30 @@ umi_workbench_layout_restore_options_default(void)
     return options;
 }
 
+/*
+ * Provide the restore kind allowed operation used by this module and its client
+ * applications.
+ */
 static bool restore_kind_allowed(
     UmiWorkbenchLayoutDataRecordKind kind,
     const UmiWorkbenchLayoutRestoreOptions *options)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((kind ==
              UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST ||
          kind ==
              UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK) &&
         !options->restore_sessions) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_OUTBOX &&
         !options->restore_outbox) return false;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_PRESENCE &&
         !options->restore_presence) return false;
     return true;
 }
 
+/* Provide the restore record operation used by this module and its client applications. */
 static UmiStatus restore_record(
     UmiDataServer *server,
     const char *line,
@@ -69,15 +81,24 @@ static UmiStatus restore_record(
     size_t key_length;
     size_t value_length;
     UmiStatus status;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length < 8U || strncmp(line, "record=", 7U) != 0) {
         return UMI_STATUS_PARSE_ERROR;
     }
     separator = memchr(line + 7U, '|', length - 7U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (separator == NULL) return UMI_STATUS_PARSE_ERROR;
     key_length = (size_t)(separator - (line + 7U));
     value_length = length - 7U - key_length - 1U;
     encoded_key = (char *)calloc(key_length + 1U, sizeof(char));
     encoded_value = (char *)calloc(value_length + 1U, sizeof(char));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (encoded_key == NULL || encoded_value == NULL) {
         free(encoded_key);
         free(encoded_value);
@@ -87,39 +108,52 @@ static UmiStatus restore_record(
     (void)memcpy(encoded_value, separator + 1U, value_length);
     status = umi_workbench_layout_data_value_unescape(
         encoded_key, key, sizeof(key), NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_value_unescape(
             encoded_value, value, sizeof(value), NULL);
     }
     free(encoded_key);
     free(encoded_value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_data_key_parse(key, &parts);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     result->parsed_count += 1U;
+    /* Apply this operation only while the related capability or state is available. */
     if (!restore_kind_allowed(parts.kind, options)) {
         result->skipped_count += 1U;
         return UMI_STATUS_OK;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (options->validate_only) return UMI_STATUS_OK;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!options->replace_existing) {
         char existing[2];
         status = umi_data_server_get(server, key,
                                      existing, sizeof(existing));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK ||
             status == UMI_STATUS_CAPACITY_EXCEEDED) {
             result->skipped_count += 1U;
             return UMI_STATUS_OK;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_NOT_FOUND) return status;
     }
     status = umi_data_server_set(server, key, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         result->restored_count += 1U;
     }
     return status;
 }
 
+/*
+ * Perform workbench layout restore through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_restore_apply(
     UmiDataServer *server,
     const char *backup,
@@ -133,11 +167,16 @@ UmiStatus umi_workbench_layout_restore_apply(
     const char *cursor;
     bool transaction_started = false;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || backup == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     effective = options != NULL
         ? *options : umi_workbench_layout_restore_options_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -145,21 +184,35 @@ UmiStatus umi_workbench_layout_restore_apply(
     result.structure_size = sizeof(result);
     status = umi_workbench_layout_backup_validate(
         backup, length, &manifest);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && !effective.validate_only) {
         status = umi_workbench_layout_data_transaction_begin(
             server, &transaction_started);
     }
     cursor = strstr(backup, "records-begin\n");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && cursor == NULL) {
         status = UMI_STATUS_PARSE_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         cursor += strlen("records-begin\n");
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (status == UMI_STATUS_OK &&
            strncmp(cursor, "records-end\n",
                    strlen("records-end\n")) != 0) {
         const char *end = strchr(cursor, '\n');
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (end == NULL) {
             status = UMI_STATUS_PARSE_ERROR;
             break;
@@ -167,6 +220,7 @@ UmiStatus umi_workbench_layout_restore_apply(
         status = restore_record(
             server, cursor, (size_t)(end - cursor),
             &effective, &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             result.failed_count += 1U;
             break;
@@ -184,6 +238,10 @@ UmiStatus umi_workbench_layout_restore_apply(
                 : "Layout backup restored transactionally."
             : "Layout backup restore failed and was rolled back.",
         true);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) *out_result = result;
     return status;
 }

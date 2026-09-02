@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant greek set data shared with callers of this public contract.
+ */
 typedef struct UmiQuantGreekSet {
     double delta;
     double gamma;

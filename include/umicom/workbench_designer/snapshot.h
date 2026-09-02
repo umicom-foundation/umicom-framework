@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerSnapshot {
     UmiWorkbenchDesignerState controller_state;
     size_t session_count;
@@ -42,6 +46,10 @@ typedef struct UmiWorkbenchDesignerSnapshot {
     uint64_t controller_revision;
 } UmiWorkbenchDesignerSnapshot;
 
+/**
+ * Provide the workbench designer snapshot capture operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_snapshot_capture(const UmiWorkbenchDesignerController *controller, UmiWorkbenchDesignerSnapshot *out_snapshot);
 
 #ifdef __cplusplus

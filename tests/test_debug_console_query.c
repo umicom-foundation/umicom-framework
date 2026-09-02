@@ -28,6 +28,10 @@
 
 #include "umicom/debug/console_query.h"
 
+/*
+ * Exercise entry and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugConsoleEntrySnapshot entry(const char *id, const char *text,
                                           uint64_t timestamp, int severity)
 {
@@ -41,6 +45,10 @@ static UmiDebugConsoleEntrySnapshot entry(const char *id, const char *text,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugConsoleEntryRegistry *registry = NULL;

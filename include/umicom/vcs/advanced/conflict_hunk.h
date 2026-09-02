@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced conflict hunk data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedConflictHunk {
     uint32_t struct_size;
     uint32_t api_version;
@@ -38,8 +42,20 @@ typedef struct UmiVcsAdvancedConflictHunk {
     UmiVcsConflictChoice choice;
 } UmiVcsAdvancedConflictHunk;
 
+/**
+ * Initialise vcs advanced conflict hunk from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_conflict_hunk_init(UmiVcsAdvancedConflictHunk *value);
+/**
+ * Check that vcs advanced conflict hunk satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_conflict_hunk_validate(const UmiVcsAdvancedConflictHunk *value);
+/**
+ * Copy vcs advanced conflict hunk into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_conflict_hunk_set(UmiVcsAdvancedConflictHunk *value,
                                                size_t base_start,
                                                size_t base_count,

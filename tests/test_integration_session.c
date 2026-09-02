@@ -25,6 +25,10 @@
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s\n", #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiIntegrationSession s; char id[128];
     CHECK(umi_integration_session_init(&s,"session","user")==UMI_STATUS_OK);

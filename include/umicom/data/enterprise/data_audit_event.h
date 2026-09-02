@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data audit event data shared with callers of this public contract.
+ */
 typedef struct UmiDataAuditEvent {
     char event_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char operation_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];

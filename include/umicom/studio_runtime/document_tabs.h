@@ -25,6 +25,10 @@ extern "C" {
 #define UMI_STUDIO_DOCUMENT_TAB_CAPACITY \
     UMI_DOCUMENT_MAX_WORKING_COPIES
 
+/**
+ * Represent the studio runtime document tab data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeDocumentTab {
     UmiDocumentId document_id;
     char view_id[UMI_UI_ID_CAPACITY];
@@ -37,6 +41,10 @@ typedef struct UmiStudioRuntimeDocumentTab {
     uint64_t revision;
 } UmiStudioRuntimeDocumentTab;
 
+/**
+ * Represent the studio runtime document tabs data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeDocumentTabs {
     UmiStudioRuntimeDocumentTab tabs[UMI_STUDIO_DOCUMENT_TAB_CAPACITY];
     size_t count;
@@ -45,9 +53,17 @@ typedef struct UmiStudioRuntimeDocumentTabs {
     int has_active;
 } UmiStudioRuntimeDocumentTabs;
 
+/**
+ * Initialise studio document tabs from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_studio_document_tabs_init(
     UmiStudioRuntimeDocumentTabs *tabs);
 
+/**
+ * Provide the studio document tabs refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_document_tabs_refresh(
     UmiStudioRuntimeDocumentTabs *tabs,
     const UmiDocumentCoordinator *documents);

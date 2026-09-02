@@ -21,6 +21,10 @@ static const UmiStudioRuntimeActivationRule RULES[] = {
     { .command_pattern = "ai.developer.open-overview", .surface = UMI_STUDIO_SURFACE_AI_CHAT, .prefix_match = 0, .make_visible = 1, .focus = 1 }
 };
 
+/*
+ * Provide the studio activation profile ai chat operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_ai_chat(void)
 {

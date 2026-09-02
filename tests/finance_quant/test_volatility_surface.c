@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/volatility_surface.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiQuantVolatilitySurface surface; double vol=0.0;

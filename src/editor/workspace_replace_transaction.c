@@ -24,14 +24,17 @@ struct UmiEditorWorkspaceReplaceTransaction {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the map state operation used by this module and its client applications. */
 static UmiEditorWorkspaceReplaceTransactionState map_state(
     UmiEditorEditTransactionState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_EDITOR_EDIT_TRANSACTION_PREFLIGHTED:
         case UMI_EDITOR_EDIT_TRANSACTION_APPLYING:
@@ -50,17 +53,30 @@ static UmiEditorWorkspaceReplaceTransactionState map_state(
     }
 }
 
+/*
+ * Initialise editor workspace replace transaction from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_create(
     UmiEditorWorkspaceReplaceTransaction **out_transaction)
 {
     UmiEditorWorkspaceReplaceTransaction *transaction;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_transaction == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_transaction = NULL;
     transaction = (UmiEditorWorkspaceReplaceTransaction *)calloc(
         1U, sizeof(*transaction));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_editor_edit_transaction_create(&transaction->transaction);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(transaction);
         return status;
@@ -70,15 +86,27 @@ UmiStatus umi_editor_workspace_replace_transaction_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor workspace replace transaction so the same storage
+ * can be reused safely.
+ */
 void umi_editor_workspace_replace_transaction_destroy(
     UmiEditorWorkspaceReplaceTransaction *transaction)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL) return;
     umi_editor_edit_transaction_destroy(transaction->transaction);
     transaction->transaction = NULL;
     free(transaction);
 }
 
+/*
+ * Provide the editor workspace replace transaction prepare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_prepare(
     UmiEditorWorkspaceReplaceTransaction *transaction,
     const UmiEditorWorkspaceReplacePlan *plan,
@@ -88,15 +116,24 @@ UmiStatus umi_editor_workspace_replace_transaction_prepare(
     UmiEditorWorkspaceReplacePlanSnapshot plan_snapshot;
     const UmiEditorWorkspaceEditSet *edit_set;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL || plan == NULL || documents == NULL ||
         document_count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_workspace_replace_plan_snapshot(plan, &plan_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || !plan_snapshot.applicable) {
         return UMI_STATUS_INVALID_STATE;
     }
     edit_set = umi_editor_workspace_replace_plan_edit_set(plan);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (edit_set == NULL) return UMI_STATUS_INVALID_STATE;
     status = umi_editor_edit_transaction_prepare(
         transaction->transaction, edit_set, documents, document_count);
@@ -105,37 +142,62 @@ UmiStatus umi_editor_workspace_replace_transaction_prepare(
     return status;
 }
 
+/*
+ * Provide the editor workspace replace transaction commit operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_commit(
     UmiEditorWorkspaceReplaceTransaction *transaction)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_edit_transaction_commit(transaction->transaction);
     transaction->revision = next_revision(transaction->revision);
     return status;
 }
 
+/*
+ * Provide the editor workspace replace transaction cancel operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_cancel(
     UmiEditorWorkspaceReplaceTransaction *transaction)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_edit_transaction_cancel(transaction->transaction);
     transaction->revision = next_revision(transaction->revision);
     return status;
 }
 
+/*
+ * Provide the editor workspace replace transaction snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_replace_transaction_snapshot(
     const UmiEditorWorkspaceReplaceTransaction *transaction,
     UmiEditorWorkspaceReplaceTransactionSnapshot *out_snapshot)
 {
     UmiEditorEditTransactionSnapshot source;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transaction == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_edit_transaction_snapshot(
         transaction->transaction, &source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);
@@ -154,6 +216,10 @@ UmiStatus umi_editor_workspace_replace_transaction_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace replace transaction revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_workspace_replace_transaction_revision(
     const UmiEditorWorkspaceReplaceTransaction *transaction)
 {

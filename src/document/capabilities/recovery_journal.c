@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/recovery_journal.h"
 
+/*
+ * Provide the document capability recovery journal operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_recovery_journal(void)
 {

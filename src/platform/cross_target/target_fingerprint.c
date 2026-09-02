@@ -20,4 +20,8 @@
 
 #include "umicom/platform/cross_target/target_fingerprint.h"
 
-uint64_t umi_ct_target_fingerprint(const UmiCtTarget*t,uint64_t f,const char*a,uint32_t p){uint64_t h;if(t==NULL||a==NULL)return 0U;h=umi_ct_hash_text(0U,t->triple);h=umi_ct_hash_text(h,t->vendor);h=umi_ct_hash_bytes(h,&t->architecture,sizeof(t->architecture));h=umi_ct_hash_bytes(h,&t->operating_system,sizeof(t->operating_system));h=umi_ct_hash_bytes(h,&t->environment,sizeof(t->environment));h=umi_ct_hash_bytes(h,&f,sizeof(f));h=umi_ct_hash_text(h,a);h=umi_ct_hash_bytes(h,&p,sizeof(p));return h;}
+/*
+ * Provide the ct target fingerprint operation used by this module and its client
+ * applications.
+ */
+uint64_t umi_ct_target_fingerprint(const UmiCtTarget*t,uint64_t f,const char*a,uint32_t p){uint64_t h;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t==NULL||a==NULL)return 0U;h=umi_ct_hash_text(0U,t->triple);h=umi_ct_hash_text(h,t->vendor);h=umi_ct_hash_bytes(h,&t->architecture,sizeof(t->architecture));h=umi_ct_hash_bytes(h,&t->operating_system,sizeof(t->operating_system));h=umi_ct_hash_bytes(h,&t->environment,sizeof(t->environment));h=umi_ct_hash_bytes(h,&f,sizeof(f));h=umi_ct_hash_text(h,a);h=umi_ct_hash_bytes(h,&p,sizeof(p));return h;}

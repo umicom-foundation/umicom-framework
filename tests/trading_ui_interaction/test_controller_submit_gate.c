@@ -15,6 +15,10 @@
 #include "test_support.h"
 #include <assert.h>
 
+/*
+ * Exercise test controller submit gate and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_controller_submit_gate(void)
 {
     UmiTradingUiTestFixture fixture;

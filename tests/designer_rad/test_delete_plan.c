@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/delete_plan.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiRadDeletePlan p;CHECK(umi_rad_delete_plan_init(&p)==UMI_STATUS_OK);CHECK(umi_rad_delete_plan_add(&p,"button") == UMI_STATUS_OK);CHECK(umi_rad_delete_plan_contains(&p,"button"));return 0;}

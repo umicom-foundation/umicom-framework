@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the document language identity data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDocumentLanguageIdentity {
     char language_id[UMI_DOCUMENT_LANGUAGE_CAPACITY];
     char mime_type[UMI_DOCUMENT_MIME_CAPACITY];
@@ -29,6 +33,10 @@ typedef struct UmiDocumentLanguageIdentity {
     int text;
 } UmiDocumentLanguageIdentity;
 
+/**
+ * Provide the document language detect operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_document_language_detect(
     const char *path_or_name,
     UmiDocumentLanguageIdentity *out_identity);

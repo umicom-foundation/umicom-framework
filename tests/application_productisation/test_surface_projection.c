@@ -20,6 +20,10 @@
 #include "umicom/application/productisation/surface_projection.h"
 #include "umicom/test_runtime/check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProductSurfacePortfolio *portfolio =

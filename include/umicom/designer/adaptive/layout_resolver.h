@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer resolved layout data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerResolvedLayout {
     size_t visible_components;
     size_t overlay_components;

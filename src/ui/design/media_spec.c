@@ -19,5 +19,10 @@
 
 #include "umicom/ui/design/media_spec.h"
 
+/* Check that design media spec satisfies its contract before another service relies on it. */
 int umi_design_media_spec_valid(const UmiDesignMediaSpec *spec){return spec!=NULL&&spec->kind>=UMI_DESIGN_MEDIA_IMAGE&&spec->kind<=UMI_DESIGN_MEDIA_VIDEO&&!(spec->kind==UMI_DESIGN_MEDIA_IMAGE&&spec->autoplay)?1:0;}
-UmiStatus umi_design_media_spec_init(UmiDesignMediaSpec *spec,UmiDesignMediaKind kind,int controls,int autoplay,int loop,int preserve_aspect){if(spec==NULL)return UMI_STATUS_INVALID_ARGUMENT;spec->kind=kind;spec->controls=controls?1:0;spec->autoplay=autoplay?1:0;spec->loop=loop?1:0;spec->preserve_aspect=preserve_aspect?1:0;return umi_design_media_spec_valid(spec)?UMI_STATUS_OK:UMI_STATUS_INVALID_ARGUMENT;}
+/*
+ * Initialise design media spec from caller-provided values so later operations receive a
+ * known state.
+ */
+UmiStatus umi_design_media_spec_init(UmiDesignMediaSpec *spec,UmiDesignMediaKind kind,int controls,int autoplay,int loop,int preserve_aspect){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(spec==NULL)return UMI_STATUS_INVALID_ARGUMENT;spec->kind=kind;spec->controls=controls?1:0;spec->autoplay=autoplay?1:0;spec->loop=loop?1:0;spec->preserve_aspect=preserve_aspect?1:0;return umi_design_media_spec_valid(spec)?UMI_STATUS_OK:UMI_STATUS_INVALID_ARGUMENT;}

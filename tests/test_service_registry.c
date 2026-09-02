@@ -20,6 +20,10 @@
 
 static int destroyed = 0;
 
+/*
+ * Exercise destroy service and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static void destroy_service(void *service, void *user_data)
 {
     int *counter = (int *)user_data;
@@ -27,6 +31,10 @@ static void destroy_service(void *service, void *user_data)
     *counter += 1;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiServiceRegistry *registry = NULL;

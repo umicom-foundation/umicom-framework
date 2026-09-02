@@ -20,18 +20,22 @@ option(UMICOM_BUILD_QT6_ADAPTER
        "Build the optional Framework Qt6 workstation adapter"
        OFF)
 
+# Create this optional product surface only when its build option is enabled.
 if(NOT UMICOM_BUILD_QT6_ADAPTER)
     return()
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ui OR NOT TARGET umicom_ui_components)
     message(FATAL_ERROR "UmicomQt6WorkstationPlatform.cmake requires canonical umicom_ui and umicom_ui_components targets")
 endif()
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_qt6)
     return()
 endif()
 
+# Apply this branch only when its contract condition is satisfied.
 if(NOT CMAKE_CXX_COMPILER_LOADED)
     enable_language(CXX)
 endif()
@@ -129,41 +133,56 @@ target_link_libraries(umicom_ui_qt6 PUBLIC
     Qt6::Widgets
 )
 
+# Visit each bounded item once so every record receives the same rule.
 foreach(_umi_qt6_optional_target IN ITEMS
         Umicom::desktop Umicom::diagnostic_ui Umicom::terminal_ui Umicom::vcs_ui)
+    # Configure the optional target only when its feature has created it.
     if(TARGET ${_umi_qt6_optional_target})
         target_link_libraries(umicom_ui_qt6 PUBLIC ${_umi_qt6_optional_target})
     endif()
 endforeach()
 
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_ui_qt6)
 endif()
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_ENABLE_STRICT_WARNINGS)
+    # Select the warning options understood by the active compiler.
     if(MSVC)
         target_compile_options(umicom_ui_qt6 PRIVATE /WX /permissive-)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         target_compile_options(umicom_ui_qt6 PRIVATE -Werror)
     endif()
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_ui_qt6)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add qt6 adapter test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_qt6_adapter_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_QT6_WORKSTATION_ROOT}/${source}")
         target_compile_features("${target}" PRIVATE cxx_std_20)
         target_link_libraries("${target}" PRIVATE Umicom::ui_qt6)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Apply this branch only when its contract condition is satisfied.
         if(UMICOM_ENABLE_STRICT_WARNINGS)
+            # Select the warning options understood by the active compiler.
             if(MSVC)
                 target_compile_options("${target}" PRIVATE /WX /permissive-)
+            # Use the stable identifier comparison to choose the matching record or policy.
             elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
                 target_compile_options("${target}" PRIVATE -Werror)
             endif()

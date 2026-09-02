@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced commit edge data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedCommitEdge {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,8 +36,20 @@ typedef struct UmiVcsAdvancedCommitEdge {
     uint32_t parent_index;
 } UmiVcsAdvancedCommitEdge;
 
+/**
+ * Initialise vcs advanced commit edge from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_commit_edge_init(UmiVcsAdvancedCommitEdge *value);
+/**
+ * Check that vcs advanced commit edge satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_commit_edge_validate(const UmiVcsAdvancedCommitEdge *value);
+/**
+ * Copy vcs advanced commit edge into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_commit_edge_set(UmiVcsAdvancedCommitEdge *value,
                                               const char *child_oid,
                                               const char *parent_oid,

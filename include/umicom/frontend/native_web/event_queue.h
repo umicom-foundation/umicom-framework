@@ -26,6 +26,9 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/ui_event.h"
+/**
+ * Represent the native web event queue data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebEventQueue { UmiNativeWebUiEvent items[UMI_NATIVE_WEB_MAX_EVENTS]; size_t head; size_t count; uint64_t dropped; } UmiNativeWebEventQueue;
 /* Initialise an empty bounded event queue. */
 void umi_native_web_event_queue_init(UmiNativeWebEventQueue *queue);

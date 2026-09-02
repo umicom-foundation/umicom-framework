@@ -39,6 +39,9 @@ extern "C" {
 #define UMI_REG_MAX_HISTORY 128U
 #define UMI_REG_MAX_JOBS 64U
 
+/**
+ * List the named reg severity values accepted by this public contract.
+ */
 typedef enum UmiRegSeverity {
     UMI_REG_SEVERITY_INFO = 0,
     UMI_REG_SEVERITY_WARNING = 1,
@@ -46,6 +49,9 @@ typedef enum UmiRegSeverity {
     UMI_REG_SEVERITY_CRITICAL = 3
 } UmiRegSeverity;
 
+/**
+ * List the named reg lifecycle state values accepted by this public contract.
+ */
 typedef enum UmiRegLifecycleState {
     UMI_REG_STATE_DRAFT = 0,
     UMI_REG_STATE_VALIDATED = 1,
@@ -56,6 +62,9 @@ typedef enum UmiRegLifecycleState {
     UMI_REG_STATE_CANCELLED = 6
 } UmiRegLifecycleState;
 
+/**
+ * Represent the reg named metric data shared with callers of this public contract.
+ */
 typedef struct UmiRegNamedMetric {
     char name[UMI_REG_NAME_CAPACITY];
     double value;

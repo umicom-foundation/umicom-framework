@@ -25,6 +25,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository remediation policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryRemediationPolicy { int allow_safe_automatic; int allow_review_automatic; int allow_destructive_automatic; } UmiRepositoryRemediationPolicy;
 /* Initialise conservative policy that never automates review/destructive actions. */
 void umi_repository_remediation_policy_init(UmiRepositoryRemediationPolicy *policy);

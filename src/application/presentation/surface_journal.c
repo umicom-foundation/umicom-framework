@@ -16,15 +16,27 @@
 
 #include <string.h>
 
+/*
+ * Initialise application presentation surface journal from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_presentation_surface_journal_init(
     UmiApplicationPresentationSurfaceJournal *journal)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal != NULL) {
         (void)memset(journal, 0, sizeof(*journal));
         journal->next_sequence = 1U;
     }
 }
 
+/*
+ * Provide the application presentation surface journal record operation used by this
+ * module and its client applications.
+ */
 void umi_application_presentation_surface_journal_record(
     UmiApplicationPresentationSurfaceJournal *journal,
     UmiApplicationPresentationSurfaceEvent event,
@@ -32,7 +44,12 @@ void umi_application_presentation_surface_journal_record(
     UmiStatus status)
 {
     UmiApplicationPresentationSurfaceJournalEntry *entry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (journal == NULL) return;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (journal->count == UMI_APPLICATION_PRESENTATION_JOURNAL_CAPACITY) {
         (void)memmove(&journal->entries[0], &journal->entries[1],
                       sizeof(journal->entries[0]) *
@@ -46,6 +63,10 @@ void umi_application_presentation_surface_journal_record(
     entry->status = status;
 }
 
+/*
+ * Find application presentation surface journal while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationPresentationSurfaceJournalEntry *
 umi_application_presentation_surface_journal_at(
     const UmiApplicationPresentationSurfaceJournal *journal,

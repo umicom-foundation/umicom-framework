@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_ARCHIVE_PROVIDER "umicom.document.provider.archive_provider"
 
+/**
+ * Provide the document capability archive provider operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_archive_provider(void);
 

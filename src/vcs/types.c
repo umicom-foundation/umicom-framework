@@ -15,8 +15,13 @@
 
 #include "umicom/vcs/types.h"
 
+/*
+ * Provide the vcs change state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_change_state_text(UmiVcsChangeState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_VCS_CHANGE_UNMODIFIED: return "unmodified";
         case UMI_VCS_CHANGE_ADDED: return "added";
@@ -31,8 +36,13 @@ const char *umi_vcs_change_state_text(UmiVcsChangeState state)
     }
 }
 
+/*
+ * Provide the vcs conflict kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_conflict_kind_text(UmiVcsConflictKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_VCS_CONFLICT_BOTH_ADDED: return "both added";
         case UMI_VCS_CONFLICT_BOTH_MODIFIED: return "both modified";
@@ -47,8 +57,13 @@ const char *umi_vcs_conflict_kind_text(UmiVcsConflictKind kind)
     }
 }
 
+/*
+ * Provide the vcs diff line kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_diff_line_kind_text(UmiVcsDiffLineKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_VCS_DIFF_ADDITION: return "addition";
         case UMI_VCS_DIFF_DELETION: return "deletion";
@@ -60,8 +75,13 @@ const char *umi_vcs_diff_line_kind_text(UmiVcsDiffLineKind kind)
     }
 }
 
+/*
+ * Provide the vcs operation kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_operation_kind_text(UmiVcsOperationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_VCS_OPERATION_REFRESH: return "refresh";
         case UMI_VCS_OPERATION_STAGE: return "stage";
@@ -79,8 +99,13 @@ const char *umi_vcs_operation_kind_text(UmiVcsOperationKind kind)
     }
 }
 
+/*
+ * Provide the vcs operation state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_vcs_operation_state_text(UmiVcsOperationState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_VCS_OPERATION_PENDING: return "pending";
         case UMI_VCS_OPERATION_RUNNING: return "running";

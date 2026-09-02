@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test case data shared with callers of this public contract.
+ */
 typedef struct UmiTestCase {
     char test_id[UMI_TEST_ID_CAPACITY];
     char name[UMI_TEST_NAME_CAPACITY];
@@ -38,13 +41,24 @@ typedef struct UmiTestCase {
     int enabled;
 } UmiTestCase;
 
+/**
+ * Initialise test case from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_test_case_init(UmiTestCase *test_case,
                         const char *test_id,
                         const char *name);
+/**
+ * Provide the test case set command operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_case_set_command(UmiTestCase *test_case,
                                     const char *program,
                                     const char *argument_text,
                                     const char *working_directory);
+/**
+ * Check that test case satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_test_case_validate(const UmiTestCase *test_case,
                                  char *out_message,
                                  size_t capacity);

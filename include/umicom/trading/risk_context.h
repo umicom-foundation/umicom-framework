@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the risk projected position operation used by this module and its client
+ * applications.
+ */
 double umi_risk_projected_position(double current_position, const UmiOrderRequest *request);
 #ifdef __cplusplus
 }

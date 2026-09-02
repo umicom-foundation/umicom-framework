@@ -22,6 +22,10 @@
 
 #include "umicom/editor/navigation_insights.h"
 
+/*
+ * Exercise result and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorNavigationResult result(UmiEditorSourceLocationKind kind)
 {
     UmiEditorNavigationResult value = {0};
@@ -36,6 +40,10 @@ static UmiEditorNavigationResult result(UmiEditorSourceLocationKind kind)
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationInsights *insights = NULL;

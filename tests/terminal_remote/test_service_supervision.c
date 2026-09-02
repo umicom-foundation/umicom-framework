@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/service_supervision.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { return umi_terminal_remote_service_supervision_decide(UMI_TERMINAL_REMOTE_STATE_ACTIVE,UMI_TERMINAL_REMOTE_STATE_ACTIVE,UMI_TERMINAL_REMOTE_HEALTH_CRITICAL)==UMI_TERMINAL_REMOTE_SERVICE_SUPERVISION_RESTART?0:1; }

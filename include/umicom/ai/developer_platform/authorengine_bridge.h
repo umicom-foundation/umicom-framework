@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev authorengine bridge data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevAuthorengineBridge {
     char id[UMI_AI_DEV_ID_CAPACITY];
     char label[UMI_AI_DEV_TEXT_CAPACITY];
@@ -38,9 +42,25 @@ typedef struct UmiAiDevAuthorengineBridge {
     int enabled;
 } UmiAiDevAuthorengineBridge;
 
+/**
+ * Initialise ai dev authorengine bridge from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_authorengine_bridge_init(UmiAiDevAuthorengineBridge *value);
+/**
+ * Provide the ai dev authorengine bridge configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_authorengine_bridge_configure(UmiAiDevAuthorengineBridge *value, const char *id, const char *label, uint32_t priority, uint64_t flags);
+/**
+ * Check that ai dev authorengine bridge satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_ai_dev_authorengine_bridge_validate(const UmiAiDevAuthorengineBridge *value);
+/**
+ * Provide the ai dev authorengine bridge evidence score operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_ai_dev_authorengine_bridge_evidence_score(const UmiAiDevAuthorengineBridge *value, uint32_t relevance);
 
 #ifdef __cplusplus

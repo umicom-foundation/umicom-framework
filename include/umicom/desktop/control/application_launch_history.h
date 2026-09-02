@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_APPLICATION_LAUNCH_HISTORY_API_VERSION 1U
 
+/**
+ * Represent the desktop application launch history snapshot data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDesktopApplicationLaunchHistorySnapshot {
     uint32_t struct_size;
     uint32_t api_version;

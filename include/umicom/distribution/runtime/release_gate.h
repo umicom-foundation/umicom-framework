@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr release gate input data shared with callers of this public contract.
+ */
 typedef struct UmiDrReleaseGateInput { bool signatures_ok; bool checksums_ok; bool compatibility_ok; bool tests_ok; bool frontend_conformance_ok; size_t blockers; } UmiDrReleaseGateInput;
+/**
+ * Provide the dr release gate pass operation used by this module and its client
+ * applications.
+ */
 bool umi_dr_release_gate_pass(const UmiDrReleaseGateInput *input);
 
 #ifdef __cplusplus

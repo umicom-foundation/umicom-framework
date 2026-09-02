@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-INT-001", "CWE-190", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_INTEGER, 68U, UMI_CODEGUARD_MATCH_CODE, "atoi(", "atoi does not report overflow or malformed input reliably.", "Use strtol/strtoul with errno, end-pointer and range validation."}
 };
 
+/*
+ * Provide the codeguard rules integer operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_integer(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

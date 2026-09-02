@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/encoding_detection.h"
 
+/*
+ * Provide the document capability encoding detection operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_encoding_detection(void)
 {

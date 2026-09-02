@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project provider bash operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_bash(void);
 
 #ifdef __cplusplus

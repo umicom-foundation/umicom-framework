@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the notional data shared with callers of this public contract.
+ */
 typedef struct UmiNotional { UmiMoney amount; } UmiNotional;
 /* Initialize notional. */ UmiStatus umi_notional_init(UmiNotional *n,UmiMoney amount);
 /* Validate notional. */ bool umi_notional_is_valid(const UmiNotional *n);

@@ -32,23 +32,40 @@ struct UmiTerminalHistory {
     UmiMutex *mutex;
 };
 
+/* Provide the physical index operation used by this module and its client applications. */
 static size_t physical_index(const UmiTerminalHistory *history, size_t index)
 {
     return (history->head + index) % history->capacity;
 }
 
+/*
+ * Initialise terminal history from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_terminal_history_create(size_t capacity,
                                       UmiTerminalHistory **out_history)
 {
     UmiTerminalHistory *history;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_history == NULL || capacity == 0U || capacity > UMI_TERMINAL_HISTORY_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_history = NULL;
     history = (UmiTerminalHistory *)calloc(1U, sizeof(*history));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     history->entries = (UmiTerminalHistoryEntry *)calloc(capacity,
                                                          sizeof(*history->entries));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history->entries == NULL ||
         umi_mutex_create(&history->mutex) != UMI_STATUS_OK) {
         umi_terminal_history_destroy(history);
@@ -60,25 +77,40 @@ UmiStatus umi_terminal_history_create(size_t capacity,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by terminal history so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_history_destroy(UmiTerminalHistory *history)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) return;
     umi_mutex_destroy(history->mutex);
     free(history->entries);
     free(history);
 }
 
+/* Add terminal history only after its inputs and available capacity have been checked. */
 UmiStatus umi_terminal_history_append(UmiTerminalHistory *history,
                                       const UmiTerminalHistoryEntry *entry)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || entry == NULL || entry->command[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(history->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (history->count > 0U) {
         UmiTerminalHistoryEntry *last =
             &history->entries[physical_index(history, history->count - 1U)];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(last->command, entry->command) == 0 &&
             strcmp(last->session_id, entry->session_id) == 0) {
             *last = *entry;
@@ -92,10 +124,11 @@ UmiStatus umi_terminal_history_append(UmiTerminalHistory *history,
         }
     }
     position = (history->head + history->count) % history->capacity;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (history->count == history->capacity) {
         position = history->head;
         history->head = (history->head + 1U) % history->capacity;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         history->count += 1U;
     }
     history->entries[position] = *entry;
@@ -108,12 +141,21 @@ UmiStatus umi_terminal_history_append(UmiTerminalHistory *history,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find terminal history while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_terminal_history_at(const UmiTerminalHistory *history,
                                   size_t index,
                                   UmiTerminalHistoryEntry *out_entry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || out_entry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(history->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= history->count) {
         (void)umi_mutex_unlock(history->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -123,6 +165,10 @@ UmiStatus umi_terminal_history_at(const UmiTerminalHistory *history,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the terminal history search operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_history_search(const UmiTerminalHistory *history,
                                       const char *query,
                                       size_t start_index,
@@ -130,17 +176,27 @@ UmiStatus umi_terminal_history_search(const UmiTerminalHistory *history,
                                       UmiTerminalHistoryEntry *out_entry)
 {
     size_t offset;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || query == NULL || query[0] == '\0' ||
         out_index == NULL || out_entry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_mutex_lock(history->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (history->count == 0U || start_index >= history->count) {
         (void)umi_mutex_unlock(history->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (offset = start_index + 1U; offset > 0U; --offset) {
         size_t index = offset - 1U;
         const UmiTerminalHistoryEntry *entry =
             &history->entries[physical_index(history, index)];
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (strstr(entry->command, query) != NULL) {
             *out_index = index;
             *out_entry = *entry;
@@ -152,19 +208,30 @@ UmiStatus umi_terminal_history_search(const UmiTerminalHistory *history,
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the terminal history previous operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_history_previous(const UmiTerminalHistory *history,
                                         size_t *cursor,
                                         UmiTerminalHistoryEntry *out_entry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || cursor == NULL || out_entry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(history->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (history->count == 0U) {
         (void)umi_mutex_unlock(history->mutex);
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*cursor > history->count) *cursor = history->count;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*cursor == 0U) {
         (void)umi_mutex_unlock(history->mutex);
         return UMI_STATUS_NOT_FOUND;
@@ -175,14 +242,23 @@ UmiStatus umi_terminal_history_previous(const UmiTerminalHistory *history,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the terminal history next operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_terminal_history_next(const UmiTerminalHistory *history,
                                     size_t *cursor,
                                     UmiTerminalHistoryEntry *out_entry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL || cursor == NULL || out_entry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)umi_mutex_lock(history->mutex);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*cursor + 1U >= history->count) {
         *cursor = history->count;
         (void)umi_mutex_unlock(history->mutex);
@@ -194,10 +270,18 @@ UmiStatus umi_terminal_history_next(const UmiTerminalHistory *history,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the terminal history stats operation used by this module and its client
+ * applications.
+ */
 UmiTerminalHistoryStats umi_terminal_history_stats(
     const UmiTerminalHistory *history)
 {
     UmiTerminalHistoryStats stats = {0};
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) return stats;
     (void)umi_mutex_lock(history->mutex);
     stats.capacity = history->capacity;
@@ -210,8 +294,16 @@ UmiTerminalHistoryStats umi_terminal_history_stats(
     return stats;
 }
 
+/*
+ * Release or reset state held by terminal history so the same storage can be reused
+ * safely.
+ */
 void umi_terminal_history_clear(UmiTerminalHistory *history)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (history == NULL) return;
     (void)umi_mutex_lock(history->mutex);
     history->count = 0U;

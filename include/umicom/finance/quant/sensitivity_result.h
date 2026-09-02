@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant sensitivity result data shared with callers of this public contract.
+ */
 typedef struct UmiQuantSensitivityResult {
     double down_pv;
     double base_pv;

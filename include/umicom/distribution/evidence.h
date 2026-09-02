@@ -29,6 +29,9 @@ extern "C" {
 
 #define UMI_DISTRIBUTION_EVIDENCE_CAPACITY 1024U
 
+/**
+ * Represent the distribution evidence data shared with callers of this public contract.
+ */
 typedef struct UmiDistributionEvidence {
     uint32_t struct_size;
     uint32_t api_version;
@@ -47,25 +50,57 @@ typedef struct UmiDistributionEvidence {
     uint64_t revision;
 } UmiDistributionEvidence;
 
+/**
+ * Represent the distribution evidence registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDistributionEvidenceRegistry UmiDistributionEvidenceRegistry;
 
+/**
+ * Initialise distribution evidence registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_distribution_evidence_registry_create(
     UmiDistributionEvidenceRegistry **out_registry);
+/**
+ * Release or reset state held by distribution evidence registry so the same storage can be
+ * reused safely.
+ */
 void umi_distribution_evidence_registry_destroy(
     UmiDistributionEvidenceRegistry *registry);
+/**
+ * Provide the distribution evidence registry upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_distribution_evidence_registry_upsert(
     UmiDistributionEvidenceRegistry *registry,
     const UmiDistributionEvidence *evidence);
+/**
+ * Find distribution evidence registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_distribution_evidence_registry_find(
     const UmiDistributionEvidenceRegistry *registry,
     const char *release_id,
     UmiDistributionEvidence *out_evidence);
+/**
+ * Find distribution evidence registry while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_distribution_evidence_registry_at(
     const UmiDistributionEvidenceRegistry *registry,
     size_t index,
     UmiDistributionEvidence *out_evidence);
+/**
+ * Return the number of records represented by distribution evidence registry without
+ * changing their state.
+ */
 size_t umi_distribution_evidence_registry_count(
     const UmiDistributionEvidenceRegistry *registry);
+/**
+ * Check that distribution evidence satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_distribution_evidence_validate(
     const UmiDistributionEvidence *evidence,
     int require_signature,

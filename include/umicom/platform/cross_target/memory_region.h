@@ -30,11 +30,24 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ct region type values accepted by this public contract.
+ */
 typedef enum UmiCtRegionType { UMI_CT_REGION_RAM=1, UMI_CT_REGION_ROM=2, UMI_CT_REGION_MMIO=3, UMI_CT_REGION_RESERVED=4, UMI_CT_REGION_FIRMWARE=5 } UmiCtRegionType;
 typedef uint32_t UmiCtRegionPermissions;
 enum { UMI_CT_REGION_READ=1U<<0, UMI_CT_REGION_WRITE=1U<<1, UMI_CT_REGION_EXEC=1U<<2, UMI_CT_REGION_DEVICE=1U<<3 };
+/**
+ * Represent the ct memory region data shared with callers of this public contract.
+ */
 typedef struct UmiCtMemoryRegion { uint64_t base; uint64_t size; UmiCtRegionType type; UmiCtRegionPermissions permissions; } UmiCtMemoryRegion;
+/**
+ * Check that ct memory region satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ct_memory_region_validate(const UmiCtMemoryRegion *region);
+/**
+ * Provide the ct memory region overlaps operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_memory_region_overlaps(const UmiCtMemoryRegion *left,const UmiCtMemoryRegion *right);
 
 #ifdef __cplusplus

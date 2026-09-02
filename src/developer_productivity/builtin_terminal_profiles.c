@@ -29,11 +29,19 @@ static const TerminalProfileFactory FACTORIES[] = {
     umi_developer_terminal_profile_bash
 };
 
+/*
+ * Return the number of records represented by developer builtin terminal profile without
+ * changing their state.
+ */
 size_t umi_developer_builtin_terminal_profile_count(void)
 {
     return sizeof(FACTORIES) / sizeof(FACTORIES[0]);
 }
 
+/*
+ * Find developer builtin terminal profile while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperTerminalProfile *
 umi_developer_builtin_terminal_profile_at(size_t index)
 {
@@ -42,18 +50,28 @@ umi_developer_builtin_terminal_profile_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find developer builtin terminal profile while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperTerminalProfile *
 umi_developer_builtin_terminal_profile_find(const char *profile_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_developer_builtin_terminal_profile_count();
          ++index) {
         const UmiDeveloperTerminalProfile *profile = FACTORIES[index]();
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(profile->profile_id, profile_id) == 0) {
             return profile;
         }

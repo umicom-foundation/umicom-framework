@@ -16,6 +16,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise test controller refresh and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void test_controller_refresh(void)
 {
     UmiTradingUiTestFixture fixture;

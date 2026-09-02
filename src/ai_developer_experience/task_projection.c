@@ -16,24 +16,35 @@
 
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *out, size_t capacity, const char *text)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || capacity == 0U || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(out, text, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer task state from agent operation used by this module and its
+ * client applications.
+ */
 UmiAiDeveloperTaskState umi_ai_developer_task_state_from_agent(
     UmiAiCodingRuntimeState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_AI_CODING_RUNTIME_IDLE:
         case UMI_AI_CODING_RUNTIME_PREPARING:
@@ -56,6 +67,10 @@ UmiAiDeveloperTaskState umi_ai_developer_task_state_from_agent(
     }
 }
 
+/*
+ * Provide the ai developer task project operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_task_project(
     const UmiAiCodingAgentSnapshot *snapshot,
     const char *title,
@@ -65,6 +80,10 @@ UmiStatus umi_ai_developer_task_project(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (snapshot == NULL || title == NULL ||
         summary == NULL || out_entry == NULL ||
         snapshot->task_id[0] == '\0') {
@@ -77,24 +96,28 @@ UmiStatus umi_ai_developer_task_project(
         out_entry->task_id,
         sizeof(out_entry->task_id),
         snapshot->task_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_entry->request_id,
             sizeof(out_entry->request_id),
             snapshot->request_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_entry->title,
             sizeof(out_entry->title),
             title);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             out_entry->summary,
             sizeof(out_entry->summary),
             summary);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_entry->state =

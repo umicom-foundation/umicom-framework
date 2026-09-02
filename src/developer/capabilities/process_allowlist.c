@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/process_allowlist.h"
 
+/*
+ * Provide the developer capability process allowlist operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_process_allowlist(void)
 {

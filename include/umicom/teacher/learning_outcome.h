@@ -30,6 +30,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the teacher learning outcome data shared with callers of this public contract.
+ */
 typedef struct UmiTeacherLearningOutcome {
     UmiTeacherState state;
     uint32_t score;
@@ -39,10 +42,30 @@ typedef struct UmiTeacherLearningOutcome {
     uint64_t revision;
 } UmiTeacherLearningOutcome;
 
+/**
+ * Initialise teacher learning outcome from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_teacher_learning_outcome_init(UmiTeacherLearningOutcome *value);
+/**
+ * Provide the teacher learning outcome record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_teacher_learning_outcome_record(UmiTeacherLearningOutcome *value, uint32_t score, int passed);
+/**
+ * Provide the teacher learning outcome set units operation used by this module and its
+ * client applications.
+ */
 void umi_teacher_learning_outcome_set_units(UmiTeacherLearningOutcome *value, uint32_t completed_units, uint32_t total_units);
+/**
+ * Provide the teacher learning outcome completion operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_teacher_learning_outcome_completion(const UmiTeacherLearningOutcome *value);
+/**
+ * Provide the teacher learning outcome complete operation used by this module and its
+ * client applications.
+ */
 int umi_teacher_learning_outcome_complete(const UmiTeacherLearningOutcome *value);
 
 #ifdef __cplusplus

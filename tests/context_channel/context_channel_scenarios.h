@@ -16,6 +16,9 @@
 #ifndef UMICOM_CONTEXT_CHANNEL_SCENARIOS_H
 #define UMICOM_CONTEXT_CHANNEL_SCENARIOS_H
 #include <stddef.h>
+/**
+ * Represent the context scenario fixture data shared with callers of this public contract.
+ */
 typedef struct UmiContextScenarioFixture { const char *scenario_id; const char *source_application; const char *source_panel; const char *target_application; const char *target_panel; const char *schema_id; const char *channel_id; const char *subject; int expected_delivery; } UmiContextScenarioFixture;
 static const UmiContextScenarioFixture umi_context_scenario_fixtures[] = {
     {"scenario-001","studio","project-explorer","studio","editor","umicom.context/source-location","red","subject-001",1},

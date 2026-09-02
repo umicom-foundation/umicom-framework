@@ -13,6 +13,10 @@
 #include <string.h>
 #include "umicom/desktop/control/workbench_activation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDesktopWorkbenchActivationSnapshot value;

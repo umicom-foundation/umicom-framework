@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operations/branch_create.h"
 
+/*
+ * Initialise developer source control operation branch from caller-provided values so
+ * later operations receive a known state.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_branch_create(void)
 {
     static const UmiDeveloperSourceControlOperationDefinition definition = {

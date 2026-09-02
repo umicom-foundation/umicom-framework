@@ -26,8 +26,20 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric compensation policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricCompensationPolicy { bool stop_on_failure; size_t maximum_compensations; } UmiFabricCompensationPolicy;
+/**
+ * Provide the fabric compensation policy default operation used by this module and its
+ * client applications.
+ */
 void umi_fabric_compensation_policy_default(UmiFabricCompensationPolicy *policy);
+/**
+ * Provide the fabric compensation order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_compensation_order(const UmiFabricSagaPlan *plan,size_t completed_steps,char out_step_ids[UMI_FABRIC_MAX_STEPS][UMI_FABRIC_ID_CAPACITY],size_t *out_count);
 
 #ifdef __cplusplus

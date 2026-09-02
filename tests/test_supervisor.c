@@ -16,6 +16,10 @@
 #include <stddef.h>
 #include <assert.h>
 #include "umicom/resilience/supervisor.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiResilienceSupervisor *s = NULL; UmiRestartDecision d; UmiSupervisedSnapshot snap;
     assert(umi_resilience_supervisor_create(&s) == UMI_STATUS_OK);

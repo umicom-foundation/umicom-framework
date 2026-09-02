@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/lifecycle_supervision.h"
-UmiPluginExtensionHostSupervisionAction umi_plugin_extension_host_lifecycle_supervision_decide(const UmiPluginExtensionHostLifecycleSupervision *v) { if(v==NULL) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_DISABLE; if(v->trust_failure||v->policy_failure||v->crash_count>=3U) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_QUARANTINE; if(v->heartbeat_timeout&&v->restart_count<v->maximum_restarts) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_RESTART; if(v->restart_count>=v->maximum_restarts) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_DISABLE; return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_NONE; }
+/*
+ * Provide the plugin extension host lifecycle supervision decide operation used by this
+ * module and its client applications.
+ */
+UmiPluginExtensionHostSupervisionAction umi_plugin_extension_host_lifecycle_supervision_decide(const UmiPluginExtensionHostLifecycleSupervision *v) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(v==NULL) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_DISABLE; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(v->trust_failure||v->policy_failure||v->crash_count>=3U) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_QUARANTINE; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(v->heartbeat_timeout&&v->restart_count<v->maximum_restarts) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_RESTART; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(v->restart_count>=v->maximum_restarts) return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_DISABLE; return UMI_PLUGIN_EXTENSION_HOST_SUPERVISION_NONE; }

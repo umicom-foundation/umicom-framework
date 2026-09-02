@@ -17,6 +17,10 @@
 
 #include "test_support.h"
 
+/*
+ * Add test desktop monitor duplicate only after its inputs and available capacity have
+ * been checked.
+ */
 int test_desktop_monitor_duplicate_add(void)
 {
     UmiDesktopMonitorTopology topology;

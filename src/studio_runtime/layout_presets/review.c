@@ -18,6 +18,10 @@ static const UmiStudioRuntimeSurfaceKind VISIBLE[] = {
     UMI_STUDIO_SURFACE_AI_REVIEW, UMI_STUDIO_SURFACE_AI_APPROVALS, UMI_STUDIO_SURFACE_AI_VALIDATION, UMI_STUDIO_SURFACE_PROBLEMS
 };
 
+/*
+ * Provide the studio layout preset review operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeLayoutPresetDefinition *
 umi_studio_layout_preset_review(void)
 {

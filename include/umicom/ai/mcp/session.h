@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai mcp session data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpSession {
     UmiAiMcpServerDescriptor server;
     UmiAiMcpTransport transport;

@@ -20,24 +20,35 @@
 
 #include "umicom/application/component/recipe_catalogue.h"
 
+/* Provide the has text operation used by this module and its client applications. */
 static int has_text(const char *value)
 {
     return value != NULL && value[0] != '\0';
 }
 
+/* Provide the surface ready operation used by this module and its client applications. */
 static int surface_ready(
     const UmiApplicationPresentationProductSurface *surface)
 {
     return surface != NULL && surface->initialized;
 }
 
+/* Provide the surface status operation used by this module and its client applications. */
 static UmiStatus surface_status(
     const UmiApplicationPresentationProductSurface *surface)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return surface->initialized ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
 }
 
+/*
+ * Initialise application presentation product surface from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_application_presentation_product_surface_init(
     const UmiApplicationPresentationProductSurfaceConfig *config,
     UmiApplicationPresentationProductSurface *out_surface)
@@ -45,6 +56,10 @@ UmiStatus umi_application_presentation_product_surface_init(
     const UmiApplicationComponentRecipe *recipe;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || out_surface == NULL ||
         !has_text(config->application_id) || !has_text(config->recipe_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -53,9 +68,14 @@ UmiStatus umi_application_presentation_product_surface_init(
     (void)memset(out_surface, 0, sizeof(*out_surface));
     status = umi_application_presentation_surface_runtime_init(
         config->recipe_id, &out_surface->runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     recipe = out_surface->runtime.session.plan.recipe;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recipe == NULL || recipe->application_id == NULL ||
         strcmp(recipe->application_id, config->application_id) != 0) {
         (void)memset(out_surface, 0, sizeof(*out_surface));
@@ -71,14 +91,20 @@ UmiStatus umi_application_presentation_product_surface_init(
         &out_surface->runtime,
         umi_application_presentation_headless_surface_host_interface(
             &out_surface->headless));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && config->register_controllers != NULL) {
         status = config->register_controllers(
             &out_surface->runtime, config->controller_context);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_application_presentation_surface_runtime_start(
             &out_surface->runtime);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_application_presentation_product_surface_dispose(out_surface);
         return status;
@@ -87,6 +113,10 @@ UmiStatus umi_application_presentation_product_surface_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application presentation product surface init for audience operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_init_for_audience(
     const char *application_id,
     UmiApplicationComponentRecipeAudience audience,
@@ -97,11 +127,19 @@ UmiStatus umi_application_presentation_product_surface_init_for_audience(
     const UmiApplicationComponentRecipe *recipe;
     UmiApplicationPresentationProductSurfaceConfig config;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (!has_text(application_id) || out_surface == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     recipe = umi_application_component_recipe_catalogue_recommend(
         application_id, audience);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (recipe == NULL) return UMI_STATUS_NOT_FOUND;
 
     config.application_id = application_id;
@@ -112,14 +150,26 @@ UmiStatus umi_application_presentation_product_surface_init_for_audience(
         &config, out_surface);
 }
 
+/*
+ * Release or reset state held by application presentation product surface so the same
+ * storage can be reused safely.
+ */
 void umi_application_presentation_product_surface_dispose(
     UmiApplicationPresentationProductSurface *surface)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL) return;
     (void)umi_application_presentation_surface_runtime_stop(&surface->runtime);
     (void)memset(surface, 0, sizeof(*surface));
 }
 
+/*
+ * Provide the application presentation product surface activate operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_activate(
     UmiApplicationPresentationProductSurface *surface,
     const char *component_id)
@@ -131,6 +181,10 @@ UmiStatus umi_application_presentation_product_surface_activate(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface deactivate operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_deactivate(
     UmiApplicationPresentationProductSurface *surface,
     const char *component_id)
@@ -142,6 +196,10 @@ UmiStatus umi_application_presentation_product_surface_deactivate(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface focus operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_focus(
     UmiApplicationPresentationProductSurface *surface,
     const char *component_id)
@@ -153,6 +211,10 @@ UmiStatus umi_application_presentation_product_surface_focus(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface refresh operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_refresh(
     UmiApplicationPresentationProductSurface *surface)
 {
@@ -163,6 +225,10 @@ UmiStatus umi_application_presentation_product_surface_refresh(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface command operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_command(
     UmiApplicationPresentationProductSurface *surface,
     const char *component_id,
@@ -175,6 +241,10 @@ UmiStatus umi_application_presentation_product_surface_command(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface context changed operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_context_changed(
     UmiApplicationPresentationProductSurface *surface,
     const char *component_id,
@@ -187,6 +257,10 @@ UmiStatus umi_application_presentation_product_surface_context_changed(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface advance operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_advance(
     UmiApplicationPresentationProductSurface *surface,
     uint32_t elapsed_seconds)
@@ -198,6 +272,10 @@ UmiStatus umi_application_presentation_product_surface_advance(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface set background operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_set_background(
     UmiApplicationPresentationProductSurface *surface,
     int background)
@@ -209,6 +287,10 @@ UmiStatus umi_application_presentation_product_surface_set_background(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface snapshot operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_presentation_product_surface_snapshot(
     const UmiApplicationPresentationProductSurface *surface,
     UmiApplicationPresentationSurfaceSnapshot *out_snapshot)
@@ -220,6 +302,10 @@ UmiStatus umi_application_presentation_product_surface_snapshot(
         : status;
 }
 
+/*
+ * Provide the application presentation product surface runtime operation used by this
+ * module and its client applications.
+ */
 UmiApplicationPresentationSurfaceRuntime *
 umi_application_presentation_product_surface_runtime(
     UmiApplicationPresentationProductSurface *surface)
@@ -227,6 +313,10 @@ umi_application_presentation_product_surface_runtime(
     return surface_ready(surface) ? &surface->runtime : NULL;
 }
 
+/*
+ * Provide the application presentation product surface runtime const operation used by
+ * this module and its client applications.
+ */
 const UmiApplicationPresentationSurfaceRuntime *
 umi_application_presentation_product_surface_runtime_const(
     const UmiApplicationPresentationProductSurface *surface)

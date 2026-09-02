@@ -19,5 +19,10 @@
  * the matching source file.
  */
 #include "umicom/ui/gtk4/window.h"
-GtkWidget *umi_gtk4_window_new(const UmiUiComponentSpec*s){GtkWidget*w=gtk_window_new();if(s&&s->text[0])gtk_window_set_title(GTK_WINDOW(w),s->text);if(s&&s->width>0&&s->height>0)gtk_window_set_default_size(GTK_WINDOW(w),s->width,s->height);return w;}
+/* Provide the gtk4 window new operation used by this module and its client applications. */
+GtkWidget *umi_gtk4_window_new(const UmiUiComponentSpec*s){GtkWidget*w=gtk_window_new();/* Apply this branch only when its contract condition is satisfied. */ if(s&&s->text[0])gtk_window_set_title(GTK_WINDOW(w),s->text);/* Apply this branch only when its contract condition is satisfied. */ if(s&&s->width>0&&s->height>0)gtk_window_set_default_size(GTK_WINDOW(w),s->width,s->height);return w;}
+/*
+ * Provide the gtk4 header bar new operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_header_bar_new(const UmiUiComponentSpec*s){(void)s;return gtk_header_bar_new();}

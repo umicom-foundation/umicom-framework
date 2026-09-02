@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/stress_result.h"
 
-int main(void) { UmiPrudentialStressResult r; if(umi_pru_stress_result_evaluate(&r,"CET1",0.11,0.08)!=UMI_STATUS_OK)return 1; return r.passed==1?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialStressResult r; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_stress_result_evaluate(&r,"CET1",0.11,0.08)!=UMI_STATUS_OK)return 1; return r.passed==1?0:2; }

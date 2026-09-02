@@ -32,6 +32,9 @@ extern "C" {
 #define UMI_EDITOR_SEMANTIC_ROLE_CAPACITY 96U
 #define UMI_EDITOR_SEMANTIC_RESULT_ID_CAPACITY 128U
 
+/**
+ * Represent the editor semantic token data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSemanticToken {
     uint32_t struct_size;
     uint32_t api_version;
@@ -43,6 +46,9 @@ typedef struct UmiEditorSemanticToken {
     int32_t priority;
 } UmiEditorSemanticToken;
 
+/**
+ * Represent the editor semantic style data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSemanticStyle {
     uint32_t struct_size;
     uint32_t api_version;
@@ -55,6 +61,10 @@ typedef struct UmiEditorSemanticStyle {
     int strikethrough;
 } UmiEditorSemanticStyle;
 
+/**
+ * Represent the editor semantic token delta data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSemanticTokenDelta {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,6 +74,10 @@ typedef struct UmiEditorSemanticTokenDelta {
     size_t token_count;
 } UmiEditorSemanticTokenDelta;
 
+/**
+ * Represent the editor semantic highlighting snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorSemanticHighlightingSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -78,23 +92,51 @@ typedef struct UmiEditorSemanticHighlightingSnapshot {
     int has_result;
 } UmiEditorSemanticHighlightingSnapshot;
 
+/**
+ * Represent the editor semantic highlighting data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSemanticHighlighting UmiEditorSemanticHighlighting;
 
+/**
+ * Initialise editor semantic highlighting from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_semantic_highlighting_create(
     UmiEditorSemanticHighlighting **out_highlighting);
+/**
+ * Release or reset state held by editor semantic highlighting so the same storage can be
+ * reused safely.
+ */
 void umi_editor_semantic_highlighting_destroy(
     UmiEditorSemanticHighlighting *highlighting);
+/**
+ * Release or reset state held by editor semantic highlighting so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_semantic_highlighting_clear(
     UmiEditorSemanticHighlighting *highlighting);
+/**
+ * Provide the editor semantic highlighting set legend operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_set_legend(
     UmiEditorSemanticHighlighting *highlighting,
     const char *const *token_types,
     size_t token_type_count,
     const char *const *modifiers,
     size_t modifier_count);
+/**
+ * Provide the editor semantic highlighting upsert style operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_upsert_style(
     UmiEditorSemanticHighlighting *highlighting,
     const UmiEditorSemanticStyle *style);
+/**
+ * Provide the editor semantic highlighting replace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_replace(
     UmiEditorSemanticHighlighting *highlighting,
     const char *document_uri,
@@ -102,33 +144,65 @@ UmiStatus umi_editor_semantic_highlighting_replace(
     const char *result_id,
     const UmiEditorSemanticToken *tokens,
     size_t token_count);
+/**
+ * Provide the editor semantic highlighting apply delta operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_apply_delta(
     UmiEditorSemanticHighlighting *highlighting,
     const char *expected_result_id,
     const UmiEditorSemanticTokenDelta *delta,
     const char *next_result_id,
     uint64_t document_revision);
+/**
+ * Find editor semantic highlighting while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_semantic_highlighting_at(
     const UmiEditorSemanticHighlighting *highlighting,
     size_t index,
     UmiEditorSemanticToken *out_token);
+/**
+ * Provide the editor semantic highlighting style for token operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_style_for_token(
     const UmiEditorSemanticHighlighting *highlighting,
     const UmiEditorSemanticToken *token,
     UmiEditorSemanticStyle *out_style);
+/**
+ * Provide the editor semantic highlighting snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_snapshot(
     const UmiEditorSemanticHighlighting *highlighting,
     UmiEditorSemanticHighlightingSnapshot *out_snapshot);
+/**
+ * Provide the editor semantic highlighting token type name operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_token_type_name(
     const UmiEditorSemanticHighlighting *highlighting,
     size_t index,
     const char **out_name);
+/**
+ * Provide the editor semantic highlighting modifier name operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_semantic_highlighting_modifier_name(
     const UmiEditorSemanticHighlighting *highlighting,
     size_t index,
     const char **out_name);
+/**
+ * Return the number of records represented by editor semantic highlighting without
+ * changing their state.
+ */
 size_t umi_editor_semantic_highlighting_count(
     const UmiEditorSemanticHighlighting *highlighting);
+/**
+ * Provide the editor semantic highlighting revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_semantic_highlighting_revision(
     const UmiEditorSemanticHighlighting *highlighting);
 

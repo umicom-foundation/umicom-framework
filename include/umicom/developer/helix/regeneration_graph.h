@@ -18,7 +18,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix regeneration graph edge data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiHelixRegenerationGraphEdge { uint16_t from; uint16_t to; } UmiHelixRegenerationGraphEdge;
+/**
+ * Represent the helix regeneration graph data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRegenerationGraph { char ids[UMI_HELIX_MAX_ITEMS][UMI_HELIX_ID_CAPACITY]; size_t count; UmiHelixRegenerationGraphEdge edges[UMI_HELIX_MAX_EDGES]; size_t edge_count; } UmiHelixRegenerationGraph;
 /* Initialise an empty bounded graph. */
 void umi_helix_regeneration_graph_init(UmiHelixRegenerationGraph *graph);

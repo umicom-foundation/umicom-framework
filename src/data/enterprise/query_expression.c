@@ -17,15 +17,24 @@
 
 /* Initialisation centralises bounded text handling and defaults. */
 UmiStatus umi_data_query_expression_init(UmiDataQueryExpression *item, const char *expression_id, const char *field, const char *operation, const char *value) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(item, 0, sizeof(*item));
-    UmiStatus s=umi_data_enterprise_copy_text(item->expression_id,sizeof(item->expression_id),expression_id);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->field,sizeof(item->field),field);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->operation,sizeof(item->operation),operation);if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->value,sizeof(item->value),value);if(s!=UMI_STATUS_OK)return s;item->parameterized=true;
+    UmiStatus s=umi_data_enterprise_copy_text(item->expression_id,sizeof(item->expression_id),expression_id);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->field,sizeof(item->field),field);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->operation,sizeof(item->operation),operation);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;s=umi_data_enterprise_copy_text(item->value,sizeof(item->value),value);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;item->parameterized=true;
     return umi_data_query_expression_validate(item);
 }
 
 /* Validation prevents malformed metadata from leaking into later query/migration stages. */
 UmiStatus umi_data_query_expression_validate(const UmiDataQueryExpression *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!(item->expression_id[0] != '\0' && item->field[0] != '\0' && item->operation[0] != '\0')) return UMI_STATUS_INVALID_ARGUMENT;
     return UMI_STATUS_OK;
 }

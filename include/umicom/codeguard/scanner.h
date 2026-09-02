@@ -27,7 +27,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the codeguard scan operation used by this module and its client applications.
+ */
 UmiStatus umi_codeguard_scan(const UmiCodeGuardConfig *config, UmiCodeGuardResult *result);
+/**
+ * Provide the codeguard scan file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_scan_file(const UmiCodeGuardConfig *config, const char *path,
                                   UmiCodeGuardResult *result);
 #ifdef __cplusplus

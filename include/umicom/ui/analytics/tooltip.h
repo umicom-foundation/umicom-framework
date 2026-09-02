@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics tooltip data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsTooltip { char title[UMI_ANALYTICS_TEXT_CAPACITY]; char text[UMI_ANALYTICS_VALUE_CAPACITY]; double x; double y; int visible; } UmiAnalyticsTooltip;
+/**
+ * Copy analytics tooltip into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_analytics_tooltip_set(UmiAnalyticsTooltip *tooltip,const char *title,double x,double y);
 
 #ifdef __cplusplus

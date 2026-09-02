@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/analytics_filter.h"
 
-int main(void){UmiAnalyticsFilter f;if(umi_analytics_filter_init(&f,UMI_ANALYTICS_COMPARE_GTE,10)!=0)return 1;return umi_analytics_filter_matches(&f,11)?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsFilter f;/* Use the stable identifier comparison to choose the matching record or policy. */ if(umi_analytics_filter_init(&f,UMI_ANALYTICS_COMPARE_GTE,10)!=0)return 1;return umi_analytics_filter_matches(&f,11)?0:2;}

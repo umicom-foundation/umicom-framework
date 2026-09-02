@@ -27,12 +27,17 @@ UmiStatus umi_adaptive_safe_area_content_rect(UmiAdaptiveViewport viewport,
 {
     int32_t width;
     int32_t height;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_rect == NULL || viewport.width <= 0 || viewport.height <= 0 ||
         !umi_adaptive_safe_area_valid(insets)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     width = viewport.width - insets.left - insets.right;
     height = viewport.height - insets.top - insets.bottom;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (width <= 0 || height <= 0) {
         return UMI_STATUS_INVALID_STATE;
     }

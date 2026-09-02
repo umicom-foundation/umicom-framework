@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcCapabilityMatrix m; UmiFcFrontendKind fs[2]={UMI_FC_FRONTEND_GTK4,UMI_FC_FRONTEND_QT6}; umi_fc_capability_matrix_init(&m); CHECK(umi_fc_capability_matrix_set(&m,fs[0],7U)==UMI_STATUS_OK); CHECK(umi_fc_capability_matrix_set(&m,fs[1],3U)==UMI_STATUS_OK); CHECK(umi_fc_capability_matrix_common(&m,fs,2U)==3U);
     return 0;

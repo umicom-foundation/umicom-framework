@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the gtk4 appearance editor data shared with callers of this public contract.
+ */
 typedef struct UmiGtk4AppearanceEditor UmiGtk4AppearanceEditor;
 
 /**

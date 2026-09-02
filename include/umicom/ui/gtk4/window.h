@@ -23,6 +23,13 @@
 #define UMICOM_UI_GTK4_WINDOW_H
 #include <gtk/gtk.h>
 #include "umicom/ui/components/component.h"
+/**
+ * Provide the gtk4 window new operation used by this module and its client applications.
+ */
 GtkWidget *umi_gtk4_window_new(const UmiUiComponentSpec *spec);
+/**
+ * Provide the gtk4 header bar new operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_header_bar_new(const UmiUiComponentSpec *spec);
 #endif

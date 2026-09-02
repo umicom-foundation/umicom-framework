@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/liquidity_asset.h"
 
-int main(void) { UmiPrudentialLiquidityAsset a; UmiCurrency c={"GBP"}; if(umi_pru_liquidity_asset_init(&a,"GILT",UMI_PRU_HQLA_LEVEL1,100.0,0.05,c)!=UMI_STATUS_OK)return 1; return a.eligible_value==95.0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialLiquidityAsset a; UmiCurrency c={"GBP"}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_liquidity_asset_init(&a,"GILT",UMI_PRU_HQLA_LEVEL1,100.0,0.05,c)!=UMI_STATUS_OK)return 1; return a.eligible_value==95.0?0:2; }

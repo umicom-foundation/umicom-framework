@@ -23,6 +23,10 @@
 /* Initialise every registry so no application owns hidden custody state. */
 void umi_digital_asset_digital_asset_service_init(UmiDigitalAssetService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service != NULL) {
         memset(service, 0, sizeof *service);
         umi_digital_asset_network_catalogue_init(&service->networks);
@@ -40,6 +44,10 @@ void umi_digital_asset_digital_asset_service_init(UmiDigitalAssetService *servic
 /* Activation is explicit for runtime bootstrap, observability and policy control. */
 UmiStatus umi_digital_asset_digital_asset_service_start(UmiDigitalAssetService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     service->started = true;
     service->revision++;

@@ -28,6 +28,10 @@
 
 #include "umicom/debug/memory_view.h"
 
+/*
+ * Exercise make block and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugMemoryBlock make_block(void)
 {
     UmiDebugMemoryBlock block;
@@ -44,12 +48,17 @@ static UmiDebugMemoryBlock make_block(void)
     block.length = 16U;
     block.writable = 1;
     block.complete = 1;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < block.length; ++position) {
         block.bytes[position] = (unsigned char)(position + 0x20U);
     }
     return block;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugMemoryView *view = NULL;

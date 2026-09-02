@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer source control operation branch checkout operation used by this
+ * module and its client applications.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_branch_checkout(void);
 
 #ifdef __cplusplus

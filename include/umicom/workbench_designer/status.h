@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer status model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerStatusModel {
     char message[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
     char layout_name[UMI_WORKBENCH_DESIGNER_LABEL_CAPACITY];
@@ -42,7 +46,15 @@ typedef struct UmiWorkbenchDesignerStatusModel {
     uint64_t revision;
 } UmiWorkbenchDesignerStatusModel;
 
+/**
+ * Initialise workbench designer status from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_status_init(UmiWorkbenchDesignerStatusModel *status);
+/**
+ * Provide the workbench designer status update operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_status_update(UmiWorkbenchDesignerStatusModel *status, const char *message, const char *layout_name, UmiWorkbenchDesignerMode mode, UmiWorkbenchDesignerTool tool, UmiWorkbenchDesignerSaveState save_state, UmiWorkbenchDesignerPoint pointer_world, double zoom, const UmiWorkbenchDesignerSelection *selection, const UmiWorkbenchDesignerCollaborationModel *collaboration, size_t issue_count, bool layout_locked, uint64_t document_revision);
 
 #ifdef __cplusplus

@@ -18,10 +18,18 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Initialise tool test fixture from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus tool_test_fixture_init(ToolTestFixture *fixture)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (fixture == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     (void)memset(fixture, 0, sizeof(*fixture));
@@ -31,6 +39,7 @@ UmiStatus tool_test_fixture_init(ToolTestFixture *fixture)
     status = test_workspace_adapter(
         &fixture->workspace_storage,
         &fixture->workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_environment_init(
@@ -39,6 +48,7 @@ UmiStatus tool_test_fixture_init(ToolTestFixture *fixture)
         NULL,
         &fixture->workspace,
         ".");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_ai_coding_checkpoint_store_init(&fixture->checkpoints);
@@ -46,12 +56,14 @@ UmiStatus tool_test_fixture_init(ToolTestFixture *fixture)
     status = umi_ai_coding_tool_environment_set_checkpoints(
         &fixture->environment,
         &fixture->checkpoints);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     fixture->runtime.policy.allow_tools = 1;
     fixture->runtime.policy.require_tool_approval = 1;
 
     status = umi_ai_coding_tool_register_all(&fixture->environment);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_coding_tool_executor_init(
@@ -59,12 +71,24 @@ UmiStatus tool_test_fixture_init(ToolTestFixture *fixture)
         &fixture->environment);
 }
 
+/*
+ * Exercise tool test fixture deinit and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void tool_test_fixture_deinit(ToolTestFixture *fixture)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (fixture == NULL) return;
     umi_ai_coding_tool_executor_deinit(&fixture->executor);
 }
 
+/*
+ * Perform tool test fake through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus tool_test_fake_execute(
     void *user_data,
     const UmiDeveloperOperationSnapshot *operation,
@@ -72,6 +96,10 @@ UmiStatus tool_test_fake_execute(
 {
     FakeExecutionState *state = (FakeExecutionState *)user_data;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || operation == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -83,6 +111,10 @@ UmiStatus tool_test_fake_execute(
     out_result->launched = state->launched;
     out_result->duration_ms = 5U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state->output != NULL) {
         (void)snprintf(
             out_result->output,
@@ -95,6 +127,10 @@ UmiStatus tool_test_fake_execute(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake provider generate and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiStatus fake_provider_generate(
     void *instance,
     const UmiAiRequest *request,
@@ -103,10 +139,15 @@ static UmiStatus fake_provider_generate(
     FakeProviderState *state = (FakeProviderState *)instance;
     const char *text;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || request == NULL || response == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (state->next_response >= state->response_count) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -134,6 +175,10 @@ static UmiStatus fake_provider_generate(
     return umi_ai_response_set_text(response, text);
 }
 
+/*
+ * Exercise tool test add provider and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 UmiStatus tool_test_add_provider(
     UmiAiRuntime *runtime,
     const char *provider_id,
@@ -141,6 +186,10 @@ UmiStatus tool_test_add_provider(
 {
     UmiAiProvider provider;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || provider_id == NULL || state == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

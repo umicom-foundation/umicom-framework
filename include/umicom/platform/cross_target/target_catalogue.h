@@ -30,11 +30,28 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct target profile data shared with callers of this public contract.
+ */
 typedef struct UmiCtTargetProfile UmiCtTargetProfile;
 #include "umicom/platform/cross_target/target_profile.h"
+/**
+ * Represent the ct target catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiCtTargetCatalogue { UmiCtTargetProfile items[UMI_CT_MAX_ITEMS]; size_t count; uint64_t revision; } UmiCtTargetCatalogue;
+/**
+ * Initialise ct target catalogue from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ct_target_catalogue_init(UmiCtTargetCatalogue *catalogue);
+/**
+ * Add ct target catalogue only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ct_target_catalogue_add(UmiCtTargetCatalogue *catalogue,const UmiCtTargetProfile *profile);
+/**
+ * Find ct target catalogue while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiCtTargetProfile *umi_ct_target_catalogue_find(const UmiCtTargetCatalogue *catalogue,const char *profile_id);
 
 #ifdef __cplusplus

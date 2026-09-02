@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRepositoryWorkflowRequest request;
@@ -38,10 +42,12 @@ int main(void)
         &request, UMI_REPOSITORY_WORKFLOW_PUBLISH, ".");
     request.commit_message = "feat(repository): add safe workflow";
     request.dry_run = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_repository_workflow_execute(
             NULL, NULL, &request, &report) != UMI_STATUS_OK) {
         return EXIT_FAILURE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!report.planned || report.commit_created || report.pushed ||
         strstr(report.output, "stage, validate") == NULL ||
         strstr(report.output, "origin/main") == NULL ||
@@ -51,6 +57,7 @@ int main(void)
     umi_repository_workflow_request_init(
         &request, UMI_REPOSITORY_WORKFLOW_UPDATE, ".");
     request.dry_run = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_repository_workflow_execute(
             NULL, NULL, &request, &report) != UMI_STATUS_OK ||
         !report.planned || strstr(report.output, "fast-forward") == NULL ||

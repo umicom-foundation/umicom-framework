@@ -19,10 +19,12 @@ include(GNUInstallDirs)
 set(UMICOM_WORKBENCH_SELECTION_PROVIDER_FRAMEWORK_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_workbench_selection_provider)
     return()
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_workbench_selection)
     message(FATAL_ERROR
         "Workbench Selection Provider requires Umicom::workbench_selection")
@@ -168,13 +170,16 @@ target_link_libraries(umicom_workbench_selection_provider PUBLIC
     Umicom::test_platform
 )
 
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_workbench_selection_provider)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_workbench_selection_provider)
 endif()
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE
         Umicom::workbench_selection_provider
@@ -203,7 +208,10 @@ install(
         "${CMAKE_INSTALL_DATADIR}/umicom/resources/workbench-selection-provider"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add workbench selection provider test build helper so parent and application
+    # projects apply one consistent rule.
     function(umicom_add_workbench_selection_provider_test target test_name source)
         add_executable("${target}"
             "${UMICOM_WORKBENCH_SELECTION_PROVIDER_FRAMEWORK_ROOT}/${source}"
@@ -211,9 +219,11 @@ if(BUILD_TESTING)
         target_link_libraries("${target}" PRIVATE
             Umicom::workbench_selection_provider
         )
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

@@ -15,6 +15,10 @@
 
 #include "umicom/workbench_context_link/gtk4.h"
 
+/*
+ * Provide the workbench context link gtk4 inspector new operation used by this module and
+ * its client applications.
+ */
 GtkWidget *umi_workbench_context_link_gtk4_inspector_new(
     const UmiWorkbenchContextLinkService *service,
     const char *group_id)
@@ -24,12 +28,20 @@ GtkWidget *umi_workbench_context_link_gtk4_inspector_new(
     GtkWidget *title = gtk_label_new("Context Inspector");
     gtk_widget_add_css_class(title, "heading");
     gtk_box_append(GTK_BOX(box), title);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service != NULL && group_id != NULL) {
         slot = umi_workbench_context_link_service_current(service, group_id);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (slot == NULL) {
         gtk_box_append(GTK_BOX(box), gtk_label_new("No active context"));
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_box_append(GTK_BOX(box), gtk_label_new(umi_context_kind_text(slot->payload.kind)));
         gtk_box_append(GTK_BOX(box), gtk_label_new(slot->payload.identity.context_id));
         gtk_box_append(GTK_BOX(box), gtk_label_new(slot->payload.identity.source_application_id));

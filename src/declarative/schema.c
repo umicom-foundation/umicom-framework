@@ -19,4 +19,8 @@
  */
 
 #include "umicom/declarative/schema.h"
-UmiStatus umi_decl_schema_init(UmiDeclSchema *s,UmiDeclComponentRegistry *c){if(s==NULL||c==NULL)return UMI_STATUS_INVALID_ARGUMENT;s->version=umi_decl_version_current();s->components=c;s->allow_unknown_properties=0;return UMI_STATUS_OK;}
+/*
+ * Initialise decl schema from caller-provided values so later operations receive a known
+ * state.
+ */
+UmiStatus umi_decl_schema_init(UmiDeclSchema *s,UmiDeclComponentRegistry *c){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||c==NULL)return UMI_STATUS_INVALID_ARGUMENT;s->version=umi_decl_version_current();s->components=c;s->allow_unknown_properties=0;return UMI_STATUS_OK;}

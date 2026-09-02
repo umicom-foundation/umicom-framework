@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_LAYOUT_CLONE_API_VERSION 1U
 
+/**
+ * Represent the desktop layout clone snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopLayoutCloneSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

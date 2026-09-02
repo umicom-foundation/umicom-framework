@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtSchedulerProfile p={UMI_CT_SCHED_PREEMPTIVE,4U,2000U,32U,true,true};CHECK(umi_ct_scheduler_profile_validate(&p)==UMI_STATUS_OK);p.timeslice_us=0U;CHECK(umi_ct_scheduler_profile_validate(&p)==UMI_STATUS_INVALID_STATE);return 0;}

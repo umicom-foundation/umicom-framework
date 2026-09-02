@@ -20,8 +20,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced range mapping from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_range_mapping_init(UmiVcsAdvancedRangeMapping *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return;
     (void)memset(value, 0, sizeof(*value));
     value->struct_size = (uint32_t)sizeof(*value);
@@ -29,8 +37,16 @@ void umi_vcs_advanced_range_mapping_init(UmiVcsAdvancedRangeMapping *value)
 
 }
 
+/*
+ * Check that vcs advanced range mapping satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_range_mapping_validate(const UmiVcsAdvancedRangeMapping *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL ||
         value->struct_size < sizeof(*value) ||
         value->api_version != UMI_VCS_ADVANCED_API_VERSION ||
@@ -40,14 +56,24 @@ UmiStatus umi_vcs_advanced_range_mapping_validate(const UmiVcsAdvancedRangeMappi
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs advanced range mapping delta operation used by this module and its
+ * client applications.
+ */
 long long umi_vcs_advanced_range_mapping_delta(const UmiVcsAdvancedRangeMapping *value)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_range_mapping_validate(value) != UMI_STATUS_OK) return 0LL;
     return (long long)value->target_start - (long long)value->source_start;
 }
+/*
+ * Provide the vcs advanced range mapping contains source operation used by this module and
+ * its client applications.
+ */
 int umi_vcs_advanced_range_mapping_contains_source(const UmiVcsAdvancedRangeMapping *value,
                                                      size_t line)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_range_mapping_validate(value) != UMI_STATUS_OK) return 0;
     return line >= value->source_start && line < value->source_start + value->source_count;
 }

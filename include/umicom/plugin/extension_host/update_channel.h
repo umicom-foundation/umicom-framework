@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host update channel data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostUpdateChannel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,9 +44,25 @@ typedef struct UmiPluginExtensionHostUpdateChannel {
     uint64_t revision;
 } UmiPluginExtensionHostUpdateChannel;
 
+/**
+ * Initialise plugin extension host update channel from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_update_channel_init(UmiPluginExtensionHostUpdateChannel *value);
+/**
+ * Provide the plugin extension host update channel configure operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_update_channel_configure(UmiPluginExtensionHostUpdateChannel *value, const char *id, const char *subject, uint32_t version, uint32_t risk, uint64_t flags);
+/**
+ * Check that plugin extension host update channel satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_plugin_extension_host_update_channel_validate(const UmiPluginExtensionHostUpdateChannel *value);
+/**
+ * Provide the plugin extension host update channel fingerprint operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_update_channel_fingerprint(const UmiPluginExtensionHostUpdateChannel *value);
 
 #ifdef __cplusplus

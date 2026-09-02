@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation dependency data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationDependency { char prerequisite_task_id[UMI_ENTERPRISE_ID_CAPACITY]; char dependent_task_id[UMI_ENTERPRISE_ID_CAPACITY]; } UmiEnterpriseValuationDependency;
 /* Initialise a directed valuation-task dependency while rejecting self-dependency. */
 UmiStatus umi_enterprise_valuation_dependency_init(UmiEnterpriseValuationDependency *dependency,const char *prerequisite_task_id,const char *dependent_task_id);

@@ -28,6 +28,10 @@ extern "C" {
 #define UMI_APPLICATION_PRESENTATION_API_VERSION 1U
 #define UMI_APPLICATION_PRESENTATION_PLAN_CAPACITY 64U
 
+/**
+ * List the named application presentation surface kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationPresentationSurfaceKind {
     UMI_APPLICATION_PRESENTATION_SURFACE_VIEW = 1,
     UMI_APPLICATION_PRESENTATION_SURFACE_EDITOR = 2,
@@ -37,6 +41,9 @@ typedef enum UmiApplicationPresentationSurfaceKind {
     UMI_APPLICATION_PRESENTATION_SURFACE_SERVICE = 6
 } UmiApplicationPresentationSurfaceKind;
 
+/**
+ * List the named application presentation chrome values accepted by this public contract.
+ */
 typedef enum UmiApplicationPresentationChrome {
     UMI_APPLICATION_PRESENTATION_CHROME_STANDARD = 1,
     UMI_APPLICATION_PRESENTATION_CHROME_DOCUMENT = 2,
@@ -46,6 +53,10 @@ typedef enum UmiApplicationPresentationChrome {
     UMI_APPLICATION_PRESENTATION_CHROME_SERVICE = 6
 } UmiApplicationPresentationChrome;
 
+/**
+ * List the named application presentation empty action values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationPresentationEmptyAction {
     UMI_APPLICATION_PRESENTATION_EMPTY_NONE = 0,
     UMI_APPLICATION_PRESENTATION_EMPTY_CREATE = 1,
@@ -55,18 +66,29 @@ typedef enum UmiApplicationPresentationEmptyAction {
     UMI_APPLICATION_PRESENTATION_EMPTY_CONNECT = 5
 } UmiApplicationPresentationEmptyAction;
 
+/**
+ * List the named application presentation density values accepted by this public contract.
+ */
 typedef enum UmiApplicationPresentationDensity {
     UMI_APPLICATION_PRESENTATION_DENSITY_COMFORTABLE = 1,
     UMI_APPLICATION_PRESENTATION_DENSITY_BALANCED = 2,
     UMI_APPLICATION_PRESENTATION_DENSITY_COMPACT = 3
 } UmiApplicationPresentationDensity;
 
+/**
+ * List the named application presentation navigation values accepted by this public
+ * contract.
+ */
 typedef enum UmiApplicationPresentationNavigation {
     UMI_APPLICATION_PRESENTATION_NAVIGATION_EXPANDED = 1,
     UMI_APPLICATION_PRESENTATION_NAVIGATION_RAIL = 2,
     UMI_APPLICATION_PRESENTATION_NAVIGATION_HIDDEN = 3
 } UmiApplicationPresentationNavigation;
 
+/**
+ * Represent the application presentation panel spec data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationPanelSpec {
     uint32_t struct_size;
     uint32_t api_version;
@@ -84,6 +106,10 @@ typedef struct UmiApplicationPresentationPanelSpec {
     int default_visible;
 } UmiApplicationPresentationPanelSpec;
 
+/**
+ * Represent the application presentation window spec data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationWindowSpec {
     uint32_t struct_size;
     uint32_t api_version;
@@ -102,12 +128,20 @@ typedef struct UmiApplicationPresentationWindowSpec {
     int allow_multiple_windows;
 } UmiApplicationPresentationWindowSpec;
 
+/**
+ * Represent the application presentation panel placement data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationPresentationPanelPlacement {
     const UmiApplicationPresentationPanelSpec *panel;
     const UmiApplicationComponentRecipeSlot *slot;
     size_t order;
 } UmiApplicationPresentationPanelPlacement;
 
+/**
+ * Represent the application presentation plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationPresentationPlan {
     const UmiApplicationComponentRecipe *recipe;
     const UmiApplicationPresentationWindowSpec *window;
@@ -118,14 +152,34 @@ typedef struct UmiApplicationPresentationPlan {
     size_t locked_count;
 } UmiApplicationPresentationPlan;
 
+/**
+ * Provide the application presentation surface kind text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_surface_kind_text(
     UmiApplicationPresentationSurfaceKind kind);
+/**
+ * Provide the application presentation chrome text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_presentation_chrome_text(
     UmiApplicationPresentationChrome chrome);
+/**
+ * Provide the application presentation empty action text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_empty_action_text(
     UmiApplicationPresentationEmptyAction action);
+/**
+ * Provide the application presentation density text operation used by this module and its
+ * client applications.
+ */
 const char *umi_application_presentation_density_text(
     UmiApplicationPresentationDensity density);
+/**
+ * Provide the application presentation navigation text operation used by this module and
+ * its client applications.
+ */
 const char *umi_application_presentation_navigation_text(
     UmiApplicationPresentationNavigation navigation);
 

@@ -17,12 +17,24 @@
 
 #include <string.h>
 
+/*
+ * Initialise application component diagnostic report from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_application_component_diagnostic_report_init(
     UmiApplicationComponentDiagnosticReport *report) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (report != NULL)
     (void)memset(report, 0, sizeof(*report));
 }
 
+/*
+ * Find application component diagnostic report while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationComponentDiagnostic *umi_application_component_diagnostic_report_at(
     const UmiApplicationComponentDiagnosticReport *report, size_t index) {
   return report != NULL && report->count <= UMI_APPLICATION_COMPONENT_DIAGNOSTIC_CAPACITY &&
@@ -31,6 +43,10 @@ const UmiApplicationComponentDiagnostic *umi_application_component_diagnostic_re
              : NULL;
 }
 
+/*
+ * Provide the application component diagnostic report passed operation used by this module
+ * and its client applications.
+ */
 int umi_application_component_diagnostic_report_passed(
     const UmiApplicationComponentDiagnosticReport *report) {
   return report != NULL && report->count <= UMI_APPLICATION_COMPONENT_DIAGNOSTIC_CAPACITY &&

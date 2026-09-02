@@ -18,16 +18,31 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the treasury netting result data shared with callers of this public contract.
+ */
 typedef struct UmiTreasuryNettingResult {
     char id[UMI_TREASURY_ID_CAPACITY];
     int64_t gross_minor;
     int64_t net_minor;
 } UmiTreasuryNettingResult;
+/**
+ * Initialise treasury netting result from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_treasury_netting_result_init(UmiTreasuryNettingResult *value,
     const char *id,
     int64_t gross_minor,
     int64_t net_minor);
+/**
+ * Check that treasury netting result satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_treasury_netting_result_valid(const UmiTreasuryNettingResult *value);
+/**
+ * Provide the treasury netting result reduction minor operation used by this module and
+ * its client applications.
+ */
 int64_t umi_treasury_netting_result_reduction_minor(const UmiTreasuryNettingResult *value);
 #ifdef __cplusplus
 }

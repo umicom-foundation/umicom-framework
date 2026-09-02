@@ -29,15 +29,35 @@ typedef struct UmiTestWorkbenchDiagnosticSnapshot {
   uint32_t item_count;
   bool active;
 } UmiTestWorkbenchDiagnosticSnapshot;
+/**
+ * Initialise test workbench diagnostic snapshot from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_test_workbench_diagnostic_snapshot_init(
     UmiTestWorkbenchDiagnosticSnapshot *model, const char *id,
     const char *label);
+/**
+ * Exercise test workbench diagnostic snapshot set active and return a clear result when
+ * the behaviour no longer matches its contract.
+ */
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
     UmiTestWorkbenchDiagnosticSnapshot *model, bool active);
+/**
+ * Return the number of records represented by test workbench diagnostic snapshot set
+ * without changing their state.
+ */
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
     UmiTestWorkbenchDiagnosticSnapshot *model, uint32_t item_count);
+/**
+ * Exercise test workbench diagnostic snapshot set state and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
     UmiTestWorkbenchDiagnosticSnapshot *model, UmiTestWorkbenchState state);
+/**
+ * Check that test workbench diagnostic snapshot satisfies its contract before another
+ * service relies on it.
+ */
 int umi_test_workbench_diagnostic_snapshot_valid(
     const UmiTestWorkbenchDiagnosticSnapshot *model);
 #ifdef __cplusplus

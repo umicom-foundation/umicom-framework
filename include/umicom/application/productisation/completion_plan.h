@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the productisation completion step data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductisationCompletionStep {
     UmiProductisationStage stage;
     UmiProductisationSeverity severity;
@@ -34,6 +38,10 @@ typedef struct UmiProductisationCompletionStep {
     size_t affected_application_count;
 } UmiProductisationCompletionStep;
 
+/**
+ * Represent the productisation completion plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductisationCompletionPlan {
     UmiProductisationCompletionStep steps[UMI_PRODUCTISATION_MAX_STEPS];
     size_t step_count;

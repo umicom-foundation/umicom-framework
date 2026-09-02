@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/application_binding.h"
 
+/**
+ * Represent the application production feature binding data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionFeatureBinding {
     const UmiExperienceFeatureDefinition *feature;
     int open;
@@ -31,6 +35,10 @@ typedef struct UmiApplicationProductionFeatureBinding {
     int external_adapter_work;
 } UmiApplicationProductionFeatureBinding;
 
+/**
+ * Represent the application production feature bindings data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionFeatureBindings {
     UmiApplicationProductionFeatureBinding
         entries[UMI_APPLICATION_PRODUCTION_MAX_FEATURES];
@@ -40,9 +48,17 @@ typedef struct UmiApplicationProductionFeatureBindings {
     size_t external_adapter_work_count;
 } UmiApplicationProductionFeatureBindings;
 
+/**
+ * Provide the application production feature bindings build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_feature_bindings_build(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionFeatureBindings *out_bindings);
+/**
+ * Find application production feature bindings while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiApplicationProductionFeatureBinding *
 umi_application_production_feature_bindings_find(
     const UmiApplicationProductionFeatureBindings *bindings,

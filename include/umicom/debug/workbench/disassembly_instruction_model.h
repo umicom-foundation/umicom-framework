@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench disassembly instruction model data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDebugWorkbenchDisassemblyInstructionModel {
     UmiDebugWorkbenchEntry value;
     uint64_t start_address;
@@ -35,10 +39,30 @@ typedef struct UmiDebugWorkbenchDisassemblyInstructionModel {
     uint64_t revision;
 } UmiDebugWorkbenchDisassemblyInstructionModel;
 
+/**
+ * Initialise debug workbench disassembly instruction model from caller-provided values so
+ * later operations receive a known state.
+ */
 UmiStatus umi_debug_workbench_disassembly_instruction_model_init(UmiDebugWorkbenchDisassemblyInstructionModel *model, const char *id, uint64_t start_address, uint64_t extent);
+/**
+ * Provide the debug workbench disassembly instruction model set cursor operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_debug_workbench_disassembly_instruction_model_set_cursor(UmiDebugWorkbenchDisassemblyInstructionModel *model, uint64_t address);
+/**
+ * Provide the debug workbench disassembly instruction model set follow execution operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_debug_workbench_disassembly_instruction_model_set_follow_execution(UmiDebugWorkbenchDisassemblyInstructionModel *model, bool follow);
+/**
+ * Provide the debug workbench disassembly instruction model contains operation used by
+ * this module and its client applications.
+ */
 int umi_debug_workbench_disassembly_instruction_model_contains(const UmiDebugWorkbenchDisassemblyInstructionModel *model, uint64_t address);
+/**
+ * Check that debug workbench disassembly instruction model satisfies its contract before
+ * another service relies on it.
+ */
 int umi_debug_workbench_disassembly_instruction_model_valid(const UmiDebugWorkbenchDisassemblyInstructionModel *model);
 
 #ifdef __cplusplus

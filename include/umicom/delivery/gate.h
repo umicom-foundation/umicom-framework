@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the release gate data shared with callers of this public contract.
+ */
 typedef struct UmiReleaseGate {
     char gate_id[UMI_DELIVERY_ID_CAPACITY];
     UmiEvidenceStatus status;
@@ -34,12 +37,24 @@ typedef struct UmiReleaseGate {
     char evidence[UMI_DELIVERY_TEXT_CAPACITY];
 } UmiReleaseGate;
 
+/**
+ * Initialise release gate from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_release_gate_init(UmiReleaseGate *gate,
                                 const char *gate_id,
                                 int required);
+/**
+ * Provide the release gate record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_release_gate_record(UmiReleaseGate *gate,
                                   UmiEvidenceStatus status,
                                   const char *evidence);
+/**
+ * Provide the release gate passed operation used by this module and its client
+ * applications.
+ */
 int umi_release_gate_passed(const UmiReleaseGate *gate);
 
 #ifdef __cplusplus

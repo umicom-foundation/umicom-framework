@@ -21,16 +21,32 @@
 #include <math.h>
 #include <string.h>
 
+/*
+ * Provide the quant curve interpolation linear operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_quant_curve_interpolation_linear(double x0, double y0, double x1, double y1, double x, double *out_value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL || x1 == x0) return UMI_STATUS_INVALID_ARGUMENT;
     *out_value = y0 + (x - x0) * (y1 - y0) / (x1 - x0);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the quant curve interpolation log linear operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_quant_curve_interpolation_log_linear(double x0, double y0, double x1, double y1, double x, double *out_value)
 {
     double log_value;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL || x1 == x0 || y0 <= 0.0 || y1 <= 0.0) return UMI_STATUS_INVALID_ARGUMENT;
     log_value = log(y0) + (x - x0) * (log(y1) - log(y0)) / (x1 - x0);
     *out_value = exp(log_value);

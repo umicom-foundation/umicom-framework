@@ -15,9 +15,14 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/repository/workflow_types.h"
 
+/*
+ * Provide the repository workflow action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_repository_workflow_action_text(
     UmiRepositoryWorkflowAction action)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (action) {
         case UMI_REPOSITORY_WORKFLOW_CLONE: return "clone";
         case UMI_REPOSITORY_WORKFLOW_INITIALISE: return "init";
@@ -31,6 +36,10 @@ const char *umi_repository_workflow_action_text(
     }
 }
 
+/*
+ * Provide the repository workflow action writes index operation used by this module and
+ * its client applications.
+ */
 int umi_repository_workflow_action_writes_index(
     UmiRepositoryWorkflowAction action)
 {
@@ -41,6 +50,10 @@ int umi_repository_workflow_action_writes_index(
            action == UMI_REPOSITORY_WORKFLOW_UPDATE;
 }
 
+/*
+ * Provide the repository workflow action uses remote operation used by this module and its
+ * client applications.
+ */
 int umi_repository_workflow_action_uses_remote(
     UmiRepositoryWorkflowAction action)
 {

@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the decl compile operation used by this module and its client applications.
+ */
 UmiStatus umi_decl_compile(const UmiDeclDocument *document,const UmiDeclSchema *schema,UmiDeclApplicationPlan *out_plan,UmiDeclDiagnosticList *diagnostics);
 #ifdef __cplusplus
 }

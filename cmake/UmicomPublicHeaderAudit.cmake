@@ -16,18 +16,23 @@
 
 if(DEFINED UMICOM_HEADER_ROOTS AND NOT UMICOM_HEADER_ROOTS STREQUAL "")
     string(REPLACE "|" ";" UMICOM_AUDIT_ROOTS "${UMICOM_HEADER_ROOTS}")
+# Use the stable identifier comparison to choose the matching record or policy.
 elseif(DEFINED UMICOM_HEADER_ROOT AND NOT UMICOM_HEADER_ROOT STREQUAL "")
     set(UMICOM_AUDIT_ROOTS "${UMICOM_HEADER_ROOT}")
+# Use this fallback path when the earlier condition does not apply.
 else()
     message(FATAL_ERROR
         "UMICOM_HEADER_ROOT or UMICOM_HEADER_ROOTS must name a public include directory.")
 endif()
+# Use the stable identifier comparison to choose the matching record or policy.
 if(NOT DEFINED UMICOM_HEADER_OWNER OR UMICOM_HEADER_OWNER STREQUAL "")
     set(UMICOM_HEADER_OWNER "Umicom SDK")
 endif()
 
 set(UMICOM_PUBLIC_HEADERS)
+# Visit each bounded item once so every record receives the same rule.
 foreach(UMICOM_AUDIT_ROOT IN LISTS UMICOM_AUDIT_ROOTS)
+    # Apply this branch only when its contract condition is satisfied.
     if(NOT IS_DIRECTORY "${UMICOM_AUDIT_ROOT}")
         message(FATAL_ERROR
             "Public header directory does not exist: ${UMICOM_AUDIT_ROOT}")
@@ -40,23 +45,28 @@ endforeach()
 list(REMOVE_DUPLICATES UMICOM_PUBLIC_HEADERS)
 list(SORT UMICOM_PUBLIC_HEADERS)
 
+# Apply this branch only when its contract condition is satisfied.
 if(NOT UMICOM_PUBLIC_HEADERS)
     message(FATAL_ERROR "No public headers were found under ${UMICOM_HEADER_ROOT}.")
 endif()
 
 set(UMICOM_PROBLEMS)
 
+# Visit each bounded item once so every record receives the same rule.
 foreach(UMICOM_HEADER IN LISTS UMICOM_PUBLIC_HEADERS)
     file(READ "${UMICOM_HEADER}" UMICOM_HEADER_TEXT LIMIT 131072)
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(DEFINED UMICOM_HEADER_ROOT AND NOT UMICOM_HEADER_ROOT STREQUAL "")
         file(RELATIVE_PATH UMICOM_HEADER_RELATIVE
             "${UMICOM_HEADER_ROOT}" "${UMICOM_HEADER}")
+    # Use this fallback path when the earlier condition does not apply.
     else()
         set(UMICOM_HEADER_RELATIVE "${UMICOM_HEADER}")
     endif()
     string(REPLACE "\\" "/" UMICOM_HEADER_RELATIVE
         "${UMICOM_HEADER_RELATIVE}")
 
+    # Visit each bounded item once so every record receives the same rule.
     foreach(UMICOM_REQUIRED_TEXT
             "File:"
             "PURPOSE:"
@@ -64,6 +74,7 @@ foreach(UMICOM_HEADER IN LISTS UMICOM_PUBLIC_HEADERS)
             "LICENCE:")
         string(FIND "${UMICOM_HEADER_TEXT}" "${UMICOM_REQUIRED_TEXT}"
             UMICOM_REQUIRED_POSITION)
+        # Use the stable identifier comparison to choose the matching record or policy.
         if(UMICOM_REQUIRED_POSITION EQUAL -1)
             list(APPEND UMICOM_PROBLEMS
                 "${UMICOM_HEADER_RELATIVE}: missing ${UMICOM_REQUIRED_TEXT}")
@@ -75,6 +86,7 @@ foreach(UMICOM_HEADER IN LISTS UMICOM_PUBLIC_HEADERS)
         "#[ \t]*ifndef[ \t]+([A-Za-z_][A-Za-z0-9_]*)"
         UMICOM_IFNDEF_MATCH "${UMICOM_HEADER_TEXT}")
     set(UMICOM_GUARD "${CMAKE_MATCH_1}")
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(UMICOM_GUARD STREQUAL "")
         list(APPEND UMICOM_PROBLEMS
             "${UMICOM_HEADER_RELATIVE}: missing include guard")
@@ -84,15 +96,18 @@ foreach(UMICOM_HEADER IN LISTS UMICOM_PUBLIC_HEADERS)
     string(REGEX MATCH
         "#[ \t]*define[ \t]+${UMICOM_GUARD}([ \t\r\n]|$)"
         UMICOM_DEFINE_MATCH "${UMICOM_HEADER_TEXT}")
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(UMICOM_DEFINE_MATCH STREQUAL "")
         list(APPEND UMICOM_PROBLEMS
             "${UMICOM_HEADER_RELATIVE}: #ifndef and #define do not match")
     endif()
 
     set(UMICOM_GUARD_VARIABLE "UMICOM_GUARD_FILE_${UMICOM_GUARD}")
+    # Apply this branch only when its contract condition is satisfied.
     if(DEFINED ${UMICOM_GUARD_VARIABLE})
         list(APPEND UMICOM_PROBLEMS
             "${UMICOM_HEADER_RELATIVE}: guard ${UMICOM_GUARD} already belongs to ${${UMICOM_GUARD_VARIABLE}}")
+    # Use this fallback path when the earlier condition does not apply.
     else()
         set(${UMICOM_GUARD_VARIABLE} "${UMICOM_HEADER_RELATIVE}")
     endif()
@@ -100,6 +115,7 @@ endforeach()
 
 list(LENGTH UMICOM_PROBLEMS UMICOM_PROBLEM_COUNT)
 list(LENGTH UMICOM_PUBLIC_HEADERS UMICOM_HEADER_COUNT)
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_PROBLEM_COUNT GREATER 0)
     list(JOIN UMICOM_PROBLEMS "\n  - " UMICOM_PROBLEM_TEXT)
     message(FATAL_ERROR

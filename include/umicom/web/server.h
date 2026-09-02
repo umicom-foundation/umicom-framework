@@ -25,11 +25,30 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web server data shared with callers of this public contract.
+ */
 typedef struct UmiWebServer UmiWebServer;
+/**
+ * Initialise web server from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_web_server_create(const UmiWebServerConfig *config,UmiWebService *service,UmiWebServer **out_server);
+/**
+ * Release or reset state held by web server so the same storage can be reused safely.
+ */
 void umi_web_server_destroy(UmiWebServer *server);
+/**
+ * Provide the web server start operation used by this module and its client applications.
+ */
 UmiStatus umi_web_server_start(UmiWebServer *server);
+/**
+ * Provide the web server stop operation used by this module and its client applications.
+ */
 UmiStatus umi_web_server_stop(UmiWebServer *server);
+/**
+ * Provide the web server state operation used by this module and its client applications.
+ */
 const UmiWebServerState *umi_web_server_state(const UmiWebServer *server);
 #ifdef __cplusplus
 }

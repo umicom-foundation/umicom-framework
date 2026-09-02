@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/market_data_snapshot_store.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseMarketDataSnapshotStore store; UmiEnterpriseMarketDataSnapshot s; umi_enterprise_market_data_snapshot_store_init(&store); CHECK(umi_enterprise_market_data_snapshot_init(&s,"s",1)==UMI_STATUS_OK); CHECK(umi_enterprise_market_data_snapshot_store_append(&store,&s)==UMI_STATUS_OK); CHECK(umi_enterprise_market_data_snapshot_store_latest(&store)->as_of_ms==1); return 0; }

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix execution session data shared with callers of this public contract.
+ */
 typedef struct UmiHelixExecutionSession { UmiHelixState state; size_t total_steps; size_t cursor; size_t completed; size_t failed; bool cancellation_requested; } UmiHelixExecutionSession;
 /* Start a session with a fixed execution-step count. */
 UmiStatus umi_helix_execution_session_start(UmiHelixExecutionSession *session,size_t total_steps);

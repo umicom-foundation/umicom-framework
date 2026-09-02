@@ -22,6 +22,7 @@
 
 #include "internal.h"
 
+/* Provide the value text operation used by this module and its client applications. */
 static UmiStatus value_text(
     char *buffer,
     size_t capacity,
@@ -34,6 +35,7 @@ static UmiStatus value_text(
         true);
 }
 
+/* Provide the value u64 operation used by this module and its client applications. */
 static UmiStatus value_u64(
     char *buffer,
     size_t capacity,
@@ -43,6 +45,7 @@ static UmiStatus value_u64(
         buffer, capacity, "%" PRIu64, value);
 }
 
+/* Return the number of records represented by value without changing their state. */
 static UmiStatus value_size(
     char *buffer,
     size_t capacity,
@@ -52,6 +55,7 @@ static UmiStatus value_size(
         buffer, capacity, "%zu", value);
 }
 
+/* Provide the value i32 operation used by this module and its client applications. */
 static UmiStatus value_i32(
     char *buffer,
     size_t capacity,
@@ -61,6 +65,7 @@ static UmiStatus value_i32(
         buffer, capacity, "%" PRId32, value);
 }
 
+/* Provide the value double operation used by this module and its client applications. */
 static UmiStatus value_double(
     char *buffer,
     size_t capacity,
@@ -70,6 +75,7 @@ static UmiStatus value_double(
         buffer, capacity, "%.6f", value);
 }
 
+/* Provide the add text change operation used by this module and its client applications. */
 static UmiStatus add_text_change(
     UmiWorkbenchLayoutDiff *diff,
     UmiWorkbenchLayoutDiffKind kind,
@@ -80,6 +86,7 @@ static UmiStatus add_text_change(
     size_t before_index,
     size_t after_index)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (umi_workbench_layout_text_equal(before, after)) {
         return UMI_STATUS_OK;
     }
@@ -94,6 +101,7 @@ static UmiStatus add_text_change(
         after_index);
 }
 
+/* Provide the add u64 change operation used by this module and its client applications. */
 static UmiStatus add_u64_change(
     UmiWorkbenchLayoutDiff *diff,
     UmiWorkbenchLayoutDiffKind kind,
@@ -108,13 +116,16 @@ static UmiStatus add_u64_change(
     char after_text[64U];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (before == after) {
         return UMI_STATUS_OK;
     }
     status = value_u64(before_text, sizeof(before_text), before);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_u64(after_text, sizeof(after_text), after);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -129,6 +140,7 @@ static UmiStatus add_u64_change(
         after_index);
 }
 
+/* Provide the add size change operation used by this module and its client applications. */
 static UmiStatus add_size_change(
     UmiWorkbenchLayoutDiff *diff,
     UmiWorkbenchLayoutDiffKind kind,
@@ -143,13 +155,16 @@ static UmiStatus add_size_change(
     char after_text[64U];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (before == after) {
         return UMI_STATUS_OK;
     }
     status = value_size(before_text, sizeof(before_text), before);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_size(after_text, sizeof(after_text), after);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -164,6 +179,7 @@ static UmiStatus add_size_change(
         after_index);
 }
 
+/* Provide the add i32 change operation used by this module and its client applications. */
 static UmiStatus add_i32_change(
     UmiWorkbenchLayoutDiff *diff,
     const char *node_id,
@@ -177,13 +193,16 @@ static UmiStatus add_i32_change(
     char after_text[64U];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (before == after) {
         return UMI_STATUS_OK;
     }
     status = value_i32(before_text, sizeof(before_text), before);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_i32(after_text, sizeof(after_text), after);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -198,6 +217,7 @@ static UmiStatus add_i32_change(
         after_index);
 }
 
+/* Provide the add double change operation used by this module and its client applications. */
 static UmiStatus add_double_change(
     UmiWorkbenchLayoutDiff *diff,
     const char *node_id,
@@ -211,13 +231,16 @@ static UmiStatus add_double_change(
     char after_text[64U];
     UmiStatus status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (before == after) {
         return UMI_STATUS_OK;
     }
     status = value_double(before_text, sizeof(before_text), before);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_double(after_text, sizeof(after_text), after);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -232,6 +255,7 @@ static UmiStatus add_double_change(
         after_index);
 }
 
+/* Provide the compare metadata operation used by this module and its client applications. */
 static UmiStatus compare_metadata(
     const UmiWorkbenchLayoutDocument *before,
     const UmiWorkbenchLayoutDocument *after,
@@ -249,6 +273,7 @@ static UmiStatus compare_metadata(
         after->name,
         UMI_WORKBENCH_LAYOUT_INDEX_NONE,
         UMI_WORKBENCH_LAYOUT_INDEX_NONE);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_text_change(
             diff,
@@ -260,6 +285,7 @@ static UmiStatus compare_metadata(
             UMI_WORKBENCH_LAYOUT_INDEX_NONE,
             UMI_WORKBENCH_LAYOUT_INDEX_NONE);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_text_change(
             diff,
@@ -271,6 +297,7 @@ static UmiStatus compare_metadata(
             UMI_WORKBENCH_LAYOUT_INDEX_NONE,
             UMI_WORKBENCH_LAYOUT_INDEX_NONE);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_u64_change(
             diff,
@@ -282,6 +309,7 @@ static UmiStatus compare_metadata(
             UMI_WORKBENCH_LAYOUT_INDEX_NONE,
             UMI_WORKBENCH_LAYOUT_INDEX_NONE);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_size_change(
             diff,
@@ -293,6 +321,7 @@ static UmiStatus compare_metadata(
             UMI_WORKBENCH_LAYOUT_INDEX_NONE,
             UMI_WORKBENCH_LAYOUT_INDEX_NONE);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         options->include_revision) {
         status = add_u64_change(
@@ -308,6 +337,7 @@ static UmiStatus compare_metadata(
     return status;
 }
 
+/* Provide the compare children operation used by this module and its client applications. */
 static UmiStatus compare_children(
     const UmiWorkbenchLayoutNode *before,
     const UmiWorkbenchLayoutNode *after,
@@ -328,10 +358,12 @@ static UmiStatus compare_children(
         after->child_count,
         before_index,
         after_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || !options->include_order) {
         return status;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < before->child_count &&
          index < after->child_count;
@@ -345,6 +377,7 @@ static UmiStatus compare_children(
             after->child_indices[index],
             before_index,
             after_index);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             return status;
         }
@@ -352,6 +385,10 @@ static UmiStatus compare_children(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the compare node fields operation used by this module and its client
+ * applications.
+ */
 static UmiStatus compare_node_fields(
     const UmiWorkbenchLayoutNode *before,
     const UmiWorkbenchLayoutNode *after,
@@ -371,6 +408,7 @@ static UmiStatus compare_node_fields(
         after->title,
         before_index,
         after_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_text_change(
             diff,
@@ -382,6 +420,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_text_change(
             diff,
@@ -393,6 +432,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_text_change(
             diff,
@@ -404,6 +444,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_text_change(
             diff,
@@ -415,6 +456,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_u64_change(
             diff,
@@ -426,6 +468,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_u64_change(
             diff,
@@ -437,6 +480,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_u64_change(
             diff,
@@ -448,6 +492,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_u64_change(
             diff,
@@ -459,6 +504,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_double_change(
             diff,
@@ -469,6 +515,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_u64_change(
             diff,
@@ -480,6 +527,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_i32_change(
             diff,
@@ -490,6 +538,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_i32_change(
             diff,
@@ -500,6 +549,7 @@ static UmiStatus compare_node_fields(
             before_index,
             after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = add_size_change(
             diff,
@@ -512,30 +562,35 @@ static UmiStatus compare_node_fields(
             after_index);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && options->include_geometry) {
         status = add_i32_change(
             diff, before->node_id, "bounds.x",
             before->bounds.x, after->bounds.x,
             before_index, after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && options->include_geometry) {
         status = add_i32_change(
             diff, before->node_id, "bounds.y",
             before->bounds.y, after->bounds.y,
             before_index, after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && options->include_geometry) {
         status = add_i32_change(
             diff, before->node_id, "bounds.width",
             before->bounds.width, after->bounds.width,
             before_index, after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && options->include_geometry) {
         status = add_i32_change(
             diff, before->node_id, "bounds.height",
             before->bounds.height, after->bounds.height,
             before_index, after_index);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = compare_children(
             before, after, options, diff,
@@ -544,6 +599,10 @@ static UmiStatus compare_node_fields(
     return status;
 }
 
+/*
+ * Provide the workbench layout diff options default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutDiffOptions
 umi_workbench_layout_diff_options_default(void)
 {
@@ -559,9 +618,17 @@ umi_workbench_layout_diff_options_default(void)
     return options;
 }
 
+/*
+ * Initialise workbench layout diff from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_workbench_layout_diff_init(
     UmiWorkbenchLayoutDiff *diff)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diff == NULL) {
         return;
     }
@@ -569,6 +636,10 @@ void umi_workbench_layout_diff_init(
     diff->structure_size = sizeof(*diff);
 }
 
+/*
+ * Add workbench layout diff only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_workbench_layout_diff_add(
     UmiWorkbenchLayoutDiff *diff,
     UmiWorkbenchLayoutDiffKind kind,
@@ -582,10 +653,15 @@ UmiStatus umi_workbench_layout_diff_add(
     UmiWorkbenchLayoutDiffEntry *entry;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diff == NULL || field == NULL ||
         before_value == NULL || after_value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (diff->entry_count >= UMI_WORKBENCH_LAYOUT_MAX_DIFF_ENTRIES) {
         diff->truncated = true;
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -601,28 +677,33 @@ UmiStatus umi_workbench_layout_diff_add(
     status = value_text(
         entry->node_id, sizeof(entry->node_id),
         node_id != NULL ? node_id : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_text(
             entry->field, sizeof(entry->field), field);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_text(
             entry->before_value,
             sizeof(entry->before_value),
             before_value);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = value_text(
             entry->after_value,
             sizeof(entry->after_value),
             after_value);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)memset(entry, 0, sizeof(*entry));
         return status;
     }
 
     diff->entry_count += 1U;
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_DIFF_METADATA_CHANGED:
         diff->metadata_change_count += 1U;
@@ -646,6 +727,10 @@ UmiStatus umi_workbench_layout_diff_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout compare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_compare(
     const UmiWorkbenchLayoutDocument *before,
     const UmiWorkbenchLayoutDocument *after,
@@ -657,6 +742,10 @@ UmiStatus umi_workbench_layout_compare(
     size_t after_index;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (before == NULL || after == NULL || out_diff == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -666,11 +755,13 @@ UmiStatus umi_workbench_layout_compare(
         : umi_workbench_layout_diff_options_default();
     umi_workbench_layout_diff_init(out_diff);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.include_metadata) {
         status = compare_metadata(
             before, after, &effective, out_diff);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (before_index = 0U;
          status == UMI_STATUS_OK &&
          before_index < before->node_count;
@@ -680,6 +771,7 @@ UmiStatus umi_workbench_layout_compare(
 
         after_index = umi_workbench_layout_document_find_node_index(
             after, before_node->node_id);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (after_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             status = umi_workbench_layout_diff_add(
                 out_diff,
@@ -693,6 +785,7 @@ UmiStatus umi_workbench_layout_compare(
             continue;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (before_node->parent_index !=
             after->nodes[after_index].parent_index) {
             status = umi_workbench_layout_diff_add(
@@ -705,6 +798,7 @@ UmiStatus umi_workbench_layout_compare(
                 before_index,
                 after_index);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = compare_node_fields(
                 before_node,
@@ -716,6 +810,7 @@ UmiStatus umi_workbench_layout_compare(
         }
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (after_index = 0U;
          status == UMI_STATUS_OK &&
          after_index < after->node_count;
@@ -725,6 +820,7 @@ UmiStatus umi_workbench_layout_compare(
 
         before_index = umi_workbench_layout_document_find_node_index(
             before, after_node->node_id);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (before_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             status = umi_workbench_layout_diff_add(
                 out_diff,
@@ -738,6 +834,7 @@ UmiStatus umi_workbench_layout_compare(
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CAPACITY_EXCEEDED) {
         out_diff->truncated = true;
         return UMI_STATUS_OK;
@@ -745,23 +842,39 @@ UmiStatus umi_workbench_layout_compare(
     return status;
 }
 
+/*
+ * Find workbench layout diff while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiWorkbenchLayoutDiffEntry *
 umi_workbench_layout_diff_at(
     const UmiWorkbenchLayoutDiff *diff,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diff == NULL || index >= diff->entry_count) {
         return NULL;
     }
     return &diff->entries[index];
 }
 
+/*
+ * Provide the workbench layout diff is empty operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_diff_is_empty(
     const UmiWorkbenchLayoutDiff *diff)
 {
     return diff != NULL && diff->entry_count == 0U;
 }
 
+/*
+ * Provide the workbench layout diff format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_diff_format(
     const UmiWorkbenchLayoutDiff *diff,
     char *buffer,
@@ -771,10 +884,15 @@ UmiStatus umi_workbench_layout_diff_format(
     size_t index;
     size_t used = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diff == NULL || out_required == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < diff->entry_count; ++index) {
         const UmiWorkbenchLayoutDiffEntry *entry =
             &diff->entries[index];
@@ -791,6 +909,7 @@ UmiStatus umi_workbench_layout_diff_format(
             entry->node_id,
             entry->before_value,
             entry->after_value);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0) {
             return UMI_STATUS_INTERNAL_ERROR;
         }
@@ -798,7 +917,15 @@ UmiStatus umi_workbench_layout_diff_format(
     }
 
     *out_required = used + 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL || capacity < *out_required) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (buffer != NULL && capacity > 0U) {
             buffer[capacity - 1U] = '\0';
         }

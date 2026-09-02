@@ -29,6 +29,10 @@ typedef struct UmiGtk4EditorBinding {
     char view_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4EditorBinding;
 
+/*
+ * Provide the effective editor group operation used by this module and its client
+ * applications.
+ */
 static const char *effective_editor_group(
     const UmiUiDocumentViewSnapshot *document)
 {
@@ -37,6 +41,10 @@ static const char *effective_editor_group(
         : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
 }
 
+/*
+ * Provide the notebook for group operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *notebook_for_group(UmiGtk4Adapter *adapter,
                                      const char *group_id)
 {
@@ -45,15 +53,24 @@ static GtkWidget *notebook_for_group(UmiGtk4Adapter *adapter,
         : adapter->document_notebook;
 }
 
+/* Provide the clear notebook operation used by this module and its client applications. */
 static void clear_notebook(GtkWidget *notebook)
 {
     int pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (pages > 0) {
         gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), 0);
         --pages;
     }
 }
 
+/*
+ * Provide the on document page switched operation used by this module and its client
+ * applications.
+ */
 static void on_document_page_switched(GtkNotebook *notebook,
                                       GtkWidget *page,
                                       guint page_number,
@@ -64,13 +81,25 @@ static void on_document_page_switched(GtkNotebook *notebook,
     UmiUiWorkbench *workbench;
     (void)notebook;
     (void)page_number;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL || page == NULL) return;
     view_id = (const char *)g_object_get_data(G_OBJECT(page), "umicom-view-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL) return;
     workbench = umi_ui_application_shell_workbench(adapter->shell);
     (void)umi_ui_workbench_activate_document(workbench, view_id);
 }
 
+/*
+ * Provide the group for notebook operation used by this module and its client
+ * applications.
+ */
 static const char *group_for_notebook(UmiGtk4Adapter *adapter,
                                       GtkNotebook *notebook)
 {
@@ -79,6 +108,10 @@ static const char *group_for_notebook(UmiGtk4Adapter *adapter,
         : UMI_UI_PRIMARY_EDITOR_GROUP_ID;
 }
 
+/*
+ * Provide the synchronise document page operation used by this module and its client
+ * applications.
+ */
 static void synchronise_document_page(GtkNotebook *notebook,
                                       GtkWidget *page,
                                       guint page_number,
@@ -90,18 +123,27 @@ static void synchronise_document_page(GtkNotebook *notebook,
     const char *group_id;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL || page == NULL ||
         adapter->applying_document_state) {
         return;
     }
     view_id = (const char *)g_object_get_data(G_OBJECT(page),
                                               "umicom-view-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL) return;
     group_id = group_for_notebook(adapter, notebook);
     workbench = umi_ui_application_shell_workbench(adapter->shell);
     status = umi_ui_document_view_model_place(
         umi_ui_workbench_documents(workbench), view_id, group_id,
         (size_t)page_number);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_ui_workbench_activate_document(workbench, view_id);
         gtk_label_set_text(GTK_LABEL(adapter->status_label),
@@ -109,6 +151,10 @@ static void synchronise_document_page(GtkNotebook *notebook,
     }
 }
 
+/*
+ * Provide the on document page added operation used by this module and its client
+ * applications.
+ */
 static void on_document_page_added(GtkNotebook *notebook,
                                    GtkWidget *page,
                                    guint page_number,
@@ -117,6 +163,10 @@ static void on_document_page_added(GtkNotebook *notebook,
     synchronise_document_page(notebook, page, page_number, user_data);
 }
 
+/*
+ * Provide the on document page reordered operation used by this module and its client
+ * applications.
+ */
 static void on_document_page_reordered(GtkNotebook *notebook,
                                        GtkWidget *page,
                                        guint page_number,
@@ -125,6 +175,10 @@ static void on_document_page_reordered(GtkNotebook *notebook,
     synchronise_document_page(notebook, page, page_number, user_data);
 }
 
+/*
+ * Provide the editor binding free operation used by this module and its client
+ * applications.
+ */
 static void editor_binding_free(gpointer data, GClosure *closure)
 {
     /* GClosureNotify supplies the owning closure for advanced finalisers.
@@ -134,6 +188,10 @@ static void editor_binding_free(gpointer data, GClosure *closure)
     g_free(data);
 }
 
+/*
+ * Provide the on editor buffer changed operation used by this module and its client
+ * applications.
+ */
 static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
                                      gpointer user_data)
 {
@@ -144,14 +202,23 @@ static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
     GtkTextIter end;
     char *text;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->adapter == NULL ||
         binding->adapter->shell == NULL) return;
     workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
                                          binding->view_id,
                                          &document) != UMI_STATUS_OK) return;
     gtk_text_buffer_get_bounds(text_buffer, &start, &end);
     text = gtk_text_buffer_get_text(text_buffer, &start, &end, TRUE);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return;
     (void)g_strlcpy(document.source_text, text, sizeof(document.source_text));
     document.dirty = 1;
@@ -163,6 +230,10 @@ static void on_editor_buffer_changed(GtkTextBuffer *text_buffer,
     g_free(text);
 }
 
+/*
+ * Provide the editor binding new operation used by this module and its client
+ * applications.
+ */
 static UmiGtk4EditorBinding *editor_binding_new(UmiGtk4Adapter *adapter,
                                                 const char *view_id)
 {
@@ -174,6 +245,10 @@ static UmiGtk4EditorBinding *editor_binding_new(UmiGtk4Adapter *adapter,
     return binding;
 }
 
+/*
+ * Provide the on editor close clicked operation used by this module and its client
+ * applications.
+ */
 static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4EditorBinding *binding = (UmiGtk4EditorBinding *)user_data;
@@ -182,27 +257,37 @@ static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
     UmiUiDocumentViewSnapshot document;
     UmiStatus status;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->adapter == NULL ||
         binding->adapter->shell == NULL) return;
     workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
     status = umi_ui_document_view_model_find(
         umi_ui_workbench_documents(workbench), binding->view_id, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (document.dirty) {
         gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
                            "Save or revert the modified editor before closing it");
         return;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (document.pinned) {
         gtk_label_set_text(GTK_LABEL(binding->adapter->status_label),
                            "Unpin the editor before closing it");
         return;
     }
     status = umi_ui_workbench_snapshot(workbench, &workbench_snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return;
     status = umi_ui_document_view_model_remove(
         umi_ui_workbench_documents(workbench), binding->view_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(workbench_snapshot.active_document_view,
                    binding->view_id) == 0) {
             char next_view_id[UMI_UI_ID_CAPACITY];
@@ -210,6 +295,7 @@ static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
             status = umi_ui_document_view_model_activate_group(
                 umi_ui_workbench_documents(workbench), closed_group,
                 next_view_id, sizeof(next_view_id));
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_NOT_FOUND) {
                 const char *other_group = strcmp(
                     closed_group, UMI_UI_PRIMARY_EDITOR_GROUP_ID) == 0
@@ -219,6 +305,7 @@ static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
                     umi_ui_workbench_documents(workbench), other_group,
                     next_view_id, sizeof(next_view_id));
             }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {
                 (void)umi_ui_workbench_activate_document(workbench,
                                                          next_view_id);
@@ -228,6 +315,10 @@ static void on_editor_close_clicked(GtkButton *button, gpointer user_data)
     }
 }
 
+/*
+ * Provide the on editor pin clicked operation used by this module and its client
+ * applications.
+ */
 static void on_editor_pin_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4EditorBinding *binding = (UmiGtk4EditorBinding *)user_data;
@@ -235,21 +326,31 @@ static void on_editor_pin_clicked(GtkButton *button, gpointer user_data)
     UmiUiDocumentViewSnapshot document;
     UmiStatus status;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (binding == NULL || binding->adapter == NULL ||
         binding->adapter->shell == NULL) return;
     workbench = umi_ui_application_shell_workbench(binding->adapter->shell);
     status = umi_ui_document_view_model_find(
         umi_ui_workbench_documents(workbench), binding->view_id, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return;
     status = umi_ui_document_view_model_set_pinned(
         umi_ui_workbench_documents(workbench),
         binding->view_id,
         !document.pinned);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)umi_gtk4_refresh_documents(binding->adapter, workbench);
     }
 }
 
+/*
+ * Provide the create editor widget operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_editor_widget(UmiUiWorkbench *workbench,
                                        const UmiUiDocumentViewSnapshot *document,
                                        GtkTextBuffer **out_buffer)
@@ -262,10 +363,15 @@ static GtkWidget *create_editor_widget(UmiUiWorkbench *workbench,
     GtkSourceBuffer *source_buffer = gtk_source_buffer_new(NULL);
     GtkSourceLanguageManager *languages = gtk_source_language_manager_get_default();
     GtkSourceLanguage *language = NULL;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (document->language_id[0] != '\0') {
         language = gtk_source_language_manager_get_language(
             languages, document->language_id);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (language != NULL) gtk_source_buffer_set_language(source_buffer, language);
     gtk_source_buffer_set_highlight_syntax(source_buffer, TRUE);
     view = gtk_source_view_new_with_buffer(source_buffer);
@@ -280,6 +386,7 @@ static GtkWidget *create_editor_widget(UmiUiWorkbench *workbench,
     gtk_source_view_set_tab_width(
         GTK_SOURCE_VIEW(view), presentation_status == UMI_STATUS_OK
             ? presentation.tab_width : 4U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (presentation_status == UMI_STATUS_OK) {
         gtk_source_buffer_set_highlight_matching_brackets(
             source_buffer, presentation.highlight_matching_brackets != 0);
@@ -308,6 +415,10 @@ static GtkWidget *create_editor_widget(UmiUiWorkbench *workbench,
     return view;
 }
 
+/*
+ * Provide the gtk4 refresh documents operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                       UmiUiWorkbench *workbench)
 {
@@ -315,6 +426,10 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
     UmiUiWorkbenchState state;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     adapter->applying_document_state = 1;
     clear_notebook(adapter->document_notebook);
@@ -329,6 +444,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                     adapter->document_page_switch_handler);
         adapter->document_page_switch_handler = 0UL;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (adapter->secondary_document_page_switch_handler != 0UL) {
         g_signal_handler_disconnect(
             adapter->secondary_document_notebook,
@@ -336,18 +452,21 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
         adapter->secondary_document_page_switch_handler = 0UL;
     }
     (void)umi_ui_workbench_state_snapshot(workbench, &state);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(state.active_editor_group,
                UMI_UI_SECONDARY_EDITOR_GROUP_ID) == 0) {
         gtk_widget_remove_css_class(adapter->document_notebook, "active");
         gtk_widget_add_css_class(adapter->secondary_document_notebook,
                                  "active");
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_widget_add_css_class(adapter->document_notebook, "active");
         gtk_widget_remove_css_class(adapter->secondary_document_notebook,
                                     "active");
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ui_document_view_model_count(documents); ++index) {
         UmiUiDocumentViewSnapshot document;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_document_view_model_at(documents, index, &document) == UMI_STATUS_OK) {
             GtkTextBuffer *text_buffer = NULL;
             GtkWidget *view = create_editor_widget(workbench, &document,
@@ -363,21 +482,25 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
 
             gtk_widget_add_css_class(scroll, "umicom-editor-scroll");
             gtk_widget_add_css_class(tab_box, "umicom-document-tab");
+            /* Apply this branch only when its contract condition is satisfied. */
             if (document.icon_name[0] != '\0') {
                 GtkWidget *icon = gtk_image_new_from_icon_name(document.icon_name);
                 gtk_widget_add_css_class(icon, "umicom-document-icon");
                 gtk_box_append(GTK_BOX(tab_box), icon);
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (document.dirty) {
                 GtkWidget *dirty = gtk_label_new("●");
                 gtk_widget_add_css_class(dirty, "accent");
                 gtk_widget_set_tooltip_text(dirty, "Modified — not yet saved");
                 gtk_box_append(GTK_BOX(tab_box), dirty);
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (document.preview) {
                 gtk_widget_add_css_class(tab_box, "preview");
             }
             gtk_box_append(GTK_BOX(tab_box), tab);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (document.read_only) {
                 GtkWidget *read_only =
                     gtk_image_new_from_icon_name("changes-prevent-symbolic");
@@ -404,6 +527,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                       0);
                 gtk_box_append(GTK_BOX(tab_box), pin);
             }
+            /* Apply this branch only when its contract condition is satisfied. */
             if (document.closable) {
                 GtkWidget *close =
                     gtk_button_new_from_icon_name("window-close-symbolic");
@@ -464,6 +588,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                                    g_strdup(document.view_id), g_free);
             gtk_widget_set_tooltip_text(tab_box,
                 document.uri[0] != '\0' ? document.uri : document.document_id);
+            /* Apply this operation only while the related capability or state is available. */
             if (document.active) {
                 gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),
                                               page_index);
@@ -480,6 +605,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                          "switch-page",
                          G_CALLBACK(on_document_page_switched),
                          adapter);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (adapter->document_page_added_handler == 0UL) {
         adapter->document_page_added_handler =
             g_signal_connect(adapter->document_notebook,
@@ -487,6 +613,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                              G_CALLBACK(on_document_page_added),
                              adapter);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (adapter->document_page_reordered_handler == 0UL) {
         adapter->document_page_reordered_handler =
             g_signal_connect(adapter->document_notebook,
@@ -494,6 +621,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                              G_CALLBACK(on_document_page_reordered),
                              adapter);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (adapter->secondary_document_page_added_handler == 0UL) {
         adapter->secondary_document_page_added_handler =
             g_signal_connect(adapter->secondary_document_notebook,
@@ -501,6 +629,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                              G_CALLBACK(on_document_page_added),
                              adapter);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (adapter->secondary_document_page_reordered_handler == 0UL) {
         adapter->secondary_document_page_reordered_handler =
             g_signal_connect(adapter->secondary_document_notebook,

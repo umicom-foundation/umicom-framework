@@ -47,9 +47,11 @@ UmiStatus umi_repository_status_probe_read(
         arguments,
         sizeof(arguments) / sizeof(arguments[0]),
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result.exit_code != 0) {
         return UMI_STATUS_INVALID_STATE;
     }

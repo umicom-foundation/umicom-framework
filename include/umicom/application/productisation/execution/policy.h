@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution policy data shared with callers of this public contract.
+ */
 typedef struct UmiProductExecutionPolicy {
     unsigned maximum_attempts;
     int dry_run;

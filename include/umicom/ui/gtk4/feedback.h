@@ -23,5 +23,9 @@
 #define UMICOM_UI_GTK4_FEEDBACK_H
 #include <gtk/gtk.h>
 #include "umicom/ui/components/component.h"
+/**
+ * Provide the gtk4 status message new operation used by this module and its client
+ * applications.
+ */
 GtkWidget *umi_gtk4_status_message_new(const UmiUiComponentSpec *spec);
 #endif

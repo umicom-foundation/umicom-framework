@@ -18,5 +18,13 @@
  */
 
 #include "umicom/trading/order_book.h"
-double umi_order_book_top_liquidity(const UmiMarketDepth *d){if(d==NULL||d->bid_count==0U||d->ask_count==0U)return 0.0;return d->bids[0].size+d->asks[0].size;}
-double umi_order_book_imbalance(const UmiMarketDepth *d){double total=umi_order_book_top_liquidity(d);if(total<=0.0)return 0.0;return (d->bids[0].size-d->asks[0].size)/total;}
+/*
+ * Provide the order book top liquidity operation used by this module and its client
+ * applications.
+ */
+double umi_order_book_top_liquidity(const UmiMarketDepth *d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d==NULL||d->bid_count==0U||d->ask_count==0U)return 0.0;return d->bids[0].size+d->asks[0].size;}
+/*
+ * Provide the order book imbalance operation used by this module and its client
+ * applications.
+ */
+double umi_order_book_imbalance(const UmiMarketDepth *d){double total=umi_order_book_top_liquidity(d);/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(total<=0.0)return 0.0;return (d->bids[0].size-d->asks[0].size)/total;}

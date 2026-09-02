@@ -20,6 +20,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the nc dead code eliminate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_dead_code_eliminate(UmiNativeIrFunction *function,size_t *out_removed);
 #ifdef __cplusplus
 }

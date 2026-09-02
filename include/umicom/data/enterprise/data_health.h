@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data health data shared with callers of this public contract.
+ */
 typedef struct UmiDataHealth { UmiDataEnterpriseState pool_state; UmiDataEnterpriseState replication_state; UmiDataEnterpriseState integrity_state; bool migration_blocked; UmiDataEnterpriseState overall_state; size_t blockers; } UmiDataHealth;
 /* Compute aggregate health while preserving each subsystem state. */ UmiStatus umi_data_health_compute(UmiDataHealth *health,UmiDataEnterpriseState pool_state,UmiDataEnterpriseState replication_state,UmiDataEnterpriseState integrity_state,bool migration_blocked);
 

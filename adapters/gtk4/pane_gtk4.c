@@ -25,6 +25,10 @@
 
 #include <stdlib.h>
 
+/*
+ * Provide the on dock page added operation used by this module and its client
+ * applications.
+ */
 static void on_dock_page_added(GtkNotebook *notebook,
                                GtkWidget *page,
                                guint page_number,
@@ -35,6 +39,10 @@ static void on_dock_page_added(GtkNotebook *notebook,
     UmiUiPlacement placement;
     UmiUiWorkbench *workbench;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL ||
         adapter->applying_dock_state) {
         return;
@@ -43,9 +51,14 @@ static void on_dock_page_added(GtkNotebook *notebook,
         G_OBJECT(page), "umicom-pane-id");
     placement = (UmiUiPlacement)GPOINTER_TO_INT(g_object_get_data(
         G_OBJECT(notebook), "umicom-dock-placement"));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pane_id == NULL) return;
 
     workbench = umi_ui_application_shell_workbench(adapter->shell);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_workbench_dock_pane(workbench,
                                    pane_id,
                                    placement,
@@ -57,6 +70,10 @@ static void on_dock_page_added(GtkNotebook *notebook,
     }
 }
 
+/*
+ * Provide the on dock page reordered operation used by this module and its client
+ * applications.
+ */
 static void on_dock_page_reordered(GtkNotebook *notebook,
                                    GtkWidget *page,
                                    guint page_number,
@@ -70,6 +87,10 @@ static void on_dock_page_reordered(GtkNotebook *notebook,
 
     (void)page;
     (void)page_number;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL ||
         adapter->applying_dock_state) {
         return;
@@ -78,11 +99,16 @@ static void on_dock_page_reordered(GtkNotebook *notebook,
     placement = (UmiUiPlacement)GPOINTER_TO_INT(g_object_get_data(
         G_OBJECT(notebook), "umicom-dock-placement"));
     page_count = gtk_notebook_get_n_pages(notebook);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index < page_count; ++index) {
         GtkWidget *child = gtk_notebook_get_nth_page(notebook, index);
         const char *pane_id = child == NULL ? NULL :
             (const char *)g_object_get_data(
                 G_OBJECT(child), "umicom-pane-id");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (pane_id != NULL) {
             (void)umi_ui_workbench_dock_pane(
                 workbench, pane_id, placement, (int32_t)index * 10);
@@ -91,10 +117,18 @@ static void on_dock_page_reordered(GtkNotebook *notebook,
     (void)umi_gtk4_refresh_workspace_profiles(adapter, workbench);
 }
 
+/*
+ * Provide the gtk4 configure dock notebook operation used by this module and its client
+ * applications.
+ */
 void umi_gtk4_configure_dock_notebook(UmiGtk4Adapter *adapter,
                                       GtkWidget *notebook,
                                       UmiUiPlacement placement)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || notebook == NULL || !GTK_IS_NOTEBOOK(notebook)) {
         return;
     }
@@ -113,10 +147,14 @@ void umi_gtk4_configure_dock_notebook(UmiGtk4Adapter *adapter,
                      adapter);
 }
 
+/* Provide the pane target operation used by this module and its client applications. */
 static GtkWidget *pane_target(UmiGtk4Adapter *adapter, UmiUiPlacement placement)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (placement == UMI_UI_PLACEMENT_LEFT) return adapter->left_box;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (placement == UMI_UI_PLACEMENT_RIGHT) return adapter->right_box;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (placement == UMI_UI_PLACEMENT_BOTTOM ||
         placement == UMI_UI_PLACEMENT_TOP) {
         return adapter->bottom_box;
@@ -130,23 +168,34 @@ static GtkWidget *pane_target(UmiGtk4Adapter *adapter, UmiUiPlacement placement)
     return NULL;
 }
 
+/* Provide the clear notebook operation used by this module and its client applications. */
 static void clear_notebook(GtkWidget *notebook)
 {
     int pages;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (notebook == NULL || !GTK_IS_NOTEBOOK(notebook)) return;
     pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (pages > 0) {
         gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), 0);
         pages -= 1;
     }
 }
 
+/* Provide the create tab label operation used by this module and its client applications. */
 static GtkWidget *create_tab_label(const UmiUiPaneSnapshot *pane)
 {
     GtkWidget *tab_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     GtkWidget *label = gtk_label_new(pane->title);
 
     gtk_widget_add_css_class(tab_box, "umicom-tool-tab");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (pane->icon_name[0] != '\0') {
         GtkWidget *icon = gtk_image_new_from_icon_name(pane->icon_name);
         gtk_image_set_pixel_size(GTK_IMAGE(icon), 14);
@@ -157,19 +206,26 @@ static GtkWidget *create_tab_label(const UmiUiPaneSnapshot *pane)
     return tab_box;
 }
 
+/* Provide the compare panes operation used by this module and its client applications. */
 static int compare_panes(const void *left, const void *right)
 {
     const UmiUiPaneSnapshot *first = (const UmiUiPaneSnapshot *)left;
     const UmiUiPaneSnapshot *second = (const UmiUiPaneSnapshot *)right;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first->placement != second->placement) {
         return (int)first->placement - (int)second->placement;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (first->order != second->order) {
         return first->order < second->order ? -1 : 1;
     }
     return g_strcmp0(first->title, second->title);
 }
 
+/*
+ * Provide the gtk4 refresh panes operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
                                  UmiUiWorkbench *workbench)
 {
@@ -178,6 +234,10 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
     size_t count;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -186,14 +246,21 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
     count = umi_ui_pane_model_count(model);
     panes = count == 0U ? NULL :
         (UmiUiPaneSnapshot *)calloc(count, sizeof(*panes));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (count > 0U && panes == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiStatus status = umi_ui_pane_model_at(model, index, &panes[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             free(panes);
             return status;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > 1U) qsort(panes, count, sizeof(*panes), compare_panes);
 
     adapter->applying_dock_state = 1;
@@ -201,9 +268,11 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
     clear_notebook(adapter->right_box);
     clear_notebook(adapter->bottom_box);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiUiPaneSnapshot pane = panes[index];
         UmiStatus status;
+        /* Apply this operation only while the related capability or state is available. */
         if (!pane.visible) continue;
 
         {
@@ -213,10 +282,12 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
             GtkWidget *content = NULL;
             int page_index;
 
+            /* Configure the optional target only when its feature has created it. */
             if (target == NULL) continue;
 
             status = umi_gtk4_build_view_widget(adapter, workbench,
                                                 &pane, &content);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 adapter->applying_dock_state = 0;
                 free(panes);
@@ -245,6 +316,7 @@ UmiStatus umi_gtk4_refresh_panes(UmiGtk4Adapter *adapter,
             gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(target),
                                             page,
                                             pane.movable != 0);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (page_index == 0) {
                 gtk_notebook_set_current_page(GTK_NOTEBOOK(target), 0);
             }

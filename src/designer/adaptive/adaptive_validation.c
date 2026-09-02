@@ -18,6 +18,10 @@
 /* Count only issues that would produce ambiguous or incorrect runtime adaptation. */
 uint32_t umi_designer_adaptive_validation_blocking_count(const UmiDesignerAdaptiveValidation *validation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(validation==NULL)return UINT32_MAX;
     return validation->invalid_variants+validation->invalid_rules+validation->failed_previews;
 }

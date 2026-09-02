@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer terminal profile wsl operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_wsl(void);
 
 #ifdef __cplusplus

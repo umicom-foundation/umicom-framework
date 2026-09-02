@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev context filter data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevContextFilter {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +41,25 @@ typedef struct UmiAiDevContextFilter {
     int enabled;
 } UmiAiDevContextFilter;
 
+/**
+ * Initialise ai dev context filter from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_context_filter_init(UmiAiDevContextFilter *policy);
+/**
+ * Provide the ai dev context filter configure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_context_filter_configure(UmiAiDevContextFilter *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev context filter allows operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_context_filter_allows(const UmiAiDevContextFilter *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev context filter approval required operation used by this module and
+ * its client applications.
+ */
 int umi_ai_dev_context_filter_approval_required(const UmiAiDevContextFilter *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

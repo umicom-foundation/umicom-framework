@@ -20,6 +20,10 @@
  */
 #include "umicom/ui/components/registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiComponentRegistry registry;
@@ -29,6 +33,7 @@ int main(void)
 
     umi_ui_component_registry_init(&registry);
     (void)umi_ui_component_spec_set_id(&spec, "title");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_component_registry_add(&registry, &spec) != UMI_STATUS_OK) {
         return 1;
     }

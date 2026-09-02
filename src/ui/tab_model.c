@@ -29,39 +29,72 @@ struct UmiUiTabRegistry {
     uint64_t revision;
 };
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(const UmiUiTabRegistry *registry, const char *id)
 {
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 0U; i < registry->count; ++i) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(registry->items[i].id, id) == 0) return i;
     }
     return SIZE_MAX;
 }
 
+/*
+ * Initialise ui tab model registry from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ui_tab_model_registry_create(UmiUiTabRegistry **out_registry)
 {
     UmiUiTabRegistry *registry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_registry = NULL;
     registry = (UmiUiTabRegistry *)calloc(1U, sizeof(*registry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     registry->revision = 1U;
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ui tab model registry so the same storage can be reused
+ * safely.
+ */
 void umi_ui_tab_model_registry_destroy(UmiUiTabRegistry *registry)
 {
     free(registry);
 }
 
+/*
+ * Provide the ui tab model registry upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_tab_model_registry_upsert(UmiUiTabRegistry *registry, const UmiUiTabSnapshot *item)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || item == NULL || item->id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, item->id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (registry->count >= UMI_UI_TAB_MODEL_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
         index = registry->count++;
     }
@@ -74,12 +107,22 @@ UmiStatus umi_ui_tab_model_registry_upsert(UmiUiTabRegistry *registry, const Umi
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove ui tab model registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ui_tab_model_registry_remove(UmiUiTabRegistry *registry, const char *id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < registry->count) {
         memmove(&registry->items[index], &registry->items[index + 1U],
                 (registry->count - index - 1U) * sizeof(registry->items[0]));
@@ -89,33 +132,62 @@ UmiStatus umi_ui_tab_model_registry_remove(UmiUiTabRegistry *registry, const cha
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find ui tab model registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_ui_tab_model_registry_find(const UmiUiTabRegistry *registry, const char *id, UmiUiTabSnapshot *out_item)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || id == NULL || out_item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_item = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find ui tab model registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_ui_tab_model_registry_at(const UmiUiTabRegistry *registry, size_t index, UmiUiTabSnapshot *out_item)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
     *out_item = registry->items[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui tab model registry activate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_tab_model_registry_activate(UmiUiTabRegistry *registry,
                                                const char *id)
 {
     size_t target;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     target = find_index(registry, id);
+    /* Configure the optional target only when its feature has created it. */
     if (target == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < registry->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(registry->items[index].group_id, registry->items[target].group_id) == 0) {
             registry->items[index].active = index == target;
             registry->revision += 1U;
@@ -125,24 +197,41 @@ UmiStatus umi_ui_tab_model_registry_activate(UmiUiTabRegistry *registry,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ui tab model registry set dirty operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_tab_model_registry_set_dirty(UmiUiTabRegistry *registry,
                                               const char *id,
                                               int dirty)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     registry->items[index].dirty = dirty != 0;
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
     return UMI_STATUS_OK;
 }
+/*
+ * Return the number of records represented by ui tab model registry without changing their
+ * state.
+ */
 size_t umi_ui_tab_model_registry_count(const UmiUiTabRegistry *registry)
 {
     return registry != NULL ? registry->count : 0U;
 }
 
+/*
+ * Provide the ui tab model registry revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ui_tab_model_registry_revision(const UmiUiTabRegistry *registry)
 {
     return registry != NULL ? registry->revision : 0U;

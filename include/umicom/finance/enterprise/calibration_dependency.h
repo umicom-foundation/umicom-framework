@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise calibration dependency data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationDependency { char prerequisite_id[UMI_ENTERPRISE_ID_CAPACITY]; char dependent_id[UMI_ENTERPRISE_ID_CAPACITY]; } UmiEnterpriseCalibrationDependency;
 /* Initialise a directed calibration dependency while rejecting self-dependency. */
 UmiStatus umi_enterprise_calibration_dependency_init(UmiEnterpriseCalibrationDependency *dependency,const char *prerequisite_id,const char *dependent_id);

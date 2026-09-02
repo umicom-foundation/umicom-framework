@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai helix bridge config data shared with callers of this public contract.
+ */
 typedef struct UmiAiHelixBridgeConfig {
     char provider_id[UMI_AI_ID_CAPACITY];
     char model_id[UMI_AI_ID_CAPACITY];
@@ -35,9 +38,17 @@ typedef struct UmiAiHelixBridgeConfig {
     int strict_protocol;
 } UmiAiHelixBridgeConfig;
 
+/**
+ * Initialise ai helix bridge config from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_helix_bridge_config_init(UmiAiHelixBridgeConfig *config,
                                           const char *provider_id,
                                           const char *model_id);
+/**
+ * Check that ai helix bridge config satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ai_helix_bridge_config_validate(
     const UmiAiHelixBridgeConfig *config);
 

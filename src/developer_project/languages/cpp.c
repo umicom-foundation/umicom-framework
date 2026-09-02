@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "g++", "clang++", "cmake", "ninja"
 };
 
+/*
+ * Provide the developer project language cpp operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_cpp(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

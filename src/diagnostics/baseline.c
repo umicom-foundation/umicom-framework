@@ -38,17 +38,25 @@ struct UmiDiagnosticBaseline {
     UmiDiagnosticBaselineDiff current_diff;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t value)
 {
     return value == UINT64_MAX ? 1U : value + 1U;
 }
 
+/* Provide the find fingerprint operation used by this module and its client applications. */
 static size_t find_fingerprint(const UmiDiagnosticBaseline *baseline,
                                uint64_t fingerprint)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || fingerprint == 0U) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < baseline->count; ++position) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (baseline->items[position].entry.fingerprint == fingerprint) {
             return position;
         }
@@ -56,32 +64,46 @@ static size_t find_fingerprint(const UmiDiagnosticBaseline *baseline,
     return SIZE_MAX;
 }
 
+/* Provide the reserve entries operation used by this module and its client applications. */
 static UmiStatus reserve_entries(UmiDiagnosticBaseline *baseline,
                                  size_t required)
 {
     size_t capacity;
     BaselineEntryState *replacement;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= baseline->capacity) return UMI_STATUS_OK;
     capacity = baseline->capacity > 0U
         ? baseline->capacity : BASELINE_INITIAL_CAPACITY;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity >= BASELINE_MAX_CAPACITY || capacity > SIZE_MAX / 2U) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         capacity *= 2U;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > BASELINE_MAX_CAPACITY) capacity = BASELINE_MAX_CAPACITY;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (BaselineEntryState *)realloc(
         baseline->items, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     baseline->items = replacement;
     baseline->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the fill entry operation used by this module and its client applications. */
 static void fill_entry(UmiDiagnosticBaselineEntry *entry,
                        const UmiDiagnosticProviderFinding *finding)
 {
@@ -108,6 +130,10 @@ static void fill_entry(UmiDiagnosticBaselineEntry *entry,
     entry->severity = finding->diagnostic.severity;
 }
 
+/*
+ * Provide the capture without revision operation used by this module and its client
+ * applications.
+ */
 static UmiStatus capture_without_revision(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderFinding *finding)
@@ -115,13 +141,16 @@ static UmiStatus capture_without_revision(
     UmiDiagnosticBaselineEntry entry;
     size_t position;
     UmiStatus status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_diagnostic_provider_finding_validate(finding) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     fill_entry(&entry, finding);
     position = find_fingerprint(baseline, entry.fingerprint);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position == SIZE_MAX) {
         status = reserve_entries(baseline, baseline->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         position = baseline->count++;
     }
@@ -130,12 +159,24 @@ static UmiStatus capture_without_revision(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise diagnostic baseline from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_diagnostic_baseline_create(UmiDiagnosticBaseline **out_baseline)
 {
     UmiDiagnosticBaseline *baseline;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_baseline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_baseline = NULL;
     baseline = (UmiDiagnosticBaseline *)calloc(1U, sizeof(*baseline));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     baseline->generation = 1U;
     baseline->revision = 1U;
@@ -143,16 +184,32 @@ UmiStatus umi_diagnostic_baseline_create(UmiDiagnosticBaseline **out_baseline)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by diagnostic baseline so the same storage can be reused
+ * safely.
+ */
 void umi_diagnostic_baseline_destroy(UmiDiagnosticBaseline *baseline)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL) return;
     free(baseline->items);
     baseline->items = NULL;
     free(baseline);
 }
 
+/*
+ * Release or reset state held by diagnostic baseline so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_diagnostic_baseline_clear(UmiDiagnosticBaseline *baseline)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     baseline->count = 0U;
     baseline->active_token = 0U;
@@ -162,13 +219,22 @@ UmiStatus umi_diagnostic_baseline_clear(UmiDiagnosticBaseline *baseline)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic baseline capture finding operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_capture_finding(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderFinding *finding)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || finding == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = capture_without_revision(baseline, finding);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         baseline->active_token = 0U;
         baseline->revision = next_revision(baseline->revision);
@@ -176,6 +242,10 @@ UmiStatus umi_diagnostic_baseline_capture_finding(
     return status;
 }
 
+/*
+ * Provide the diagnostic baseline capture batch operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_capture_batch(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderBatch *batch)
@@ -183,16 +253,23 @@ UmiStatus umi_diagnostic_baseline_capture_batch(
     size_t position;
     UmiDiagnosticProviderFinding finding;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || batch == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     baseline->count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < umi_diagnostic_provider_batch_count(batch);
          ++position) {
         status = umi_diagnostic_provider_batch_at(batch, position, &finding);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             baseline->count = 0U;
             return status;
         }
         status = capture_without_revision(baseline, &finding);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             baseline->count = 0U;
             return status;
@@ -205,9 +282,17 @@ UmiStatus umi_diagnostic_baseline_capture_batch(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic baseline begin comparison operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_begin_comparison(
     UmiDiagnosticBaseline *baseline)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     baseline->comparison_token = next_revision(baseline->comparison_token);
     baseline->active_token = baseline->comparison_token;
@@ -221,6 +306,10 @@ UmiStatus umi_diagnostic_baseline_begin_comparison(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic baseline compare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_baseline_compare(
     UmiDiagnosticBaseline *baseline,
     const UmiDiagnosticProviderFinding *finding,
@@ -230,6 +319,10 @@ UmiStatus umi_diagnostic_baseline_compare(
     uint64_t content_fingerprint;
     size_t position;
     BaselineEntryState *state;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || finding == NULL || out_decision == NULL ||
         baseline->active_token == 0U ||
         umi_diagnostic_provider_finding_validate(finding) != UMI_STATUS_OK) {
@@ -247,6 +340,7 @@ UmiStatus umi_diagnostic_baseline_compare(
     out_decision->current_content_fingerprint = content_fingerprint;
     out_decision->current_severity = finding->diagnostic.severity;
     position = find_fingerprint(baseline, fingerprint);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (position == SIZE_MAX) {
         out_decision->state = UMI_DIAGNOSTIC_BASELINE_NEW;
         ++baseline->current_diff.new_count;
@@ -261,29 +355,41 @@ UmiStatus umi_diagnostic_baseline_compare(
         state->entry.severity != finding->diagnostic.severity;
     out_decision->content_changed =
         state->entry.content_fingerprint != content_fingerprint;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_decision->content_changed || out_decision->severity_changed) {
         out_decision->state = UMI_DIAGNOSTIC_BASELINE_UPDATED;
         ++baseline->current_diff.updated_count;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (out_decision->severity_changed) {
             ++baseline->current_diff.severity_changed_count;
         }
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_decision->state = UMI_DIAGNOSTIC_BASELINE_UNCHANGED;
         ++baseline->current_diff.unchanged_count;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the diagnostic baseline finish comparison operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_baseline_finish_comparison(
     UmiDiagnosticBaseline *baseline,
     UmiDiagnosticBaselineDiff *out_diff)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || out_diff == NULL || baseline->active_token == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     baseline->current_diff.absent_count = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < baseline->count; ++position) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (baseline->items[position].seen_token != baseline->active_token) {
             ++baseline->current_diff.absent_count;
         }
@@ -294,17 +400,30 @@ UmiStatus umi_diagnostic_baseline_finish_comparison(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find diagnostic baseline while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_diagnostic_baseline_at(
     const UmiDiagnosticBaseline *baseline,
     size_t position,
     UmiDiagnosticBaselineEntry *out_entry)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || out_entry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= baseline->count) return UMI_STATUS_NOT_FOUND;
     *out_entry = baseline->items[position].entry;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find diagnostic baseline absent while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_diagnostic_baseline_absent_at(
     const UmiDiagnosticBaseline *baseline,
     size_t position,
@@ -312,11 +431,18 @@ UmiStatus umi_diagnostic_baseline_absent_at(
 {
     size_t cursor;
     size_t absent_index = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || out_entry == NULL || baseline->active_token == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (cursor = 0U; cursor < baseline->count; ++cursor) {
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (baseline->items[cursor].seen_token == baseline->active_token) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (absent_index == position) {
             *out_entry = baseline->items[cursor].entry;
             return UMI_STATUS_OK;
@@ -326,11 +452,19 @@ UmiStatus umi_diagnostic_baseline_absent_at(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the diagnostic baseline snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_diagnostic_baseline_snapshot(
     const UmiDiagnosticBaseline *baseline,
     UmiDiagnosticBaselineSnapshot *out_snapshot)
 {
     size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (baseline == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -340,11 +474,14 @@ UmiStatus umi_diagnostic_baseline_snapshot(
     out_snapshot->entry_count = baseline->count;
     out_snapshot->generation = baseline->generation;
     out_snapshot->revision = baseline->revision;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (baseline->active_token != 0U) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (position = 0U; position < baseline->count; ++position) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (baseline->items[position].seen_token == baseline->active_token) {
                 ++out_snapshot->seen_count;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 ++out_snapshot->absent_count;
             }
         }
@@ -352,11 +489,19 @@ UmiStatus umi_diagnostic_baseline_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by diagnostic baseline without changing their
+ * state.
+ */
 size_t umi_diagnostic_baseline_count(const UmiDiagnosticBaseline *baseline)
 {
     return baseline != NULL ? baseline->count : 0U;
 }
 
+/*
+ * Provide the diagnostic baseline revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_diagnostic_baseline_revision(const UmiDiagnosticBaseline *baseline)
 {
     return baseline != NULL ? baseline->revision : 0U;

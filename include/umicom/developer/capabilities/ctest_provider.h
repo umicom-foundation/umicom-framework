@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CTEST_PROVIDER "umicom.developer.integration.ctest_provider"
 
+/**
+ * Provide the developer capability ctest provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_ctest_provider(void);
 

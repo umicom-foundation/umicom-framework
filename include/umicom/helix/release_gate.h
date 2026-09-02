@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix release gate data shared with callers of this public contract.
+ */
 typedef struct UmiHelixReleaseGate {
     uint32_t required_checks;
     uint32_t passed_checks;
@@ -35,6 +38,10 @@ typedef struct UmiHelixReleaseGate {
     int rollback_ready;
 } UmiHelixReleaseGate;
 
+/**
+ * Provide the helix release gate check operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_release_gate_check(const UmiHelixReleaseGate *gate,
                                        const UmiHelixFitness *fitness,
                                        const UmiHelixPolicy *policy);

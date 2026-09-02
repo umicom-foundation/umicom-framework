@@ -20,6 +20,7 @@
 
 #include "umicom/platform/process.h"
 
+/* Provide the dependency check operation used by this module and its client applications. */
 UmiStatus umi_dependency_check(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -30,16 +31,25 @@ UmiStatus umi_dependency_check(
     const UmiToolInfo *pkg_config;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || requirements == NULL || out_report == NULL ||
         requirement_count > UMI_DEPENDENCY_MAX) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_report, 0, sizeof(*out_report));
     pkg_config = umi_toolchain_profile_tool(profile, UMI_TOOL_PKG_CONFIG);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pkg_config == NULL || pkg_config->state != UMI_TOOL_VALIDATED) {
         return UMI_STATUS_NOT_FOUND;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < requirement_count; ++index) {
         const char *exists_arguments[2];
         const char *version_arguments[2];
@@ -72,6 +82,7 @@ UmiStatus umi_dependency_check(
         (void)umi_process_execute(&request, &result);
         item->available = result.exit_code == 0;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->available) {
             version_arguments[0] = "--modversion";
             version_arguments[1] = requirements[index].package_name;
@@ -81,12 +92,17 @@ UmiStatus umi_dependency_check(
             (void)umi_process_execute(&request, &result);
             {
                 size_t version_length = strcspn(result.output, "\r\n");
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (version_length >= sizeof(item->version)) {
                     version_length = sizeof(item->version) - 1U;
                 }
                 (void)memcpy(item->version, result.output, version_length);
                 item->version[version_length] = '\0';
             }
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (requirements[index].minimum_version != NULL &&
                 requirements[index].minimum_version[0] != '\0') {
                 (void)snprintf(
@@ -103,6 +119,7 @@ UmiStatus umi_dependency_check(
                 item->available = result.exit_code == 0;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!item->available && item->required) {
             out_report->required_missing += 1U;
         }

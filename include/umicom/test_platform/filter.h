@@ -29,6 +29,9 @@ extern "C" {
 
 #define UMI_TEST_PLATFORM_SELECTION_CAPACITY 1024U
 
+/**
+ * Represent the test platform filter data shared with callers of this public contract.
+ */
 typedef struct UmiTestPlatformFilter {
     /* Free text is matched case-insensitively against id, name and labels. */
     char text[256];
@@ -39,6 +42,9 @@ typedef struct UmiTestPlatformFilter {
     int failed_only;
 } UmiTestPlatformFilter;
 
+/**
+ * Represent the test platform selection data shared with callers of this public contract.
+ */
 typedef struct UmiTestPlatformSelection {
     /* Selections carry stable ids rather than borrowed registry pointers. */
     char item_ids[UMI_TEST_PLATFORM_SELECTION_CAPACITY][128];
@@ -46,6 +52,10 @@ typedef struct UmiTestPlatformSelection {
     uint64_t source_revision;
 } UmiTestPlatformSelection;
 
+/**
+ * Initialise test platform filter from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_test_platform_filter_init(UmiTestPlatformFilter *filter);
 /* latest_result may be NULL when the test has never run. */
 int umi_test_platform_filter_matches(
@@ -53,6 +63,10 @@ int umi_test_platform_filter_matches(
     const UmiTestPlatformResultSnapshot *latest_result,
     const UmiTestPlatformFilter *filter
 );
+/**
+ * Provide the test platform filter select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_filter_select(
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results,

@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital resource data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalResource { char resource_id[UMI_PRU_ID_CAPACITY]; UmiCapitalTierKind tier; double gross_amount; double deductions; double eligible_amount; UmiCurrency currency; } UmiPrudentialCapitalResource;
 /* Initialise a capital resource and derive its eligible amount after deductions. */
 UmiStatus umi_pru_capital_resource_init(UmiPrudentialCapitalResource *record, const char *resource_id, UmiCapitalTierKind tier, double gross_amount, double deductions, UmiCurrency currency);

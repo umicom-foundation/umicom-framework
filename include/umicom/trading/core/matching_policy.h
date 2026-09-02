@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading matching policy data shared with callers of this public contract.
+ */
 typedef struct UmiTradingMatchingPolicy { bool price_time_priority; bool prevent_self_trade; uint32_t max_matches_per_cycle; } UmiTradingMatchingPolicy;
 /* Initialise and validate define common exchange matching priorities and self-trade prevention behaviour. */
 UmiStatus umi_trading_matching_policy_init(UmiTradingMatchingPolicy *value,bool price_time_priority, bool prevent_self_trade, uint32_t max_matches_per_cycle);

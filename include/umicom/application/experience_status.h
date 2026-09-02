@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience status data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceStatus {
     uint32_t structure_size;
     size_t panel_count;
@@ -34,6 +38,10 @@ typedef struct UmiApplicationExperienceStatus {
     unsigned readiness_percent;
 } UmiApplicationExperienceStatus;
 
+/**
+ * Provide the application experience status operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_experience_status(
     const UmiApplicationExperienceDefinition *definition,
     UmiApplicationExperienceStatus *out_status);

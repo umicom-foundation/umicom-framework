@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench memory viewport model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchMemoryViewportModel {
     UmiDebugWorkbenchEntry value;
     uint64_t start_address;
@@ -35,10 +39,30 @@ typedef struct UmiDebugWorkbenchMemoryViewportModel {
     uint64_t revision;
 } UmiDebugWorkbenchMemoryViewportModel;
 
+/**
+ * Initialise debug workbench memory viewport model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_workbench_memory_viewport_model_init(UmiDebugWorkbenchMemoryViewportModel *model, const char *id, uint64_t start_address, uint64_t extent);
+/**
+ * Provide the debug workbench memory viewport model set cursor operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_memory_viewport_model_set_cursor(UmiDebugWorkbenchMemoryViewportModel *model, uint64_t address);
+/**
+ * Provide the debug workbench memory viewport model set follow execution operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_debug_workbench_memory_viewport_model_set_follow_execution(UmiDebugWorkbenchMemoryViewportModel *model, bool follow);
+/**
+ * Provide the debug workbench memory viewport model contains operation used by this module
+ * and its client applications.
+ */
 int umi_debug_workbench_memory_viewport_model_contains(const UmiDebugWorkbenchMemoryViewportModel *model, uint64_t address);
+/**
+ * Check that debug workbench memory viewport model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_debug_workbench_memory_viewport_model_valid(const UmiDebugWorkbenchMemoryViewportModel *model);
 
 #ifdef __cplusplus

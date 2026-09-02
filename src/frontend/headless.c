@@ -21,6 +21,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 typedef struct Headless{char *capture;size_t capacity;}Headless;
+/* Provide the render operation used by this module and its client applications. */
 static UmiStatus render(void *p,const UmiFrontendPlan *plan,const char *root){Headless *h=(Headless*)p;int n;(void)root;n=snprintf(h->capture,h->capacity,"frontend=%s app=%s pages=%zu routes=%zu assets=%zu",umi_frontend_kind_text(plan->kind),plan->application_id,plan->page_count,plan->route_count,plan->asset_count);return n<0||(size_t)n>=h->capacity?UMI_STATUS_CAPACITY_EXCEEDED:UMI_STATUS_OK;}
+/* Provide the destroy operation used by this module and its client applications. */
 static void destroy(void *p){free(p);}
-UmiStatus umi_frontend_headless_create(char *capture,size_t cap,UmiFrontendRenderer *out){Headless *h;if(capture==NULL||cap==0U||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;h=(Headless*)calloc(1U,sizeof(*h));if(h==NULL)return UMI_STATUS_OUT_OF_MEMORY;h->capture=capture;h->capacity=cap;out->instance=h;out->kind=UMI_FRONTEND_KIND_HEADLESS;out->render=render;out->destroy=destroy;return UMI_STATUS_OK;}
+/*
+ * Initialise frontend headless from caller-provided values so later operations receive a
+ * known state.
+ */
+UmiStatus umi_frontend_headless_create(char *capture,size_t cap,UmiFrontendRenderer *out){Headless *h;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(capture==NULL||cap==0U||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;h=(Headless*)calloc(1U,sizeof(*h));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(h==NULL)return UMI_STATUS_OUT_OF_MEMORY;h->capture=capture;h->capacity=cap;out->instance=h;out->kind=UMI_FRONTEND_KIND_HEADLESS;out->render=render;out->destroy=destroy;return UMI_STATUS_OK;}

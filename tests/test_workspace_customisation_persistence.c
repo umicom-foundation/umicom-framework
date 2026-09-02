@@ -76,6 +76,10 @@ static void seed_layout(UmiUiWorkspaceCustomisation *customisation)
                UMI_UI_WINDOW_GROUP_SOURCE) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiUiWorkspaceCustomisation *source =

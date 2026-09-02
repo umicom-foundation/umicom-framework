@@ -17,6 +17,10 @@
 
 #include "umicom/editor/intelligence_workbench/code_action_projection.h"
 
+/*
+ * Exercise action and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorRankedCodeAction action(
     const char *id, const char *title, int enabled, int preferred, int score)
 {
@@ -42,6 +46,10 @@ static UmiEditorRankedCodeAction action(
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorCodeActionOrchestration *orchestration = NULL;

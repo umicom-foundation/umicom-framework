@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc render snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiFcRenderSnapshot { char surface_id[UMI_FC_ID_CAPACITY]; size_t node_count; size_t text_bytes; size_t interactive_count; uint64_t semantic_fingerprint; uint64_t revision; } UmiFcRenderSnapshot;
+/**
+ * Provide the fc render snapshot make operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fc_render_snapshot_make(const char *surface_id,size_t node_count,size_t text_bytes,size_t interactive_count,uint64_t semantic_fingerprint,uint64_t revision,UmiFcRenderSnapshot *out_snapshot);
 
 #ifdef __cplusplus

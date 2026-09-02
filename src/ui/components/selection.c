@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/selection.h"
+/*
+ * Provide the ui component selection none operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentSelection umi_ui_component_selection_none(void){UmiUiComponentSelection s={0U,false};return s;}

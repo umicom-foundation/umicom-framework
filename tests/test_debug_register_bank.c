@@ -28,6 +28,10 @@
 
 #include "umicom/debug/register_bank.h"
 
+/*
+ * Exercise make group and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDebugRegisterGroup make_group(
     const char *id,
     const char *name,
@@ -47,6 +51,7 @@ static UmiDebugRegisterGroup make_group(
     return group;
 }
 
+/* Add make only after its inputs and available capacity have been checked. */
 static UmiDebugRegisterValue make_register(
     const char *id,
     const char *group_id,
@@ -71,6 +76,10 @@ static UmiDebugRegisterValue make_register(
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDebugRegisterBank *bank = NULL;

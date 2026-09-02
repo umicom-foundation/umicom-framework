@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap resolution request from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_resolution_request_init(
     UmiBootstrapResolutionRequest *request,
     const UmiBootstrapServiceKey *key,

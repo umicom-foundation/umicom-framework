@@ -31,7 +31,14 @@ extern "C" {
 #include "umicom/ui/design/color_role.h"
 #include "umicom/ui/design/color.h"
 
+/**
+ * Represent the design color palette entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignColorPaletteEntry { UmiDesignColorRole role; UmiDesignRgba color; } UmiDesignColorPaletteEntry;
+/**
+ * Represent the design color palette data shared with callers of this public contract.
+ */
 typedef struct UmiDesignColorPalette { UmiDesignColorPaletteEntry entries[UMI_DESIGN_MAX_ITEMS]; size_t count; } UmiDesignColorPalette;
 
 /* Insert or replace one semantic colour role in the bounded palette. */

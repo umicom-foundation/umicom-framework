@@ -15,28 +15,50 @@
 #include "umicom/ui/mosaic/types.h"
 #include <string.h>
 
+/*
+ * Provide the ui mosaic copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_mosaic_copy_text(char *destination, size_t capacity, const char *source) {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Check that ui mosaic id satisfies its contract before another service relies on it. */
 int umi_ui_mosaic_id_is_valid(const char *identifier) {
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (identifier == NULL || identifier[0] == '\0') return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 0U; identifier[i] != '\0'; ++i) {
         const char c = identifier[i];
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
               (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-')) return 0;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (i + 1U >= UMI_UI_MOSAIC_ID_CAPACITY) return 0;
     }
     return 1;
 }
 
+/*
+ * Provide the ui mosaic application name operation used by this module and its client
+ * applications.
+ */
 const char *umi_ui_mosaic_application_name(UmiUiMosaicApplication application) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (application) {
         case UMI_UI_MOSAIC_APP_FRAMEWORK: return "Framework";
         case UMI_UI_MOSAIC_APP_DESK: return "Desk";
@@ -54,7 +76,12 @@ const char *umi_ui_mosaic_application_name(UmiUiMosaicApplication application) {
     }
 }
 
+/*
+ * Provide the ui mosaic dock zone name operation used by this module and its client
+ * applications.
+ */
 const char *umi_ui_mosaic_dock_zone_name(UmiUiMosaicDockZone zone) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (zone) {
         case UMI_UI_MOSAIC_DOCK_LEFT: return "left";
         case UMI_UI_MOSAIC_DOCK_RIGHT: return "right";

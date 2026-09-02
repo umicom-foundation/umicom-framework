@@ -33,14 +33,29 @@
 extern "C" {
 #endif
 #define UMI_CONTEXT_PANEL_HOST_NAME "panel-host"
+/**
+ * Represent the context panel host state data shared with callers of this public contract.
+ */
 typedef struct UmiContextPanelHostState {
     uint64_t revision;
     uint64_t operation_count;
     UmiStatus last_status;
     char last_message[UMI_CONTEXT_VALUE_CAPACITY];
 } UmiContextPanelHostState;
+/**
+ * Initialise context panel host state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_context_panel_host_state_init(UmiContextPanelHostState *state);
+/**
+ * Provide the context panel host state record operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_panel_host_state_record(UmiContextPanelHostState *state,UmiStatus status,const char *message);
+/**
+ * Return the number of records represented by context panel host operation without
+ * changing their state.
+ */
 uint64_t umi_context_panel_host_operation_count(const UmiContextPanelHostState *state);
 #ifdef __cplusplus
 }

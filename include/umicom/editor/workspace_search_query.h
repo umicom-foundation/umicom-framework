@@ -37,6 +37,10 @@ extern "C" {
 
 typedef int (*UmiEditorWorkspaceSearchCancellationCheck)(void *user_data);
 
+/**
+ * Represent the editor workspace search query request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchQueryRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -49,6 +53,10 @@ typedef struct UmiEditorWorkspaceSearchQueryRequest {
     void *cancellation_user_data;
 } UmiEditorWorkspaceSearchQueryRequest;
 
+/**
+ * Represent the editor workspace search query snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchQuerySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -71,47 +79,99 @@ typedef struct UmiEditorWorkspaceSearchQuerySnapshot {
     int complete;
 } UmiEditorWorkspaceSearchQuerySnapshot;
 
+/**
+ * Represent the editor workspace search query data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceSearchQuery
     UmiEditorWorkspaceSearchQuery;
 
+/**
+ * Initialise editor workspace search query request from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_editor_workspace_search_query_request_init(
     UmiEditorWorkspaceSearchQueryRequest *request);
 
+/**
+ * Initialise editor workspace search query from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_query_create(
     UmiEditorWorkspaceSearchQuery **out_query);
+/**
+ * Release or reset state held by editor workspace search query so the same storage can be
+ * reused safely.
+ */
 void umi_editor_workspace_search_query_destroy(
     UmiEditorWorkspaceSearchQuery *query);
 
+/**
+ * Perform editor workspace search query through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_editor_workspace_search_query_execute(
     UmiEditorWorkspaceSearchQuery *query,
     const UmiEditorWorkspaceSearchIndex *index,
     const UmiEditorWorkspaceSearchPattern *pattern,
     const UmiEditorWorkspaceSearchExclusionSet *exclusions,
     const UmiEditorWorkspaceSearchQueryRequest *request);
+/**
+ * Release or reset state held by editor workspace search query so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_workspace_search_query_clear(
     UmiEditorWorkspaceSearchQuery *query);
 
+/**
+ * Find editor workspace search query while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_workspace_search_query_at(
     const UmiEditorWorkspaceSearchQuery *query,
     size_t position,
     UmiEditorWorkspaceSearchMatch *out_match);
+/**
+ * Find editor workspace search query while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_workspace_search_query_find(
     const UmiEditorWorkspaceSearchQuery *query,
     const char *match_id,
     UmiEditorWorkspaceSearchMatch *out_match);
+/**
+ * Provide the editor workspace search query select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_query_select(
     UmiEditorWorkspaceSearchQuery *query,
     const char *match_id,
     int selected);
+/**
+ * Provide the editor workspace search query select all operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_query_select_all(
     UmiEditorWorkspaceSearchQuery *query,
     int selected);
+/**
+ * Provide the editor workspace search query snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_query_snapshot(
     const UmiEditorWorkspaceSearchQuery *query,
     UmiEditorWorkspaceSearchQuerySnapshot *out_snapshot);
 
+/**
+ * Return the number of records represented by editor workspace search query without
+ * changing their state.
+ */
 size_t umi_editor_workspace_search_query_count(
     const UmiEditorWorkspaceSearchQuery *query);
+/**
+ * Provide the editor workspace search query revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_workspace_search_query_revision(
     const UmiEditorWorkspaceSearchQuery *query);
 

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_AARCH64 "umicom.developer.portability.aarch64"
 
+/**
+ * Provide the developer capability aarch64 operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_aarch64(void);
 

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/encoding_validation.h"
 
+/*
+ * Provide the document capability encoding validation operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_encoding_validation(void)
 {

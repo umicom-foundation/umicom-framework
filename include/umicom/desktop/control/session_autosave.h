@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_SESSION_AUTOSAVE_API_VERSION 1U
 
+/**
+ * Represent the desktop session autosave snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopSessionAutosaveSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

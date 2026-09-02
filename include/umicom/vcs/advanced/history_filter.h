@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced history filter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedHistoryFilter {
     uint32_t struct_size;
     uint32_t api_version;
@@ -34,8 +38,20 @@ typedef struct UmiVcsAdvancedHistoryFilter {
     int exclude_merges;
     int case_sensitive;
 } UmiVcsAdvancedHistoryFilter;
+/**
+ * Initialise vcs advanced history filter from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_history_filter_init(UmiVcsAdvancedHistoryFilter *filter);
+/**
+ * Check that vcs advanced history filter satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_history_filter_validate(const UmiVcsAdvancedHistoryFilter *filter);
+/**
+ * Provide the vcs advanced history filter match operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_history_filter_match(const UmiVcsAdvancedHistoryFilter *filter,
                                            const UmiVcsAdvancedCommitNode *node);
 #ifdef __cplusplus

@@ -40,9 +40,11 @@ UmiStatus umi_repository_head_probe_read(
     /* Resolve HEAD without constructing shell command text. */
     status = umi_repository_git_command_execute(
         context, arguments, sizeof(arguments) / sizeof(arguments[0]), &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result.exit_code != 0) {
         return UMI_STATUS_INVALID_STATE;
     }

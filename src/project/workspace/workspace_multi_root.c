@@ -16,19 +16,42 @@
 #include "umicom/project/workspace/workspace_multi_root.h"
 #include "internal.h"
 #include <string.h>
+/*
+ * Initialise project workspace workspace multi root from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_project_workspace_workspace_multi_root_init(UmiProjectWorkspaceWorkspaceMultiRoot *value) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value!=NULL)(void)memset(value,0,sizeof(*value));
 }
+/*
+ * Provide the project workspace workspace multi root add root operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_project_workspace_workspace_multi_root_add_root(UmiProjectWorkspaceWorkspaceMultiRoot *value,const char *path) {
     size_t i;
     UmiStatus s;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(value==NULL||path==NULL||path[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;
-    for(i=0U;i<value->count;++i)if(strcmp(value->roots[i],path)==0)return UMI_STATUS_ALREADY_EXISTS;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for(i=0U;i<value->count;++i)/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(strcmp(value->roots[i],path)==0)return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if(value->count>=UMI_PROJECT_WORKSPACE_SMALL_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;
     s=umi_pw_copy(value->roots[value->count],sizeof(value->roots[value->count]),path);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if(s==UMI_STATUS_OK)value->count+=1U;
     return s;
 }
+/*
+ * Check that project workspace workspace multi root satisfies its contract before another
+ * service relies on it.
+ */
 bool umi_project_workspace_workspace_multi_root_valid(const UmiProjectWorkspaceWorkspaceMultiRoot *value) {
     return value!=NULL&&value->count>0U;
 }

@@ -18,14 +18,26 @@
 #include "umicom/desktop/shell_model.h"
 #include "umicom/ui/view_model.h"
 
+/**
+ * Initialise desktop overview view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_desktop_overview_view_create(
     const char *view_id,
     UmiDesktopShellModel *model,
     UmiUiViewModel **out_view);
+/**
+ * Initialise desktop layout designer view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_layout_designer_view_create(
     const char *view_id,
     UmiDesktopShellModel *model,
     UmiUiViewModel **out_view);
+/**
+ * Initialise desktop monitor manager view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_monitor_manager_view_create(
     const char *view_id,
     UmiDesktopShellModel *model,

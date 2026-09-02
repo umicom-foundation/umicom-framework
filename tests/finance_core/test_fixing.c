@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/fixing.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiMarketDataKey k; UmiFixing f; CHECK(umi_market_data_key_init(&k,"K","Key","SRC",1U)==UMI_STATUS_OK); CHECK(umi_fixing_init(&f,&k,(UmiFinancialDate){2026,8U,25U},1.0,1)==UMI_STATUS_OK);

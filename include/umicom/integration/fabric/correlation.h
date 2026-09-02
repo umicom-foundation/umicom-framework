@@ -26,7 +26,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the fabric correlation set causation operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_fabric_correlation_set_causation(UmiFabricMessageHeader *header,const char *causation_id);
+/**
+ * Provide the fabric correlation matches operation used by this module and its client
+ * applications.
+ */
 bool umi_fabric_correlation_matches(const UmiFabricMessageHeader *left,const UmiFabricMessageHeader *right);
 
 #ifdef __cplusplus

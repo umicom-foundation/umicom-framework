@@ -30,11 +30,18 @@ extern "C" {
 
 #define UMI_DECL_MAX_TOKENS_PER_LINE 16U
 
+/**
+ * Represent the decl token line data shared with callers of this public contract.
+ */
 typedef struct UmiDeclTokenLine {
     char tokens[UMI_DECL_MAX_TOKENS_PER_LINE][UMI_DECL_TEXT_CAPACITY];
     size_t count;
 } UmiDeclTokenLine;
 
+/**
+ * Provide the decl lexer split line operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_decl_lexer_split_line(const char *line, UmiDeclTokenLine *out_tokens);
 
 #ifdef __cplusplus

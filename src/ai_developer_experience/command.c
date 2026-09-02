@@ -67,11 +67,19 @@ static const UmiAiDeveloperCommandDescriptor COMMANDS[] = {
      "Restore AI developer state through Session Store.", UMI_AI_DEVELOPER_PANE_OVERVIEW, 0, 0, 1}
 };
 
+/*
+ * Return the number of records represented by ai developer command without changing their
+ * state.
+ */
 size_t umi_ai_developer_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/*
+ * Find ai developer command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiDeveloperCommandDescriptor *
 umi_ai_developer_command_at(size_t index)
 {
@@ -80,14 +88,24 @@ umi_ai_developer_command_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find ai developer command while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiAiDeveloperCommandDescriptor *
 umi_ai_developer_command_find(const char *command_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ai_developer_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].command_id, command_id) == 0) {
             return &COMMANDS[index];
         }

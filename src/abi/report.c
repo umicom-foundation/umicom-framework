@@ -18,4 +18,5 @@
  */
 #include "umicom/abi/report.h"
 #include <stdio.h>
-UmiStatus umi_abi_report_format(const UmiAbiCompatibility *r,char *b,size_t cap){int n;if(r==NULL||b==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;n=snprintf(b,cap,"compatible=%s missing_features=%zu missing_symbols=%zu incompatible_layouts=%zu",r->compatible?"yes":"no",r->missing_features,r->missing_symbols,r->incompatible_layouts);return n<0||(size_t)n>=cap?UMI_STATUS_CAPACITY_EXCEEDED:UMI_STATUS_OK;}
+/* Provide the abi report format operation used by this module and its client applications. */
+UmiStatus umi_abi_report_format(const UmiAbiCompatibility *r,char *b,size_t cap){int n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||b==NULL||cap==0U)return UMI_STATUS_INVALID_ARGUMENT;n=snprintf(b,cap,"compatible=%s missing_features=%zu missing_symbols=%zu incompatible_layouts=%zu",r->compatible?"yes":"no",r->missing_features,r->missing_symbols,r->incompatible_layouts);return n<0||(size_t)n>=cap?UMI_STATUS_CAPACITY_EXCEEDED:UMI_STATUS_OK;}

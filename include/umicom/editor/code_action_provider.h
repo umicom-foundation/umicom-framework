@@ -45,6 +45,10 @@ enum {
     UMI_EDITOR_CODE_ACTION_KIND_ALL = (1U << 9) - 1U
 };
 
+/**
+ * Represent the editor code action provider item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorCodeActionProviderItem {
     uint32_t struct_size;
     uint32_t api_version;
@@ -61,6 +65,10 @@ typedef struct UmiEditorCodeActionProviderItem {
     int enabled;
 } UmiEditorCodeActionProviderItem;
 
+/**
+ * Represent the editor code action provider snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCodeActionProviderSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -71,38 +79,86 @@ typedef struct UmiEditorCodeActionProviderSnapshot {
     uint64_t revision;
 } UmiEditorCodeActionProviderSnapshot;
 
+/**
+ * Represent the editor code action provider registry data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorCodeActionProviderRegistry
     UmiEditorCodeActionProviderRegistry;
 
+/**
+ * Initialise editor code action provider registry from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_code_action_provider_registry_create(
     UmiEditorCodeActionProviderRegistry **out_registry);
+/**
+ * Release or reset state held by editor code action provider registry so the same storage
+ * can be reused safely.
+ */
 void umi_editor_code_action_provider_registry_destroy(
     UmiEditorCodeActionProviderRegistry *registry);
+/**
+ * Release or reset state held by editor code action provider registry so the same storage
+ * can be reused safely.
+ */
 UmiStatus umi_editor_code_action_provider_registry_clear(
     UmiEditorCodeActionProviderRegistry *registry);
+/**
+ * Provide the editor code action provider registry upsert operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_code_action_provider_registry_upsert(
     UmiEditorCodeActionProviderRegistry *registry,
     const UmiEditorCodeActionProviderItem *provider);
+/**
+ * Remove editor code action provider registry while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_editor_code_action_provider_registry_remove(
     UmiEditorCodeActionProviderRegistry *registry,
     const char *provider_id);
+/**
+ * Find editor code action provider registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_code_action_provider_registry_find(
     const UmiEditorCodeActionProviderRegistry *registry,
     const char *provider_id,
     UmiEditorCodeActionProviderItem *out_provider);
+/**
+ * Find editor code action provider registry while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_code_action_provider_registry_at(
     const UmiEditorCodeActionProviderRegistry *registry,
     size_t index,
     UmiEditorCodeActionProviderItem *out_provider);
+/**
+ * Provide the editor code action provider registry snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_code_action_provider_registry_snapshot(
     const UmiEditorCodeActionProviderRegistry *registry,
     UmiEditorCodeActionProviderSnapshot *out_snapshot);
+/**
+ * Provide the editor code action provider supports operation used by this module and its
+ * client applications.
+ */
 int umi_editor_code_action_provider_supports(
     const UmiEditorCodeActionProviderItem *provider,
     const char *language_id,
     UmiEditorCodeActionKindMask kind_mask);
+/**
+ * Return the number of records represented by editor code action provider registry without
+ * changing their state.
+ */
 size_t umi_editor_code_action_provider_registry_count(
     const UmiEditorCodeActionProviderRegistry *registry);
+/**
+ * Provide the editor code action provider registry revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_code_action_provider_registry_revision(
     const UmiEditorCodeActionProviderRegistry *registry);
 

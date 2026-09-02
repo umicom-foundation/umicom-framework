@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding patch preview file data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingPatchPreviewFile {
     char path[UMI_AI_TEXT_CAPACITY];
     UmiAiCodingPatchOperation operation;
@@ -29,6 +33,9 @@ typedef struct UmiAiCodingPatchPreviewFile {
     size_t after_length;
 } UmiAiCodingPatchPreviewFile;
 
+/**
+ * Represent the ai coding patch preview data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingPatchPreview {
     char patch_id[UMI_AI_ID_CAPACITY];
     char title[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -43,6 +50,10 @@ typedef struct UmiAiCodingPatchPreview {
     uint64_t revision;
 } UmiAiCodingPatchPreview;
 
+/**
+ * Provide the ai coding patch preview operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_patch_preview(
     const UmiAiCodingPatch *patch,
     UmiAiCodingPatchPreview *out_preview);

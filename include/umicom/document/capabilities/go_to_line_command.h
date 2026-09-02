@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_GO_TO_LINE_COMMAND "umicom.document.navigation.go_to_line_command"
 
+/**
+ * Provide the document capability go to line command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_go_to_line_command(void);
 

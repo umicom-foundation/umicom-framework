@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcViewportProfile p={1920,1080,1.0,UMI_FC_INPUT_MOUSE_KEYBOARD}; CHECK(umi_fc_viewport_profile_aspect(&p)>1.7); CHECK(!umi_fc_viewport_profile_is_portrait(&p));
     return 0;

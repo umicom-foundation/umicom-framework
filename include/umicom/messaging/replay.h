@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the replay source data shared with callers of this public contract.
+ */
 typedef struct UmiReplaySource {
     void *instance;
     size_t (*count)(void *instance);
@@ -33,6 +36,9 @@ typedef struct UmiReplaySource {
                       UmiOwnedMessage *out_message);
 } UmiReplaySource;
 
+/**
+ * Represent the replay options data shared with callers of this public contract.
+ */
 typedef struct UmiReplayOptions {
     uint64_t minimum_sequence;
     uint64_t maximum_sequence;
@@ -43,7 +49,15 @@ typedef struct UmiReplayOptions {
 typedef UmiStatus (*UmiReplayHandler)(const UmiMessageEnvelope *message,
                                       void *user_data);
 
+/**
+ * Provide the replay options default operation used by this module and its client
+ * applications.
+ */
 UmiReplayOptions umi_replay_options_default(void);
+/**
+ * Perform replay through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_replay_execute(const UmiReplaySource *source,
                              const UmiReplayOptions *options,
                              UmiReplayHandler handler,

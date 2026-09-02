@@ -18,6 +18,10 @@
 
 #include "umicom/application/presentation/presentation.h"
 
+/*
+ * Exercise test controller and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus test_controller(
     void *context,
     const UmiApplicationPresentationPanelPlacement *placement,
@@ -35,6 +39,10 @@ static UmiStatus test_controller(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationPresentationSurfaceSession session;

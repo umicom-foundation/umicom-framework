@@ -29,6 +29,10 @@ extern "C" {
 
 #include "umicom/repository/inspection_issue.h"
 #include "umicom/repository/inspection_policy.h"
+/**
+ * Represent the repository inspection report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryInspectionReport { UmiRepositoryInspectionIssue issues[UMI_REPOSITORY_INSPECTION_ISSUE_CAPACITY]; size_t count; size_t warnings; size_t errors; } UmiRepositoryInspectionReport;
 /* Evaluate the collected snapshot against additive inspection policy. */
 UmiStatus umi_repository_inspection_report_build(const UmiRepositoryInspectionSnapshot *snapshot, const UmiRepositoryInspectionPolicy *policy, UmiRepositoryInspectionReport *out_report);

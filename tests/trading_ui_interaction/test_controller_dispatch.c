@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 
+/*
+ * Perform test controller through the module contract so client applications do not
+ * duplicate its policy.
+ */
 void test_controller_dispatch(void)
 {
     UmiTradingUiTestFixture fixture;

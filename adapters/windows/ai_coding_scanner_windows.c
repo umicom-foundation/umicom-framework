@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the scan directory operation used by this module and its client applications. */
 static UmiStatus scan_directory(
     const char *root,
     const char *relative,
@@ -40,11 +41,13 @@ static UmiStatus scan_directory(
         ? snprintf(pattern, sizeof(pattern), "%s/%s/*", root, relative)
         : snprintf(pattern, sizeof(pattern), "%s/*", root);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(pattern)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     handle = FindFirstFileA(pattern, &data);
+    /* Apply this operation only while the related capability or state is available. */
     if (handle == INVALID_HANDLE_VALUE) {
         const DWORD error = GetLastError();
         return error == ERROR_FILE_NOT_FOUND
@@ -59,6 +62,7 @@ static UmiStatus scan_directory(
         int descend = 1;
         UmiStatus status;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(data.cFileName, ".") == 0 ||
             strcmp(data.cFileName, "..") == 0) {
             continue;
@@ -72,12 +76,14 @@ static UmiStatus scan_directory(
                 child_relative, sizeof(child_relative),
                 "%s", data.cFileName);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0 ||
             (size_t)written >= sizeof(child_relative)) {
             (void)FindClose(handle);
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0U) {
             continue;
         }
@@ -95,6 +101,7 @@ static UmiStatus scan_directory(
         size.LowPart = data.nFileSizeLow;
         item.byte_size = (uint64_t)size.QuadPart;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ai_coding_ignore_path(
                 ignore_policy,
                 item.relative_path,
@@ -103,11 +110,13 @@ static UmiStatus scan_directory(
         }
 
         status = visitor(user_data, &item, &descend);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             (void)FindClose(handle);
             return status;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item.directory && descend) {
             status = scan_directory(
                 root,
@@ -116,15 +125,17 @@ static UmiStatus scan_directory(
                 visitor,
                 user_data,
                 file_count);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) {
                 (void)FindClose(handle);
                 return status;
             }
-        } else if (!item.directory) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (!item.directory) {
             *file_count += 1U;
         }
-    } while (FindNextFileA(handle, &data));
+    } /* Continue only while work remains available; the loop body advances the state on each pass. */ while (FindNextFileA(handle, &data));
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (GetLastError() != ERROR_NO_MORE_FILES) {
         (void)FindClose(handle);
         return UMI_STATUS_IO_ERROR;
@@ -133,6 +144,10 @@ static UmiStatus scan_directory(
     return FindClose(handle) ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 }
 
+/*
+ * Provide the ai coding platform scan workspace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_platform_scan_workspace(
     const char *root,
     const UmiAiCodingIgnorePolicy *ignore_policy,

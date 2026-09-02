@@ -22,12 +22,22 @@ UmiStatus umi_designer_variant_resolver_resolve(const UmiDesignerAdaptiveVariant
 {
     size_t index;
     const UmiDesignerAdaptiveVariant *best = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (set == NULL || out_variant == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < set->count; ++index) {
         const UmiDesignerAdaptiveVariant *candidate = &set->variants[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (candidate->size_class == size_class && candidate->orientation == orientation &&
             (best == NULL || candidate->priority > best->priority)) best = candidate;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (best == NULL) return UMI_STATUS_NOT_FOUND;
     *out_variant = *best;
     return UMI_STATUS_OK;

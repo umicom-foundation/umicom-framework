@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/liquidity_cashflow.h"
 
-int main(void) { UmiPrudentialLiquidityCashflow f; UmiCurrency c={"GBP"}; if(umi_pru_liquidity_cashflow_init(&f,1,80.0,100.0,c)!=UMI_STATUS_OK)return 1; return umi_pru_liquidity_cashflow_net(&f)==-20.0?0:2; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialLiquidityCashflow f; UmiCurrency c={"GBP"}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_liquidity_cashflow_init(&f,1,80.0,100.0,c)!=UMI_STATUS_OK)return 1; return umi_pru_liquidity_cashflow_net(&f)==-20.0?0:2; }

@@ -19,6 +19,10 @@
 
 #include "test_support.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiWorkbenchContextHostTestFixture fixture;
@@ -26,6 +30,7 @@ int main(void)
     const UmiWorkbenchContextHostInbox *inbox;
     size_t index;
     assert(umi_wch_test_fixture_init(&fixture) == UMI_STATUS_OK);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_CONTEXT_HOST_MAX_INBOX_ITEMS + 12U;
          ++index) {

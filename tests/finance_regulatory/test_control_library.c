@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/control_library.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiControlLibrary l; umi_reg_control_library_init(&l); CHECK(umi_reg_control_library_add(&l,"CTRL-1")==UMI_STATUS_OK); CHECK(umi_reg_control_library_add(&l,"CTRL-1")==UMI_STATUS_ALREADY_EXISTS); return 0; }

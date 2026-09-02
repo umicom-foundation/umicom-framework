@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/sdk_runtime/runtime_policy.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSdkRuntimeRuntimePolicy value; UmiSdkRuntimeRuntimePolicy same; uint64_t revision;

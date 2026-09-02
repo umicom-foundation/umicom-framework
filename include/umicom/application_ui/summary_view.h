@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application ui summary row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationUiSummaryRow {
     const char *application_id;
     const char *display_name;
@@ -33,6 +37,10 @@ typedef struct UmiApplicationUiSummaryRow {
     const char *next_feature_id;
 } UmiApplicationUiSummaryRow;
 
+/**
+ * Provide the application ui summary row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_summary_row(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationUiSummaryRow *out_row);

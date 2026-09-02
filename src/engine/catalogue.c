@@ -96,7 +96,9 @@ const UmiEngineDescriptor *umi_engine_catalogue_at(size_t index)
 const UmiEngineDescriptor *umi_engine_catalogue_find(UmiEngineKind kind)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_COUNT_OF(UMI_ENGINES); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (UMI_ENGINES[index].kind == kind) return &UMI_ENGINES[index];
     }
     return NULL;
@@ -108,7 +110,9 @@ const UmiEngineDescriptor *umi_engine_catalogue_find_id(const char *engine_id)
     size_t index;
     /* Empty identifiers cannot name an engine and are rejected before strcmp. */
     if (engine_id == NULL || engine_id[0] == '\0') return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_COUNT_OF(UMI_ENGINES); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(UMI_ENGINES[index].engine_id, engine_id) == 0) {
             return &UMI_ENGINES[index];
         }
@@ -156,7 +160,7 @@ UmiStatus umi_engine_catalogue_validate(
         /* A requirement passes only when both maturity and capabilities pass. */
         if (satisfied) {
             out_report->satisfied_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             UmiEngineCapabilityMask available = descriptor != NULL
                 ? descriptor->capabilities : UINT64_C(0);
             /* Preserve the first failure as the most direct diagnostic hint. */

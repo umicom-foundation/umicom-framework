@@ -38,6 +38,10 @@ extern "C" {
 #define UMI_PROJECT_WORKSPACE_IMPORT_API_VERSION 1U
 #define UMI_PROJECT_WORKSPACE_IMPORT_DEFAULT_PARALLEL_JOBS 2U
 
+/**
+ * Represent the project workspace import request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectWorkspaceImportRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -54,6 +58,10 @@ typedef struct UmiProjectWorkspaceImportRequest {
     int create_test_task;
 } UmiProjectWorkspaceImportRequest;
 
+/**
+ * Represent the project workspace import snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectWorkspaceImportSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -81,6 +89,10 @@ typedef struct UmiProjectWorkspaceImportSnapshot {
     UmiProjectWorkspaceValidationReport validation;
 } UmiProjectWorkspaceImportSnapshot;
 
+/**
+ * Provide the project workspace import directory operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_import_directory(
     UmiProjectWorkspace *workspace,
     const UmiProjectWorkspaceImportRequest *request,

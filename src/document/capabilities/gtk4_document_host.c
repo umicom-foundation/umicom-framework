@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/gtk4_document_host.h"
 
+/*
+ * Provide the document capability gtk4 document host operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_gtk4_document_host(void)
 {

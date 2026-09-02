@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context event data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchContextEvent {
     uint32_t structure_size;
     char event_id[UMI_WORKBENCH_CONTEXT_EVENT_ID_CAPACITY];
@@ -51,20 +54,40 @@ typedef struct UmiWorkbenchContextEvent {
     bool boolean_value;
 } UmiWorkbenchContextEvent;
 
+/**
+ * Initialise workbench context event from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_context_event_init(
     UmiWorkbenchContextEvent *event,
     UmiWorkbenchContextEventKind kind,
     const char *event_id);
+/**
+ * Check that workbench context event satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_workbench_context_event_validate(
     const UmiWorkbenchContextEvent *event);
+/**
+ * Provide the workbench context event add metadata operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_add_metadata(
     UmiWorkbenchContextEvent *event,
     const char *name,
     const char *value);
+/**
+ * Provide the workbench context event find metadata operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchContextEventMetadata *
 umi_workbench_context_event_find_metadata(
     const UmiWorkbenchContextEvent *event,
     const char *name);
+/**
+ * Provide the workbench context event refresh hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_event_refresh_hash(
     UmiWorkbenchContextEvent *event);
 

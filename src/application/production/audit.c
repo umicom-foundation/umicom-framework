@@ -17,15 +17,24 @@
 
 #include <string.h>
 
+/*
+ * Provide the application production gap audit build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_production_gap_audit_build(
     const UmiApplicationProductionPortfolio *portfolio,
     UmiApplicationProductionGapAudit *out_audit)
 {
     size_t application_index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (portfolio == NULL || out_audit == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_audit, 0, sizeof(*out_audit));
     out_audit->application_count = portfolio->count;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (application_index = 0U;
          application_index < portfolio->count; ++application_index) {
         const UmiApplicationProductionRuntime *runtime =
@@ -38,6 +47,7 @@ UmiStatus umi_application_production_gap_audit_build(
             runtime->panels.uncovered_count;
         out_audit->manifest_drift_count +=
             (size_t)!runtime->manifest_drift.compatible;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (feature_index = 0U;
              feature_index < runtime->features.count; ++feature_index) {
             const UmiExperienceFeatureDefinition *feature =

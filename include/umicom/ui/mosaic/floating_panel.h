@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic floating panel data shared with callers of this public contract.
+ */
 typedef struct UmiUiMosaicFloatingPanel {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char name[UMI_UI_MOSAIC_TEXT_CAPACITY];

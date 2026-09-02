@@ -55,9 +55,14 @@ static int umi_codeguard_scanner_path_excluded(const char *path)
     };
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < sizeof(excluded_fragments) / sizeof(excluded_fragments[0]);
          ++index) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (strstr(path, excluded_fragments[index]) != NULL) {
             return 1;
         }
@@ -101,6 +106,10 @@ static UmiStatus umi_codeguard_scanner_report_long_line(
     return umi_codeguard_result_add(result, &finding);
 }
 
+/*
+ * Provide the codeguard scan file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_scan_file(const UmiCodeGuardConfig *config,
                                   const char *path,
                                   UmiCodeGuardResult *result)
@@ -114,32 +123,48 @@ UmiStatus umi_codeguard_scan_file(const UmiCodeGuardConfig *config,
     UmiCodeGuardLifetimeTracker lifetime;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || path == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_codeguard_source_supported(path, config->profile.scan_cpp,
                                         config->profile.scan_headers)) {
         return UMI_STATUS_OK;
     }
 
     file = fopen(path, "rb");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (file == NULL) {
         return UMI_STATUS_IO_ERROR;
     }
 
     status = umi_codeguard_rule_registry_create(&registry);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_codeguard_rule_registry_add_builtin(registry);
     }
     umi_codeguard_lifetime_init(&lifetime);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (status == UMI_STATUS_OK &&
            fgets(raw_line, sizeof(raw_line), file) != NULL) {
         ++line_number;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (strlen(raw_line) > config->profile.max_line_length) {
             status = umi_codeguard_scanner_report_long_line(
                 config, path, line_number, result);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             break;
         }
@@ -149,20 +174,24 @@ UmiStatus umi_codeguard_scan_file(const UmiCodeGuardConfig *config,
                                          &inside_block_comment);
         status = umi_codeguard_pattern_scan_line(
             registry, path, line_number, raw_line, code_line, result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             umi_codeguard_lifetime_scan(&lifetime, path, line_number,
                                         code_line, result);
         }
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (ferror(file) != 0 && status == UMI_STATUS_OK) {
         status = UMI_STATUS_IO_ERROR;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (fclose(file) != 0 && status == UMI_STATUS_OK) {
         status = UMI_STATUS_IO_ERROR;
     }
     umi_codeguard_rule_registry_destroy(registry);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && config->profile.scan_architecture) {
         status = umi_codeguard_architecture_scan_file(
             config->root, path, &config->profile, result);
@@ -177,21 +206,29 @@ static UmiStatus umi_codeguard_scanner_visit(const UmiFileInfo *info,
 {
     ScanState *state = (ScanState *)user;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || info == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (state->status != UMI_STATUS_OK) {
         return state->status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (info->kind != UMI_FILE_KIND_REGULAR ||
         umi_codeguard_scanner_path_excluded(info->path)) {
         return UMI_STATUS_OK;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state->config->profile.scan_source_names) {
         state->status = umi_codeguard_source_name_audit(info->path,
                                                         state->result);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (state->status != UMI_STATUS_OK ||
         !umi_codeguard_source_supported(
             info->path, state->config->profile.scan_cpp,
@@ -201,6 +238,7 @@ static UmiStatus umi_codeguard_scanner_visit(const UmiFileInfo *info,
 
     state->status = umi_codeguard_scan_file(state->config, info->path,
                                             state->result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (state->status == UMI_STATUS_OK &&
         state->config->profile.scan_duplicates &&
         umi_codeguard_scanner_duplicate_candidate(info->path)) {
@@ -210,6 +248,7 @@ static UmiStatus umi_codeguard_scanner_visit(const UmiFileInfo *info,
     return state->status;
 }
 
+/* Provide the codeguard scan operation used by this module and its client applications. */
 UmiStatus umi_codeguard_scan(const UmiCodeGuardConfig *config,
                              UmiCodeGuardResult *result)
 {
@@ -217,11 +256,16 @@ UmiStatus umi_codeguard_scan(const UmiCodeGuardConfig *config,
     ScanState state = {0};
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL || config->root == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_codeguard_duplicate_set_create(&state.duplicates);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -239,9 +283,11 @@ UmiStatus umi_codeguard_scan(const UmiCodeGuardConfig *config,
 
     status = umi_directory_walk(config->root, &options,
                                 umi_codeguard_scanner_visit, &state);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = state.status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && config->profile.scan_duplicates) {
         status = umi_codeguard_duplicate_emit(state.duplicates, result);
     }

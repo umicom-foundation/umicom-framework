@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application module status data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationModuleStatus {
     uint32_t structure_size;
     const char *application_id;
@@ -31,12 +35,20 @@ typedef struct UmiApplicationModuleStatus {
     int tests_available;
 } UmiApplicationModuleStatus;
 
+/**
+ * Initialise application module status from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_module_status_init(
     const UmiApplicationExperienceDefinition *experience,
     int composition_available,
     int executable_available,
     int tests_available,
     UmiApplicationModuleStatus *out_status);
+/**
+ * Provide the application module status runnable operation used by this module and its
+ * client applications.
+ */
 int umi_application_module_status_runnable(
     const UmiApplicationModuleStatus *status);
 

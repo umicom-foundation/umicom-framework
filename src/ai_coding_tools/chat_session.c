@@ -18,21 +18,31 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *out, size_t capacity, const char *value)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || capacity == 0U || value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(out, value, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise ai coding tool chat session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_coding_tool_chat_session_init(
     UmiAiCodingToolChatSession *session,
     const char *session_id,
@@ -41,25 +51,33 @@ UmiStatus umi_ai_coding_tool_chat_session_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     (void)memset(session, 0, sizeof(*session));
 
     status = copy_text(session->session_id, sizeof(session->session_id), session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             session->provider_id, sizeof(session->provider_id), provider_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             session->model_id, sizeof(session->model_id), model_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     session->revision = 1U;
     return UMI_STATUS_OK;
 }
 
+/* Add ai coding tool chat only after its inputs and available capacity have been checked. */
 UmiStatus umi_ai_coding_tool_chat_add(
     UmiAiCodingToolChatSession *session,
     UmiAiRole role,
@@ -68,10 +86,15 @@ UmiStatus umi_ai_coding_tool_chat_add(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || name == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (session->message_count >= UMI_AI_CODING_TOOL_CHAT_MESSAGE_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -81,15 +104,22 @@ UmiStatus umi_ai_coding_tool_chat_add(
         role,
         name,
         text);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     session->message_count += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (role == UMI_AI_ROLE_USER) session->turn_count += 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (role == UMI_AI_ROLE_TOOL) session->tool_result_count += 1U;
     session->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding tool chat add chunked operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_chat_add_chunked(
     UmiAiCodingToolChatSession *session,
     UmiAiRole role,
@@ -100,14 +130,23 @@ UmiStatus umi_ai_coding_tool_chat_add_chunked(
     const size_t length = text != NULL ? strlen(text) : 0U;
     size_t offset = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || name == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U) {
         return umi_ai_coding_tool_chat_add(session, role, name, "");
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (offset < length) {
         char chunk[UMI_AI_TEXT_CAPACITY];
         const size_t remaining = length - offset;
@@ -120,6 +159,7 @@ UmiStatus umi_ai_coding_tool_chat_add_chunked(
 
         status = umi_ai_coding_tool_chat_add(
             session, role, name, chunk);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         offset += count;
@@ -128,6 +168,10 @@ UmiStatus umi_ai_coding_tool_chat_add_chunked(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding tool chat build request operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_chat_build_request(
     const UmiAiCodingToolChatSession *session,
     uint32_t max_output_tokens,
@@ -137,6 +181,10 @@ UmiStatus umi_ai_coding_tool_chat_build_request(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || out_request == NULL ||
         max_output_tokens == 0U ||
         temperature < 0.0 || temperature > 2.0) {
@@ -163,10 +211,12 @@ UmiStatus umi_ai_coding_tool_chat_build_request(
     out_request->temperature = temperature;
     out_request->allow_tools = 1;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < session->message_count; ++index) {
         status = umi_ai_request_add_message(
             out_request,
             &session->messages[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

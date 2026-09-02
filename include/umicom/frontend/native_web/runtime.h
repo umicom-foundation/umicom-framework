@@ -29,6 +29,9 @@ extern "C" {
 #include "umicom/frontend/native_web/browser_capability.h"
 #include "umicom/frontend/native_web/event_queue.h"
 #include "umicom/frontend/native_web/patch_batch.h"
+/**
+ * Represent the native web runtime data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebRuntime { UmiNativeWebRendererRegistry renderers; UmiNativeWebBrowserCapability browser; UmiNativeWebEventQueue events; UmiNativeWebPatchBatch patches; uint64_t revision; bool started; } UmiNativeWebRuntime;
 /* Initialise the native-web runtime and register all built-in semantic renderers. */
 UmiStatus umi_native_web_runtime_init(UmiNativeWebRuntime *runtime);

@@ -16,12 +16,20 @@
 
 #include "umicom/ui/workspace_geometry.h"
 
+/*
+ * Provide the ui workspace region supported operation used by this module and its client
+ * applications.
+ */
 bool umi_ui_workspace_region_supported(UmiUiPlacement placement)
 {
     return placement >= UMI_UI_PLACEMENT_LEFT &&
            placement <= UMI_UI_PLACEMENT_FLOATING;
 }
 
+/*
+ * Provide the ui workspace region rect operation used by this module and its client
+ * applications.
+ */
 UmiUiWorkspaceRect umi_ui_workspace_region_rect(UmiUiPlacement placement)
 {
     UmiUiWorkspaceRect rectangle = {0.0, 0.0, 1.0, 1.0};

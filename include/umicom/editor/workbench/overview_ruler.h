@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb overview marker data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbOverviewMarker { uint32_t line; UmiEditorWbSeverity severity; } UmiEditorWbOverviewMarker; typedef struct UmiEditorWbOverviewRuler { UmiEditorWbOverviewMarker markers[UMI_EDITOR_WB_MAX_SEGMENTS]; size_t count; } UmiEditorWbOverviewRuler;
+/**
+ * Initialise editor wb overview ruler from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_editor_wb_overview_ruler_init(UmiEditorWbOverviewRuler *state); UmiStatus umi_editor_wb_overview_ruler_add(UmiEditorWbOverviewRuler *state,uint32_t line,UmiEditorWbSeverity severity);
 
 #ifdef __cplusplus

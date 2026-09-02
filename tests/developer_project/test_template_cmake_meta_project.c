@@ -16,6 +16,10 @@
 
 #include "umicom/developer_project/templates/cmake_meta_project.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiDeveloperProjectTemplate *project_template =

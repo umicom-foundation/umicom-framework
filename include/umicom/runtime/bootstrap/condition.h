@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap condition from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_bootstrap_condition_init(UmiBootstrapCondition *condition,
                                        UmiBootstrapConditionKind kind,
                                        const char *key,

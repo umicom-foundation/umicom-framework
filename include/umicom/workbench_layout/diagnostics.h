@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout health data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchLayoutHealth {
     uint32_t structure_size;
     bool valid;
@@ -45,6 +48,10 @@ typedef struct UmiWorkbenchLayoutHealth {
     char summary[UMI_WORKBENCH_LAYOUT_DESCRIPTION_CAPACITY];
 } UmiWorkbenchLayoutHealth;
 
+/**
+ * Provide the workbench layout diagnose operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_diagnose(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchMonitorTopology *topology,
@@ -52,6 +59,10 @@ UmiStatus umi_workbench_layout_diagnose(
     UmiWorkbenchLayoutHealth *out_health,
     UmiWorkbenchLayoutValidationReport *out_validation);
 
+/**
+ * Provide the workbench layout health format operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_health_format(
     const UmiWorkbenchLayoutHealth *health,
     char *buffer,

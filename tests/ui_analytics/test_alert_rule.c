@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/alert_rule.h"
 
-int main(void){UmiAnalyticsAlertRule r;if(umi_analytics_alert_rule_init(&r,"cpu",UMI_ANALYTICS_COMPARE_GT,80,UMI_ANALYTICS_SEVERITY_WARNING)!=0)return 1;return umi_analytics_alert_rule_triggered(&r,90)?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsAlertRule r;/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_alert_rule_init(&r,"cpu",UMI_ANALYTICS_COMPARE_GT,80,UMI_ANALYTICS_SEVERITY_WARNING)!=0)return 1;return umi_analytics_alert_rule_triggered(&r,90)?0:2;}

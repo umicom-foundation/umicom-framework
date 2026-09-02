@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/manifest_contract.h"
 
+/**
+ * Represent the application production manifest snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationProductionManifestSnapshot {
     UmiApplicationProductionManifestContract observed;
     int manifest_available;
@@ -32,6 +36,10 @@ typedef struct UmiApplicationProductionManifestSnapshot {
     int tests_available;
 } UmiApplicationProductionManifestSnapshot;
 
+/**
+ * Provide the application production manifest snapshot capture operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_application_production_manifest_snapshot_capture(
     const UmiApplicationProductionBinding *binding,
     UmiApplicationProductionManifestSnapshot *out_snapshot);

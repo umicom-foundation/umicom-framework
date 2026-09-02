@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_SANITIZER_PROFILE "umicom.developer.build.sanitizer_profile"
 
+/**
+ * Provide the developer capability sanitizer profile operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_sanitizer_profile(void);
 

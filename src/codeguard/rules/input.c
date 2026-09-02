@@ -24,8 +24,16 @@ static const UmiCodeGuardRule UMI_RULES[] = {
     {"CODEGUARD-C-IN-001", "CWE-20", UMI_CODEGUARD_HIGH, UMI_CODEGUARD_CATEGORY_INPUT, 88U, UMI_CODEGUARD_MATCH_CODE, "scanf(\"%s", "Unbounded %s input can overflow the destination buffer.", "Specify a maximum width or use fgets plus validated parsing."}
 };
 
+/*
+ * Provide the codeguard rules input operation used by this module and its client
+ * applications.
+ */
 const UmiCodeGuardRule *umi_codeguard_rules_input(size_t *out_count)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = sizeof(UMI_RULES) / sizeof(UMI_RULES[0]);
     return UMI_RULES;
 }

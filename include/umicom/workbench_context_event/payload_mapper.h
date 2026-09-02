@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench context event map payload operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_map_payload(
     const UmiWorkbenchContextEvent *event,
     UmiContextPayload *out_payload);

@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise save layout and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int save_layout(
     UmiWorkbenchLayoutDocumentStore *store,
     const char *layout_id,
@@ -24,6 +28,10 @@ static int save_layout(
 {
     UmiWorkbenchLayoutDocument *document = test_allocate_layout(layout_id);
     uint64_t revision = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) return 1;
     TEST_STATUS_OK(umi_workbench_layout_document_set_metadata(
         document, name, category, "Queryable layout record."));
@@ -33,6 +41,10 @@ static int save_layout(
     return 0;
 }
 
+/*
+ * Exercise test offset and limit and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_offset_and_limit(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -60,6 +72,10 @@ static int test_offset_and_limit(void)
     return 0;
 }
 
+/*
+ * Exercise test text and category filter and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_text_and_category_filter(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -86,6 +102,10 @@ static int test_text_and_category_filter(void)
     return 0;
 }
 
+/*
+ * Exercise test workspace filter and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_workspace_filter(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -111,6 +131,10 @@ static int test_workspace_filter(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_offset_and_limit() == 0, "offset limit");

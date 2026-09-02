@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the fabric service select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fabric_service_select(const UmiFabricServiceRegistry *registry,const char *service_id,UmiFabricServiceInstance *out_instance);
 
 #ifdef __cplusplus

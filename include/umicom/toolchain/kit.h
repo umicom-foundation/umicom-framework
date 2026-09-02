@@ -57,6 +57,9 @@ enum {
     UMI_TOOLCHAIN_KIT_CAPABILITY_GIT = UINT64_C(1) << 13
 };
 
+/**
+ * List the named toolchain kit state values accepted by this public contract.
+ */
 typedef enum UmiToolchainKitState {
     UMI_TOOLCHAIN_KIT_UNKNOWN = 0,
     UMI_TOOLCHAIN_KIT_READY = 1,
@@ -64,6 +67,9 @@ typedef enum UmiToolchainKitState {
     UMI_TOOLCHAIN_KIT_UNAVAILABLE = 3
 } UmiToolchainKitState;
 
+/**
+ * Represent the toolchain kit snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiToolchainKitSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -96,32 +102,75 @@ typedef struct UmiToolchainKitSnapshot {
     uint64_t revision;
 } UmiToolchainKitSnapshot;
 
+/**
+ * Initialise toolchain kit from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_toolchain_kit_init(UmiToolchainKitSnapshot *kit,
                             const char *kit_id,
                             const char *display_name);
+/**
+ * Check that toolchain kit satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_toolchain_kit_validate(const UmiToolchainKitSnapshot *kit);
+/**
+ * Provide the toolchain kit from profile operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_from_profile(
     UmiToolchainKitSnapshot *kit,
     const UmiToolchainProfile *profile,
     const UmiSdkSnapshot *sdk,
     const char *host_triple);
+/**
+ * Provide the toolchain kit apply cross toolchain operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_kit_apply_cross_toolchain(
     UmiToolchainKitSnapshot *kit,
     const UmiCrossToolchainSnapshot *cross_toolchain);
+/**
+ * Provide the toolchain kit apply python runtime operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_kit_apply_python_runtime(
     UmiToolchainKitSnapshot *kit,
     const UmiPythonRuntimeSnapshot *runtime);
+/**
+ * Provide the toolchain kit set sysroot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_set_sysroot(UmiToolchainKitSnapshot *kit,
                                        const char *sysroot);
+/**
+ * Provide the toolchain kit set cmake toolchain file operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_kit_set_cmake_toolchain_file(
     UmiToolchainKitSnapshot *kit,
     const char *path);
+/**
+ * Provide the toolchain kit set environment profile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_kit_set_environment_profile(
     UmiToolchainKitSnapshot *kit,
     const char *profile_id);
+/**
+ * Provide the toolchain kit is cross compile operation used by this module and its client
+ * applications.
+ */
 int umi_toolchain_kit_is_cross_compile(const UmiToolchainKitSnapshot *kit);
+/**
+ * Provide the toolchain kit supports operation used by this module and its client
+ * applications.
+ */
 int umi_toolchain_kit_supports(const UmiToolchainKitSnapshot *kit,
                                UmiToolchainKitCapabilityFlags required);
+/**
+ * Provide the toolchain kit state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_toolchain_kit_state_text(UmiToolchainKitState state);
 
 #ifdef __cplusplus

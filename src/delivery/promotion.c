@@ -20,11 +20,19 @@
 #include "umicom/delivery/promotion.h"
 #include "delivery_internal.h"
 #include <string.h>
+/*
+ * Initialise promotion from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_promotion_init(UmiPromotion *promotion,
                              const char *release_id,
                              UmiReleaseChannel from_channel,
                              UmiReleaseChannel to_channel)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (promotion == NULL || release_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(promotion, 0, sizeof(*promotion));
     promotion->from_channel = from_channel;
@@ -32,6 +40,10 @@ UmiStatus umi_promotion_init(UmiPromotion *promotion,
     promotion->status = UMI_EVIDENCE_UNKNOWN;
     return umi_delivery_copy_text(promotion->release_id, sizeof(promotion->release_id), release_id);
 }
+/*
+ * Check that promotion direction satisfies its contract before another service relies on
+ * it.
+ */
 int umi_promotion_direction_valid(const UmiPromotion *promotion)
 {
     return promotion != NULL && promotion->to_channel >= promotion->from_channel;

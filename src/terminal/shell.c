@@ -19,8 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Provide the shell kind text operation used by this module and its client applications. */
 const char *umi_shell_kind_text(UmiShellKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_SHELL_POWERSHELL: return "PowerShell";
         case UMI_SHELL_COMMAND_PROMPT: return "Command Prompt";
@@ -30,9 +32,14 @@ const char *umi_shell_kind_text(UmiShellKind kind)
     }
 }
 
+/* Provide the shell detect operation used by this module and its client applications. */
 UmiStatus umi_shell_detect(UmiShellDescriptor *out_shell)
 {
     const char *shell;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_shell == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -46,9 +53,13 @@ UmiStatus umi_shell_detect(UmiShellDescriptor *out_shell)
                    shell != NULL ? shell : "cmd.exe");
 #else
     shell = getenv("SHELL");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (shell != NULL && strstr(shell, "bash") != NULL) {
         out_shell->kind = UMI_SHELL_BASH;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_shell->kind = UMI_SHELL_SH;
     }
     (void)snprintf(out_shell->program,
@@ -63,14 +74,23 @@ UmiStatus umi_shell_detect(UmiShellDescriptor *out_shell)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the shell create command operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_shell_create_command(const UmiShellDescriptor *shell,
                                    const char *script,
                                    UmiTerminalCommand *out_command)
 {
     char command_text[UMI_TERMINAL_COMMAND_CAPACITY];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (shell == NULL || script == NULL || out_command == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (shell->kind) {
         case UMI_SHELL_COMMAND_PROMPT:
             (void)snprintf(command_text,

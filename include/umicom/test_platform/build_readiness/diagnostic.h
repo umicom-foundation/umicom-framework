@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the test platform build diagnostic input data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiTestPlatformBuildDiagnosticInput {
     bool configure_completed;
     bool target_enabled;
@@ -29,12 +33,20 @@ typedef struct UmiTestPlatformBuildDiagnosticInput {
     bool executable_exists;
 } UmiTestPlatformBuildDiagnosticInput;
 
+/**
+ * Represent the test platform build diagnostic data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformBuildDiagnostic {
     UmiTestPlatformBuildReadinessState state;
     char summary[256];
     char remediation_command_id[128];
 } UmiTestPlatformBuildDiagnostic;
 
+/**
+ * Provide the test platform build diagnostic classify operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_platform_build_diagnostic_classify(
     const UmiTestPlatformBuildDiagnosticInput *input,
     UmiTestPlatformBuildDiagnostic *diagnostic);

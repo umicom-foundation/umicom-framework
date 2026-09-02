@@ -16,6 +16,10 @@
 
 #include <stdio.h>
 
+/*
+ * Initialise studio command search view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_command_search_view_create(
     const char *view_id,
     UmiStudioRuntimePlatform *platform,
@@ -27,14 +31,23 @@ UmiStatus umi_studio_command_search_view_create(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (platform == NULL || query == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     bindings = umi_studio_runtime_platform_bindings(platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_studio_command_search(bindings, query, &results);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_view_create_base(
@@ -43,17 +56,21 @@ UmiStatus umi_studio_command_search_view_create(
         "Command Search",
         "Search commands and menu contributions from one authoritative registry.",
         out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_view_set_string(
         *out_view, "studio.command-search.query", query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_integer(
             *out_view, "studio.command-search.count", (int64_t)results.count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_studio_view_set_boolean(
             *out_view, "studio.command-search.truncated", results.truncated);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK && index < results.count;
          ++index) {

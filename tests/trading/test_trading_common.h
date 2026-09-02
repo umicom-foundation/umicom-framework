@@ -23,6 +23,10 @@
 #include <string.h>
 #include "umicom/trading/trading.h"
 
+/**
+ * Exercise test instrument and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiInstrument test_instrument(void)
 {
     UmiInstrument instrument = {0};
@@ -35,6 +39,10 @@ static inline UmiInstrument test_instrument(void)
     return instrument;
 }
 
+/**
+ * Exercise test order request and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiOrderRequest test_order_request(void)
 {
     UmiOrderRequest request = {0};

@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/business_date.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFinancialDate d={2026,8U,25U},n={0}; CHECK(umi_business_date_add(d,1,&n)==UMI_STATUS_OK); CHECK(n.day==26U);

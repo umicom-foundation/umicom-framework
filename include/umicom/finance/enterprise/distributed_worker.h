@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise distributed worker data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseDistributedWorker { char worker_id[UMI_ENTERPRISE_ID_CAPACITY]; size_t capacity; size_t active_jobs; int64_t heartbeat_ms; int64_t lease_until_ms; } UmiEnterpriseDistributedWorker;
 /* Initialise one distributed worker with fixed capacity. */
 UmiStatus umi_enterprise_distributed_worker_init(UmiEnterpriseDistributedWorker *worker,const char *worker_id,size_t capacity);

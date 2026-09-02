@@ -16,9 +16,14 @@
 #include <assert.h>
 #include <string.h>
 #include "context_channel_scenarios.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t index; size_t matches=0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for(index=5U; index<umi_context_scenario_fixture_count; index+=10U){
         const UmiContextScenarioFixture *fixture=&umi_context_scenario_fixtures[index];
         assert(fixture->scenario_id!=NULL);

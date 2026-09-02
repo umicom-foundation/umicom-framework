@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/scenario_grid.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseScenarioGrid g;UmiEnterpriseHistoricalScenario s;umi_enterprise_scenario_grid_init(&g);CHECK(umi_enterprise_historical_scenario_init(&s,"s")==UMI_STATUS_OK);CHECK(umi_enterprise_scenario_grid_add(&g,&s)==UMI_STATUS_OK);CHECK(g.count==1U);return 0;}

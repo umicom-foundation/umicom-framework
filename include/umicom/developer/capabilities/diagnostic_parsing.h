@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_DIAGNOSTIC_PARSING "umicom.developer.build.diagnostic_parsing"
 
+/**
+ * Provide the developer capability diagnostic parsing operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_diagnostic_parsing(void);
 

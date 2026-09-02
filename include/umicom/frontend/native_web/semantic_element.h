@@ -27,7 +27,15 @@ extern "C" {
 
 #include "umicom/frontend/native_web/types.h"
 
+/**
+ * Represent the native web element attribute data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebElementAttribute { char name[64]; char value[UMI_NATIVE_WEB_VALUE_CAPACITY]; } UmiNativeWebElementAttribute;
+/**
+ * Represent the native web semantic element data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebSemanticElement {
     char element_id[UMI_NATIVE_WEB_ID_CAPACITY];
     char parent_id[UMI_NATIVE_WEB_ID_CAPACITY];

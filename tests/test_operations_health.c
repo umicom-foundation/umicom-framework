@@ -16,6 +16,10 @@
 /* Umicom Framework | Operations health tests | Sammy Hegab | Umicom Foundation | MIT */
 #include <assert.h>
 #include "umicom/observability/health_summary.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiHealthRegistry *health = NULL;

@@ -24,8 +24,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc command equivalence data shared with callers of this public contract.
+ */
 typedef struct UmiFcCommandEquivalence { size_t required_commands; size_t implemented_commands; size_t blockers; } UmiFcCommandEquivalence;
+/**
+ * Provide the fc command equivalence evaluate operation used by this module and its client
+ * applications.
+ */
 double umi_fc_command_equivalence_evaluate(const UmiFcCommandEquivalence *item);
+/**
+ * Provide the fc command equivalence passes operation used by this module and its client
+ * applications.
+ */
 bool umi_fc_command_equivalence_passes(const UmiFcCommandEquivalence *item,double minimum);
 
 #ifdef __cplusplus

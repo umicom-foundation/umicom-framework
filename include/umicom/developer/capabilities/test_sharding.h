@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TEST_SHARDING "umicom.developer.testing.test_sharding"
 
+/**
+ * Provide the developer capability test sharding operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_test_sharding(void);
 

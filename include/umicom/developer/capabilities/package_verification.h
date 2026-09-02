@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PACKAGE_VERIFICATION "umicom.developer.delivery.package_verification"
 
+/**
+ * Provide the developer capability package verification operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_package_verification(void);
 

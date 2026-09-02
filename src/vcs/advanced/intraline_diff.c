@@ -21,6 +21,10 @@
 
 #include <string.h>
 
+/*
+ * Provide the vcs advanced intraline diff compute operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_intraline_diff_compute(
     const char *left,
     const char *right,
@@ -31,6 +35,10 @@ UmiStatus umi_vcs_advanced_intraline_diff_compute(
     size_t prefix = 0U;
     size_t suffix = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL || out_diff == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -42,12 +50,20 @@ UmiStatus umi_vcs_advanced_intraline_diff_compute(
     left_length = strlen(left);
     right_length = strlen(right);
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (prefix < left_length &&
            prefix < right_length &&
            left[prefix] == right[prefix]) {
         prefix += 1U;
     }
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (suffix < left_length - prefix &&
            suffix < right_length - prefix &&
            left[left_length - 1U - suffix] ==

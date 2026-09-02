@@ -17,14 +17,23 @@
 
 #include <string.h>
 
+/*
+ * Provide the application ui summary row operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_application_ui_summary_row(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationUiSummaryRow *out_row)
 {
     UmiApplicationReadinessReport report;
     UmiStatus result;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (experience == NULL || out_row == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     result = umi_application_readiness_report(experience, &report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result != UMI_STATUS_OK) return result;
     memset(out_row, 0, sizeof(*out_row));
     out_row->application_id = experience->application_id;

@@ -12,6 +12,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/test_platform/build_readiness/artifact.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiTestPlatformBuildArtifact artifact;
     assert(umi_test_platform_build_artifact_init(&artifact, "studio",

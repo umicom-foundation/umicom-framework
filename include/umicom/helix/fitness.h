@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix fitness data shared with callers of this public contract.
+ */
 typedef struct UmiHelixFitness {
     double correctness;
     double security;
@@ -36,6 +39,10 @@ typedef struct UmiHelixFitness {
     int passed;
 } UmiHelixFitness;
 
+/**
+ * Provide the helix fitness calculate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_helix_fitness_calculate(UmiHelixFitness *fitness,
                                       double correctness,
                                       double security,

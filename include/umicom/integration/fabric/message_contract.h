@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric message contract data shared with callers of this public contract.
+ */
 typedef struct UmiFabricMessageContract {
     char contract_id[UMI_FABRIC_ID_CAPACITY];
     char schema_id[UMI_FABRIC_ID_CAPACITY];
@@ -33,7 +36,15 @@ typedef struct UmiFabricMessageContract {
     UmiFabricDeliveryMode delivery_mode;
 } UmiFabricMessageContract;
 
+/**
+ * Initialise fabric message contract from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_message_contract_init(UmiFabricMessageContract *item, const char *contract_id, const char *schema_id, UmiFabricVersion version, uint64_t max_payload_bytes, UmiFabricDeliveryMode delivery_mode);
+/**
+ * Check that fabric message contract satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_fabric_message_contract_validate(const UmiFabricMessageContract *item);
 
 #ifdef __cplusplus

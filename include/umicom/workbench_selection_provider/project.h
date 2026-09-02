@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection provider from project selection operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_project_selection(
     const UmiProjectWorkspaceSelectionSnapshot *snapshot,
     const char *application_id,
@@ -31,6 +35,10 @@ UmiStatus umi_workbench_selection_provider_from_project_selection(
     uint64_t timestamp_ms,
     UmiWorkbenchSelection *out_selection);
 
+/**
+ * Provide the workbench selection provider from project descriptor operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_project_descriptor(
     const UmiProjectDescriptorSnapshot *project,
     const char *application_id,

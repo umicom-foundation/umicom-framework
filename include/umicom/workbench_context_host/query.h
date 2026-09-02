@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the workbench context host query data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchContextHostQuery {
     uint32_t structure_size;
     char query_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
@@ -27,6 +31,10 @@ typedef struct UmiWorkbenchContextHostQuery {
     char group_id[UMI_WORKBENCH_CONTEXT_HOST_ID_CAPACITY];
     uint64_t requested_at_ms;
 } UmiWorkbenchContextHostQuery;
+/**
+ * Initialise workbench context host query from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_context_host_query_init(
     UmiWorkbenchContextHostQuery *query,UmiWorkbenchContextHostQueryKind kind);
 #ifdef __cplusplus

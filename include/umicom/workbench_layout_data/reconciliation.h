@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench layout reconciliation policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutReconciliationPolicy {
     uint32_t structure_size;
     bool verify_layout_payloads;
@@ -36,15 +40,27 @@ typedef struct UmiWorkbenchLayoutReconciliationPolicy {
     bool stop_after_capacity;
 } UmiWorkbenchLayoutReconciliationPolicy;
 
+/**
+ * Provide the workbench layout reconciliation policy default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutReconciliationPolicy
 umi_workbench_layout_reconciliation_policy_default(void);
 
+/**
+ * Provide the workbench layout reconcile operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_reconcile(
     UmiDataServer *server,
     const UmiWorkbenchLayoutReconciliationPolicy *policy,
     uint64_t now_ms,
     UmiWorkbenchLayoutReconciliationReport *out_report);
 
+/**
+ * Provide the workbench layout reconciliation add issue operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_reconciliation_add_issue(
     UmiWorkbenchLayoutReconciliationReport *report,
     const char *key,

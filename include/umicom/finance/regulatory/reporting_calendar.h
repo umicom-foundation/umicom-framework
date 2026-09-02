@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting calendar data shared with callers of this public contract.
+ */
 typedef struct UmiReportingCalendar {
     char calendar_id[UMI_REG_ID_CAPACITY];
     char authority_id[UMI_REG_ID_CAPACITY];

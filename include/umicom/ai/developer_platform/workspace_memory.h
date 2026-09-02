@@ -29,11 +29,34 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev workspace memory data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevWorkspaceMemory { char ids[UMI_AI_DEV_MEDIUM_CAPACITY][UMI_AI_DEV_ID_CAPACITY]; size_t count; uint64_t revision; } UmiAiDevWorkspaceMemory;
+/**
+ * Initialise ai dev workspace memory from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_workspace_memory_init(UmiAiDevWorkspaceMemory *collection);
+/**
+ * Add ai dev workspace memory only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_ai_dev_workspace_memory_add(UmiAiDevWorkspaceMemory *collection, const char *id);
+/**
+ * Remove ai dev workspace memory while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_ai_dev_workspace_memory_remove(UmiAiDevWorkspaceMemory *collection, const char *id);
+/**
+ * Provide the ai dev workspace memory contains operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_workspace_memory_contains(const UmiAiDevWorkspaceMemory *collection, const char *id);
+/**
+ * Return the number of records represented by ai dev workspace memory without changing
+ * their state.
+ */
 size_t umi_ai_dev_workspace_memory_count(const UmiAiDevWorkspaceMemory *collection);
 
 #ifdef __cplusplus

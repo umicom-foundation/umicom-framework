@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/search.h"
 
+/*
+ * Provide the ide surface profile search operation used by this module and its client
+ * applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_search(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project provider cpython operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_cpython(void);
 
 #ifdef __cplusplus

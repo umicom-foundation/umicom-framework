@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ai)
     message(FATAL_ERROR
         "UmicomAiMcpPlatform requires existing umicom_ai")
@@ -42,6 +43,7 @@ target_sources(umicom_ai PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai/hybrid_retrieval.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-ai-mcp-tests)
     add_executable(umicom-ai-mcp-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_mcp/test_array_empty.c"
@@ -134,6 +136,7 @@ if(BUILD_TESTING AND NOT TARGET umicom-ai-mcp-tests)
         COMMAND umicom-ai-mcp-tests)
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-ai-hybrid-retrieval-tests)
     add_executable(umicom-ai-hybrid-retrieval-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_hybrid_retrieval/test_capacity.c"

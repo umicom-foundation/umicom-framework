@@ -32,6 +32,9 @@ extern "C" {
 #define UMI_PRODUCT_EXECUTION_LABEL_CAPACITY 192U
 #define UMI_PRODUCT_EXECUTION_DETAIL_CAPACITY 384U
 
+/**
+ * List the named product execution state values accepted by this public contract.
+ */
 typedef enum UmiProductExecutionState {
     UMI_PRODUCT_EXECUTION_PENDING = 1,
     UMI_PRODUCT_EXECUTION_READY = 2,
@@ -43,6 +46,9 @@ typedef enum UmiProductExecutionState {
     UMI_PRODUCT_EXECUTION_ROLLED_BACK = 8
 } UmiProductExecutionState;
 
+/**
+ * List the named product execution outcome values accepted by this public contract.
+ */
 typedef enum UmiProductExecutionOutcome {
     UMI_PRODUCT_EXECUTION_OUTCOME_NONE = 0,
     UMI_PRODUCT_EXECUTION_OUTCOME_SUCCESS = 1,
@@ -52,6 +58,9 @@ typedef enum UmiProductExecutionOutcome {
     UMI_PRODUCT_EXECUTION_OUTCOME_CANCELLED = 5
 } UmiProductExecutionOutcome;
 
+/**
+ * List the named product execution event kind values accepted by this public contract.
+ */
 typedef enum UmiProductExecutionEventKind {
     UMI_PRODUCT_EXECUTION_EVENT_QUEUED = 1,
     UMI_PRODUCT_EXECUTION_EVENT_READY = 2,

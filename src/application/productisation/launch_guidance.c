@@ -272,7 +272,7 @@ UmiStatus umi_product_guided_launch_plan_build(
             /* A running entry contributes an activation, not a second process. */
             if (entry->resolved_action == UMI_APPLICATION_LAUNCH_ACTIVATE) {
                 out_plan->activate_count += 1U;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 out_plan->start_count += 1U;
             }
         }
@@ -280,6 +280,7 @@ UmiStatus umi_product_guided_launch_plan_build(
         if (!entry->eligible) {
             out_plan->unavailable_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!entry->guidance_available) {
             out_plan->missing_guidance_count += 1U;
         }
@@ -409,21 +410,25 @@ UmiStatus umi_product_guided_launch_plan_validate(
         if (entry->selected) {
             selected_count += 1U;
         }
+        /* Apply this operation only while the related capability or state is available. */
         if (entry->ready_to_execute) {
             ready_count += 1U;
             /* Only the two preview actions are valid for a ready selection. */
             if (entry->resolved_action == UMI_APPLICATION_LAUNCH_ACTIVATE) {
                 activate_count += 1U;
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 start_count += 1U;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!entry->eligible) {
             unavailable_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!entry->guidance_available) {
             missing_guidance_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (entry->selected &&
             (!entry->guidance_available || !entry->acceptance_ready)) {
             guidance_warning_count += 1U;

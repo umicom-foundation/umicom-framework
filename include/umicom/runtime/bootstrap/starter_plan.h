@@ -22,7 +22,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap starter plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_bootstrap_starter_plan_init(UmiBootstrapStarterPlan *plan);
+/**
+ * Add bootstrap starter plan only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_bootstrap_starter_plan_add(
     UmiBootstrapStarterPlan *plan,
     const UmiBootstrapStarterCatalogue *catalogue,

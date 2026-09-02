@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise command base and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchLayoutDataCommand command_base(
     UmiWorkbenchLayoutDataCommandKind kind,
     const char *command_id,
@@ -34,6 +38,10 @@ static UmiWorkbenchLayoutDataCommand command_base(
     return command;
 }
 
+/*
+ * Exercise test controller lifecycle and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_controller_lifecycle(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -75,6 +83,10 @@ static int test_controller_lifecycle(void)
     return 0;
 }
 
+/*
+ * Exercise test save command and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_save_command(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -113,6 +125,10 @@ static int test_save_command(void)
     return 0;
 }
 
+/*
+ * Exercise test lease command and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_lease_command(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -147,6 +163,10 @@ static int test_lease_command(void)
     return 0;
 }
 
+/*
+ * Exercise test invalid command and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_invalid_command(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -175,6 +195,10 @@ static int test_invalid_command(void)
     return 0;
 }
 
+/*
+ * Exercise test command text and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_command_text(void)
 {
     TEST_REQUIRE(strcmp(umi_workbench_layout_data_command_kind_text(
@@ -189,6 +213,10 @@ static int test_command_text(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_controller_lifecycle() == 0,

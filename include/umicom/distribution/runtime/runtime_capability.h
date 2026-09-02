@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr runtime capability data shared with callers of this public contract.
+ */
 typedef struct UmiDrRuntimeCapability { uint64_t required; uint64_t available; } UmiDrRuntimeCapability;
+/**
+ * Initialise dr runtime capability from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_dr_runtime_capability_init(UmiDrRuntimeCapability *capability);
+/**
+ * Provide the dr runtime capability missing operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_dr_runtime_capability_missing(const UmiDrRuntimeCapability *capability);
+/**
+ * Provide the dr runtime capability satisfied operation used by this module and its client
+ * applications.
+ */
 bool umi_dr_runtime_capability_satisfied(const UmiDrRuntimeCapability *capability);
 
 #ifdef __cplusplus

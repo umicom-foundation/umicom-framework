@@ -37,9 +37,17 @@ typedef struct UmiGtk4ProfileDesignerControls {
     GtkWidget *bottom_size;
 } UmiGtk4ProfileDesignerControls;
 
+/*
+ * Provide the designer workbench operation used by this module and its client
+ * applications.
+ */
 static UmiUiWorkbench *designer_workbench(
     UmiGtk4ProfileDesignerControls *controls)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controls == NULL || controls->adapter == NULL ||
         controls->adapter->shell == NULL) {
         return NULL;
@@ -47,14 +55,23 @@ static UmiUiWorkbench *designer_workbench(
     return umi_ui_application_shell_workbench(controls->adapter->shell);
 }
 
+/*
+ * Provide the apply designer values operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_designer_values(
     UmiGtk4ProfileDesignerControls *controls)
 {
     UmiUiWorkbench *workbench = designer_workbench(controls);
     UmiUiWorkbenchState state;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_ui_workbench_state_snapshot(workbench, &state);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     state.sidebar_visible = gtk_check_button_get_active(
@@ -80,16 +97,25 @@ static UmiStatus apply_designer_values(
     return umi_ui_workbench_state_apply(workbench, &state);
 }
 
+/*
+ * Perform on designer through the module contract so client applications do not duplicate
+ * its policy.
+ */
 static void on_designer_apply(GtkButton *button, gpointer user_data)
 {
     UmiGtk4ProfileDesignerControls *controls =
         (UmiGtk4ProfileDesignerControls *)user_data;
     (void)button;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (apply_designer_values(controls) == UMI_STATUS_OK) {
         (void)umi_gtk4_refresh_workbench(controls->adapter);
     }
 }
 
+/*
+ * Provide the on designer save as operation used by this module and its client
+ * applications.
+ */
 static void on_designer_save_as(GtkButton *button, gpointer user_data)
 {
     UmiGtk4ProfileDesignerControls *controls =
@@ -98,12 +124,21 @@ static void on_designer_save_as(GtkButton *button, gpointer user_data)
     const char *label;
     char profile_id[UMI_UI_ID_CAPACITY];
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || apply_designer_values(controls) !=
         UMI_STATUS_OK) {
         return;
     }
     label = gtk_editable_get_text(GTK_EDITABLE(controls->name_entry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (label == NULL || label[0] == '\0') label = "My Layout";
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_workbench_save_workspace_profile(
             workbench,
             label,
@@ -114,6 +149,10 @@ static void on_designer_save_as(GtkButton *button, gpointer user_data)
     }
 }
 
+/*
+ * Provide the on designer update operation used by this module and its client
+ * applications.
+ */
 static void on_designer_update(GtkButton *button, gpointer user_data)
 {
     UmiGtk4ProfileDesignerControls *controls =
@@ -121,12 +160,21 @@ static void on_designer_update(GtkButton *button, gpointer user_data)
     UmiUiWorkbench *workbench = designer_workbench(controls);
     const char *label;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || apply_designer_values(controls) !=
         UMI_STATUS_OK) {
         return;
     }
     label = gtk_editable_get_text(GTK_EDITABLE(controls->name_entry));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (label == NULL || label[0] == '\0') return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_workbench_update_workspace_profile(
             workbench,
             controls->profile_id,
@@ -136,6 +184,7 @@ static void on_designer_update(GtkButton *button, gpointer user_data)
     }
 }
 
+/* Provide the on designer lock operation used by this module and its client applications. */
 static void on_designer_lock(GtkButton *button, gpointer user_data)
 {
     UmiGtk4ProfileDesignerControls *controls =
@@ -143,6 +192,10 @@ static void on_designer_lock(GtkButton *button, gpointer user_data)
     UmiUiWorkbench *workbench = designer_workbench(controls);
     UmiUiWorkspaceProfileSnapshot profile;
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL ||
         umi_ui_workspace_profile_model_find(
             umi_ui_workbench_workspace_profiles(workbench),
@@ -150,6 +203,7 @@ static void on_designer_lock(GtkButton *button, gpointer user_data)
             &profile) != UMI_STATUS_OK) {
         return;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_ui_workbench_set_workspace_profile_locked(
             workbench, controls->profile_id, !profile.locked) ==
         UMI_STATUS_OK) {
@@ -157,12 +211,20 @@ static void on_designer_lock(GtkButton *button, gpointer user_data)
     }
 }
 
+/*
+ * Provide the on designer delete operation used by this module and its client
+ * applications.
+ */
 static void on_designer_delete(GtkButton *button, gpointer user_data)
 {
     UmiGtk4ProfileDesignerControls *controls =
         (UmiGtk4ProfileDesignerControls *)user_data;
     UmiUiWorkbench *workbench = designer_workbench(controls);
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench != NULL &&
         umi_ui_workbench_remove_workspace_profile(
             workbench, controls->profile_id) == UMI_STATUS_OK) {
@@ -170,12 +232,17 @@ static void on_designer_delete(GtkButton *button, gpointer user_data)
     }
 }
 
+/* Release or reset state held by on designer so the same storage can be reused safely. */
 static void on_designer_reset(GtkButton *button, gpointer user_data)
 {
     UmiGtk4ProfileDesignerControls *controls =
         (UmiGtk4ProfileDesignerControls *)user_data;
     UmiUiWorkbench *workbench = designer_workbench(controls);
     (void)button;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench != NULL &&
         umi_ui_workbench_activate_workspace_profile(
             workbench, controls->profile_id) == UMI_STATUS_OK) {
@@ -183,6 +250,7 @@ static void on_designer_reset(GtkButton *button, gpointer user_data)
     }
 }
 
+/* Provide the create region row operation used by this module and its client applications. */
 static GtkWidget *create_region_row(const char *label,
                                     int visible,
                                     int size,
@@ -203,6 +271,10 @@ static GtkWidget *create_region_row(const char *label,
     return row;
 }
 
+/*
+ * Provide the create profile designer operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_profile_designer(
     UmiGtk4Adapter *adapter,
     const UmiUiWorkspaceProfileSnapshot *profile,
@@ -280,6 +352,7 @@ static GtkWidget *create_profile_designer(
         update, "Replace this unlocked custom layout with the current workspace");
     gtk_widget_set_tooltip_text(
         reset, "Discard unsaved layout changes and restore this profile");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!profile->built_in) {
         management_buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
         lock = gtk_button_new_with_label(
@@ -298,6 +371,10 @@ static GtkWidget *create_profile_designer(
     gtk_widget_set_sensitive(update,
                              !profile->built_in && !profile->locked);
     gtk_box_append(GTK_BOX(box), buttons);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (management_buttons != NULL) {
         gtk_box_append(GTK_BOX(box), management_buttons);
     }
@@ -317,6 +394,10 @@ static GtkWidget *create_profile_designer(
     return box;
 }
 
+/*
+ * Provide the on workspace profile clicked operation used by this module and its client
+ * applications.
+ */
 static void on_workspace_profile_clicked(GtkButton *button,
                                          gpointer user_data)
 {
@@ -325,22 +406,39 @@ static void on_workspace_profile_clicked(GtkButton *button,
     UmiUiWorkbench *workbench;
     GtkWidget *popover;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || adapter->shell == NULL) return;
     profile_id = (const char *)g_object_get_data(
         G_OBJECT(button), "umicom-workspace-profile-id");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile_id == NULL) return;
 
     workbench = umi_ui_application_shell_workbench(adapter->shell);
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (umi_ui_workbench_activate_workspace_profile(workbench, profile_id) !=
         UMI_STATUS_OK) {
         return;
     }
 
     popover = gtk_widget_get_ancestor(GTK_WIDGET(button), GTK_TYPE_POPOVER);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (popover != NULL) gtk_popover_popdown(GTK_POPOVER(popover));
     (void)umi_gtk4_refresh_workbench(adapter);
 }
 
+/*
+ * Provide the create profile button operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *create_profile_button(
     UmiGtk4Adapter *adapter,
     const UmiUiWorkspaceProfileSnapshot *profile)
@@ -352,6 +450,7 @@ static GtkWidget *create_profile_button(
     GtkWidget *description = gtk_label_new(profile->description);
     GtkWidget *state_icon;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->icon_name[0] != '\0') {
         GtkWidget *icon = gtk_image_new_from_icon_name(profile->icon_name);
         gtk_image_set_pixel_size(GTK_IMAGE(icon), 17);
@@ -377,6 +476,7 @@ static GtkWidget *create_profile_button(
     gtk_button_set_child(GTK_BUTTON(button), row);
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-workspace-profile-item");
+    /* Apply this operation only while the related capability or state is available. */
     if (profile->active) gtk_widget_add_css_class(button, "active");
     gtk_widget_set_tooltip_text(button, profile->description);
     g_object_set_data_full(G_OBJECT(button),
@@ -390,6 +490,10 @@ static GtkWidget *create_profile_button(
     return button;
 }
 
+/*
+ * Provide the gtk4 refresh workspace profiles operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_gtk4_refresh_workspace_profiles(
     UmiGtk4Adapter *adapter,
     UmiUiWorkbench *workbench)
@@ -402,6 +506,10 @@ UmiStatus umi_gtk4_refresh_workspace_profiles(
     UmiUiWorkbenchState state;
     char active_label[UMI_UI_TEXT_CAPACITY + 8U] = "Layout";
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || workbench == NULL ||
         adapter->workspace_profile_button == NULL ||
         adapter->workspace_profile_label == NULL) {
@@ -413,6 +521,7 @@ UmiStatus umi_gtk4_refresh_workspace_profiles(
     umi_ui_workbench_state_init(&state);
     (void)umi_ui_workbench_state_snapshot(workbench, &state);
     gtk_widget_set_visible(adapter->workspace_profile_button, count > 0U);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count == 0U) return UMI_STATUS_OK;
 
     popover = gtk_popover_new();
@@ -420,20 +529,24 @@ UmiStatus umi_gtk4_refresh_workspace_profiles(
                              "umicom-workspace-profile-popover");
     items_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiUiWorkspaceProfileSnapshot profile;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_workspace_profile_model_at(model, index, &profile) !=
             UMI_STATUS_OK) {
             continue;
         }
+        /* Apply this operation only while the related capability or state is available. */
         if (profile.active) {
             int modified = 0;
             (void)umi_ui_workbench_workspace_profile_modified(
                 workbench, profile.profile_id, &modified);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (modified) {
                 (void)snprintf(active_label, sizeof(active_label),
                                "%s •", profile.label);
-            } else {
+            } /* Use this fallback path when the earlier condition does not apply. */ else {
                 (void)snprintf(active_label, sizeof(active_label),
                                "%s", profile.label);
             }
@@ -445,6 +558,7 @@ UmiStatus umi_gtk4_refresh_workspace_profiles(
     /* The active profile supplies the editing policy and display name. */
     for (index = 0U; index < count; ++index) {
         UmiUiWorkspaceProfileSnapshot profile;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ui_workspace_profile_model_at(model, index, &profile) ==
                 UMI_STATUS_OK &&
             profile.active) {

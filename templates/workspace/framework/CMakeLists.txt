@@ -49,13 +49,18 @@ include(CMakePackageConfigHelpers)
 # The parent Umicom application may already provide these helper functions.
 # Define them only when they do not already exist.
 if(NOT COMMAND umicom_apply_warnings)
+    # Define the apply warnings build helper so parent and application projects apply one
+    # consistent rule.
     function(umicom_apply_warnings target)
+        # Apply this branch only when its contract condition is satisfied.
         if(NOT UMICOM_ENABLE_STRICT_WARNINGS)
             return()
         endif()
 
+        # Select the warning options understood by the active compiler.
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)
+        # Use this fallback path when the earlier condition does not apply.
         else()
             target_compile_options(${target} PRIVATE
                 -Wall
@@ -68,8 +73,12 @@ if(NOT COMMAND umicom_apply_warnings)
     endfunction()
 endif()
 
+# Define the local fallback only when the parent build did not provide the shared helper.
 if(NOT COMMAND umicom_apply_sanitizers)
+    # Define the apply sanitizers build helper so parent and application projects apply one
+    # consistent rule.
     function(umicom_apply_sanitizers target)
+        # Apply this branch only when its contract condition is satisfied.
         if(UMICOM_ENABLE_SANITIZERS AND NOT MSVC)
             target_compile_options(${target} PRIVATE
                 -fsanitize=address,undefined
@@ -148,11 +157,15 @@ add_library(umicom_data STATIC
 add_library(Umicom::data ALIAS umicom_data)
 set_target_properties(umicom_data PROPERTIES EXPORT_NAME data)
 target_link_libraries(umicom_data PUBLIC Umicom::base)
+# Apply this branch only when its contract condition is satisfied.
 if(SQLite3_FOUND)
+    # Configure the optional target only when its feature has created it.
     if(TARGET SQLite3::SQLite3)
         target_link_libraries(umicom_data PUBLIC SQLite3::SQLite3)
+    # Apply this branch only when its contract condition is satisfied.
     elseif(TARGET SQLite::SQLite3)
         target_link_libraries(umicom_data PUBLIC SQLite::SQLite3)
+    # Use this fallback path when the earlier condition does not apply.
     else()
         target_include_directories(umicom_data PUBLIC ${SQLite3_INCLUDE_DIRS})
         target_link_libraries(umicom_data PUBLIC ${SQLite3_LIBRARIES})
@@ -231,6 +244,7 @@ target_include_directories(umicom_plugin PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UNIX AND NOT APPLE)
     target_link_libraries(umicom_plugin PRIVATE dl)
 endif()
@@ -282,6 +296,7 @@ target_link_libraries(umicom-framework-demo PRIVATE Umicom::Framework)
 umicom_apply_warnings(umicom-framework-demo)
 umicom_apply_sanitizers(umicom-framework-demo)
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_executable(umicom-framework-tests
         tests/test_framework.c

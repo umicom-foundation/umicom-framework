@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data read routing policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataReadRoutingPolicy { UmiDataConsistency consistency; uint64_t max_replica_lag_ms; bool prefer_replica; } UmiDataReadRoutingPolicy;
 /* Initialise conservative session-consistent routing defaults. */ void umi_data_read_routing_policy_default(UmiDataReadRoutingPolicy *policy);
 /* Select the best eligible replica index or return unavailable. */ UmiStatus umi_data_read_routing_policy_select(const UmiDataReadRoutingPolicy *policy,const UmiDataReplicaSet *replicas,const UmiDataReplicationLag *lags,size_t lag_count,size_t *out_index);

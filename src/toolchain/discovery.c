@@ -52,10 +52,15 @@
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/process.h"
 
+/* Provide the toolchain emit operation used by this module and its client applications. */
 static void umi_toolchain_emit(const UmiToolchainDiscoveryRequest *request,
                                UmiDiagnosticSeverity severity,
                                const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request != NULL) {
         umi_diagnostic_emit(request->diagnostic_sink,
                             request->diagnostic_user_data,
@@ -66,9 +71,11 @@ static void umi_toolchain_emit(const UmiToolchainDiscoveryRequest *request,
     }
 }
 
+/* Provide the tool required operation used by this module and its client applications. */
 static int umi_tool_required(UmiToolKind kind,
                              const UmiToolchainDiscoveryRequest *request)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_TOOL_CMAKE:
         case UMI_TOOL_CTEST:
@@ -96,6 +103,7 @@ static int umi_tool_required(UmiToolKind kind,
     }
 }
 
+/* Provide the find in directory operation used by this module and its client applications. */
 static UmiStatus umi_find_in_directory(const char *directory,
                                        const char *executable,
                                        char *out_path,
@@ -104,6 +112,10 @@ static UmiStatus umi_find_in_directory(const char *directory,
     char candidate[UMI_PATH_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (directory == NULL || directory[0] == '\0' || executable == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -111,12 +123,15 @@ static UmiStatus umi_find_in_directory(const char *directory,
                          sizeof(candidate),
                          directory,
                          executable);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_fs_is_file(candidate)) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strlen(candidate) + 1U > capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -124,6 +139,10 @@ static UmiStatus umi_find_in_directory(const char *directory,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the toolchain find on path operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_find_on_path(const char *executable,
                                      char *out_path,
                                      size_t capacity)
@@ -138,26 +157,43 @@ UmiStatus umi_toolchain_find_on_path(const char *executable,
     const char *delimiter = ":";
 #endif
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (executable == NULL || out_path == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     path_value = getenv("PATH");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path_value == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
     copy = (char *)malloc(strlen(path_value) + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (copy == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     (void)strcpy(copy, path_value);
 
     cursor = strtok_r(copy, delimiter, &save_pointer);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cursor != NULL) {
         UmiStatus status = umi_find_in_directory(cursor,
                                                  executable,
                                                  out_path,
                                                  capacity);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             free(copy);
             return UMI_STATUS_OK;
@@ -168,32 +204,50 @@ UmiStatus umi_toolchain_find_on_path(const char *executable,
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the toolchain first line operation used by this module and its client
+ * applications.
+ */
 static void umi_toolchain_first_line(char *text)
 {
     char *line_end;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) {
         return;
     }
     line_end = strpbrk(text, "\r\n");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (line_end != NULL) {
         *line_end = '\0';
     }
 }
 
+/* Provide the validate tool operation used by this module and its client applications. */
 static UmiStatus umi_validate_tool(UmiToolInfo *tool)
 {
     const char *arguments[] = {"--version"};
     int exit_code = -1;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool == NULL || tool->path[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (tool->kind == UMI_TOOL_MSVC_CL || tool->kind == UMI_TOOL_MSVC_LINK)
         arguments[0] = "/?";
-    else if (tool->kind == UMI_TOOL_VSWHERE)
+    else /* Apply this branch only when its contract condition is satisfied. */ if (tool->kind == UMI_TOOL_VSWHERE)
         arguments[0] = "-help";
-    else if (tool->kind == UMI_TOOL_DR_MEMORY)
+    else /* Apply this branch only when its contract condition is satisfied. */ if (tool->kind == UMI_TOOL_DR_MEMORY)
         arguments[0] = "-version";
     status = umi_process_capture(tool->path,
                                  arguments,
@@ -202,6 +256,7 @@ static UmiStatus umi_validate_tool(UmiToolInfo *tool)
                                  sizeof(tool->version),
                                  &exit_code);
     umi_toolchain_first_line(tool->version);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (exit_code == 0) {
         tool->state = UMI_TOOL_VALIDATED;
         return UMI_STATUS_OK;
@@ -217,6 +272,10 @@ static UmiStatus umi_validate_tool(UmiToolInfo *tool)
     return status;
 }
 
+/*
+ * Provide the profile select root operation used by this module and its client
+ * applications.
+ */
 static void umi_profile_select_root(UmiToolchainProfile *profile,
                                     const UmiToolchainDiscoveryRequest *request)
 {
@@ -231,20 +290,26 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
     size_t index;
 #endif
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request != NULL && request->explicit_root != NULL &&
         request->explicit_root[0] != '\0') {
         (void)snprintf(profile->root,
                        sizeof(profile->root),
                        "%s",
                        request->explicit_root);
-    } else if (environment_root != NULL && environment_root[0] != '\0') {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (environment_root != NULL && environment_root[0] != '\0') {
         (void)snprintf(profile->root,
                        sizeof(profile->root),
                        "%s",
                        environment_root);
 #ifdef _WIN32
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; roots[index] != NULL; ++index) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (umi_fs_is_directory(roots[index])) {
                 (void)snprintf(profile->root,
                                sizeof(profile->root),
@@ -256,6 +321,7 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
 #endif
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->root[0] != '\0') {
         (void)umi_fs_join(profile->bin_directory,
                           sizeof(profile->bin_directory),
@@ -266,13 +332,18 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
                        "%s",
                        profile->root);
 #ifdef _WIN32
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (request != NULL && request->preferred_profile != NULL &&
             strstr(request->preferred_profile, "msvc") != NULL)
             profile->family = UMI_TOOLCHAIN_MSVC;
-        else if (strstr(profile->root, "clang64") != NULL)
+        else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strstr(profile->root, "clang64") != NULL)
             profile->family = UMI_TOOLCHAIN_MSYS2_CLANG64;
-        else if (strstr(profile->root, "mingw64") != NULL)
+        else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (strstr(profile->root, "mingw64") != NULL)
             profile->family = UMI_TOOLCHAIN_MSYS2_MINGW64;
+        /* Use this fallback path when the earlier condition does not apply. */
         else
             profile->family = UMI_TOOLCHAIN_MSYS2_UCRT64;
         (void)snprintf(profile->profile_id,
@@ -301,7 +372,7 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
                        profile->family == UMI_TOOLCHAIN_POSIX_GCC
                            ? "posix-gcc" : "posix-clang");
 #endif
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
 #ifdef _WIN32
         profile->family = UMI_TOOLCHAIN_UNKNOWN;
         (void)snprintf(profile->profile_id,
@@ -327,6 +398,10 @@ static void umi_profile_select_root(UmiToolchainProfile *profile,
                    umi_toolchain_family_text(profile->family));
 }
 
+/*
+ * Provide the profile select compiler operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_profile_select_compiler(
     UmiToolchainProfile *profile,
     const UmiToolchainDiscoveryRequest *request)
@@ -334,24 +409,33 @@ static UmiStatus umi_profile_select_compiler(
     const char *preferred = request != NULL ? request->preferred_profile : NULL;
     UmiToolKind candidates[3];
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preferred != NULL && strstr(preferred, "msvc") != NULL) {
         candidates[0] = UMI_TOOL_MSVC_CL;
         candidates[1] = UMI_TOOL_CLANG;
         candidates[2] = UMI_TOOL_GCC;
-    } else if ((preferred != NULL && strstr(preferred, "gcc") != NULL) ||
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if ((preferred != NULL && strstr(preferred, "gcc") != NULL) ||
                profile->family == UMI_TOOLCHAIN_POSIX_GCC ||
                profile->family == UMI_TOOLCHAIN_MSYS2_MINGW64) {
         candidates[0] = UMI_TOOL_GCC;
         candidates[1] = UMI_TOOL_CLANG;
         candidates[2] = UMI_TOOL_MSVC_CL;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         candidates[0] = UMI_TOOL_CLANG;
         candidates[1] = UMI_TOOL_GCC;
         candidates[2] = UMI_TOOL_MSVC_CL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < 3U; ++index) {
         UmiToolInfo *tool = umi_toolchain_profile_tool_mutable(
             profile, candidates[index]);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (tool == NULL || tool->state != UMI_TOOL_VALIDATED) continue;
         tool->required = 1;
         profile->selected_c_compiler = candidates[index];
@@ -359,9 +443,11 @@ static UmiStatus umi_profile_select_compiler(
             ? UMI_TOOL_GXX
             : candidates[index] == UMI_TOOL_CLANG
                 ? UMI_TOOL_CLANGXX : UMI_TOOL_MSVC_CL;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (candidates[index] == UMI_TOOL_GCC &&
             profile->family == UMI_TOOLCHAIN_POSIX_CLANG)
             profile->family = UMI_TOOLCHAIN_POSIX_GCC;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (candidates[index] == UMI_TOOL_MSVC_CL)
             profile->family = UMI_TOOLCHAIN_MSVC;
         return UMI_STATUS_OK;
@@ -369,29 +455,44 @@ static UmiStatus umi_profile_select_compiler(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the profile capture target operation used by this module and its client
+ * applications.
+ */
 static void umi_profile_capture_target(UmiToolchainProfile *profile)
 {
     const UmiToolInfo *compiler;
     const char *arguments[] = {"-dumpmachine"};
     int exit_code = -1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->selected_c_compiler == UMI_TOOL_MSVC_CL) {
         (void)snprintf(profile->target_triple, sizeof(profile->target_triple),
                        "%s", "x86_64-pc-windows-msvc");
         return;
     }
     compiler = umi_toolchain_profile_c_compiler(profile);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (compiler == NULL || compiler->state != UMI_TOOL_VALIDATED) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_process_capture(compiler->path, arguments, 1U,
                             profile->target_triple,
                             sizeof(profile->target_triple), &exit_code) ==
             UMI_STATUS_OK && exit_code == 0) {
         umi_toolchain_first_line(profile->target_triple);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         profile->target_triple[0] = '\0';
     }
 }
 
+/* Provide the discover one operation used by this module and its client applications. */
 static UmiStatus umi_discover_one(UmiToolchainProfile *profile,
                                   UmiToolKind kind,
                                   int required,
@@ -401,23 +502,30 @@ static UmiStatus umi_discover_one(UmiToolchainProfile *profile,
     const char *executable = umi_tool_default_executable(kind);
     UmiStatus status = UMI_STATUS_NOT_FOUND;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     tool->required = required;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->bin_directory[0] != '\0') {
         status = umi_find_in_directory(profile->bin_directory,
                                        executable,
                                        tool->path,
                                        sizeof(tool->path));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         status = umi_toolchain_find_on_path(executable,
                                             tool->path,
                                             sizeof(tool->path));
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         tool->state = UMI_TOOL_FOUND;
         *found_count += 1U;
@@ -427,6 +535,10 @@ static UmiStatus umi_discover_one(UmiToolchainProfile *profile,
     return required ? UMI_STATUS_NOT_FOUND : UMI_STATUS_OK;
 }
 
+/*
+ * Provide the toolchain compile probe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_compile_probe(
     const UmiToolchainProfile *profile,
     UmiToolchainDiscoveryReport *in_out_report)
@@ -446,15 +558,24 @@ UmiStatus umi_toolchain_compile_probe(
     UmiProcessResult result;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || in_out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     compiler = umi_toolchain_profile_c_compiler(profile);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (compiler == NULL || compiler->state != UMI_TOOL_VALIDATED) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     status = umi_fs_temp_directory(temp_root, sizeof(temp_root));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -476,13 +597,16 @@ UmiStatus umi_toolchain_compile_probe(
                          sizeof(probe_directory),
                          temp_root,
                          unique_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_fs_make_directories(probe_directory);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_fs_join(source_path,
                          sizeof(source_path),
                          probe_directory,
                          "probe.c");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 #ifdef _WIN32
     status = umi_fs_join(executable_path,
@@ -495,14 +619,17 @@ UmiStatus umi_toolchain_compile_probe(
                          probe_directory,
                          "probe");
 #endif
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_fs_write_text(
         source_path,
         "#include <stdio.h>\nint main(void){puts(\"UMICOM_PROBE_OK\");return 0;}\n"
     );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (profile->selected_c_compiler == UMI_TOOL_MSVC_CL) {
         (void)snprintf(output_argument, sizeof(output_argument),
                        "/Fe:%s", executable_path);
@@ -510,7 +637,7 @@ UmiStatus umi_toolchain_compile_probe(
         arguments[1] = "/std:clatest";
         arguments[2] = source_path;
         arguments[3] = output_argument;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         arguments[0] = "-std=c2x";
         arguments[1] = source_path;
         arguments[2] = "-o";
@@ -525,6 +652,7 @@ UmiStatus umi_toolchain_compile_probe(
     request.capture_stdout = 1;
     request.capture_stderr = 1;
     status = umi_process_execute(&request, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || result.exit_code != 0) {
         (void)umi_fs_remove_tree(probe_directory);
         return UMI_STATUS_INTERNAL_ERROR;
@@ -539,6 +667,7 @@ UmiStatus umi_toolchain_compile_probe(
     request.capture_stdout = 1;
     request.capture_stderr = 1;
     status = umi_process_execute(&request, &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         result.exit_code == 0 &&
         strstr(result.output, "UMICOM_PROBE_OK") != NULL) {
@@ -550,6 +679,10 @@ UmiStatus umi_toolchain_compile_probe(
         : UMI_STATUS_INTERNAL_ERROR;
 }
 
+/*
+ * Provide the toolchain discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_discover(
     const UmiToolchainDiscoveryRequest *request,
     UmiToolchainDiscoveryReport *out_report)
@@ -557,6 +690,10 @@ UmiStatus umi_toolchain_discover(
     size_t index;
     UmiStatus overall = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -564,9 +701,11 @@ UmiStatus umi_toolchain_discover(
     umi_toolchain_profile_init(&out_report->profile);
     umi_profile_select_root(&out_report->profile, request);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_TOOL_COUNT; ++index) {
         int required = umi_tool_required((UmiToolKind)index, request);
         UmiStatus status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (required) {
             out_report->required_tools += 1U;
         }
@@ -574,6 +713,7 @@ UmiStatus umi_toolchain_discover(
                                   (UmiToolKind)index,
                                   required,
                                   &out_report->tools_found);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (required && status != UMI_STATUS_OK) {
             out_report->required_tools_missing += 1U;
             overall = UMI_STATUS_NOT_FOUND;
@@ -585,10 +725,11 @@ UmiStatus umi_toolchain_discover(
         UMI_STATUS_OK) {
         out_report->required_tools_missing += 1U;
         overall = UMI_STATUS_NOT_FOUND;
-    } else if (request != NULL && request->preferred_profile != NULL) {
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (request != NULL && request->preferred_profile != NULL) {
         int wants_clang = strstr(request->preferred_profile, "clang") != NULL;
         int wants_gcc = strstr(request->preferred_profile, "gcc") != NULL;
         int wants_msvc = strstr(request->preferred_profile, "msvc") != NULL;
+        /* Apply this branch only when its contract condition is satisfied. */
         if ((wants_clang && out_report->profile.selected_c_compiler !=
                 UMI_TOOL_CLANG) ||
             (wants_gcc && out_report->profile.selected_c_compiler !=
@@ -599,22 +740,25 @@ UmiStatus umi_toolchain_discover(
             overall = UMI_STATUS_NOT_FOUND;
         }
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_report->profile.selected_c_compiler < UMI_TOOL_COUNT)
         umi_profile_capture_target(&out_report->profile);
 
     out_report->profile.complete = out_report->required_tools_missing == 0U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (out_report->profile.complete &&
         (request == NULL || !request->skip_compile_probe)) {
         UmiStatus probe_status = umi_toolchain_compile_probe(
             &out_report->profile,
             out_report
         );
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (probe_status != UMI_STATUS_OK) {
             overall = probe_status;
             umi_toolchain_emit(request,
                                UMI_DIAGNOSTIC_ERROR,
                                "Compiler compile-link-run probe failed");
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             out_report->profile.c23_capable =
                 out_report->c23_probe_passed;
             umi_toolchain_emit(request,

@@ -24,11 +24,16 @@ UmiStatus umi_adaptive_responsive_region_init(UmiAdaptiveResponsiveRegion *regio
                                               uint32_t priority)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (region == NULL || region_id == NULL || minimum_class > maximum_class) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     memset(region, 0, sizeof *region);
     status = umi_adaptive_copy_text(region->region_id, sizeof region->region_id, region_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -43,6 +48,10 @@ UmiStatus umi_adaptive_responsive_region_init(UmiAdaptiveResponsiveRegion *regio
 int umi_adaptive_responsive_region_matches(const UmiAdaptiveResponsiveRegion *region,
                                            UmiDesignSizeClass size_class)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (region == NULL) {
         return 0;
     }

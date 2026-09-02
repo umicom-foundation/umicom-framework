@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime bootstrap options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiStudioRuntimeBootstrapOptions {
     const char *workspace_name;
     const char *actor_id;
@@ -31,6 +35,9 @@ typedef struct UmiStudioRuntimeBootstrapOptions {
     int restore_session;
 } UmiStudioRuntimeBootstrapOptions;
 
+/**
+ * Represent the studio runtime bootstrap data shared with callers of this public contract.
+ */
 typedef struct UmiStudioRuntimeBootstrap {
     UmiStudioRuntimePlatform *platform;
     UmiStudioRuntimeSessionController *session;
@@ -40,17 +47,33 @@ typedef struct UmiStudioRuntimeBootstrap {
     int session_restored;
 } UmiStudioRuntimeBootstrap;
 
+/**
+ * Initialise studio runtime bootstrap from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_runtime_bootstrap_create(
     const UmiStudioRuntimeBindings *bindings,
     const UmiStudioRuntimeBootstrapOptions *options,
     UmiStudioRuntimeBootstrap **out_bootstrap);
 
+/**
+ * Release or reset state held by studio runtime bootstrap so the same storage can be
+ * reused safely.
+ */
 void umi_studio_runtime_bootstrap_destroy(
     UmiStudioRuntimeBootstrap *bootstrap);
 
+/**
+ * Provide the studio runtime bootstrap refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_bootstrap_refresh(
     UmiStudioRuntimeBootstrap *bootstrap);
 
+/**
+ * Provide the studio runtime bootstrap save session operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_bootstrap_save_session(
     UmiStudioRuntimeBootstrap *bootstrap);
 

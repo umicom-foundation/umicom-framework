@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named workbench layout diagnostic code values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchLayoutDiagnosticCode {
     UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_NONE = 0,
     UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_MISSING_LAYOUT_ID = 1,
@@ -48,6 +51,10 @@ typedef enum UmiWorkbenchLayoutDiagnosticCode {
     UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_HASH_MISMATCH = 22
 } UmiWorkbenchLayoutDiagnosticCode;
 
+/**
+ * Represent the workbench layout diagnostic data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDiagnostic {
     uint32_t structure_size;
     UmiWorkbenchLayoutSeverity severity;
@@ -58,6 +65,10 @@ typedef struct UmiWorkbenchLayoutDiagnostic {
     char remediation[UMI_WORKBENCH_LAYOUT_ERROR_CAPACITY];
 } UmiWorkbenchLayoutDiagnostic;
 
+/**
+ * Represent the workbench layout validation options data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutValidationOptions {
     uint32_t structure_size;
     bool require_connected_tree;
@@ -69,6 +80,10 @@ typedef struct UmiWorkbenchLayoutValidationOptions {
     bool warnings_as_errors;
 } UmiWorkbenchLayoutValidationOptions;
 
+/**
+ * Represent the workbench layout validation report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutValidationReport {
     uint32_t structure_size;
     UmiWorkbenchLayoutDiagnostic
@@ -80,17 +95,32 @@ typedef struct UmiWorkbenchLayoutValidationReport {
     bool valid;
 } UmiWorkbenchLayoutValidationReport;
 
+/**
+ * Provide the workbench layout validation options default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutValidationOptions
 umi_workbench_layout_validation_options_default(void);
 
+/**
+ * Initialise workbench layout validation report from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_layout_validation_report_init(
     UmiWorkbenchLayoutValidationReport *report);
 
+/**
+ * Check that workbench layout satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_workbench_layout_validate(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutValidationOptions *options,
     UmiWorkbenchLayoutValidationReport *out_report);
 
+/**
+ * Add workbench layout validation report only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_layout_validation_report_add(
     UmiWorkbenchLayoutValidationReport *report,
     UmiWorkbenchLayoutSeverity severity,
@@ -100,9 +130,17 @@ UmiStatus umi_workbench_layout_validation_report_add(
     const char *message,
     const char *remediation);
 
+/**
+ * Provide the workbench layout diagnostic code text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_diagnostic_code_text(
     UmiWorkbenchLayoutDiagnosticCode code);
 
+/**
+ * Provide the workbench layout validation report has code operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_layout_validation_report_has_code(
     const UmiWorkbenchLayoutValidationReport *report,
     UmiWorkbenchLayoutDiagnosticCode code);

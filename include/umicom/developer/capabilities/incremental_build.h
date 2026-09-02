@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_INCREMENTAL_BUILD "umicom.developer.build.incremental_build"
 
+/**
+ * Provide the developer capability incremental build operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_incremental_build(void);
 

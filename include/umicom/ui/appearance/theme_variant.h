@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance theme variant data shared with callers of this public contract.
+ */
 typedef struct UmiAppearanceThemeVariant {
     char variant_id[UMI_APPEARANCE_ID_CAPACITY];
     char pack_id[UMI_APPEARANCE_ID_CAPACITY];

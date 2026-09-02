@@ -16,6 +16,10 @@
 #include <string.h>
 /* Initialise bounded state without allocating renderer-specific resources. */
 UmiStatus umi_appearance_theme_pack_init(UmiAppearanceThemePack *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(item, 0, sizeof *item);
     (void)umi_appearance_copy_text(item->pack_id, sizeof item->pack_id, "theme.default.dark");
@@ -28,6 +32,10 @@ UmiStatus umi_appearance_theme_pack_init(UmiAppearanceThemePack *item) {
 
 /* Validate semantic invariants before the record is published to a renderer. */
 int umi_appearance_theme_pack_is_valid(const UmiAppearanceThemePack *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL) return 0;
     return (umi_appearance_id_valid(item->pack_id) && umi_appearance_id_valid(item->token_set_id) && item->revision > 0U);
 }

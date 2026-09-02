@@ -20,8 +20,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise vcs advanced conflict hunk from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_conflict_hunk_init(UmiVcsAdvancedConflictHunk *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return;
     (void)memset(value, 0, sizeof(*value));
     value->struct_size = (uint32_t)sizeof(*value);
@@ -29,8 +37,16 @@ void umi_vcs_advanced_conflict_hunk_init(UmiVcsAdvancedConflictHunk *value)
 
 }
 
+/*
+ * Check that vcs advanced conflict hunk satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_conflict_hunk_validate(const UmiVcsAdvancedConflictHunk *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL ||
         value->struct_size < sizeof(*value) ||
         value->api_version != UMI_VCS_ADVANCED_API_VERSION ||
@@ -40,6 +56,10 @@ UmiStatus umi_vcs_advanced_conflict_hunk_validate(const UmiVcsAdvancedConflictHu
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy vcs advanced conflict hunk into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_vcs_advanced_conflict_hunk_set(UmiVcsAdvancedConflictHunk *value,
                                                size_t base_start,
                                                size_t base_count,
@@ -49,6 +69,10 @@ UmiStatus umi_vcs_advanced_conflict_hunk_set(UmiVcsAdvancedConflictHunk *value,
                                                size_t theirs_count,
                                                const char *identity_text)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     value->base_start = base_start; value->base_count = base_count;
     value->ours_start = ours_start; value->ours_count = ours_count;

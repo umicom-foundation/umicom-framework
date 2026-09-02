@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/toolchain_detection.h"
 
+/*
+ * Provide the developer capability toolchain detection operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_toolchain_detection(void)
 {

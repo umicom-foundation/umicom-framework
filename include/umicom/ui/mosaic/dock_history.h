@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic dock history data shared with callers of this public contract.
+ */
 typedef struct UmiUiMosaicDockHistory {
     char source_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char target_id[UMI_UI_MOSAIC_ID_CAPACITY];

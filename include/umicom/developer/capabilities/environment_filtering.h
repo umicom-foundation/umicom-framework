@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_ENVIRONMENT_FILTERING "umicom.developer.security.environment_filtering"
 
+/**
+ * Provide the developer capability environment filtering operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_environment_filtering(void);
 

@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr package plan data shared with callers of this public contract.
+ */
 typedef struct UmiDrPackagePlan { char id[UMI_DR_ID_CAPACITY]; uint32_t required_steps; uint32_t completed_steps; bool deterministic; bool privileged; } UmiDrPackagePlan;
+/**
+ * Initialise dr package plan from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_package_plan_init(UmiDrPackagePlan *plan); UmiStatus umi_dr_package_plan_complete_step(UmiDrPackagePlan *plan); bool umi_dr_package_plan_ready(const UmiDrPackagePlan *plan);
 
 #ifdef __cplusplus

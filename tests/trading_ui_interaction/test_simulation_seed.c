@@ -16,6 +16,10 @@
 
 #include <assert.h>
 
+/*
+ * Exercise test simulation seed and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void test_simulation_seed(void)
 {
     UmiTradingUiTestFixture fixture;

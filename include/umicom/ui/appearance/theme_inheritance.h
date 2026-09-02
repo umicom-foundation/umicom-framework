@@ -22,7 +22,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance theme inheritance edge data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceThemeInheritanceEdge { char child_id[UMI_APPEARANCE_ID_CAPACITY]; char parent_id[UMI_APPEARANCE_ID_CAPACITY]; } UmiAppearanceThemeInheritanceEdge;
+/**
+ * Represent the appearance theme inheritance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceThemeInheritance { UmiAppearanceThemeInheritanceEdge edges[UMI_APPEARANCE_MAX_ITEMS]; size_t count; } UmiAppearanceThemeInheritance;
 
 /* Initialise an empty theme inheritance graph. */

@@ -17,6 +17,10 @@
 
 #include "umicom/application/productisation/evidence.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProductisationEvidenceLedger ledger;
@@ -47,6 +51,7 @@ int main(void)
     {
         char oversized[UMI_PRODUCTISATION_REFERENCE_CAPACITY + 1U];
         size_t index;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index + 1U < sizeof(oversized); ++index)
             oversized[index] = 'x';
         oversized[sizeof(oversized) - 1U] = '\0';

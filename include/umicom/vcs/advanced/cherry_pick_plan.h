@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the vcs advanced cherry pick plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedCherryPickPlan {
     uint32_t struct_size; uint32_t api_version;
     char commits[UMI_VCS_ADVANCED_SMALL_CAPACITY][UMI_VCS_ADVANCED_OID_CAPACITY];
@@ -29,8 +33,20 @@ typedef struct UmiVcsAdvancedCherryPickPlan {
     int no_commit; int signoff; int allow_empty;
     UmiVcsSafetyLevel safety;
 } UmiVcsAdvancedCherryPickPlan;
+/**
+ * Initialise vcs advanced cherry pick plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_cherry_pick_plan_init(UmiVcsAdvancedCherryPickPlan *plan);
+/**
+ * Add vcs advanced cherry pick plan only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_vcs_advanced_cherry_pick_plan_add(UmiVcsAdvancedCherryPickPlan *plan,const char *oid);
+/**
+ * Provide the vcs advanced cherry pick plan ready operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_cherry_pick_plan_ready(const UmiVcsAdvancedCherryPickPlan *plan);
 #ifdef __cplusplus
 }

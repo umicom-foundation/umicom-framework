@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_RESOURCE_URI "umicom.document.identity.resource_uri"
 
+/**
+ * Provide the document capability resource uri operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_resource_uri(void);
 

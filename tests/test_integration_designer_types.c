@@ -17,6 +17,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/integration/designer_types.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIntegrationDesignerRecord record = {0};

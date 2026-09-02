@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace cmake test model data shared with callers of this public
+ * contract.
+ */
     typedef struct UmiProjectWorkspaceCmakeTestModel {
         UmiProjectWorkspaceNamedState base;
         uint64_t metric;

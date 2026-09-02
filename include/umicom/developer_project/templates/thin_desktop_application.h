@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project template thin desktop application operation used by this
+ * module and its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_thin_desktop_application(void);
 
 #ifdef __cplusplus

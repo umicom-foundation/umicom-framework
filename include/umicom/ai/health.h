@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai health data shared with callers of this public contract.
+ */
 typedef struct UmiAiHealth {
     char provider_id[UMI_AI_ID_CAPACITY];
     int available;
@@ -36,6 +39,10 @@ typedef struct UmiAiHealth {
     char message[UMI_AI_SMALL_TEXT_CAPACITY];
 } UmiAiHealth;
 
+/**
+ * Initialise ai health from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_health_init(UmiAiHealth *value);
 
 #ifdef __cplusplus

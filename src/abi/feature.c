@@ -18,4 +18,5 @@
  */
 #include "umicom/abi/feature.h"
 #include <stddef.h>
-UmiStatus umi_abi_feature_validate(const UmiAbiFeature *feature){if(feature==NULL||feature->feature_id==NULL||feature->feature_id[0]=='\0'||feature->version==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that abi feature satisfies its contract before another service relies on it. */
+UmiStatus umi_abi_feature_validate(const UmiAbiFeature *feature){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(feature==NULL||feature->feature_id==NULL||feature->feature_id[0]=='\0'||feature->version==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

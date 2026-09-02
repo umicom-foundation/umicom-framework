@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/finance/enterprise/valuation_checkpoint.h"
+/**
+ * Represent the enterprise valuation replay data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationReplay { UmiEnterpriseValuationCheckpoint checkpoints[64U]; size_t count; } UmiEnterpriseValuationReplay;
 /* Initialise an empty replay checkpoint store. */
 void umi_enterprise_valuation_replay_init(UmiEnterpriseValuationReplay *replay);

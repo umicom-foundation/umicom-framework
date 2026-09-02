@@ -28,6 +28,10 @@
 
 #include "umicom/editor/semantic_highlighting.h"
 
+/*
+ * Exercise make token and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorSemanticToken make_token(uint64_t column,
                                          uint64_t length,
                                          uint32_t type_index,
@@ -44,6 +48,10 @@ static UmiEditorSemanticToken make_token(uint64_t column,
     return token;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const char *types[] = {"keyword", "variable"};

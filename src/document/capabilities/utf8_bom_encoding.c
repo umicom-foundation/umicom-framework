@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/utf8_bom_encoding.h"
 
+/*
+ * Provide the document capability utf8 bom encoding operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_utf8_bom_encoding(void)
 {

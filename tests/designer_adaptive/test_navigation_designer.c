@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/adaptive/navigation_designer.h"
 #define CHECK(x) do { if (!(x)) return 1; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiAdaptiveNavigationModel m; UmiAdaptiveNavigationItem a,b; UmiDesignerNavigationDesigner d; umi_adaptive_navigation_model_init(&m);

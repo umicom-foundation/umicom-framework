@@ -20,6 +20,7 @@
 
 #include "internal.h"
 
+/* Provide the set result operation used by this module and its client applications. */
 static UmiStatus set_result(
     UmiWorkbenchLayoutOperationResult *result,
     UmiStatus status,
@@ -30,6 +31,10 @@ static UmiStatus set_result(
 {
     UmiStatus copy_status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) {
         return status;
     }
@@ -47,6 +52,7 @@ static UmiStatus set_result(
     return copy_status == UMI_STATUS_OK ? status : copy_status;
 }
 
+/* Provide the apply add node operation used by this module and its client applications. */
 static UmiStatus apply_add_node(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -56,16 +62,19 @@ static UmiStatus apply_add_node(
 
     status = umi_workbench_layout_document_add_node(
         document, &operation->node_value, &node_index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (umi_workbench_layout_text_present(operation->parent_node_id)) {
         status = umi_workbench_layout_document_attach_child(
             document,
             operation->parent_node_id,
             operation->node_value.node_id,
             operation->index_value);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             (void)umi_workbench_layout_document_remove_node(
                 document, operation->node_value.node_id, true);
@@ -75,6 +84,7 @@ static UmiStatus apply_add_node(
     return UMI_STATUS_OK;
 }
 
+/* Provide the apply remove node operation used by this module and its client applications. */
 static UmiStatus apply_remove_node(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -83,6 +93,7 @@ static UmiStatus apply_remove_node(
         document, operation->node_id, operation->bool_value);
 }
 
+/* Provide the apply move node operation used by this module and its client applications. */
 static UmiStatus apply_move_node(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -94,6 +105,7 @@ static UmiStatus apply_move_node(
         operation->index_value);
 }
 
+/* Provide the apply set root operation used by this module and its client applications. */
 static UmiStatus apply_set_root(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -102,6 +114,10 @@ static UmiStatus apply_set_root(
         document, operation->node_id);
 }
 
+/*
+ * Provide the apply set split ratio operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_set_split_ratio(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -109,6 +125,10 @@ static UmiStatus apply_set_split_ratio(
     UmiWorkbenchLayoutNode *node =
         umi_workbench_layout_document_find_node_mutable(
             document, operation->node_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -116,6 +136,10 @@ static UmiStatus apply_set_split_ratio(
         node, node->orientation, operation->number_value);
 }
 
+/*
+ * Provide the apply set active child operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_set_active_child(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -123,9 +147,14 @@ static UmiStatus apply_set_active_child(
     UmiWorkbenchLayoutNode *node =
         umi_workbench_layout_document_find_node_mutable(
             document, operation->node_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->index_value != UMI_WORKBENCH_LAYOUT_INDEX_NONE &&
         operation->index_value >= node->child_count) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -136,6 +165,7 @@ static UmiStatus apply_set_active_child(
     return UMI_STATUS_OK;
 }
 
+/* Provide the apply set bounds operation used by this module and its client applications. */
 static UmiStatus apply_set_bounds(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -144,17 +174,26 @@ static UmiStatus apply_set_bounds(
         umi_workbench_layout_document_find_node_mutable(
             document, operation->node_id);
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
     status = umi_workbench_layout_node_set_bounds(
         node, &operation->rect_value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_workbench_layout_document_increment_revision(document);
     }
     return status;
 }
 
+/*
+ * Provide the apply set visibility operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_set_visibility(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -162,9 +201,14 @@ static UmiStatus apply_set_visibility(
     UmiWorkbenchLayoutNode *node =
         umi_workbench_layout_document_find_node_mutable(
             document, operation->node_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (operation->index_value < UMI_WORKBENCH_LAYOUT_VISIBILITY_VISIBLE ||
         operation->index_value > UMI_WORKBENCH_LAYOUT_VISIBILITY_AUTO) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -176,6 +220,10 @@ static UmiStatus apply_set_visibility(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the apply set context group operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_set_context_group(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -184,17 +232,26 @@ static UmiStatus apply_set_context_group(
         umi_workbench_layout_document_find_node_mutable(
             document, operation->node_id);
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
     status = umi_workbench_layout_node_set_context_group(
         node, operation->text_value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_workbench_layout_document_increment_revision(document);
     }
     return status;
 }
 
+/*
+ * Provide the apply set component operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_set_component(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -203,6 +260,10 @@ static UmiStatus apply_set_component(
         umi_workbench_layout_document_find_node_mutable(
             document, operation->node_id);
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (node == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -210,12 +271,17 @@ static UmiStatus apply_set_component(
         node,
         operation->text_value,
         operation->secondary_node_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_workbench_layout_document_increment_revision(document);
     }
     return status;
 }
 
+/*
+ * Provide the apply rename layout operation used by this module and its client
+ * applications.
+ */
 static UmiStatus apply_rename_layout(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -225,12 +291,14 @@ static UmiStatus apply_rename_layout(
         sizeof(document->name),
         operation->text_value,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_workbench_layout_document_increment_revision(document);
     }
     return status;
 }
 
+/* Provide the apply set locked operation used by this module and its client applications. */
 static UmiStatus apply_set_locked(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
@@ -241,16 +309,22 @@ static UmiStatus apply_set_locked(
         operation->bool_value);
 }
 
+/* Provide the apply set dirty operation used by this module and its client applications. */
 static UmiStatus apply_set_dirty(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->bool_value) {
         document->flags |= UMI_WORKBENCH_LAYOUT_DOCUMENT_DIRTY;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         document->flags &=
             ~(uint32_t)UMI_WORKBENCH_LAYOUT_DOCUMENT_DIRTY;
     }
@@ -259,11 +333,19 @@ static UmiStatus apply_set_dirty(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise workbench layout operation from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_layout_operation_init(
     UmiWorkbenchLayoutOperation *operation,
     UmiWorkbenchLayoutOperationKind kind,
     const char *operation_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation == NULL) {
         return;
     }
@@ -273,6 +355,10 @@ void umi_workbench_layout_operation_init(
     operation->index_value = UMI_WORKBENCH_LAYOUT_INDEX_NONE;
     operation->node_value.structure_size =
         sizeof(operation->node_value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation_id != NULL) {
         (void)umi_workbench_layout_copy_text(
             operation->operation_id,
@@ -282,19 +368,29 @@ void umi_workbench_layout_operation_init(
     }
 }
 
+/*
+ * Check that workbench layout operation satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_layout_operation_validate(
     const UmiWorkbenchLayoutOperation *operation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation == NULL ||
         operation->structure_size < sizeof(*operation) ||
         operation->kind < UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE ||
         operation->kind > UMI_WORKBENCH_LAYOUT_OPERATION_SET_DIRTY) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_workbench_layout_text_present(operation->operation_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (operation->kind) {
     case UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE:
         return umi_workbench_layout_node_validate(
@@ -307,11 +403,13 @@ UmiStatus umi_workbench_layout_operation_validate(
     case UMI_WORKBENCH_LAYOUT_OPERATION_SET_VISIBILITY:
     case UMI_WORKBENCH_LAYOUT_OPERATION_SET_CONTEXT_GROUP:
     case UMI_WORKBENCH_LAYOUT_OPERATION_SET_COMPONENT:
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_workbench_layout_text_present(operation->node_id)) {
             return UMI_STATUS_INVALID_ARGUMENT;
         }
         break;
     case UMI_WORKBENCH_LAYOUT_OPERATION_MOVE_NODE:
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!umi_workbench_layout_text_present(operation->node_id) ||
             !umi_workbench_layout_text_present(
                 operation->parent_node_id)) {
@@ -319,6 +417,7 @@ UmiStatus umi_workbench_layout_operation_validate(
         }
         break;
     case UMI_WORKBENCH_LAYOUT_OPERATION_RENAME_LAYOUT:
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_workbench_layout_text_present(
                 operation->text_value)) {
             return UMI_STATUS_INVALID_ARGUMENT;
@@ -333,6 +432,10 @@ UmiStatus umi_workbench_layout_operation_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Perform workbench layout operation through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_operation_apply(
     UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutOperation *operation,
@@ -342,6 +445,10 @@ UmiStatus umi_workbench_layout_operation_apply(
     uint64_t before_hash;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || operation == NULL) {
         return set_result(
             out_result,
@@ -352,6 +459,7 @@ UmiStatus umi_workbench_layout_operation_apply(
             "Document and operation are required.");
     }
     status = umi_workbench_layout_operation_validate(operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return set_result(
             out_result,
@@ -361,6 +469,7 @@ UmiStatus umi_workbench_layout_operation_apply(
             document->version.revision,
             "The operation is invalid.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->expected_revision != 0U &&
         operation->expected_revision != document->version.revision) {
         return set_result(
@@ -371,6 +480,7 @@ UmiStatus umi_workbench_layout_operation_apply(
             document->version.revision,
             "The expected layout revision does not match.");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_operation_requires_unlocked_document(
             operation) &&
         umi_workbench_layout_document_has_flag(
@@ -387,6 +497,7 @@ UmiStatus umi_workbench_layout_operation_apply(
     before_revision = document->version.revision;
     before_hash = document->content_hash;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (operation->kind) {
     case UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE:
         status = apply_add_node(document, operation);
@@ -402,6 +513,7 @@ UmiStatus umi_workbench_layout_operation_apply(
         break;
     case UMI_WORKBENCH_LAYOUT_OPERATION_SET_SPLIT_RATIO:
         status = apply_set_split_ratio(document, operation);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             umi_workbench_layout_document_increment_revision(document);
         }
@@ -448,6 +560,10 @@ UmiStatus umi_workbench_layout_operation_apply(
             : "The layout operation failed.");
 }
 
+/*
+ * Provide the workbench layout operation inverse operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_operation_inverse(
     const UmiWorkbenchLayoutDocument *before,
     const UmiWorkbenchLayoutOperation *operation,
@@ -456,6 +572,10 @@ UmiStatus umi_workbench_layout_operation_inverse(
     const UmiWorkbenchLayoutNode *node;
     size_t node_index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (before == NULL || operation == NULL || out_inverse == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -476,6 +596,7 @@ UmiStatus umi_workbench_layout_operation_inverse(
         true);
     out_inverse->expected_revision = 0U;
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (operation->kind) {
     case UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE:
         out_inverse->kind =
@@ -491,11 +612,16 @@ UmiStatus umi_workbench_layout_operation_inverse(
     case UMI_WORKBENCH_LAYOUT_OPERATION_REMOVE_NODE:
         node = umi_workbench_layout_document_find_node(
             before, operation->node_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (node == NULL) {
             return UMI_STATUS_NOT_FOUND;
         }
         out_inverse->kind = UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE;
         out_inverse->node_value = *node;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node->parent_index != UMI_WORKBENCH_LAYOUT_INDEX_NONE &&
             node->parent_index < before->node_count) {
             const UmiWorkbenchLayoutNode *parent =
@@ -516,10 +642,12 @@ UmiStatus umi_workbench_layout_operation_inverse(
     case UMI_WORKBENCH_LAYOUT_OPERATION_MOVE_NODE:
         node_index = umi_workbench_layout_document_find_node_index(
             before, operation->node_id);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             return UMI_STATUS_NOT_FOUND;
         }
         node = &before->nodes[node_index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node->parent_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             return UMI_STATUS_INVALID_STATE;
         }
@@ -541,6 +669,7 @@ UmiStatus umi_workbench_layout_operation_inverse(
 
     case UMI_WORKBENCH_LAYOUT_OPERATION_SET_ROOT:
         out_inverse->kind = UMI_WORKBENCH_LAYOUT_OPERATION_SET_ROOT;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (before->root_index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             return UMI_STATUS_INVALID_STATE;
         }
@@ -559,6 +688,10 @@ UmiStatus umi_workbench_layout_operation_inverse(
     case UMI_WORKBENCH_LAYOUT_OPERATION_SET_COMPONENT:
         node = umi_workbench_layout_document_find_node(
             before, operation->node_id);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (node == NULL) {
             return UMI_STATUS_NOT_FOUND;
         }
@@ -567,26 +700,27 @@ UmiStatus umi_workbench_layout_operation_inverse(
             sizeof(out_inverse->node_id),
             operation->node_id,
             false);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (operation->kind ==
             UMI_WORKBENCH_LAYOUT_OPERATION_SET_SPLIT_RATIO) {
             out_inverse->number_value = node->split_ratio;
-        } else if (operation->kind ==
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (operation->kind ==
                    UMI_WORKBENCH_LAYOUT_OPERATION_SET_ACTIVE_CHILD) {
             out_inverse->index_value = node->active_child_index;
-        } else if (operation->kind ==
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (operation->kind ==
                    UMI_WORKBENCH_LAYOUT_OPERATION_SET_BOUNDS) {
             out_inverse->rect_value = node->bounds;
-        } else if (operation->kind ==
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (operation->kind ==
                    UMI_WORKBENCH_LAYOUT_OPERATION_SET_VISIBILITY) {
             out_inverse->index_value = node->visibility;
-        } else if (operation->kind ==
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (operation->kind ==
                    UMI_WORKBENCH_LAYOUT_OPERATION_SET_CONTEXT_GROUP) {
             (void)umi_workbench_layout_copy_text(
                 out_inverse->text_value,
                 sizeof(out_inverse->text_value),
                 node->context_group_id,
                 true);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             (void)umi_workbench_layout_copy_text(
                 out_inverse->text_value,
                 sizeof(out_inverse->text_value),
@@ -627,6 +761,10 @@ UmiStatus umi_workbench_layout_operation_inverse(
     }
 }
 
+/*
+ * Provide the workbench layout operation is metadata only operation used by this module
+ * and its client applications.
+ */
 bool umi_workbench_layout_operation_is_metadata_only(
     const UmiWorkbenchLayoutOperation *operation)
 {
@@ -639,9 +777,17 @@ bool umi_workbench_layout_operation_is_metadata_only(
                 UMI_WORKBENCH_LAYOUT_OPERATION_SET_DIRTY);
 }
 
+/*
+ * Provide the workbench layout operation requires unlocked document operation used by this
+ * module and its client applications.
+ */
 bool umi_workbench_layout_operation_requires_unlocked_document(
     const UmiWorkbenchLayoutOperation *operation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation == NULL) {
         return true;
     }

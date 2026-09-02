@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/command_alias.h"
 
+/*
+ * Check that studio command alias satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_studio_command_alias_validate(
     const UmiStudioRuntimeCommandAliasDefinition *definition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL ||
         definition->alias_id == NULL ||
         definition->alias_id[0] == '\0' ||

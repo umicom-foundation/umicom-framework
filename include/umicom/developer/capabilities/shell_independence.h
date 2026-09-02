@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_SHELL_INDEPENDENCE "umicom.developer.portability.shell_independence"
 
+/**
+ * Provide the developer capability shell independence operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_shell_independence(void);
 

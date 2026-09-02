@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design toolbar spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignToolbarSpec {
     UmiUiOrientation orientation;
     UmiDesignDensity density;

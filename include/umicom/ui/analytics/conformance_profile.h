@@ -27,8 +27,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics conformance profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsConformanceProfile { int charts; int gauges; int heatmaps; int dashboards; int keyboard_access; int high_dpi; int export_text; } UmiAnalyticsConformanceProfile;
+/**
+ * Provide the analytics conformance profile required operation used by this module and its
+ * client applications.
+ */
 void umi_analytics_conformance_profile_required(UmiAnalyticsConformanceProfile *p);
+/**
+ * Provide the analytics conformance profile satisfied operation used by this module and
+ * its client applications.
+ */
 int umi_analytics_conformance_profile_satisfied(const UmiAnalyticsConformanceProfile *required,const UmiAnalyticsConformanceProfile *actual);
 
 #ifdef __cplusplus

@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading posttrade risk policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingPosttradeRiskPolicy { UmiTradingQuantityLots max_abs_position_lots; int64_t max_daily_loss_minor; } UmiTradingPosttradeRiskPolicy;
 /* Evaluate absolute position and realised daily loss after fills. */
 UmiTradingCoreDecision umi_trading_posttrade_risk_check(const UmiTradingPosttradeRiskPolicy *policy,UmiTradingQuantityLots position_lots,int64_t daily_pnl_minor);

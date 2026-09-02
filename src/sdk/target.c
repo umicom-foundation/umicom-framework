@@ -18,4 +18,5 @@
  */
 #include "umicom/sdk/target.h"
 #include <stddef.h>
-UmiStatus umi_sdk_target_validate(const UmiSdkTarget *t){if(t==NULL||t->target_name==NULL||t->target_name[0]=='\0'||t->component_id==NULL||t->component_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that sdk target satisfies its contract before another service relies on it. */
+UmiStatus umi_sdk_target_validate(const UmiSdkTarget *t){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t==NULL||t->target_name==NULL||t->target_name[0]=='\0'||t->component_id==NULL||t->component_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

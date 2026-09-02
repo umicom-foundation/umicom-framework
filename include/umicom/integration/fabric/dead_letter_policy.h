@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric dead letter policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricDeadLetterPolicy {
     char policy_id[UMI_FABRIC_ID_CAPACITY];
     char destination[UMI_FABRIC_URI_CAPACITY];
@@ -33,7 +37,15 @@ typedef struct UmiFabricDeadLetterPolicy {
     bool include_payload;
 } UmiFabricDeadLetterPolicy;
 
+/**
+ * Initialise fabric dead letter policy from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_dead_letter_policy_init(UmiFabricDeadLetterPolicy *item, const char *policy_id, const char *destination, uint32_t after_attempts, uint64_t retention_ms, bool include_payload);
+/**
+ * Check that fabric dead letter policy satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_fabric_dead_letter_policy_validate(const UmiFabricDeadLetterPolicy *item);
 
 #ifdef __cplusplus

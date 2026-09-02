@@ -26,6 +26,9 @@
 #include "umicom/integration/registry.h"
 #include "umicom/integration/suite.h"
 
+/**
+ * List the named integration launch disposition values accepted by this public contract.
+ */
 typedef enum UmiIntegrationLaunchDisposition {
     UMI_INTEGRATION_LAUNCH_READY = 0,
     UMI_INTEGRATION_LAUNCH_ALREADY_RUNNING,
@@ -34,6 +37,9 @@ typedef enum UmiIntegrationLaunchDisposition {
     UMI_INTEGRATION_LAUNCH_DISABLED
 } UmiIntegrationLaunchDisposition;
 
+/**
+ * Represent the integration launch item data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationLaunchItem {
     char application_id[UMI_INTEGRATION_ID_CAPACITY];
     UmiIntegrationDependencyKind kind;
@@ -41,6 +47,9 @@ typedef struct UmiIntegrationLaunchItem {
     unsigned preferred_frontend;
 } UmiIntegrationLaunchItem;
 
+/**
+ * Represent the integration launch plan data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationLaunchPlan {
     UmiIntegrationLaunchItem items[UMI_INTEGRATION_MAX_MEMBERS];
     size_t count;
@@ -49,10 +58,18 @@ typedef struct UmiIntegrationLaunchPlan {
     size_t missing_optional;
 } UmiIntegrationLaunchPlan;
 
+/**
+ * Provide the integration launch plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_integration_launch_plan_build(
     const UmiIntegrationSuiteDefinition *suite,
     const UmiIntegrationRegistry *registry,
     UmiIntegrationLaunchPlan *out_plan);
+/**
+ * Provide the integration launch plan can start operation used by this module and its
+ * client applications.
+ */
 bool umi_integration_launch_plan_can_start(
     const UmiIntegrationLaunchPlan *plan);
 

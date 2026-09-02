@@ -17,6 +17,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test desktop monitor constrain right bottom and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_desktop_monitor_constrain_right_bottom(void)
 {
     UmiDesktopMonitorTopology topology;

@@ -23,11 +23,34 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the browser history data shared with callers of this public contract.
+ */
 typedef struct UmiBrowserHistory { char entries[UMI_BROWSER_HISTORY_CAPACITY][UMI_BROWSER_URL_CAPACITY]; size_t count; size_t current; } UmiBrowserHistory;
+/**
+ * Initialise browser history from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_browser_history_init(UmiBrowserHistory *history);
+/**
+ * Provide the browser history visit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_browser_history_visit(UmiBrowserHistory *history,const char *url);
+/**
+ * Provide the browser history back operation used by this module and its client
+ * applications.
+ */
 const char *umi_browser_history_back(UmiBrowserHistory *history);
+/**
+ * Provide the browser history forward operation used by this module and its client
+ * applications.
+ */
 const char *umi_browser_history_forward(UmiBrowserHistory *history);
+/**
+ * Provide the browser history current operation used by this module and its client
+ * applications.
+ */
 const char *umi_browser_history_current(const UmiBrowserHistory *history);
 #ifdef __cplusplus
 }

@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace environment overlay data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceEnvironmentOverlay {
         UmiProjectWorkspaceNamedState base;
         uint64_t metric;

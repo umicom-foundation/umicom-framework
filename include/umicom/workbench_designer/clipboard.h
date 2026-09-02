@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer clipboard data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerClipboard {
     UmiWorkbenchLayoutNode nodes[UMI_WORKBENCH_DESIGNER_MAX_CLIPBOARD_NODES];
     size_t node_count;
@@ -36,10 +40,30 @@ typedef struct UmiWorkbenchDesignerClipboard {
     uint64_t revision;
 } UmiWorkbenchDesignerClipboard;
 
+/**
+ * Initialise workbench designer clipboard from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_clipboard_init(UmiWorkbenchDesignerClipboard *clipboard);
+/**
+ * Release or reset state held by workbench designer clipboard so the same storage can be
+ * reused safely.
+ */
 void umi_workbench_designer_clipboard_clear(UmiWorkbenchDesignerClipboard *clipboard);
+/**
+ * Copy workbench designer clipboard into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 UmiStatus umi_workbench_designer_clipboard_copy(UmiWorkbenchDesignerClipboard *clipboard, const UmiWorkbenchLayoutDocument *document, const UmiWorkbenchDesignerSelection *selection, bool cut);
+/**
+ * Provide the workbench designer clipboard paste operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_clipboard_paste(UmiWorkbenchDesignerClipboard *clipboard, UmiWorkbenchLayoutDocument *document, const char *parent_node_id, size_t position, const char *identifier_suffix, UmiWorkbenchDesignerSelection *out_selection);
+/**
+ * Provide the workbench designer clipboard empty operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_designer_clipboard_empty(const UmiWorkbenchDesignerClipboard *clipboard);
 
 #ifdef __cplusplus

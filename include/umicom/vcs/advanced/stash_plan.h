@@ -22,10 +22,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named vcs advanced stash action values accepted by this public contract.
+ */
 typedef enum UmiVcsAdvancedStashAction {
     UMI_VCS_STASH_PUSH = 0, UMI_VCS_STASH_APPLY = 1, UMI_VCS_STASH_POP = 2,
     UMI_VCS_STASH_DROP = 3, UMI_VCS_STASH_BRANCH = 4
 } UmiVcsAdvancedStashAction;
+/**
+ * Represent the vcs advanced stash plan data shared with callers of this public contract.
+ */
 typedef struct UmiVcsAdvancedStashPlan {
     uint32_t struct_size; uint32_t api_version;
     UmiVcsAdvancedStashAction action;
@@ -35,10 +41,26 @@ typedef struct UmiVcsAdvancedStashPlan {
     int include_untracked; int keep_index; int reinstate_index;
     UmiVcsSafetyLevel safety;
 } UmiVcsAdvancedStashPlan;
+/**
+ * Initialise vcs advanced stash plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_stash_plan_init(UmiVcsAdvancedStashPlan *plan);
+/**
+ * Check that vcs advanced stash plan satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_vcs_advanced_stash_plan_validate(const UmiVcsAdvancedStashPlan *plan);
+/**
+ * Provide the vcs advanced stash plan push operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_advanced_stash_plan_push(UmiVcsAdvancedStashPlan *plan, const char *message,
                                             int include_untracked, int keep_index);
+/**
+ * Perform vcs advanced stash plan through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_vcs_advanced_stash_plan_apply(UmiVcsAdvancedStashPlan *plan, const char *stash_ref,
                                              int pop, int reinstate_index);
 #ifdef __cplusplus

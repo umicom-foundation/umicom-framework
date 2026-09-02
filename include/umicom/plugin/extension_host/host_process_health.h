@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host host process health data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostHostProcessHealth { uint64_t now_ms; uint64_t last_heartbeat_ms; uint32_t crash_count; uint32_t restart_count; int responsive; } UmiPluginExtensionHostHostProcessHealth;
+/**
+ * Provide the plugin extension host host process health evaluate operation used by this
+ * module and its client applications.
+ */
 UmiPluginExtensionHostHealthState umi_plugin_extension_host_host_process_health_evaluate(const UmiPluginExtensionHostHostProcessHealth *value, uint64_t heartbeat_timeout_ms);
+/**
+ * Provide the plugin extension host host process health score operation used by this
+ * module and its client applications.
+ */
 uint32_t umi_plugin_extension_host_host_process_health_score(const UmiPluginExtensionHostHostProcessHealth *value, uint64_t heartbeat_timeout_ms);
 
 #ifdef __cplusplus

@@ -35,6 +35,10 @@ struct UmiDeveloperWorkbench {
     uint64_t revision;
 };
 
+/*
+ * Initialise developer workbench from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_developer_workbench_create(
     const UmiDeveloperWorkbenchBindings *bindings,
     UmiDeveloperWorkbench **out_workbench)
@@ -43,6 +47,10 @@ UmiStatus umi_developer_workbench_create(
     UmiDeveloperWorkbenchSearchProvider provider;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || bindings->toolchain == NULL ||
         out_workbench == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -51,6 +59,10 @@ UmiStatus umi_developer_workbench_create(
     *out_workbench = NULL;
     workbench =
         (UmiDeveloperWorkbench *)calloc(1U, sizeof(*workbench));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     workbench->toolchain = bindings->toolchain;
@@ -59,21 +71,26 @@ UmiStatus umi_developer_workbench_create(
     workbench->trust_store = bindings->trust_store;
     workbench->revision = 1U;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_command_registry_create(&workbench->commands);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_action_registry_create(
             &workbench->actions);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_configuration_registry_create(
             &workbench->configurations);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_operation_history_create(
             &workbench->history);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_lifecycle_create(
             workbench->toolchain,
@@ -82,6 +99,7 @@ UmiStatus umi_developer_workbench_create(
             workbench->history,
             &workbench->lifecycle);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_command_service_create(
             workbench->commands,
@@ -91,32 +109,39 @@ UmiStatus umi_developer_workbench_create(
             workbench->actions,
             &workbench->command_service);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_command_service_set_workspace_trust(
             workbench->command_service,
             workbench->trust_store);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_command_service_register_all(
             workbench->command_service);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_search_engine_create(
             &workbench->search_engine);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_platform_recent_items_registry_create(
             &workbench->recent_items);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_perspective_registry_create(
             &workbench->perspectives);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_developer_workbench_builtin_perspectives_register(
             workbench->perspectives);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_developer_workbench_command_search_provider_init(
             &provider, workbench->commands);
@@ -124,6 +149,10 @@ UmiStatus umi_developer_workbench_create(
             workbench->search_engine, &provider);
     }
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status == UMI_STATUS_OK && workbench->file_index != NULL) {
         umi_developer_workbench_file_search_provider_init(
             &provider, workbench->file_index);
@@ -131,6 +160,7 @@ UmiStatus umi_developer_workbench_create(
             workbench->search_engine, &provider);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         umi_developer_workbench_recent_project_provider_init(
             &provider, workbench->recent_items);
@@ -138,6 +168,7 @@ UmiStatus umi_developer_workbench_create(
             workbench->search_engine, &provider);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_developer_workbench_destroy(workbench);
         return status;
@@ -147,9 +178,17 @@ UmiStatus umi_developer_workbench_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer workbench so the same storage can be reused
+ * safely.
+ */
 void umi_developer_workbench_destroy(
     UmiDeveloperWorkbench *workbench)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return;
 
     umi_developer_workbench_perspective_registry_destroy(
@@ -167,6 +206,10 @@ void umi_developer_workbench_destroy(
     free(workbench);
 }
 
+/*
+ * Provide the developer workbench add configuration operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_workbench_add_configuration(
     UmiDeveloperWorkbench *workbench,
     const UmiDeveloperWorkbenchConfiguration *configuration,
@@ -174,6 +217,10 @@ UmiStatus umi_developer_workbench_add_configuration(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || configuration == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -181,16 +228,22 @@ UmiStatus umi_developer_workbench_add_configuration(
     status = umi_developer_workbench_configuration_registry_upsert(
         workbench->configurations,
         configuration);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && make_active) {
         status = umi_developer_workbench_configuration_registry_activate(
             workbench->configurations,
             configuration->configuration_id);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) workbench->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the developer workbench bind action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_workbench_bind_action(
     UmiDeveloperWorkbench *workbench,
     const char *command_id,
@@ -200,6 +253,10 @@ UmiStatus umi_developer_workbench_bind_action(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_workbench_action_registry_bind(
@@ -208,6 +265,7 @@ UmiStatus umi_developer_workbench_bind_action(
         handler,
         enabled,
         user_data);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) workbench->revision += 1U;
     return status;
 }
@@ -219,16 +277,25 @@ UmiStatus umi_developer_workbench_unbind_action(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || command_id == NULL || command_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_workbench_action_registry_unbind(
         workbench->actions, command_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) workbench->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the developer workbench execute command operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_workbench_execute_command(
     UmiDeveloperWorkbench *workbench,
     const char *command_id,
@@ -236,6 +303,10 @@ UmiStatus umi_developer_workbench_execute_command(
     char *out_message,
     size_t message_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     return umi_developer_workbench_command_service_execute(
@@ -246,6 +317,10 @@ UmiStatus umi_developer_workbench_execute_command(
         message_capacity);
 }
 
+/*
+ * Provide the developer workbench command enabled operation used by this module and its
+ * client applications.
+ */
 int umi_developer_workbench_command_enabled(
     UmiDeveloperWorkbench *workbench,
     const char *command_id,
@@ -258,11 +333,19 @@ int umi_developer_workbench_command_enabled(
             argument);
 }
 
+/*
+ * Provide the developer workbench search operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_workbench_search(
     UmiDeveloperWorkbench *workbench,
     const char *query,
     UmiDeveloperWorkbenchSearchSession *session)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -273,27 +356,44 @@ UmiStatus umi_developer_workbench_search(
         query);
 }
 
+/*
+ * Provide the developer workbench activate perspective operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_developer_workbench_activate_perspective(
     UmiDeveloperWorkbench *workbench,
     const char *perspective_id)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_workbench_perspective_registry_activate(
         workbench->perspectives,
         perspective_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) workbench->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the developer workbench snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_workbench_snapshot(
     UmiDeveloperWorkbench *workbench,
     UmiDeveloperWorkbenchSnapshot *out_snapshot)
 {
     const UmiDeveloperWorkbenchPerspectiveDefinition *active;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -319,6 +419,10 @@ UmiStatus umi_developer_workbench_snapshot(
 
     active = umi_developer_workbench_perspective_registry_active(
         workbench->perspectives);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (active != NULL) {
         (void)snprintf(out_snapshot->active_perspective_id,
                        sizeof(out_snapshot->active_perspective_id),
@@ -330,12 +434,20 @@ UmiStatus umi_developer_workbench_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer workbench commands operation used by this module and its client
+ * applications.
+ */
 UmiCommandRegistry *umi_developer_workbench_commands(
     UmiDeveloperWorkbench *workbench)
 {
     return workbench != NULL ? workbench->commands : NULL;
 }
 
+/*
+ * Provide the developer workbench configurations operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperWorkbenchConfigurationRegistry *
 umi_developer_workbench_configurations(
     UmiDeveloperWorkbench *workbench)
@@ -343,12 +455,20 @@ umi_developer_workbench_configurations(
     return workbench != NULL ? workbench->configurations : NULL;
 }
 
+/*
+ * Provide the developer workbench recent items operation used by this module and its
+ * client applications.
+ */
 UmiRecentItemRegistry *umi_developer_workbench_recent_items(
     UmiDeveloperWorkbench *workbench)
 {
     return workbench != NULL ? workbench->recent_items : NULL;
 }
 
+/*
+ * Provide the developer workbench perspectives operation used by this module and its
+ * client applications.
+ */
 UmiDeveloperWorkbenchPerspectiveRegistry *
 umi_developer_workbench_perspectives(
     UmiDeveloperWorkbench *workbench)
@@ -356,6 +476,10 @@ umi_developer_workbench_perspectives(
     return workbench != NULL ? workbench->perspectives : NULL;
 }
 
+/*
+ * Provide the developer workbench history operation used by this module and its client
+ * applications.
+ */
 UmiDeveloperWorkbenchOperationHistory *
 umi_developer_workbench_history(
     UmiDeveloperWorkbench *workbench)

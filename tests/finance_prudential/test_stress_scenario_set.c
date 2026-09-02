@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/stress_scenario_set.h"
 
-int main(void) { UmiPrudentialStressScenarioSet set={0}; UmiPrudentialStressScenario s; if(umi_pru_stress_scenario_init(&s,"S","S",UMI_PRU_SEVERITY_WARNING,30U)!=UMI_STATUS_OK)return 1; if(umi_pru_stress_scenario_set_add(&set,&s)!=UMI_STATUS_OK)return 2; if(umi_pru_stress_scenario_set_add(&set,&s)!=UMI_STATUS_ALREADY_EXISTS)return 3; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialStressScenarioSet set={0}; UmiPrudentialStressScenario s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_stress_scenario_init(&s,"S","S",UMI_PRU_SEVERITY_WARNING,30U)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_stress_scenario_set_add(&set,&s)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_stress_scenario_set_add(&set,&s)!=UMI_STATUS_ALREADY_EXISTS)return 3; return 0; }

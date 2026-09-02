@@ -23,7 +23,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Add web rest only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_web_rest_register(UmiWebRouter *router,UmiHttpMethod method,const char *path,UmiWebHandler handler,void *user_data);
+/**
+ * Provide the web rest json operation used by this module and its client applications.
+ */
 UmiStatus umi_web_rest_json(UmiWebResponse *response,int status,const char *json);
 #ifdef __cplusplus
 }

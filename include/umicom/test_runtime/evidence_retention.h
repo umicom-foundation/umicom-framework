@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test runtime evidence retention data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestRuntimeEvidenceRetention {
     uint32_t structure_size;
     char id[UMI_TEST_RUNTIME_ID_CAPACITY];
@@ -29,13 +33,45 @@ typedef struct UmiTestRuntimeEvidenceRetention {
     uint64_t revision;
     bool active;
 } UmiTestRuntimeEvidenceRetention;
+/**
+ * Initialise test runtime evidence retention from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_test_runtime_evidence_retention_init(UmiTestRuntimeEvidenceRetention *value,const char *id);
+/**
+ * Check that test runtime evidence retention satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_test_runtime_evidence_retention_validate(const UmiTestRuntimeEvidenceRetention *value);
+/**
+ * Provide the test runtime evidence retention set category operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_test_runtime_evidence_retention_set_category(UmiTestRuntimeEvidenceRetention *value,const char *category);
+/**
+ * Provide the test runtime evidence retention set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_evidence_retention_set_detail(UmiTestRuntimeEvidenceRetention *value,const char *detail);
+/**
+ * Provide the test runtime evidence retention set retention days operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_evidence_retention_set_retention_days(UmiTestRuntimeEvidenceRetention *value,uint64_t number);
+/**
+ * Provide the test runtime evidence retention set maximum runs operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_test_runtime_evidence_retention_set_maximum_runs(UmiTestRuntimeEvidenceRetention *value,uint64_t number);
+/**
+ * Provide the test runtime evidence retention set active operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_test_runtime_evidence_retention_set_active(UmiTestRuntimeEvidenceRetention *value,bool active);
+/**
+ * Provide the test runtime evidence retention same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_test_runtime_evidence_retention_same_identity(const UmiTestRuntimeEvidenceRetention *left,const UmiTestRuntimeEvidenceRetention *right);
 #ifdef __cplusplus
 }

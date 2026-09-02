@@ -37,6 +37,10 @@
 
 #include "umicom/editor/peek_navigation_session.h"
 
+/*
+ * Exercise emit definition and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus emit_definition(UmiEditorNavigationResultSink sink,
                                  void *user_data,
                                  const char *uri,
@@ -57,6 +61,10 @@ static UmiStatus emit_definition(UmiEditorNavigationResultSink sink,
     return sink(&result, user_data);
 }
 
+/*
+ * Exercise fake query and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_query(
     void *instance,
     const UmiEditorNavigationRequest *request,
@@ -76,6 +84,10 @@ static UmiStatus fake_query(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise fake preview and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_preview(
     void *instance,
     const UmiEditorNavigationPreviewRequest *request,
@@ -102,6 +114,10 @@ static UmiStatus fake_preview(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationProviderRegistry *registry = NULL;

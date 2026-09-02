@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context source health record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextSourceHealthRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_SOURCE_ID_CAPACITY];
@@ -38,28 +42,64 @@ typedef struct UmiWorkbenchContextSourceHealthRecord {
     uint64_t revision;
 } UmiWorkbenchContextSourceHealthRecord;
 
+/**
+ * Initialise workbench context source health record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_source_health_record_init(
     UmiWorkbenchContextSourceHealthRecord *record,
     const char *record_id);
+/**
+ * Check that workbench context source health record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_source_health_record_validate(
     const UmiWorkbenchContextSourceHealthRecord *record);
+/**
+ * Provide the workbench context source health record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_health_record_set_source(
     UmiWorkbenchContextSourceHealthRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench context source health record set panel operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_health_record_set_panel(
     UmiWorkbenchContextSourceHealthRecord *record,
     const char *panel_id);
+/**
+ * Provide the workbench context source health record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_health_record_set_subject(
     UmiWorkbenchContextSourceHealthRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench context source health record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_health_record_set_group(
     UmiWorkbenchContextSourceHealthRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench context source health record set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_source_health_record_set_label(
     UmiWorkbenchContextSourceHealthRecord *record,
     const char *label);
+/**
+ * Provide the workbench context source health record hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_source_health_record_hash(
     const UmiWorkbenchContextSourceHealthRecord *record);
+/**
+ * Provide the workbench context source health record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_source_health_record_touch(
     UmiWorkbenchContextSourceHealthRecord *record,
     uint64_t sequence,

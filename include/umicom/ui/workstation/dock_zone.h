@@ -22,12 +22,23 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws dock zone data shared with callers of this public contract.
+ */
 typedef struct UmiWsDockZone {
     UmiWsDockRegion region;
     double edge_fraction;
 } UmiWsDockZone;
 
+/**
+ * Provide the ws dock zone classify operation used by this module and its client
+ * applications.
+ */
 UmiWsDockRegion umi_ws_dock_zone_classify(double x_ratio, double y_ratio, double edge_fraction);
+/**
+ * Initialise ws dock zone from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ws_dock_zone_init(UmiWsDockZone *zone, UmiWsDockRegion region, double edge_fraction);
 
 #ifdef __cplusplus

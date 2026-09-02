@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design tab spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTabSpec {
     int closable;
     int pinnable;

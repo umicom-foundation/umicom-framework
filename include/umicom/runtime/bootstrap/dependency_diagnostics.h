@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap dependency diagnostics collect operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_bootstrap_dependency_diagnostics_collect(
     const UmiBootstrapServiceGraph *graph,
     const UmiBootstrapBindingRegistry *bindings,

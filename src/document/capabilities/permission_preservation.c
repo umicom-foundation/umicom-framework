@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/permission_preservation.h"
 
+/*
+ * Provide the document capability permission preservation operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_permission_preservation(void)
 {

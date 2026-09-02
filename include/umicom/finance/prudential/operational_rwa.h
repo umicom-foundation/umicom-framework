@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential operational rwa data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialOperationalRwa { double business_indicator_component; double loss_multiplier; double conversion_factor; double rwa; } UmiPrudentialOperationalRwa;
 /* Calculate operational RWA from business-indicator component, loss multiplier and conversion factor. */
 UmiStatus umi_pru_operational_rwa_calculate(UmiPrudentialOperationalRwa *result, double business_indicator_component, double loss_multiplier, double conversion_factor);

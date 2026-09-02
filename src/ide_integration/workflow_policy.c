@@ -16,8 +16,16 @@
 
 #include <string.h>
 
+/*
+ * Initialise ide workflow policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ide_workflow_policy_init(UmiIdeWorkflowPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return;
 
     (void)memset(policy, 0, sizeof(*policy));

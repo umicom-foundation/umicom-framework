@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrRuntimeCapability c; umi_dr_runtime_capability_init(&c); c.required=UINT64_C(7); c.available=UINT64_C(3); CHECK(!umi_dr_runtime_capability_satisfied(&c)); c.available=7U; CHECK(umi_dr_runtime_capability_satisfied(&c));
     return 0;

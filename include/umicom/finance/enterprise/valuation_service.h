@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/finance/enterprise/market_data_service.h"
 #include "umicom/finance/enterprise/valuation_grid.h"
+/**
+ * Represent the enterprise valuation service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationService { UmiEnterpriseMarketDataService market_data; UmiEnterpriseValuationGrid grid; uint64_t completed_jobs; uint64_t failed_jobs; } UmiEnterpriseValuationService;
 /* Initialise the valuation service and its internal market-data/grid control planes. */
 UmiStatus umi_enterprise_valuation_service_init(UmiEnterpriseValuationService *service,int64_t freshness_ms);

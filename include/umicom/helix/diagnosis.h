@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix diagnosis data shared with callers of this public contract.
+ */
 typedef struct UmiHelixDiagnosis {
     char diagnosis_id[UMI_HELIX_ID_CAPACITY];
     char component_id[UMI_HELIX_ID_CAPACITY];
@@ -35,6 +38,10 @@ typedef struct UmiHelixDiagnosis {
     double confidence;
 } UmiHelixDiagnosis;
 
+/**
+ * Initialise helix diagnosis from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_helix_diagnosis_init(UmiHelixDiagnosis *value);
 
 #ifdef __cplusplus

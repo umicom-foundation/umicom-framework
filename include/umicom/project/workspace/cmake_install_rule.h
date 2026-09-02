@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace cmake install rule data shared with callers of this
+ * public contract.
+ */
     typedef struct UmiProjectWorkspaceCmakeInstallRule {
         UmiProjectWorkspaceNamedState base;
         uint64_t metric;

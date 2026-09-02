@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Return the number of records represented by bootstrap binding ambiguity without changing
+ * their state.
+ */
 size_t umi_bootstrap_binding_ambiguity_count(
     const UmiBootstrapBindingRegistry *registry,
     const UmiBootstrapServiceKey *key);

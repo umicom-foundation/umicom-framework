@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the component domain inventory data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiComponentDomainInventory {
   const char *domain_id;
   size_t component_count;
@@ -31,6 +35,9 @@ typedef struct UmiComponentDomainInventory {
   size_t evidence_incomplete_count;
 } UmiComponentDomainInventory;
 
+/**
+ * Represent the component inventory data shared with callers of this public contract.
+ */
 typedef struct UmiComponentInventory {
   UmiComponentGovernanceRecord records[UMI_COMPONENT_GOVERNANCE_MAX_COMPONENTS];
   UmiComponentDomainInventory domains[UMI_COMPONENT_GOVERNANCE_MAX_DOMAINS];
@@ -43,16 +50,40 @@ typedef struct UmiComponentInventory {
   size_t evidence_incomplete_count;
 } UmiComponentInventory;
 
+/**
+ * Provide the component inventory build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_component_inventory_build(const UmiComponentGovernanceOverride *overrides,
                                         size_t override_count,
                                         UmiComponentInventory *out_inventory);
+/**
+ * Check that component inventory satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_component_inventory_validate(const UmiComponentInventory *inventory);
+/**
+ * Find component inventory while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiComponentGovernanceRecord *
 umi_component_inventory_at(const UmiComponentInventory *inventory, size_t index);
+/**
+ * Find component inventory while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiComponentGovernanceRecord *
 umi_component_inventory_find(const UmiComponentInventory *inventory, const char *component_id);
+/**
+ * Find component inventory domain while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiComponentDomainInventory *
 umi_component_inventory_domain_at(const UmiComponentInventory *inventory, size_t index);
+/**
+ * Find component inventory domain while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiComponentDomainInventory *
 umi_component_inventory_domain_find(const UmiComponentInventory *inventory, const char *domain_id);
 

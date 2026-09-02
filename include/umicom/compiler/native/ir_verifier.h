@@ -20,7 +20,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native ir verify report data shared with callers of this public contract.
+ */
 typedef struct UmiNativeIrVerifyReport { size_t blocks; size_t instructions; size_t errors; size_t unterminated_blocks; size_t missing_targets; size_t duplicate_values; } UmiNativeIrVerifyReport;
+/**
+ * Provide the nc ir verify function operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ir_verify_function(const UmiNativeIrFunction *function,UmiNativeIrVerifyReport *out_report);
 #ifdef __cplusplus
 }

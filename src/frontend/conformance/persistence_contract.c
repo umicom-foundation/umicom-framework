@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/persistence_contract.h"
 
-bool umi_fc_persistence_contract_validate(const UmiFcPersistenceContract *item){if(item==NULL)return false;return item->required_fields!=0U && item->schema_version>0U;}
+/*
+ * Check that fc persistence contract satisfies its contract before another service relies
+ * on it.
+ */
+bool umi_fc_persistence_contract_validate(const UmiFcPersistenceContract *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return false;return item->required_fields!=0U && item->schema_version>0U;}

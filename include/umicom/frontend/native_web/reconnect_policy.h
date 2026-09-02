@@ -26,6 +26,10 @@ extern "C" {
 #endif
 
 #include "umicom/frontend/native_web/types.h"
+/**
+ * Represent the native web reconnect policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebReconnectPolicy { uint32_t attempt_limit; uint64_t base_delay_ms; uint64_t max_delay_ms; } UmiNativeWebReconnectPolicy;
 /* Compute bounded exponential reconnect delay; return zero when attempts are exhausted. */
 uint64_t umi_native_web_reconnect_delay(const UmiNativeWebReconnectPolicy *policy, uint32_t attempt);

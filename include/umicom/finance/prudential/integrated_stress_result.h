@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential integrated stress result data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPrudentialIntegratedStressResult { int capital_passed; int liquidity_passed; int overall_passed; UmiPrudentialSeverity severity; } UmiPrudentialIntegratedStressResult;
 /* Combine capital and liquidity control outcomes without allowing one to mask the other. */
 UmiStatus umi_pru_integrated_stress_result_evaluate(UmiPrudentialIntegratedStressResult *result, int capital_passed, int liquidity_passed);

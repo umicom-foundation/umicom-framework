@@ -19,7 +19,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the nc riscv64 mnemonic operation used by this module and its client
+ * applications.
+ */
 const char *umi_nc_riscv64_mnemonic(UmiNativeMachineOpcode opcode);
+/**
+ * Provide the nc riscv64 immediate fits i12 operation used by this module and its client
+ * applications.
+ */
 bool umi_nc_riscv64_immediate_fits_i12(int64_t value);
 #ifdef __cplusplus
 }

@@ -30,8 +30,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct dynamic library semantics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCtDynamicLibrarySemantics { char prefix[16]; char suffix[16]; bool dynamic_loading; bool global_symbols; bool unload; } UmiCtDynamicLibrarySemantics;
+/**
+ * Provide the ct dynamic library semantics default operation used by this module and its
+ * client applications.
+ */
 UmiCtDynamicLibrarySemantics umi_ct_dynamic_library_semantics_default(UmiCtOperatingSystem os);
+/**
+ * Provide the ct dynamic library name operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ct_dynamic_library_name(const UmiCtDynamicLibrarySemantics *semantics,const char *base,char *out_name,size_t capacity);
 
 #ifdef __cplusplus

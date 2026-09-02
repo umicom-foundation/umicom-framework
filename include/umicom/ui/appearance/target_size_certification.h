@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance target size certification data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceTargetSizeCertification {
     char target_id[UMI_APPEARANCE_ID_CAPACITY];
     double width_dp;

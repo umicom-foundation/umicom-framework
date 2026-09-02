@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout share manifest data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutShareManifest {
     uint32_t structure_size;
     char bundle_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -39,6 +43,10 @@ typedef struct UmiWorkbenchLayoutShareManifest {
     bool includes_audit;
 } UmiWorkbenchLayoutShareManifest;
 
+/**
+ * Represent the workbench layout share bundle data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutShareBundle {
     uint32_t structure_size;
     UmiWorkbenchLayoutShareManifest manifest;
@@ -47,6 +55,10 @@ typedef struct UmiWorkbenchLayoutShareBundle {
     bool signature_present;
 } UmiWorkbenchLayoutShareBundle;
 
+/**
+ * Represent the workbench layout import options data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutImportOptions {
     uint32_t structure_size;
     char target_layout_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -59,9 +71,17 @@ typedef struct UmiWorkbenchLayoutImportOptions {
     bool require_integrity_match;
 } UmiWorkbenchLayoutImportOptions;
 
+/**
+ * Provide the workbench layout import options default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutImportOptions
 umi_workbench_layout_import_options_default(void);
 
+/**
+ * Initialise workbench layout share bundle from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_share_bundle_create(
     const UmiWorkbenchLayoutDocument *document,
     const char *bundle_id,
@@ -71,20 +91,36 @@ UmiStatus umi_workbench_layout_share_bundle_create(
     bool include_audit,
     UmiWorkbenchLayoutShareBundle *out_bundle);
 
+/**
+ * Check that workbench layout share bundle satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_workbench_layout_share_bundle_validate(
     const UmiWorkbenchLayoutShareBundle *bundle);
 
+/**
+ * Provide the workbench layout share bundle import operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_share_bundle_import(
     const UmiWorkbenchLayoutShareBundle *bundle,
     const UmiWorkbenchLayoutImportOptions *options,
     UmiWorkbenchLayoutDocument *out_document);
 
+/**
+ * Write workbench layout share bundle in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_share_bundle_encode(
     const UmiWorkbenchLayoutShareBundle *bundle,
     char *buffer,
     size_t capacity,
     size_t *out_required);
 
+/**
+ * Read workbench layout share bundle into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_share_bundle_decode(
     const char *text,
     size_t length,

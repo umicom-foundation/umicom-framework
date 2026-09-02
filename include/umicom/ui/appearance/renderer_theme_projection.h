@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance renderer theme projection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceRendererThemeProjection {
     char projection_id[UMI_APPEARANCE_ID_CAPACITY];
     char packet_id[UMI_APPEARANCE_ID_CAPACITY];

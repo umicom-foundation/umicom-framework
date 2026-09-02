@@ -15,6 +15,10 @@
 #include "umicom/ai_coding_tools/tools/debug_snapshot.h"
 #include "../tool_support.h"
 
+/*
+ * Provide the ai coding tool debug snapshot descriptor operation used by this module and
+ * its client applications.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_debug_snapshot_descriptor(void)
 {
     static const UmiAiCodingToolDescriptor descriptor = {
@@ -31,6 +35,10 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_debug_snapshot_descriptor(vo
     return &descriptor;
 }
 
+/*
+ * Provide the ai coding tool debug snapshot invoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_debug_snapshot_invoke(
     const char *arguments_json,
     char *output,
@@ -45,6 +53,10 @@ UmiStatus umi_ai_coding_tool_debug_snapshot_invoke(
 
     (void)arguments_json;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->debug_runtime == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -52,10 +64,12 @@ UmiStatus umi_ai_coding_tool_debug_snapshot_invoke(
     status = umi_debug_runtime_platform_snapshot(
         environment->debug_runtime,
         &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"active\":");

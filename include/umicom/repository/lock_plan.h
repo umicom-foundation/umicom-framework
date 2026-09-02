@@ -24,11 +24,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named repository lock action values accepted by this public contract.
+ */
 typedef enum UmiRepositoryLockAction {
     UMI_REPOSITORY_LOCK_NO_CHANGE = 0,
     UMI_REPOSITORY_LOCK_STAGE_GITLINK = 1,
     UMI_REPOSITORY_LOCK_MISSING_HEAD = 2
 } UmiRepositoryLockAction;
+/**
+ * Represent the repository lock step data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryLockStep {
     char name[UMI_REPOSITORY_CONTROL_NAME_CAPACITY];
     char path[UMI_REPOSITORY_CONTROL_PATH_CAPACITY];
@@ -36,6 +42,9 @@ typedef struct UmiRepositoryLockStep {
     UmiRepositoryLockAction action;
     int required;
 } UmiRepositoryLockStep;
+/**
+ * Represent the repository lock plan data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryLockPlan {
     UmiRepositoryLockStep steps[UMI_REPOSITORY_CONTROL_ITEM_CAPACITY];
     size_t count;
@@ -44,11 +53,19 @@ typedef struct UmiRepositoryLockPlan {
     int dry_run;
     uint64_t revision;
 } UmiRepositoryLockPlan;
+/**
+ * Provide the repository lock plan build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_lock_plan_build(
     const UmiRepositoryInventory *inventory,
     const UmiRepositoryHeadSet *heads,
     const UmiRepositoryLockPolicy *policy,
     UmiRepositoryLockPlan *out_plan);
+/**
+ * Provide the repository lock action text operation used by this module and its client
+ * applications.
+ */
 const char *umi_repository_lock_action_text(UmiRepositoryLockAction action);
 #ifdef __cplusplus
 }

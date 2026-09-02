@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_BUILD_CACHE "umicom.developer.performance.build_cache"
 
+/**
+ * Provide the developer capability build cache operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_build_cache(void);
 

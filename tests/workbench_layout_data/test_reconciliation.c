@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test issue builder and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_issue_builder(void)
 {
     UmiWorkbenchLayoutReconciliationReport report;
@@ -35,6 +39,10 @@ static int test_issue_builder(void)
     return 0;
 }
 
+/*
+ * Exercise test consistent store and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_consistent_store(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -60,6 +68,10 @@ static int test_consistent_store(void)
     return 0;
 }
 
+/*
+ * Exercise test orphan detection and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_orphan_detection(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -80,6 +92,10 @@ static int test_orphan_detection(void)
     return 0;
 }
 
+/*
+ * Exercise test orphan repair and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_orphan_repair(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -104,6 +120,10 @@ static int test_orphan_repair(void)
     return 0;
 }
 
+/*
+ * Exercise test unknown key detection and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_unknown_key_detection(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -124,6 +144,10 @@ static int test_unknown_key_detection(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_issue_builder() == 0, "issue builder");

@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/value_at_risk.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ const double l[5]={1,5,2,4,3};double v=0;CHECK(umi_enterprise_value_at_risk_historical(l,5U,0.8,&v)==UMI_STATUS_OK);CHECK(v==5.0);return 0; }

@@ -21,19 +21,35 @@
 
 #include "umicom/platform/process.h"
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the skip space operation used by this module and its client applications. */
 static const char *skip_space(const char *cursor)
 {
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cursor != NULL && *cursor != '\0' &&
            isspace((unsigned char)*cursor)) {
         ++cursor;
@@ -41,17 +57,27 @@ static const char *skip_space(const char *cursor)
     return cursor;
 }
 
+/* Provide the skip string operation used by this module and its client applications. */
 static const char *skip_string(const char *cursor)
 {
     int escaped = 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || *cursor != '"') return cursor;
     ++cursor;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (escaped) {
             escaped = 0;
-        } else if (*cursor == '\\') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (*cursor == '\\') {
             escaped = 1;
-        } else if (*cursor == '"') {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (*cursor == '"') {
             return cursor + 1;
         }
         ++cursor;
@@ -59,15 +85,26 @@ static const char *skip_string(const char *cursor)
     return cursor;
 }
 
+/* Provide the skip value operation used by this module and its client applications. */
 static const char *skip_value(const char *cursor)
 {
     char open;
     char close;
     size_t depth = 0U;
     cursor = skip_space(cursor);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || *cursor == '\0') return cursor;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*cursor == '"') return skip_string(cursor);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (*cursor != '{' && *cursor != '[') {
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*cursor != '\0' && *cursor != ',' && *cursor != '}' &&
                *cursor != ']') {
             ++cursor;
@@ -76,15 +113,24 @@ static const char *skip_value(const char *cursor)
     }
     open = *cursor;
     close = open == '{' ? '}' : ']';
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != '\0') {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '"') {
             cursor = skip_string(cursor);
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == open) ++depth;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == close) {
+            /* Apply this branch only when its contract condition is satisfied. */
             if (depth == 0U) return cursor;
             --depth;
+            /* Apply this branch only when its contract condition is satisfied. */
             if (depth == 0U) return cursor + 1;
         }
         ++cursor;
@@ -92,6 +138,7 @@ static const char *skip_value(const char *cursor)
     return cursor;
 }
 
+/* Provide the parse string operation used by this module and its client applications. */
 static UmiStatus parse_string(const char *value,
                               char *out_text,
                               size_t capacity)
@@ -99,21 +146,33 @@ static UmiStatus parse_string(const char *value,
     size_t used = 0U;
     int escaped = 0;
     value = skip_space(value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || out_text == NULL || capacity == 0U || *value != '"') {
         return UMI_STATUS_PARSE_ERROR;
     }
     ++value;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*value != '\0') {
         char character = *value++;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!escaped && character == '"') {
             out_text[used] = '\0';
             return UMI_STATUS_OK;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!escaped && character == '\\') {
             escaped = 1;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (escaped) {
+            /* Select the behaviour associated with the requested command or state value. */
             switch (character) {
                 case 'n': character = '\n'; break;
                 case 'r': character = '\r'; break;
@@ -127,59 +186,83 @@ static UmiStatus parse_string(const char *value,
             }
             escaped = 0;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (used + 1U >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
         out_text[used++] = character;
     }
     return UMI_STATUS_PARSE_ERROR;
 }
 
+/* Provide the find object field operation used by this module and its client applications. */
 static const char *find_object_field(const char *object, const char *field)
 {
     const char *cursor = skip_space(object);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || field == NULL || *cursor != '{') return NULL;
     ++cursor;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         char key[128];
         cursor = skip_space(cursor);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '}') return NULL;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor != '"' ||
             parse_string(cursor, key, sizeof(key)) != UMI_STATUS_OK) {
             return NULL;
         }
         cursor = skip_string(cursor);
         cursor = skip_space(cursor);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor != ':') return NULL;
         cursor = skip_space(cursor + 1);
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(key, field) == 0) return cursor;
         cursor = skip_value(cursor);
         cursor = skip_space(cursor);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ',') {
             ++cursor;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == '}') return NULL;
         return NULL;
     }
 }
 
+/* Provide the copy value operation used by this module and its client applications. */
 static UmiStatus copy_value(const char *value,
                             char *out_text,
                             size_t capacity)
 {
     const char *end;
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     end = skip_value(value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (end == NULL || end <= value) return UMI_STATUS_PARSE_ERROR;
     length = (size_t)(end - value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length + 1U > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(out_text, value, length);
     out_text[length] = '\0';
     return UMI_STATUS_OK;
 }
 
+/* Provide the join string array operation used by this module and its client applications. */
 static UmiStatus join_string_array(const char *value,
                                    const char *separator,
                                    char *out_text,
@@ -187,26 +270,35 @@ static UmiStatus join_string_array(const char *value,
 {
     const char *cursor = skip_space(value);
     size_t used = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || separator == NULL || out_text == NULL ||
         capacity == 0U || *cursor != '[') {
         return UMI_STATUS_PARSE_ERROR;
     }
     out_text[0] = '\0';
     ++cursor;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         char element[1024];
         size_t element_length;
         size_t separator_length;
         cursor = skip_space(cursor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (*cursor == ']') return UMI_STATUS_OK;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (parse_string(cursor, element, sizeof(element)) != UMI_STATUS_OK) {
             return UMI_STATUS_PARSE_ERROR;
         }
         element_length = strlen(element);
         separator_length = used == 0U ? 0U : strlen(separator);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (used + separator_length + element_length + 1U > capacity) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (separator_length > 0U) {
             (void)memcpy(out_text + used, separator, separator_length);
             used += separator_length;
@@ -215,69 +307,106 @@ static UmiStatus join_string_array(const char *value,
         used += element_length;
         out_text[used] = '\0';
         cursor = skip_space(skip_string(cursor));
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ',') {
             ++cursor;
             continue;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (*cursor == ']') return UMI_STATUS_OK;
         return UMI_STATUS_PARSE_ERROR;
     }
 }
 
+/*
+ * Provide the find property value operation used by this module and its client
+ * applications.
+ */
 static const char *find_property_value(const char *test,
                                        const char *property_name)
 {
     const char *properties = find_object_field(test, "properties");
     const char *cursor = skip_space(properties);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || *cursor != '[') return NULL;
     ++cursor;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         char name[128];
         const char *end;
         const char *name_value;
         const char *property_value;
         cursor = skip_space(cursor);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ']') return NULL;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor != '{') return NULL;
         end = skip_value(cursor);
         name_value = find_object_field(cursor, "name");
         property_value = find_object_field(cursor, "value");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (name_value != NULL && property_value != NULL &&
             parse_string(name_value, name, sizeof(name)) == UMI_STATUS_OK &&
             strcmp(name, property_name) == 0) {
             return property_value;
         }
         cursor = skip_space(end);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ',') {
             ++cursor;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ']') return NULL;
         return NULL;
     }
 }
 
+/* Provide the parse boolean operation used by this module and its client applications. */
 static int parse_boolean(const char *value, int default_value)
 {
     value = skip_space(value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return default_value;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(value, "true", 4U) == 0) return 1;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(value, "false", 5U) == 0) return 0;
     return default_value;
 }
 
+/* Provide the parse timeout ms operation used by this module and its client applications. */
 static uint32_t parse_timeout_ms(const char *value)
 {
     char *end = NULL;
     double seconds;
     value = skip_space(value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return 0U;
     seconds = strtod(value, &end);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (end == value || seconds <= 0.0) return 0U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (seconds >= 4294967.0) return UINT32_MAX;
     return (uint32_t)(seconds * 1000.0);
 }
 
+/*
+ * Provide the import test object operation used by this module and its client
+ * applications.
+ */
 static UmiStatus import_test_object(
     const char *test,
     const UmiTestPlatformCtestImportOptions *options,
@@ -294,6 +423,10 @@ static UmiStatus import_test_object(
         find_property_value(test, "WORKING_DIRECTORY");
     char name[256];
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (name_value == NULL ||
         parse_string(name_value, name, sizeof(name)) != UMI_STATUS_OK) {
         return UMI_STATUS_PARSE_ERROR;
@@ -303,6 +436,7 @@ static UmiStatus import_test_object(
     item.api_version = UMI_TEST_PLATFORM_ITEM_API_VERSION;
     written = snprintf(item.id, sizeof(item.id), "%s.%s",
                        options->suite_id, name);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(item.id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -315,31 +449,53 @@ static UmiStatus import_test_object(
     item.enabled = !parse_boolean(disabled_value, 0);
     item.discovered = 1;
     item.timeout_ms = parse_timeout_ms(timeout_value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_value != NULL) {
         UmiStatus status = join_string_array(command_value, " ", item.command,
                                              sizeof(item.command));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (labels_value != NULL && *skip_space(labels_value) == '[') {
         UmiStatus status = join_string_array(labels_value, ";", item.labels,
                                              sizeof(item.labels));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (working_value != NULL) {
         UmiStatus status = parse_string(working_value, item.working_directory,
                                         sizeof(item.working_directory));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         copy_text(item.working_directory, sizeof(item.working_directory),
                   options->build_directory);
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!item.enabled) summary->disabled_count += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item.labels[0] != '\0') summary->labelled_count += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (item.timeout_ms > 0U) summary->timed_count += 1U;
     summary->discovered_count += 1U;
     return umi_test_platform_item_registry_upsert(items, &item);
 }
 
+/*
+ * Provide the test platform ctest parse json operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_ctest_parse_json(
     const char *json,
     const UmiTestPlatformCtestImportOptions *options,
@@ -355,6 +511,10 @@ UmiStatus umi_test_platform_ctest_parse_json(
     const char *tests_value;
     const char *cursor;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || options == NULL || items == NULL || suites == NULL ||
         discoveries == NULL || options->suite_id[0] == '\0' ||
         options->project_id[0] == '\0' ||
@@ -363,6 +523,10 @@ UmiStatus umi_test_platform_ctest_parse_json(
     }
     tests_value = find_object_field(json, "tests");
     cursor = skip_space(tests_value);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL || *cursor != '[') return UMI_STATUS_PARSE_ERROR;
     (void)memset(&summary, 0, sizeof(summary));
     (void)memset(&root, 0, sizeof(root));
@@ -377,22 +541,30 @@ UmiStatus umi_test_platform_ctest_parse_json(
     root.enabled = 1;
     root.discovered = 1;
     status = umi_test_platform_item_registry_upsert(items, &root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     ++cursor;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
         char test_object[16384];
         cursor = skip_space(cursor);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ']') break;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (*cursor != '{') return UMI_STATUS_PARSE_ERROR;
         status = copy_value(cursor, test_object, sizeof(test_object));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         status = import_test_object(test_object, options, items, &summary);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         cursor = skip_space(skip_value(cursor));
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ',') {
             ++cursor;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*cursor == ']') break;
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -407,10 +579,12 @@ UmiStatus umi_test_platform_ctest_parse_json(
     suite.test_count = summary.discovered_count;
     suite.enabled = 1;
     status = umi_test_platform_suite_registry_upsert(suites, &suite);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)memset(&discovery, 0, sizeof(discovery));
     discovery.struct_size = (uint32_t)sizeof(discovery);
     discovery.api_version = UMI_TEST_PLATFORM_DISCOVERY_API_VERSION;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snprintf(discovery.id, sizeof(discovery.id), "discovery.%s",
                  options->suite_id) < 0) {
         return UMI_STATUS_INTERNAL_ERROR;
@@ -428,11 +602,20 @@ UmiStatus umi_test_platform_ctest_parse_json(
     discovery.metadata_supported = 1;
     status = umi_test_platform_discovery_registry_upsert(discoveries,
                                                         &discovery);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_summary != NULL) *out_summary = summary;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform ctest discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_ctest_discover(
     const UmiTestPlatformCtestImportOptions *options,
     UmiTestPlatformItemRegistry *items,
@@ -447,6 +630,10 @@ UmiStatus umi_test_platform_ctest_discover(
     UmiProcessResult result;
     UmiStatus status;
     size_t diagnostics_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (options == NULL || items == NULL || suites == NULL ||
         discoveries == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -466,16 +653,23 @@ UmiStatus umi_test_platform_ctest_discover(
     request.capture_stdout = 1;
     request.capture_stderr = 1;
     status = umi_process_execute(&request, &result);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_diagnostics != NULL && diagnostics_capacity > 0U) {
         diagnostics_length = strlen(result.output);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (diagnostics_length >= diagnostics_capacity) {
             diagnostics_length = diagnostics_capacity - 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (diagnostics_length > 0U) {
             (void)memcpy(out_diagnostics, result.output, diagnostics_length);
         }
         out_diagnostics[diagnostics_length] = '\0';
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || result.exit_code != 0) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_INTERNAL_ERROR;
     }

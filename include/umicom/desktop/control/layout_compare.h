@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_LAYOUT_COMPARE_API_VERSION 1U
 
+/**
+ * Represent the desktop layout compare snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesktopLayoutCompareSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

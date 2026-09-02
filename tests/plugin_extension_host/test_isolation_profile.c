@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/isolation_profile.h"
-int main(void) { UmiPluginExtensionHostIsolationProfile p; umi_plugin_extension_host_isolation_profile_init(&p); if(umi_plugin_extension_host_isolation_profile_satisfies(&p,20U,1,0)) return 1; if(umi_plugin_extension_host_isolation_profile_configure(&p,UMI_PLUGIN_EXTENSION_HOST_ISOLATION_PROCESS,50U)!=UMI_STATUS_OK) return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostIsolationProfile p; umi_plugin_extension_host_isolation_profile_init(&p); /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_isolation_profile_satisfies(&p,20U,1,0)) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_isolation_profile_configure(&p,UMI_PLUGIN_EXTENSION_HOST_ISOLATION_PROCESS,50U)!=UMI_STATUS_OK) return 2; return 0; }

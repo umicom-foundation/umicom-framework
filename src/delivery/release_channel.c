@@ -19,14 +19,20 @@
 
 #include "umicom/delivery/release_channel.h"
 
+/*
+ * Provide the release channel policy operation used by this module and its client
+ * applications.
+ */
 UmiReleaseChannelPolicy umi_release_channel_policy(UmiReleaseChannel channel)
 {
     UmiReleaseChannelPolicy policy = {0};
     policy.channel = channel;
     policy.require_tests = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (channel == UMI_RELEASE_BETA || channel == UMI_RELEASE_STABLE) {
         policy.require_sbom = 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (channel == UMI_RELEASE_STABLE) {
         policy.require_signature = 1;
         policy.require_zero_warnings = 1;

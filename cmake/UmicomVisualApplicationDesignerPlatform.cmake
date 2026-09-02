@@ -3,6 +3,22 @@
 # File: cmake/UmicomVisualApplicationDesignerPlatform.cmake
 #
 # PURPOSE:
+#   Configure the umicom visual application designer platform build rules
+#   without duplicating product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomVisualApplicationDesignerPlatform.cmake
+#
+# PURPOSE:
 #   Extend canonical Umicom::designer with production RAD-style application,
 #   form and page authoring services that consume canonical Umicom::ui state.
 #
@@ -13,6 +29,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 set(UMICOM_RAD_DESIGNER_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_designer OR NOT TARGET umicom_ui)
     message(FATAL_ERROR "UmicomVisualApplicationDesignerPlatform.cmake requires canonical umicom_designer and umicom_ui")
 endif()
@@ -89,16 +106,22 @@ target_sources(umicom_designer PRIVATE
 # Designer orchestration consumes the canonical semantic UI/design/reactive contracts.
 target_link_libraries(umicom_designer PUBLIC Umicom::ui)
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add rad designer test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_rad_designer_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_RAD_DESIGNER_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::designer)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

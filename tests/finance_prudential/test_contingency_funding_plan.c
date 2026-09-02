@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/contingency_funding_plan.h"
 
-int main(void) { UmiPrudentialContingencyFundingPlan p={0}; if(umi_pru_contingency_funding_plan_add(&p,"A",1,10.0)!=UMI_STATUS_OK)return 1; if(umi_pru_contingency_funding_plan_add(&p,"B",2,20.0)!=UMI_STATUS_OK)return 2; return umi_pru_contingency_funding_plan_total(&p)==30.0?0:3; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPrudentialContingencyFundingPlan p={0}; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_contingency_funding_plan_add(&p,"A",1,10.0)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_pru_contingency_funding_plan_add(&p,"B",2,20.0)!=UMI_STATUS_OK)return 2; return umi_pru_contingency_funding_plan_total(&p)==30.0?0:3; }

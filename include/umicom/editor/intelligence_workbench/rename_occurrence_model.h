@@ -24,10 +24,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel rename occurrence model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelRenameOccurrenceModel { UmiEditorIntelEntry value; UmiEditorIntelApplicability applicability; bool selected; uint64_t revision; } UmiEditorIntelRenameOccurrenceModel;
+/**
+ * Initialise editor intel rename occurrence model from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_rename_occurrence_model_init(UmiEditorIntelRenameOccurrenceModel *model,const char *id,const char *label,const char *path,UmiEditorIntelRange range);
+/**
+ * Provide the editor intel rename occurrence model set score operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_intel_rename_occurrence_model_set_score(UmiEditorIntelRenameOccurrenceModel *model,uint32_t score);
+/**
+ * Find editor intel rename occurrence model set while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_intel_rename_occurrence_model_set_selected(UmiEditorIntelRenameOccurrenceModel *model,bool selected);
+/**
+ * Check that editor intel rename occurrence model satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_rename_occurrence_model_valid(const UmiEditorIntelRenameOccurrenceModel *model);
 
 #ifdef __cplusplus

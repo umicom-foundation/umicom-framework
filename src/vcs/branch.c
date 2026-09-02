@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the vcs branch parse status header operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_branch_parse_status_header(const char *line,
                                              UmiVcsBranch *out_branch)
 {
@@ -26,12 +30,17 @@ UmiStatus umi_vcs_branch_parse_status_header(const char *line,
     const char *bracket;
     const char *end;
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (line == NULL || out_branch == NULL ||
         strncmp(line, "## ", 3U) != 0) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_branch, 0, sizeof(*out_branch));
     name_start = line + 3;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strncmp(name_start, "HEAD (no branch)", 16U) == 0) {
         out_branch->detached = 1;
         (void)snprintf(out_branch->name,
@@ -44,37 +53,63 @@ UmiStatus umi_vcs_branch_parse_status_header(const char *line,
     bracket = strchr(name_start, '[');
     end = upstream_start != NULL ? upstream_start :
           (bracket != NULL ? bracket : name_start + strlen(name_start));
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (end > name_start && end[-1] == ' ') {
         end -= 1;
     }
     length = (size_t)(end - name_start);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(out_branch->name)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memcpy(out_branch->name, name_start, length);
     out_branch->name[length] = '\0';
     out_branch->current = 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (upstream_start != NULL) {
         const char *upstream = upstream_start + 3;
         const char *upstream_end = bracket != NULL
             ? bracket
             : name_start + strlen(name_start);
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (upstream_end > upstream && upstream_end[-1] == ' ') {
             upstream_end -= 1;
         }
         length = (size_t)(upstream_end - upstream);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (length >= sizeof(out_branch->upstream)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         (void)memcpy(out_branch->upstream, upstream, length);
         out_branch->upstream[length] = '\0';
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bracket != NULL) {
         const char *ahead = strstr(bracket, "ahead ");
         const char *behind = strstr(bracket, "behind ");
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (ahead != NULL) {
             (void)sscanf(ahead, "ahead %d", &out_branch->ahead);
         }
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (behind != NULL) {
             (void)sscanf(behind, "behind %d", &out_branch->behind);
         }
@@ -82,17 +117,26 @@ UmiStatus umi_vcs_branch_parse_status_header(const char *line,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the vcs branch parse current operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_branch_parse_current(const char *output,
                                        UmiVcsBranch *out_branch)
 {
     const char *newline;
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (output == NULL || out_branch == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_branch, 0, sizeof(*out_branch));
     newline = strpbrk(output, "\r\n");
     length = newline != NULL ? (size_t)(newline - output) : strlen(output);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length == 0U || length >= sizeof(out_branch->name)) {
         return UMI_STATUS_PARSE_ERROR;
     }
@@ -103,11 +147,16 @@ UmiStatus umi_vcs_branch_parse_current(const char *output,
     return UMI_STATUS_OK;
 }
 
+/* Provide the vcs branch format operation used by this module and its client applications. */
 UmiStatus umi_vcs_branch_format(const UmiVcsBranch *branch,
                                 char *out_text,
                                 size_t capacity)
 {
     int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (branch == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

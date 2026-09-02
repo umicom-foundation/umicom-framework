@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading platform snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingPlatformSnapshot { uint64_t open_orders; uint64_t executions; uint64_t venues; uint64_t alerts; bool brokerage_ready; bool exchange_ready; UmiTradingCoreSeverity severity; } UmiTradingPlatformSnapshot;
 /* Populate aggregate platform health and severity from bounded counters. */
 void umi_trading_platform_snapshot_build(UmiTradingPlatformSnapshot *snapshot,uint64_t open_orders,uint64_t executions,uint64_t venues,uint64_t alerts,bool brokerage_ready,bool exchange_ready);

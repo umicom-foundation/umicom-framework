@@ -17,18 +17,30 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the search files operation used by this module and its client applications. */
 static UmiStatus search_files(
     void *user_data,
     const char *query,
@@ -42,12 +54,20 @@ static UmiStatus search_files(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (file_index == NULL || query == NULL ||
         out_results == NULL || out_count == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     entries = (UmiFileIndexEntry *)calloc(capacity, sizeof(*entries));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (entries == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = umi_file_index_find(
@@ -58,7 +78,9 @@ static UmiStatus search_files(
         capacity,
         &count);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < count; ++index) {
             (void)memset(&out_results[index],
                          0,
@@ -95,10 +117,18 @@ static UmiStatus search_files(
     return status;
 }
 
+/*
+ * Initialise developer workbench file search provider from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_developer_workbench_file_search_provider_init(
     UmiDeveloperWorkbenchSearchProvider *provider,
     UmiFileIndex *file_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL) return;
 
     (void)memset(provider, 0, sizeof(*provider));

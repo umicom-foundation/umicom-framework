@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential hqla pool data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialHqlaPool { UmiPrudentialLiquidityAsset assets[UMI_PRU_MAX_ITEMS]; size_t count; } UmiPrudentialHqlaPool;
 /* Add one eligible liquidity asset to the bounded HQLA pool. */
 UmiStatus umi_pru_hqla_pool_add(UmiPrudentialHqlaPool *pool, const UmiPrudentialLiquidityAsset *asset);

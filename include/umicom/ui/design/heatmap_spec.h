@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design heatmap spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignHeatmapSpec {
     uint16_t rows;
     uint16_t columns;

@@ -17,16 +17,26 @@
 
 #include <string.h>
 
+/* Check that boolean satisfies its contract before another service relies on it. */
 static int boolean_valid(int value) { return value == 0 || value == 1; }
 
+/*
+ * Check that application experience profile satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus
 umi_application_experience_profile_validate(const UmiApplicationExperienceProfile *profile) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (profile == NULL || !umi_application_experience_identifier_valid(profile->profile_id) ||
       !umi_application_experience_identifier_valid(profile->recipe_id) ||
       !umi_application_experience_identifier_valid(profile->application_id) ||
       !umi_application_experience_identifier_valid(profile->primary_command_id) ||
       !umi_application_experience_identifier_valid(profile->primary_form_id))
     return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (profile->struct_size < sizeof(*profile) ||
       profile->api_version != UMI_APPLICATION_EXPERIENCE_API_VERSION ||
       profile->audience < UMI_APPLICATION_COMPONENT_RECIPE_AUDIENCE_LEARNING ||
@@ -50,6 +60,10 @@ umi_application_experience_profile_validate(const UmiApplicationExperienceProfil
   return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application experience profile matches recipe operation used by this module
+ * and its client applications.
+ */
 int umi_application_experience_profile_matches_recipe(
     const UmiApplicationExperienceProfile *profile, const UmiApplicationComponentRecipe *recipe) {
   return profile != NULL && recipe != NULL &&

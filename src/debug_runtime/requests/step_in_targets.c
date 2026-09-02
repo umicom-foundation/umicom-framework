@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request step in targets operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_step_in_targets(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t frame_id,

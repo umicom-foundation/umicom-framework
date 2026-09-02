@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_lineage.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiEnterpriseValuationLineage l;CHECK(umi_enterprise_valuation_lineage_init(&l,"j",1U,"black76","abc")==UMI_STATUS_OK);CHECK(l.lineage_fingerprint!=0U);return 0;}

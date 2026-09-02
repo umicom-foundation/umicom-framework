@@ -24,7 +24,12 @@
 /* Validate financial inputs before making the record observable to callers. */
 UmiStatus umi_quant_cap_floor_init(UmiQuantCapFloor *record, double notional, double strike_rate, double observed_rate, double year_fraction, int32_t right)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!(notional >= 0.0 && year_fraction >= 0.0 && (right == 1 || right == -1))) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     record->notional = notional;
@@ -38,6 +43,10 @@ UmiStatus umi_quant_cap_floor_init(UmiQuantCapFloor *record, double notional, do
 /* Return undiscounted caplet or floorlet payoff. */
 double umi_quant_cap_floor_payoff(const UmiQuantCapFloor *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0.0;
     return record->notional * record->year_fraction * fmax(((double)record->right) * (record->observed_rate - record->strike_rate), 0.0);
 }

@@ -19,12 +19,20 @@
 
 #include "umicom/desktop/context_links.h"
 
+/*
+ * Exercise listener and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void listener(void *listener_context, const UmiApplicationContext *context)
 {
     UmiApplicationContext *received = (UmiApplicationContext *)listener_context;
     *received = *context;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiApplicationContextHub *hub = NULL;

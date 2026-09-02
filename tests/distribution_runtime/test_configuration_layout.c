@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrConfigurationLayout value; umi_dr_configuration_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"config")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.user_root,sizeof(value.user_root),"config")==UMI_STATUS_OK); value.portable=true; CHECK(umi_dr_configuration_layout_valid(&value)); CHECK(umi_dr_configuration_layout_fingerprint(&value) != 0U);
     return 0;

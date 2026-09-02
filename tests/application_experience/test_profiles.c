@@ -21,9 +21,14 @@
 #include <stddef.h>
 #include "umicom/application/experience_catalogue.h"
 
+/*
+ * Exercise test experience profiles and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_experience_profiles(void)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_experience_catalogue_count();
          ++index) {
         const UmiApplicationExperienceDefinition *definition =

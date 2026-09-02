@@ -19,11 +19,19 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/panel_chrome.h"
 
+/**
+ * Initialise gtk4 ws panel frame from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_panel_frame_create(const UmiWsPanelChrome *chrome, GtkWidget *child);
 typedef void (*UmiGtk4WsPanelActionHandler)(
     UmiWsPanelAction action,
     const UmiWsPanelChrome *chrome,
     void *user_data);
+/**
+ * Provide the gtk4 ws panel frame create interactive operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     const UmiWsPanelChrome *chrome,
     GtkWidget *child,

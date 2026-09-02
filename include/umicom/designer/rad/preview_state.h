@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad preview state data shared with callers of this public contract.
+ */
 typedef struct UmiRadPreviewState {
     uint64_t document_revision;
     uint64_t render_revision;
@@ -25,7 +28,14 @@ typedef struct UmiRadPreviewState {
     size_t error_count;
     bool healthy;
 } UmiRadPreviewState;
+/**
+ * Initialise rad preview state from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_rad_preview_state_init(UmiRadPreviewState *item);
+/**
+ * Check that rad preview state satisfies its contract before another service relies on it.
+ */
 int umi_rad_preview_state_is_valid(const UmiRadPreviewState *item);
 #ifdef __cplusplus
 }

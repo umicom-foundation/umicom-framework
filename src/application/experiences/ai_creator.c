@@ -100,6 +100,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience ai creator operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_ai_creator(void)
 {
     return &DEFINITION;

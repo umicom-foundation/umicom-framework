@@ -38,6 +38,9 @@ typedef enum UmiUiActionArgumentKind {
 } UmiUiActionArgumentKind;
 
 
+/**
+ * Represent the ui action snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiUiActionSnapshot {
     char action_id[UMI_UI_ID_CAPACITY];
     char command_id[UMI_UI_ID_CAPACITY];
@@ -55,18 +58,52 @@ typedef struct UmiUiActionSnapshot {
     UmiUiActionArgumentKind argument_kind;
 } UmiUiActionSnapshot;
 
+/**
+ * Represent the ui action model data shared with callers of this public contract.
+ */
 typedef struct UmiUiActionModel UmiUiActionModel;
 
+/**
+ * Initialise ui action model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ui_action_model_create(UmiUiActionModel **out_model);
+/**
+ * Release or reset state held by ui action model so the same storage can be reused safely.
+ */
 void umi_ui_action_model_destroy(UmiUiActionModel *model);
+/**
+ * Provide the ui action model upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_action_model_upsert(UmiUiActionModel *model,
                                      const UmiUiActionSnapshot *item);
+/**
+ * Remove ui action model while keeping the remaining records in a valid and discoverable
+ * state.
+ */
 UmiStatus umi_ui_action_model_remove(UmiUiActionModel *model, const char *item_id);
+/**
+ * Find ui action model while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_ui_action_model_find(const UmiUiActionModel *model, const char *item_id,
                                    UmiUiActionSnapshot *out_item);
+/**
+ * Find ui action model while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_ui_action_model_at(const UmiUiActionModel *model, size_t index,
                                  UmiUiActionSnapshot *out_item);
+/**
+ * Return the number of records represented by ui action model without changing their
+ * state.
+ */
 size_t umi_ui_action_model_count(const UmiUiActionModel *model);
+/**
+ * Provide the ui action model revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ui_action_model_revision(const UmiUiActionModel *model);
 
 #ifdef __cplusplus

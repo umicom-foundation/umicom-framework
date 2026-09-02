@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/accessibility_contract.h"
 
-int main(void){UmiDesignAccessibilityContract c;if(umi_design_accessibility_contract_init(&c,"Save",32,32)!=UMI_STATUS_OK)return 1;return umi_design_accessibility_contract_passes(&c)?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignAccessibilityContract c;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_accessibility_contract_init(&c,"Save",32,32)!=UMI_STATUS_OK)return 1;return umi_design_accessibility_contract_passes(&c)?0:2;}

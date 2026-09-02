@@ -16,6 +16,10 @@
 
 #include <string.h>
 
+/*
+ * Initialise ide workflow service from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ide_workflow_service_init(
     UmiIdeWorkflowService *service,
     UmiIdeIntegrationBindings *bindings,
@@ -23,12 +27,17 @@ UmiStatus umi_ide_workflow_service_init(
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || bindings == NULL ||
         workspace_root == NULL || workspace_root[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(workspace_root);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(service->workspace_root)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -41,10 +50,18 @@ UmiStatus umi_ide_workflow_service_init(
     return umi_ide_workflow_service_refresh(service);
 }
 
+/*
+ * Provide the ide workflow service set policy operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_service_set_policy(
     UmiIdeWorkflowService *service,
     const UmiIdeWorkflowPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || policy == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -54,11 +71,19 @@ UmiStatus umi_ide_workflow_service_set_policy(
     return umi_ide_workflow_service_refresh(service);
 }
 
+/*
+ * Provide the ide workflow service refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_service_refresh(
     UmiIdeWorkflowService *service)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || service->bindings == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -67,6 +92,7 @@ UmiStatus umi_ide_workflow_service_refresh(
         service->bindings,
         service->workspace_root,
         &service->context);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ide_workflow_evaluate(
@@ -74,10 +100,15 @@ UmiStatus umi_ide_workflow_service_refresh(
         &service->context,
         &service->policy,
         &service->report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) service->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the ide workflow service ready operation used by this module and its client
+ * applications.
+ */
 int umi_ide_workflow_service_ready(
     const UmiIdeWorkflowService *service)
 {

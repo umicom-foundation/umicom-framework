@@ -14,12 +14,20 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/types.h"
 
+/*
+ * Check that productisation asset kind satisfies its contract before another service
+ * relies on it.
+ */
 int umi_productisation_asset_kind_valid(UmiProductisationAssetKind kind)
 {
     return kind >= UMI_PRODUCTISATION_ASSET_FEATURE &&
            kind <= UMI_PRODUCTISATION_ASSET_CAPABILITY;
 }
 
+/*
+ * Check that productisation evidence state satisfies its contract before another service
+ * relies on it.
+ */
 int umi_productisation_evidence_state_valid(
     UmiProductisationEvidenceState state)
 {
@@ -27,9 +35,14 @@ int umi_productisation_evidence_state_valid(
            state <= UMI_PRODUCTISATION_EVIDENCE_BLOCKED;
 }
 
+/*
+ * Provide the productisation asset kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_productisation_asset_kind_text(
     UmiProductisationAssetKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_PRODUCTISATION_ASSET_FEATURE: return "feature";
     case UMI_PRODUCTISATION_ASSET_PANEL: return "panel";
@@ -40,9 +53,14 @@ const char *umi_productisation_asset_kind_text(
     }
 }
 
+/*
+ * Provide the productisation evidence state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_productisation_evidence_state_text(
     UmiProductisationEvidenceState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_PRODUCTISATION_EVIDENCE_DECLARED: return "declared";
     case UMI_PRODUCTISATION_EVIDENCE_FOUNDATION: return "foundation";
@@ -55,8 +73,13 @@ const char *umi_productisation_evidence_state_text(
     }
 }
 
+/*
+ * Provide the productisation gap kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_productisation_gap_kind_text(UmiProductisationGapKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_PRODUCTISATION_GAP_MISSING_CAPABILITY:
         return "missing-capability";
@@ -74,8 +97,13 @@ const char *umi_productisation_gap_kind_text(UmiProductisationGapKind kind)
     }
 }
 
+/*
+ * Provide the productisation severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_productisation_severity_text(UmiProductisationSeverity severity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
     case UMI_PRODUCTISATION_SEVERITY_LOW: return "low";
     case UMI_PRODUCTISATION_SEVERITY_MEDIUM: return "medium";
@@ -85,8 +113,13 @@ const char *umi_productisation_severity_text(UmiProductisationSeverity severity)
     }
 }
 
+/*
+ * Provide the productisation owner text operation used by this module and its client
+ * applications.
+ */
 const char *umi_productisation_owner_text(UmiProductisationOwner owner)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (owner) {
     case UMI_PRODUCTISATION_OWNER_FRAMEWORK: return "framework";
     case UMI_PRODUCTISATION_OWNER_APPLICATION: return "application";
@@ -96,8 +129,13 @@ const char *umi_productisation_owner_text(UmiProductisationOwner owner)
     }
 }
 
+/*
+ * Provide the productisation stage text operation used by this module and its client
+ * applications.
+ */
 const char *umi_productisation_stage_text(UmiProductisationStage stage)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (stage) {
     case UMI_PRODUCTISATION_STAGE_FRAMEWORK: return "framework";
     case UMI_PRODUCTISATION_STAGE_STUDIO: return "studio";

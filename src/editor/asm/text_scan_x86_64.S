@@ -1,4 +1,20 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/editor/asm/text_scan_x86_64.S
+ *
+ * PURPOSE:
+ *   Implement the text scan x86 64 behaviour used by its public contract and
+ *   client applications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework x86-64 scalar byte scanner.
  *
  * System V / MinGW64 ABI:
@@ -13,6 +29,7 @@
 
     .text
     .globl umi_editor_text_scan_count_byte_x86_64
+/* Normalise the selected ABI arguments before entering the shared byte loop. */
 #ifdef _WIN32
 umi_editor_text_scan_count_byte_x86_64:
     movq %rcx, %r9
@@ -30,6 +47,7 @@ umi_editor_text_scan_count_byte_x86_64:
     testq %r10, %r10
     je .Lumi_scan_x86_done
 .Lumi_scan_x86_loop:
+    /* Compare one byte and add it to the result only when the value matches. */
     cmpb %r11b, (%r9,%rcx,1)
     jne .Lumi_scan_x86_next
     incq %rax
@@ -38,6 +56,7 @@ umi_editor_text_scan_count_byte_x86_64:
     cmpq %r10, %rcx
     jb .Lumi_scan_x86_loop
 .Lumi_scan_x86_done:
+    /* Return the number of matching bytes to the portable editor service. */
     ret
 #ifndef _WIN32
     .size umi_editor_text_scan_count_byte_x86_64, .-umi_editor_text_scan_count_byte_x86_64

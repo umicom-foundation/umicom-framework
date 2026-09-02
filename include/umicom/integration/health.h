@@ -24,6 +24,10 @@
 
 #include "umicom/integration/launch_plan.h"
 
+/**
+ * Represent the integration health summary data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIntegrationHealthSummary {
     size_t available;
     size_t running;
@@ -33,6 +37,10 @@ typedef struct UmiIntegrationHealthSummary {
     bool degraded;
 } UmiIntegrationHealthSummary;
 
+/**
+ * Provide the integration health from plan operation used by this module and its client
+ * applications.
+ */
 void umi_integration_health_from_plan(
     const UmiIntegrationLaunchPlan *plan,
     UmiIntegrationHealthSummary *out_summary);

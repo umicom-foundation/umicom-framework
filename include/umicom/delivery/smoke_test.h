@@ -27,22 +27,39 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the smoke check data shared with callers of this public contract.
+ */
 typedef struct UmiSmokeCheck {
     char check_id[UMI_DELIVERY_ID_CAPACITY];
     UmiEvidenceStatus status;
     char message[UMI_DELIVERY_TEXT_CAPACITY];
 } UmiSmokeCheck;
 
+/**
+ * Represent the smoke report data shared with callers of this public contract.
+ */
 typedef struct UmiSmokeReport {
     UmiSmokeCheck checks[UMI_DELIVERY_MAX_CHECKS];
     size_t count;
 } UmiSmokeReport;
 
+/**
+ * Initialise smoke report from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_smoke_report_init(UmiSmokeReport *report);
+/**
+ * Add smoke report only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_smoke_report_add(UmiSmokeReport *report,
                                const char *check_id,
                                UmiEvidenceStatus status,
                                const char *message);
+/**
+ * Provide the smoke report passed operation used by this module and its client
+ * applications.
+ */
 int umi_smoke_report_passed(const UmiSmokeReport *report);
 
 #ifdef __cplusplus

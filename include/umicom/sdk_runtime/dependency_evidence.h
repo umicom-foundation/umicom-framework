@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk runtime dependency evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiSdkRuntimeDependencyEvidence {
     uint32_t structure_size;
     char id[UMI_SDK_RUNTIME_ID_CAPACITY];
@@ -30,13 +34,45 @@ typedef struct UmiSdkRuntimeDependencyEvidence {
     UmiSdkRuntimeState state;
     bool enabled;
 } UmiSdkRuntimeDependencyEvidence;
+/**
+ * Initialise sdk runtime dependency evidence from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_sdk_runtime_dependency_evidence_init(UmiSdkRuntimeDependencyEvidence *value, const char *id);
+/**
+ * Check that sdk runtime dependency evidence satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_sdk_runtime_dependency_evidence_validate(const UmiSdkRuntimeDependencyEvidence *value);
+/**
+ * Provide the sdk runtime dependency evidence set path operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_dependency_evidence_set_path(UmiSdkRuntimeDependencyEvidence *value, const char *path);
+/**
+ * Provide the sdk runtime dependency evidence set detail operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_dependency_evidence_set_detail(UmiSdkRuntimeDependencyEvidence *value, const char *detail);
+/**
+ * Provide the sdk runtime dependency evidence set required operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_sdk_runtime_dependency_evidence_set_required(UmiSdkRuntimeDependencyEvidence *value, uint64_t number);
+/**
+ * Provide the sdk runtime dependency evidence set resolved operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_sdk_runtime_dependency_evidence_set_resolved(UmiSdkRuntimeDependencyEvidence *value, uint64_t number);
+/**
+ * Provide the sdk runtime dependency evidence set state operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_sdk_runtime_dependency_evidence_set_state(UmiSdkRuntimeDependencyEvidence *value, UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime dependency evidence same identity operation used by this module
+ * and its client applications.
+ */
 bool umi_sdk_runtime_dependency_evidence_same_identity(const UmiSdkRuntimeDependencyEvidence *left, const UmiSdkRuntimeDependencyEvidence *right);
 #ifdef __cplusplus
 }

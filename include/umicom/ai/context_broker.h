@@ -31,6 +31,9 @@ extern "C" {
 #define UMI_AI_CONTEXT_SOURCE_CAPACITY 128U
 #define UMI_AI_CONTEXT_PLAN_SOURCE_MAX 32U
 
+/**
+ * List the named ai context source kind values accepted by this public contract.
+ */
 typedef enum UmiAiContextSourceKind {
     UMI_AI_CONTEXT_WORKSPACE = 1,
     UMI_AI_CONTEXT_PROJECT = 2,
@@ -41,6 +44,9 @@ typedef enum UmiAiContextSourceKind {
     UMI_AI_CONTEXT_RETRIEVAL = 7
 } UmiAiContextSourceKind;
 
+/**
+ * Represent the ai context source data shared with callers of this public contract.
+ */
 typedef struct UmiAiContextSource {
     char source_id[UMI_AI_ID_CAPACITY];
     char label[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -54,6 +60,9 @@ typedef struct UmiAiContextSource {
     uint64_t revision;
 } UmiAiContextSource;
 
+/**
+ * Represent the ai context plan data shared with callers of this public contract.
+ */
 typedef struct UmiAiContextPlan {
     UmiAiContextSource sources[UMI_AI_CONTEXT_PLAN_SOURCE_MAX];
     size_t source_count;
@@ -67,22 +76,57 @@ typedef struct UmiAiContextPlan {
     uint64_t revision;
 } UmiAiContextPlan;
 
+/**
+ * Represent the ai context broker data shared with callers of this public contract.
+ */
 typedef struct UmiAiContextBroker UmiAiContextBroker;
 
+/**
+ * Initialise ai context broker from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_context_broker_create(UmiAiContextBroker **out_broker);
+/**
+ * Release or reset state held by ai context broker so the same storage can be reused
+ * safely.
+ */
 void umi_ai_context_broker_destroy(UmiAiContextBroker *broker);
+/**
+ * Provide the ai context broker upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_context_broker_upsert(
     UmiAiContextBroker *broker,
     const UmiAiContextSource *source);
+/**
+ * Remove ai context broker while keeping the remaining records in a valid and discoverable
+ * state.
+ */
 UmiStatus umi_ai_context_broker_remove(
     UmiAiContextBroker *broker,
     const char *source_id);
+/**
+ * Release or reset state held by ai context broker so the same storage can be reused
+ * safely.
+ */
 void umi_ai_context_broker_clear(UmiAiContextBroker *broker);
+/**
+ * Find ai context broker while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_ai_context_broker_at(
     const UmiAiContextBroker *broker,
     size_t index,
     UmiAiContextSource *out_source);
+/**
+ * Return the number of records represented by ai context broker without changing their
+ * state.
+ */
 size_t umi_ai_context_broker_count(const UmiAiContextBroker *broker);
+/**
+ * Provide the ai context broker plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_context_broker_plan(
     const UmiAiContextBroker *broker,
     uint32_t context_limit,
@@ -92,6 +136,10 @@ UmiStatus umi_ai_context_broker_plan(
     const UmiAiPrivacyPolicy *privacy,
     int sensitive_approved,
     UmiAiContextPlan *out_plan);
+/**
+ * Provide the ai context source kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ai_context_source_kind_text(UmiAiContextSourceKind kind);
 
 #ifdef __cplusplus

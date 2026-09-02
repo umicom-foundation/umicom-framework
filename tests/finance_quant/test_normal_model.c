@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/normal_model.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double price=0.0; CHECK(umi_quant_normal_model_price(100.0,100.0,10.0,1.0,1.0,UMI_QUANT_CALL,&price)==UMI_STATUS_OK); CHECK(price>3.98&&price<4.00);

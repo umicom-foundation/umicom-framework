@@ -28,6 +28,10 @@ extern "C" {
 #endif
 
 #include "umicom/ui/analytics/data_point.h"
+/**
+ * Provide the analytics downsample lttb operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_downsample_lttb(const UmiAnalyticsDataPoint *input,size_t input_count,UmiAnalyticsDataPoint *output,size_t threshold,size_t *out_count);
 
 #ifdef __cplusplus

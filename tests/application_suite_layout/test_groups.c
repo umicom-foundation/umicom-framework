@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/application/suite_layout/suite_layout.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiUiWorkspaceLayout l;
     assert(umi_application_suite_layout_project_default("org.umicom.trader",&l)==UMI_STATUS_OK);

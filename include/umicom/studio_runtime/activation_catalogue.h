@@ -22,11 +22,23 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by studio activation profile without changing
+ * their state.
+ */
 size_t umi_studio_activation_profile_count(void);
 
+/**
+ * Find studio activation profile while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiStudioRuntimeActivationProfile *
 umi_studio_activation_profile_at(size_t index);
 
+/**
+ * Provide the studio activation resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_activation_resolve(
     const char *command_id,
     UmiStudioRuntimeActivationRule *out_rule);

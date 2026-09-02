@@ -20,8 +20,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime build request operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_build_request(uint64_t id,const char*method,const char*params,char*out,size_t cap);
+/**
+ * Provide the language runtime build notification operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_build_notification(const char*method,const char*params,char*out,size_t cap);
+/**
+ * Read language runtime message into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_language_runtime_message_parse(const char*json,UmiLanguageRuntimeEnvelope*out);
 #ifdef __cplusplus
 }

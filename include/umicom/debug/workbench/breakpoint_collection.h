@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench breakpoint collection data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchBreakpointCollection {
     UmiDebugWorkbenchEntry items[UMI_DEBUG_WORKBENCH_MAX_ITEMS];
     size_t count;
@@ -33,11 +37,35 @@ typedef struct UmiDebugWorkbenchBreakpointCollection {
     uint64_t revision;
 } UmiDebugWorkbenchBreakpointCollection;
 
+/**
+ * Initialise debug workbench breakpoint collection from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_debug_workbench_breakpoint_collection_init(UmiDebugWorkbenchBreakpointCollection *model);
+/**
+ * Add debug workbench breakpoint collection only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_debug_workbench_breakpoint_collection_add(UmiDebugWorkbenchBreakpointCollection *model, const UmiDebugWorkbenchEntry *entry);
+/**
+ * Remove debug workbench breakpoint collection while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_debug_workbench_breakpoint_collection_remove(UmiDebugWorkbenchBreakpointCollection *model, const char *id);
+/**
+ * Provide the debug workbench breakpoint collection select operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_workbench_breakpoint_collection_select(UmiDebugWorkbenchBreakpointCollection *model, const char *id);
+/**
+ * Find debug workbench breakpoint collection while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiDebugWorkbenchEntry *umi_debug_workbench_breakpoint_collection_find(const UmiDebugWorkbenchBreakpointCollection *model, const char *id);
+/**
+ * Check that debug workbench breakpoint collection satisfies its contract before another
+ * service relies on it.
+ */
 int umi_debug_workbench_breakpoint_collection_valid(const UmiDebugWorkbenchBreakpointCollection *model);
 
 #ifdef __cplusplus

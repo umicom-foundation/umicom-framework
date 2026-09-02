@@ -26,8 +26,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that market depth satisfies its contract before another service relies on it.
+ */
 int umi_market_depth_valid(const UmiMarketDepth *depth);
+/**
+ * Provide the market depth best bid operation used by this module and its client
+ * applications.
+ */
 double umi_market_depth_best_bid(const UmiMarketDepth *depth);
+/**
+ * Provide the market depth best ask operation used by this module and its client
+ * applications.
+ */
 double umi_market_depth_best_ask(const UmiMarketDepth *depth);
 #ifdef __cplusplus
 }

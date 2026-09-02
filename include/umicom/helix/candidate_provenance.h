@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix candidate provenance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiHelixCandidateProvenance {
     char operation_id[UMI_HELIX_ID_CAPACITY];
     char candidate_id[UMI_HELIX_ID_CAPACITY];
@@ -33,6 +37,10 @@ typedef struct UmiHelixCandidateProvenance {
     uint64_t content_hash;
 } UmiHelixCandidateProvenance;
 
+/**
+ * Initialise helix candidate provenance from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_helix_candidate_provenance_init(
     UmiHelixCandidateProvenance *provenance,
     const char *operation_id,
@@ -42,6 +50,10 @@ UmiStatus umi_helix_candidate_provenance_init(
     const char *action_id,
     const char *source_revision,
     const char *content);
+/**
+ * Provide the helix candidate provenance hash text operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_helix_candidate_provenance_hash_text(const char *text);
 
 #ifdef __cplusplus

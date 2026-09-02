@@ -25,8 +25,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the decl starter data shared with callers of this public contract.
+ */
 typedef struct UmiDeclStarter { char starter_id[UMI_DECL_ID_CAPACITY]; char capability_id[UMI_DECL_ID_CAPACITY]; } UmiDeclStarter;
+/**
+ * Initialise decl starter from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_decl_starter_init(UmiDeclStarter *item,const char *left,const char *right);
+/**
+ * Check that decl starter satisfies its contract before another service relies on it.
+ */
 int umi_decl_starter_is_valid(const UmiDeclStarter *item);
 #ifdef __cplusplus
 }

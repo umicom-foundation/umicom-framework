@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer workbench quick open query operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_workbench_quick_open_query(
     UmiFileIndex *file_index,
     const char *query,

@@ -67,6 +67,7 @@ UmiStatus umi_application_suite_layout_project(
      * phase, so unlock before adding windows; callers may lock the completed
      * layout afterwards through the existing Framework API. */
     status = umi_ui_workspace_layout_set_locked(out_layout, false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Each panel recipe becomes exactly one initial workspace window. */
     for (index = 0U; index < definition->panel_count; ++index) {

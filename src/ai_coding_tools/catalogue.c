@@ -152,11 +152,19 @@ static const InvokeFunction INVOKERS[] = {
     umi_ai_coding_tool_workspace_search_invoke
 };
 
+/*
+ * Return the number of records represented by ai coding tool catalogue without changing
+ * their state.
+ */
 size_t umi_ai_coding_tool_catalogue_count(void)
 {
     return sizeof(DESCRIPTORS) / sizeof(DESCRIPTORS[0]);
 }
 
+/*
+ * Find ai coding tool catalogue while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_catalogue_at(size_t index)
 {
     return index < umi_ai_coding_tool_catalogue_count()
@@ -164,16 +172,29 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_catalogue_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find ai coding tool catalogue while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiAiCodingToolDescriptor *umi_ai_coding_tool_catalogue_find(
     const char *tool_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (tool_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ai_coding_tool_catalogue_count(); ++index) {
         const UmiAiCodingToolDescriptor *descriptor = DESCRIPTORS[index]();
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor != NULL &&
             strcmp(descriptor->tool_id, tool_id) == 0) {
             return descriptor;
@@ -183,24 +204,38 @@ const UmiAiCodingToolDescriptor *umi_ai_coding_tool_catalogue_find(
     return NULL;
 }
 
+/*
+ * Provide the ai coding tool register all operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_register_all(
     UmiAiCodingToolEnvironment *environment)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->ai_runtime == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ai_coding_tool_catalogue_count(); ++index) {
         const UmiAiCodingToolDescriptor *descriptor = DESCRIPTORS[index]();
         UmiAiTool tool;
         UmiStatus status;
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (descriptor == NULL || INVOKERS[index] == NULL) {
             return UMI_STATUS_INTERNAL_ERROR;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_ai_tool_registry_find(
                 &environment->ai_runtime->tools,
                 descriptor->tool_id) != NULL) {
@@ -214,6 +249,7 @@ UmiStatus umi_ai_coding_tool_register_all(
             descriptor->permission,
             INVOKERS[index],
             environment);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         tool.flags = (uint32_t)descriptor->risk;
@@ -221,6 +257,7 @@ UmiStatus umi_ai_coding_tool_register_all(
         status = umi_ai_tool_registry_add(
             &environment->ai_runtime->tools,
             &tool);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

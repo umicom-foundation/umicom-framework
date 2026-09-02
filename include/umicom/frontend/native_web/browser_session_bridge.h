@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/frontend/native_web/types.h"
 #include "umicom/frontend/web_session.h"
+/**
+ * Represent the native web browser session state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebBrowserSessionState { char session_id[UMI_NATIVE_WEB_ID_CAPACITY]; char route[UMI_NATIVE_WEB_TEXT_CAPACITY]; uint64_t last_activity; bool connected; bool suspended; uint64_t revision; } UmiNativeWebBrowserSessionState;
 /* Copy canonical frontend session state into the native-web presentation runtime. */
 UmiStatus umi_native_web_browser_session_bridge(const UmiFrontendSessionSnapshot *snapshot, UmiNativeWebBrowserSessionState *out_state);

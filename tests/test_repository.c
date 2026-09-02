@@ -19,6 +19,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiToolchainProfile profile;
@@ -29,6 +33,10 @@ int main(void)
 
     umi_toolchain_profile_init(&profile);
     git_tool = umi_toolchain_profile_tool_mutable(&profile, UMI_TOOL_GIT);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (git_tool == NULL) return EXIT_FAILURE;
     git_tool->state = UMI_TOOL_VALIDATED;
     (void)snprintf(git_tool->path, sizeof(git_tool->path), "%s", "git");
@@ -39,11 +47,13 @@ int main(void)
     request.initialise_local = 1;
     request.create_initial_commit = 1;
     request.dry_run = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_repository_initialise(&profile,
                                   &environment,
                                   &request,
                                   &report) != UMI_STATUS_OK)
         return EXIT_FAILURE;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!report.local_initialised || !report.initial_commit_created)
         return EXIT_FAILURE;
     return EXIT_SUCCESS;

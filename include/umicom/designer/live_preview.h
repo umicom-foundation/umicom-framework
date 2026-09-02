@@ -29,6 +29,9 @@ extern "C" {
 
 #define UMI_DESIGNER_PREVIEW_TEXT_CAPACITY 32768U
 
+/**
+ * Represent the designer live preview data shared with callers of this public contract.
+ */
 typedef struct UmiDesignerLivePreview {
     UmiDesignerPreviewViewport viewport;
     UmiDesignerPreviewHealth health;
@@ -38,11 +41,27 @@ typedef struct UmiDesignerLivePreview {
     char rendered_text[UMI_DESIGNER_PREVIEW_TEXT_CAPACITY];
 } UmiDesignerLivePreview;
 
+/**
+ * Initialise designer live preview from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_designer_live_preview_init(UmiDesignerLivePreview *preview);
+/**
+ * Provide the designer live preview mark stale operation used by this module and its
+ * client applications.
+ */
 void umi_designer_live_preview_mark_stale(UmiDesignerLivePreview *preview);
+/**
+ * Provide the designer live preview refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_designer_live_preview_refresh(UmiDesignerLivePreview *preview,
                                                const UmiDesignerDocument *document,
                                                const UmiDeclSchema *schema);
+/**
+ * Provide the designer live preview text operation used by this module and its client
+ * applications.
+ */
 const char *umi_designer_live_preview_text(const UmiDesignerLivePreview *preview);
 
 #ifdef __cplusplus

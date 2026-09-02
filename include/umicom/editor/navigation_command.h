@@ -35,6 +35,9 @@ extern "C" {
 #define UMI_EDITOR_NAVIGATION_COMMAND_LABEL_CAPACITY 128U
 #define UMI_EDITOR_NAVIGATION_COMMAND_KEY_CAPACITY 48U
 
+/**
+ * List the named editor navigation command kind values accepted by this public contract.
+ */
 typedef enum UmiEditorNavigationCommandKind {
     UMI_EDITOR_NAVIGATION_COMMAND_GO_TO_DEFINITION = 1,
     UMI_EDITOR_NAVIGATION_COMMAND_PEEK_DEFINITION = 2,
@@ -76,6 +79,10 @@ typedef enum UmiEditorNavigationCommandKind {
     UMI_EDITOR_NAVIGATION_COMMAND_PROVIDER_DIAGNOSTICS = 38
 } UmiEditorNavigationCommandKind;
 
+/**
+ * Represent the editor navigation command descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorNavigationCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -88,11 +95,27 @@ typedef struct UmiEditorNavigationCommandDescriptor {
     int opens_multiple_results;
 } UmiEditorNavigationCommandDescriptor;
 
+/**
+ * Return the number of records represented by editor navigation command without changing
+ * their state.
+ */
 size_t umi_editor_navigation_command_count(void);
+/**
+ * Find editor navigation command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorNavigationCommandDescriptor *
 umi_editor_navigation_command_at(size_t index);
+/**
+ * Find editor navigation command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorNavigationCommandDescriptor *
 umi_editor_navigation_command_find(const char *id);
+/**
+ * Provide the editor navigation command for kind operation used by this module and its
+ * client applications.
+ */
 const UmiEditorNavigationCommandDescriptor *
 umi_editor_navigation_command_for_kind(UmiEditorNavigationCommandKind kind);
 

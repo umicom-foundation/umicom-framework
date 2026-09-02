@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context event envelope record data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextEventEnvelopeRecord {
     uint32_t structure_size;
     char record_id[UMI_WORKBENCH_CONTEXT_EVENT_ID_CAPACITY];
@@ -39,25 +43,57 @@ typedef struct UmiWorkbenchContextEventEnvelopeRecord {
     uint64_t revision;
 } UmiWorkbenchContextEventEnvelopeRecord;
 
+/**
+ * Initialise workbench context event envelope record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_event_envelope_record_init(
     UmiWorkbenchContextEventEnvelopeRecord *record,
     const char *record_id);
+/**
+ * Check that workbench context event envelope record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_event_envelope_record_validate(
     const UmiWorkbenchContextEventEnvelopeRecord *record);
+/**
+ * Provide the workbench context event envelope record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_envelope_record_set_source(
     UmiWorkbenchContextEventEnvelopeRecord *record,
     const char *source_id);
+/**
+ * Provide the workbench context event envelope record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_envelope_record_set_subject(
     UmiWorkbenchContextEventEnvelopeRecord *record,
     const char *subject_id);
+/**
+ * Provide the workbench context event envelope record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_envelope_record_set_group(
     UmiWorkbenchContextEventEnvelopeRecord *record,
     const char *group_id);
+/**
+ * Provide the workbench context event envelope record set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_envelope_record_set_label(
     UmiWorkbenchContextEventEnvelopeRecord *record,
     const char *label);
+/**
+ * Provide the workbench context event envelope record hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_event_envelope_record_hash(
     const UmiWorkbenchContextEventEnvelopeRecord *record);
+/**
+ * Provide the workbench context event envelope record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_event_envelope_record_touch(
     UmiWorkbenchContextEventEnvelopeRecord *record,
     uint64_t sequence,

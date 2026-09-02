@@ -17,6 +17,7 @@
 
 #include "umicom/workbench_selection/builders.h"
 
+/* Provide the add text operation used by this module and its client applications. */
 static UmiStatus add_text(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -27,10 +28,12 @@ static UmiStatus add_text(
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_text(
         &field, value != NULL ? value : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/* Provide the add boolean operation used by this module and its client applications. */
 static UmiStatus add_boolean(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -40,10 +43,12 @@ static UmiStatus add_boolean(
     UmiStatus status;
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_boolean(&field, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/* Provide the add unsigned operation used by this module and its client applications. */
 static UmiStatus add_unsigned(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -53,10 +58,15 @@ static UmiStatus add_unsigned(
     UmiStatus status;
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_unsigned(&field, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/*
+ * Provide the workbench selection provider from source control change operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_source_control_change(
     const UmiSourceControlChangeSnapshot *change,
     const char *application_id,
@@ -69,6 +79,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_change(
 {
     char selection_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (change == NULL || application_id == NULL ||
         panel_id == NULL || out_selection == NULL ||
         change->id[0] == '\0') {
@@ -81,6 +95,7 @@ UmiStatus umi_workbench_selection_provider_from_source_control_change(
         "vcs-change",
         change->id,
         change->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_workbench_selection_build_source_control_change(
@@ -97,15 +112,20 @@ UmiStatus umi_workbench_selection_provider_from_source_control_change(
         change->uri,
         change->status,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_text(out_selection, "change-id", change->id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "old-uri", change->old_uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "staged", change->staged != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "conflict", change->conflict != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_selection->boolean_value = change->staged != 0;
@@ -113,6 +133,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_change(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection provider from source control commit operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_source_control_commit(
     const UmiSourceControlCommitSnapshot *commit,
     const char *application_id,
@@ -123,6 +147,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_commit(
 {
     char selection_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (commit == NULL || application_id == NULL ||
         panel_id == NULL || out_selection == NULL ||
         commit->id[0] == '\0') {
@@ -135,6 +163,7 @@ UmiStatus umi_workbench_selection_provider_from_source_control_commit(
         "vcs-commit",
         commit->id,
         commit->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_workbench_selection_init(
@@ -147,26 +176,35 @@ UmiStatus umi_workbench_selection_provider_from_source_control_commit(
         application_id,
         panel_id,
         workspace_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_subject(
         out_selection,
         commit->id,
         commit->hash);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_text(out_selection, "repository-id", commit->repository_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "hash", commit->hash);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "author", commit->author);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "email", commit->email);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "subject", commit->subject);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_unsigned(out_selection, "commit-timestamp", commit->timestamp);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "head", commit->head != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_selection->timestamp_ms = timestamp_ms;
@@ -179,6 +217,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_commit(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection provider from source control branch operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_source_control_branch(
     const UmiSourceControlBranchSnapshot *branch,
     const char *application_id,
@@ -189,6 +231,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_branch(
 {
     char selection_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (branch == NULL || application_id == NULL ||
         panel_id == NULL || out_selection == NULL ||
         branch->id[0] == '\0') {
@@ -201,6 +247,7 @@ UmiStatus umi_workbench_selection_provider_from_source_control_branch(
         "vcs-branch",
         branch->id,
         branch->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     umi_workbench_selection_init(
@@ -213,24 +260,32 @@ UmiStatus umi_workbench_selection_provider_from_source_control_branch(
         application_id,
         panel_id,
         workspace_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_subject(
         out_selection,
         branch->id,
         branch->name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_text(out_selection, "repository-id", branch->repository_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "branch", branch->name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "upstream", branch->upstream);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "head", branch->head);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "current", branch->current != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "remote", branch->remote != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_selection->timestamp_ms = timestamp_ms;
@@ -242,6 +297,10 @@ UmiStatus umi_workbench_selection_provider_from_source_control_branch(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench selection provider source control change while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_source_control_change_find(
     const UmiSourceControlChangeRegistry *registry,
     const char *change_id,
@@ -255,9 +314,14 @@ UmiStatus umi_workbench_selection_provider_source_control_change_find(
 {
     UmiSourceControlChangeSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || change_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_source_control_change_registry_find(
         registry, change_id, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_provider_from_source_control_change(
         &snapshot,
@@ -270,6 +334,10 @@ UmiStatus umi_workbench_selection_provider_source_control_change_find(
         out_selection);
 }
 
+/*
+ * Find workbench selection provider source control commit while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_source_control_commit_find(
     const UmiSourceControlCommitRegistry *registry,
     const char *commit_id,
@@ -281,9 +349,14 @@ UmiStatus umi_workbench_selection_provider_source_control_commit_find(
 {
     UmiSourceControlCommitSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || commit_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_source_control_commit_registry_find(
         registry, commit_id, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_provider_from_source_control_commit(
         &snapshot,
@@ -294,6 +367,10 @@ UmiStatus umi_workbench_selection_provider_source_control_commit_find(
         out_selection);
 }
 
+/*
+ * Find workbench selection provider source control branch while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_source_control_branch_find(
     const UmiSourceControlBranchRegistry *registry,
     const char *branch_id,
@@ -305,9 +382,14 @@ UmiStatus umi_workbench_selection_provider_source_control_branch_find(
 {
     UmiSourceControlBranchSnapshot snapshot;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || branch_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_source_control_branch_registry_find(
         registry, branch_id, &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_provider_from_source_control_branch(
         &snapshot,

@@ -39,8 +39,28 @@ static const UmiProductProfile designer={&designer_desc,designer_caps,sizeof(des
 static const UmiProductProfile trader={&trader_desc,trader_caps,sizeof(trader_caps)/sizeof(trader_caps[0]),trader_features,1U,dev_frontends,sizeof(dev_frontends)/sizeof(dev_frontends[0])};
 static const UmiProductProfile tms={&tms_desc,tms_caps,sizeof(tms_caps)/sizeof(tms_caps[0]),tms_features,1U,dev_frontends,sizeof(dev_frontends)/sizeof(dev_frontends[0])};
 static const UmiProductProfile media={&media_desc,media_caps,sizeof(media_caps)/sizeof(media_caps[0]),media_features,1U,dev_frontends,sizeof(dev_frontends)/sizeof(dev_frontends[0])};
+/*
+ * Provide the reference product studio operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_studio(void){return &studio;}
+/*
+ * Provide the reference product designer operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_designer(void){return &designer;}
+/*
+ * Provide the reference product trader operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_trader(void){return &trader;}
+/*
+ * Provide the reference product tms operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_tms(void){return &tms;}
+/*
+ * Provide the reference product media studio operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_reference_product_media_studio(void){return &media;}

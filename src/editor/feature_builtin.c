@@ -140,17 +140,27 @@ static const FeatureGetter BUILTIN_FEATURES[] = {
     umi_editor_feature_policy_gate,
 };
 
+/*
+ * Provide the editor feature catalog register builtins operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_feature_catalog_register_builtins(
     UmiEditorFeatureCatalog *catalog)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < sizeof(BUILTIN_FEATURES) / sizeof(BUILTIN_FEATURES[0]);
          ++index) {
         UmiStatus status = umi_editor_feature_catalog_upsert(
             catalog, BUILTIN_FEATURES[index]());
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;

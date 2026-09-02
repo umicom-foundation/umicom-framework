@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/tree_projection.h"
 #include <stdio.h>
-int main(void){UmiUiEntTreeProjection p;UmiUiEntTreeNode n;umi_ui_ent_tree_projection_init(&p);umi_ui_ent_tree_node_init(&n);umi_ui_ent_copy_text(n.node_id,sizeof n.node_id,"n");if(umi_ui_ent_tree_projection_append(&p,&n)!=UMI_STATUS_OK||p.count!=1U)return 1;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntTreeProjection p;UmiUiEntTreeNode n;umi_ui_ent_tree_projection_init(&p);umi_ui_ent_tree_node_init(&n);umi_ui_ent_copy_text(n.node_id,sizeof n.node_id,"n");/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(umi_ui_ent_tree_projection_append(&p,&n)!=UMI_STATUS_OK||p.count!=1U)return 1;puts("ok");return 0;}

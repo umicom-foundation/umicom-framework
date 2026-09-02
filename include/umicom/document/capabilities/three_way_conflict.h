@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_THREE_WAY_CONFLICT "umicom.document.conflict.three_way_conflict"
 
+/**
+ * Provide the document capability three way conflict operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_three_way_conflict(void);
 

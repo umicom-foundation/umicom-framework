@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcCapabilitySet a,b; umi_fc_capability_set_clear(&a); umi_fc_capability_set_clear(&b);
     CHECK(umi_fc_capability_set_add(&a, UMI_FC_CAP_DOCK) == UMI_STATUS_OK); CHECK(umi_fc_capability_set_add(&a, UMI_FC_CAP_TABS) == UMI_STATUS_OK); CHECK(umi_fc_capability_set_add(&b, UMI_FC_CAP_DOCK) == UMI_STATUS_OK); CHECK(umi_fc_capability_set_count(&a)==2U); CHECK(umi_fc_capability_set_missing(&a,&b)!=0U);

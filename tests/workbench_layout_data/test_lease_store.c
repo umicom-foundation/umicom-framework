@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test lease codec and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static int test_lease_codec(void)
 {
     UmiWorkbenchLayoutLease source;
@@ -45,6 +49,10 @@ static int test_lease_codec(void)
     return 0;
 }
 
+/*
+ * Exercise test acquire and write authority and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 static int test_acquire_and_write_authority(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -73,6 +81,10 @@ static int test_acquire_and_write_authority(void)
     return 0;
 }
 
+/*
+ * Exercise test competing acquisition and expiry and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_competing_acquisition_and_expiry(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -101,6 +113,7 @@ static int test_competing_acquisition_and_expiry(void)
     return 0;
 }
 
+/* Release or reset state held by test renew and so the same storage can be reused safely. */
 static int test_renew_and_release(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -130,6 +143,10 @@ static int test_renew_and_release(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_lease_codec() == 0, "lease codec");

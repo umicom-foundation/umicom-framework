@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ws surface descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiWsSurfaceDescriptor {
     uint32_t api_version;
     char surface_id[UMI_UI_ID_CAPACITY];

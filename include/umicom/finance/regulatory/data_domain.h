@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data domain data shared with callers of this public contract.
+ */
 typedef struct UmiDataDomain {
     char domain_id[UMI_REG_ID_CAPACITY];
     char name[UMI_REG_NAME_CAPACITY];

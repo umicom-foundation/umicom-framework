@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the dr path policy relative safe operation used by this module and its client
+ * applications.
+ */
 bool umi_dr_path_policy_relative_safe(const char *path); bool umi_dr_path_policy_has_traversal(const char *path);
 
 #ifdef __cplusplus

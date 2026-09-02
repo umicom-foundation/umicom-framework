@@ -31,10 +31,18 @@ struct UmiWorkbenchLayoutSlaveController {
     uint64_t revision;
 };
 
+/*
+ * Provide the result set message operation used by this module and its client
+ * applications.
+ */
 static void result_set_message(
     UmiWorkbenchLayoutCommandResult *result,
     const char *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) {
         return;
     }
@@ -45,6 +53,7 @@ static void result_set_message(
         true);
 }
 
+/* Provide the controller reject operation used by this module and its client applications. */
 static UmiStatus controller_reject(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutCommand *command,
@@ -52,10 +61,18 @@ static UmiStatus controller_reject(
     const char *message,
     UmiWorkbenchLayoutCommandResult *result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller != NULL) {
         controller->rejected_command_count += 1U;
         controller->revision += 1U;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result != NULL) {
         umi_workbench_layout_command_result_init(result, command);
         result->status = status;
@@ -64,6 +81,7 @@ static UmiStatus controller_reject(
     return status;
 }
 
+/* Provide the make identity operation used by this module and its client applications. */
 static UmiStatus make_identity(
     const UmiWorkbenchLayoutPrincipal *principal,
     const UmiWorkbenchLayoutCommand *command,
@@ -71,6 +89,10 @@ static UmiStatus make_identity(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (principal == NULL || command == NULL || identity == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -81,6 +103,7 @@ static UmiStatus make_identity(
         sizeof(identity->layout_id),
         command->layout_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             identity->owner_user_id,
@@ -88,6 +111,7 @@ static UmiStatus make_identity(
             principal->user_id,
             false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             identity->owner_application_id,
@@ -95,6 +119,7 @@ static UmiStatus make_identity(
             "",
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             identity->workspace_id,
@@ -105,6 +130,7 @@ static UmiStatus make_identity(
     return status;
 }
 
+/* Initialise handle from caller-provided values so later operations receive a known state. */
 static UmiStatus handle_create(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -116,9 +142,14 @@ static UmiStatus handle_create(
     UmiStatus status;
 
     status = make_identity(principal, command, &identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         document = (UmiWorkbenchLayoutDocument *)
             calloc(1U, sizeof(*document));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (document == NULL) {
             return UMI_STATUS_OUT_OF_MEMORY;
         }
@@ -128,6 +159,7 @@ static UmiStatus handle_create(
             &identity,
             command->name,
             document);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             result->changed = true;
             result->previous_revision = 0U;
@@ -138,6 +170,7 @@ static UmiStatus handle_create(
     return status;
 }
 
+/* Provide the handle clone operation used by this module and its client applications. */
 static UmiStatus handle_clone(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -149,9 +182,14 @@ static UmiStatus handle_clone(
     UmiStatus status;
 
     status = make_identity(principal, command, &identity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         document = (UmiWorkbenchLayoutDocument *)
             calloc(1U, sizeof(*document));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (document == NULL) {
             return UMI_STATUS_OUT_OF_MEMORY;
         }
@@ -162,6 +200,7 @@ static UmiStatus handle_clone(
             &identity,
             command->name,
             document);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             result->changed = true;
             result->previous_revision = 0U;
@@ -172,6 +211,10 @@ static UmiStatus handle_clone(
     return status;
 }
 
+/*
+ * Provide the handle apply operation operation used by this module and its client
+ * applications.
+ */
 static UmiStatus handle_apply_operation(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -183,12 +226,15 @@ static UmiStatus handle_apply_operation(
     UmiStatus status;
 
     operation = command->operation;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation.timestamp_ms == 0U) {
         operation.timestamp_ms = command->timestamp_ms;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation.expected_revision == 0U) {
         operation.expected_revision = command->expected_revision;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_workbench_layout_text_present(operation.actor_id)) {
         (void)umi_workbench_layout_copy_text(
             operation.actor_id,
@@ -196,6 +242,7 @@ static UmiStatus handle_apply_operation(
             command->actor_id,
             true);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!umi_workbench_layout_text_present(operation.correlation_id)) {
         (void)umi_workbench_layout_copy_text(
             operation.correlation_id,
@@ -212,12 +259,14 @@ static UmiStatus handle_apply_operation(
     result->changed = operation_result.changed;
     result->previous_revision = operation_result.previous_revision;
     result->resulting_revision = operation_result.resulting_revision;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (operation_result.message[0] != '\0') {
         result_set_message(result, operation_result.message);
     }
     return status;
 }
 
+/* Provide the handle lock state operation used by this module and its client applications. */
 static UmiStatus handle_lock_state(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -255,12 +304,17 @@ static UmiStatus handle_lock_state(
     result->changed = operation_result.changed;
     result->previous_revision = operation_result.previous_revision;
     result->resulting_revision = operation_result.resulting_revision;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (operation_result.message[0] != '\0') {
         result_set_message(result, operation_result.message);
     }
     return status;
 }
 
+/*
+ * Write handle in its stable representation and report capacity or input failures to the
+ * caller.
+ */
 static UmiStatus handle_save(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -280,12 +334,14 @@ static UmiStatus handle_save(
     result->previous_revision = persistence_result.previous_revision;
     result->resulting_revision = persistence_result.resulting_revision;
     result->changed = status == UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (persistence_result.message[0] != '\0') {
         result_set_message(result, persistence_result.message);
     }
     return status;
 }
 
+/* Provide the handle restore operation used by this module and its client applications. */
 static UmiStatus handle_restore(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -298,17 +354,23 @@ static UmiStatus handle_restore(
         controller->service,
         principal,
         command->layout_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_service_activate(
             controller->service,
             principal,
             command->layout_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         const UmiWorkbenchLayoutDocument *document =
             umi_workbench_layout_service_active_layout(
                 controller->service);
         result->changed = true;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (document != NULL) {
             result->previous_revision = document->version.base_revision;
             result->resulting_revision = document->version.revision;
@@ -317,12 +379,14 @@ static UmiStatus handle_restore(
     return status;
 }
 
+/* Provide the dispatch command operation used by this module and its client applications. */
 static UmiStatus dispatch_command(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
     const UmiWorkbenchLayoutCommand *command,
     UmiWorkbenchLayoutCommandResult *result)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (command->kind) {
     case UMI_WORKBENCH_LAYOUT_COMMAND_CREATE:
         return handle_create(controller, principal, command, result);
@@ -376,6 +440,10 @@ static UmiStatus dispatch_command(
     }
 }
 
+/*
+ * Provide the workbench layout controller config default operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutControllerConfig
 umi_workbench_layout_controller_config_default(void)
 {
@@ -393,6 +461,10 @@ umi_workbench_layout_controller_config_default(void)
     return config;
 }
 
+/*
+ * Initialise workbench layout slave controller from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_slave_controller_create(
     const UmiWorkbenchLayoutControllerConfig *config,
     UmiWorkbenchLayoutService *service,
@@ -401,6 +473,10 @@ UmiStatus umi_workbench_layout_slave_controller_create(
     UmiWorkbenchLayoutControllerConfig effective;
     UmiWorkbenchLayoutSlaveController *controller;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -408,6 +484,7 @@ UmiStatus umi_workbench_layout_slave_controller_create(
     effective = config != NULL
         ? *config
         : umi_workbench_layout_controller_config_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective) ||
         !umi_workbench_layout_text_present(effective.controller_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -415,6 +492,10 @@ UmiStatus umi_workbench_layout_slave_controller_create(
 
     controller = (UmiWorkbenchLayoutSlaveController *)
         calloc(1U, sizeof(*controller));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -426,22 +507,36 @@ UmiStatus umi_workbench_layout_slave_controller_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench layout slave controller so the same storage can
+ * be reused safely.
+ */
 void umi_workbench_layout_slave_controller_destroy(
     UmiWorkbenchLayoutSlaveController *controller)
 {
     free(controller);
 }
 
+/*
+ * Provide the workbench layout slave controller initialise operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_slave_controller_initialise(
     UmiWorkbenchLayoutSlaveController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state ==
         UMI_WORKBENCH_LAYOUT_CONTROLLER_INITIALISED) {
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state !=
         UMI_WORKBENCH_LAYOUT_CONTROLLER_CREATED) {
         return UMI_STATUS_INVALID_STATE;
@@ -452,18 +547,28 @@ UmiStatus umi_workbench_layout_slave_controller_initialise(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout slave controller start operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_slave_controller_start(
     UmiWorkbenchLayoutSlaveController *controller)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state ==
         UMI_WORKBENCH_LAYOUT_CONTROLLER_RUNNING) {
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state !=
         UMI_WORKBENCH_LAYOUT_CONTROLLER_INITIALISED &&
         controller->state !=
@@ -472,6 +577,7 @@ UmiStatus umi_workbench_layout_slave_controller_start(
     }
     status = umi_workbench_layout_service_start(
         controller->service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         controller->state =
             UMI_WORKBENCH_LAYOUT_CONTROLLER_FAILED;
@@ -484,16 +590,26 @@ UmiStatus umi_workbench_layout_slave_controller_start(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout slave controller quiesce operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_slave_controller_quiesce(
     UmiWorkbenchLayoutSlaveController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state ==
         UMI_WORKBENCH_LAYOUT_CONTROLLER_QUIESCED) {
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state !=
         UMI_WORKBENCH_LAYOUT_CONTROLLER_RUNNING) {
         return UMI_STATUS_INVALID_STATE;
@@ -504,19 +620,29 @@ UmiStatus umi_workbench_layout_slave_controller_quiesce(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout slave controller stop operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_slave_controller_stop(
     UmiWorkbenchLayoutSlaveController *controller,
     uint64_t timestamp_ms)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state ==
         UMI_WORKBENCH_LAYOUT_CONTROLLER_STOPPED) {
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state !=
             UMI_WORKBENCH_LAYOUT_CONTROLLER_RUNNING &&
         controller->state !=
@@ -528,6 +654,7 @@ UmiStatus umi_workbench_layout_slave_controller_stop(
 
     status = umi_workbench_layout_service_stop(
         controller->service, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK &&
         controller->config.stop_on_persistence_failure) {
         controller->state =
@@ -541,6 +668,10 @@ UmiStatus umi_workbench_layout_slave_controller_stop(
     return status;
 }
 
+/*
+ * Perform workbench layout slave controller through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_slave_controller_handle(
     UmiWorkbenchLayoutSlaveController *controller,
     const UmiWorkbenchLayoutPrincipal *principal,
@@ -549,6 +680,10 @@ UmiStatus umi_workbench_layout_slave_controller_handle(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || principal == NULL ||
         command == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -556,6 +691,7 @@ UmiStatus umi_workbench_layout_slave_controller_handle(
     umi_workbench_layout_command_result_init(
         out_result, command);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state ==
             UMI_WORKBENCH_LAYOUT_CONTROLLER_QUIESCED &&
         controller->config.reject_commands_while_quiesced) {
@@ -567,6 +703,7 @@ UmiStatus umi_workbench_layout_slave_controller_handle(
             "new commands.",
             out_result);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->state !=
         UMI_WORKBENCH_LAYOUT_CONTROLLER_RUNNING) {
         return controller_reject(
@@ -578,6 +715,7 @@ UmiStatus umi_workbench_layout_slave_controller_handle(
     }
 
     status = umi_workbench_layout_command_validate(command);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return controller_reject(
             controller,
@@ -591,19 +729,22 @@ UmiStatus umi_workbench_layout_slave_controller_handle(
     status = dispatch_command(
         controller, principal, command, out_result);
     out_result->status = status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         controller->failed_command_count += 1U;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (out_result->message[0] == '\0') {
             result_set_message(
                 out_result,
                 umi_status_text(status));
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_IO_ERROR &&
             controller->config.stop_on_persistence_failure) {
             controller->state =
                 UMI_WORKBENCH_LAYOUT_CONTROLLER_FAILED;
         }
-    } else if (out_result->message[0] == '\0') {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (out_result->message[0] == '\0') {
         result_set_message(
             out_result,
             "The layout command completed successfully.");
@@ -612,12 +753,20 @@ UmiStatus umi_workbench_layout_slave_controller_handle(
     return status;
 }
 
+/*
+ * Provide the workbench layout slave controller snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_slave_controller_snapshot(
     const UmiWorkbenchLayoutSlaveController *controller,
     UmiWorkbenchLayoutControllerSnapshot *out_snapshot)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -641,6 +790,10 @@ UmiStatus umi_workbench_layout_slave_controller_snapshot(
     return status;
 }
 
+/*
+ * Provide the workbench layout slave controller state operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutControllerState
 umi_workbench_layout_slave_controller_state(
     const UmiWorkbenchLayoutSlaveController *controller)

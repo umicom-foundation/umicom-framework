@@ -19,6 +19,10 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/workspace_strip.h"
 
+/**
+ * Initialise gtk4 ws workspace strip from caller-provided values so later operations
+ * receive a known state.
+ */
 GtkWidget *umi_gtk4_ws_workspace_strip_create(const UmiWsWorkspaceStrip *strip);
 
 #endif

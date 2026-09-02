@@ -24,6 +24,10 @@ extern "C" {
 
 #include "umicom/application/production/lifecycle_gate.h"
 
+/**
+ * Represent the application production launch step data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationProductionLaunchStep {
     UmiApplicationProductionLaunchStage stage;
     UmiApplicationProductionGate gate;
@@ -31,6 +35,10 @@ typedef struct UmiApplicationProductionLaunchStep {
     int complete;
 } UmiApplicationProductionLaunchStep;
 
+/**
+ * Represent the application production launch plan data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationProductionLaunchPlan {
     UmiApplicationProductionLaunchStep
         steps[UMI_APPLICATION_PRODUCTION_MAX_LAUNCH_STEPS];
@@ -39,11 +47,23 @@ typedef struct UmiApplicationProductionLaunchPlan {
     size_t blocked_count;
 } UmiApplicationProductionLaunchPlan;
 
+/**
+ * Provide the application production launch plan build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_production_launch_plan_build(
     UmiApplicationProductionLaunchPlan *out_plan);
+/**
+ * Provide the application production launch plan apply gate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_application_production_launch_plan_apply_gate(
     UmiApplicationProductionLaunchPlan *plan,
     const UmiApplicationProductionLifecycleGate *gate);
+/**
+ * Provide the application production launch plan ready operation used by this module and
+ * its client applications.
+ */
 int umi_application_production_launch_plan_ready(
     const UmiApplicationProductionLaunchPlan *plan);
 

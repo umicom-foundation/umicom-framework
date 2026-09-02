@@ -25,12 +25,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer project generator request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectGeneratorRequest {
     const UmiDeveloperProjectGenerationPlan *plan;
     int dry_run;
     int overwrite_existing_files;
 } UmiDeveloperProjectGeneratorRequest;
 
+/**
+ * Represent the developer project generator report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectGeneratorReport {
     size_t directories_created;
     size_t files_created;
@@ -39,6 +47,10 @@ typedef struct UmiDeveloperProjectGeneratorReport {
     int dry_run;
 } UmiDeveloperProjectGeneratorReport;
 
+/**
+ * Perform developer project generator through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_developer_project_generator_apply(
     const UmiDeveloperProjectGeneratorRequest *request,
     UmiDeveloperProjectGeneratorReport *out_report);

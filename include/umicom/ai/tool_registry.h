@@ -27,14 +27,28 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai tool registry data shared with callers of this public contract.
+ */
 typedef struct UmiAiToolRegistry {
     UmiAiTool tools[UMI_AI_MAX_TOOLS];
     size_t count;
 } UmiAiToolRegistry;
 
+/**
+ * Initialise ai tool registry from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ai_tool_registry_init(UmiAiToolRegistry *registry);
+/**
+ * Add ai tool registry only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_ai_tool_registry_add(UmiAiToolRegistry *registry,
                                    const UmiAiTool *tool);
+/**
+ * Find ai tool registry while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiAiTool *umi_ai_tool_registry_find(UmiAiToolRegistry *registry,
                                      const char *tool_id);
 

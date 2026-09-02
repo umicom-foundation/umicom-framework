@@ -22,9 +22,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote terminal restore data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTerminalRemoteTerminalRestore { char id[UMI_TERMINAL_REMOTE_ID_CAPACITY]; UmiTerminalRemoteState state; uint64_t revision; } UmiTerminalRemoteTerminalRestore;
+/**
+ * Initialise terminal remote terminal restore from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_terminal_restore_init(UmiTerminalRemoteTerminalRestore *value,const char *id);
+/**
+ * Provide the terminal remote terminal restore transition operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_terminal_remote_terminal_restore_transition(UmiTerminalRemoteTerminalRestore *value,UmiTerminalRemoteState next);
+/**
+ * Provide the terminal remote terminal restore usable operation used by this module and
+ * its client applications.
+ */
 bool umi_terminal_remote_terminal_restore_usable(const UmiTerminalRemoteTerminalRestore *value);
 #ifdef __cplusplus
 }

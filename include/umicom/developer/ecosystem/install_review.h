@@ -18,6 +18,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ecosystem install action data shared with callers of this public contract.
+ */
 typedef struct UmiEcosystemInstallAction {
     UmiEcosystemActionKind kind;
     UmiEcosystemReviewSeverity severity;
@@ -30,6 +33,9 @@ typedef struct UmiEcosystemInstallAction {
     UmiStatus status;
 } UmiEcosystemInstallAction;
 
+/**
+ * Represent the ecosystem install review data shared with callers of this public contract.
+ */
 typedef struct UmiEcosystemInstallReview {
     char package_id[UMI_ECOSYSTEM_ID_CAPACITY];
     char from_version[UMI_ECOSYSTEM_VERSION_CAPACITY];
@@ -47,9 +53,17 @@ typedef struct UmiEcosystemInstallReview {
     uint64_t revision;
 } UmiEcosystemInstallReview;
 
+/**
+ * Provide the ecosystem install review begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ecosystem_install_review_begin(
     UmiEcosystemInstallReview *review,
     const UmiEcosystemPackageRecord *record);
+/**
+ * Provide the ecosystem install review add action operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ecosystem_install_review_add_action(
     UmiEcosystemInstallReview *review,
     UmiEcosystemActionKind kind,
@@ -58,16 +72,32 @@ UmiStatus umi_ecosystem_install_review_add_action(
     UmiEcosystemReviewSeverity severity,
     bool required,
     bool requires_approval);
+/**
+ * Provide the ecosystem install review set approved operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ecosystem_install_review_set_approved(
     UmiEcosystemInstallReview *review,
     size_t action_index,
     bool approved);
+/**
+ * Provide the ecosystem install review complete action operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ecosystem_install_review_complete_action(
     UmiEcosystemInstallReview *review,
     size_t action_index,
     UmiStatus status);
+/**
+ * Provide the ecosystem install review recalculate operation used by this module and its
+ * client applications.
+ */
 void umi_ecosystem_install_review_recalculate(
     UmiEcosystemInstallReview *review);
+/**
+ * Provide the ecosystem install review ready operation used by this module and its client
+ * applications.
+ */
 bool umi_ecosystem_install_review_ready(
     const UmiEcosystemInstallReview *review);
 

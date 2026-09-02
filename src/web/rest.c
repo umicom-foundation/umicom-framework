@@ -18,5 +18,7 @@
  */
 
 #include "umicom/web/rest.h"
+/* Add web rest only after its inputs and available capacity have been checked. */
 UmiStatus umi_web_rest_register(UmiWebRouter *router,UmiHttpMethod method,const char *path,UmiWebHandler handler,void *user_data){UmiWebRoute route;UmiStatus s=umi_web_route_init(&route,method,path,handler,user_data);return s==UMI_STATUS_OK?umi_web_router_add(router,&route):s;}
+/* Provide the web rest json operation used by this module and its client applications. */
 UmiStatus umi_web_rest_json(UmiWebResponse *response,int status,const char *json){return umi_web_response_set_text(response,status,"application/json; charset=utf-8",json);}

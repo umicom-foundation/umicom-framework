@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/output_backpressure.h"
 
+/*
+ * Provide the developer capability output backpressure operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_output_backpressure(void)
 {

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise debug runtime request from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_debug_runtime_request_initialize(
     UmiDebugRuntimeAdapter *adapter,
     const char *adapter_id,

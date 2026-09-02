@@ -16,4 +16,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/language_runtime/process_stream.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiLanguageRuntimeProcessStreamConfig c={0};UmiLanguageRuntimeProcessStream*s=NULL;assert(umi_language_runtime_process_stream_start(&c,&s)==UMI_STATUS_INVALID_ARGUMENT);assert(s==NULL);return 0;}

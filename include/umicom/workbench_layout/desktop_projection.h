@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench layout projection options data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutProjectionOptions {
     uint32_t structure_size;
     char default_monitor_id[UMI_WORKBENCH_LAYOUT_ID_CAPACITY];
@@ -32,6 +36,10 @@ typedef struct UmiWorkbenchLayoutProjectionOptions {
     bool preserve_z_order;
 } UmiWorkbenchLayoutProjectionOptions;
 
+/**
+ * Represent the workbench layout projection report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutProjectionReport {
     uint32_t structure_size;
     size_t inspected_node_count;
@@ -42,15 +50,27 @@ typedef struct UmiWorkbenchLayoutProjectionReport {
     bool complete;
 } UmiWorkbenchLayoutProjectionReport;
 
+/**
+ * Provide the workbench layout projection options default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutProjectionOptions
 umi_workbench_layout_projection_options_default(void);
 
+/**
+ * Provide the workbench layout project desktop operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_project_desktop(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutProjectionOptions *options,
     UmiDesktopLayout *out_layout,
     UmiWorkbenchLayoutProjectionReport *out_report);
 
+/**
+ * Provide the workbench layout import desktop operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_import_desktop(
     const UmiDesktopLayout *desktop_layout,
     const UmiWorkbenchLayoutIdentity *identity,

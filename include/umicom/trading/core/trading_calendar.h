@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading calendar data shared with callers of this public contract.
+ */
 typedef struct UmiTradingCalendar { bool weekday_open[7]; uint32_t open_days; } UmiTradingCalendar;
 /* Initialise a Monday-Friday trading calendar. */
 void umi_trading_calendar_weekdays(UmiTradingCalendar *calendar);

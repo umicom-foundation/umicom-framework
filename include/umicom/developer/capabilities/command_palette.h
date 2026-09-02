@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_COMMAND_PALETTE "umicom.developer.experience.command_palette"
 
+/**
+ * Provide the developer capability command palette operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_command_palette(void);
 

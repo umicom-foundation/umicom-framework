@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/risk_factor_mapping.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseRiskFactorMapping m; umi_enterprise_risk_factor_mapping_init(&m); CHECK(umi_enterprise_risk_factor_mapping_add(&m,"swap","USD01",2.0)==UMI_STATUS_OK); CHECK(umi_enterprise_risk_factor_mapping_loading(&m,"swap","USD01")==2.0); return 0; }

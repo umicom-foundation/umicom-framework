@@ -26,7 +26,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ibkr connection settings data shared with callers of this public contract.
+ */
 typedef struct UmiIbkrConnectionSettings { char host[64]; uint16_t port; int32_t client_id; UmiTradingEnvironment environment; } UmiIbkrConnectionSettings;
+/**
+ * Check that ibkr settings satisfies its contract before another service relies on it.
+ */
 int umi_ibkr_settings_valid(const UmiIbkrConnectionSettings *settings);
 #ifdef __cplusplus
 }

@@ -22,6 +22,7 @@
 
 #include <string.h>
 
+/* Provide the ai chunk text operation used by this module and its client applications. */
 size_t umi_ai_chunk_text(const char *document_id,
                          const char *text,
                          size_t chunk_characters,
@@ -31,20 +32,31 @@ size_t umi_ai_chunk_text(const char *document_id,
     size_t length;
     size_t offset = 0U;
     size_t count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document_id == NULL || text == NULL || chunks == NULL ||
         chunk_characters == 0U || capacity == 0U) {
         return 0U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (chunk_characters >= UMI_AI_TEXT_CAPACITY) {
         chunk_characters = UMI_AI_TEXT_CAPACITY - 1U;
     }
     length = strlen(text);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (offset < length && count < capacity) {
         size_t take = length - offset;
         char buffer[UMI_AI_TEXT_CAPACITY];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (take > chunk_characters) take = chunk_characters;
         (void)memcpy(buffer, text + offset, take);
         buffer[take] = '\0';
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_ai_chunk_set(&chunks[count], document_id, count, offset, buffer) != UMI_STATUS_OK) {
             break;
         }

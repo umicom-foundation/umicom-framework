@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc coverage summary data shared with callers of this public contract.
+ */
 typedef struct UmiFcCoverageSummary { size_t required_total; size_t required_covered; size_t optional_total; size_t optional_covered; double required_score; double total_score; } UmiFcCoverageSummary;
+/**
+ * Provide the fc coverage summary calculate operation used by this module and its client
+ * applications.
+ */
 void umi_fc_coverage_summary_calculate(uint64_t required,uint64_t optional,uint64_t actual,UmiFcCoverageSummary *out_summary);
 
 #ifdef __cplusplus

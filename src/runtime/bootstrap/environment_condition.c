@@ -25,12 +25,20 @@
 
 
 #include <string.h>
+/*
+ * Provide the bootstrap environment condition match operation used by this module and its
+ * client applications.
+ */
 bool umi_bootstrap_environment_condition_match(
     const UmiBootstrapPropertySet *environment,
     const char *key,
     const char *expected_value) {
     const UmiBootstrapConfigurationProperty *property =
         umi_bootstrap_property_set_find(environment, key);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (property == NULL) return false;
     return expected_value == NULL || strcmp(property->value, expected_value) == 0;
 }

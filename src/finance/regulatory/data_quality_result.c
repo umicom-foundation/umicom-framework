@@ -20,12 +20,21 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg data quality result from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_reg_data_quality_result_init(UmiDataQualityResult *record, const char *rule_id, double score, uint64_t checked_records, uint64_t failed_records)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(umi_reg_number_valid(score) && score >= 0.0 && score <= 1.0 && failed_records <= checked_records)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->rule_id, sizeof record->rule_id, rule_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->score = score;
     record->checked_records = checked_records;

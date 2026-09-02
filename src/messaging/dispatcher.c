@@ -42,13 +42,25 @@ struct UmiDispatcher {
     UmiDispatcherStats stats;
 };
 
+/*
+ * Initialise dispatcher from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_dispatcher_create(UmiSchemaRegistry *schemas,
                                 UmiDispatcher **out_dispatcher)
 {
     UmiDispatcher *dispatcher;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_dispatcher == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_dispatcher = NULL;
     dispatcher = (UmiDispatcher *)calloc(1U, sizeof(*dispatcher));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dispatcher == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     umi_spin_init(&dispatcher->lock);
     dispatcher->schemas = schemas;
@@ -57,6 +69,7 @@ UmiStatus umi_dispatcher_create(UmiSchemaRegistry *schemas,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by entry so the same storage can be reused safely. */
 static void entry_dispose(UmiHandlerEntry *entry)
 {
     free(entry->name);
@@ -66,18 +79,32 @@ static void entry_dispose(UmiHandlerEntry *entry)
     (void)memset(entry, 0, sizeof(*entry));
 }
 
+/* Release or reset state held by dispatcher so the same storage can be reused safely. */
 void umi_dispatcher_destroy(UmiDispatcher *dispatcher)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dispatcher == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < dispatcher->count; ++index) {
         entry_dispose(&dispatcher->entries[index]);
     }
     free(dispatcher);
 }
 
+/*
+ * Provide the duplicate optional operation used by this module and its client
+ * applications.
+ */
 static UmiStatus duplicate_optional(const char *value, char **out_value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || value[0] == '\0') {
         *out_value = NULL;
         return UMI_STATUS_OK;
@@ -86,6 +113,10 @@ static UmiStatus duplicate_optional(const char *value, char **out_value)
     return *out_value != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }
 
+/*
+ * Provide the dispatcher subscribe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dispatcher_subscribe(UmiDispatcher *dispatcher,
                                    const UmiSubscription *subscription,
                                    UmiMessageHandler handler,
@@ -94,6 +125,10 @@ UmiStatus umi_dispatcher_subscribe(UmiDispatcher *dispatcher,
 {
     UmiHandlerEntry entry;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dispatcher == NULL || subscription == NULL || handler == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -121,6 +156,7 @@ UmiStatus umi_dispatcher_subscribe(UmiDispatcher *dispatcher,
     entry.subscription.partition_key = entry.partition;
 
     umi_spin_lock(&dispatcher->lock);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (dispatcher->count >= UMI_DISPATCHER_CAPACITY) {
         umi_spin_unlock(&dispatcher->lock);
         entry_dispose(&entry);
@@ -130,19 +166,33 @@ UmiStatus umi_dispatcher_subscribe(UmiDispatcher *dispatcher,
     dispatcher->entries[dispatcher->count++] = entry;
     dispatcher->stats.handlers++;
     umi_spin_unlock(&dispatcher->lock);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_subscription_id != NULL) *out_subscription_id = entry.id;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the dispatcher unsubscribe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_dispatcher_unsubscribe(UmiDispatcher *dispatcher,
                                      uint64_t subscription_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dispatcher == NULL || subscription_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     umi_spin_lock(&dispatcher->lock);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < dispatcher->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (dispatcher->entries[index].active &&
             dispatcher->entries[index].id == subscription_id) {
             dispatcher->entries[index].active = 0;
@@ -155,6 +205,10 @@ UmiStatus umi_dispatcher_unsubscribe(UmiDispatcher *dispatcher,
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Perform dispatcher through the module contract so client applications do not duplicate
+ * its policy.
+ */
 UmiStatus umi_dispatcher_dispatch(UmiDispatcher *dispatcher,
                                   const UmiMessageEnvelope *message,
                                   size_t *out_delivery_count)
@@ -163,38 +217,55 @@ UmiStatus umi_dispatcher_dispatch(UmiDispatcher *dispatcher,
     size_t delivered = 0U;
     UmiStatus first_failure = UMI_STATUS_OK;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dispatcher == NULL || message == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dispatcher->schemas != NULL && message->schema_id != NULL &&
         message->schema_id[0] != '\0') {
         status = umi_schema_registry_validate(dispatcher->schemas, message);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_message_validate(message);
     }
     dispatcher->stats.dispatched++;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         dispatcher->stats.rejected++;
         return status;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < dispatcher->count; ++index) {
         UmiHandlerEntry *entry = &dispatcher->entries[index];
+        /* Apply this operation only while the related capability or state is available. */
         if (!entry->active ||
             !umi_subscription_matches(&entry->subscription, message)) {
             continue;
         }
         status = entry->handler(message, entry->user_data);
         delivered++;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK && first_failure == UMI_STATUS_OK) {
             first_failure = status;
             dispatcher->stats.failures++;
         }
     }
     dispatcher->stats.delivered += (uint64_t)delivered;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_delivery_count != NULL) *out_delivery_count = delivered;
     return first_failure;
 }
 
+/* Provide the dispatcher stats operation used by this module and its client applications. */
 UmiDispatcherStats umi_dispatcher_stats(const UmiDispatcher *dispatcher)
 {
     UmiDispatcherStats stats;

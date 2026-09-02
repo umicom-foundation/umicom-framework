@@ -22,6 +22,10 @@
 
 #include "umicom/editor/reference_results.h"
 
+/*
+ * Exercise reference and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorNavigationResult reference(const char *uri,
                                            uint64_t line,
                                            const char *preview)
@@ -39,6 +43,10 @@ static UmiEditorNavigationResult reference(const char *uri,
     return result;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorNavigationResultSet *set = NULL;

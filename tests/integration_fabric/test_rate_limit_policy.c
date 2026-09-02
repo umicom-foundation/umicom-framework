@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricRateLimitPolicy p; bool ok=false; uint32_t remain=0U; umi_fabric_rate_limit_policy_default(&p); CHECK(umi_fabric_rate_limit_policy_evaluate(&p,99U,&ok,&remain)==UMI_STATUS_OK); CHECK(ok&&remain==1U); CHECK(umi_fabric_rate_limit_policy_evaluate(&p,100U,&ok,&remain)==UMI_STATUS_OK); CHECK(!ok);
     return 0;

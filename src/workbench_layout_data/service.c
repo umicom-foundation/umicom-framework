@@ -43,6 +43,10 @@ struct UmiWorkbenchLayoutDataService {
     bool accepting_writes;
 };
 
+/*
+ * Provide the workbench layout data service config default operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutDataServiceConfig
 umi_workbench_layout_data_service_config_default(void)
 {
@@ -64,44 +68,57 @@ umi_workbench_layout_data_service_config_default(void)
     return config;
 }
 
+/*
+ * Provide the initialise repositories operation used by this module and its client
+ * applications.
+ */
 static UmiStatus initialise_repositories(
     UmiWorkbenchLayoutDataService *service)
 {
     UmiStatus status;
     status = umi_workbench_layout_data_server_store_init(
         &service->store, service->server);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_revision_store_repository_init(
             &service->revisions, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_grant_store_repository_init(
             &service->grants, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_lease_store_repository_init(
             &service->leases, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_change_feed_repository_init(
             &service->changes, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_outbox_repository_init(
             &service->outbox, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_conflict_store_repository_init(
             &service->conflicts, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_sync_cursor_repository_init(
             &service->cursors, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_presence_store_repository_init(
             &service->presence, service->server);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_sync_engine_init(
             &service->sync,
@@ -112,6 +129,10 @@ static UmiStatus initialise_repositories(
     return status;
 }
 
+/*
+ * Initialise workbench layout data service from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_data_service_create(
     UmiDataServer *server,
     const UmiWorkbenchLayoutDataServiceConfig *config,
@@ -120,12 +141,17 @@ UmiStatus umi_workbench_layout_data_service_create(
     UmiWorkbenchLayoutDataService *service;
     UmiWorkbenchLayoutDataServiceConfig effective;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || out_service == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_service = NULL;
     effective = config != NULL
         ? *config : umi_workbench_layout_data_service_config_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective) ||
         effective.replica_id[0] == '\0' ||
         effective.actor_id[0] == '\0' ||
@@ -134,6 +160,10 @@ UmiStatus umi_workbench_layout_data_service_create(
     }
     service = (UmiWorkbenchLayoutDataService *)calloc(
         1U, sizeof(*service));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     service->server = server;
     service->config = effective;
@@ -141,6 +171,7 @@ UmiStatus umi_workbench_layout_data_service_create(
     service->revision = 1U;
     umi_workbench_layout_metrics_init(&service->metrics);
     status = initialise_repositories(service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(service);
         return status;
@@ -149,17 +180,30 @@ UmiStatus umi_workbench_layout_data_service_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by workbench layout data service so the same storage can be
+ * reused safely.
+ */
 void umi_workbench_layout_data_service_destroy(
     UmiWorkbenchLayoutDataService *service)
 {
     free(service);
 }
 
+/*
+ * Provide the workbench layout data service start operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_start(
     UmiWorkbenchLayoutDataService *service,
     uint64_t now_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (service->started) return UMI_STATUS_OK;
     service->started = true;
     service->accepting_writes = true;
@@ -168,20 +212,37 @@ UmiStatus umi_workbench_layout_data_service_start(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout data service quiesce operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_quiesce(
     UmiWorkbenchLayoutDataService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!service->started) return UMI_STATUS_INVALID_STATE;
     service->accepting_writes = false;
     service->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout data service stop operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_stop(
     UmiWorkbenchLayoutDataService *service,
     uint64_t now_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     service->accepting_writes = false;
     service->started = false;
@@ -190,16 +251,29 @@ UmiStatus umi_workbench_layout_data_service_stop(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Write require in its stable representation and report capacity or input failures to the
+ * caller.
+ */
 static UmiStatus require_write(
     const UmiWorkbenchLayoutDataService *service)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!service->started || !service->accepting_writes) {
         return UMI_STATUS_INVALID_STATE;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the append change and outbox operation used by this module and its client
+ * applications.
+ */
 static UmiStatus append_change_and_outbox(
     UmiWorkbenchLayoutDataService *service,
     const char *layout_id,
@@ -240,6 +314,7 @@ static UmiStatus append_change_and_outbox(
         summary != NULL ? summary : "", true);
     status = umi_workbench_layout_change_feed_save(
         &service->changes, &change);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(&outbox, 0, sizeof(outbox));
@@ -269,6 +344,7 @@ static UmiStatus append_change_and_outbox(
         &service->outbox, &outbox);
 }
 
+/* Provide the append revision operation used by this module and its client applications. */
 static UmiStatus append_revision(
     UmiWorkbenchLayoutDataService *service,
     const UmiWorkbenchLayoutDocument *document,
@@ -306,6 +382,10 @@ static UmiStatus append_revision(
         &service->revisions, &record);
 }
 
+/*
+ * Provide the workbench layout data service save layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_save_layout(
     UmiWorkbenchLayoutDataService *service,
     UmiWorkbenchLayoutDocument *document,
@@ -318,17 +398,23 @@ UmiStatus umi_workbench_layout_data_service_save_layout(
     uint64_t resulting_revision = 0U;
     bool transaction_started = false;
     UmiStatus status = require_write(service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || document == NULL) return status;
     adapter = umi_workbench_layout_data_server_store_adapter(
         &service->store);
     status = umi_workbench_layout_data_transaction_begin(
         service->server, &transaction_started);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         document->audit.modified_at_ms = now_ms;
         status = umi_workbench_layout_store_save(
             &adapter, document, expected_revision,
             &resulting_revision);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         document->version.base_revision = expected_revision;
         document->version.revision = resulting_revision;
@@ -336,6 +422,7 @@ UmiStatus umi_workbench_layout_data_service_save_layout(
             service, document, expected_revision,
             correlation_id, "Layout saved.", now_ms, false);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append_change_and_outbox(
             service, document->identity.layout_id,
@@ -348,13 +435,18 @@ UmiStatus umi_workbench_layout_data_service_save_layout(
     }
     status = umi_workbench_layout_data_transaction_finish(
         service->server, transaction_started, status);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         service->last_success_at_ms = now_ms;
         service->revision += 1U;
         umi_workbench_layout_metrics_record_save(
             &service->metrics, sizeof(*document), 0U, status);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_revision != NULL) *out_revision = resulting_revision;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         service->last_failure_at_ms = now_ms;
         umi_workbench_layout_metrics_record_save(
             &service->metrics, 0U, 0U, status);
@@ -362,6 +454,10 @@ UmiStatus umi_workbench_layout_data_service_save_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout data service load layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_load_layout(
     UmiWorkbenchLayoutDataService *service,
     const char *layout_id,
@@ -369,6 +465,10 @@ UmiStatus umi_workbench_layout_data_service_load_layout(
 {
     UmiWorkbenchLayoutStoreAdapter adapter;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || layout_id == NULL ||
         out_document == NULL || !service->started) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -384,6 +484,10 @@ UmiStatus umi_workbench_layout_data_service_load_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout data service delete layout operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_delete_layout(
     UmiWorkbenchLayoutDataService *service,
     const char *layout_id,
@@ -395,18 +499,25 @@ UmiStatus umi_workbench_layout_data_service_delete_layout(
     UmiWorkbenchLayoutStoreAdapter adapter;
     bool transaction_started = false;
     UmiStatus status = require_write(service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || layout_id == NULL) return status;
     status = umi_workbench_layout_data_service_load_layout(
         service, layout_id, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     adapter = umi_workbench_layout_data_server_store_adapter(
         &service->store);
     status = umi_workbench_layout_data_transaction_begin(
         service->server, &transaction_started);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_store_delete(
             &adapter, layout_id, expected_revision);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         document.version.base_revision = expected_revision;
         document.version.revision = expected_revision + 1U;
@@ -414,6 +525,7 @@ UmiStatus umi_workbench_layout_data_service_delete_layout(
             service, &document, expected_revision,
             correlation_id, "Layout deleted.", now_ms, true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append_change_and_outbox(
             service, layout_id,
@@ -429,6 +541,10 @@ UmiStatus umi_workbench_layout_data_service_delete_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout data service share layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_share_layout(
     UmiWorkbenchLayoutDataService *service,
     const UmiWorkbenchLayoutGrant *grant,
@@ -436,9 +552,14 @@ UmiStatus umi_workbench_layout_data_service_share_layout(
     uint64_t now_ms)
 {
     UmiStatus status = require_write(service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || grant == NULL) return status;
     status = umi_workbench_layout_grant_store_save(
         &service->grants, grant);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = append_change_and_outbox(
             service, grant->layout_id,
@@ -449,6 +570,10 @@ UmiStatus umi_workbench_layout_data_service_share_layout(
     return status;
 }
 
+/*
+ * Provide the workbench layout data service acquire lease operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_acquire_lease(
     UmiWorkbenchLayoutDataService *service,
     const char *layout_id,
@@ -458,6 +583,7 @@ UmiStatus umi_workbench_layout_data_service_acquire_lease(
     UmiWorkbenchLayoutLease *out_lease)
 {
     UmiStatus status = require_write(service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_layout_lease_store_acquire(
         &service->leases, layout_id, holder_id,
@@ -465,6 +591,10 @@ UmiStatus umi_workbench_layout_data_service_acquire_lease(
         service->config.lease_duration_ms, out_lease);
 }
 
+/*
+ * Provide the workbench layout data service checkpoint session operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_checkpoint_session(
     UmiWorkbenchLayoutDataService *service,
     const UmiWorkbenchLayoutSession *session,
@@ -473,6 +603,10 @@ UmiStatus umi_workbench_layout_data_service_checkpoint_session(
 {
     UmiWorkbenchLayoutStoreAdapter adapter;
     UmiStatus status = require_write(service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK || session == NULL) return status;
     adapter = umi_workbench_layout_data_server_store_adapter(
         &service->store);
@@ -480,6 +614,10 @@ UmiStatus umi_workbench_layout_data_service_checkpoint_session(
         &adapter, session, expected_revision, out_revision);
 }
 
+/*
+ * Provide the workbench layout data service backup operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_backup(
     UmiWorkbenchLayoutDataService *service,
     const char *backup_id,
@@ -488,6 +626,10 @@ UmiStatus umi_workbench_layout_data_service_backup(
     size_t capacity,
     UmiWorkbenchLayoutBackupResult *out_result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || !service->started) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -496,6 +638,10 @@ UmiStatus umi_workbench_layout_data_service_backup(
         now_ms, NULL, buffer, capacity, out_result);
 }
 
+/*
+ * Provide the workbench layout data service restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_restore(
     UmiWorkbenchLayoutDataService *service,
     const char *backup,
@@ -504,13 +650,19 @@ UmiStatus umi_workbench_layout_data_service_restore(
     UmiWorkbenchLayoutRestoreResult *out_result)
 {
     UmiStatus status = require_write(service);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_layout_restore_apply(
         service->server, backup, length, options, out_result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) service->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the workbench layout data service snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_service_snapshot(
     UmiWorkbenchLayoutDataService *service,
     uint64_t now_ms,
@@ -521,6 +673,10 @@ UmiStatus umi_workbench_layout_data_service_snapshot(
     size_t conflicts;
     size_t presence;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -535,10 +691,12 @@ UmiStatus umi_workbench_layout_data_service_snapshot(
         &service->conflicts);
     presence = umi_workbench_layout_presence_store_active_count(
         &service->presence, now_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_metrics_snapshot(
             &service->metrics, &out_snapshot->metrics);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_health_evaluate(
             service->server, &out_snapshot->metrics,
@@ -558,6 +716,10 @@ UmiStatus umi_workbench_layout_data_service_snapshot(
     return status;
 }
 
+/*
+ * Provide the workbench layout data service store adapter operation used by this module
+ * and its client applications.
+ */
 UmiWorkbenchLayoutStoreAdapter
 umi_workbench_layout_data_service_store_adapter(
     UmiWorkbenchLayoutDataService *service)
@@ -568,6 +730,10 @@ umi_workbench_layout_data_service_store_adapter(
         : (UmiWorkbenchLayoutStoreAdapter){0};
 }
 
+/*
+ * Provide the workbench layout data service sync engine operation used by this module and
+ * its client applications.
+ */
 UmiWorkbenchLayoutSyncEngine *
 umi_workbench_layout_data_service_sync_engine(
     UmiWorkbenchLayoutDataService *service)

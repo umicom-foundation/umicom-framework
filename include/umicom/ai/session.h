@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai session data shared with callers of this public contract.
+ */
 typedef struct UmiAiSession {
     char session_id[UMI_AI_ID_CAPACITY];
     char provider_id[UMI_AI_ID_CAPACITY];
@@ -36,6 +39,10 @@ typedef struct UmiAiSession {
     uint64_t created_at_ns;
 } UmiAiSession;
 
+/**
+ * Initialise ai session from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_session_init(UmiAiSession *value);
 
 #ifdef __cplusplus

@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/ibkr_boundary.h"
+/* Check that ibkr settings satisfies its contract before another service relies on it. */
 int umi_ibkr_settings_valid(const UmiIbkrConnectionSettings *s){return s!=NULL&&s->host[0]!='\0'&&s->port>0U&&s->client_id>=0;}

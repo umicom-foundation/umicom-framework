@@ -17,9 +17,14 @@
 
 #include <limits.h>
 
+/*
+ * Provide the workbench layout node kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_node_kind_text(
     UmiWorkbenchLayoutNodeKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_NODE_EMPTY: return "empty";
     case UMI_WORKBENCH_LAYOUT_NODE_WINDOW: return "window";
@@ -33,9 +38,14 @@ const char *umi_workbench_layout_node_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout orientation text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_orientation_text(
     UmiWorkbenchLayoutOrientation orientation)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (orientation) {
     case UMI_WORKBENCH_LAYOUT_ORIENTATION_NONE: return "none";
     case UMI_WORKBENCH_LAYOUT_ORIENTATION_HORIZONTAL:
@@ -46,9 +56,14 @@ const char *umi_workbench_layout_orientation_text(
     }
 }
 
+/*
+ * Provide the workbench layout dock region text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_dock_region_text(
     UmiWorkbenchLayoutDockRegion region)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (region) {
     case UMI_WORKBENCH_LAYOUT_DOCK_CANVAS: return "canvas";
     case UMI_WORKBENCH_LAYOUT_DOCK_DOCUMENT: return "document";
@@ -61,9 +76,14 @@ const char *umi_workbench_layout_dock_region_text(
     }
 }
 
+/*
+ * Provide the workbench layout visibility text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_visibility_text(
     UmiWorkbenchLayoutVisibility visibility)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (visibility) {
     case UMI_WORKBENCH_LAYOUT_VISIBILITY_VISIBLE: return "visible";
     case UMI_WORKBENCH_LAYOUT_VISIBILITY_HIDDEN: return "hidden";
@@ -72,9 +92,14 @@ const char *umi_workbench_layout_visibility_text(
     }
 }
 
+/*
+ * Provide the workbench layout severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_severity_text(
     UmiWorkbenchLayoutSeverity severity)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (severity) {
     case UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_INFO: return "info";
     case UMI_WORKBENCH_LAYOUT_DIAGNOSTIC_WARNING: return "warning";
@@ -83,9 +108,14 @@ const char *umi_workbench_layout_severity_text(
     }
 }
 
+/*
+ * Provide the workbench layout operation kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_operation_kind_text(
     UmiWorkbenchLayoutOperationKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_OPERATION_ADD_NODE: return "add-node";
     case UMI_WORKBENCH_LAYOUT_OPERATION_REMOVE_NODE: return "remove-node";
@@ -110,9 +140,14 @@ const char *umi_workbench_layout_operation_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout diff kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_workbench_layout_diff_kind_text(
     UmiWorkbenchLayoutDiffKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_DIFF_METADATA_CHANGED:
         return "metadata-changed";
@@ -125,9 +160,14 @@ const char *umi_workbench_layout_diff_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout conflict kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_conflict_kind_text(
     UmiWorkbenchLayoutConflictKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_CONFLICT_METADATA:
         return "metadata";
@@ -145,9 +185,14 @@ const char *umi_workbench_layout_conflict_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout store kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_store_kind_text(
     UmiWorkbenchLayoutStoreKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_STORE_MEMORY: return "memory";
     case UMI_WORKBENCH_LAYOUT_STORE_DATA_SERVER: return "data-server";
@@ -156,9 +201,14 @@ const char *umi_workbench_layout_store_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout event kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_event_kind_text(
     UmiWorkbenchLayoutEventKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_EVENT_CREATED: return "created";
     case UMI_WORKBENCH_LAYOUT_EVENT_UPDATED: return "updated";
@@ -176,9 +226,14 @@ const char *umi_workbench_layout_event_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout command kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_command_kind_text(
     UmiWorkbenchLayoutCommandKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_WORKBENCH_LAYOUT_COMMAND_CREATE: return "create";
     case UMI_WORKBENCH_LAYOUT_COMMAND_CLONE: return "clone";
@@ -198,9 +253,14 @@ const char *umi_workbench_layout_command_kind_text(
     }
 }
 
+/*
+ * Provide the workbench layout controller state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_workbench_layout_controller_state_text(
     UmiWorkbenchLayoutControllerState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_WORKBENCH_LAYOUT_CONTROLLER_CREATED: return "created";
     case UMI_WORKBENCH_LAYOUT_CONTROLLER_INITIALISED: return "initialised";
@@ -212,12 +272,20 @@ const char *umi_workbench_layout_controller_state_text(
     }
 }
 
+/*
+ * Check that workbench layout rect satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_workbench_layout_rect_is_valid(
     const UmiWorkbenchLayoutRect *rect)
 {
     return rect != NULL && rect->width >= 0 && rect->height >= 0;
 }
 
+/*
+ * Provide the workbench layout rect contains operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_rect_contains(
     const UmiWorkbenchLayoutRect *outer,
     const UmiWorkbenchLayoutRect *inner)
@@ -227,6 +295,7 @@ bool umi_workbench_layout_rect_contains(
     int64_t inner_right;
     int64_t inner_bottom;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_layout_rect_is_valid(outer) ||
         !umi_workbench_layout_rect_is_valid(inner)) {
         return false;
@@ -241,6 +310,10 @@ bool umi_workbench_layout_rect_contains(
            inner_right <= outer_right && inner_bottom <= outer_bottom;
 }
 
+/*
+ * Provide the workbench layout rect intersects operation used by this module and its
+ * client applications.
+ */
 bool umi_workbench_layout_rect_intersects(
     const UmiWorkbenchLayoutRect *left,
     const UmiWorkbenchLayoutRect *right)
@@ -250,6 +323,7 @@ bool umi_workbench_layout_rect_intersects(
     int64_t right_right;
     int64_t right_bottom;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_layout_rect_is_valid(left) ||
         !umi_workbench_layout_rect_is_valid(right)) {
         return false;
@@ -264,6 +338,10 @@ bool umi_workbench_layout_rect_intersects(
            left->y < right_bottom && left_bottom > right->y;
 }
 
+/*
+ * Provide the workbench layout rect intersection operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutRect umi_workbench_layout_rect_intersection(
     const UmiWorkbenchLayoutRect *left,
     const UmiWorkbenchLayoutRect *right)
@@ -274,6 +352,7 @@ UmiWorkbenchLayoutRect umi_workbench_layout_rect_intersection(
     int64_t x2;
     int64_t y2;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!umi_workbench_layout_rect_intersects(left, right)) {
         return intersection;
     }
@@ -289,6 +368,7 @@ UmiWorkbenchLayoutRect umi_workbench_layout_rect_intersection(
              ? ((int64_t)left->y + left->height)
              : ((int64_t)right->y + right->height);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (x1 < INT32_MIN || x1 > INT32_MAX ||
         y1 < INT32_MIN || y1 > INT32_MAX ||
         x2 - x1 > INT32_MAX || y2 - y1 > INT32_MAX) {
@@ -302,9 +382,14 @@ UmiWorkbenchLayoutRect umi_workbench_layout_rect_intersection(
     return intersection;
 }
 
+/*
+ * Provide the workbench layout rect area operation used by this module and its client
+ * applications.
+ */
 int64_t umi_workbench_layout_rect_area(
     const UmiWorkbenchLayoutRect *rect)
 {
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_workbench_layout_rect_is_valid(rect)) {
         return 0;
     }

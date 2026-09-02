@@ -21,6 +21,10 @@
 #if defined(UMICOM_DOCUMENT_HASH_X86_64_ASM) || \
     defined(UMICOM_DOCUMENT_HASH_AARCH64_ASM) || \
     defined(UMICOM_DOCUMENT_HASH_RISCV64_ASM)
+/**
+ * Provide the document hash bytes asm operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_document_hash_bytes_asm(const unsigned char *bytes,
                                      size_t byte_count,
                                      uint64_t initial_hash);

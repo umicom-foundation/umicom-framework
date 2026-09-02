@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/color.h"
+/**
+ * Represent the design token data shared with callers of this public contract.
+ */
 typedef struct UmiDesignToken { char id[UMI_DESIGN_ID_CAPACITY]; UmiDesignValueKind kind; UmiDesignRgba color; double number; int64_t integer; UmiDesignLength length; char text[UMI_DESIGN_TEXT_CAPACITY]; } UmiDesignToken;
 /* Initialise a numeric design token. */
 UmiStatus umi_design_token_number(UmiDesignToken *token, const char *id, double value);

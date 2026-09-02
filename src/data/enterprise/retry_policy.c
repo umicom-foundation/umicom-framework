@@ -17,6 +17,10 @@
 
 /* Defaults favour bounded, reviewable behaviour over aggressive execution. */
 void umi_data_retry_policy_default(UmiDataRetryPolicy *policy) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL) return;
     (void)memset(policy, 0, sizeof(*policy));
     policy->max_attempts = 3U;
@@ -26,6 +30,10 @@ void umi_data_retry_policy_default(UmiDataRetryPolicy *policy) {
 
 /* Evaluation is side-effect free so callers can preview decisions. */
 UmiStatus umi_data_retry_policy_evaluate(const UmiDataRetryPolicy *policy, uint32_t attempt, bool transient_failure, bool *out_allowed) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL || out_allowed == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_allowed = transient_failure && attempt < policy->max_attempts;
     return UMI_STATUS_OK;

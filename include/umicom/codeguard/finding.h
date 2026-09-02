@@ -32,6 +32,9 @@ extern "C" {
 #define UMI_CODEGUARD_MESSAGE_CAPACITY 320U
 #define UMI_CODEGUARD_REMEDIATION_CAPACITY 384U
 #define UMI_CODEGUARD_CWE_CAPACITY 24U
+/**
+ * Represent the code guard finding data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardFinding {
     char rule_id[UMI_CODEGUARD_RULE_ID_CAPACITY];
     char cwe[UMI_CODEGUARD_CWE_CAPACITY];

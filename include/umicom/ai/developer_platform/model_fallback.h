@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev model fallback data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevModelFallback {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +41,25 @@ typedef struct UmiAiDevModelFallback {
     int enabled;
 } UmiAiDevModelFallback;
 
+/**
+ * Initialise ai dev model fallback from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ai_dev_model_fallback_init(UmiAiDevModelFallback *policy);
+/**
+ * Provide the ai dev model fallback configure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_model_fallback_configure(UmiAiDevModelFallback *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev model fallback allows operation used by this module and its client
+ * applications.
+ */
 int umi_ai_dev_model_fallback_allows(const UmiAiDevModelFallback *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev model fallback approval required operation used by this module and
+ * its client applications.
+ */
 int umi_ai_dev_model_fallback_approval_required(const UmiAiDevModelFallback *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

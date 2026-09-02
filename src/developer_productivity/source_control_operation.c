@@ -14,9 +14,17 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operation.h"
 
+/*
+ * Check that developer source control operation satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_source_control_operation_validate(
     const UmiDeveloperSourceControlOperationDefinition *definition)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (definition == NULL ||
         definition->structure_size != sizeof(*definition) ||
         definition->api_version != UMI_DEVELOPER_PRODUCTIVITY_API_VERSION ||

@@ -24,6 +24,10 @@ static const char *const BUILD_TOOLS[] = {
     "node", "npm", "tsc"
 };
 
+/*
+ * Provide the developer project language typescript operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguagePack *umi_developer_project_language_typescript(void)
 {
     static const UmiDeveloperProjectLanguagePack pack = {

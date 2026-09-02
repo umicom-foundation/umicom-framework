@@ -30,26 +30,50 @@ extern "C" {
 
 #define UMI_AI_UI_VISIBLE_ROWS 32U
 
+/**
+ * Initialise ai ui authorengine overview view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_ai_ui_authorengine_overview_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui chat view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_chat_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui runtime catalogue view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_ui_runtime_catalogue_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui context view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_context_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui sessions view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_sessions_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,
     UmiUiViewModel **out_view);
+/**
+ * Initialise ai ui privacy view from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_ui_privacy_view_create(
     const char *view_id,
     UmiAiAuthorEngineService *service,

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading tick size rule data shared with callers of this public contract.
+ */
 typedef struct UmiTradingTickSizeRule { UmiTradingPriceTicks minimum_price; UmiTradingPriceTicks maximum_price; UmiTradingPriceTicks tick_size; } UmiTradingTickSizeRule;
 /* Initialise and validate represent a price range and legal tick increment. */
 UmiStatus umi_trading_tick_size_rule_init(UmiTradingTickSizeRule *value,UmiTradingPriceTicks minimum_price, UmiTradingPriceTicks maximum_price, UmiTradingPriceTicks tick_size);

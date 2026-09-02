@@ -18,10 +18,18 @@
 
 #include "umicom/test_platform/history.h"
 
+/*
+ * Initialise test platform operation plan from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_test_platform_operation_plan_init(
     UmiTestPlatformOperationPlan *plan,
     UmiTestPlatformOperationKind kind)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) return;
     (void)memset(plan, 0, sizeof(*plan));
     plan->kind = kind;
@@ -29,6 +37,10 @@ void umi_test_platform_operation_plan_init(
     plan->generation = 1U;
 }
 
+/*
+ * Provide the test platform operation plan all operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_operation_plan_all(
     UmiTestPlatformOperationPlan *plan,
     const UmiTestPlatformItemRegistry *items,
@@ -36,7 +48,15 @@ UmiStatus umi_test_platform_operation_plan_all(
     const UmiTestPlatformFilter *filter)
 {
     UmiTestPlatformFilter default_filter;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || items == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (filter == NULL) {
         umi_test_platform_filter_init(&default_filter);
         filter = &default_filter;
@@ -47,11 +67,19 @@ UmiStatus umi_test_platform_operation_plan_all(
                                            &plan->selection);
 }
 
+/*
+ * Provide the test platform operation plan failed operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_operation_plan_failed(
     UmiTestPlatformOperationPlan *plan,
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || items == NULL || results == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -61,19 +89,30 @@ UmiStatus umi_test_platform_operation_plan_failed(
                                                       &plan->selection);
 }
 
+/*
+ * Add test platform operation plan only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_test_platform_operation_plan_add(
     UmiTestPlatformOperationPlan *plan,
     const char *item_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL || item_id == NULL || item_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->selection.count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(plan->selection.item_ids[index], item_id) == 0) {
             return UMI_STATUS_ALREADY_EXISTS;
         }
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (plan->selection.count >= UMI_TEST_PLATFORM_SELECTION_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -85,31 +124,57 @@ UmiStatus umi_test_platform_operation_plan_add(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by test platform operation execution without
+ * changing their state.
+ */
 size_t umi_test_platform_operation_execution_count(
     const UmiTestPlatformOperationPlan *plan)
 {
     uint32_t repeats;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (plan == NULL) return 0U;
     repeats = plan->repeat_count == 0U ? 1U : plan->repeat_count;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (plan->selection.count > SIZE_MAX / repeats) return SIZE_MAX;
     return plan->selection.count * (size_t)repeats;
 }
 
+/*
+ * Initialise test platform operation controller from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_test_platform_operation_controller_init(
     UmiTestPlatformOperationController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return;
     (void)memset(controller, 0, sizeof(*controller));
     controller->generation = 1U;
 }
 
+/*
+ * Provide the test platform operation begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_test_platform_operation_begin(
     UmiTestPlatformOperationController *controller,
     const UmiTestPlatformOperationPlan *plan)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || plan == NULL || plan->selection.count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (controller->running) return UMI_STATUS_BUSY;
     controller->running = 1;
     controller->stop_requested = 0;
@@ -121,26 +186,48 @@ UmiStatus umi_test_platform_operation_begin(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform operation request stop operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_operation_request_stop(
     UmiTestPlatformOperationController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!controller->running) return UMI_STATUS_INVALID_STATE;
     controller->stop_requested = 1;
     controller->generation += 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the test platform operation should stop operation used by this module and its
+ * client applications.
+ */
 int umi_test_platform_operation_should_stop(
     const UmiTestPlatformOperationController *controller)
 {
     return controller != NULL && controller->stop_requested;
 }
 
+/*
+ * Provide the test platform operation mark completed operation used by this module and its
+ * client applications.
+ */
 void umi_test_platform_operation_mark_completed(
     UmiTestPlatformOperationController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || !controller->running) return;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (controller->completed_execution_count <
         controller->planned_execution_count) {
         controller->completed_execution_count += 1U;
@@ -148,9 +235,17 @@ void umi_test_platform_operation_mark_completed(
     controller->generation += 1U;
 }
 
+/*
+ * Provide the test platform operation finish operation used by this module and its client
+ * applications.
+ */
 void umi_test_platform_operation_finish(
     UmiTestPlatformOperationController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return;
     controller->running = 0;
     controller->generation += 1U;

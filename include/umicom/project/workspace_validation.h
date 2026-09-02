@@ -35,12 +35,19 @@ extern "C" {
 #define UMI_PROJECT_WORKSPACE_VALIDATION_API_VERSION 1U
 #define UMI_PROJECT_WORKSPACE_VALIDATION_ISSUE_CAPACITY 128U
 
+/**
+ * List the named project workspace issue severity values accepted by this public contract.
+ */
 typedef enum UmiProjectWorkspaceIssueSeverity {
     UMI_PROJECT_WORKSPACE_ISSUE_INFO = 0,
     UMI_PROJECT_WORKSPACE_ISSUE_WARNING = 1,
     UMI_PROJECT_WORKSPACE_ISSUE_ERROR = 2
 } UmiProjectWorkspaceIssueSeverity;
 
+/**
+ * Represent the project workspace validation issue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProjectWorkspaceValidationIssue {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,6 +58,10 @@ typedef struct UmiProjectWorkspaceValidationIssue {
     char message[384];
 } UmiProjectWorkspaceValidationIssue;
 
+/**
+ * Represent the project workspace validation report data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiProjectWorkspaceValidationReport {
     uint32_t struct_size;
     uint32_t api_version;
@@ -64,10 +75,17 @@ typedef struct UmiProjectWorkspaceValidationReport {
     int valid;
 } UmiProjectWorkspaceValidationReport;
 
+/**
+ * Check that project workspace satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_project_workspace_validate(
     const UmiProjectWorkspace *workspace,
     UmiProjectWorkspaceValidationReport *out_report);
 
+/**
+ * Provide the project workspace validate project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_project_workspace_validate_project(
     const UmiProjectWorkspace *workspace,
     const char *project_id,

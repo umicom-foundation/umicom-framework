@@ -18,5 +18,7 @@
  */
 #include "umicom/product/suite.h"
 #include <string.h>
-UmiStatus umi_product_suite_validate(const UmiProductSuite *s){size_t i;if(s==NULL||s->suite_id==NULL||s->suite_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;for(i=0U;i<s->product_count;++i)if(umi_product_profile_validate(s->products[i])!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
-const UmiProductProfile *umi_product_suite_find(const UmiProductSuite *s,const char *id){size_t i;if(s==NULL||id==NULL)return NULL;for(i=0U;i<s->product_count;++i)if(strcmp(s->products[i]->descriptor->product_id,id)==0)return s->products[i];return NULL;}
+/* Check that product suite satisfies its contract before another service relies on it. */
+UmiStatus umi_product_suite_validate(const UmiProductSuite *s){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||s->suite_id==NULL||s->suite_id[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<s->product_count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_product_profile_validate(s->products[i])!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Find product suite while leaving the underlying catalogue or model owned by this module. */
+const UmiProductProfile *umi_product_suite_find(const UmiProductSuite *s,const char *id){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||id==NULL)return NULL;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<s->product_count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strcmp(s->products[i]->descriptor->product_id,id)==0)return s->products[i];return NULL;}

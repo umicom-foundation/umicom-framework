@@ -24,9 +24,24 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr executable layout data shared with callers of this public contract.
+ */
 typedef struct UmiDrExecutableLayout { char id[UMI_DR_ID_CAPACITY]; char entrypoint[UMI_DR_PATH_CAPACITY]; char bin_dir[UMI_DR_PATH_CAPACITY]; bool console; bool gui; } UmiDrExecutableLayout;
+/**
+ * Initialise dr executable layout from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_dr_executable_layout_init(UmiDrExecutableLayout *value);
+/**
+ * Check that dr executable layout satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_dr_executable_layout_valid(const UmiDrExecutableLayout *value);
+/**
+ * Provide the dr executable layout fingerprint operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_dr_executable_layout_fingerprint(const UmiDrExecutableLayout *value);
 
 #ifdef __cplusplus

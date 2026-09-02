@@ -19,13 +19,22 @@
 /* Copy character-by-character so truncation is explicit and deterministic. */
 UmiStatus umi_ws_copy_text(char *destination, size_t capacity, const char *source) {
     size_t index = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || source == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (source[index] != '\0' && index + 1U < capacity) {
         destination[index] = source[index];
         ++index;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (source[index] != '\0') {
         destination[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -37,10 +46,19 @@ UmiStatus umi_ws_copy_text(char *destination, size_t capacity, const char *sourc
 /* Accept only non-empty identifiers terminated inside the shared UI capacity. */
 bool umi_ws_id_valid(const char *identifier) {
     size_t index = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (identifier == NULL || identifier[0] == '\0') {
         return false;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index < UMI_UI_ID_CAPACITY) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (identifier[index] == '\0') {
             return true;
         }
@@ -51,15 +69,20 @@ bool umi_ws_id_valid(const char *identifier) {
 
 /* Normalise scores and ratios used by toolkit-neutral layout policies. */
 double umi_ws_clamp_unit(double value) {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value < 0.0) return 0.0;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (value > 1.0) return 1.0;
     return value;
 }
 
 /* Keep geometry and spacing values inside explicit policy limits. */
 int32_t umi_ws_clamp_i32(int32_t value, int32_t minimum, int32_t maximum) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (minimum > maximum) return minimum;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value < minimum) return minimum;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value > maximum) return maximum;
     return value;
 }
@@ -68,7 +91,15 @@ int32_t umi_ws_clamp_i32(int32_t value, int32_t minimum, int32_t maximum) {
 uint64_t umi_ws_hash_text(const char *text) {
     uint64_t hash = UINT64_C(1469598103934665603);
     size_t index = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL) return 0U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (text[index] != '\0') {
         hash ^= (uint64_t)(unsigned char)text[index];
         hash *= UINT64_C(1099511628211);
@@ -77,7 +108,9 @@ uint64_t umi_ws_hash_text(const char *text) {
     return hash;
 }
 
+/* Provide the ws domain text operation used by this module and its client applications. */
 const char *umi_ws_domain_text(UmiWsApplicationDomain domain) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (domain) {
         case UMI_WS_DOMAIN_STUDIO: return "studio";
         case UMI_WS_DOMAIN_TRADER: return "trader";
@@ -93,7 +126,12 @@ const char *umi_ws_domain_text(UmiWsApplicationDomain domain) {
     }
 }
 
+/*
+ * Provide the ws surface kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_surface_kind_text(UmiWsSurfaceKind kind) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_WS_SURFACE_EDITOR: return "editor";
         case UMI_WS_SURFACE_CANVAS: return "canvas";
@@ -114,7 +152,12 @@ const char *umi_ws_surface_kind_text(UmiWsSurfaceKind kind) {
     }
 }
 
+/*
+ * Provide the ws dock region text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_dock_region_text(UmiWsDockRegion region) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (region) {
         case UMI_WS_DOCK_LEFT: return "left";
         case UMI_WS_DOCK_RIGHT: return "right";

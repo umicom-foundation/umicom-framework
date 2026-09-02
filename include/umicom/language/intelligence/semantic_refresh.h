@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_SEMANTIC_REFRESH_API_VERSION 1U
+/**
+ * Represent the language intelligence semantic refresh data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceSemanticRefresh {
     uint32_t struct_size;
     uint32_t api_version;
@@ -34,12 +38,28 @@ typedef struct UmiLanguageIntelligenceSemanticRefresh {
     uint64_t generation;
     uint64_t revision;
 } UmiLanguageIntelligenceSemanticRefresh;
+/**
+ * Initialise language intelligence semantic refresh from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_semantic_refresh_init(UmiLanguageIntelligenceSemanticRefresh *value, const char *id);
+/**
+ * Provide the language intelligence semantic refresh transition operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_semantic_refresh_transition(
     UmiLanguageIntelligenceSemanticRefresh *value,
     UmiLanguageIntelligenceState next_state,
     int explicit_release);
+/**
+ * Provide the language intelligence semantic refresh record failure operation used by this
+ * module and its client applications.
+ */
 void umi_language_intelligence_semantic_refresh_record_failure(UmiLanguageIntelligenceSemanticRefresh *value);
+/**
+ * Provide the language intelligence semantic refresh is usable operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_semantic_refresh_is_usable(const UmiLanguageIntelligenceSemanticRefresh *value);
 #ifdef __cplusplus
 }

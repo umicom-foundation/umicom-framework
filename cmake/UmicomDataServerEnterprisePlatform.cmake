@@ -22,6 +22,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_DATA_ENTERPRISE_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_data)
     message(FATAL_ERROR "UmicomDataServerEnterprisePlatform.cmake requires umicom_data")
 endif()
@@ -96,16 +97,22 @@ target_sources(umicom_data PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/data/enterprise/data_platform_service.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add data enterprise test build helper so parent and application projects
+    # apply one consistent rule.
     function(umicom_add_data_enterprise_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_DATA_ENTERPRISE_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::data)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()

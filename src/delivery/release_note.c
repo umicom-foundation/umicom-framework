@@ -20,19 +20,34 @@
 #include "umicom/delivery/release_note.h"
 #include "delivery_internal.h"
 #include <string.h>
+/*
+ * Initialise release notes from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_release_notes_init(UmiReleaseNotes *notes)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (notes != NULL) (void)memset(notes, 0, sizeof(*notes));
 }
+/* Add release notes only after its inputs and available capacity have been checked. */
 UmiStatus umi_release_notes_add(UmiReleaseNotes *notes,
                                 const char *category,
                                 const char *text)
 {
     UmiReleaseNoteEntry *entry;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (notes == NULL || category == NULL || text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (notes->count >= UMI_DELIVERY_MAX_METADATA) return UMI_STATUS_CAPACITY_EXCEEDED;
     entry = &notes->entries[notes->count++];
     (void)memset(entry, 0, sizeof(*entry));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_delivery_copy_text(entry->category, sizeof(entry->category), category) != UMI_STATUS_OK ||
         umi_delivery_copy_text(entry->text, sizeof(entry->text), text) != UMI_STATUS_OK) {
         return UMI_STATUS_CAPACITY_EXCEEDED;

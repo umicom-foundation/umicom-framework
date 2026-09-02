@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise debug runtime decode from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_debug_runtime_decode_initialize(
     const char *json,
     UmiDebugRuntimeCapabilities *out_result);

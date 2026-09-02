@@ -14,6 +14,10 @@
 
 #include "umicom/build/graph.h"
 
+/*
+ * Exercise add and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add(UmiBuildGraph *graph, const char *id, UmiBuildPhase phase,
                 uint32_t attempts)
 {
@@ -25,6 +29,10 @@ static void add(UmiBuildGraph *graph, const char *id, UmiBuildPhase phase,
     assert(umi_build_graph_add_node(graph, &node) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildGraph *graph = NULL;

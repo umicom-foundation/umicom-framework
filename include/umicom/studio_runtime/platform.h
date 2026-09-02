@@ -38,6 +38,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the studio runtime snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiStudioRuntimeSnapshot {
     UmiIdeIntegrationPlatformSnapshot ide;
     UmiStudioRuntimeDocumentSync document_sync;
@@ -51,32 +54,63 @@ typedef struct UmiStudioRuntimeSnapshot {
     uint64_t revision;
 } UmiStudioRuntimeSnapshot;
 
+/**
+ * Represent the studio runtime platform data shared with callers of this public contract.
+ */
 typedef struct UmiStudioRuntimePlatform UmiStudioRuntimePlatform;
 
+/**
+ * Initialise studio runtime platform from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_runtime_platform_create(
     const UmiStudioRuntimeBindings *bindings,
     const char *workspace_name,
     const char *actor_id,
     UmiStudioRuntimePlatform **out_platform);
 
+/**
+ * Release or reset state held by studio runtime platform so the same storage can be reused
+ * safely.
+ */
 void umi_studio_runtime_platform_destroy(
     UmiStudioRuntimePlatform *platform);
 
+/**
+ * Provide the studio runtime platform refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_runtime_platform_refresh(
     UmiStudioRuntimePlatform *platform);
 
+/**
+ * Provide the studio runtime platform set actor operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_set_actor(
     UmiStudioRuntimePlatform *platform,
     const char *actor_id);
 
+/**
+ * Provide the studio runtime platform select layout operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_select_layout(
     UmiStudioRuntimePlatform *platform,
     const char *preset_id);
 
+/**
+ * Provide the studio runtime platform set selection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_set_selection(
     UmiStudioRuntimePlatform *platform,
     const UmiStudioRuntimeSelectionRouter *selection);
 
+/**
+ * Provide the studio runtime platform execute command operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_studio_runtime_platform_execute_command(
     UmiStudioRuntimePlatform *platform,
     const char *command_id,
@@ -84,6 +118,10 @@ UmiStatus umi_studio_runtime_platform_execute_command(
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the studio runtime platform execute contribution operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_studio_runtime_platform_execute_contribution(
     UmiStudioRuntimePlatform *platform,
     const char *contribution_id,
@@ -91,19 +129,39 @@ UmiStatus umi_studio_runtime_platform_execute_contribution(
     char *out_message,
     size_t message_capacity);
 
+/**
+ * Provide the studio runtime platform snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_runtime_platform_snapshot(
     UmiStudioRuntimePlatform *platform,
     UmiStudioRuntimeSnapshot *out_snapshot);
 
+/**
+ * Provide the studio runtime platform bindings operation used by this module and its
+ * client applications.
+ */
 UmiStudioRuntimeBindings *umi_studio_runtime_platform_bindings(
     UmiStudioRuntimePlatform *platform);
 
+/**
+ * Provide the studio runtime platform selection operation used by this module and its
+ * client applications.
+ */
 UmiStudioRuntimeSelectionRouter *umi_studio_runtime_platform_selection(
     UmiStudioRuntimePlatform *platform);
 
+/**
+ * Provide the studio runtime platform status operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeStatusModel *umi_studio_runtime_platform_status(
     const UmiStudioRuntimePlatform *platform);
 
+/**
+ * Provide the studio runtime platform tabs operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeDocumentTabs *umi_studio_runtime_platform_tabs(
     const UmiStudioRuntimePlatform *platform);
 

@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai citation data shared with callers of this public contract.
+ */
 typedef struct UmiAiCitation {
     char source_id[UMI_AI_ID_CAPACITY];
     char label[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -37,6 +40,10 @@ typedef struct UmiAiCitation {
     size_t end_offset;
 } UmiAiCitation;
 
+/**
+ * Initialise ai citation from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_citation_init(UmiAiCitation *value);
 
 #ifdef __cplusplus

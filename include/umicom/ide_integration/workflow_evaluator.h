@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide workflow evaluate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_workflow_evaluate(
     const UmiIdeIntegrationBindings *bindings,
     const UmiIdeActiveContext *context,

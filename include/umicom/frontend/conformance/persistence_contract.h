@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc persistence contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcPersistenceContract { uint64_t required_fields; uint32_t schema_version; bool forward_readable; } UmiFcPersistenceContract;
+/**
+ * Check that fc persistence contract satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_fc_persistence_contract_validate(const UmiFcPersistenceContract *item);
 
 #ifdef __cplusplus

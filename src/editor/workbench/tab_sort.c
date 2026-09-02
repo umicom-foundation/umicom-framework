@@ -15,4 +15,8 @@
 #include "umicom/editor/workbench/tab_sort.h"
 
 #include <string.h>
-int umi_editor_wb_tab_sort_compare(const UmiEditorWbTabSortKey *a,const UmiEditorWbTabSortKey *b){if(a==NULL||b==NULL)return 0;if(a->pinned!=b->pinned)return a->pinned?-1:1;if(a->dirty!=b->dirty)return a->dirty?-1:1;return strcmp(a->label,b->label);}
+/*
+ * Provide the editor wb tab sort compare operation used by this module and its client
+ * applications.
+ */
+int umi_editor_wb_tab_sort_compare(const UmiEditorWbTabSortKey *a,const UmiEditorWbTabSortKey *b){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(a==NULL||b==NULL)return 0;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(a->pinned!=b->pinned)return a->pinned?-1:1;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(a->dirty!=b->dirty)return a->dirty?-1:1;return strcmp(a->label,b->label);}

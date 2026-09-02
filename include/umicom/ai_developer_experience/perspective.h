@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer perspective definition operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperWorkbenchPerspectiveDefinition *
 umi_ai_developer_perspective_definition(void);
 

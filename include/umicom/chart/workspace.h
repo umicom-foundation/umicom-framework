@@ -36,8 +36,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the chart workspace data shared with callers of this public contract.
+ */
 typedef struct UmiChartWorkspace UmiChartWorkspace;
 
+/**
+ * Represent the chart workspace snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiChartWorkspaceSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -52,16 +58,59 @@ typedef struct UmiChartWorkspaceSnapshot {
     uint64_t revision;
 } UmiChartWorkspaceSnapshot;
 
+/**
+ * Initialise chart workspace from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_chart_workspace_create(UmiChartWorkspace **out_service);
+/**
+ * Release or reset state held by chart workspace so the same storage can be reused safely.
+ */
 void umi_chart_workspace_destroy(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_workspace_snapshot(const UmiChartWorkspace *service, UmiChartWorkspaceSnapshot *out_snapshot);
+/**
+ * Provide the chart workspace panes operation used by this module and its client
+ * applications.
+ */
 UmiChartPaneRegistry *umi_chart_workspace_panes(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace scales operation used by this module and its client
+ * applications.
+ */
 UmiChartScaleRegistry *umi_chart_workspace_scales(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace crosshairs operation used by this module and its client
+ * applications.
+ */
 UmiChartCrosshairRegistry *umi_chart_workspace_crosshairs(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace markers operation used by this module and its client
+ * applications.
+ */
 UmiChartMarkerRegistry *umi_chart_workspace_markers(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace annotations operation used by this module and its client
+ * applications.
+ */
 UmiChartAnnotationRegistry *umi_chart_workspace_annotations(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace drawings operation used by this module and its client
+ * applications.
+ */
 UmiChartDrawingRegistry *umi_chart_workspace_drawings(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace streams operation used by this module and its client
+ * applications.
+ */
 UmiChartStreamRegistry *umi_chart_workspace_streams(UmiChartWorkspace *service);
+/**
+ * Provide the chart workspace extensions operation used by this module and its client
+ * applications.
+ */
 UmiChartExtensionRegistry *umi_chart_workspace_extensions(UmiChartWorkspace *service);
 
 #ifdef __cplusplus

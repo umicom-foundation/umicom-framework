@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TARGET_SELECTION "umicom.developer.build.target_selection"
 
+/**
+ * Provide the developer capability target selection operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_target_selection(void);
 

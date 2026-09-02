@@ -115,14 +115,24 @@ static const DocumentCapabilityGetter BUILTIN_CAPABILITIES[] = {
     umi_document_capability_document_telemetry,
 };
 
+/*
+ * Provide the document capability catalog register builtins operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_document_capability_catalog_register_builtins(
     UmiDocumentCapabilityCatalog *catalog)
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (catalog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(BUILTIN_CAPABILITIES) / sizeof(BUILTIN_CAPABILITIES[0]); ++index) {
         status = umi_document_capability_catalog_upsert(catalog, BUILTIN_CAPABILITIES[index]());
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;

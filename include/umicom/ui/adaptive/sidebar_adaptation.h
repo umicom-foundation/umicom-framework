@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive sidebar decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveSidebarDecision { UmiAdaptivePresentation presentation; int32_t extent; } UmiAdaptiveSidebarDecision;
 /* Resolve side-navigation presentation and extent for the active size class. */
 UmiAdaptiveSidebarDecision umi_adaptive_sidebar_adaptation_resolve(UmiDesignSizeClass size_class, int32_t preferred_extent);

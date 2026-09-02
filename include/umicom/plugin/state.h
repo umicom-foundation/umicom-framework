@@ -20,6 +20,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * List the named plugin state values accepted by this public contract.
+ */
 typedef enum UmiPluginState {
     UMI_PLUGIN_DISCOVERED = 0,
     UMI_PLUGIN_VALIDATED = 1,
@@ -31,7 +34,14 @@ typedef enum UmiPluginState {
     UMI_PLUGIN_FAILED = 7,
     UMI_PLUGIN_DISABLED = 8
 } UmiPluginState;
+/**
+ * Check that plugin state transition satisfies its contract before another service relies
+ * on it.
+ */
 int umi_plugin_state_transition_valid(UmiPluginState from, UmiPluginState to);
+/**
+ * Provide the plugin state text operation used by this module and its client applications.
+ */
 const char *umi_plugin_state_text(UmiPluginState state);
 #ifdef __cplusplus
 }

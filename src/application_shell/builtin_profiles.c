@@ -87,11 +87,19 @@ static const BuiltinProfileFactory FACTORIES[] = {
     umi_application_shell_profile_application_launcher
 };
 
+/*
+ * Return the number of records represented by application shell builtin profile without
+ * changing their state.
+ */
 size_t umi_application_shell_builtin_profile_count(void)
 {
     return sizeof(FACTORIES) / sizeof(FACTORIES[0]);
 }
 
+/*
+ * Find application shell builtin profile while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationShellProfileDefinition *
 umi_application_shell_builtin_profile_at(size_t index)
 {
@@ -100,19 +108,32 @@ umi_application_shell_builtin_profile_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find application shell builtin profile while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationShellProfileDefinition *
 umi_application_shell_builtin_profile_find(const char *profile_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_shell_builtin_profile_count();
          ++index) {
         const UmiApplicationShellProfileDefinition *profile =
             FACTORIES[index]();
 
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (profile != NULL &&
             strcmp(profile->profile_id, profile_id) == 0) {
             return profile;
@@ -122,13 +143,22 @@ umi_application_shell_builtin_profile_find(const char *profile_id)
     return NULL;
 }
 
+/*
+ * Provide the application shell builtin profiles install operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_application_shell_builtin_profiles_install(
     UmiApplicationShellRegistry *registry)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_application_shell_builtin_profile_count();
          ++index) {
@@ -137,6 +167,7 @@ UmiStatus umi_application_shell_builtin_profiles_install(
                 registry,
                 FACTORIES[index]());
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

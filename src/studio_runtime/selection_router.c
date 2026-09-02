@@ -17,17 +17,24 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *out, size_t capacity, const char *value)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(out, value, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the begin selection operation used by this module and its client applications. */
 static void begin_selection(
     UmiStudioRuntimeSelectionRouter *router,
     UmiStudioRuntimeSelectionKind kind)
@@ -38,9 +45,17 @@ static void begin_selection(
     router->state.revision += 1U;
 }
 
+/*
+ * Initialise studio selection router from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_studio_selection_router_init(
     UmiStudioRuntimeSelectionRouter *router)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL) return;
 
     (void)memset(router, 0, sizeof(*router));
@@ -49,11 +64,19 @@ void umi_studio_selection_router_init(
     router->revision = 1U;
 }
 
+/*
+ * Provide the studio selection router problem operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_selection_router_problem(
     UmiStudioRuntimeSelectionRouter *router,
     size_t problem_index,
     const char *label)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || label == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -69,6 +92,10 @@ UmiStatus umi_studio_selection_router_problem(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio selection router test operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_selection_router_test(
     UmiStudioRuntimeSelectionRouter *router,
     const char *test_item_id,
@@ -76,6 +103,10 @@ UmiStatus umi_studio_selection_router_test(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || test_item_id == NULL || label == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -86,22 +117,29 @@ UmiStatus umi_studio_selection_router_test(
         router->state.current.subject_id,
         sizeof(router->state.current.subject_id),
         test_item_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->state.current.label,
             sizeof(router->state.current.label),
             label);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->command_context.test_item_id,
             sizeof(router->command_context.test_item_id),
             test_item_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) router->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the studio selection router source control operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_selection_router_source_control(
     UmiStudioRuntimeSelectionRouter *router,
     const char *path,
@@ -109,6 +147,10 @@ UmiStatus umi_studio_selection_router_source_control(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || path == NULL || path[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -119,12 +161,14 @@ UmiStatus umi_studio_selection_router_source_control(
         router->state.current.path,
         sizeof(router->state.current.path),
         path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->command_context.source_control_path,
             sizeof(router->command_context.source_control_path),
             path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         router->state.current.line = line;
         router->command_context.source_control_line = line;
@@ -133,6 +177,10 @@ UmiStatus umi_studio_selection_router_source_control(
     return status;
 }
 
+/*
+ * Provide the studio selection router symbol operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_selection_router_symbol(
     UmiStudioRuntimeSelectionRouter *router,
     const char *symbol_id,
@@ -140,6 +188,10 @@ UmiStatus umi_studio_selection_router_symbol(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || symbol_id == NULL || label == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -150,27 +202,38 @@ UmiStatus umi_studio_selection_router_symbol(
         router->state.current.subject_id,
         sizeof(router->state.current.subject_id),
         symbol_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->state.current.label,
             sizeof(router->state.current.label),
             label);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->command_context.symbol_id,
             sizeof(router->command_context.symbol_id),
             symbol_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) router->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the studio selection router diagnostic operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_selection_router_diagnostic(
     UmiStudioRuntimeSelectionRouter *router,
     size_t diagnostic_index,
     const char *label)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || label == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -186,12 +249,20 @@ UmiStatus umi_studio_selection_router_diagnostic(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio selection router debug frame operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_selection_router_debug_frame(
     UmiStudioRuntimeSelectionRouter *router,
     uint64_t frame_id)
 {
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || frame_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -202,6 +273,7 @@ UmiStatus umi_studio_selection_router_debug_frame(
         sizeof(router->state.current.subject_id),
         "frame.%llu",
         (unsigned long long)frame_id);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0 ||
         (size_t)written >= sizeof(router->state.current.subject_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -211,17 +283,26 @@ UmiStatus umi_studio_selection_router_debug_frame(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio selection router editor operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_selection_router_editor(
     UmiStudioRuntimeSelectionRouter *router,
     const UmiIdeEditorSelection *selection)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || selection == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_ide_editor_selection_validate(selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     begin_selection(router, UMI_STUDIO_SELECTION_EDITOR);
@@ -230,12 +311,14 @@ UmiStatus umi_studio_selection_router_editor(
         router->state.current.subject_id,
         sizeof(router->state.current.subject_id),
         selection->document_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->state.current.path,
             sizeof(router->state.current.path),
             selection->path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     router->state.current.line = selection->start_line;
@@ -246,6 +329,10 @@ UmiStatus umi_studio_selection_router_editor(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the studio selection router ai approval operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_selection_router_ai_approval(
     UmiStudioRuntimeSelectionRouter *router,
     const char *approval_id,
@@ -253,6 +340,10 @@ UmiStatus umi_studio_selection_router_ai_approval(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || approval_id == NULL || label == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -263,16 +354,22 @@ UmiStatus umi_studio_selection_router_ai_approval(
         router->state.current.subject_id,
         sizeof(router->state.current.subject_id),
         approval_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->state.current.label,
             sizeof(router->state.current.label),
             label);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) router->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the studio selection router ai patch file operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_selection_router_ai_patch_file(
     UmiStudioRuntimeSelectionRouter *router,
     const char *patch_id,
@@ -281,6 +378,10 @@ UmiStatus umi_studio_selection_router_ai_patch_file(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (router == NULL || patch_id == NULL || path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -291,12 +392,14 @@ UmiStatus umi_studio_selection_router_ai_patch_file(
         router->state.current.subject_id,
         sizeof(router->state.current.subject_id),
         patch_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = copy_text(
             router->state.current.path,
             sizeof(router->state.current.path),
             path);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         router->state.current.index = file_index;
         router->revision += 1U;
@@ -304,6 +407,10 @@ UmiStatus umi_studio_selection_router_ai_patch_file(
     return status;
 }
 
+/*
+ * Provide the studio selection router context operation used by this module and its client
+ * applications.
+ */
 const UmiIdeCommandContext *umi_studio_selection_router_context(
     const UmiStudioRuntimeSelectionRouter *router)
 {

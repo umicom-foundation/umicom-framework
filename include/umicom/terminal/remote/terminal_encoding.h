@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote terminal encoding supported operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_terminal_encoding_supported(const char *name);
 #ifdef __cplusplus
 }

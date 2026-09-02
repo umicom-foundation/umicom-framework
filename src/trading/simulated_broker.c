@@ -19,12 +19,17 @@
 
 #include "umicom/trading/simulated_broker.h"
 
+/* Provide the sim connect operation used by this module and its client applications. */
 static UmiStatus sim_connect(void *instance,
                              UmiTradingEnvironment environment)
 {
     UmiSimulatedBrokerStorage *broker =
         (UmiSimulatedBrokerStorage *)instance;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || environment == UMI_TRADING_LIVE) {
         return UMI_STATUS_PERMISSION_DENIED;
     }
@@ -34,12 +39,17 @@ static UmiStatus sim_connect(void *instance,
     return UMI_STATUS_OK;
 }
 
+/* Provide the sim submit operation used by this module and its client applications. */
 static UmiStatus sim_submit(void *instance,
                             const UmiOrderRequest *request)
 {
     UmiSimulatedBrokerStorage *broker =
         (UmiSimulatedBrokerStorage *)instance;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || request == NULL || !broker->connected) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -51,12 +61,17 @@ static UmiStatus sim_submit(void *instance,
     return umi_order_store_add(&broker->orders, &order);
 }
 
+/* Provide the sim cancel operation used by this module and its client applications. */
 static UmiStatus sim_cancel(void *instance,
                             const UmiFinancialId *client_order_id)
 {
     UmiSimulatedBrokerStorage *broker =
         (UmiSimulatedBrokerStorage *)instance;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker == NULL || client_order_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -66,6 +81,7 @@ static UmiStatus sim_cancel(void *instance,
         umi_order_store_find(&broker->orders,
                              client_order_id->value,
                              &order);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -75,19 +91,32 @@ static UmiStatus sim_cancel(void *instance,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by sim so the same storage can be reused safely. */
 static void sim_destroy(void *instance)
 {
     UmiSimulatedBrokerStorage *broker =
         (UmiSimulatedBrokerStorage *)instance;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (broker != NULL) {
         broker->connected = 0;
         umi_order_store_init(&broker->orders);
     }
 }
 
+/*
+ * Initialise simulated broker from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_simulated_broker_create(UmiSimulatedBrokerStorage *storage,
                                       UmiBroker *out_broker)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (storage == NULL || out_broker == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_ENCODING_DETECTION "umicom.document.encoding.encoding_detection"
 
+/**
+ * Provide the document capability encoding detection operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_encoding_detection(void);
 

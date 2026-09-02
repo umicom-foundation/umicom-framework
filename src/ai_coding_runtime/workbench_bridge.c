@@ -27,6 +27,10 @@ struct UmiAiCodingWorkbenchBridge {
     uint64_t task_sequence;
 };
 
+/*
+ * Provide the has active selection operation used by this module and its client
+ * applications.
+ */
 static int has_active_selection(void *user_data, const char *argument)
 {
     UmiAiCodingWorkbenchBridge *bridge =
@@ -40,6 +44,7 @@ static int has_active_selection(void *user_data, const char *argument)
             bridge->context.selection_start_line;
 }
 
+/* Provide the has problems operation used by this module and its client applications. */
 static int has_problems(void *user_data, const char *argument)
 {
     UmiAiCodingWorkbenchBridge *bridge =
@@ -50,6 +55,7 @@ static int has_problems(void *user_data, const char *argument)
         bridge->context.problems_summary[0] != '\0';
 }
 
+/* Provide the prepare request operation used by this module and its client applications. */
 static UmiStatus prepare_request(
     UmiAiCodingWorkbenchBridge *bridge,
     UmiAiCodingTaskKind task,
@@ -59,6 +65,10 @@ static UmiStatus prepare_request(
     const char *workspace_root;
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || instruction == NULL ||
         out_request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -66,6 +76,10 @@ static UmiStatus prepare_request(
 
     workspace_root =
         umi_ai_coding_runtime_platform_workspace_root(bridge->platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workspace_root == NULL) return UMI_STATUS_INVALID_STATE;
 
     umi_ai_coding_request_init(out_request, task);
@@ -77,6 +91,7 @@ static UmiStatus prepare_request(
         sizeof(out_request->request_id),
         "workbench.ai.%llu",
         (unsigned long long)bridge->task_sequence);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (written < 0 ||
         (size_t)written >= sizeof(out_request->request_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -127,6 +142,7 @@ static UmiStatus prepare_request(
     return umi_ai_coding_request_validate(out_request);
 }
 
+/* Provide the run task operation used by this module and its client applications. */
 static UmiStatus run_task(
     UmiAiCodingWorkbenchBridge *bridge,
     UmiAiCodingTaskKind task,
@@ -141,6 +157,7 @@ static UmiStatus run_task(
     UmiStatus status;
 
     status = prepare_request(bridge, task, instruction, &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     written = snprintf(
@@ -148,6 +165,7 @@ static UmiStatus run_task(
         sizeof(task_id),
         "workbench-task.%llu",
         (unsigned long long)bridge->task_sequence);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(task_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -156,13 +174,19 @@ static UmiStatus run_task(
         bridge->platform,
         task_id,
         &request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_agent_snapshot(
         umi_ai_coding_runtime_platform_agent(bridge->platform),
         &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_message != NULL && message_capacity > 0U) {
         (void)snprintf(
             out_message,
@@ -174,6 +198,7 @@ static UmiStatus run_task(
     return UMI_STATUS_OK;
 }
 
+/* Provide the explain selection operation used by this module and its client applications. */
 static UmiStatus explain_selection(
     void *user_data,
     const char *argument,
@@ -197,6 +222,7 @@ static UmiStatus explain_selection(
         message_capacity);
 }
 
+/* Provide the fix problems operation used by this module and its client applications. */
 static UmiStatus fix_problems(
     void *user_data,
     const char *argument,
@@ -208,6 +234,10 @@ static UmiStatus fix_problems(
     char instruction[UMI_AI_TEXT_CAPACITY];
     int written;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (argument != NULL && argument[0] != '\0') {
         written = snprintf(
             instruction,
@@ -215,7 +245,7 @@ static UmiStatus fix_problems(
             "%s\nProblems:\n%s",
             argument,
             bridge->context.problems_summary);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         written = snprintf(
             instruction,
             sizeof(instruction),
@@ -225,6 +255,7 @@ static UmiStatus fix_problems(
             bridge->context.problems_summary);
     }
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(instruction)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -237,6 +268,10 @@ static UmiStatus fix_problems(
         message_capacity);
 }
 
+/*
+ * Initialise ai coding workbench bridge from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_coding_workbench_bridge_create(
     UmiDeveloperWorkbench *workbench,
     UmiAiCodingRuntimePlatform *platform,
@@ -244,6 +279,10 @@ UmiStatus umi_ai_coding_workbench_bridge_create(
 {
     UmiAiCodingWorkbenchBridge *bridge;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workbench == NULL || platform == NULL ||
         out_bridge == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -252,6 +291,10 @@ UmiStatus umi_ai_coding_workbench_bridge_create(
     *out_bridge = NULL;
     bridge = (UmiAiCodingWorkbenchBridge *)calloc(
         1U, sizeof(*bridge));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     bridge->workbench = workbench;
@@ -262,16 +305,28 @@ UmiStatus umi_ai_coding_workbench_bridge_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by ai coding workbench bridge so the same storage can be
+ * reused safely.
+ */
 void umi_ai_coding_workbench_bridge_destroy(
     UmiAiCodingWorkbenchBridge *bridge)
 {
     free(bridge);
 }
 
+/*
+ * Provide the ai coding workbench bridge set context operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_workbench_bridge_set_context(
     UmiAiCodingWorkbenchBridge *bridge,
     const UmiAiCodingWorkbenchContext *context)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL || context == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -280,11 +335,19 @@ UmiStatus umi_ai_coding_workbench_bridge_set_context(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding workbench bridge bind operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_workbench_bridge_bind(
     UmiAiCodingWorkbenchBridge *bridge)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bridge == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_developer_workbench_bind_action(
@@ -293,6 +356,7 @@ UmiStatus umi_ai_coding_workbench_bridge_bind(
         explain_selection,
         has_active_selection,
         bridge);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_developer_workbench_bind_action(

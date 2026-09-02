@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/capital_ratio.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiCapitalRatio r; CHECK(umi_reg_capital_ratio_compute(&r,12.0,100.0)==UMI_STATUS_OK); CHECK(r.ratio>0.119&&r.ratio<0.121); return 0; }

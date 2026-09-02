@@ -17,6 +17,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/*
+ * Provide the retry policy default operation used by this module and its client
+ * applications.
+ */
 UmiRetryPolicy umi_retry_policy_default(void)
 {
     UmiRetryPolicy policy;
@@ -27,6 +31,10 @@ UmiRetryPolicy umi_retry_policy_default(void)
     return policy;
 }
 
+/*
+ * Provide the retry status is retryable operation used by this module and its client
+ * applications.
+ */
 int umi_retry_status_is_retryable(UmiStatus status)
 {
     return status == UMI_STATUS_UNAVAILABLE ||
@@ -35,6 +43,10 @@ int umi_retry_status_is_retryable(UmiStatus status)
            status == UMI_STATUS_IO_ERROR;
 }
 
+/*
+ * Provide the retry should attempt operation used by this module and its client
+ * applications.
+ */
 int umi_retry_should_attempt(const UmiRetryPolicy *policy,
                              uint32_t completed_attempts,
                              UmiStatus last_status)
@@ -46,6 +58,7 @@ int umi_retry_should_attempt(const UmiRetryPolicy *policy,
            umi_retry_status_is_retryable(last_status);
 }
 
+/* Provide the retry delay ms operation used by this module and its client applications. */
 uint32_t umi_retry_delay_ms(const UmiRetryPolicy *policy,
                             uint32_t completed_attempts)
 {
@@ -54,8 +67,10 @@ uint32_t umi_retry_delay_ms(const UmiRetryPolicy *policy,
         : umi_retry_policy_default();
     uint64_t delay = effective.initial_delay_ms;
     uint32_t attempt;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (attempt = 0U; attempt < completed_attempts; ++attempt) {
         delay = (delay * effective.multiplier_percent) / 100U;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (delay >= effective.maximum_delay_ms) {
             return effective.maximum_delay_ms;
         }

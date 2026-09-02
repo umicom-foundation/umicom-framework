@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic perspective switch data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicPerspectiveSwitch {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char name[UMI_UI_MOSAIC_TEXT_CAPACITY];

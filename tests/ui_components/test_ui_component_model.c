@@ -19,4 +19,8 @@
  * the matching source file.
  */
 #include "umicom/ui/components/model.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiUiComponentModel m=umi_ui_component_model_default(UMI_UI_COMPONENT_ENTRY);return m.state.visible&&m.state.enabled?0:1;}

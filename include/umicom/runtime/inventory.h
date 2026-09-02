@@ -31,6 +31,10 @@ extern "C" {
 
 #define UMI_RUNTIME_INVENTORY_API_VERSION 1U
 
+/**
+ * Represent the runtime inventory snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRuntimeInventorySnapshot {
     uint32_t structure_size;
     uint32_t api_version;
@@ -65,22 +69,46 @@ UmiStatus umi_runtime_inventory_snapshot(
     const UmiCapabilityRegistry *capabilities,
     UmiRuntimeInventorySnapshot *out_snapshot);
 
+/**
+ * Provide the runtime inventory has command operation used by this module and its client
+ * applications.
+ */
 int umi_runtime_inventory_has_command(const UmiCommandRegistry *registry,
                                       const char *command_id);
+/**
+ * Provide the runtime inventory has service operation used by this module and its client
+ * applications.
+ */
 int umi_runtime_inventory_has_service(const UmiServiceRegistry *registry,
                                       const char *service_id);
+/**
+ * Provide the runtime inventory has capability operation used by this module and its
+ * client applications.
+ */
 int umi_runtime_inventory_has_capability(
     const UmiCapabilityRegistry *registry,
     const char *capability_id);
 
+/**
+ * Provide the runtime inventory count command prefix operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_runtime_inventory_count_command_prefix(
     const UmiCommandRegistry *registry,
     const char *prefix,
     size_t *out_count);
+/**
+ * Provide the runtime inventory count service prefix operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_runtime_inventory_count_service_prefix(
     const UmiServiceRegistry *registry,
     const char *prefix,
     size_t *out_count);
+/**
+ * Provide the runtime inventory count capability prefix operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_runtime_inventory_count_capability_prefix(
     const UmiCapabilityRegistry *registry,
     const char *prefix,

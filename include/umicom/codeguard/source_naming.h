@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named code guard source name issue values accepted by this public contract.
+ */
 typedef enum UmiCodeGuardSourceNameIssue {
     UMI_CODEGUARD_SOURCE_NAME_OK = 0,
     UMI_CODEGUARD_SOURCE_NAME_VERSION_LABEL,

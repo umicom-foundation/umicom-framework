@@ -19,18 +19,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise application thin client from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_thin_client_create(
     const char *application_id,
     UmiApplicationThinClient **out_client)
 {
     UmiApplicationThinClient *client;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id == NULL || out_client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     *out_client = NULL;
     client = (UmiApplicationThinClient *)calloc(1U, sizeof(*client));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_application_thin_client_init(application_id, client);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(client);
         return status;
@@ -39,6 +52,10 @@ UmiStatus umi_application_thin_client_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by application thin client so the same storage can be reused
+ * safely.
+ */
 void umi_application_thin_client_destroy(UmiApplicationThinClient *client)
 {
     free(client);
@@ -54,6 +71,10 @@ UmiStatus umi_application_thin_client_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (application_id == NULL || out_client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
 
@@ -62,15 +83,18 @@ UmiStatus umi_application_thin_client_init(
 
     status = umi_application_contract_resolve(
         application_id, &out_client->contract);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
         return status;
 
     status = umi_application_contract_validate(&out_client->contract);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
         return status;
 
     status = umi_application_workspace_runtime_init(
         out_client->contract.experience, &out_client->workspace);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK)
         return status;
 
@@ -83,6 +107,10 @@ UmiStatus umi_application_thin_client_bind_workbench(
     UmiApplicationThinClient *client,
     UmiUiWorkbench *workbench)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_workspace_runtime_bind_workbench(
@@ -94,6 +122,10 @@ UmiStatus umi_application_thin_client_select_layout(
     UmiApplicationThinClient *client,
     const char *layout_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_workspace_runtime_select_layout(
@@ -105,6 +137,10 @@ UmiStatus umi_application_thin_client_activate_panel(
     UmiApplicationThinClient *client,
     const char *panel_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_workspace_runtime_activate_panel(
@@ -116,6 +152,10 @@ UmiStatus umi_application_thin_client_deactivate_panel(
     UmiApplicationThinClient *client,
     const char *panel_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_workspace_runtime_deactivate_panel(
@@ -127,6 +167,10 @@ UmiStatus umi_application_thin_client_set_layout_locked(
     UmiApplicationThinClient *client,
     bool locked)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_workspace_runtime_set_layout_locked(
@@ -139,6 +183,10 @@ UmiStatus umi_application_thin_client_set_context(
     const char *group_id,
     const char *value)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_workspace_runtime_set_context(
@@ -149,6 +197,10 @@ UmiStatus umi_application_thin_client_set_context(
 UmiStatus umi_application_thin_client_refresh_readiness(
     UmiApplicationThinClient *client)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || client->contract.experience == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_readiness_report(
@@ -162,6 +214,10 @@ UmiStatus umi_application_thin_client_health(
     void *user_data,
     UmiApplicationRuntimeHealth *out_health)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (client == NULL || client->contract.experience == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return umi_application_runtime_health_evaluate(

@@ -62,6 +62,7 @@ UmiStatus umi_application_suite_layout_catalogue_build(
             descriptor->context_linked_layout_count;
         /* Separate ready and incomplete applications for release reporting. */
         if (descriptor->complete) out_catalogue->complete_count++;
+        /* Use this fallback path when the earlier condition does not apply. */
         else out_catalogue->incomplete_count++;
     }
     return out_catalogue->incomplete_count == 0U

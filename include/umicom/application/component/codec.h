@@ -24,9 +24,17 @@ extern "C" {
 
 #define UMI_APPLICATION_COMPONENT_WORKSPACE_FORMAT_VERSION 2U
 
+/**
+ * Write application component workspace in its stable representation and report capacity
+ * or input failures to the caller.
+ */
 UmiStatus
 umi_application_component_workspace_encode(const UmiApplicationComponentWorkspaceDraft *draft,
                                            char *buffer, size_t capacity, size_t *out_length);
+/**
+ * Read application component workspace into validated module state and return a status
+ * when input cannot be used.
+ */
 UmiStatus
 umi_application_component_workspace_decode(const char *text, size_t length,
                                            UmiApplicationComponentWorkspaceDraft *out_draft);

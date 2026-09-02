@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_command.h"
-int main(void) { UmiTerminalRemoteRemoteCommand v; umi_terminal_remote_remote_command_init(&v,"cmake","/work",false); if(!umi_terminal_remote_remote_command_valid(&v)) return 1; umi_terminal_remote_remote_command_init(&v,"","/work",false); return umi_terminal_remote_remote_command_valid(&v)?2:0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteRemoteCommand v; umi_terminal_remote_remote_command_init(&v,"cmake","/work",false); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_command_valid(&v)) return 1; umi_terminal_remote_remote_command_init(&v,"","/work",false); return umi_terminal_remote_remote_command_valid(&v)?2:0; }

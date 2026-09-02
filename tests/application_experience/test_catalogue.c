@@ -16,6 +16,10 @@
 #include <assert.h>
 #include "umicom/application/experience_catalogue.h"
 
+/*
+ * Exercise test experience catalogue and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_experience_catalogue(void)
 {
     const UmiApplicationExperienceDefinition *studio;

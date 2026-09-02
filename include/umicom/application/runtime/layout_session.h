@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application layout session data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationLayoutSession {
     uint32_t structure_size;
     const UmiApplicationExperienceDefinition *experience;
@@ -31,15 +35,31 @@ typedef struct UmiApplicationLayoutSession {
     uint64_t revision;
 } UmiApplicationLayoutSession;
 
+/**
+ * Initialise application layout session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_application_layout_session_init(
     const UmiApplicationExperienceDefinition *experience,
     UmiApplicationLayoutSession *out_session);
+/**
+ * Provide the application layout session select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_layout_session_select(
     UmiApplicationLayoutSession *session,
     const char *layout_id);
+/**
+ * Provide the application layout session set locked operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_layout_session_set_locked(
     UmiApplicationLayoutSession *session,
     bool locked);
+/**
+ * Provide the application layout session current operation used by this module and its
+ * client applications.
+ */
 const UmiExperienceLayoutDefinition *umi_application_layout_session_current(
     const UmiApplicationLayoutSession *session);
 /* Materialise experience layouts as canonical workspace profiles.

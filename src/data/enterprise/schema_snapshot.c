@@ -16,13 +16,19 @@
 #include <string.h>
 
 /* Registry initialisation is deterministic and allocation-free. */
-void umi_data_schema_snapshot_init(UmiDataSchemaSnapshot *registry) { if (registry != NULL) (void)memset(registry, 0, sizeof(*registry)); }
+void umi_data_schema_snapshot_init(UmiDataSchemaSnapshot *registry) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (registry != NULL) (void)memset(registry, 0, sizeof(*registry)); }
 
 /* Duplicate identifiers are rejected to keep mapping semantics unambiguous. */
 UmiStatus umi_data_schema_snapshot_add(UmiDataSchemaSnapshot *registry, const UmiDataSchemaTable *item) {
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || item == NULL || item->table_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
-    for (i = 0U; i < registry->count; ++i) if (strcmp(registry->items[i].table_id, item->table_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (i = 0U; i < registry->count; ++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(registry->items[i].table_id, item->table_id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_DATA_ENTERPRISE_MAX_ITEMS) return UMI_STATUS_CAPACITY_EXCEEDED;
     registry->items[registry->count++] = *item; registry->revision++;
     return UMI_STATUS_OK;
@@ -31,8 +37,13 @@ UmiStatus umi_data_schema_snapshot_add(UmiDataSchemaSnapshot *registry, const Um
 /* Lookup copies a snapshot so callers never borrow internal registry storage. */
 UmiStatus umi_data_schema_snapshot_find(const UmiDataSchemaSnapshot *registry, const char *id, UmiDataSchemaTable *out_item) {
     size_t i;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || id == NULL || out_item == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    for (i = 0U; i < registry->count; ++i) if (strcmp(registry->items[i].table_id, id) == 0) { *out_item = registry->items[i]; return UMI_STATUS_OK; }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (i = 0U; i < registry->count; ++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(registry->items[i].table_id, id) == 0) { *out_item = registry->items[i]; return UMI_STATUS_OK; }
     return UMI_STATUS_NOT_FOUND;
 }
 

@@ -18,6 +18,10 @@
 /* Reset the layout and assign its stable application-level identifier. */
 UmiStatus umi_adaptive_shell_layout_init(UmiAdaptiveShellLayout *layout, const char *layout_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || layout_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -29,12 +33,21 @@ UmiStatus umi_adaptive_shell_layout_init(UmiAdaptiveShellLayout *layout, const c
 UmiStatus umi_adaptive_shell_layout_add(UmiAdaptiveShellLayout *layout,
                                         const UmiAdaptiveShellRegion *region)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || region == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_adaptive_shell_layout_find(layout, region->responsive.region_id) != NULL) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (layout->count >= UMI_ADAPTIVE_MAX_ITEMS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -47,10 +60,16 @@ const UmiAdaptiveShellRegion *umi_adaptive_shell_layout_find(const UmiAdaptiveSh
                                                              const char *region_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (layout == NULL || region_id == NULL) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < layout->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(layout->regions[index].responsive.region_id, region_id) == 0) {
             return &layout->regions[index];
         }

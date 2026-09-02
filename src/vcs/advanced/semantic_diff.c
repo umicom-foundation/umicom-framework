@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <string.h>
 
+/* Provide the tokenize operation used by this module and its client applications. */
 static size_t tokenize(const char *text, uint64_t *tokens, size_t capacity)
 {
     size_t count = 0U;
@@ -29,13 +30,20 @@ static size_t tokenize(const char *text, uint64_t *tokens, size_t capacity)
     size_t token_length = 0U;
     const unsigned char *cursor = (const unsigned char *)text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (*cursor != 0U) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (isalnum(*cursor) || *cursor == (unsigned char)'_') {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (token_length + 1U < sizeof(token)) {
                 token[token_length++] = (char)tolower(*cursor);
             }
-        } else if (token_length > 0U) {
+        } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (token_length > 0U) {
             token[token_length] = '\0';
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (count < capacity) {
                 tokens[count] = umi_vcs_advanced_hash_text(token);
             }
@@ -45,8 +53,10 @@ static size_t tokenize(const char *text, uint64_t *tokens, size_t capacity)
         cursor += 1;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (token_length > 0U) {
         token[token_length] = '\0';
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (count < capacity) {
             tokens[count] = umi_vcs_advanced_hash_text(token);
         }
@@ -55,6 +65,10 @@ static size_t tokenize(const char *text, uint64_t *tokens, size_t capacity)
     return count;
 }
 
+/*
+ * Provide the vcs advanced semantic diff compare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_semantic_diff_compare(
     const char *left,
     const char *right,
@@ -71,6 +85,10 @@ UmiStatus umi_vcs_advanced_semantic_diff_compare(
     size_t i;
     size_t j;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL || right == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -86,8 +104,11 @@ UmiStatus umi_vcs_advanced_semantic_diff_compare(
     left_limit = left_count < 256U ? left_count : 256U;
     right_limit = right_count < 256U ? right_count : 256U;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (i = 0U; i < left_limit; ++i) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (j = 0U; j < right_limit; ++j) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (!used[j] && left_tokens[i] == right_tokens[j]) {
                 used[j] = 1;
                 common += 1U;
@@ -99,9 +120,10 @@ UmiStatus umi_vcs_advanced_semantic_diff_compare(
     out_result->left_token_count = left_count;
     out_result->right_token_count = right_count;
     out_result->common_token_count = common;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left_count == 0U && right_count == 0U) {
         out_result->similarity_percent = 100U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_result->similarity_percent =
             (uint32_t)((200U * common) / (left_count + right_count));
     }

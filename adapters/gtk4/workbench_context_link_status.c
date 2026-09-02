@@ -17,10 +17,18 @@
 
 #include <stdio.h>
 
+/*
+ * Provide the workbench context link gtk4 status new operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_context_link_gtk4_status_new(
     const UmiWorkbenchContextLinkService *service)
 {
     char text[256U];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL) return gtk_label_new("Context links unavailable");
     (void)snprintf(text, sizeof(text),
                    "Groups: %zu  Bindings: %zu  Published: %llu  Delivered: %llu",

@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic cross app surface data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiMosaicCrossAppSurface {
     char id[UMI_UI_MOSAIC_ID_CAPACITY];
     char panel_id[UMI_UI_MOSAIC_ID_CAPACITY];

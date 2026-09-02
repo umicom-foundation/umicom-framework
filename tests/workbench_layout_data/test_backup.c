@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise seed backup server and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int seed_backup_server(UmiDataServer *server)
 {
     TEST_STATUS_OK(umi_data_server_set(
@@ -40,6 +44,10 @@ static int seed_backup_server(UmiDataServer *server)
     return 0;
 }
 
+/*
+ * Exercise test backup size negotiation and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_backup_size_negotiation(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -61,6 +69,10 @@ static int test_backup_size_negotiation(void)
     return 0;
 }
 
+/*
+ * Exercise test backup round trip validation and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 static int test_backup_round_trip_validation(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -95,6 +107,10 @@ static int test_backup_round_trip_validation(void)
     return 0;
 }
 
+/*
+ * Exercise test backup filtering and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_backup_filtering(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -129,6 +145,10 @@ static int test_backup_filtering(void)
     return 0;
 }
 
+/*
+ * Exercise test backup tamper detection and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_backup_tamper_detection(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -158,6 +178,10 @@ static int test_backup_tamper_detection(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_backup_size_negotiation() == 0,

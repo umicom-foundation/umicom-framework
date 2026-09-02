@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise market data quality data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataQuality { size_t expected; size_t observed; size_t invalid; size_t outliers; } UmiEnterpriseMarketDataQuality;
 /* Initialise quality evidence counters for an expected topic population. */
 UmiStatus umi_enterprise_market_data_quality_init(UmiEnterpriseMarketDataQuality *quality, size_t expected);

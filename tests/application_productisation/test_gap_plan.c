@@ -18,6 +18,10 @@
 #include "umicom/application/productisation/completion_plan.h"
 #include "umicom/test_runtime/check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProductCapabilityMatrix *matrix =
@@ -47,12 +51,16 @@ int main(void)
                      UMI_STATUS_OK);
     UMI_TEST_REQUIRE(plan->step_count == gaps->gap_count);
     UMI_TEST_REQUIRE(plan->framework_step_count == gaps->framework_gap_count);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < plan->step_count; ++index) {
         const UmiProductisationCompletionStep *step =
             umi_productisation_completion_plan_at(plan, index);
         UMI_TEST_REQUIRE(step != NULL);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (step->stage == UMI_PRODUCTISATION_STAGE_STUDIO) saw_studio = 1;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (step->stage == UMI_PRODUCTISATION_STAGE_TRADER) saw_trader = 1;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index > 0U)
             UMI_TEST_REQUIRE(plan->steps[index - 1U].stage <= step->stage);
     }

@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "umicom/security/secret_inventory.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiSecuritySecretInventory inventory = {0};

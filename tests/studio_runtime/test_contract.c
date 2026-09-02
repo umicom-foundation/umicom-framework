@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/studio_runtime/contract.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiStudioRuntimeContract *contract=umi_studio_runtime_contract();

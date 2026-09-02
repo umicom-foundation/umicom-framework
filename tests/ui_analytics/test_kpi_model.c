@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/kpi_model.h"
 
-int main(void){UmiAnalyticsKpiModel k;double p;if(umi_analytics_kpi_model_init(&k,0,100,50,1)!=0)return 1;if(umi_analytics_kpi_model_progress(&k,&p)!=0)return 2;return p==.5?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiAnalyticsKpiModel k;double p;/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_kpi_model_init(&k,0,100,50,1)!=0)return 1;/* Apply this branch only when its contract condition is satisfied. */ if(umi_analytics_kpi_model_progress(&k,&p)!=0)return 2;return p==.5?0:3;}

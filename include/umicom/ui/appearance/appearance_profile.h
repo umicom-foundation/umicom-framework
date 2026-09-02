@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance appearance profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceAppearanceProfile {
     char profile_id[UMI_APPEARANCE_ID_CAPACITY];
     UmiDesignThemeMode theme_mode;

@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ws theme role values accepted by this public contract.
+ */
 typedef enum UmiWsThemeRole {
     UMI_WS_THEME_BACKGROUND = 1,
     UMI_WS_THEME_SURFACE = 2,
@@ -37,7 +40,15 @@ typedef enum UmiWsThemeRole {
     UMI_WS_THEME_DRAG_TARGET = 12
 } UmiWsThemeRole;
 
+/**
+ * Provide the ws theme role token operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_theme_role_token(UmiWsThemeRole role);
+/**
+ * Provide the ws theme role css class operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_theme_role_css_class(UmiWsThemeRole role);
 
 #ifdef __cplusplus

@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtUmicomOsProfile p;CHECK(umi_ct_umicom_os_profile_default(&p)==UMI_STATUS_OK);CHECK(umi_ct_umicom_os_profile_validate(&p)==UMI_STATUS_OK);CHECK(p.target.architecture==UMI_CT_ARCH_RISCV64&&p.smp&&p.userspace);return 0;}

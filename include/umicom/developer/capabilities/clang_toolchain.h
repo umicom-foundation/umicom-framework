@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CLANG_TOOLCHAIN "umicom.developer.integration.clang_toolchain"
 
+/**
+ * Provide the developer capability clang toolchain operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_clang_toolchain(void);
 

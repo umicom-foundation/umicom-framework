@@ -30,8 +30,18 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ct interrupt trigger values accepted by this public contract.
+ */
 typedef enum UmiCtInterruptTrigger { UMI_CT_IRQ_EDGE=1, UMI_CT_IRQ_LEVEL=2 } UmiCtInterruptTrigger;
+/**
+ * Represent the ct interrupt descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiCtInterruptDescriptor { uint32_t vector; uint8_t priority; UmiCtInterruptTrigger trigger; bool active_low; uint64_t affinity_mask; } UmiCtInterruptDescriptor;
+/**
+ * Check that ct interrupt descriptor satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ct_interrupt_descriptor_validate(const UmiCtInterruptDescriptor *descriptor,uint32_t maximum_vector);
 
 #ifdef __cplusplus

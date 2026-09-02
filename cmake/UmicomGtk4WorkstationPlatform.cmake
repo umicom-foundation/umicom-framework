@@ -21,6 +21,7 @@
 include_guard(GLOBAL)
 
 set(UMICOM_GTK4_WORKSTATION_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ui)
     message(FATAL_ERROR "UmicomGtk4WorkstationPlatform.cmake requires umicom_ui")
 endif()
@@ -106,6 +107,7 @@ if(TARGET umicom_ui_gtk4)
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/workspace_strip_gtk4.c"
     )
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(UMICOM_ENABLE_STRICT_WARNINGS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         set_source_files_properties(
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
@@ -131,21 +133,28 @@ if(TARGET umicom_ui_gtk4)
     endif()
 endif()
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add ui workstation test build helper so parent and application projects apply
+    # one consistent rule.
     function(umicom_add_ui_workstation_test target test_name source)
+        # Configure the optional target only when its feature has created it.
         if(TARGET "${target}")
             return()
         endif()
         add_executable("${target}" "${UMICOM_GTK4_WORKSTATION_ROOT}/${source}")
         target_link_libraries("${target}" PRIVATE Umicom::ui)
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()
         add_test(NAME "${test_name}" COMMAND "${target}")
         set_tests_properties("${test_name}" PROPERTIES LABELS "framework;ui-workstation")
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target("${target}")
         endif()

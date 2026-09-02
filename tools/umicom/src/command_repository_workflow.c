@@ -21,30 +21,46 @@
 
 #include "umicom/repository/workflow.h"
 
+/*
+ * Provide the cli repository option value operation used by this module and its client
+ * applications.
+ */
 static const char *umi_cli_repository_option_value(
     int argc,
     char **argv,
     const char *option)
 {
     int index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index + 1 < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], option) == 0) return argv[index + 1];
     }
     return NULL;
 }
 
+/*
+ * Provide the cli repository has flag operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_has_flag(
     int argc,
     char **argv,
     const char *option)
 {
     int index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0; index < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], option) == 0) return 1;
     }
     return 0;
 }
 
+/*
+ * Provide the cli repository option allowed operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_option_allowed(
     const char *value,
     const char *const *flags,
@@ -54,13 +70,17 @@ static int umi_cli_repository_option_allowed(
     int *takes_value)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < flag_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(value, flags[index]) == 0) {
             *takes_value = 0;
             return 1;
         }
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < option_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(value, options[index]) == 0) {
             *takes_value = 1;
             return 1;
@@ -69,6 +89,10 @@ static int umi_cli_repository_option_allowed(
     return 0;
 }
 
+/*
+ * Provide the cli repository validate options operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_validate_options(
     int argc,
     char **argv,
@@ -79,15 +103,19 @@ static int umi_cli_repository_validate_options(
     size_t option_count)
 {
     int index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = option_start; index < argc; ++index) {
         int takes_value = 0;
+        /* Apply this operation only while the related capability or state is available. */
         if (!umi_cli_repository_option_allowed(
                 argv[index], flags, flag_count,
                 options, option_count, &takes_value)) {
             (void)fprintf(stderr, "Unknown repository option: %s\n", argv[index]);
             return 0;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (takes_value) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
                 strncmp(argv[index + 1], "--", 2U) == 0) {
                 (void)fprintf(stderr, "Option %s requires a value.\n", argv[index]);
@@ -99,13 +127,22 @@ static int umi_cli_repository_validate_options(
     return 1;
 }
 
+/*
+ * Provide the cli repository prepare workflow operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_cli_repository_prepare_workflow(
     UmiCliContext *context,
     const UmiRepositoryWorkflowRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->dry_run) {
         (void)memset(context, 0, sizeof(*context));
         context->template_root = UMICOM_REPOSITORY_TEMPLATE_ROOT;
@@ -119,6 +156,10 @@ static UmiStatus umi_cli_repository_prepare_workflow(
         UMI_TOOLCHAIN_OPERATION_REPOSITORY_WRITE);
 }
 
+/*
+ * Provide the cli repository run workflow operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_run_workflow(
     UmiCliContext *context,
     UmiRepositoryWorkflowRequest *request)
@@ -127,6 +168,7 @@ static int umi_cli_repository_run_workflow(
     UmiStatus status;
 
     status = umi_cli_repository_prepare_workflow(context, request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr,
                       "Unable to prepare repository tools: %s\n",
@@ -142,15 +184,18 @@ static int umi_cli_repository_run_workflow(
     (void)printf("Repository action: %s\n",
                  umi_repository_workflow_action_text(request->action));
     (void)printf("Repository: %s\n", request->repository_root);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.output[0] != '\0') {
         (void)printf("%s%s", report.output,
                      report.output[strlen(report.output) - 1U] == '\n'
                          ? "" : "\n");
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr,
                       "Repository action failed: %s",
                       umi_status_text(status));
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (report.last_exit_code >= 0) {
             (void)fprintf(stderr,
                           " (Git exit code %d)",
@@ -159,16 +204,27 @@ static int umi_cli_repository_run_workflow(
         (void)fputc('\n', stderr);
         return 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.planned) (void)puts("Dry run completed; no files changed.");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.no_changes) (void)puts("No staged content required a new commit.");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.commit_created) (void)puts("Commit created.");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.pushed) (void)puts("Push completed.");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.fetched) (void)puts("Remote revisions fetched.");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.updated) (void)puts("Repository updated by fast-forward.");
+    /* Apply this branch only when its contract condition is satisfied. */
     if (report.submodules_updated) (void)puts("Submodules synchronised.");
     return 0;
 }
 
+/*
+ * Provide the cli repository clone operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_clone(
     UmiCliContext *context,
     int argc,
@@ -181,11 +237,13 @@ static int umi_cli_repository_clone(
     char *depth_end = NULL;
     unsigned long depth = 0UL;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (argc < 2) {
         (void)fprintf(stderr,
                       "Usage: umicom repo clone URL DESTINATION [options]\n");
         return 2;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_cli_repository_validate_options(
             argc, argv, 2,
             flags, sizeof(flags) / sizeof(flags[0]),
@@ -193,8 +251,16 @@ static int umi_cli_repository_clone(
         return 2;
     }
     depth_text = umi_cli_repository_option_value(argc, argv, "--depth");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (depth_text != NULL) {
         depth = strtoul(depth_text, &depth_end, 10);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (depth == 0UL || depth_end == NULL || *depth_end != '\0' ||
             depth > 1000000UL) {
             (void)fprintf(stderr, "--depth must be a positive whole number.\n");
@@ -215,6 +281,10 @@ static int umi_cli_repository_clone(
     return umi_cli_repository_run_workflow(context, &request);
 }
 
+/*
+ * Initialise cli repository from caller-provided values so later operations receive a
+ * known state.
+ */
 static int umi_cli_repository_init(
     UmiCliContext *context,
     int argc,
@@ -228,6 +298,7 @@ static int umi_cli_repository_init(
     const char *root = argc > 0 && argv[0][0] != '-' ? argv[0] : ".";
     int option_start = argc > 0 && argv[0][0] != '-' ? 1 : 0;
 
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_cli_repository_validate_options(
             argc, argv, option_start,
             flags, sizeof(flags) / sizeof(flags[0]),
@@ -236,9 +307,17 @@ static int umi_cli_repository_init(
     }
     umi_repository_workflow_request_init(
         &request, UMI_REPOSITORY_WORKFLOW_INITIALISE, root);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_cli_repository_option_value(argc, argv, "--branch") != NULL) {
         request.branch = umi_cli_repository_option_value(argc, argv, "--branch");
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_cli_repository_option_value(argc, argv, "--remote") != NULL) {
         request.remote_name = umi_cli_repository_option_value(argc, argv, "--remote");
     }
@@ -247,6 +326,10 @@ static int umi_cli_repository_init(
     return umi_cli_repository_run_workflow(context, &request);
 }
 
+/*
+ * Provide the cli repository submodule operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_submodule(
     UmiCliContext *context,
     int argc,
@@ -256,11 +339,13 @@ static int umi_cli_repository_submodule(
     static const char *const options[] = {"--root", "--branch"};
     UmiRepositoryWorkflowRequest request;
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (argc < 3 || strcmp(argv[0], "add") != 0) {
         (void)fprintf(stderr,
                       "Usage: umicom repo submodule add URL PATH [options]\n");
         return 2;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_cli_repository_validate_options(
             argc, argv, 3,
             flags, sizeof(flags) / sizeof(flags[0]),
@@ -273,6 +358,10 @@ static int umi_cli_repository_submodule(
         umi_cli_repository_option_value(argc, argv, "--root"));
     request.source_url = argv[1];
     request.submodule_path = argv[2];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_cli_repository_option_value(argc, argv, "--branch") != NULL) {
         request.branch = umi_cli_repository_option_value(argc, argv, "--branch");
     }
@@ -280,6 +369,10 @@ static int umi_cli_repository_submodule(
     return umi_cli_repository_run_workflow(context, &request);
 }
 
+/*
+ * Provide the cli repository simple operation used by this module and its client
+ * applications.
+ */
 static int umi_cli_repository_simple(
     UmiCliContext *context,
     UmiRepositoryWorkflowAction action,
@@ -305,28 +398,30 @@ static int umi_cli_repository_simple(
     const char *root = argc > 0 && argv[0][0] != '-' ? argv[0] : ".";
     int option_start = argc > 0 && argv[0][0] != '-' ? 1 : 0;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_REPOSITORY_WORKFLOW_STAGE) {
         flags = stage_flags;
         flag_count = sizeof(stage_flags) / sizeof(stage_flags[0]);
-    } else if (action == UMI_REPOSITORY_WORKFLOW_COMMIT) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_COMMIT) {
         options = message_option;
         option_count = sizeof(message_option) / sizeof(message_option[0]);
-    } else if (action == UMI_REPOSITORY_WORKFLOW_PUSH) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_PUSH) {
         flags = push_flags;
         flag_count = sizeof(push_flags) / sizeof(push_flags[0]);
         options = push_options;
         option_count = sizeof(push_options) / sizeof(push_options[0]);
-    } else if (action == UMI_REPOSITORY_WORKFLOW_PUBLISH) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_PUBLISH) {
         flags = push_flags;
         flag_count = sizeof(push_flags) / sizeof(push_flags[0]);
         options = publish_options;
         option_count = sizeof(publish_options) / sizeof(publish_options[0]);
-    } else if (action == UMI_REPOSITORY_WORKFLOW_UPDATE) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_UPDATE) {
         flags = update_flags;
         flag_count = sizeof(update_flags) / sizeof(update_flags[0]);
         options = push_options;
         option_count = sizeof(push_options) / sizeof(push_options[0]);
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!umi_cli_repository_validate_options(
             argc, argv, option_start,
             flags, flag_count, options, option_count)) {
@@ -335,10 +430,15 @@ static int umi_cli_repository_simple(
     umi_repository_workflow_request_init(&request, action, root);
     request.commit_message = umi_cli_repository_option_value(
         argc, argv, "--message");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request.commit_message == NULL) {
         request.commit_message = umi_cli_repository_option_value(
             argc, argv, "-m");
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((action == UMI_REPOSITORY_WORKFLOW_COMMIT ||
          action == UMI_REPOSITORY_WORKFLOW_PUBLISH) &&
         request.commit_message == NULL) {
@@ -347,9 +447,17 @@ static int umi_cli_repository_simple(
                       "this command.\n");
         return 2;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_cli_repository_option_value(argc, argv, "--remote") != NULL) {
         request.remote_name = umi_cli_repository_option_value(argc, argv, "--remote");
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_cli_repository_option_value(argc, argv, "--branch") != NULL) {
         request.branch = umi_cli_repository_option_value(argc, argv, "--branch");
     }
@@ -361,38 +469,51 @@ static int umi_cli_repository_simple(
     return umi_cli_repository_run_workflow(context, &request);
 }
 
+/*
+ * Provide the cli command repository workflow operation used by this module and its client
+ * applications.
+ */
 int umi_cli_command_repository_workflow(
     UmiCliContext *context,
     const char *command,
     int argc,
     char **argv)
 {
+    /* Use the shared build helper when it is available from the parent composition. */
     if (command == NULL) return 2;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "clone") == 0) {
         return umi_cli_repository_clone(context, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "init") == 0 || strcmp(command, "initialise") == 0) {
         return umi_cli_repository_init(context, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "submodule") == 0) {
         return umi_cli_repository_submodule(context, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "stage") == 0 || strcmp(command, "add") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_STAGE, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "commit") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_COMMIT, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "push") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_PUSH, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "publish") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_PUBLISH, argc, argv);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "update") == 0 || strcmp(command, "sync") == 0) {
         return umi_cli_repository_simple(
             context, UMI_REPOSITORY_WORKFLOW_UPDATE, argc, argv);

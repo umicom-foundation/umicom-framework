@@ -20,4 +20,8 @@
 #include "umicom/ui/design/color_role.h"
 
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { return strcmp(umi_design_color_role_name(UMI_DESIGN_COLOR_BORDER),"border")==0 ? 0 : 1; }

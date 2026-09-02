@@ -43,15 +43,27 @@ extern "C" {
  */
 #define UMI_WORKBENCH_CONTEXT_HOST_SESSION_MAX_CHUNKS 80U
 
+/**
+ * Write workbench context host session in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_context_host_session_save(
     const UmiWorkbenchContextHost *host,
     UmiSessionStore *store,
     const char *key_prefix);
+/**
+ * Provide the workbench context host session restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_host_session_restore(
     UmiWorkbenchContextHost *host,
     const UmiSessionStore *store,
     const char *key_prefix,
     bool *out_restored);
+/**
+ * Remove workbench context host session while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_workbench_context_host_session_remove(
     UmiSessionStore *store,
     const char *key_prefix);

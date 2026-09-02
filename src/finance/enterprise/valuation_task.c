@@ -19,4 +19,8 @@
 #include "umicom/finance/enterprise/valuation_task.h"
 
 #include <string.h>
-UmiStatus umi_enterprise_valuation_task_init(UmiEnterpriseValuationTask *t,const char *tid,const char *jid,const char *pid,double q){ UmiStatus s; if(t==NULL||!umi_quant_number_valid(q)||q==0.0)return UMI_STATUS_INVALID_ARGUMENT; memset(t,0,sizeof *t); s=umi_quant_copy_text(t->task_id,sizeof t->task_id,tid); if(s!=UMI_STATUS_OK)return s; s=umi_quant_copy_text(t->job_id,sizeof t->job_id,jid); if(s!=UMI_STATUS_OK)return s; s=umi_quant_copy_text(t->product_id.value,sizeof t->product_id.value,pid); if(s!=UMI_STATUS_OK)return s; t->quantity=q;t->state=UMI_ENTERPRISE_PENDING;return UMI_STATUS_OK; }
+/*
+ * Initialise enterprise valuation task from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_enterprise_valuation_task_init(UmiEnterpriseValuationTask *t,const char *tid,const char *jid,const char *pid,double q){ UmiStatus s; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(t==NULL||!umi_quant_number_valid(q)||q==0.0)return UMI_STATUS_INVALID_ARGUMENT; memset(t,0,sizeof *t); s=umi_quant_copy_text(t->task_id,sizeof t->task_id,tid); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; s=umi_quant_copy_text(t->job_id,sizeof t->job_id,jid); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; s=umi_quant_copy_text(t->product_id.value,sizeof t->product_id.value,pid); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s; t->quantity=q;t->state=UMI_ENTERPRISE_PENDING;return UMI_STATUS_OK; }

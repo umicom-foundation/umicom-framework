@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data query parameter data shared with callers of this public contract.
+ */
 typedef struct UmiDataQueryParameter {
     char parameter_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char name[UMI_DATA_ENTERPRISE_ID_CAPACITY];

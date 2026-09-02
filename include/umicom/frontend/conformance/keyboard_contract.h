@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc keyboard contract data shared with callers of this public contract.
+ */
 typedef struct UmiFcKeyboardContract { size_t command_count; size_t navigation_count; bool shortcuts_documented; } UmiFcKeyboardContract;
+/**
+ * Check that fc keyboard contract satisfies its contract before another service relies on
+ * it.
+ */
 bool umi_fc_keyboard_contract_validate(const UmiFcKeyboardContract *item);
 
 #ifdef __cplusplus

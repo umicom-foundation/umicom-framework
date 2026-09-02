@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the helix feedback loop data shared with callers of this public contract.
+ */
 typedef struct UmiHelixFeedbackLoop { size_t events; size_t failures; size_t critical; size_t consecutive_failures; uint32_t max_consecutive_failures; } UmiHelixFeedbackLoop;
 /* Initialise feedback-loop escalation limits. */
 void umi_helix_feedback_loop_init(UmiHelixFeedbackLoop *loop,uint32_t max_consecutive_failures);

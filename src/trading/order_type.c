@@ -18,5 +18,13 @@
  */
 
 #include "umicom/trading/order_type.h"
+/*
+ * Provide the order type requires limit operation used by this module and its client
+ * applications.
+ */
 int umi_order_type_requires_limit(UmiOrderType type){return type==UMI_ORDER_LIMIT||type==UMI_ORDER_STOP_LIMIT;}
+/*
+ * Provide the order type requires stop operation used by this module and its client
+ * applications.
+ */
 int umi_order_type_requires_stop(UmiOrderType type){return type==UMI_ORDER_STOP||type==UMI_ORDER_STOP_LIMIT;}

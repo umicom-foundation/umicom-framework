@@ -22,7 +22,15 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the document save options default operation used by this module and its client
+ * applications.
+ */
 UmiDocumentSaveOptions umi_document_save_options_default(void);
+/**
+ * Write document saver in its stable representation and report capacity or input failures
+ * to the caller.
+ */
 UmiStatus umi_document_saver_write(const UmiDocumentProvider *provider,
                                    const char *resource,
                                    const char *utf8_text,

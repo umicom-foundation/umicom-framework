@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 
+/* Provide the set text field operation used by this module and its client applications. */
 static UmiStatus set_text_field(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -24,14 +25,23 @@ static UmiStatus set_text_field(
 {
     UmiWorkbenchSelectionField field;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selection == NULL || name == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_text(
         &field, value != NULL ? value : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/*
+ * Provide the set unsigned field operation used by this module and its client
+ * applications.
+ */
 static UmiStatus set_unsigned_field(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -41,10 +51,12 @@ static UmiStatus set_unsigned_field(
     UmiStatus status;
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_unsigned(&field, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/* Provide the initialise operation used by this module and its client applications. */
 static UmiStatus initialise(
     UmiWorkbenchSelection *selection,
     UmiWorkbenchSelectionKind kind,
@@ -57,6 +69,10 @@ static UmiStatus initialise(
     uint64_t timestamp_ms)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (selection == NULL || selection_id == NULL ||
         application_id == NULL || panel_id == NULL ||
         subject_id == NULL) {
@@ -66,15 +82,21 @@ static UmiStatus initialise(
         selection, kind, context_kind, selection_id);
     status = umi_workbench_selection_set_origin(
         selection, application_id, panel_id, workspace_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_subject(
         selection, subject_id, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     selection->timestamp_ms = timestamp_ms;
     selection->state = UMI_WORKBENCH_SELECTION_STATE_RESOLVED;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_build_file(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -97,15 +119,21 @@ UmiStatus umi_workbench_selection_build_file(
         workspace_id,
         path,
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_location(
         selection, path, line, column, selection_length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, path);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_project(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -124,17 +152,25 @@ UmiStatus umi_workbench_selection_build_project(
         UMI_CONTEXT_KIND_PROJECT,
         selection_id, application_id, panel_id, workspace_id,
         project_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_location(
         selection, root_path, 0U, 0U, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"repository-id",repository_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"language-id",language_id))!=UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, project_id);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build diagnostic operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_diagnostic(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -156,18 +192,27 @@ UmiStatus umi_workbench_selection_build_diagnostic(
         UMI_CONTEXT_KIND_SOURCE_LOCATION,
         selection_id, application_id, panel_id, workspace_id,
         diagnostic_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_location(
         selection, path, line, column, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"severity",severity))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"diagnostic-code",code))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"message",message))!=UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, message != NULL ? message : diagnostic_id);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build source control change operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_build_source_control_change(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -188,19 +233,29 @@ UmiStatus umi_workbench_selection_build_source_control_change(
         UMI_CONTEXT_KIND_PROJECT,
         selection_id, application_id, panel_id, workspace_id,
         project_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_selection_set_location(
         selection, root_path, 0U, 0U, 0U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"repository-id",repository_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"branch",branch))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"selected-path",selected_path))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"change-kind",change_kind))!=UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, selected_path != NULL ? selected_path : project_id);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build test operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_build_test(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -221,11 +276,17 @@ UmiStatus umi_workbench_selection_build_test(
         UMI_CONTEXT_KIND_SELECTION,
         selection_id, application_id, panel_id, workspace_id,
         test_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"suite-id",suite_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"outcome",outcome))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"source-uri",source_uri))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_unsigned_field(selection,"source-line",source_line))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_unsigned_field(selection,"duration-ms",duration_ms))!=UMI_STATUS_OK) return status;
     selection->unsigned_value = source_line;
     (void)umi_workbench_selection_set_display_text(selection, test_id);
@@ -233,6 +294,10 @@ UmiStatus umi_workbench_selection_build_test(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build ai message operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_ai_message(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -252,16 +317,25 @@ UmiStatus umi_workbench_selection_build_ai_message(
         UMI_CONTEXT_KIND_SELECTION,
         selection_id, application_id, panel_id, workspace_id,
         message_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"conversation-id",conversation_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"provider-id",provider_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"model-id",model_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"evidence-id",evidence_id))!=UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, message_id);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build instrument operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_instrument(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -281,17 +355,27 @@ UmiStatus umi_workbench_selection_build_instrument(
         UMI_CONTEXT_KIND_INSTRUMENT,
         selection_id, application_id, panel_id, NULL,
         instrument_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"symbol",symbol))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"venue",venue))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"currency",currency))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"asset-class",asset_class))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"contract-id",contract_id))!=UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, symbol != NULL ? symbol : instrument_id);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build account operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_build_account(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -311,17 +395,27 @@ UmiStatus umi_workbench_selection_build_account(
         UMI_CONTEXT_KIND_ACCOUNT,
         selection_id, application_id, panel_id, NULL,
         account_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"organisation-id",organisation_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"book-id",book_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"currency",currency))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"account-type",account_type))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"environment",environment))!=UMI_STATUS_OK) return status;
     (void)umi_workbench_selection_set_display_text(selection, account_id);
     (void)umi_workbench_selection_refresh_hash(selection);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection build trade operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_selection_build_trade(
     UmiWorkbenchSelection *selection,
     const char *selection_id,
@@ -341,11 +435,17 @@ UmiStatus umi_workbench_selection_build_trade(
         UMI_CONTEXT_KIND_TRADE,
         selection_id, application_id, panel_id, NULL,
         trade_id, timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"source-system",source_system))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"product-type",product_type))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"book-id",book_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_text_field(selection,"counterparty-id",counterparty_id))!=UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if ((status=set_unsigned_field(selection,"version",version))!=UMI_STATUS_OK) return status;
     selection->unsigned_value = version;
     (void)umi_workbench_selection_set_display_text(selection, trade_id);

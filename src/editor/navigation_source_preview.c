@@ -34,25 +34,33 @@ struct UmiEditorNavigationSourcePreviewCache {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the cancelled never operation used by this module and its client applications. */
 static int cancelled_never(void *user_data)
 {
     (void)user_data;
     return 0;
 }
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the validate request operation used by this module and its client applications. */
 static UmiStatus validate_request(
     const UmiEditorNavigationPreviewRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL ||
         request->struct_size != (uint32_t)sizeof(*request) ||
         request->api_version != UMI_EDITOR_NAVIGATION_PROVIDER_API_VERSION ||
@@ -67,10 +75,15 @@ static UmiStatus validate_request(
     return UMI_STATUS_OK;
 }
 
+/* Provide the validate preview operation used by this module and its client applications. */
 static UmiStatus validate_preview(
     const UmiEditorNavigationSourcePreview *preview,
     const UmiEditorNavigationPreviewRequest *request)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (preview == NULL ||
         preview->struct_size != (uint32_t)sizeof(*preview) ||
         preview->api_version != UMI_EDITOR_NAVIGATION_PROVIDER_API_VERSION ||
@@ -92,6 +105,7 @@ static UmiStatus validate_preview(
     return UMI_STATUS_OK;
 }
 
+/* Provide the same key operation used by this module and its client applications. */
 static int same_key(const UmiEditorNavigationSourcePreview *preview,
                     const UmiEditorNavigationPreviewRequest *request)
 {
@@ -105,23 +119,29 @@ static int same_key(const UmiEditorNavigationSourcePreview *preview,
             preview->document_revision == request->document_revision);
 }
 
+/* Provide the find key operation used by this module and its client applications. */
 static size_t find_key(
     const UmiEditorNavigationSourcePreviewCache *cache,
     const UmiEditorNavigationPreviewRequest *request)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < cache->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (same_key(&cache->items[index], request)) return index;
     }
     return SIZE_MAX;
 }
 
+/* Provide the oldest index operation used by this module and its client applications. */
 static size_t oldest_index(
     const UmiEditorNavigationSourcePreviewCache *cache)
 {
     size_t index;
     size_t oldest = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 1U; index < cache->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (cache->items[index].sequence < cache->items[oldest].sequence) {
             oldest = index;
         }
@@ -129,15 +149,19 @@ static size_t oldest_index(
     return oldest;
 }
 
+/* Find remove while leaving the underlying catalogue or model owned by this module. */
 static void remove_at(UmiEditorNavigationSourcePreviewCache *cache,
                       size_t index)
 {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= cache->count) return;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (cache->total_bytes >= cache->items[index].content_length) {
         cache->total_bytes -= cache->items[index].content_length;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         cache->total_bytes = 0U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < cache->count) {
         (void)memmove(&cache->items[index], &cache->items[index + 1U],
                       (cache->count - index - 1U) * sizeof(*cache->items));
@@ -145,6 +169,7 @@ static void remove_at(UmiEditorNavigationSourcePreviewCache *cache,
     --cache->count;
 }
 
+/* Provide the store preview operation used by this module and its client applications. */
 static UmiStatus store_preview(
     UmiEditorNavigationSourcePreviewCache *cache,
     UmiEditorNavigationSourcePreview *preview)
@@ -152,6 +177,7 @@ static UmiStatus store_preview(
     UmiEditorNavigationPreviewRequest key;
     size_t index;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (preview->content_length > cache->maximum_total_bytes) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -165,10 +191,16 @@ static UmiStatus store_preview(
     key.end_line = preview->end_line;
     key.document_revision = preview->document_revision;
     index = find_key(cache, &key);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index != SIZE_MAX) remove_at(cache, index);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (cache->count >= cache->capacity ||
            cache->total_bytes + preview->content_length >
                cache->maximum_total_bytes) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (cache->count == 0U) return UMI_STATUS_CAPACITY_EXCEEDED;
         remove_at(cache, oldest_index(cache));
         ++cache->eviction_count;
@@ -180,9 +212,17 @@ static UmiStatus store_preview(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise editor navigation source preview config from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_navigation_source_preview_config_initialize(
     UmiEditorNavigationSourcePreviewConfig *config)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(config, 0, sizeof(*config));
     config->struct_size = (uint32_t)sizeof(*config);
@@ -193,6 +233,10 @@ UmiStatus umi_editor_navigation_source_preview_config_initialize(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise editor navigation source preview cache from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_navigation_source_preview_cache_create(
     UmiEditorNavigationProviderRegistry *registry,
     const UmiEditorNavigationSourcePreviewConfig *config,
@@ -201,15 +245,24 @@ UmiStatus umi_editor_navigation_source_preview_cache_create(
     UmiEditorNavigationSourcePreviewConfig effective;
     UmiEditorNavigationSourcePreviewCache *cache;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL || out_cache == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_cache = NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (config == NULL) {
         (void)umi_editor_navigation_source_preview_config_initialize(&effective);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         effective = *config;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.struct_size != (uint32_t)sizeof(effective) ||
         effective.api_version !=
             UMI_EDITOR_NAVIGATION_SOURCE_PREVIEW_API_VERSION ||
@@ -222,9 +275,17 @@ UmiStatus umi_editor_navigation_source_preview_cache_create(
     }
     cache = (UmiEditorNavigationSourcePreviewCache *)calloc(1U,
                                                              sizeof(*cache));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     cache->items = (UmiEditorNavigationSourcePreview *)calloc(
         effective.capacity, sizeof(*cache->items));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache->items == NULL) {
         free(cache);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -237,18 +298,34 @@ UmiStatus umi_editor_navigation_source_preview_cache_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor navigation source preview cache so the same
+ * storage can be reused safely.
+ */
 void umi_editor_navigation_source_preview_cache_destroy(
     UmiEditorNavigationSourcePreviewCache *cache)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL) return;
     free(cache->items);
     cache->items = NULL;
     free(cache);
 }
 
+/*
+ * Release or reset state held by editor navigation source preview cache so the same
+ * storage can be reused safely.
+ */
 UmiStatus umi_editor_navigation_source_preview_cache_clear(
     UmiEditorNavigationSourcePreviewCache *cache)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(cache->items, 0, cache->capacity * sizeof(*cache->items));
     cache->count = 0U;
@@ -257,6 +334,10 @@ UmiStatus umi_editor_navigation_source_preview_cache_clear(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor navigation source preview cache resolve operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_navigation_source_preview_cache_resolve(
     UmiEditorNavigationSourcePreviewCache *cache,
     const UmiEditorNavigationPreviewRequest *request,
@@ -267,11 +348,16 @@ UmiStatus umi_editor_navigation_source_preview_cache_resolve(
     size_t index;
     UmiStatus first_failure = UMI_STATUS_NOT_FOUND;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL || out_preview == NULL ||
         validate_request(request) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_key(cache, request);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index != SIZE_MAX) {
         cache->items[index].sequence = ++cache->sequence;
         *out_preview = cache->items[index];
@@ -288,11 +374,13 @@ UmiStatus umi_editor_navigation_source_preview_cache_resolve(
     cancellation.api_version = UMI_EDITOR_NAVIGATION_PROVIDER_API_VERSION;
     cancellation.is_cancelled = cancelled_never;
     cancellation.user_data = NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_editor_navigation_provider_registry_count(cache->registry);
          ++index) {
         UmiEditorNavigationSourcePreview preview;
         UmiStatus status;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (umi_editor_navigation_provider_registry_at(cache->registry, index,
                                                        &registration) !=
                 UMI_STATUS_OK ||
@@ -303,13 +391,17 @@ UmiStatus umi_editor_navigation_source_preview_cache_resolve(
         (void)memset(&preview, 0, sizeof(preview));
         status = registration.functions.preview(
             registration.instance, request, &cancellation, &preview);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_NOT_FOUND) continue;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (first_failure == UMI_STATUS_NOT_FOUND) first_failure = status;
             continue;
         }
         {
             size_t length = strlen(registration.descriptor.id);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (length >= sizeof(preview.provider_id)) {
                 first_failure = UMI_STATUS_CAPACITY_EXCEEDED;
                 continue;
@@ -317,6 +409,7 @@ UmiStatus umi_editor_navigation_source_preview_cache_resolve(
             (void)memcpy(preview.provider_id, registration.descriptor.id,
                          length + 1U);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (validate_preview(&preview, request) != UMI_STATUS_OK) {
             first_failure = UMI_STATUS_INVALID_STATE;
             continue;
@@ -328,6 +421,7 @@ UmiStatus umi_editor_navigation_source_preview_cache_resolve(
                  request->document_revision != preview.document_revision);
             preview.stale = preview.stale != 0;
             status = store_preview(cache, &preview);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             *out_preview = preview;
             out_preview->stale = stale;
@@ -337,6 +431,10 @@ UmiStatus umi_editor_navigation_source_preview_cache_resolve(
     return first_failure;
 }
 
+/*
+ * Provide the editor navigation source preview cache invalidate uri operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_navigation_source_preview_cache_invalidate_uri(
     UmiEditorNavigationSourcePreviewCache *cache,
     const char *uri,
@@ -345,41 +443,76 @@ UmiStatus umi_editor_navigation_source_preview_cache_invalidate_uri(
     size_t index = 0U;
     size_t removed = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_removed_count != NULL) *out_removed_count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL || uri == NULL || uri[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (index < cache->count) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(cache->items[index].uri, uri) == 0) {
             remove_at(cache, index);
             ++removed;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             ++index;
         }
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (removed == 0U) return UMI_STATUS_NOT_FOUND;
     cache->revision = next_revision(cache->revision);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_removed_count != NULL) *out_removed_count = removed;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor navigation source preview cache while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_navigation_source_preview_cache_at(
     const UmiEditorNavigationSourcePreviewCache *cache,
     size_t position,
     UmiEditorNavigationSourcePreview *out_preview)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL || out_preview == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= cache->count) return UMI_STATUS_NOT_FOUND;
     *out_preview = cache->items[position];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor navigation source preview cache snapshot operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_navigation_source_preview_cache_snapshot(
     const UmiEditorNavigationSourcePreviewCache *cache,
     UmiEditorNavigationSourcePreviewCacheSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cache == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -398,12 +531,20 @@ UmiStatus umi_editor_navigation_source_preview_cache_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by editor navigation source preview cache
+ * without changing their state.
+ */
 size_t umi_editor_navigation_source_preview_cache_count(
     const UmiEditorNavigationSourcePreviewCache *cache)
 {
     return cache != NULL ? cache->count : 0U;
 }
 
+/*
+ * Provide the editor navigation source preview cache revision operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_editor_navigation_source_preview_cache_revision(
     const UmiEditorNavigationSourcePreviewCache *cache)
 {

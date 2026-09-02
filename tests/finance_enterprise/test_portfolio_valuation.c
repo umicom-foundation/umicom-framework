@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/portfolio_valuation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterprisePortfolioValuation v; CHECK(umi_enterprise_portfolio_valuation_init(&v,"p",1,105.0,100.0)==UMI_STATUS_OK); CHECK(v.pnl==5.0); return 0; }

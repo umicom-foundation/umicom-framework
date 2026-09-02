@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data integrity scan data shared with callers of this public contract.
+ */
 typedef struct UmiDataIntegrityScan { char scan_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; size_t checks_run; size_t warnings; size_t failures; uint64_t started_at; uint64_t finished_at; UmiDataEnterpriseState state; } UmiDataIntegrityScan;
 /* Start a new integrity-scan evidence record. */ UmiStatus umi_data_integrity_scan_begin(UmiDataIntegrityScan *scan,const char *scan_id,uint64_t started_at);
 /* Record one backend or logical integrity check result. */ UmiStatus umi_data_integrity_scan_record(UmiDataIntegrityScan *scan,bool warning,bool failure);

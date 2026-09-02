@@ -22,12 +22,20 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap configuration profile from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_bootstrap_configuration_profile_init(
     UmiBootstrapConfigurationProfile *profile,
     const char *profile_id,
     const char *parent_profile_id,
     int32_t priority,
     bool active);
+/**
+ * Provide the bootstrap configuration profile matches operation used by this module and
+ * its client applications.
+ */
 bool umi_bootstrap_configuration_profile_matches(
     const UmiBootstrapConfigurationProfile *profile,
     const char *active_profile_id);

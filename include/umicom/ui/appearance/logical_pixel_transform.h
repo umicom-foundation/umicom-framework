@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance logical pixel transform data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceLogicalPixelTransform { double scale; } UmiAppearanceLogicalPixelTransform;
 /* Initialise one pixel transform with a positive scale factor. */
 UmiStatus umi_appearance_logical_pixel_transform_init(UmiAppearanceLogicalPixelTransform *item,double scale);

@@ -15,4 +15,8 @@
 #include <assert.h>
 #include "umicom/toolchain/scoped_discovery.h"
 #include "umicom/toolchain/operation_catalogue.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiToolchainOperationProfile p; UmiToolchainScopedDiscoveryRequest r={0}; UmiToolchainScopedDiscoveryReport o; assert(umi_toolchain_operation_catalogue_profile(UMI_TOOLCHAIN_OPERATION_RUN,&p)==UMI_STATUS_OK); r.operation=&p; assert(umi_toolchain_discover_scoped(&r,&o)==UMI_STATUS_OK); assert(o.complete); return 0; }

@@ -28,6 +28,10 @@ extern "C" {
 #include "umicom/finance/enterprise/market_data_cache.h"
 #include "umicom/finance/enterprise/market_data_freshness.h"
 
+/**
+ * Represent the enterprise market data service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseMarketDataService { UmiEnterpriseMarketDataCache cache; UmiEnterpriseMarketDataFreshnessPolicy freshness; uint64_t accepted_updates; uint64_t rejected_updates; } UmiEnterpriseMarketDataService;
 /* Initialise the Framework-owned market-data service with a freshness policy. */
 UmiStatus umi_enterprise_market_data_service_init(UmiEnterpriseMarketDataService *service,int64_t max_age_ms);

@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_ai)
     message(FATAL_ERROR
         "UmicomAiHelixBridge requires existing umicom_ai")
@@ -35,6 +36,7 @@ target_sources(umicom_ai PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai/helix/bridge.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING AND NOT TARGET umicom-ai-helix-bridge-tests)
     add_executable(umicom-ai-helix-bridge-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_helix_bridge/test_main.c"

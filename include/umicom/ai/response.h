@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai response data shared with callers of this public contract.
+ */
 typedef struct UmiAiResponse {
     char request_id[UMI_AI_ID_CAPACITY];
     char provider_id[UMI_AI_ID_CAPACITY];
@@ -36,7 +39,15 @@ typedef struct UmiAiResponse {
     UmiAiUsage usage;
 } UmiAiResponse;
 
+/**
+ * Initialise ai response from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_response_init(UmiAiResponse *response);
+/**
+ * Provide the ai response set text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_response_set_text(UmiAiResponse *response, const char *text);
 
 #ifdef __cplusplus

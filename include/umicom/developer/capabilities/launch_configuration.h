@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_LAUNCH_CONFIGURATION "umicom.developer.execution.launch_configuration"
 
+/**
+ * Provide the developer capability launch configuration operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_launch_configuration(void);
 

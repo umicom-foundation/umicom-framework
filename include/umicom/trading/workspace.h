@@ -41,6 +41,9 @@ extern "C" {
 #define UMI_TRADING_WORKSPACE_API_VERSION 1U
 #define UMI_TRADING_WORKSPACE_FILTER_CAPACITY 96U
 
+/**
+ * List the named trading workspace order filter values accepted by this public contract.
+ */
 typedef enum UmiTradingWorkspaceOrderFilter {
     UMI_TRADING_WORKSPACE_ORDERS_ALL = 0,
     UMI_TRADING_WORKSPACE_ORDERS_OPEN = 1,
@@ -49,6 +52,9 @@ typedef enum UmiTradingWorkspaceOrderFilter {
     UMI_TRADING_WORKSPACE_ORDERS_REJECTED = 4
 } UmiTradingWorkspaceOrderFilter;
 
+/**
+ * Represent the trading market snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiTradingMarketSnapshot {
     uint32_t structure_size;
     uint32_t api_version;
@@ -64,6 +70,9 @@ typedef struct UmiTradingMarketSnapshot {
     uint64_t revision;
 } UmiTradingMarketSnapshot;
 
+/**
+ * Represent the trading workspace config data shared with callers of this public contract.
+ */
 typedef struct UmiTradingWorkspaceConfig {
     uint32_t structure_size;
     uint32_t api_version;
@@ -72,6 +81,10 @@ typedef struct UmiTradingWorkspaceConfig {
     UmiTradingEnvironment environment;
 } UmiTradingWorkspaceConfig;
 
+/**
+ * Represent the trading workspace snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingWorkspaceSnapshot {
     uint32_t structure_size;
     uint32_t api_version;
@@ -122,124 +135,290 @@ typedef struct UmiTradingWorkspaceSnapshot {
     int can_reset_kill_switch;
 } UmiTradingWorkspaceSnapshot;
 
+/**
+ * Represent the trading workspace data shared with callers of this public contract.
+ */
 typedef struct UmiTradingWorkspace UmiTradingWorkspace;
 
+/**
+ * Provide the trading workspace config default operation used by this module and its
+ * client applications.
+ */
 UmiTradingWorkspaceConfig umi_trading_workspace_config_default(void);
+/**
+ * Initialise trading workspace from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_trading_workspace_create(
     const UmiTradingWorkspaceConfig *config,
     UmiTradingWorkspace **out_workspace);
+/**
+ * Release or reset state held by trading workspace so the same storage can be reused
+ * safely.
+ */
 void umi_trading_workspace_destroy(UmiTradingWorkspace *workspace);
 
+/**
+ * Provide the trading workspace add instrument operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_add_instrument(
     UmiTradingWorkspace *workspace,
     const UmiInstrument *instrument);
+/**
+ * Provide the trading workspace remove instrument operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_remove_instrument(
     UmiTradingWorkspace *workspace,
     const char *instrument_id);
+/**
+ * Provide the trading workspace update quote operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_update_quote(
     UmiTradingWorkspace *workspace,
     const UmiQuote *quote);
+/**
+ * Provide the trading workspace update bar operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_update_bar(
     UmiTradingWorkspace *workspace,
     const UmiBar *bar,
     double previous_close);
+/**
+ * Provide the trading workspace update depth operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_update_depth(
     UmiTradingWorkspace *workspace,
     const UmiMarketDepth *depth);
+/**
+ * Provide the trading workspace set market state operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_market_state(
     UmiTradingWorkspace *workspace,
     const char *instrument_id,
     UmiMarketState state);
 
+/**
+ * Provide the trading workspace set instrument filter operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_trading_workspace_set_instrument_filter(
     UmiTradingWorkspace *workspace,
     const char *filter_text);
+/**
+ * Provide the trading workspace set order filter operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_order_filter(
     UmiTradingWorkspace *workspace,
     UmiTradingWorkspaceOrderFilter order_filter);
+/**
+ * Provide the trading workspace select instrument operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_select_instrument(
     UmiTradingWorkspace *workspace,
     const char *instrument_id);
+/**
+ * Provide the trading workspace select order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_select_order(
     UmiTradingWorkspace *workspace,
     const char *client_order_id);
 
+/**
+ * Provide the trading workspace set environment operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_environment(
     UmiTradingWorkspace *workspace,
     UmiTradingEnvironment environment);
+/**
+ * Provide the trading workspace set health operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_set_health(
     UmiTradingWorkspace *workspace,
     int market_data_ready,
     int broker_ready,
     int risk_ready);
+/**
+ * Provide the trading workspace set live armed operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_live_armed(
     UmiTradingWorkspace *workspace,
     int armed);
 
+/**
+ * Provide the trading workspace set draft side operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_draft_side(
     UmiTradingWorkspace *workspace,
     UmiSide side);
+/**
+ * Provide the trading workspace set draft type operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_draft_type(
     UmiTradingWorkspace *workspace,
     UmiOrderType type,
     UmiTimeInForce time_in_force);
+/**
+ * Provide the trading workspace set draft quantity operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_draft_quantity(
     UmiTradingWorkspace *workspace,
     double quantity);
+/**
+ * Provide the trading workspace set draft prices operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_set_draft_prices(
     UmiTradingWorkspace *workspace,
     double limit_price,
     double stop_price);
+/**
+ * Provide the trading workspace preview order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_preview_order(
     UmiTradingWorkspace *workspace,
     UmiRiskDecision *out_decision);
+/**
+ * Provide the trading workspace submit order operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_submit_order(
     UmiTradingWorkspace *workspace,
     int64_t now_ms,
     UmiRiskDecision *out_decision);
+/**
+ * Provide the trading workspace cancel selected order operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_trading_workspace_cancel_selected_order(
     UmiTradingWorkspace *workspace);
+/**
+ * Provide the trading workspace record execution operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_record_execution(
     UmiTradingWorkspace *workspace,
     const UmiExecutionReport *report);
 
+/**
+ * Provide the trading workspace engage kill switch operation used by this module and its
+ * client applications.
+ */
 void umi_trading_workspace_engage_kill_switch(
     UmiTradingWorkspace *workspace,
     const char *reason);
+/**
+ * Provide the trading workspace reset kill switch operation used by this module and its
+ * client applications.
+ */
 void umi_trading_workspace_reset_kill_switch(UmiTradingWorkspace *workspace);
+/**
+ * Provide the trading workspace refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_refresh(UmiTradingWorkspace *workspace);
 
+/**
+ * Provide the trading workspace snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_trading_workspace_snapshot(
     UmiTradingWorkspace *workspace,
     UmiTradingWorkspaceSnapshot *out_snapshot);
+/**
+ * Find trading workspace visible instrument while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_trading_workspace_visible_instrument_at(
     UmiTradingWorkspace *workspace,
     size_t index,
     UmiTradingMarketSnapshot *out_market);
+/**
+ * Provide the trading workspace selected market operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_trading_workspace_selected_market(
     UmiTradingWorkspace *workspace,
     UmiTradingMarketSnapshot *out_market);
+/**
+ * Find trading workspace visible order while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_trading_workspace_visible_order_at(
     UmiTradingWorkspace *workspace,
     size_t index,
     UmiOrder *out_order);
+/**
+ * Find trading workspace position while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_trading_workspace_position_at(
     UmiTradingWorkspace *workspace,
     size_t index,
     UmiPosition *out_position);
+/**
+ * Find trading workspace execution while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_trading_workspace_execution_at(
     UmiTradingWorkspace *workspace,
     size_t newest_first_index,
     UmiExecutionReport *out_report);
 
+/**
+ * Provide the trading workspace charts operation used by this module and its client
+ * applications.
+ */
 UmiChartWorkspace *umi_trading_workspace_charts(
     UmiTradingWorkspace *workspace);
+/**
+ * Provide the trading environment text operation used by this module and its client
+ * applications.
+ */
 const char *umi_trading_environment_text(UmiTradingEnvironment environment);
+/**
+ * Provide the trading side text operation used by this module and its client applications.
+ */
 const char *umi_trading_side_text(UmiSide side);
+/**
+ * Provide the trading order type text operation used by this module and its client
+ * applications.
+ */
 const char *umi_trading_order_type_text(UmiOrderType type);
+/**
+ * Provide the trading time in force text operation used by this module and its client
+ * applications.
+ */
 const char *umi_trading_time_in_force_text(UmiTimeInForce time_in_force);
+/**
+ * Provide the trading order status text operation used by this module and its client
+ * applications.
+ */
 const char *umi_trading_order_status_text(UmiOrderStatus status);
+/**
+ * Provide the trading market state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_trading_market_state_text(UmiMarketState state);
+/**
+ * Provide the trading workspace order filter text operation used by this module and its
+ * client applications.
+ */
 const char *umi_trading_workspace_order_filter_text(
     UmiTradingWorkspaceOrderFilter order_filter);
 

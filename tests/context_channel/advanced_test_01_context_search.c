@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/context_channel/context_search.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiContextSearch state;

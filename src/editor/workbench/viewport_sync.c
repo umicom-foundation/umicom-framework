@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/viewport_sync.h"
 
-void umi_editor_wb_viewport_sync_apply(UmiEditorWbViewportSync *s,double h,double v){if(s==NULL)return;s->master_horizontal=h;s->master_vertical=v;if(s->horizontal)s->follower_horizontal=h;if(s->vertical)s->follower_vertical=v;}
+/*
+ * Perform editor wb viewport sync through the module contract so client applications do
+ * not duplicate its policy.
+ */
+void umi_editor_wb_viewport_sync_apply(UmiEditorWbViewportSync *s,double h,double v){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL)return;s->master_horizontal=h;s->master_vertical=v;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s->horizontal)s->follower_horizontal=h;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s->vertical)s->follower_vertical=v;}

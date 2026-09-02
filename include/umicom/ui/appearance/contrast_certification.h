@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance contrast certification data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceContrastCertification {
     char target_id[UMI_APPEARANCE_ID_CAPACITY];
     double measured_ratio;

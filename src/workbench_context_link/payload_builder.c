@@ -17,6 +17,7 @@
 
 #include <string.h>
 
+/* Provide the set identity operation used by this module and its client applications. */
 static UmiStatus set_identity(
     UmiContextPayload *payload,
     const char *application_id,
@@ -27,6 +28,7 @@ static UmiStatus set_identity(
         payload->identity.source_application_id,
         sizeof(payload->identity.source_application_id),
         application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_context_copy_text(
         payload->identity.source_panel_id,
@@ -34,6 +36,10 @@ static UmiStatus set_identity(
         panel_id);
 }
 
+/*
+ * Provide the workbench context link build source location operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_link_build_source_location(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -45,6 +51,10 @@ UmiStatus umi_workbench_context_link_build_source_location(
     uint32_t column)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_payload == NULL || context_id == NULL || application_id == NULL ||
         panel_id == NULL || workspace_id == NULL || file_path == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -53,12 +63,15 @@ UmiStatus umi_workbench_context_link_build_source_location(
         out_payload, UMI_CONTEXT_KIND_SOURCE_LOCATION,
         context_id, "org.umicom.context.source-location");
     status = set_identity(out_payload, application_id, panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_source_location_context_set_workspace_id(
         &out_payload->domain.source_location, workspace_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_source_location_context_set_file_path(
         &out_payload->domain.source_location, file_path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)umi_source_location_context_set_line(
         &out_payload->domain.source_location, line);
@@ -68,6 +81,10 @@ UmiStatus umi_workbench_context_link_build_source_location(
     return umi_context_payload_validate(out_payload);
 }
 
+/*
+ * Provide the workbench context link build instrument operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_context_link_build_instrument(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -78,6 +95,10 @@ UmiStatus umi_workbench_context_link_build_instrument(
     const char *venue)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_payload == NULL || context_id == NULL || application_id == NULL ||
         panel_id == NULL || instrument_id == NULL || symbol == NULL || venue == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -86,20 +107,28 @@ UmiStatus umi_workbench_context_link_build_instrument(
         out_payload, UMI_CONTEXT_KIND_INSTRUMENT,
         context_id, "org.umicom.context.instrument");
     status = set_identity(out_payload, application_id, panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_instrument_context_set_instrument_id(
         &out_payload->domain.instrument, instrument_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_instrument_context_set_symbol(
         &out_payload->domain.instrument, symbol);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_instrument_context_set_venue(
         &out_payload->domain.instrument, venue);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_context_payload_refresh_hash(out_payload);
     return umi_context_payload_validate(out_payload);
 }
 
+/*
+ * Provide the workbench context link build project operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_build_project(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -110,6 +139,10 @@ UmiStatus umi_workbench_context_link_build_project(
     const char *language_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_payload == NULL || context_id == NULL || application_id == NULL ||
         panel_id == NULL || project_id == NULL || root_path == NULL ||
         language_id == NULL) {
@@ -119,20 +152,28 @@ UmiStatus umi_workbench_context_link_build_project(
         out_payload, UMI_CONTEXT_KIND_PROJECT,
         context_id, "org.umicom.context.project");
     status = set_identity(out_payload, application_id, panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_context_set_project_id(
         &out_payload->domain.project, project_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_context_set_root_path(
         &out_payload->domain.project, root_path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_project_context_set_language_id(
         &out_payload->domain.project, language_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_context_payload_refresh_hash(out_payload);
     return umi_context_payload_validate(out_payload);
 }
 
+/*
+ * Provide the workbench context link build selection operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_build_selection(
     UmiContextPayload *out_payload,
     const char *context_id,
@@ -143,6 +184,10 @@ UmiStatus umi_workbench_context_link_build_selection(
     const char *primary_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_payload == NULL || context_id == NULL || application_id == NULL ||
         panel_id == NULL || selection_id == NULL || selection_type == NULL ||
         primary_id == NULL) {
@@ -152,15 +197,19 @@ UmiStatus umi_workbench_context_link_build_selection(
         out_payload, UMI_CONTEXT_KIND_SELECTION,
         context_id, "org.umicom.context.selection");
     status = set_identity(out_payload, application_id, panel_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_selection_context_set_selection_id(
         &out_payload->domain.selection, selection_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_selection_context_set_selection_type(
         &out_payload->domain.selection, selection_type);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_selection_context_set_primary_id(
         &out_payload->domain.selection, primary_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     umi_context_payload_refresh_hash(out_payload);
     return umi_context_payload_validate(out_payload);

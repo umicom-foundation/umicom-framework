@@ -20,6 +20,9 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/venue_descriptor.h"
+/**
+ * Represent the trading venue catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiTradingVenueCatalogue { UmiTradingVenueDescriptor items[UMI_TRADING_CORE_MAX_ITEMS]; size_t count; uint64_t revision; } UmiTradingVenueCatalogue;
 /* Initialise an empty venue catalogue. */
 void umi_trading_venue_catalogue_init(UmiTradingVenueCatalogue *catalogue);

@@ -17,5 +17,13 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/quarantine_policy.h"
-void umi_plugin_extension_host_quarantine_policy_init(UmiPluginExtensionHostQuarantinePolicy *p) { if(p!=NULL) { p->crash_threshold=3U; p->trust_failure_threshold=1U; p->signature_failure_threshold=1U; p->policy_failure_threshold=2U; } }
+/*
+ * Initialise plugin extension host quarantine policy from caller-provided values so later
+ * operations receive a known state.
+ */
+void umi_plugin_extension_host_quarantine_policy_init(UmiPluginExtensionHostQuarantinePolicy *p) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(p!=NULL) { p->crash_threshold=3U; p->trust_failure_threshold=1U; p->signature_failure_threshold=1U; p->policy_failure_threshold=2U; } }
+/*
+ * Provide the plugin extension host quarantine policy should quarantine operation used by
+ * this module and its client applications.
+ */
 int umi_plugin_extension_host_quarantine_policy_should_quarantine(const UmiPluginExtensionHostQuarantinePolicy *p,uint32_t c,uint32_t t,uint32_t s,uint32_t f) { return p!=NULL&&(c>=p->crash_threshold||t>=p->trust_failure_threshold||s>=p->signature_failure_threshold||f>=p->policy_failure_threshold); }

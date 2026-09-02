@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/cycle_detection.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveCycleDetection d={0}; d.has_cycle=false; d.visited_nodes=2U; return (!d.has_cycle&&d.visited_nodes==2U)?0:1; }

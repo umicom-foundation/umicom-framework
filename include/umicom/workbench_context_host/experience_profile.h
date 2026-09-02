@@ -30,6 +30,10 @@ typedef UmiStatus (*UmiWorkbenchContextHostExperiencePolicyResolver)(
     void *user_data,
     UmiWorkbenchContextHostExperiencePanelPolicy *out_policy);
 
+/**
+ * Represent the workbench context host experience profile options data shared with callers
+ * of this public contract.
+ */
 typedef struct UmiWorkbenchContextHostExperienceProfileOptions {
     uint32_t structure_size;
     const char *profile_id;
@@ -38,14 +42,26 @@ typedef struct UmiWorkbenchContextHostExperienceProfileOptions {
     bool include_passive_panels;
 } UmiWorkbenchContextHostExperienceProfileOptions;
 
+/**
+ * Initialise workbench context host experience profile options from caller-provided values
+ * so later operations receive a known state.
+ */
 void umi_workbench_context_host_experience_profile_options_init(
     UmiWorkbenchContextHostExperienceProfileOptions *options);
 
+/**
+ * Provide the workbench context host experience profile build operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_experience_profile_build(
     const UmiApplicationExperienceDefinition *experience,
     const UmiWorkbenchContextHostExperienceProfileOptions *options,
     UmiWorkbenchContextHostProfile *out_profile);
 
+/**
+ * Provide the workbench context host experience profile build for application operation
+ * used by this module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_experience_profile_build_for_application(
     const char *application_id,
     const UmiWorkbenchContextHostExperienceProfileOptions *options,

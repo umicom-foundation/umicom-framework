@@ -19,4 +19,5 @@
 
 #include "umicom/trading/execution_report.h"
 #include "umicom/finance/identifier.h"
+/* Check that execution report satisfies its contract before another service relies on it. */
 int umi_execution_report_valid(const UmiExecutionReport *r){return r!=NULL&&umi_financial_id_valid(&r->execution_id)&&umi_financial_id_valid(&r->client_order_id)&&r->fill_quantity>0.0&&r->fill_price>0.0;}

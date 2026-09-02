@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/environment_filtering.h"
 
+/*
+ * Provide the developer capability environment filtering operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_environment_filtering(void)
 {

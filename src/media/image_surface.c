@@ -33,6 +33,10 @@ static UmiStatus pixel_index(
     size_t y,
     size_t *out_index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL || out_index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Coordinates at or beyond a dimension are outside the owned allocation. */
     if (x >= surface->width || y >= surface->height) {
@@ -60,6 +64,10 @@ UmiStatus umi_media_image_surface_create(
     }
     *out_surface = NULL;
     surface = (UmiMediaImageSurface *)calloc(1U, sizeof(*surface));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     surface->pixels = (UmiMediaRgbaPixel *)calloc(
         pixel_count, sizeof(*surface->pixels));
@@ -79,6 +87,10 @@ UmiStatus umi_media_image_surface_create(
 /* Release pixels before their surface owner; NULL destruction is safe. */
 void umi_media_image_surface_destroy(UmiMediaImageSurface *surface)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL) return;
     free(surface->pixels);
     free(surface);
@@ -90,7 +102,12 @@ UmiStatus umi_media_image_surface_clear(
     UmiMediaRgbaPixel pixel)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < surface->pixel_count; ++index) {
         surface->pixels[index] = pixel;
     }
@@ -107,6 +124,7 @@ UmiStatus umi_media_image_surface_set_pixel(
 {
     size_t index;
     UmiStatus status = pixel_index(surface, x, y, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     surface->pixels[index] = pixel;
     surface->revision += 1U;
@@ -122,8 +140,13 @@ UmiStatus umi_media_image_surface_get_pixel(
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_pixel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = pixel_index(surface, x, y, &index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     *out_pixel = surface->pixels[index];
     return UMI_STATUS_OK;
@@ -136,7 +159,12 @@ UmiStatus umi_media_image_surface_read_row(
     UmiMediaRgbaPixel *out_pixels,
     size_t pixel_capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL || out_pixels == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (y >= surface->height) return UMI_STATUS_NOT_FOUND;
     /* The caller must provide a complete row to avoid hidden partial output. */
     if (pixel_capacity < surface->width) return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -150,6 +178,10 @@ UmiStatus umi_media_image_surface_snapshot(
     const UmiMediaImageSurface *surface,
     UmiMediaImageSurfaceSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->struct_size = (uint32_t)sizeof(*out_snapshot);

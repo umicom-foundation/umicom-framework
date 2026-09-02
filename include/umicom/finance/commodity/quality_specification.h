@@ -30,6 +30,10 @@ extern "C" {
 
 #define UMI_COMMODITY_MAX_QUALITY_MEASURES 16U
 
+/**
+ * Represent the commodity quality specification data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityQualitySpecification {
     UmiCommodityId grade_id;
     UmiCommodityQualityMeasure measures[UMI_COMMODITY_MAX_QUALITY_MEASURES];

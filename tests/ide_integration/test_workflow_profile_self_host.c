@@ -15,6 +15,10 @@
 #include <assert.h>
 #include "umicom/ide_integration/workflow_profiles/self_host.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiIdeWorkflowPolicy policy;

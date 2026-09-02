@@ -19,6 +19,10 @@
 #include "umicom/ui/layout_library.h"
 #include "umicom/ui/theme_profile.h"
 #define UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS 16U
+/**
+ * Represent the ui workspace customisation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiWorkspaceCustomisation {
     UmiUiWorkspaceLayout layouts[UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS];
     size_t layout_count;
@@ -35,6 +39,10 @@ typedef struct UmiUiWorkspaceCustomisation {
     uint64_t edit_started_revision;
     uint64_t revision;
 } UmiUiWorkspaceCustomisation;
+/**
+ * Represent the ui workspace customisation snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiUiWorkspaceCustomisationSnapshot {
     size_t layouts;
     size_t available_windows;
@@ -64,29 +72,77 @@ typedef struct UmiUiWorkspacePanelSettings {
     bool auto_hidden;              /* True collapses a supported docked panel. */
 } UmiUiWorkspacePanelSettings;
 
+/**
+ * Initialise ui workspace customisation from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ui_workspace_customisation_init(UmiUiWorkspaceCustomisation *customisation);
+/**
+ * Provide the ui workspace customisation add layout operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_add_layout(UmiUiWorkspaceCustomisation *customisation,const UmiUiWorkspaceLayout *layout);
+/**
+ * Provide the ui workspace customisation activate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_activate(UmiUiWorkspaceCustomisation *customisation,const char *layout_id);
+/**
+ * Provide the ui workspace customisation active operation used by this module and its
+ * client applications.
+ */
 UmiUiWorkspaceLayout *umi_ui_workspace_customisation_active(UmiUiWorkspaceCustomisation *customisation);
+/**
+ * Provide the ui workspace customisation active const operation used by this module and
+ * its client applications.
+ */
 const UmiUiWorkspaceLayout *umi_ui_workspace_customisation_active_const(
     const UmiUiWorkspaceCustomisation *customisation);
+/**
+ * Provide the ui workspace customisation clone layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_clone_layout(
     UmiUiWorkspaceCustomisation *customisation,
     const char *source_layout_id,
     const char *layout_id,
     const char *name);
+/**
+ * Provide the ui workspace customisation remove layout operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_remove_layout(
     UmiUiWorkspaceCustomisation *customisation,
     const char *layout_id);
+/**
+ * Provide the ui workspace customisation rename active operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_rename_active(
     UmiUiWorkspaceCustomisation *customisation,
     const char *name);
+/**
+ * Provide the ui workspace customisation begin edit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_begin_edit(
     UmiUiWorkspaceCustomisation *customisation);
+/**
+ * Provide the ui workspace customisation commit edit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_commit_edit(
     UmiUiWorkspaceCustomisation *customisation);
+/**
+ * Provide the ui workspace customisation cancel edit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_cancel_edit(
     UmiUiWorkspaceCustomisation *customisation);
+/**
+ * Provide the ui workspace customisation open window operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_open_window(
     UmiUiWorkspaceCustomisation *customisation,
     const char *tool_id,
@@ -129,14 +185,30 @@ UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
 UmiStatus umi_ui_workspace_customisation_close_window(
     UmiUiWorkspaceCustomisation *customisation,
     const char *window_id);
+/**
+ * Provide the ui workspace customisation assign context group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_assign_context_group(
     UmiUiWorkspaceCustomisation *customisation,
     const char *window_id,
     const char *context_group_id,
     UmiUiWindowGroupRole role);
+/**
+ * Provide the ui workspace customisation clear context group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_clear_context_group(
     UmiUiWorkspaceCustomisation *customisation,
     const char *window_id);
+/**
+ * Provide the ui workspace customisation set theme operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ui_workspace_customisation_set_theme(UmiUiWorkspaceCustomisation *customisation,const UmiUiThemeProfile *theme);
+/**
+ * Provide the ui workspace customisation snapshot operation used by this module and its
+ * client applications.
+ */
 void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *customisation,UmiUiWorkspaceCustomisationSnapshot *out_snapshot);
 #endif

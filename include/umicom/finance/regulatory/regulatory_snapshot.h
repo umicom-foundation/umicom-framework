@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the regulatory snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiRegulatorySnapshot { size_t reports_due; size_t reports_ready; size_t rejected_submissions; double capital_ratio; double liquidity_ratio; } UmiRegulatorySnapshot;
 /* Initialise a regulatory snapshot with bounded counts and finite ratios. */
 UmiStatus umi_reg_regulatory_snapshot_init(UmiRegulatorySnapshot *snapshot,size_t reports_due,size_t reports_ready,size_t rejected,double capital_ratio,double liquidity_ratio);

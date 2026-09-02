@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/plugin_trust.h"
 
+/*
+ * Provide the developer capability plugin trust operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_plugin_trust(void)
 {

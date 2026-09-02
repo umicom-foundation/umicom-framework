@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link status model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextLinkStatusModel {
     uint32_t structure_size;
     char model_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkStatusModel {
     uint64_t revision;
 } UmiWorkbenchContextLinkStatusModel;
 
+/**
+ * Initialise workbench context link status model from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_status_model_init(UmiWorkbenchContextLinkStatusModel *record,
                                            const char *identity);
+/**
+ * Check that workbench context link status model satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_status_model_validate(
     const UmiWorkbenchContextLinkStatusModel *record);
+/**
+ * Copy workbench context link status model into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_status_model_copy(
     UmiWorkbenchContextLinkStatusModel *destination,
     const UmiWorkbenchContextLinkStatusModel *source);
+/**
+ * Provide the workbench context link status model hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_link_status_model_hash(
     const UmiWorkbenchContextLinkStatusModel *record);
+/**
+ * Provide the workbench context link status model set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_status_model_set_primary(
     UmiWorkbenchContextLinkStatusModel *record,
     const char *value);
+/**
+ * Provide the workbench context link status model set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_status_model_set_secondary(
     UmiWorkbenchContextLinkStatusModel *record,
     const char *value);
+/**
+ * Provide the workbench context link status model touch operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_context_link_status_model_touch(
     UmiWorkbenchContextLinkStatusModel *record,
     uint64_t sequence,

@@ -20,8 +20,16 @@
 extern "C" {
 #endif
 
+/**
+ * Initialise ide editor selection from caller-provided values so later operations receive
+ * a known state.
+ */
 void umi_ide_editor_selection_init(UmiIdeEditorSelection *selection);
 
+/**
+ * Copy ide editor selection into module-owned storage so callers keep ownership of their
+ * input values.
+ */
 UmiStatus umi_ide_editor_selection_set(
     UmiIdeEditorSelection *selection,
     const char *document_id,
@@ -35,6 +43,10 @@ UmiStatus umi_ide_editor_selection_set(
     uint64_t document_revision,
     int dirty);
 
+/**
+ * Check that ide editor selection satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ide_editor_selection_validate(
     const UmiIdeEditorSelection *selection);
 

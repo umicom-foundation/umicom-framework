@@ -27,7 +27,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the codeguard hash bytes operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_codeguard_hash_bytes(const void *data, size_t size);
+/**
+ * Provide the codeguard hash file operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_hash_file(const char *path, uint64_t *out_raw_hash,
                                   uint64_t *out_normalized_hash, size_t *out_size);
 #ifdef __cplusplus

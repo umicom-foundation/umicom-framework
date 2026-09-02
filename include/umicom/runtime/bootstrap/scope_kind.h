@@ -22,7 +22,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap scope kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_bootstrap_scope_kind_text(UmiBootstrapScopeKind scope);
+/**
+ * Provide the bootstrap scope kind rank operation used by this module and its client
+ * applications.
+ */
 int umi_bootstrap_scope_kind_rank(UmiBootstrapScopeKind scope);
 
 #ifdef __cplusplus

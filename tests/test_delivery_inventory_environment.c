@@ -20,6 +20,10 @@
 #include <assert.h>
 #include "umicom/delivery/inventory.h"
 #include "umicom/delivery/environment.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDeliveryInventory inventory;
     UmiDeliveryEnvironment environment;

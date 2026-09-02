@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap service prepare operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_bootstrap_service_prepare(
     UmiBootstrapContext *context,
     const UmiBootstrapServiceGraph *service_graph,

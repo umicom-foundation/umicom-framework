@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive override data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerAdaptiveOverride {
     char variant_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];
     char property_path[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

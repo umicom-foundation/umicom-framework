@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named repository maintenance state values accepted by this public contract.
+ */
 typedef enum UmiRepositoryMaintenanceState {
     UMI_REPOSITORY_MAINTENANCE_CLEAN = 0,
     UMI_REPOSITORY_MAINTENANCE_DIRTY = 1,
@@ -31,13 +34,24 @@ typedef enum UmiRepositoryMaintenanceState {
     UMI_REPOSITORY_MAINTENANCE_ERROR = 4
 } UmiRepositoryMaintenanceState;
 
+/**
+ * List the named repository doctor severity values accepted by this public contract.
+ */
 typedef enum UmiRepositoryDoctorSeverity {
     UMI_REPOSITORY_DOCTOR_INFO = 0,
     UMI_REPOSITORY_DOCTOR_WARNING = 1,
     UMI_REPOSITORY_DOCTOR_ERROR = 2
 } UmiRepositoryDoctorSeverity;
 
+/**
+ * Provide the repository maintenance state text operation used by this module and its
+ * client applications.
+ */
 const char *umi_repository_maintenance_state_text(UmiRepositoryMaintenanceState state);
+/**
+ * Provide the repository doctor severity text operation used by this module and its client
+ * applications.
+ */
 const char *umi_repository_doctor_severity_text(UmiRepositoryDoctorSeverity severity);
 
 #ifdef __cplusplus

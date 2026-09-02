@@ -22,6 +22,10 @@
 
 #include "umicom/toolchain/sdk.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiToolchainProfile profile;
@@ -29,6 +33,7 @@ int main(void)
     umi_toolchain_profile_init(&profile);
     profile.family = UMI_TOOLCHAIN_POSIX_GCC;
     strcpy(profile.prefix_directory, "/usr");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_toolchain_sdk_discover(&profile, &catalogue) != UMI_STATUS_OK ||
         catalogue.count != 1U ||
         catalogue.items[0].kind != UMI_SDK_POSIX ||

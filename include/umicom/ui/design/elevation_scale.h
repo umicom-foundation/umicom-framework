@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 #define UMI_DESIGN_ELEVATION_SCALE_LEVELS 6U
+/**
+ * Represent the design elevation scale data shared with callers of this public contract.
+ */
 typedef struct UmiDesignElevationScale { double depth[6U]; } UmiDesignElevationScale;
 /* Initialise the canonical scale used as a stable design-system baseline. */
 UmiDesignElevationScale elevation_scale_default(void);

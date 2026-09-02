@@ -18,4 +18,8 @@
 
 #include "umicom/finance/prudential/total_rwa.h"
 
-UmiStatus umi_pru_total_rwa_calculate(UmiPrudentialTotalRwa *result,double credit,double market,double operational) { if(result==NULL||!umi_pru_number_valid(credit)||!umi_pru_number_valid(market)||!umi_pru_number_valid(operational)||credit<0.0||market<0.0||operational<0.0)return UMI_STATUS_INVALID_ARGUMENT; result->credit_rwa=credit; result->market_rwa=market; result->operational_rwa=operational; result->total_rwa=credit+market+operational; return umi_pru_number_valid(result->total_rwa)?UMI_STATUS_OK:UMI_STATUS_INVALID_STATE; }
+/*
+ * Provide the pru total rwa calculate operation used by this module and its client
+ * applications.
+ */
+UmiStatus umi_pru_total_rwa_calculate(UmiPrudentialTotalRwa *result,double credit,double market,double operational) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if(result==NULL||!umi_pru_number_valid(credit)||!umi_pru_number_valid(market)||!umi_pru_number_valid(operational)||credit<0.0||market<0.0||operational<0.0)return UMI_STATUS_INVALID_ARGUMENT; result->credit_rwa=credit; result->market_rwa=market; result->operational_rwa=operational; result->total_rwa=credit+market+operational; return umi_pru_number_valid(result->total_rwa)?UMI_STATUS_OK:UMI_STATUS_INVALID_STATE; }

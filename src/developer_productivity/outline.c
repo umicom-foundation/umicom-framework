@@ -17,6 +17,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the developer outline build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_outline_build(
     const UmiDeveloperSymbolIndex *index,
     const char *document_uri,
@@ -24,6 +28,10 @@ UmiStatus umi_developer_outline_build(
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (index == NULL || document_uri == NULL ||
         out_outline == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -36,17 +44,21 @@ UmiStatus umi_developer_outline_build(
         "%s",
         document_uri);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U;
          position < umi_developer_symbol_index_count(index);
          ++position) {
         UmiDeveloperSymbol symbol;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_developer_symbol_index_at(
                 index, position, &symbol) != UMI_STATUS_OK) {
             continue;
         }
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(symbol.location.uri, document_uri) == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (out_outline->count >= UMI_DEVELOPER_OUTLINE_CAPACITY) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
             }

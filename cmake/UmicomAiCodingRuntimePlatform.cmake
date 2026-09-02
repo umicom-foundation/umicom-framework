@@ -22,19 +22,23 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_developer)
     message(FATAL_ERROR
         "AI Coding Runtime requires the canonical umicom_developer target")
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET Umicom::ai)
     message(FATAL_ERROR
         "AI Coding Runtime requires the existing Umicom::ai target")
 endif()
 
+# Apply this branch only when its contract condition is satisfied.
 if(WIN32)
     set(UMICOM_AI_CODING_SCANNER_PLATFORM_SOURCE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/windows/ai_coding_scanner_windows.c")
+# Use this fallback path when the earlier condition does not apply.
 else()
     set(UMICOM_AI_CODING_SCANNER_PLATFORM_SOURCE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/posix/ai_coding_scanner_posix.c")
@@ -99,6 +103,7 @@ target_link_libraries(umicom_developer PUBLIC
     Umicom::ai
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_executable(
         umicom-ai-coding-runtime-audit-test
@@ -110,9 +115,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-audit-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-audit-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-audit-test)
     endif()
@@ -128,9 +135,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-cancellation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-cancellation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-cancellation-test)
     endif()
@@ -146,9 +155,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-change-guard-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-change-guard-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-change-guard-test)
     endif()
@@ -164,9 +175,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-config-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-config-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-config-test)
     endif()
@@ -183,9 +196,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-context-materializer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-context-materializer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-context-materializer-test)
     endif()
@@ -201,9 +216,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-context-summary-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-context-summary-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-context-summary-test)
     endif()
@@ -219,9 +236,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-event-queue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-event-queue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-event-queue-test)
     endif()
@@ -237,9 +256,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-history-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-history-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-history-test)
     endif()
@@ -255,9 +276,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-ignore-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-ignore-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-ignore-test)
     endif()
@@ -273,9 +296,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-language-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-language-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-language-test)
     endif()
@@ -291,9 +316,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-patch-preview-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-patch-preview-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-patch-preview-test)
     endif()
@@ -309,9 +336,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-path-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-path-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-path-test)
     endif()
@@ -328,9 +357,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-path-traversal-response-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-path-traversal-response-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-path-traversal-response-test)
     endif()
@@ -346,9 +377,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-prompt-template-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-prompt-template-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-prompt-template-test)
     endif()
@@ -364,9 +397,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-repair-policy-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-repair-policy-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-repair-policy-test)
     endif()
@@ -383,9 +418,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-response-create-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-response-create-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-response-create-test)
     endif()
@@ -402,9 +439,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-response-modify-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-response-modify-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-response-modify-test)
     endif()
@@ -420,9 +459,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-selection-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-selection-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-selection-test)
     endif()
@@ -438,9 +479,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-session-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-session-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-session-test)
     endif()
@@ -456,9 +499,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-task-queue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-task-queue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-task-queue-test)
     endif()
@@ -474,9 +519,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-types-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-types-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-types-test)
     endif()
@@ -492,9 +539,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-feedback-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-feedback-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-feedback-test)
     endif()
@@ -510,9 +559,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-plan-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-plan-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-plan-test)
     endif()
@@ -528,9 +579,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-cargo-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-cargo-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-cargo-test)
     endif()
@@ -546,9 +599,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-cmake-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-cmake-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-cmake-test)
     endif()
@@ -564,9 +619,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-go-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-go-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-go-test)
     endif()
@@ -582,9 +639,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-gradle-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-gradle-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-gradle-test)
     endif()
@@ -600,9 +659,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-make-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-make-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-make-test)
     endif()
@@ -618,9 +679,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-maven-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-maven-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-maven-test)
     endif()
@@ -636,9 +699,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-meson-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-meson-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-meson-test)
     endif()
@@ -654,9 +719,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-npm-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-npm-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-npm-test)
     endif()
@@ -672,9 +739,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-python-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-python-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-python-test)
     endif()
@@ -690,9 +759,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-profile-zig-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-profile-zig-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-profile-zig-test)
     endif()
@@ -708,9 +779,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-runner-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-runner-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-runner-test)
     endif()
@@ -727,9 +800,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-validation-selector-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-validation-selector-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-validation-selector-test)
     endif()
@@ -746,9 +821,11 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tests/ai_coding_runtime"
     )
     target_link_libraries(umicom-ai-coding-runtime-workspace-adapter-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ai-coding-runtime-workspace-adapter-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ai-coding-runtime-workspace-adapter-test)
     endif()
@@ -771,10 +848,12 @@ if(BUILD_TESTING)
         umicom-devprod-problem-navigation-test
         PRIVATE Umicom::Framework
     )
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(
             umicom-devprod-problem-navigation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(
             umicom-devprod-problem-navigation-test)

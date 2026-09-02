@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_ASYNCHRONOUS_LOAD "umicom.document.performance.asynchronous_load"
 
+/**
+ * Read document capability asynchronous into validated module state and return a status
+ * when input cannot be used.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_asynchronous_load(void);
 

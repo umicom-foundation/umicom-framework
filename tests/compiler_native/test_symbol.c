@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/compiler/native/symbol.h"
-int main(void){UmiNativeSymbol s;if(umi_nc_symbol_init(&s,1U,UMI_NC_SYMBOL_VARIABLE,"x",2U,1U)!=UMI_STATUS_OK)return 1;s.defined=true;if(umi_nc_symbol_validate(&s)!=UMI_STATUS_OK)return 2;return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiNativeSymbol s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_symbol_init(&s,1U,UMI_NC_SYMBOL_VARIABLE,"x",2U,1U)!=UMI_STATUS_OK)return 1;s.defined=true;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_symbol_validate(&s)!=UMI_STATUS_OK)return 2;return 0;}

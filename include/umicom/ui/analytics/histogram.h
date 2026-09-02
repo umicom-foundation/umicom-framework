@@ -27,7 +27,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics histogram data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsHistogram { double minimum; double maximum; size_t bin_count; size_t counts[UMI_ANALYTICS_MAX_BINS]; } UmiAnalyticsHistogram;
+/**
+ * Provide the analytics histogram build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_histogram_build(const double *values,size_t count,size_t bins,UmiAnalyticsHistogram *out_histogram);
 
 #ifdef __cplusplus

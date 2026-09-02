@@ -16,6 +16,10 @@
 
 #include "umicom/developer_project/languages/rust.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiDeveloperProjectLanguagePack *pack = umi_developer_project_language_rust();

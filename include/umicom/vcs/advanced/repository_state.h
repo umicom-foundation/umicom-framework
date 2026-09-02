@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced repository state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedRepositoryState {
     uint32_t struct_size;
     uint32_t api_version;
@@ -42,9 +46,25 @@ typedef struct UmiVcsAdvancedRepositoryState {
     int bisect_in_progress;
 } UmiVcsAdvancedRepositoryState;
 
+/**
+ * Initialise vcs advanced repository state from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_repository_state_init(UmiVcsAdvancedRepositoryState *value);
+/**
+ * Check that vcs advanced repository state satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_repository_state_validate(const UmiVcsAdvancedRepositoryState *value);
+/**
+ * Provide the vcs advanced repository state operation in progress operation used by this
+ * module and its client applications.
+ */
 int umi_vcs_advanced_repository_state_operation_in_progress(const UmiVcsAdvancedRepositoryState *value);
+/**
+ * Provide the vcs advanced repository state diverged operation used by this module and its
+ * client applications.
+ */
 int umi_vcs_advanced_repository_state_diverged(const UmiVcsAdvancedRepositoryState *value);
 
 #ifdef __cplusplus

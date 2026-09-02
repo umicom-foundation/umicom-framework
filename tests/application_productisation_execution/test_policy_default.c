@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "test_support.h"
 
+/*
+ * Exercise test policy default and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 void test_policy_default(void)
 {
     UmiProductExecutionPolicy p=umi_product_execution_policy_default(); assert(p.maximum_attempts==3U); assert(p.require_framework_completion_first);

@@ -26,6 +26,9 @@
 #include "umicom/integration/dependency.h"
 #include "umicom/integration/registry.h"
 
+/**
+ * Represent the integration resolution data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationResolution {
     size_t satisfied_required;
     size_t satisfied_optional;
@@ -34,6 +37,10 @@ typedef struct UmiIntegrationResolution {
     char first_missing_required[UMI_INTEGRATION_ID_CAPACITY];
 } UmiIntegrationResolution;
 
+/**
+ * Provide the integration resolve operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_integration_resolve(
     const UmiIntegrationRegistry *registry,
     const UmiIntegrationDependency *dependencies,

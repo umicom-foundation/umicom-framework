@@ -17,4 +17,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/*
+ * Exercise test evidence multiple and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_evidence_multiple(void){UmiAiHelixEvidenceContext c;umi_ai_helix_evidence_context_init(&c);TEST_CHECK(umi_ai_helix_evidence_context_add(&c,"build","green")==UMI_STATUS_OK);TEST_CHECK(umi_ai_helix_evidence_context_add(&c,"tests","passed")==UMI_STATUS_OK);TEST_CHECK(c.item_count==2U);return 0;}

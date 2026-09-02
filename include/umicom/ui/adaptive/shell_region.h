@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive shell region data shared with callers of this public contract.
+ */
 typedef struct UmiAdaptiveShellRegion {
     UmiAdaptiveResponsiveRegion responsive;
     int32_t preferred_extent;

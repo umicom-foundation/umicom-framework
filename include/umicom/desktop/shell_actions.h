@@ -31,6 +31,9 @@
 
 #define UMI_DESKTOP_SHELL_ACTION_COUNT 11U
 
+/**
+ * Represent the desktop shell action data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopShellAction {
     char action_id[UMI_DESKTOP_ID_CAPACITY];
     char label[UMI_DESKTOP_TITLE_CAPACITY];
@@ -39,7 +42,15 @@ typedef struct UmiDesktopShellAction {
     bool destructive;
 } UmiDesktopShellAction;
 
+/**
+ * Return the number of records represented by desktop shell action without changing their
+ * state.
+ */
 size_t umi_desktop_shell_action_count(void);
+/**
+ * Find desktop shell action while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_desktop_shell_action_at(
     const UmiDesktopLayoutDesigner *designer,
     size_t index,

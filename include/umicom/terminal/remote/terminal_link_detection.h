@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote terminal link detection find first operation used by this
+ * module and its client applications.
+ */
 size_t umi_terminal_remote_terminal_link_detection_find_first(const char *text,char *out,size_t capacity);
 #ifdef __cplusplus
 }

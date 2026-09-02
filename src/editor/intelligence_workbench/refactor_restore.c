@@ -20,7 +20,23 @@
 
 #include <string.h>
 
-UmiStatus umi_editor_intel_refactor_restore_begin(UmiEditorIntelRefactorRestore *session,const char *session_id){if(session==NULL||!umi_editor_intel_id_valid(session_id))return UMI_STATUS_INVALID_ARGUMENT;memset(session,0,sizeof *session);if(umi_editor_intel_copy_text(session->session_id,sizeof session->session_id,session_id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;session->phase=UMI_EDITOR_INTEL_PHASE_PREPARING;session->revision=1U;return UMI_STATUS_OK;}
-UmiStatus umi_editor_intel_refactor_restore_set_ready(UmiEditorIntelRefactorRestore *session,uint32_t item_count){if(session==NULL||session->phase!=UMI_EDITOR_INTEL_PHASE_PREPARING)return UMI_STATUS_INVALID_STATE;session->item_count=item_count;session->phase=UMI_EDITOR_INTEL_PHASE_READY;session->changed=true;session->revision++;return UMI_STATUS_OK;}
-UmiStatus umi_editor_intel_refactor_restore_cancel(UmiEditorIntelRefactorRestore *session){if(session==NULL||session->phase==UMI_EDITOR_INTEL_PHASE_COMMITTED)return UMI_STATUS_INVALID_STATE;session->phase=UMI_EDITOR_INTEL_PHASE_CANCELLED;session->revision++;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel refactor restore begin operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_editor_intel_refactor_restore_begin(UmiEditorIntelRefactorRestore *session,const char *session_id){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(session==NULL||!umi_editor_intel_id_valid(session_id))return UMI_STATUS_INVALID_ARGUMENT;memset(session,0,sizeof *session);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(umi_editor_intel_copy_text(session->session_id,sizeof session->session_id,session_id)!=UMI_STATUS_OK)return UMI_STATUS_CAPACITY_EXCEEDED;session->phase=UMI_EDITOR_INTEL_PHASE_PREPARING;session->revision=1U;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel refactor restore set ready operation used by this module and
+ * its client applications.
+ */
+UmiStatus umi_editor_intel_refactor_restore_set_ready(UmiEditorIntelRefactorRestore *session,uint32_t item_count){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(session==NULL||session->phase!=UMI_EDITOR_INTEL_PHASE_PREPARING)return UMI_STATUS_INVALID_STATE;session->item_count=item_count;session->phase=UMI_EDITOR_INTEL_PHASE_READY;session->changed=true;session->revision++;return UMI_STATUS_OK;}
+/*
+ * Provide the editor intel refactor restore cancel operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_editor_intel_refactor_restore_cancel(UmiEditorIntelRefactorRestore *session){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(session==NULL||session->phase==UMI_EDITOR_INTEL_PHASE_COMMITTED)return UMI_STATUS_INVALID_STATE;session->phase=UMI_EDITOR_INTEL_PHASE_CANCELLED;session->revision++;return UMI_STATUS_OK;}
+/*
+ * Check that editor intel refactor restore satisfies its contract before another service
+ * relies on it.
+ */
 int umi_editor_intel_refactor_restore_valid(const UmiEditorIntelRefactorRestore *session){return session!=NULL&&umi_editor_intel_id_valid(session->session_id)&&session->phase>=UMI_EDITOR_INTEL_PHASE_PREPARING&&session->phase<=UMI_EDITOR_INTEL_PHASE_CANCELLED;}

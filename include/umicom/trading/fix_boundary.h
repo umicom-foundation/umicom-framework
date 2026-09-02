@@ -26,7 +26,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the fix session info data shared with callers of this public contract.
+ */
 typedef struct UmiFixSessionInfo { char sender_comp_id[32]; char target_comp_id[32]; uint64_t next_out_sequence; uint64_t next_in_sequence; } UmiFixSessionInfo;
+/**
+ * Check that fix session info satisfies its contract before another service relies on it.
+ */
 int umi_fix_session_info_valid(const UmiFixSessionInfo *session);
 #ifdef __cplusplus
 }

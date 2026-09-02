@@ -20,6 +20,7 @@
 #include "umicom/developer_project/run_plan.h"
 
 
+/* Provide the plan build operation used by this module and its client applications. */
 static UmiStatus plan_build(
     const UmiDeveloperProjectModel *model,
     int include_test,
@@ -36,10 +37,15 @@ static UmiStatus plan_build(
         include_package);
 }
 
+/*
+ * Perform plan through the module contract so client applications do not duplicate its
+ * policy.
+ */
 static UmiStatus plan_run(
     const UmiDeveloperProjectModel *model,
     UmiDeveloperProjectRunPlan *out_plan)
 {
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (model->executable[0] == '\0') return UMI_STATUS_NOT_FOUND;
 
     return umi_developer_project_run_plan_native(
@@ -50,6 +56,10 @@ static UmiStatus plan_run(
 }
 
 
+/*
+ * Provide the developer project provider cmake operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperProjectLanguageProvider *umi_developer_project_provider_cmake(void)
 {
     static const UmiDeveloperProjectLanguageProvider provider = {

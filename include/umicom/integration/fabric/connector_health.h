@@ -26,9 +26,24 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the fabric connector health data shared with callers of this public contract.
+ */
 typedef struct UmiFabricConnectorHealth { uint64_t connects; uint64_t disconnects; uint64_t errors; uint64_t messages; UmiFabricState state; } UmiFabricConnectorHealth;
+/**
+ * Initialise fabric connector health from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_fabric_connector_health_init(UmiFabricConnectorHealth *health);
+/**
+ * Provide the fabric connector health record operation used by this module and its client
+ * applications.
+ */
 void umi_fabric_connector_health_record(UmiFabricConnectorHealth *health,bool connected,bool error,bool message);
+/**
+ * Provide the fabric connector health error rate operation used by this module and its
+ * client applications.
+ */
 double umi_fabric_connector_health_error_rate(const UmiFabricConnectorHealth *health);
 
 #ifdef __cplusplus

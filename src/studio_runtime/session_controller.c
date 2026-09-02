@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Initialise studio session controller from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_session_controller_create(
     const char *path,
     const char *prefix,
@@ -27,6 +31,10 @@ UmiStatus umi_studio_session_controller_create(
     size_t prefix_length;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (path == NULL || path[0] == '\0' ||
         prefix == NULL || prefix[0] == '\0' ||
         out_controller == NULL) {
@@ -36,6 +44,7 @@ UmiStatus umi_studio_session_controller_create(
     path_length = strlen(path);
     prefix_length = strlen(prefix);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (path_length >= UMI_STUDIO_RUNTIME_PATH_CAPACITY ||
         prefix_length >= UMI_SESSION_KEY_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -45,9 +54,14 @@ UmiStatus umi_studio_session_controller_create(
 
     controller = (UmiStudioRuntimeSessionController *)calloc(
         1U, sizeof(*controller));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
     status = umi_session_store_create(&controller->store);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(controller);
         return status;
@@ -61,14 +75,26 @@ UmiStatus umi_studio_session_controller_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by studio session controller so the same storage can be
+ * reused safely.
+ */
 void umi_studio_session_controller_destroy(
     UmiStudioRuntimeSessionController *controller)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL) return;
     umi_session_store_destroy(controller->store);
     free(controller);
 }
 
+/*
+ * Write studio session controller in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_studio_session_controller_save(
     UmiStudioRuntimeSessionController *controller,
     UmiStudioRuntimePlatform *platform)
@@ -77,17 +103,26 @@ UmiStatus umi_studio_session_controller_save(
     UmiStudioRuntimeBindings *bindings;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->store == NULL ||
         platform == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     bindings = umi_studio_runtime_platform_bindings(platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) return UMI_STATUS_INVALID_STATE;
 
     status = umi_studio_runtime_platform_snapshot(
         platform,
         &snapshot);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_layout_session_save(
@@ -96,15 +131,21 @@ UmiStatus umi_studio_session_controller_save(
         snapshot.active_layout_preset_id,
         bindings->shell_state,
         bindings->shell_layout);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_session_store_save(
         controller->store,
         controller->path);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) controller->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the studio session controller restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_session_controller_restore(
     UmiStudioRuntimeSessionController *controller,
     UmiStudioRuntimePlatform *platform,
@@ -118,6 +159,10 @@ UmiStatus umi_studio_session_controller_restore(
     int restored = 0;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->store == NULL ||
         platform == NULL || out_restored == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -129,12 +174,18 @@ UmiStatus umi_studio_session_controller_restore(
         controller->store,
         controller->path,
         &loaded);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     controller->loaded = loaded;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!loaded) return UMI_STATUS_OK;
 
     bindings = umi_studio_runtime_platform_bindings(platform);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL) return UMI_STATUS_INVALID_STATE;
 
     umi_application_shell_state_init(&restored_state);
@@ -151,6 +202,7 @@ UmiStatus umi_studio_session_controller_restore(
         &restored_state,
         &restored_layout,
         &restored);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || !restored) return status;
 
     /*
@@ -162,6 +214,7 @@ UmiStatus umi_studio_session_controller_restore(
         status = umi_studio_runtime_platform_select_layout(
             platform,
             preset_id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -169,6 +222,7 @@ UmiStatus umi_studio_session_controller_restore(
     *bindings->shell_layout = restored_layout;
 
     status = umi_studio_runtime_platform_refresh(platform);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     controller->revision += 1U;

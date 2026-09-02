@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic workbench designer service data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiUiMosaicWorkbenchDesignerService {
     char workspace_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char active_id[UMI_UI_MOSAIC_ID_CAPACITY];

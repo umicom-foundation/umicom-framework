@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/path_canonicalization.h"
 
+/*
+ * Provide the document capability path canonicalization operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_path_canonicalization(void)
 {

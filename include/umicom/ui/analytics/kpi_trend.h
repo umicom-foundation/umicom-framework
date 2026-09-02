@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the analytics kpi trend slope operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_analytics_kpi_trend_slope(const double *values,size_t count,double *out_slope);
 
 #ifdef __cplusplus

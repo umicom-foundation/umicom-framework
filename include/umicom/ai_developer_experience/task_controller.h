@@ -19,15 +19,31 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai developer task cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_task_cancel(
     UmiAiDeveloperExperiencePlatform *platform);
 
+/**
+ * Provide the ai developer task continue repair operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_task_continue_repair(
     UmiAiDeveloperExperiencePlatform *platform);
 
+/**
+ * Provide the ai developer task apply pending operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_task_apply_pending(
     UmiAiDeveloperExperiencePlatform *platform);
 
+/**
+ * Provide the ai developer task reject pending operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_task_reject_pending(
     UmiAiDeveloperExperiencePlatform *platform);
 

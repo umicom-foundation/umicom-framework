@@ -18,8 +18,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad clipboard payload data shared with callers of this public contract.
+ */
 typedef struct UmiRadClipboardPayload { UmiRadComponentInstance items[UMI_RAD_MAX_ITEMS]; size_t count; } UmiRadClipboardPayload;
+/**
+ * Initialise rad clipboard payload from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_clipboard_payload_init(UmiRadClipboardPayload *payload);
+/**
+ * Add rad clipboard payload only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_rad_clipboard_payload_add(UmiRadClipboardPayload *payload,const UmiRadComponentInstance *item);
 #ifdef __cplusplus
 }

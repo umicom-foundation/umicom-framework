@@ -15,13 +15,18 @@
 
 #include "umicom/workbench_context_host/workbench_adapter.h"
 #include <string.h>
+/*
+ * Provide the workbench context host observation from workbench operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_observation_from_workbench(
     const UmiUiWorkbench *workbench,uint64_t now_ms,
     UmiWorkbenchContextHostObservation *out_observation)
 {
     UmiUiWorkbenchSnapshot snapshot;UmiStatus s;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(!workbench||!out_observation)return UMI_STATUS_INVALID_ARGUMENT;
-    s=umi_ui_workbench_snapshot(workbench,&snapshot);if(s!=UMI_STATUS_OK)return s;
+    s=umi_ui_workbench_snapshot(workbench,&snapshot);/* Preserve the original failure result so the caller can respond to the correct cause. */ if(s!=UMI_STATUS_OK)return s;
     umi_workbench_context_host_observation_init(out_observation);
     (void)umi_workbench_context_host_copy_text(out_observation->workbench_id,
         sizeof(out_observation->workbench_id),snapshot.workbench_id);

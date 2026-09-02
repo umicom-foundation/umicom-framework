@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio ai context sync operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_ai_context_sync(
     const UmiStudioRuntimeSelectionRouter *selection,
     const char *actor_id,

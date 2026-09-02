@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_DOCUMENT_TELEMETRY "umicom.document.integration.document_telemetry"
 
+/**
+ * Provide the document capability document telemetry operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_document_telemetry(void);
 

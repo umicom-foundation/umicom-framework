@@ -29,9 +29,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host resource budget data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostResourceBudget { uint64_t memory_bytes; uint64_t cpu_time_ms; uint32_t process_count; uint32_t thread_count; } UmiPluginExtensionHostResourceBudget;
+/**
+ * Represent the plugin extension host resource budget usage data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiPluginExtensionHostResourceBudgetUsage { uint64_t memory_bytes; uint64_t cpu_time_ms; uint32_t process_count; uint32_t thread_count; } UmiPluginExtensionHostResourceBudgetUsage;
+/**
+ * Initialise plugin extension host resource budget from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_resource_budget_init(UmiPluginExtensionHostResourceBudget *budget);
+/**
+ * Provide the plugin extension host resource budget evaluate operation used by this module
+ * and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_resource_budget_evaluate(const UmiPluginExtensionHostResourceBudget *budget, const UmiPluginExtensionHostResourceBudgetUsage *usage);
 
 #ifdef __cplusplus

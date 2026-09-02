@@ -65,6 +65,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomPublicContractFingerprint.cmake
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomLivingDocumentation.cmake")
 find_package(Threads REQUIRED)
 
+# Use the stable identifier comparison to choose the matching record or policy.
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     umicom_register_header_governance_test(
         framework.sdk.public_headers
@@ -82,13 +83,18 @@ endif()
 # The parent Umicom application may already provide these helper functions.
 # Define them only when they do not already exist.
 if(NOT COMMAND umicom_apply_warnings)
+    # Define the apply warnings build helper so parent and application projects apply one
+    # consistent rule.
     function(umicom_apply_warnings target)
+        # Apply this branch only when its contract condition is satisfied.
         if(NOT UMICOM_ENABLE_STRICT_WARNINGS)
             return()
         endif()
 
+        # Select the warning options understood by the active compiler.
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)
+        # Use this fallback path when the earlier condition does not apply.
         else()
             target_compile_options(${target} PRIVATE
                 -Wall
@@ -101,8 +107,12 @@ if(NOT COMMAND umicom_apply_warnings)
     endfunction()
 endif()
 
+# Define the local fallback only when the parent build did not provide the shared helper.
 if(NOT COMMAND umicom_apply_sanitizers)
+    # Define the apply sanitizers build helper so parent and application projects apply one
+    # consistent rule.
     function(umicom_apply_sanitizers target)
+        # Apply this branch only when its contract condition is satisfied.
         if(UMICOM_ENABLE_SANITIZERS AND NOT MSVC)
             target_compile_options(${target} PRIVATE
                 -fsanitize=address,undefined
@@ -136,6 +146,7 @@ umicom_attach_public_contract_fingerprint(
 umicom_apply_warnings(umicom_base)
 umicom_apply_sanitizers(umicom_base)
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_test(
         NAME framework.build.public-contract-fingerprint
@@ -271,11 +282,15 @@ add_library(umicom_data STATIC
 add_library(Umicom::data ALIAS umicom_data)
 set_target_properties(umicom_data PROPERTIES EXPORT_NAME data)
 target_link_libraries(umicom_data PUBLIC Umicom::base Umicom::messaging)
+# Apply this branch only when its contract condition is satisfied.
 if(SQLite3_FOUND)
+    # Configure the optional target only when its feature has created it.
     if(TARGET SQLite3::SQLite3)
         target_link_libraries(umicom_data PUBLIC SQLite3::SQLite3)
+    # Apply this branch only when its contract condition is satisfied.
     elseif(TARGET SQLite::SQLite3)
         target_link_libraries(umicom_data PUBLIC SQLite::SQLite3)
+    # Use this fallback path when the earlier condition does not apply.
     else()
         target_include_directories(umicom_data PUBLIC ${SQLite3_INCLUDE_DIRS})
         target_link_libraries(umicom_data PUBLIC ${SQLite3_LIBRARIES})
@@ -696,6 +711,7 @@ target_include_directories(umicom_ui_headless
 umicom_apply_warnings(umicom_ui_headless)
 umicom_apply_sanitizers(umicom_ui_headless)
 
+# Create this optional product surface only when its build option is enabled.
 if(UMICOM_BUILD_GTK4_ADAPTER)
     find_package(PkgConfig REQUIRED)
     # GtkFileDialog replaced deprecated GtkFileChooser APIs in GTK 4.10.  Make
@@ -755,6 +771,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         PkgConfig::UMICOM_FRAMEWORK_GTK4
     )
     target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::editor)
+    # Configure the optional target only when its feature has created it.
     if(TARGET PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
         target_link_libraries(umicom_ui_gtk4 PRIVATE
             PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
@@ -769,6 +786,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
             ${CMAKE_CURRENT_SOURCE_DIR}/adapters/gtk4
     )
     umicom_apply_warnings(umicom_ui_gtk4)
+    # Apply this branch only when its contract condition is satisfied.
     if(UMICOM_ENABLE_STRICT_WARNINGS AND
        CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         set_source_files_properties(
@@ -1041,6 +1059,7 @@ target_include_directories(umicom_diagnostic_ui PUBLIC
 umicom_apply_warnings(umicom_diagnostic_ui)
 umicom_apply_sanitizers(umicom_diagnostic_ui)
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::diagnostic_ui)
 endif()
@@ -1077,20 +1096,24 @@ umicom_apply_sanitizers(umicom_testing)
 # -----------------------------------------------------------------------------
 set(UMICOM_TERMINAL_ASSEMBLY_SOURCE "")
 set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION "")
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_TERMINAL_ENABLE_ASSEMBLY AND
    CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
         enable_language(ASM)
         set(UMICOM_TERMINAL_ASSEMBLY_SOURCE
             src/terminal/asm/scan_x86_64.S)
         set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION
             UMICOM_TERMINAL_SCAN_X86_64_ASM=1)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
         enable_language(ASM)
         set(UMICOM_TERMINAL_ASSEMBLY_SOURCE
             src/terminal/asm/scan_aarch64.S)
         set(UMICOM_TERMINAL_ASSEMBLY_DEFINITION
             UMICOM_TERMINAL_SCAN_AARCH64_ASM=1)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|RISCV64)$")
         enable_language(ASM)
         set(UMICOM_TERMINAL_ASSEMBLY_SOURCE
@@ -1132,6 +1155,7 @@ target_include_directories(umicom_terminal PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_TERMINAL_ASSEMBLY_DEFINITION)
     target_compile_definitions(umicom_terminal PRIVATE
         ${UMICOM_TERMINAL_ASSEMBLY_DEFINITION})
@@ -1167,6 +1191,7 @@ target_include_directories(umicom_terminal_ui
 umicom_apply_warnings(umicom_terminal_ui)
 umicom_apply_sanitizers(umicom_terminal_ui)
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::terminal_ui)
 endif()
@@ -1249,20 +1274,24 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomEditorFeatures.cmake")
 
 set(UMICOM_EDITOR_ASSEMBLY_SOURCE "")
 set(UMICOM_EDITOR_ASSEMBLY_DEFINITION "")
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_EDITOR_ENABLE_ASSEMBLY AND
    CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
         enable_language(ASM)
         set(UMICOM_EDITOR_ASSEMBLY_SOURCE
             src/editor/asm/text_scan_x86_64.S)
         set(UMICOM_EDITOR_ASSEMBLY_DEFINITION
             UMICOM_EDITOR_SCAN_X86_64_ASM=1)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
         enable_language(ASM)
         set(UMICOM_EDITOR_ASSEMBLY_SOURCE
             src/editor/asm/text_scan_aarch64.S)
         set(UMICOM_EDITOR_ASSEMBLY_DEFINITION
             UMICOM_EDITOR_SCAN_AARCH64_ASM=1)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|RISCV64)$")
         enable_language(ASM)
         set(UMICOM_EDITOR_ASSEMBLY_SOURCE
@@ -1349,6 +1378,7 @@ target_include_directories(umicom_editor PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_EDITOR_ASSEMBLY_DEFINITION)
     target_compile_definitions(umicom_editor PRIVATE
         ${UMICOM_EDITOR_ASSEMBLY_DEFINITION})
@@ -1363,19 +1393,23 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDocumentCapabilities.cmake")
 
 set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE "")
 set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION "")
+# Use the stable identifier comparison to choose the matching record or policy.
 if(UMICOM_EDITOR_ENABLE_ASSEMBLY AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Use the stable identifier comparison to choose the matching record or policy.
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
         enable_language(ASM)
         set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE
             src/document/asm/fingerprint_x86_64.S)
         set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION
             UMICOM_DOCUMENT_HASH_X86_64_ASM=1)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
         enable_language(ASM)
         set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE
             src/document/asm/fingerprint_aarch64.S)
         set(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION
             UMICOM_DOCUMENT_HASH_AARCH64_ASM=1)
+    # Use the stable identifier comparison to choose the matching record or policy.
     elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv64|RISCV64)$")
         enable_language(ASM)
         set(UMICOM_DOCUMENT_ASSEMBLY_SOURCE
@@ -1420,6 +1454,7 @@ target_include_directories(umicom_document PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_DOCUMENT_ASSEMBLY_DEFINITION)
     target_compile_definitions(umicom_document PRIVATE
         ${UMICOM_DOCUMENT_ASSEMBLY_DEFINITION})
@@ -1486,6 +1521,7 @@ target_include_directories(umicom_vcs_ui
 )
 umicom_apply_warnings(umicom_vcs_ui)
 umicom_apply_sanitizers(umicom_vcs_ui)
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::vcs_ui)
 endif()
@@ -1548,10 +1584,12 @@ target_include_directories(umicom_plugin PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UNIX AND NOT APPLE)
     target_link_libraries(umicom_plugin PRIVATE dl)
 endif()
 umicom_apply_warnings(umicom_plugin)
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_ENABLE_STRICT_WARNINGS AND
    CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     set_source_files_properties(src/plugin/plugin.c PROPERTIES
@@ -1633,10 +1671,12 @@ set(UMICOM_WEB_PLATFORM_SOURCE
     src/web/runtime.c
     src/web/server.c
 )
+# Apply this branch only when its contract condition is satisfied.
 if(WIN32)
     list(APPEND UMICOM_WEB_PLATFORM_SOURCE
         adapters/windows/web_listener_windows.c
     )
+# Use this fallback path when the earlier condition does not apply.
 else()
     list(APPEND UMICOM_WEB_PLATFORM_SOURCE
         adapters/posix/web_listener_posix.c
@@ -1650,6 +1690,7 @@ target_link_libraries(umicom_web PUBLIC
     Umicom::base
     Umicom::platform
 )
+# Apply this branch only when its contract condition is satisfied.
 if(WIN32)
     target_link_libraries(umicom_web PRIVATE ws2_32)
 endif()
@@ -1834,6 +1875,7 @@ target_link_libraries(umicom_ai PUBLIC
     Umicom::security
     Umicom::diagnostics
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UNIX)
     target_link_libraries(umicom_ai PUBLIC m)
 endif()
@@ -2170,6 +2212,7 @@ add_library(umicom_application STATIC
     src/application/presentation/headless_surface_host.c
     src/application/presentation/surface_runtime.c
     src/application/presentation/product_surface.c
+    src/application/presentation/product_panel_projection.c
     src/application/presentation/surface_behavior.c
     src/application/presentation/surface_behavior_catalogue.c
     src/application/presentation/workspace_runtime_policy.c
@@ -2343,6 +2386,7 @@ target_include_directories(umicom_desktop PUBLIC
 )
 umicom_apply_warnings(umicom_desktop)
 umicom_apply_sanitizers(umicom_desktop)
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::desktop)
 endif()
@@ -2733,6 +2777,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDeveloperCapabilities.cmake")
 
 set(UMICOM_DEVELOPER_ASSEMBLY_SOURCE "")
 set(UMICOM_DEVELOPER_ASSEMBLY_DEFINITION "")
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_DEVELOPER_ENABLE_ASSEMBLY AND
    CMAKE_C_COMPILER_ID MATCHES "GNU|Clang" AND
    CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64|amd64)$")
@@ -2785,6 +2830,7 @@ target_include_directories(umicom_developer PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# Apply this branch only when its contract condition is satisfied.
 if(UMICOM_DEVELOPER_ASSEMBLY_DEFINITION)
     target_compile_definitions(umicom_developer PRIVATE
         ${UMICOM_DEVELOPER_ASSEMBLY_DEFINITION})
@@ -3123,7 +3169,10 @@ include(
 include(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationRuntimeIntegration.cmake"
 )
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the add framework test build helper so parent and application projects apply one
+    # consistent rule.
     function(umicom_add_framework_test target test_name source)
         add_executable(${target} ${source})
         target_link_libraries(${target} PRIVATE Umicom::Framework)
@@ -3815,6 +3864,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-headless-tests framework.ui_headless tests/test_ui_headless.c)
     umicom_add_framework_test(umicom-ui-command-view-tests framework.ui.command_view tests/test_ui_command_view.c)
 
+    # Create this optional product surface only when its build option is enabled.
     if(UMICOM_BUILD_NATIVE_TOOL)
         add_test(NAME framework.native_cli.version COMMAND umicom version)
         add_test(NAME framework.native_cli.capabilities COMMAND umicom capabilities)
@@ -4266,6 +4316,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-trading-watchlist-alerts-test framework.trading_watchlist_alerts tests/trading/test_watchlist_alerts.c)
     umicom_add_framework_test(umicom-trading-workspace-test framework.trading_workspace tests/trading/test_trading_workspace.c)
     umicom_add_framework_test(umicom-trading-ui-views-test framework.trading_ui_views tests/trading/test_trading_ui_views.c)
+    # Visit each bounded item once so every record receives the same rule.
     foreach(UMICOM_TRADING_TEST_TARGET
         umicom-trading-cash-buying-power-test
         umicom-trading-environment-health-test
@@ -4314,6 +4365,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-component-command-test framework.ui_component_command tests/ui_components/test_ui_component_command.c)
     umicom_add_framework_test(umicom-ui-component-set-test framework.ui_component_set tests/ui_components/test_ui_component_set.c)
     umicom_add_framework_test(umicom-ui-component-host-test framework.ui_component_host tests/ui_components/test_component_host.c)
+    # Visit each bounded item once so every record receives the same rule.
     foreach(UMICOM_UI_COMPONENT_TEST_TARGET
         umicom-ui-component-spec-test
         umicom-ui-component-registry-test
@@ -4344,6 +4396,7 @@ if(BUILD_TESTING)
         add_test(NAME ${test_name} COMMAND ${target})
         set_tests_properties(${test_name} PROPERTIES
             LABELS "framework;application")
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(${target})
         endif()
@@ -4516,6 +4569,10 @@ if(BUILD_TESTING)
         umicom-application-presentation-product-surface-test
         framework.application_presentation.product_surface
         tests/application_presentation/test_product_surface.c)
+    umicom_add_application_test(
+        umicom-application-presentation-product-panel-projection-test
+        framework.application_presentation.product_panel_projection
+        tests/application_presentation/test_product_panel_projection.c)
     umicom_add_application_test(
         umicom-application-presentation-product-surface-portfolio-test
         framework.application_presentation.product_surface_portfolio
@@ -4792,6 +4849,7 @@ install(TARGETS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+# Create this optional product surface only when its build option is enabled.
 if(UMICOM_BUILD_GTK4_ADAPTER)
     install(TARGETS umicom_ui_gtk4
         EXPORT UmicomFrameworkTargets
@@ -4801,6 +4859,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     )
 endif()
 
+# Create this optional product surface only when its build option is enabled.
 if(UMICOM_BUILD_NATIVE_TOOL)
     install(TARGETS umicom umicom-developer-reference
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -4815,6 +4874,7 @@ install(EXPORT UmicomFrameworkTargets
 )
 
 set(UMICOM_FRAMEWORK_FIND_SQLITE "")
+# Apply this branch only when its contract condition is satisfied.
 if(SQLite3_FOUND)
     set(UMICOM_FRAMEWORK_FIND_SQLITE "find_dependency(SQLite3)")
 endif()

@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital network descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDigitalNetworkDescriptor {
     UmiDigitalAssetId id;
     char name[UMI_DIGITAL_ASSET_NAME_CAPACITY];

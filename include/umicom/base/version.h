@@ -24,6 +24,9 @@
 #define UMICOM_FRAMEWORK_VERSION_STRING "0.9.0"
 #define UMICOM_FRAMEWORK_ABI_VERSION 2U
 
+/**
+ * Represent the version data shared with callers of this public contract.
+ */
 typedef struct UmiVersion {
     uint16_t major;
     uint16_t minor;

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_FILE_SIZE_LIMIT "umicom.document.security.file_size_limit"
 
+/**
+ * Provide the document capability file size limit operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_file_size_limit(void);
 

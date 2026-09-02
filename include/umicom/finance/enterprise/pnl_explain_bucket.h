@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise pnl explain bucket data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterprisePnlExplainBucket { char name[UMI_ENTERPRISE_NAME_CAPACITY]; double pnl; } UmiEnterprisePnlExplainBucket;
 /* Initialise one finite named P&L explanation bucket. */
 UmiStatus umi_enterprise_pnl_explain_bucket_init(UmiEnterprisePnlExplainBucket *bucket,const char *name,double pnl);

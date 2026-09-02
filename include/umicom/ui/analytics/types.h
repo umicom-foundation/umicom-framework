@@ -39,6 +39,9 @@ extern "C" {
 #define UMI_ANALYTICS_MAX_MATRIX 64U
 #define UMI_ANALYTICS_MAX_CELLS (UMI_ANALYTICS_MAX_MATRIX * UMI_ANALYTICS_MAX_MATRIX)
 
+/**
+ * List the named analytics axis scale values accepted by this public contract.
+ */
 typedef enum UmiAnalyticsAxisScale {
     UMI_ANALYTICS_SCALE_LINEAR = 1,
     UMI_ANALYTICS_SCALE_LOG10 = 2,
@@ -46,6 +49,9 @@ typedef enum UmiAnalyticsAxisScale {
     UMI_ANALYTICS_SCALE_CATEGORY = 4
 } UmiAnalyticsAxisScale;
 
+/**
+ * List the named analytics severity values accepted by this public contract.
+ */
 typedef enum UmiAnalyticsSeverity {
     UMI_ANALYTICS_SEVERITY_INFO = 1,
     UMI_ANALYTICS_SEVERITY_SUCCESS = 2,
@@ -53,6 +59,9 @@ typedef enum UmiAnalyticsSeverity {
     UMI_ANALYTICS_SEVERITY_ERROR = 4
 } UmiAnalyticsSeverity;
 
+/**
+ * List the named analytics aggregate kind values accepted by this public contract.
+ */
 typedef enum UmiAnalyticsAggregateKind {
     UMI_ANALYTICS_AGGREGATE_COUNT = 1,
     UMI_ANALYTICS_AGGREGATE_SUM = 2,
@@ -61,6 +70,9 @@ typedef enum UmiAnalyticsAggregateKind {
     UMI_ANALYTICS_AGGREGATE_AVERAGE = 5
 } UmiAnalyticsAggregateKind;
 
+/**
+ * List the named analytics compare values accepted by this public contract.
+ */
 typedef enum UmiAnalyticsCompare {
     UMI_ANALYTICS_COMPARE_GT = 1,
     UMI_ANALYTICS_COMPARE_GTE = 2,
@@ -70,11 +82,17 @@ typedef enum UmiAnalyticsCompare {
     UMI_ANALYTICS_COMPARE_NE = 6
 } UmiAnalyticsCompare;
 
+/**
+ * List the named analytics orientation values accepted by this public contract.
+ */
 typedef enum UmiAnalyticsOrientation {
     UMI_ANALYTICS_HORIZONTAL = 1,
     UMI_ANALYTICS_VERTICAL = 2
 } UmiAnalyticsOrientation;
 
+/**
+ * List the named analytics stage kind values accepted by this public contract.
+ */
 typedef enum UmiAnalyticsStageKind {
     UMI_ANALYTICS_STAGE_FILTER = 1,
     UMI_ANALYTICS_STAGE_GROUP = 2,

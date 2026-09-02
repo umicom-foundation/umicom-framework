@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Provide the make key operation used by this module and its client applications. */
 static UmiStatus make_key(
     const char *prefix,
     const char *suffix,
@@ -37,6 +38,7 @@ static UmiStatus make_key(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the set text operation used by this module and its client applications. */
 static UmiStatus set_text(
     UmiSessionStore *store,
     const char *prefix,
@@ -45,10 +47,12 @@ static UmiStatus set_text(
 {
     char key[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status = make_key(prefix, suffix, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_session_store_set(store, key, text);
 }
 
+/* Provide the get text operation used by this module and its client applications. */
 static UmiStatus get_text(
     const UmiSessionStore *store,
     const char *prefix,
@@ -58,10 +62,12 @@ static UmiStatus get_text(
 {
     char key[UMI_SESSION_KEY_CAPACITY];
     UmiStatus status = make_key(prefix, suffix, key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_session_store_get(store, key, out_text, capacity);
 }
 
+/* Provide the save message operation used by this module and its client applications. */
 static UmiStatus save_message(
     UmiSessionStore *store,
     const char *prefix,
@@ -81,19 +87,23 @@ static UmiStatus save_message(
         "%s.m%zu",
         prefix,
         persisted_index);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(message_prefix)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     written = snprintf(role, sizeof(role), "%u", (unsigned)message->role);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(role)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     status = set_text(store, message_prefix, "role", role);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_text(store, message_prefix, "name", message->name);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_developer_persistence_save_text(
@@ -102,6 +112,7 @@ static UmiStatus save_message(
         message->text,
         strlen(message->text),
         &chunk_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_key(
@@ -109,6 +120,7 @@ static UmiStatus save_message(
         "chunks",
         key,
         sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_developer_persistence_set_uint64(
@@ -117,6 +129,7 @@ static UmiStatus save_message(
         chunk_count);
 }
 
+/* Provide the restore message operation used by this module and its client applications. */
 static UmiStatus restore_message(
     const UmiSessionStore *store,
     const char *prefix,
@@ -141,6 +154,7 @@ static UmiStatus restore_message(
         "%s.m%zu",
         prefix,
         persisted_index);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(message_prefix)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -151,9 +165,11 @@ static UmiStatus restore_message(
         "role",
         role_text,
         sizeof(role_text));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     role = strtoull(role_text, &end, 10);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (end == role_text || *end != '\0') return UMI_STATUS_PARSE_ERROR;
 
     status = get_text(
@@ -162,9 +178,11 @@ static UmiStatus restore_message(
         "name",
         name,
         sizeof(name));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_key(message_prefix, "chunks", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_developer_persistence_get_uint64(
@@ -172,6 +190,7 @@ static UmiStatus restore_message(
         key,
         0U,
         &chunks);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || chunks == 0U) {
         return status != UMI_STATUS_OK ? status : UMI_STATUS_PARSE_ERROR;
     }
@@ -183,6 +202,7 @@ static UmiStatus restore_message(
         text,
         sizeof(text),
         &length);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)length;
@@ -193,6 +213,10 @@ static UmiStatus restore_message(
         text);
 }
 
+/*
+ * Write ai developer chat session in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_ai_developer_chat_session_save(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -204,20 +228,27 @@ UmiStatus umi_ai_developer_chat_session_save(
     size_t persisted_count;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         session == NULL || session->session_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = set_text(store, key_prefix, "id", session->session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_text(
             store, key_prefix, "provider", session->provider_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_text(
             store, key_prefix, "model", session->model_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     persisted_count =
@@ -228,35 +259,46 @@ UmiStatus umi_ai_developer_chat_session_save(
     first = session->message_count - persisted_count;
 
     status = make_key(key_prefix, "messageCount", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_set_uint64(
             store, key, persisted_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < persisted_count; ++index) {
         status = save_message(
             store,
             key_prefix,
             index,
             &session->messages[first + index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     status = make_key(key_prefix, "turnCount", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_set_uint64(
             store, key, session->turn_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_key(key_prefix, "toolResultCount", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_developer_persistence_set_uint64(
         store, key, session->tool_result_count);
 }
 
+/*
+ * Provide the ai developer chat session restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_chat_session_restore(
     const UmiSessionStore *store,
     const char *key_prefix,
@@ -273,6 +315,10 @@ UmiStatus umi_ai_developer_chat_session_restore(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         out_session == NULL || out_restored == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -281,26 +327,33 @@ UmiStatus umi_ai_developer_chat_session_restore(
     *out_restored = 0;
 
     status = get_text(store, key_prefix, "id", id, sizeof(id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = get_text(
         store, key_prefix, "provider", provider, sizeof(provider));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = get_text(
             store, key_prefix, "model", model, sizeof(model));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_ai_coding_tool_chat_session_init(
         out_session, id, provider, model);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_key(key_prefix, "messageCount", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, key, 0U, &message_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK ||
         message_count > UMI_AI_DEVELOPER_PERSISTED_CHAT_MESSAGES) {
         return status != UMI_STATUS_OK
@@ -308,13 +361,16 @@ UmiStatus umi_ai_developer_chat_session_restore(
             : UMI_STATUS_PARSE_ERROR;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < (size_t)message_count; ++index) {
         UmiAiMessage message;
 
         status = restore_message(
             store, key_prefix, index, &message);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (out_session->message_count >=
             UMI_AI_CODING_TOOL_CHAT_MESSAGE_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -324,17 +380,21 @@ UmiStatus umi_ai_developer_chat_session_restore(
     }
 
     status = make_key(key_prefix, "turnCount", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, key, 0U, &turn_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = make_key(key_prefix, "toolResultCount", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, key, 0U, &tool_result_count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     out_session->turn_count = turn_count;
@@ -344,6 +404,10 @@ UmiStatus umi_ai_developer_chat_session_restore(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Write ai developer chat registry in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_ai_developer_chat_registry_save(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -355,11 +419,16 @@ UmiStatus umi_ai_developer_chat_registry_save(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL || registry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     count = umi_ai_coding_tool_chat_registry_count(registry);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_AI_DEVELOPER_PERSISTED_CHAT_SESSIONS) {
         count = UMI_AI_DEVELOPER_PERSISTED_CHAT_SESSIONS;
     }
@@ -368,12 +437,15 @@ UmiStatus umi_ai_developer_chat_registry_save(
         umi_ai_coding_tool_chat_registry_count(registry) - count;
 
     status = make_key(key_prefix, "count", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_set_uint64(
             store, key, count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiAiCodingToolChatSession session;
         char session_prefix[UMI_SESSION_KEY_CAPACITY];
@@ -383,6 +455,7 @@ UmiStatus umi_ai_developer_chat_registry_save(
             registry,
             first + index,
             &session);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         written = snprintf(
@@ -391,6 +464,7 @@ UmiStatus umi_ai_developer_chat_registry_save(
             "%s.s%zu",
             key_prefix,
             index);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0 ||
             (size_t)written >= sizeof(session_prefix)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -398,12 +472,17 @@ UmiStatus umi_ai_developer_chat_registry_save(
 
         status = umi_ai_developer_chat_session_save(
             store, session_prefix, &session);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer chat registry restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_chat_registry_restore(
     const UmiSessionStore *store,
     const char *key_prefix,
@@ -415,6 +494,10 @@ UmiStatus umi_ai_developer_chat_registry_restore(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         registry == NULL || out_restored_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -423,18 +506,22 @@ UmiStatus umi_ai_developer_chat_registry_restore(
     *out_restored_count = 0U;
 
     status = make_key(key_prefix, "count", key, sizeof(key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, key, 0U, &count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_AI_DEVELOPER_PERSISTED_CHAT_SESSIONS) {
         return UMI_STATUS_PARSE_ERROR;
     }
 
     umi_ai_coding_tool_chat_registry_init(registry);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < (size_t)count; ++index) {
         UmiAiCodingToolChatSession session;
         UmiAiCodingToolChatSession *target = NULL;
@@ -447,6 +534,7 @@ UmiStatus umi_ai_developer_chat_registry_restore(
             key_prefix,
             index);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (written < 0 ||
             (size_t)written >= sizeof(session_prefix)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -457,7 +545,9 @@ UmiStatus umi_ai_developer_chat_registry_restore(
             session_prefix,
             &session,
             &restored);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!restored) continue;
 
         status = umi_ai_coding_tool_chat_registry_open(
@@ -466,6 +556,10 @@ UmiStatus umi_ai_developer_chat_registry_restore(
             session.provider_id,
             session.model_id,
             &target);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (status != UMI_STATUS_OK || target == NULL) {
             return status != UMI_STATUS_OK
                 ? status

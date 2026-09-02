@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/fx_conversion.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCurrency a={{'E','U','R','\0'}},b={{'U','S','D','\0'}}; UmiCurrencyPair p; UmiExchangeRate r; UmiMoney in={10000,2U,{{'E','U','R','\0'}}},out={0}; CHECK(umi_currency_pair_init(&p,a,b)==UMI_STATUS_OK); CHECK(umi_exchange_rate_init(&r,&p,1.2,1)==UMI_STATUS_OK); CHECK(umi_fx_conversion_base_to_quote(in,&r,2U,&out)==UMI_STATUS_OK); CHECK(out.minor_units==12000);

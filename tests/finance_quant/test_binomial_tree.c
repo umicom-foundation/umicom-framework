@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/binomial_tree.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double price=0.0; CHECK(umi_quant_binomial_tree_price(100.0,100.0,0.05,0.20,1.0,100U,UMI_QUANT_CALL,&price)==UMI_STATUS_OK); CHECK(price>10.3&&price<10.6);

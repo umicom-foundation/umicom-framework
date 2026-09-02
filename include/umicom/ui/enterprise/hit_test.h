@@ -17,7 +17,14 @@
 
 #include <stdint.h>
 #include "umicom/ui/enterprise/types.h"
+/**
+ * Represent the ui ent hit data shared with callers of this public contract.
+ */
 typedef struct UmiUiEntHit { size_t row,column; int valid; } UmiUiEntHit;
+/**
+ * Provide the ui ent hit test uniform operation used by this module and its client
+ * applications.
+ */
 UmiUiEntHit umi_ui_ent_hit_test_uniform(int32_t x,int32_t y,int32_t row_height,int32_t column_width,size_t row_offset,size_t column_offset,size_t rows,size_t columns);
 
 #endif

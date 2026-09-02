@@ -27,6 +27,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the digital signing session data shared with callers of this public contract.
+ */
 typedef struct UmiDigitalSigningSession {
     UmiDigitalSigningRequest request;
     uint64_t revision;

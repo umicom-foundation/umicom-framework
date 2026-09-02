@@ -14,6 +14,10 @@
 #include <string.h>
 #define CHECK(expression) do { if (!(expression)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiLanguageIntelligenceDynamicRegistration catalogue;

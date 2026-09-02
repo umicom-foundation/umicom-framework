@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench breakpoint item data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDebugWorkbenchBreakpointItem {
     UmiDebugWorkbenchEntry value;
     UmiDebugWorkbenchBreakpointKind kind;
@@ -35,10 +39,30 @@ typedef struct UmiDebugWorkbenchBreakpointItem {
     uint64_t revision;
 } UmiDebugWorkbenchBreakpointItem;
 
+/**
+ * Initialise debug workbench breakpoint item from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_debug_workbench_breakpoint_item_init(UmiDebugWorkbenchBreakpointItem *model, const char *id, UmiDebugWorkbenchBreakpointKind kind, const char *path, UmiDebugWorkbenchRange range);
+/**
+ * Provide the debug workbench breakpoint item set verification operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_breakpoint_item_set_verification(UmiDebugWorkbenchBreakpointItem *model, bool verified);
+/**
+ * Provide the debug workbench breakpoint item record hit operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_workbench_breakpoint_item_record_hit(UmiDebugWorkbenchBreakpointItem *model);
+/**
+ * Provide the debug workbench breakpoint item set enabled operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_debug_workbench_breakpoint_item_set_enabled(UmiDebugWorkbenchBreakpointItem *model, bool enabled);
+/**
+ * Check that debug workbench breakpoint item satisfies its contract before another service
+ * relies on it.
+ */
 int umi_debug_workbench_breakpoint_item_valid(const UmiDebugWorkbenchBreakpointItem *model);
 
 #ifdef __cplusplus

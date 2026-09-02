@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_job.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationJob j; CHECK(umi_enterprise_valuation_job_init(&j,"j","p",10,50)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_job_transition(&j,UMI_ENTERPRISE_RUNNING)==UMI_STATUS_OK); CHECK(umi_enterprise_valuation_job_transition(&j,UMI_ENTERPRISE_COMPLETED)==UMI_STATUS_OK); return 0; }

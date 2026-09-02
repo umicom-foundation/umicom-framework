@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design density values accepted by this public contract.
+ */
 typedef enum UmiDesignDensity {
     UMI_DESIGN_DENSITY_COMPACT = 1,
     UMI_DESIGN_DENSITY_STANDARD = 2,

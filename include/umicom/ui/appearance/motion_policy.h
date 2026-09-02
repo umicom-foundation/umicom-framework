@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance motion policy data shared with callers of this public contract.
+ */
 typedef struct UmiAppearanceMotionPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     uint32_t standard_duration_ms;

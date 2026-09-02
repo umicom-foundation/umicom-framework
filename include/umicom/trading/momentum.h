@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the price momentum operation used by this module and its client applications.
+ */
 double umi_price_momentum(double previous_close, double current_close);
 #ifdef __cplusplus
 }

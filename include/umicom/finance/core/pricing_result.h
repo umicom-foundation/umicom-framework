@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the pricing result data shared with callers of this public contract.
+ */
 typedef struct UmiPricingResult { UmiFinancialId id; UmiMoney amount; UmiFinancialDate date; uint32_t state; } UmiPricingResult;
 /* Initialize monetary record. */ UmiStatus umi_pricing_result_init(UmiPricingResult *x,const char *id,UmiMoney amount,UmiFinancialDate date,uint32_t state);
 /* Validate monetary record. */ bool umi_pricing_result_is_valid(const UmiPricingResult *x);

@@ -19,4 +19,8 @@
 #include <assert.h>
 #include <string.h>
 #include "reference_product.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiProductValidation v;UmiProductCompatibility c;const UmiProductProfile *p=umi_example_trader_profile();assert(p!=NULL);assert(strcmp(p->descriptor->product_id,"org.umicom.trader")==0);assert(umi_product_validation_run(p,&v)==UMI_STATUS_OK);assert(v.passed);assert(umi_product_compatibility_check(p,&c)==UMI_STATUS_OK);return 0;}

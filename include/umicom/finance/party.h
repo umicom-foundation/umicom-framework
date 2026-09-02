@@ -24,6 +24,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that financial party satisfies its contract before another service relies on it.
+ */
 int umi_financial_party_valid(const UmiFinancialParty *party);
 #ifdef __cplusplus
 }

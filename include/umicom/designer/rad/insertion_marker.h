@@ -18,13 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad insertion marker data shared with callers of this public contract.
+ */
 typedef struct UmiRadInsertionMarker {
     char parent_id[UMI_RAD_ID_CAPACITY];
     int32_t index;
     UmiRadRect bounds;
     bool visible;
 } UmiRadInsertionMarker;
+/**
+ * Initialise rad insertion marker from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_insertion_marker_init(UmiRadInsertionMarker *item);
+/**
+ * Check that rad insertion marker satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_insertion_marker_is_valid(const UmiRadInsertionMarker *item);
 #ifdef __cplusplus
 }

@@ -29,33 +29,47 @@ struct UmiDesktopMonitorInteraction {
     uint64_t revision;
 };
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(
     char *destination,
     size_t capacity,
     const char *source)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL ||
         source[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/* Provide the find affinity operation used by this module and its client applications. */
 static size_t find_affinity(
     const UmiDesktopMonitorInteraction *interaction,
     const char *window_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || window_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < interaction->affinity_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(interaction->affinities[index].window_id,
                    window_id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/* Provide the remember window operation used by this module and its client applications. */
 static UmiStatus remember_window(
     UmiDesktopMonitorInteraction *interaction,
     const UmiDesktopWindow *window)
@@ -63,7 +77,9 @@ static UmiStatus remember_window(
     UmiDesktopMonitorAffinity *affinity;
     size_t index = find_affinity(interaction, window->window_id);
     UmiStatus status;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (interaction->affinity_count >= UMI_DESKTOP_MONITOR_AFFINITY_MAX)
             return UMI_STATUS_CAPACITY_EXCEEDED;
         index = interaction->affinity_count++;
@@ -74,9 +90,11 @@ static UmiStatus remember_window(
     affinity->structure_size = (uint32_t)sizeof(*affinity);
     status = copy_text(affinity->window_id, sizeof(affinity->window_id),
                        window->window_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = copy_text(affinity->monitor_id,
                            sizeof(affinity->monitor_id), window->monitor_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     affinity->bounds = window->bounds;
     affinity->placement = window->dock_placement;
@@ -84,18 +102,32 @@ static UmiStatus remember_window(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by enabled monitor without changing their
+ * state.
+ */
 static size_t enabled_monitor_count(
     const UmiDesktopMonitorTopology *topology)
 {
     size_t index;
     size_t count = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (topology == NULL) return 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < topology->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (topology->monitors[index].enabled) count += 1U;
     }
     return count;
 }
 
+/*
+ * Initialise desktop monitor interaction from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_desktop_monitor_interaction_create(
     UmiDesktopRuntime *runtime,
     UmiDesktopMonitorInteraction **out_interaction)
@@ -103,19 +135,32 @@ UmiStatus umi_desktop_monitor_interaction_create(
     UmiDesktopMonitorInteraction *interaction;
     const UmiDesktopMonitor *primary;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (runtime == NULL || out_interaction == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     *out_interaction = NULL;
     primary = umi_desktop_monitor_topology_primary(
         umi_desktop_runtime_monitors(runtime));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (primary == NULL) return UMI_STATUS_INVALID_STATE;
     interaction = (UmiDesktopMonitorInteraction *)calloc(
         1U, sizeof(*interaction));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     interaction->runtime = runtime;
     status = copy_text(interaction->focused_monitor_id,
                        sizeof(interaction->focused_monitor_id),
                        primary->monitor_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(interaction);
         return status;
@@ -125,52 +170,88 @@ UmiStatus umi_desktop_monitor_interaction_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by desktop monitor interaction so the same storage can be
+ * reused safely.
+ */
 void umi_desktop_monitor_interaction_destroy(
     UmiDesktopMonitorInteraction *interaction)
 {
     free(interaction);
 }
 
+/*
+ * Provide the desktop monitor interaction focus operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_focus(
     UmiDesktopMonitorInteraction *interaction,
     const char *monitor_id)
 {
     const UmiDesktopMonitor *monitor;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || monitor_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     monitor = umi_desktop_monitor_topology_find(
         umi_desktop_runtime_monitors(interaction->runtime), monitor_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (monitor == NULL || !monitor->enabled) return UMI_STATUS_NOT_FOUND;
     status = copy_text(interaction->focused_monitor_id,
                        sizeof(interaction->focused_monitor_id), monitor_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) interaction->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the desktop monitor interaction capture affinities operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_capture_affinities(
     UmiDesktopMonitorInteraction *interaction)
 {
     UmiDesktopWindowManager *windows;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     windows = umi_desktop_runtime_windows(interaction->runtime);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < windows->count; ++index) {
         status = remember_window(interaction, &windows->windows[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     interaction->revision += 1U;
     return UMI_STATUS_OK;
 }
 
+/* Provide the map bounds operation used by this module and its client applications. */
 static UmiDesktopRect map_bounds(
     UmiDesktopRect bounds,
     const UmiDesktopMonitor *source,
     const UmiDesktopMonitor *destination)
 {
     UmiDesktopRect mapped = bounds;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL) return mapped;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source != NULL && source->work_area.width > 0 &&
         source->work_area.height > 0) {
         mapped.x = destination->work_area.x + (int32_t)(
@@ -185,7 +266,7 @@ static UmiDesktopRect map_bounds(
         mapped.height = (int32_t)(
             (int64_t)bounds.height * destination->work_area.height /
             source->work_area.height);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         mapped.x = destination->work_area.x +
             (destination->work_area.width - mapped.width) / 2;
         mapped.y = destination->work_area.y +
@@ -194,6 +275,10 @@ static UmiDesktopRect map_bounds(
     return mapped;
 }
 
+/*
+ * Provide the desktop monitor interaction move window operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_move_window(
     UmiDesktopMonitorInteraction *interaction,
     const char *window_id,
@@ -205,25 +290,39 @@ UmiStatus umi_desktop_monitor_interaction_move_window(
     const UmiDesktopMonitor *destination;
     UmiDesktopRect bounds;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || window_id == NULL || monitor_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     topology = umi_desktop_runtime_monitors(interaction->runtime);
     window = umi_desktop_window_manager_find(
         umi_desktop_runtime_windows(interaction->runtime), window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL) return UMI_STATUS_NOT_FOUND;
     source = umi_desktop_monitor_topology_find(topology, window->monitor_id);
     destination = umi_desktop_monitor_topology_find(topology, monitor_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || !destination->enabled)
         return UMI_STATUS_NOT_FOUND;
     bounds = map_bounds(window->bounds, source, destination);
     status = umi_desktop_runtime_place_window(
         interaction->runtime, window_id, monitor_id, bounds,
         window->dock_placement);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         window = umi_desktop_window_manager_find(
             umi_desktop_runtime_windows(interaction->runtime), window_id);
         status = remember_window(interaction, window);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)copy_text(interaction->focused_monitor_id,
                         sizeof(interaction->focused_monitor_id), monitor_id);
@@ -232,6 +331,10 @@ UmiStatus umi_desktop_monitor_interaction_move_window(
     return status;
 }
 
+/*
+ * Provide the desktop monitor interaction move window next operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_move_window_next(
     UmiDesktopMonitorInteraction *interaction,
     const char *window_id)
@@ -240,23 +343,36 @@ UmiStatus umi_desktop_monitor_interaction_move_window_next(
     const UmiDesktopWindow *window;
     size_t current = SIZE_MAX;
     size_t offset;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || window_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     topology = umi_desktop_runtime_monitors(interaction->runtime);
     window = umi_desktop_window_manager_find(
         umi_desktop_runtime_windows(interaction->runtime), window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (offset = 0U; offset < topology->count; ++offset) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(topology->monitors[offset].monitor_id,
                    window->monitor_id) == 0) {
             current = offset;
             break;
         }
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (current == SIZE_MAX || enabled_monitor_count(topology) < 2U)
         return UMI_STATUS_INVALID_STATE;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (offset = 1U; offset <= topology->count; ++offset) {
         const size_t candidate = (current + offset) % topology->count;
+        /* Apply this operation only while the related capability or state is available. */
         if (topology->monitors[candidate].enabled) {
             return umi_desktop_monitor_interaction_move_window(
                 interaction, window_id,
@@ -266,6 +382,10 @@ UmiStatus umi_desktop_monitor_interaction_move_window_next(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the desktop monitor interaction restore affinity operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_restore_affinity(
     UmiDesktopMonitorInteraction *interaction,
     const char *window_id)
@@ -275,26 +395,44 @@ UmiStatus umi_desktop_monitor_interaction_restore_affinity(
     const UmiDesktopWindow *window;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || window_id == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = find_affinity(interaction, window_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     affinity = &interaction->affinities[index];
     monitor = umi_desktop_monitor_topology_find(
         umi_desktop_runtime_monitors(interaction->runtime),
         affinity->monitor_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (monitor == NULL || !monitor->enabled) return UMI_STATUS_UNAVAILABLE;
     window = umi_desktop_window_manager_find(
         umi_desktop_runtime_windows(interaction->runtime), window_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (window == NULL) return UMI_STATUS_NOT_FOUND;
     status = umi_desktop_runtime_restore_window_session(
         interaction->runtime, window_id, affinity->monitor_id,
         affinity->bounds, affinity->placement, window->visible,
         window->maximised);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) interaction->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the desktop monitor interaction reconcile operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_reconcile(
     UmiDesktopMonitorInteraction *interaction)
 {
@@ -303,24 +441,38 @@ UmiStatus umi_desktop_monitor_interaction_reconcile(
     const UmiDesktopMonitor *primary;
     size_t index;
     size_t relocated = 0U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     topology = umi_desktop_runtime_monitors(interaction->runtime);
     windows = umi_desktop_runtime_windows(interaction->runtime);
     primary = umi_desktop_monitor_topology_primary(topology);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (primary == NULL || !primary->enabled)
         return UMI_STATUS_INVALID_STATE;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < windows->count; ++index) {
         UmiDesktopWindow *window = &windows->windows[index];
         const UmiDesktopMonitor *source = umi_desktop_monitor_topology_find(
             topology, window->monitor_id);
         UmiDesktopRect bounds;
         UmiStatus status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (source != NULL && source->enabled) continue;
         bounds = map_bounds(window->bounds, source, primary);
         status = umi_desktop_runtime_restore_window_session(
             interaction->runtime, window->window_id, primary->monitor_id,
             bounds, window->dock_placement, window->visible,
             window->maximised);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         relocated += 1U;
     }
@@ -332,22 +484,39 @@ UmiStatus umi_desktop_monitor_interaction_reconcile(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find desktop monitor interaction affinity while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_desktop_monitor_interaction_affinity_at(
     const UmiDesktopMonitorInteraction *interaction,
     size_t index,
     UmiDesktopMonitorAffinity *out_affinity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || out_affinity == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= interaction->affinity_count) return UMI_STATUS_NOT_FOUND;
     *out_affinity = interaction->affinities[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the desktop monitor interaction snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_monitor_interaction_snapshot(
     const UmiDesktopMonitorInteraction *interaction,
     UmiDesktopMonitorInteractionSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (interaction == NULL || out_snapshot == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));

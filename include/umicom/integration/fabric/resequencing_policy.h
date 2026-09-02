@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fabric resequencing policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiFabricResequencingPolicy {
     char policy_id[UMI_FABRIC_ID_CAPACITY];
     size_t maximum_buffered;
@@ -32,7 +36,15 @@ typedef struct UmiFabricResequencingPolicy {
     bool release_on_timeout;
 } UmiFabricResequencingPolicy;
 
+/**
+ * Initialise fabric resequencing policy from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_fabric_resequencing_policy_init(UmiFabricResequencingPolicy *item, const char *policy_id, size_t maximum_buffered, uint64_t gap_timeout_ms, bool release_on_timeout);
+/**
+ * Check that fabric resequencing policy satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_fabric_resequencing_policy_validate(const UmiFabricResequencingPolicy *item);
 
 #ifdef __cplusplus

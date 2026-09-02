@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the surface reference data shared with callers of this public contract.
+ */
 typedef struct UmiSurfaceReference { UmiFinancialId reference_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; bool active; } UmiSurfaceReference;
 /* Initialize the typed financial record. */ UmiStatus umi_surface_reference_init(UmiSurfaceReference *item,const char *id,const char *name,const char *code);
 /* Validate the typed financial record. */ bool umi_surface_reference_is_valid(const UmiSurfaceReference *item);

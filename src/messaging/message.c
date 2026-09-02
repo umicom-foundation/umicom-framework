@@ -22,11 +22,19 @@
 
 static atomic_uint_fast64_t g_next_message_id = 1U;
 
+/*
+ * Initialise message envelope from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_message_envelope_init(UmiMessageEnvelope *message,
                                UmiMessageKind kind,
                                const char *name,
                                const char *payload)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message == NULL) return;
     (void)memset(message, 0, sizeof(*message));
     message->structure_size = (uint32_t)sizeof(*message);
@@ -39,6 +47,7 @@ void umi_message_envelope_init(UmiMessageEnvelope *message,
     message->payload_size = strlen(message->payload);
 }
 
+/* Provide the message next id operation used by this module and its client applications. */
 uint64_t umi_message_next_id(void)
 {
     return atomic_fetch_add_explicit(&g_next_message_id,
@@ -46,8 +55,10 @@ uint64_t umi_message_next_id(void)
                                      memory_order_relaxed);
 }
 
+/* Provide the message kind text operation used by this module and its client applications. */
 const char *umi_message_kind_text(UmiMessageKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_MESSAGE_COMMAND: return "command";
     case UMI_MESSAGE_EVENT: return "event";
@@ -60,18 +71,29 @@ const char *umi_message_kind_text(UmiMessageKind kind)
     }
 }
 
+/* Check that message satisfies its contract before another service relies on it. */
 UmiStatus umi_message_validate(const UmiMessageEnvelope *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message == NULL || message->name == NULL || message->name[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (message->structure_size < offsetof(UmiMessageEnvelope, message_id)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (message->kind < UMI_MESSAGE_COMMAND ||
         message->kind > UMI_MESSAGE_WORKFLOW) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message->payload_size > 0U && message->payload_data == NULL &&
         message->payload == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -79,12 +101,14 @@ UmiStatus umi_message_validate(const UmiMessageEnvelope *message)
     return UMI_STATUS_OK;
 }
 
+/* Provide the copy string operation used by this module and its client applications. */
 static UmiStatus copy_string(const char *source, char **out_value)
 {
     *out_value = umi_message_strdup(source);
     return *out_value != NULL ? UMI_STATUS_OK : UMI_STATUS_OUT_OF_MEMORY;
 }
 
+/* Copy message into module-owned storage so callers keep ownership of their input values. */
 UmiStatus umi_message_copy(const UmiMessageEnvelope *source,
                            UmiOwnedMessage *destination)
 {
@@ -92,10 +116,15 @@ UmiStatus umi_message_copy(const UmiMessageEnvelope *source,
     const void *payload_data;
     size_t payload_size;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || destination == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_message_validate(source);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(destination, 0, sizeof(*destination));
@@ -123,12 +152,21 @@ UmiStatus umi_message_copy(const UmiMessageEnvelope *source,
         ? source->payload_data
         : (const void *)source->payload;
     payload_size = source->payload_size;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (payload_size == 0U && source->payload != NULL) {
         payload_size = strlen(source->payload);
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (payload_size > 0U) {
         destination->payload_bytes =
             (unsigned char *)umi_message_memdup(payload_data, payload_size);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (destination->payload_bytes == NULL) {
             umi_message_dispose(destination);
             return UMI_STATUS_OUT_OF_MEMORY;
@@ -150,8 +188,13 @@ UmiStatus umi_message_copy(const UmiMessageEnvelope *source,
     return UMI_STATUS_OK;
 }
 
+/* Release or reset state held by message so the same storage can be reused safely. */
 void umi_message_dispose(UmiOwnedMessage *message)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (message == NULL) return;
     free(message->name_storage);
     free(message->payload_storage);

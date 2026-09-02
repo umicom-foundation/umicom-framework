@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced diff document data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedDiffDocument {
     uint32_t struct_size;
     uint32_t api_version;
@@ -40,12 +44,28 @@ typedef struct UmiVcsAdvancedDiffDocument {
     UmiVcsCompareMode mode;
 } UmiVcsAdvancedDiffDocument;
 
+/**
+ * Initialise vcs advanced diff document from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_diff_document_init(UmiVcsAdvancedDiffDocument *value);
+/**
+ * Check that vcs advanced diff document satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_diff_document_validate(const UmiVcsAdvancedDiffDocument *value);
+/**
+ * Provide the vcs advanced diff document set paths operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_diff_document_set_paths(UmiVcsAdvancedDiffDocument *value,
                                                      const char *left_path,
                                                      const char *right_path,
                                                      UmiVcsCompareMode mode);
+/**
+ * Return the number of records represented by vcs advanced diff document change without
+ * changing their state.
+ */
 size_t umi_vcs_advanced_diff_document_change_count(const UmiVcsAdvancedDiffDocument *value);
 
 #ifdef __cplusplus

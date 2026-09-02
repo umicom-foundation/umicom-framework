@@ -24,8 +24,19 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web metrics data shared with callers of this public contract.
+ */
 typedef struct UmiWebMetrics { uint64_t requests; uint64_t responses_2xx; uint64_t responses_4xx; uint64_t responses_5xx; uint64_t bytes_in; uint64_t bytes_out; } UmiWebMetrics;
+/**
+ * Initialise web metrics from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_web_metrics_init(UmiWebMetrics *metrics);
+/**
+ * Provide the web metrics record operation used by this module and its client
+ * applications.
+ */
 void umi_web_metrics_record(UmiWebMetrics *metrics,size_t bytes_in,int status,size_t bytes_out);
 #ifdef __cplusplus
 }

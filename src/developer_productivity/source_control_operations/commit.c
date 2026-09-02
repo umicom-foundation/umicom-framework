@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/source_control_operations/commit.h"
 
+/*
+ * Provide the developer source control operation commit operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperSourceControlOperationDefinition *umi_developer_source_control_operation_commit(void)
 {
     static const UmiDeveloperSourceControlOperationDefinition definition = {

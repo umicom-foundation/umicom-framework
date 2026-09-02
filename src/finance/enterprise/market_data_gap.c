@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/market_data_gap.h"
 
-UmiStatus umi_enterprise_market_data_gap_detect(UmiEnterpriseMarketDataGap *gap,uint64_t expected,uint64_t received){ if(gap==NULL||expected==0U||received<expected)return UMI_STATUS_INVALID_ARGUMENT; gap->expected_sequence=expected; gap->received_sequence=received; gap->missing_count=received-expected; return UMI_STATUS_OK; }
+/*
+ * Provide the enterprise market data gap detect operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_enterprise_market_data_gap_detect(UmiEnterpriseMarketDataGap *gap,uint64_t expected,uint64_t received){ /* Protect caller-owned memory by checking that required state is available before it is used. */ if(gap==NULL||expected==0U||received<expected)return UMI_STATUS_INVALID_ARGUMENT; gap->expected_sequence=expected; gap->received_sequence=received; gap->missing_count=received-expected; return UMI_STATUS_OK; }

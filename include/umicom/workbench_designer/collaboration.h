@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer collaboration state values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchDesignerCollaborationState {
     UMI_WORKBENCH_DESIGNER_COLLABORATOR_VIEWING = 1,
     UMI_WORKBENCH_DESIGNER_COLLABORATOR_EDITING = 2,
@@ -32,6 +36,10 @@ typedef enum UmiWorkbenchDesignerCollaborationState {
     UMI_WORKBENCH_DESIGNER_COLLABORATOR_CONFLICT = 5
 } UmiWorkbenchDesignerCollaborationState;
 
+/**
+ * Represent the workbench designer collaborator data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerCollaborator {
     char user_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char client_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -45,16 +53,40 @@ typedef struct UmiWorkbenchDesignerCollaborator {
     bool local_user;
 } UmiWorkbenchDesignerCollaborator;
 
+/**
+ * Represent the workbench designer collaboration model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerCollaborationModel {
     UmiWorkbenchDesignerCollaborator collaborators[UMI_WORKBENCH_DESIGNER_MAX_COLLABORATORS];
     size_t count;
     uint64_t revision;
 } UmiWorkbenchDesignerCollaborationModel;
 
+/**
+ * Initialise workbench designer collaboration from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_collaboration_init(UmiWorkbenchDesignerCollaborationModel *model);
+/**
+ * Provide the workbench designer collaboration upsert operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_collaboration_upsert(UmiWorkbenchDesignerCollaborationModel *model, const UmiWorkbenchDesignerCollaborator *collaborator);
+/**
+ * Remove workbench designer collaboration while keeping the remaining records in a valid
+ * and discoverable state.
+ */
 UmiStatus umi_workbench_designer_collaboration_remove(UmiWorkbenchDesignerCollaborationModel *model, const char *user_id, const char *client_id);
+/**
+ * Find workbench designer collaboration while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerCollaborator *umi_workbench_designer_collaboration_find(const UmiWorkbenchDesignerCollaborationModel *model, const char *user_id, const char *client_id);
+/**
+ * Return the number of records represented by workbench designer collaboration editing
+ * without changing their state.
+ */
 size_t umi_workbench_designer_collaboration_editing_count(const UmiWorkbenchDesignerCollaborationModel *model);
 
 #ifdef __cplusplus

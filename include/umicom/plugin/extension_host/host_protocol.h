@@ -29,10 +29,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host host protocol data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostHostProtocol { uint32_t version; uint64_t supported_features; uint64_t negotiated_features; uint64_t last_received_sequence; uint64_t next_send_sequence; } UmiPluginExtensionHostHostProtocol;
+/**
+ * Initialise plugin extension host host protocol from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_host_protocol_init(UmiPluginExtensionHostHostProtocol *protocol, uint32_t version, uint64_t supported_features);
+/**
+ * Provide the plugin extension host host protocol negotiate operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_host_protocol_negotiate(UmiPluginExtensionHostHostProtocol *protocol, uint32_t peer_version, uint64_t peer_features);
+/**
+ * Provide the plugin extension host host protocol accept sequence operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_plugin_extension_host_host_protocol_accept_sequence(UmiPluginExtensionHostHostProtocol *protocol, uint64_t sequence);
+/**
+ * Provide the plugin extension host host protocol next sequence operation used by this
+ * module and its client applications.
+ */
 uint64_t umi_plugin_extension_host_host_protocol_next_sequence(UmiPluginExtensionHostHostProtocol *protocol);
 
 #ifdef __cplusplus

@@ -28,6 +28,10 @@ extern "C" {
 #include "umicom/finance/enterprise/calibration_job.h"
 #include "umicom/finance/enterprise/calibration_dependency.h"
 
+/**
+ * Represent the enterprise calibration graph data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationGraph { UmiEnterpriseCalibrationJob jobs[32U]; size_t job_count; UmiEnterpriseCalibrationDependency dependencies[64U]; size_t dependency_count; } UmiEnterpriseCalibrationGraph;
 /* Initialise an empty calibration dependency graph. */
 void umi_enterprise_calibration_graph_init(UmiEnterpriseCalibrationGraph *graph);

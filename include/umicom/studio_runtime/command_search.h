@@ -24,6 +24,10 @@ extern "C" {
 
 #define UMI_STUDIO_COMMAND_SEARCH_CAPACITY 64U
 
+/**
+ * Represent the studio runtime command search result data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiStudioRuntimeCommandSearchResult {
     char command_id[UMI_COMMAND_ID_CAPACITY];
     char title[UMI_COMMAND_TITLE_CAPACITY];
@@ -34,6 +38,10 @@ typedef struct UmiStudioRuntimeCommandSearchResult {
     int from_shell;
 } UmiStudioRuntimeCommandSearchResult;
 
+/**
+ * Represent the studio runtime command search results data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiStudioRuntimeCommandSearchResults {
     UmiStudioRuntimeCommandSearchResult
         items[UMI_STUDIO_COMMAND_SEARCH_CAPACITY];
@@ -41,6 +49,10 @@ typedef struct UmiStudioRuntimeCommandSearchResults {
     int truncated;
 } UmiStudioRuntimeCommandSearchResults;
 
+/**
+ * Provide the studio command search operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_command_search(
     const UmiStudioRuntimeBindings *bindings,
     const char *query,

@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai developer patch review file data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperPatchReviewFile {
     char path[UMI_AI_DEVELOPER_PATH_CAPACITY];
     UmiAiCodingPatchOperation operation;
@@ -35,6 +39,10 @@ typedef struct UmiAiDeveloperPatchReviewFile {
     int reviewed;
 } UmiAiDeveloperPatchReviewFile;
 
+/**
+ * Represent the ai developer patch review data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDeveloperPatchReview {
     char patch_id[UMI_AI_ID_CAPACITY];
     char request_id[UMI_AI_ID_CAPACITY];
@@ -51,19 +59,35 @@ typedef struct UmiAiDeveloperPatchReview {
     uint64_t revision;
 } UmiAiDeveloperPatchReview;
 
+/**
+ * Provide the ai developer patch review build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_patch_review_build(
     const UmiAiCodingPatch *patch,
     UmiAiDeveloperPatchReview *out_review);
 
+/**
+ * Provide the ai developer patch review select operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_developer_patch_review_select(
     UmiAiDeveloperPatchReview *review,
     size_t file_index);
 
+/**
+ * Provide the ai developer patch review mark reviewed operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_developer_patch_review_mark_reviewed(
     UmiAiDeveloperPatchReview *review,
     size_t file_index,
     int reviewed);
 
+/**
+ * Provide the ai developer patch review diff operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_patch_review_diff(
     const UmiAiCodingPatch *patch,
     const UmiAiDeveloperPatchReview *review,

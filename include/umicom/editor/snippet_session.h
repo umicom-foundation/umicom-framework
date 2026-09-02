@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_EDITOR_SNIPPET_DEFAULT_CAPACITY 512U
 #define UMI_EDITOR_SNIPPET_CHOICES_CAPACITY 1024U
 
+/**
+ * List the named editor snippet session state values accepted by this public contract.
+ */
 typedef enum UmiEditorSnippetSessionState {
     UMI_EDITOR_SNIPPET_IDLE = 0,
     UMI_EDITOR_SNIPPET_ACTIVE = 1,
@@ -42,6 +45,9 @@ typedef enum UmiEditorSnippetSessionState {
     UMI_EDITOR_SNIPPET_FAILED = 4
 } UmiEditorSnippetSessionState;
 
+/**
+ * Represent the editor snippet template data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSnippetTemplate {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,6 +57,10 @@ typedef struct UmiEditorSnippetTemplate {
     char body[UMI_EDITOR_SNIPPET_BODY_CAPACITY];
 } UmiEditorSnippetTemplate;
 
+/**
+ * Represent the editor snippet placeholder data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSnippetPlaceholder {
     uint32_t struct_size;
     uint32_t api_version;
@@ -63,6 +73,10 @@ typedef struct UmiEditorSnippetPlaceholder {
     int final_stop;
 } UmiEditorSnippetPlaceholder;
 
+/**
+ * Represent the editor snippet session snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorSnippetSessionSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -78,37 +92,92 @@ typedef struct UmiEditorSnippetSessionSnapshot {
     int has_active_placeholder;
 } UmiEditorSnippetSessionSnapshot;
 
+/**
+ * Represent the editor snippet session data shared with callers of this public contract.
+ */
 typedef struct UmiEditorSnippetSession UmiEditorSnippetSession;
 
+/**
+ * Initialise editor snippet session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_snippet_session_create(
     UmiEditorSnippetSession **out_session);
+/**
+ * Release or reset state held by editor snippet session so the same storage can be reused
+ * safely.
+ */
 void umi_editor_snippet_session_destroy(UmiEditorSnippetSession *session);
+/**
+ * Provide the editor snippet session start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_start(
     UmiEditorSnippetSession *session,
     const UmiEditorSnippetTemplate *snippet,
     uint64_t insertion_byte_offset);
+/**
+ * Provide the editor snippet session next operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_next(UmiEditorSnippetSession *session);
+/**
+ * Provide the editor snippet session previous operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_previous(UmiEditorSnippetSession *session);
+/**
+ * Provide the editor snippet session select operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_select(
     UmiEditorSnippetSession *session,
     uint32_t ordinal);
+/**
+ * Provide the editor snippet session cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_cancel(UmiEditorSnippetSession *session);
+/**
+ * Provide the editor snippet session active operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_active(
     const UmiEditorSnippetSession *session,
     UmiEditorSnippetPlaceholder *out_placeholder);
+/**
+ * Find editor snippet session placeholder while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_editor_snippet_session_placeholder_at(
     const UmiEditorSnippetSession *session,
     size_t index,
     UmiEditorSnippetPlaceholder *out_placeholder);
+/**
+ * Provide the editor snippet session expanded text operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_snippet_session_expanded_text(
     const UmiEditorSnippetSession *session,
     char *out_text,
     size_t out_capacity);
+/**
+ * Provide the editor snippet session snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_editor_snippet_session_snapshot(
     const UmiEditorSnippetSession *session,
     UmiEditorSnippetSessionSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by editor snippet session placeholder without
+ * changing their state.
+ */
 size_t umi_editor_snippet_session_placeholder_count(
     const UmiEditorSnippetSession *session);
+/**
+ * Provide the editor snippet session revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_editor_snippet_session_revision(
     const UmiEditorSnippetSession *session);
 

@@ -16,6 +16,10 @@
 
 #include "umicom/application_shell/profiles/ai_assistant.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiApplicationShellProfileDefinition *profile =

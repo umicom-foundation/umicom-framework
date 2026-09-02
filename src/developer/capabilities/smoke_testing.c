@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/smoke_testing.h"
 
+/*
+ * Provide the developer capability smoke testing operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_smoke_testing(void)
 {

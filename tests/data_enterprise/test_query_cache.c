@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDataQueryCache c; uint64_t fp=0U; umi_data_query_cache_init(&c); CHECK(umi_data_query_cache_put(&c,"q1",1234U,10U)==UMI_STATUS_OK); CHECK(umi_data_query_cache_hit(&c,"q1",&fp)==UMI_STATUS_OK); CHECK(fp==1234U); CHECK(c.items[0].hits==1U); umi_data_query_cache_invalidate_all(&c); CHECK(umi_data_query_cache_hit(&c,"q1",&fp)==UMI_STATUS_NOT_FOUND);
     return 0;

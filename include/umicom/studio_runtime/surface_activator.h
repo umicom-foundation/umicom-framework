@@ -23,12 +23,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio surface activate kind operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_surface_activate_kind(
     UmiStudioRuntimeBindings *bindings,
     UmiStudioRuntimeSurfaceKind kind,
     int make_visible,
     int focus);
 
+/**
+ * Provide the studio surface activate for command operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_surface_activate_for_command(
     UmiStudioRuntimeBindings *bindings,
     const char *command_id);

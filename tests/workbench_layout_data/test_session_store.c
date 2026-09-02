@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test session codec and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_session_codec(void)
 {
     UmiWorkbenchLayoutSession source = test_create_session(
@@ -39,6 +43,10 @@ static int test_session_codec(void)
     return 0;
 }
 
+/*
+ * Read test checkpoint and into validated module state and return a status when input
+ * cannot be used.
+ */
 static int test_checkpoint_and_load(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -62,6 +70,10 @@ static int test_checkpoint_and_load(void)
     return 0;
 }
 
+/*
+ * Exercise test session update conflict and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_session_update_conflict(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -86,6 +98,10 @@ static int test_session_update_conflict(void)
     return 0;
 }
 
+/*
+ * Exercise test session delete and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_session_delete(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -110,6 +126,10 @@ static int test_session_delete(void)
     return 0;
 }
 
+/*
+ * Exercise test malformed session and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_malformed_session(void)
 {
     UmiWorkbenchLayoutSession session;
@@ -122,6 +142,10 @@ static int test_malformed_session(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_session_codec() == 0, "session codec");

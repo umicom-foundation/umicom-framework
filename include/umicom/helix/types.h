@@ -33,6 +33,9 @@ extern "C" {
 #define UMI_HELIX_MAX_AGENTS 32U
 #define UMI_HELIX_MAX_CANDIDATES 16U
 
+/**
+ * List the named helix agent kind values accepted by this public contract.
+ */
 typedef enum UmiHelixAgentKind {
     UMI_HELIX_AGENT_DESIGNER = 1,
     UMI_HELIX_AGENT_BUILDER = 2,
@@ -42,6 +45,9 @@ typedef enum UmiHelixAgentKind {
     UMI_HELIX_AGENT_RELEASE = 6
 } UmiHelixAgentKind;
 
+/**
+ * List the named helix candidate state values accepted by this public contract.
+ */
 typedef enum UmiHelixCandidateState {
     UMI_HELIX_CANDIDATE_DRAFT = 1,
     UMI_HELIX_CANDIDATE_BUILT = 2,
@@ -51,7 +57,15 @@ typedef enum UmiHelixCandidateState {
     UMI_HELIX_CANDIDATE_PROMOTED = 6
 } UmiHelixCandidateState;
 
+/**
+ * Provide the helix agent kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_agent_kind_text(UmiHelixAgentKind kind);
+/**
+ * Provide the helix candidate state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_candidate_state_text(UmiHelixCandidateState state);
 
 #ifdef __cplusplus

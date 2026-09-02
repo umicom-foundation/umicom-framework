@@ -17,8 +17,22 @@
 #include "umicom/data/data_server.h"
 #include "umicom/data/query_history.h"
 #include "umicom/data/query_policy.h"
+/**
+ * Represent the database query result data shared with callers of this public contract.
+ */
 typedef struct UmiDatabaseQueryResult { UmiDatabaseQueryKind kind; UmiStatus status; size_t row_count; char preview[UMI_DATABASE_RESULT_CAPACITY]; char message[UMI_DATABASE_TEXT_CAPACITY]; } UmiDatabaseQueryResult;
+/**
+ * Represent the database query session data shared with callers of this public contract.
+ */
 typedef struct UmiDatabaseQuerySession { UmiDataServer *server; UmiDatabaseQueryPolicy policy; UmiDatabaseQueryHistory history; uint64_t revision; } UmiDatabaseQuerySession;
+/**
+ * Initialise database query session from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_database_query_session_init(UmiDatabaseQuerySession *session,UmiDataServer *server,const UmiDatabaseQueryPolicy *policy);
+/**
+ * Perform database query session through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_database_query_session_execute(UmiDatabaseQuerySession *session,const char *statement,UmiDatabaseQueryResult *out_result);
 #endif

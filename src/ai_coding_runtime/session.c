@@ -17,21 +17,31 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise ai coding session from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ai_coding_session_init(
     UmiAiCodingSession *session,
     const char *session_id,
@@ -39,6 +49,10 @@ UmiStatus umi_ai_coding_session_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     (void)memset(session, 0, sizeof(*session));
@@ -47,34 +61,46 @@ UmiStatus umi_ai_coding_session_init(
         session->session_id,
         sizeof(session->session_id),
         session_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = copy_text(
         session->workspace_root,
         sizeof(session->workspace_root),
         workspace_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     session->revision = 1U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding session begin task operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_session_begin_task(
     UmiAiCodingSession *session,
     const char *task_id)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || task_id == NULL || task_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (session->active_task_id[0] != '\0') return UMI_STATUS_BUSY;
 
     status = copy_text(
         session->active_task_id,
         sizeof(session->active_task_id),
         task_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     session->task_count += 1U;
@@ -82,14 +108,23 @@ UmiStatus umi_ai_coding_session_begin_task(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai coding session complete task operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_session_complete_task(
     UmiAiCodingSession *session,
     UmiAiCodingRuntimeState final_state)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL || session->active_task_id[0] == '\0') {
         return UMI_STATUS_INVALID_STATE;
     }
 
+    /* Select the behaviour associated with the requested command or state value. */
     switch (final_state) {
         case UMI_AI_CODING_RUNTIME_COMPLETED:
             session->completed_count += 1U;

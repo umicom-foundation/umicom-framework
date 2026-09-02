@@ -30,9 +30,21 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct page policy data shared with callers of this public contract.
+ */
 typedef struct UmiCtPagePolicy { uint32_t base_page_size; uint32_t huge_page_size; bool huge_pages; bool execute_never; } UmiCtPagePolicy;
+/**
+ * Check that ct page policy satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ct_page_policy_validate(const UmiCtPagePolicy *policy);
+/**
+ * Provide the ct page align up operation used by this module and its client applications.
+ */
 uint64_t umi_ct_page_align_up(const UmiCtPagePolicy *policy,uint64_t address);
+/**
+ * Return the number of records represented by ct page without changing their state.
+ */
 uint64_t umi_ct_page_count(const UmiCtPagePolicy *policy,uint64_t bytes);
 
 #ifdef __cplusplus

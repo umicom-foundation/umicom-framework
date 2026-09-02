@@ -22,7 +22,15 @@ extern "C" {
 #endif
 
 
+/**
+ * Provide the bootstrap lifecycle phase text operation used by this module and its client
+ * applications.
+ */
 const char *umi_bootstrap_lifecycle_phase_text(UmiBootstrapLifecyclePhase phase);
+/**
+ * Provide the bootstrap lifecycle phase rank operation used by this module and its client
+ * applications.
+ */
 int umi_bootstrap_lifecycle_phase_rank(UmiBootstrapLifecyclePhase phase);
 
 #ifdef __cplusplus

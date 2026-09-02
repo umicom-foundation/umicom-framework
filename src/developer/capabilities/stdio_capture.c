@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/stdio_capture.h"
 
+/*
+ * Provide the developer capability stdio capture operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_stdio_capture(void)
 {

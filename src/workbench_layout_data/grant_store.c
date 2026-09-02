@@ -20,6 +20,7 @@
 
 
 
+/* Provide the encode bridge operation used by this module and its client applications. */
 static UmiStatus encode_bridge(
     const void *record,
     char *buffer,
@@ -30,6 +31,7 @@ static UmiStatus encode_bridge(
         (const UmiWorkbenchLayoutGrant *)record, buffer, capacity, out_required);
 }
 
+/* Provide the decode bridge operation used by this module and its client applications. */
 static UmiStatus decode_bridge(
     const char *value,
     void *out_record)
@@ -38,6 +40,10 @@ static UmiStatus decode_bridge(
         value, (UmiWorkbenchLayoutGrant *)out_record);
 }
 
+/*
+ * Write workbench layout grant store in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_grant_store_encode(
     const UmiWorkbenchLayoutGrant *record,
     char *buffer,
@@ -46,63 +52,86 @@ UmiStatus umi_workbench_layout_grant_store_encode(
 {
     UmiWorkbenchLayoutDataFieldSet fields;
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || record->structure_size < sizeof(*record)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     umi_workbench_layout_data_field_set_init(&fields);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put(
             &fields, "grant_id", record->grant_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put(
             &fields, "layout_id", record->layout_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put(
             &fields, "subject_id", record->subject_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put(
             &fields, "granted_by", record->granted_by);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put_u64(
             &fields, "granted_at_ms", record->granted_at_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put_u64(
             &fields, "expires_at_ms", record->expires_at_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put_u32(
             &fields, "permissions", record->permissions);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put_bool(
             &fields, "inherited", record->inherited);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_put_bool(
             &fields, "revoked", record->revoked);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_layout_data_value_encode(
         &fields, buffer, capacity, out_required);
 }
 
+/*
+ * Read workbench layout grant store into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_grant_store_decode(
     const char *value,
     UmiWorkbenchLayoutGrant *out_record)
 {
     UmiWorkbenchLayoutDataFieldSet fields;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || out_record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_record, 0, sizeof(*out_record));
     out_record->structure_size = sizeof(*out_record);
     status = umi_workbench_layout_data_value_decode(value, &fields);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         const char *text = umi_workbench_layout_data_field_set_get(
             &fields, "grant_id");
@@ -111,6 +140,7 @@ UmiStatus umi_workbench_layout_grant_store_decode(
                 out_record->grant_id, sizeof(out_record->grant_id), text, true)
             : UMI_STATUS_NOT_FOUND;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         const char *text = umi_workbench_layout_data_field_set_get(
             &fields, "layout_id");
@@ -119,6 +149,7 @@ UmiStatus umi_workbench_layout_grant_store_decode(
                 out_record->layout_id, sizeof(out_record->layout_id), text, true)
             : UMI_STATUS_NOT_FOUND;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         const char *text = umi_workbench_layout_data_field_set_get(
             &fields, "subject_id");
@@ -127,6 +158,7 @@ UmiStatus umi_workbench_layout_grant_store_decode(
                 out_record->subject_id, sizeof(out_record->subject_id), text, true)
             : UMI_STATUS_NOT_FOUND;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         const char *text = umi_workbench_layout_data_field_set_get(
             &fields, "granted_by");
@@ -135,22 +167,27 @@ UmiStatus umi_workbench_layout_grant_store_decode(
                 out_record->granted_by, sizeof(out_record->granted_by), text, true)
             : UMI_STATUS_NOT_FOUND;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_u64(
             &fields, "granted_at_ms", &out_record->granted_at_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_u64(
             &fields, "expires_at_ms", &out_record->expires_at_ms);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_u32(
             &fields, "permissions", &out_record->permissions);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_bool(
             &fields, "inherited", &out_record->inherited);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_bool(
             &fields, "revoked", &out_record->revoked);
@@ -158,11 +195,19 @@ UmiStatus umi_workbench_layout_grant_store_decode(
     return status;
 }
 
+/*
+ * Initialise workbench layout grant store repository from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_grant_store_repository_init(
     UmiWorkbenchLayoutGrantStoreRepository *repository,
     UmiDataServer *server)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(repository, 0, sizeof(*repository));
     repository->structure_size = sizeof(*repository);
@@ -176,10 +221,18 @@ UmiStatus umi_workbench_layout_grant_store_repository_init(
     return status;
 }
 
+/*
+ * Write workbench layout grant store in its stable representation and report capacity or
+ * input failures to the caller.
+ */
 UmiStatus umi_workbench_layout_grant_store_save(
     const UmiWorkbenchLayoutGrantStoreRepository *repository,
     const UmiWorkbenchLayoutGrant *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || record == NULL ||
         repository->structure_size < sizeof(*repository)) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -192,6 +245,10 @@ UmiStatus umi_workbench_layout_grant_store_save(
         record);
 }
 
+/*
+ * Read workbench layout grant store into validated module state and return a status when
+ * input cannot be used.
+ */
 UmiStatus umi_workbench_layout_grant_store_load(
     const UmiWorkbenchLayoutGrantStoreRepository *repository,
     const char *aggregate_id,
@@ -199,6 +256,10 @@ UmiStatus umi_workbench_layout_grant_store_load(
     uint64_t sequence,
     UmiWorkbenchLayoutGrant *out_record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || out_record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -207,17 +268,29 @@ UmiStatus umi_workbench_layout_grant_store_load(
         sequence, out_record);
 }
 
+/*
+ * Provide the workbench layout grant store delete operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_grant_store_delete(
     const UmiWorkbenchLayoutGrantStoreRepository *repository,
     const char *aggregate_id,
     const char *record_id,
     uint64_t sequence)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return umi_workbench_layout_data_record_repository_delete(
         &repository->records, aggregate_id, record_id, sequence);
 }
 
+/*
+ * Provide the workbench layout grant store list operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_grant_store_list(
     const UmiWorkbenchLayoutGrantStoreRepository *repository,
     const char *aggregate_id,
@@ -230,6 +303,10 @@ UmiStatus umi_workbench_layout_grant_store_list(
 {
     UmiWorkbenchLayoutDataRecordPage page;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || records == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -241,7 +318,15 @@ UmiStatus umi_workbench_layout_grant_store_list(
     status = umi_workbench_layout_data_record_repository_list(
         &repository->records, aggregate_id, predicate,
         predicate_context, &page);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_count != NULL) *out_count = page.count;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_total != NULL) *out_total = page.total_available;
     return status;
 }
@@ -252,6 +337,7 @@ typedef struct GrantPredicateContext {
     uint64_t now_ms;
 } GrantPredicateContext;
 
+/* Provide the grant matches operation used by this module and its client applications. */
 static UmiStatus grant_matches(
     const void *record,
     void *context,
@@ -261,6 +347,10 @@ static UmiStatus grant_matches(
     const GrantPredicateContext *criteria =
         (const GrantPredicateContext *)context;
     const uint32_t mask = UINT32_C(1) << (uint32_t)criteria->permission;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (grant == NULL || criteria == NULL || out_matches == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -273,6 +363,10 @@ static UmiStatus grant_matches(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout grant store evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_grant_store_evaluate(
     const UmiWorkbenchLayoutGrantStoreRepository *repository,
     const char *layout_id,
@@ -285,6 +379,10 @@ UmiStatus umi_workbench_layout_grant_store_evaluate(
     GrantPredicateContext criteria;
     size_t count = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (repository == NULL || layout_id == NULL ||
         subject_id == NULL || out_allowed == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -297,11 +395,16 @@ UmiStatus umi_workbench_layout_grant_store_evaluate(
         repository, layout_id, grant_matches, &criteria,
         grants, UMI_WORKBENCH_LAYOUT_DATA_MAX_GRANTS,
         &count, NULL);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     *out_allowed = count > 0U;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout grant store revoke operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_grant_store_revoke(
     const UmiWorkbenchLayoutGrantStoreRepository *repository,
     const char *layout_id,
@@ -310,6 +413,7 @@ UmiStatus umi_workbench_layout_grant_store_revoke(
     UmiWorkbenchLayoutGrant grant;
     UmiStatus status = umi_workbench_layout_grant_store_load(
         repository, layout_id, grant_id, 0U, &grant);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     grant.revoked = true;
     return umi_workbench_layout_grant_store_save(repository, &grant);

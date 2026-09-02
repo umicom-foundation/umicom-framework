@@ -18,12 +18,20 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the developer acceptance record toolchain support operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_developer_acceptance_record_toolchain_support(
     const UmiDeveloperLanguageSupportSnapshot *support,
     UmiDeveloperAcceptanceEvidenceStore *evidence)
 {
     UmiDeveloperAcceptanceEvidence item;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (support == NULL ||
         evidence == NULL ||
         support->language_id[0] == '\0') {

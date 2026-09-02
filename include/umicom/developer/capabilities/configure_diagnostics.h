@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_CONFIGURE_DIAGNOSTICS "umicom.developer.configuration.configure_diagnostics"
 
+/**
+ * Provide the developer capability configure diagnostics operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_configure_diagnostics(void);
 

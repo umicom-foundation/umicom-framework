@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer project template cmake meta project operation used by this module
+ * and its client applications.
+ */
 const UmiDeveloperProjectTemplate *umi_developer_project_template_cmake_meta_project(void);
 
 #ifdef __cplusplus

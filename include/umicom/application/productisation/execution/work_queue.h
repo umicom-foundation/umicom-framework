@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution work queue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionWorkQueue {
     UmiProductExecutionWorkItem items[UMI_PRODUCT_EXECUTION_MAX_ITEMS];
     size_t count;

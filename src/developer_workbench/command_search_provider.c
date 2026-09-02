@@ -18,19 +18,31 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
 
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the search commands operation used by this module and its client applications. */
 static UmiStatus search_commands(
     void *user_data,
     const char *query,
@@ -42,17 +54,23 @@ static UmiStatus search_commands(
     size_t index;
     size_t used = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (commands == NULL || query == NULL ||
         out_results == NULL || out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_command_registry_count(commands) && used < capacity;
          ++index) {
         UmiCommandSnapshot command;
         int32_t score;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_command_registry_at(
                 commands, index, &command) != UMI_STATUS_OK) {
             continue;
@@ -63,6 +81,7 @@ static UmiStatus search_commands(
             command.title,
             command.command_id);
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (score < 0) {
             score = umi_developer_workbench_search_score(
                 query,
@@ -70,6 +89,7 @@ static UmiStatus search_commands(
                 command.description);
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (score < 0) continue;
 
         (void)memset(&out_results[used], 0, sizeof(out_results[used]));
@@ -103,10 +123,18 @@ static UmiStatus search_commands(
     return used > 0U ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Initialise developer workbench command search provider from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_developer_workbench_command_search_provider_init(
     UmiDeveloperWorkbenchSearchProvider *provider,
     UmiCommandRegistry *commands)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL) return;
 
     (void)memset(provider, 0, sizeof(*provider));

@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFcSurfaceRequirement r; CHECK(umi_fc_surface_requirement_make("editor",3U,4U,false,&r)==UMI_STATUS_OK); CHECK(umi_fc_surface_requirement_missing(&r,1U)==2U);
     return 0;

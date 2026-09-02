@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer alignment guide kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchDesignerAlignmentGuideKind {
     UMI_WORKBENCH_DESIGNER_GUIDE_LEFT = 1,
     UMI_WORKBENCH_DESIGNER_GUIDE_HORIZONTAL_CENTRE = 2,
@@ -33,6 +37,10 @@ typedef enum UmiWorkbenchDesignerAlignmentGuideKind {
     UMI_WORKBENCH_DESIGNER_GUIDE_BOTTOM = 6
 } UmiWorkbenchDesignerAlignmentGuideKind;
 
+/**
+ * Represent the workbench designer alignment guide data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerAlignmentGuide {
     UmiWorkbenchDesignerAlignmentGuideKind kind;
     char source_node_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -43,6 +51,10 @@ typedef struct UmiWorkbenchDesignerAlignmentGuide {
     bool vertical;
 } UmiWorkbenchDesignerAlignmentGuide;
 
+/**
+ * Represent the workbench designer alignment guide model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerAlignmentGuideModel {
     UmiWorkbenchDesignerAlignmentGuide guides[UMI_WORKBENCH_DESIGNER_MAX_GUIDES];
     size_t count;
@@ -51,8 +63,20 @@ typedef struct UmiWorkbenchDesignerAlignmentGuideModel {
     uint64_t revision;
 } UmiWorkbenchDesignerAlignmentGuideModel;
 
+/**
+ * Initialise workbench designer alignment guides from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_alignment_guides_init(UmiWorkbenchDesignerAlignmentGuideModel *model, double threshold);
+/**
+ * Provide the workbench designer alignment guides build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_alignment_guides_build(UmiWorkbenchDesignerAlignmentGuideModel *model, const UmiWorkbenchDesignerCanvas *canvas, const char *moving_node_id, UmiWorkbenchDesignerRect moving_bounds);
+/**
+ * Find workbench designer alignment guide while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerAlignmentGuide *umi_workbench_designer_alignment_guide_at(const UmiWorkbenchDesignerAlignmentGuideModel *model, size_t index);
 
 #ifdef __cplusplus

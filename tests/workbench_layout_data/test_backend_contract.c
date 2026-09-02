@@ -21,24 +21,37 @@ typedef struct VisitState {
     size_t foreign_count;
 } VisitState;
 
+/*
+ * Exercise count record and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus count_record(
     const char *key,
     const char *value,
     void *context)
 {
     VisitState *state = (VisitState *)context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (key == NULL || value == NULL || state == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     state->count += 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_data_key_is_owned(key)) {
         state->owned_count += 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         state->foreign_count += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise test memory backend identity and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_memory_backend_identity(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -57,6 +70,10 @@ static int test_memory_backend_identity(void)
     return 0;
 }
 
+/*
+ * Exercise test visitation and namespace and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_visitation_and_namespace(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -79,6 +96,10 @@ static int test_visitation_and_namespace(void)
     return 0;
 }
 
+/*
+ * Exercise test transaction state and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static int test_transaction_state(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -97,6 +118,10 @@ static int test_transaction_state(void)
     return 0;
 }
 
+/*
+ * Return the number of records represented by test server snapshot without changing their
+ * state.
+ */
 static int test_server_snapshot_count(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -113,6 +138,10 @@ static int test_server_snapshot_count(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_memory_backend_identity() == 0,

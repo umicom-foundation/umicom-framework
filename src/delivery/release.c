@@ -20,10 +20,18 @@
 #include "umicom/delivery/release.h"
 #include <string.h>
 
+/*
+ * Initialise release from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_release_init(UmiRelease *release,
                            const UmiDeliveryManifest *manifest,
                            uint64_t generation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (release == NULL || manifest == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(release, 0, sizeof(*release));
     release->manifest = *manifest;
@@ -31,6 +39,10 @@ UmiStatus umi_release_init(UmiRelease *release,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the release ready to publish operation used by this module and its client
+ * applications.
+ */
 int umi_release_ready_to_publish(const UmiRelease *release)
 {
     return release != NULL &&
@@ -38,7 +50,15 @@ int umi_release_ready_to_publish(const UmiRelease *release)
            release->published == 0;
 }
 
+/*
+ * Provide the release mark published operation used by this module and its client
+ * applications.
+ */
 void umi_release_mark_published(UmiRelease *release)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (release != NULL) release->published = 1;
 }

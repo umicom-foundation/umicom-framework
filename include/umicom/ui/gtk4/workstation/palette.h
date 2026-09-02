@@ -19,6 +19,10 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/palette_model.h"
 
+/**
+ * Initialise gtk4 ws palette from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_palette_create(const UmiWsPaletteModel *model);
 
 #endif

@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity quality measure data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityQualityMeasure {
     char name[UMI_COMMODITY_NAME_CAPACITY];
     char unit_code[UMI_COMMODITY_CODE_CAPACITY];

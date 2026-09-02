@@ -22,8 +22,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the language runtime dispatch state data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiLanguageRuntimeDispatchState{UmiLanguageRuntimeTextEditList last_text_edits;UmiLanguageRuntimeWorkspaceEdit last_workspace_edit;UmiLanguageRuntimeInitializeResult last_initialize;uint64_t messages_dispatched,errors_received,revision;char last_error[UMI_LANGUAGE_RUNTIME_TEXT_CAPACITY];}UmiLanguageRuntimeDispatchState;
+/**
+ * Initialise language runtime dispatch state from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_runtime_dispatch_state_init(UmiLanguageRuntimeDispatchState*s);
+/**
+ * Perform language runtime through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_language_runtime_dispatch(UmiLanguageRuntimeServiceBridge*l,UmiLanguageRuntimeEditorBridge*e,UmiLanguageRuntimeDocumentSync*d,const UmiLanguageRuntimeEnvelope*env,const UmiLanguageRuntimeRequestContext*ctx,UmiLanguageRuntimeDispatchState*state,int*handled);
 #ifdef __cplusplus
 }

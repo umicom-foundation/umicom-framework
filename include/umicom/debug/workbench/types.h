@@ -36,6 +36,9 @@ extern "C" {
 #define UMI_DEBUG_WORKBENCH_MAX_ITEMS 64U
 #define UMI_DEBUG_WORKBENCH_NO_INDEX UMI_DEBUG_WORKBENCH_MAX_ITEMS
 
+/**
+ * List the named debug workbench session phase values accepted by this public contract.
+ */
 typedef enum UmiDebugWorkbenchSessionPhase {
     UMI_DEBUG_WORKBENCH_SESSION_IDLE = 0,
     UMI_DEBUG_WORKBENCH_SESSION_INITIALIZING = 1,
@@ -46,6 +49,9 @@ typedef enum UmiDebugWorkbenchSessionPhase {
     UMI_DEBUG_WORKBENCH_SESSION_FAILED = 6
 } UmiDebugWorkbenchSessionPhase;
 
+/**
+ * List the named debug workbench breakpoint kind values accepted by this public contract.
+ */
 typedef enum UmiDebugWorkbenchBreakpointKind {
     UMI_DEBUG_WORKBENCH_BREAKPOINT_SOURCE = 1,
     UMI_DEBUG_WORKBENCH_BREAKPOINT_FUNCTION = 2,
@@ -55,6 +61,9 @@ typedef enum UmiDebugWorkbenchBreakpointKind {
     UMI_DEBUG_WORKBENCH_BREAKPOINT_LOGPOINT = 6
 } UmiDebugWorkbenchBreakpointKind;
 
+/**
+ * List the named debug workbench command values accepted by this public contract.
+ */
 typedef enum UmiDebugWorkbenchCommand {
     UMI_DEBUG_WORKBENCH_COMMAND_START = 0,
     UMI_DEBUG_WORKBENCH_COMMAND_ATTACH = 1,
@@ -70,6 +79,9 @@ typedef enum UmiDebugWorkbenchCommand {
     UMI_DEBUG_WORKBENCH_COMMAND_COUNT = 11
 } UmiDebugWorkbenchCommand;
 
+/**
+ * List the named debug workbench view kind values accepted by this public contract.
+ */
 typedef enum UmiDebugWorkbenchViewKind {
     UMI_DEBUG_WORKBENCH_VIEW_BREAKPOINTS = 1,
     UMI_DEBUG_WORKBENCH_VIEW_THREADS = 2,
@@ -85,21 +97,33 @@ typedef enum UmiDebugWorkbenchViewKind {
     UMI_DEBUG_WORKBENCH_VIEW_TIMELINE = 12
 } UmiDebugWorkbenchViewKind;
 
+/**
+ * Represent the debug workbench position data shared with callers of this public contract.
+ */
 typedef struct UmiDebugWorkbenchPosition {
     uint32_t line;
     uint32_t column;
 } UmiDebugWorkbenchPosition;
 
+/**
+ * Represent the debug workbench range data shared with callers of this public contract.
+ */
 typedef struct UmiDebugWorkbenchRange {
     UmiDebugWorkbenchPosition start;
     UmiDebugWorkbenchPosition end;
 } UmiDebugWorkbenchRange;
 
+/**
+ * Represent the debug workbench location data shared with callers of this public contract.
+ */
 typedef struct UmiDebugWorkbenchLocation {
     char path[UMI_DEBUG_WORKBENCH_PATH_CAPACITY];
     UmiDebugWorkbenchRange range;
 } UmiDebugWorkbenchLocation;
 
+/**
+ * Represent the debug workbench entry data shared with callers of this public contract.
+ */
 typedef struct UmiDebugWorkbenchEntry {
     char id[UMI_DEBUG_WORKBENCH_ID_CAPACITY];
     char label[UMI_DEBUG_WORKBENCH_TEXT_CAPACITY];
@@ -111,14 +135,50 @@ typedef struct UmiDebugWorkbenchEntry {
     uint64_t revision;
 } UmiDebugWorkbenchEntry;
 
+/**
+ * Provide the debug workbench copy text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_workbench_copy_text(char *destination, size_t capacity, const char *source);
+/**
+ * Check that debug workbench id satisfies its contract before another service relies on
+ * it.
+ */
 int umi_debug_workbench_id_valid(const char *identifier);
+/**
+ * Provide the debug workbench position compare operation used by this module and its
+ * client applications.
+ */
 int umi_debug_workbench_position_compare(UmiDebugWorkbenchPosition left, UmiDebugWorkbenchPosition right);
+/**
+ * Provide the debug workbench range normalize operation used by this module and its client
+ * applications.
+ */
 UmiDebugWorkbenchRange umi_debug_workbench_range_normalize(UmiDebugWorkbenchRange range);
+/**
+ * Initialise debug workbench location from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_debug_workbench_location_init(UmiDebugWorkbenchLocation *location, const char *path, UmiDebugWorkbenchRange range);
+/**
+ * Initialise debug workbench entry from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_debug_workbench_entry_init(UmiDebugWorkbenchEntry *entry, const char *id, const char *label, const char *detail, const char *path, UmiDebugWorkbenchRange range);
+/**
+ * Check that debug workbench entry satisfies its contract before another service relies on
+ * it.
+ */
 int umi_debug_workbench_entry_valid(const UmiDebugWorkbenchEntry *entry);
+/**
+ * Provide the debug workbench session transition allowed operation used by this module and
+ * its client applications.
+ */
 int umi_debug_workbench_session_transition_allowed(UmiDebugWorkbenchSessionPhase from, UmiDebugWorkbenchSessionPhase to);
+/**
+ * Provide the debug workbench command bit operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_debug_workbench_command_bit(UmiDebugWorkbenchCommand command);
 
 #ifdef __cplusplus

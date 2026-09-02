@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct target profile data shared with callers of this public contract.
+ */
 typedef struct UmiCtTargetProfile { char profile_id[UMI_CT_ID_CAPACITY]; UmiCtTarget target; char abi[32]; uint64_t required_cpu_features; uint32_t minimum_page_size; bool production_supported; } UmiCtTargetProfile;
+/**
+ * Initialise ct target profile from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ct_target_profile_init(UmiCtTargetProfile *profile,const char *id,const UmiCtTarget *target,const char *abi);
+/**
+ * Provide the ct target profile satisfied operation used by this module and its client
+ * applications.
+ */
 bool umi_ct_target_profile_satisfied(const UmiCtTargetProfile *profile,uint64_t cpu_features,uint32_t page_size);
 
 #ifdef __cplusplus

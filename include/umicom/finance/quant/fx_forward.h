@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant fx forward data shared with callers of this public contract.
+ */
 typedef struct UmiQuantFxForward {
     double spot;
     double forward_points;

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance renderer appearance capability data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAppearanceRendererAppearanceCapability {
     char renderer_id[UMI_APPEARANCE_ID_CAPACITY];
     UmiAppearanceRendererKind kind;

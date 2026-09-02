@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the web parse request operation used by this module and its client applications.
+ */
 UmiStatus umi_web_parse_request(const char *text,size_t length,UmiWebRequest *out_request);
 #ifdef __cplusplus
 }

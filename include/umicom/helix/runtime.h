@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the helix runtime data shared with callers of this public contract.
+ */
 typedef struct UmiHelixRuntime {
     UmiHelixAgentRegistry agents;
     UmiHelixMemory memory;
@@ -36,7 +39,15 @@ typedef struct UmiHelixRuntime {
     UmiHelixWorkflow workflow;
 } UmiHelixRuntime;
 
+/**
+ * Initialise helix runtime from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_helix_runtime_init(UmiHelixRuntime *runtime, const char *workflow_id);
+/**
+ * Provide the helix runtime register default agents operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_helix_runtime_register_default_agents(UmiHelixRuntime *runtime,
                                                      const char *provider_id);
 

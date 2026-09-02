@@ -22,10 +22,22 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap condition set from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_bootstrap_condition_set_init(UmiBootstrapConditionSet *set,
                                       UmiBootstrapConditionMode mode);
+/**
+ * Add bootstrap condition set only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_bootstrap_condition_set_add(UmiBootstrapConditionSet *set,
                                           const UmiBootstrapCondition *condition);
+/**
+ * Provide the bootstrap condition set reduce operation used by this module and its client
+ * applications.
+ */
 bool umi_bootstrap_condition_set_reduce(const bool *results,
                                         size_t count,
                                         UmiBootstrapConditionMode mode);

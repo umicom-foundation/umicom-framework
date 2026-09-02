@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise risk limit evaluation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseRiskLimitEvaluation { char limit_id[UMI_ENTERPRISE_ID_CAPACITY]; double warning_limit; double hard_limit; double observed; double utilisation; int warning; int breach; } UmiEnterpriseRiskLimitEvaluation;
 /* Evaluate one finite observed risk amount against ordered non-negative limits. */
 UmiStatus umi_enterprise_risk_limit_evaluate(UmiEnterpriseRiskLimitEvaluation *evaluation,const char *limit_id,double warning_limit,double hard_limit,double observed);

@@ -25,6 +25,10 @@ static UmiStatus count_sink(
     void *sink_context)
 {
     size_t *byte_count = (size_t *)sink_context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (data == NULL || byte_count == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *byte_count += data_size;
     return UMI_STATUS_OK;
@@ -39,6 +43,10 @@ static UmiStatus fake_pdf_adapter(
 {
     const char bytes[] = "PDF";
     (void)adapter_context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request == NULL || sink == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return sink(bytes, sizeof(bytes) - 1U, sink_context);
 }

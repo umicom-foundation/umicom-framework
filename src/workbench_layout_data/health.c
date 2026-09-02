@@ -18,6 +18,10 @@
 
 
 
+/*
+ * Provide the workbench layout health policy default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutHealthPolicy
 umi_workbench_layout_health_policy_default(void)
 {
@@ -32,6 +36,10 @@ umi_workbench_layout_health_policy_default(void)
     return policy;
 }
 
+/*
+ * Provide the workbench layout health evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_health_evaluate(
     const UmiDataServer *server,
     const UmiWorkbenchLayoutDataMetrics *metrics,
@@ -48,17 +56,23 @@ UmiStatus umi_workbench_layout_health_evaluate(
     UmiWorkbenchLayoutHealthPolicy effective;
     UmiDataServerSnapshot data;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (server == NULL || metrics == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     effective = policy != NULL
         ? *policy : umi_workbench_layout_health_policy_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.structure_size < sizeof(effective)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->structure_size = sizeof(*out_snapshot);
     status = umi_data_server_snapshot(server, &data);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         out_snapshot->state =
             UMI_WORKBENCH_LAYOUT_DATA_HEALTH_UNAVAILABLE;
@@ -85,6 +99,7 @@ UmiStatus umi_workbench_layout_health_evaluate(
     out_snapshot->last_failure_at_ms = last_failure_at_ms;
     out_snapshot->revision = metrics->revision;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (effective.require_sqlite_for_production &&
         data.backend != UMI_DATA_BACKEND_SQLITE) {
         out_snapshot->state =
@@ -93,7 +108,7 @@ UmiStatus umi_workbench_layout_health_evaluate(
             out_snapshot->message, sizeof(out_snapshot->message),
             "Production policy requires the SQLite Data Server backend.",
             true);
-    } else if (open_conflicts >
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (open_conflicts >
                    effective.maximum_open_conflicts) {
         out_snapshot->state =
             UMI_WORKBENCH_LAYOUT_DATA_HEALTH_UNHEALTHY;
@@ -101,7 +116,7 @@ UmiStatus umi_workbench_layout_health_evaluate(
             out_snapshot->message, sizeof(out_snapshot->message),
             "Open layout conflicts exceed the safe synchronisation threshold.",
             true);
-    } else if (pending_outbox >
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (pending_outbox >
                    effective.maximum_pending_outbox ||
                pending_offline_operations >
                    effective.maximum_pending_offline_operations) {
@@ -111,7 +126,7 @@ UmiStatus umi_workbench_layout_health_evaluate(
             out_snapshot->message, sizeof(out_snapshot->message),
             "Layout persistence is available but operational queues exceed policy.",
             true);
-    } else if (last_failure_at_ms > last_success_at_ms &&
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (last_failure_at_ms > last_success_at_ms &&
                now_ms >= last_failure_at_ms &&
                now_ms - last_failure_at_ms <
                    effective.maximum_failure_age_ms) {
@@ -121,7 +136,7 @@ UmiStatus umi_workbench_layout_health_evaluate(
             out_snapshot->message, sizeof(out_snapshot->message),
             "A recent persistence or synchronisation operation failed.",
             true);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         out_snapshot->state =
             UMI_WORKBENCH_LAYOUT_DATA_HEALTH_HEALTHY;
         (void)umi_workbench_layout_data_copy_text(
@@ -131,6 +146,10 @@ UmiStatus umi_workbench_layout_health_evaluate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout health ready operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_health_ready(
     const UmiWorkbenchLayoutDataHealthSnapshot *snapshot)
 {
@@ -141,6 +160,10 @@ bool umi_workbench_layout_health_ready(
              UMI_WORKBENCH_LAYOUT_DATA_HEALTH_DEGRADED);
 }
 
+/*
+ * Provide the workbench layout health live operation used by this module and its client
+ * applications.
+ */
 bool umi_workbench_layout_health_live(
     const UmiWorkbenchLayoutDataHealthSnapshot *snapshot)
 {

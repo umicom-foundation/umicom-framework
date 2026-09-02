@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance input target policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceInputTargetPolicy {
     char policy_id[UMI_APPEARANCE_ID_CAPACITY];
     UmiAppearanceInputModality modality;

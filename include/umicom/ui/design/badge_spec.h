@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design badge spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignBadgeSpec {
     char text[UMI_DESIGN_TEXT_CAPACITY];
     UmiDesignSemanticRole role;

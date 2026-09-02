@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance contrast evidence data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceContrastEvidence {
     char evidence_id[UMI_APPEARANCE_ID_CAPACITY];
     char foreground_token[UMI_APPEARANCE_TOKEN_CAPACITY];

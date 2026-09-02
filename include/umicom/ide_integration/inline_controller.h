@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide inline controller data shared with callers of this public contract.
+ */
 typedef struct UmiIdeInlineController {
     UmiIdeInlineExecutor executor;
     UmiIdeEditorEditAdapter edits;
@@ -33,26 +36,54 @@ typedef struct UmiIdeInlineController {
     uint64_t revision;
 } UmiIdeInlineController;
 
+/**
+ * Initialise ide inline controller from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_ide_inline_controller_init(
     UmiIdeInlineController *controller,
     const UmiIdeInlineExecutor *executor,
     const UmiIdeEditorEditAdapter *edits);
 
+/**
+ * Provide the ide inline controller deinit operation used by this module and its client
+ * applications.
+ */
 void umi_ide_inline_controller_deinit(UmiIdeInlineController *controller);
 
+/**
+ * Provide the ide inline controller request operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_request(
     UmiIdeInlineController *controller,
     const UmiIdeEditorSelection *context);
 
+/**
+ * Provide the ide inline controller accept operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_accept(
     UmiIdeInlineController *controller);
 
+/**
+ * Provide the ide inline controller reject operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_reject(
     UmiIdeInlineController *controller);
 
+/**
+ * Provide the ide inline controller cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_cancel(
     UmiIdeInlineController *controller);
 
+/**
+ * Provide the ide inline controller snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_inline_controller_snapshot(
     const UmiIdeInlineController *controller,
     UmiIdeInlineSuggestion *out_suggestion);

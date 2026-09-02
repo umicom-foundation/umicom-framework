@@ -25,6 +25,9 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/launch_plan.h"
 
+/**
+ * List the named integration suite state values accepted by this public contract.
+ */
 typedef enum UmiIntegrationSuiteState {
     UMI_INTEGRATION_SUITE_IDLE = 0,
     UMI_INTEGRATION_SUITE_PREPARED,
@@ -35,6 +38,10 @@ typedef enum UmiIntegrationSuiteState {
     UMI_INTEGRATION_SUITE_STOPPED
 } UmiIntegrationSuiteState;
 
+/**
+ * Represent the integration suite runtime data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIntegrationSuiteRuntime {
     char suite_id[UMI_INTEGRATION_ID_CAPACITY];
     UmiIntegrationSuiteState state;
@@ -45,16 +52,32 @@ typedef struct UmiIntegrationSuiteRuntime {
     size_t failed_optional;
 } UmiIntegrationSuiteRuntime;
 
+/**
+ * Provide the integration suite runtime prepare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_suite_runtime_prepare(
     UmiIntegrationSuiteRuntime *runtime,
     const UmiIntegrationSuiteDefinition *suite,
     const UmiIntegrationRegistry *registry);
+/**
+ * Provide the integration suite runtime mark running operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_suite_runtime_mark_running(
     UmiIntegrationSuiteRuntime *runtime,
     const char *application_id);
+/**
+ * Provide the integration suite runtime mark failed operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_suite_runtime_mark_failed(
     UmiIntegrationSuiteRuntime *runtime,
     const char *application_id);
+/**
+ * Provide the integration suite runtime is usable operation used by this module and its
+ * client applications.
+ */
 bool umi_integration_suite_runtime_is_usable(
     const UmiIntegrationSuiteRuntime *runtime);
 

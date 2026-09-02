@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/quarantine_policy.h"
-int main(void) { UmiPluginExtensionHostQuarantinePolicy p; umi_plugin_extension_host_quarantine_policy_init(&p); if(umi_plugin_extension_host_quarantine_policy_should_quarantine(&p,1U,0U,0U,0U)) return 1; if(!umi_plugin_extension_host_quarantine_policy_should_quarantine(&p,3U,0U,0U,0U)) return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostQuarantinePolicy p; umi_plugin_extension_host_quarantine_policy_init(&p); /* Apply this branch only when its contract condition is satisfied. */ if(umi_plugin_extension_host_quarantine_policy_should_quarantine(&p,1U,0U,0U,0U)) return 1; /* Apply this branch only when its contract condition is satisfied. */ if(!umi_plugin_extension_host_quarantine_policy_should_quarantine(&p,3U,0U,0U,0U)) return 2; return 0; }

@@ -23,6 +23,13 @@
 #define UMICOM_UI_COMPONENTS_SELECTION_H
 #include <stddef.h>
 #include <stdbool.h>
+/**
+ * Represent the ui component selection data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentSelection { size_t index; bool has_selection; } UmiUiComponentSelection;
+/**
+ * Provide the ui component selection none operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentSelection umi_ui_component_selection_none(void);
 #endif

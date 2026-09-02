@@ -14,8 +14,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/productisation/execution/types.h"
 
+/*
+ * Provide the product execution state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_product_execution_state_text(UmiProductExecutionState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
     case UMI_PRODUCT_EXECUTION_PENDING: return "pending";
     case UMI_PRODUCT_EXECUTION_READY: return "ready";
@@ -28,8 +33,13 @@ const char *umi_product_execution_state_text(UmiProductExecutionState state)
     default: return "unknown";
     }
 }
+/*
+ * Provide the product execution outcome text operation used by this module and its client
+ * applications.
+ */
 const char *umi_product_execution_outcome_text(UmiProductExecutionOutcome outcome)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (outcome) {
     case UMI_PRODUCT_EXECUTION_OUTCOME_NONE: return "none";
     case UMI_PRODUCT_EXECUTION_OUTCOME_SUCCESS: return "success";
@@ -40,8 +50,13 @@ const char *umi_product_execution_outcome_text(UmiProductExecutionOutcome outcom
     default: return "unknown";
     }
 }
+/*
+ * Provide the product execution event kind text operation used by this module and its
+ * client applications.
+ */
 const char *umi_product_execution_event_kind_text(UmiProductExecutionEventKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
     case UMI_PRODUCT_EXECUTION_EVENT_QUEUED: return "queued";
     case UMI_PRODUCT_EXECUTION_EVENT_READY: return "ready";
@@ -55,6 +70,10 @@ const char *umi_product_execution_event_kind_text(UmiProductExecutionEventKind k
     default: return "unknown";
     }
 }
+/*
+ * Provide the product execution state terminal operation used by this module and its
+ * client applications.
+ */
 int umi_product_execution_state_terminal(UmiProductExecutionState state)
 {
     return state == UMI_PRODUCT_EXECUTION_SUCCEEDED ||
@@ -63,26 +82,35 @@ int umi_product_execution_state_terminal(UmiProductExecutionState state)
            state == UMI_PRODUCT_EXECUTION_CANCELLED ||
            state == UMI_PRODUCT_EXECUTION_ROLLED_BACK;
 }
+/*
+ * Provide the product execution state can transition operation used by this module and its
+ * client applications.
+ */
 int umi_product_execution_state_can_transition(
     UmiProductExecutionState current,
     UmiProductExecutionState next)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (current == UMI_PRODUCT_EXECUTION_PENDING)
         return next == UMI_PRODUCT_EXECUTION_READY ||
                next == UMI_PRODUCT_EXECUTION_BLOCKED ||
                next == UMI_PRODUCT_EXECUTION_CANCELLED;
+    /* Apply this operation only while the related capability or state is available. */
     if (current == UMI_PRODUCT_EXECUTION_READY)
         return next == UMI_PRODUCT_EXECUTION_RUNNING ||
                next == UMI_PRODUCT_EXECUTION_BLOCKED ||
                next == UMI_PRODUCT_EXECUTION_CANCELLED;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (current == UMI_PRODUCT_EXECUTION_RUNNING)
         return next == UMI_PRODUCT_EXECUTION_SUCCEEDED ||
                next == UMI_PRODUCT_EXECUTION_FAILED ||
                next == UMI_PRODUCT_EXECUTION_BLOCKED ||
                next == UMI_PRODUCT_EXECUTION_CANCELLED;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (current == UMI_PRODUCT_EXECUTION_FAILED)
         return next == UMI_PRODUCT_EXECUTION_READY ||
                next == UMI_PRODUCT_EXECUTION_ROLLED_BACK;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (current == UMI_PRODUCT_EXECUTION_SUCCEEDED)
         return next == UMI_PRODUCT_EXECUTION_ROLLED_BACK;
     return 0;

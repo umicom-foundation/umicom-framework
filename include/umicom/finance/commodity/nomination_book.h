@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity nomination book data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityNominationBook {
     UmiCommodityNomination items[UMI_COMMODITY_MAX_ITEMS];
     size_t count;

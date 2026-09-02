@@ -17,6 +17,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiDrLaunchProfile value; umi_dr_launch_profile_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"normal")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.launcher_id,sizeof(value.launcher_id),"default")==UMI_STATUS_OK); CHECK(umi_dr_launch_profile_valid(&value)); CHECK(umi_dr_launch_profile_fingerprint(&value) != 0U);
     return 0;

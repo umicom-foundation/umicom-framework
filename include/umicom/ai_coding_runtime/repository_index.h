@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding repository index snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiAiCodingRepositoryIndexSnapshot {
     size_t scanned_files;
     size_t indexed_files;
@@ -32,21 +36,41 @@ typedef struct UmiAiCodingRepositoryIndexSnapshot {
     int truncated;
 } UmiAiCodingRepositoryIndexSnapshot;
 
+/**
+ * Represent the ai coding repository index data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingRepositoryIndex UmiAiCodingRepositoryIndex;
 
+/**
+ * Initialise ai coding repository index from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_coding_repository_index_create(
     UmiAiCodingContextIndex *context_index,
     UmiAiCodingRepositoryIndex **out_index);
 
+/**
+ * Release or reset state held by ai coding repository index so the same storage can be
+ * reused safely.
+ */
 void umi_ai_coding_repository_index_destroy(
     UmiAiCodingRepositoryIndex *index);
 
+/**
+ * Provide the ai coding repository index refresh operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_repository_index_refresh(
     UmiAiCodingRepositoryIndex *index,
     const char *workspace_root,
     const UmiAiCodingIgnorePolicy *ignore_policy,
     UmiAiDataClassification classification);
 
+/**
+ * Provide the ai coding repository index snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_repository_index_snapshot(
     const UmiAiCodingRepositoryIndex *index,
     UmiAiCodingRepositoryIndexSnapshot *out_snapshot);

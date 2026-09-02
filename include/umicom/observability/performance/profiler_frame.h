@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the performance profiler frame data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPerformanceProfilerFrame {
     uint32_t structure_size;
     uint32_t api_version;

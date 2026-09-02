@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the abi report format operation used by this module and its client applications.
+ */
 UmiStatus umi_abi_report_format(const UmiAbiCompatibility *result, char *buffer, size_t capacity);
 #ifdef __cplusplus
 }

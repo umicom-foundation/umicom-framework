@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/component_layout.h"
 
-UmiStatus umi_design_component_layout_init(UmiDesignComponentLayout *layout,UmiDesignComponentLayoutKind kind,uint16_t columns,double gap,int wrap){if(layout==NULL||kind<UMI_DESIGN_LAYOUT_ROW||kind>UMI_DESIGN_LAYOUT_GRID||!umi_design_number_valid(gap)||gap<0.0||(kind==UMI_DESIGN_LAYOUT_GRID&&columns==0U))return UMI_STATUS_INVALID_ARGUMENT;layout->kind=kind;layout->columns=kind==UMI_DESIGN_LAYOUT_GRID?columns:1U;layout->gap=gap;layout->wrap=wrap?1:0;return UMI_STATUS_OK;}
+/*
+ * Initialise design component layout from caller-provided values so later operations
+ * receive a known state.
+ */
+UmiStatus umi_design_component_layout_init(UmiDesignComponentLayout *layout,UmiDesignComponentLayoutKind kind,uint16_t columns,double gap,int wrap){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(layout==NULL||kind<UMI_DESIGN_LAYOUT_ROW||kind>UMI_DESIGN_LAYOUT_GRID||!umi_design_number_valid(gap)||gap<0.0||(kind==UMI_DESIGN_LAYOUT_GRID&&columns==0U))return UMI_STATUS_INVALID_ARGUMENT;layout->kind=kind;layout->columns=kind==UMI_DESIGN_LAYOUT_GRID?columns:1U;layout->gap=gap;layout->wrap=wrap?1:0;return UMI_STATUS_OK;}

@@ -17,6 +17,10 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the workbench designer gtk4 build review operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_review(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -39,11 +43,20 @@ GtkWidget *umi_workbench_designer_gtk4_build_review(
     return notebook;
 }
 
+/* Release or reset state held by list so the same storage can be reused safely. */
 static void list_clear(GtkWidget *list)
 {
     GtkWidget *child;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (list == NULL) return;
     child = gtk_widget_get_first_child(list);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_list_box_remove(GTK_LIST_BOX(list), child);
@@ -51,6 +64,10 @@ static void list_clear(GtkWidget *list)
     }
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh review operation used by this module and its
+ * client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_review(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -58,15 +75,28 @@ void umi_workbench_designer_gtk4_refresh_review(
     const UmiWorkbenchDesignerDiagnostics *diagnostics;
     const UmiWorkbenchDesignerCollaborationModel *collaboration;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL) return;
     list_clear(designer->diagnostics_list);
     list_clear(designer->history_list);
     umi_workbench_designer_gtk4_clear_box(designer->collaboration_box);
     session = umi_workbench_designer_service_active(
         designer->config.controller->service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return;
     diagnostics = umi_workbench_designer_session_diagnostics(session);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (diagnostics != NULL) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < diagnostics->count; ++index) {
             const UmiWorkbenchDesignerIssue *issue = &diagnostics->issues[index];
             GtkWidget *row = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
@@ -83,7 +113,12 @@ void umi_workbench_designer_gtk4_refresh_review(
         }
     }
     collaboration = umi_workbench_designer_session_collaboration(session);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (collaboration != NULL) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < collaboration->count; ++index) {
             const UmiWorkbenchDesignerCollaborator *person =
                 &collaboration->collaborators[index];

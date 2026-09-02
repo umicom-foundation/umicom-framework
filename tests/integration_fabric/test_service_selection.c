@@ -18,6 +18,10 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr,"CHECK failed: %s:%d: %s\n",__FILE__,__LINE__,#expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiFabricServiceRegistry r; UmiFabricServiceInstance a,b,out; umi_fabric_service_registry_init(&r);
     CHECK(umi_fabric_service_instance_init(&a,"risk.1","risk","e1",2U,10U)==UMI_STATUS_OK);

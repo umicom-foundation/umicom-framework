@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/studio_runtime/view_ids.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const char *ids[]={
@@ -30,7 +34,9 @@ int main(void)
         umi_studio_view_id_shell_state()
     };
     size_t i,j;
+    /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<sizeof(ids)/sizeof(ids[0]);++i)
+        /* Visit each bounded item once so every record receives the same rule. */
         for(j=i+1U;j<sizeof(ids)/sizeof(ids[0]);++j)
             assert(strcmp(ids[i],ids[j])!=0);
     return 0;

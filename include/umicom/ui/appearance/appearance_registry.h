@@ -24,6 +24,10 @@ extern "C" {
 #endif
 #include "umicom/ui/appearance/appearance_profile.h"
 
+/**
+ * Represent the appearance appearance registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceAppearanceRegistry { UmiAppearanceAppearanceProfile items[UMI_APPEARANCE_MAX_ITEMS]; size_t count; uint64_t revision; } UmiAppearanceAppearanceRegistry;
 
 /* Initialise an empty bounded registry. */

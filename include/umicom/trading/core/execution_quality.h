@@ -19,6 +19,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading execution quality data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingExecutionQuality { UmiTradingPriceTicks reference_ticks; UmiTradingPriceTicks execution_ticks; int64_t signed_improvement_ticks; } UmiTradingExecutionQuality;
 /* Calculate signed improvement where positive is beneficial for the order side. */
 UmiStatus umi_trading_execution_quality_compute(UmiSide side,UmiTradingPriceTicks reference_ticks,UmiTradingPriceTicks execution_ticks,UmiTradingExecutionQuality *out_quality);

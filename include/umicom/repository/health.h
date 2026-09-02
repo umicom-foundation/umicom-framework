@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the repository health data shared with callers of this public contract.
+ */
 typedef struct UmiRepositoryHealth {
     size_t dependency_count;
     size_t stage_count;
@@ -30,6 +33,10 @@ typedef struct UmiRepositoryHealth {
     size_t error_count;
     int healthy;
 } UmiRepositoryHealth;
+/**
+ * Provide the repository health from plan operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_health_from_plan(
     const UmiRepositoryLockPlan *plan,
     UmiRepositoryHealth *out_health);

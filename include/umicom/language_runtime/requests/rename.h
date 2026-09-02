@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime request rename operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_request_rename(UmiLanguageRuntimeServer*s,const char*d,const char*u,uint32_t l,uint32_t c,const char*new_name,uint64_t*out);
 #ifdef __cplusplus
 }

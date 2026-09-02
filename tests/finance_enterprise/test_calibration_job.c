@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/calibration_job.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseCalibrationJob j; CHECK(umi_enterprise_calibration_job_init(&j,"j","curve",2U)==UMI_STATUS_OK); CHECK(umi_enterprise_calibration_job_progress(&j,2U)==UMI_STATUS_OK); CHECK(j.state==UMI_ENTERPRISE_COMPLETED); return 0; }

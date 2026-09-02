@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the sdk runtime sdk bundle data shared with callers of this public contract.
+ */
 typedef struct UmiSdkRuntimeSdkBundle
 {
     uint32_t structure_size;
@@ -31,13 +34,45 @@ typedef struct UmiSdkRuntimeSdkBundle
     UmiSdkRuntimeState state;
     bool enabled;
     } UmiSdkRuntimeSdkBundle;
+/**
+ * Initialise sdk runtime sdk bundle from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_sdk_runtime_sdk_bundle_init(UmiSdkRuntimeSdkBundle *value,const char *id);
+/**
+ * Check that sdk runtime sdk bundle satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_sdk_runtime_sdk_bundle_validate(const UmiSdkRuntimeSdkBundle *value);
+/**
+ * Provide the sdk runtime sdk bundle set path operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_sdk_runtime_sdk_bundle_set_path(UmiSdkRuntimeSdkBundle *value,const char *path);
+/**
+ * Provide the sdk runtime sdk bundle set detail operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_sdk_bundle_set_detail(UmiSdkRuntimeSdkBundle *value,const char *detail);
+/**
+ * Return the number of records represented by sdk runtime sdk bundle set header without
+ * changing their state.
+ */
 UmiStatus umi_sdk_runtime_sdk_bundle_set_header_count(UmiSdkRuntimeSdkBundle *value,uint64_t number);
+/**
+ * Return the number of records represented by sdk runtime sdk bundle set library without
+ * changing their state.
+ */
 UmiStatus umi_sdk_runtime_sdk_bundle_set_library_count(UmiSdkRuntimeSdkBundle *value,uint64_t number);
+/**
+ * Provide the sdk runtime sdk bundle set state operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_sdk_runtime_sdk_bundle_set_state(UmiSdkRuntimeSdkBundle *value,UmiSdkRuntimeState state);
+/**
+ * Provide the sdk runtime sdk bundle same identity operation used by this module and its
+ * client applications.
+ */
 bool umi_sdk_runtime_sdk_bundle_same_identity(const UmiSdkRuntimeSdkBundle *left,const UmiSdkRuntimeSdkBundle *right);
 #ifdef __cplusplus
 }

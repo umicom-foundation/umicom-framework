@@ -19,5 +19,9 @@
 #ifndef UMICOM_REFERENCE_TMS_H
 #define UMICOM_REFERENCE_TMS_H
 #include "umicom/product/product.h"
+/**
+ * Provide the example tms profile operation used by this module and its client
+ * applications.
+ */
 const UmiProductProfile *umi_example_tms_profile(void);
 #endif

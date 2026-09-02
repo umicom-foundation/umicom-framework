@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_IO_CANCELLATION "umicom.document.performance.io_cancellation"
 
+/**
+ * Provide the document capability io cancellation operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_io_cancellation(void);
 

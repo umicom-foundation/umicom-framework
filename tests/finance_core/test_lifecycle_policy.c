@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/lifecycle_policy.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiLifecyclePolicy p; umi_lifecycle_policy_default(&p); CHECK(umi_lifecycle_policy_allows(&p,10U,1U));

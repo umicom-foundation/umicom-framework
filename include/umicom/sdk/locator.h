@@ -23,6 +23,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the sdk locate operation used by this module and its client applications.
+ */
 UmiStatus umi_sdk_locate(const char *preferred_prefix,char *out_prefix,size_t capacity);
 #ifdef __cplusplus
 }

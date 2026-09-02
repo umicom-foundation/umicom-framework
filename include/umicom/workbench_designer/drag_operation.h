@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer drag operation plan data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerDragOperationPlan {
     UmiWorkbenchDesignerCommand command;
     UmiWorkbenchDesignerRect preview_bounds;
@@ -34,6 +38,10 @@ typedef struct UmiWorkbenchDesignerDragOperationPlan {
     char explanation[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
 } UmiWorkbenchDesignerDragOperationPlan;
 
+/**
+ * Provide the workbench designer drag operation plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_drag_operation_plan(
     const UmiWorkbenchDesignerDragSession *drag,
     const UmiWorkbenchDesignerDropTarget *target,

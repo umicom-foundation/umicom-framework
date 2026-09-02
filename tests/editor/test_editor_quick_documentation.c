@@ -28,6 +28,10 @@
 
 #include "umicom/editor/quick_documentation.h"
 
+/*
+ * Exercise documentation section and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiEditorQuickDocumentationSection documentation_section(
     const char *id,
     const char *symbol_id,
@@ -53,12 +57,17 @@ static UmiEditorQuickDocumentationSection documentation_section(
     section.order = order;
     section.trusted = 1;
     section.visible = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_EDITOR_DOCUMENTATION_LINK) {
         (void)strcpy(section.source_uri, "https://docs.example/reference");
     }
     return section;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorQuickDocumentation *documentation = NULL;

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/surface_profiles/ai_tools.h"
 
+/*
+ * Provide the studio surface profile ai tools operation used by this module and its client
+ * applications.
+ */
 const UmiStudioRuntimeSurfaceBinding *umi_studio_surface_profile_ai_tools(void)
 {
     static const UmiStudioRuntimeSurfaceBinding binding = {

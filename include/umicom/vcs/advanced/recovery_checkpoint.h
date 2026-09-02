@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced recovery checkpoint data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedRecoveryCheckpoint {
     uint32_t struct_size;
     uint32_t api_version;
@@ -38,8 +42,20 @@ typedef struct UmiVcsAdvancedRecoveryCheckpoint {
     int worktree_dirty;
 } UmiVcsAdvancedRecoveryCheckpoint;
 
+/**
+ * Initialise vcs advanced recovery checkpoint from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_vcs_advanced_recovery_checkpoint_init(UmiVcsAdvancedRecoveryCheckpoint *value);
+/**
+ * Check that vcs advanced recovery checkpoint satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_vcs_advanced_recovery_checkpoint_validate(const UmiVcsAdvancedRecoveryCheckpoint *value);
+/**
+ * Copy vcs advanced recovery checkpoint into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_vcs_advanced_recovery_checkpoint_set(UmiVcsAdvancedRecoveryCheckpoint *value,
                                                      const char *checkpoint_id,
                                                      const char *head_oid,

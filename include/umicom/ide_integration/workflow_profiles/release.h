@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Release or reset state held by ide workflow profile so the same storage can be reused
+ * safely.
+ */
 UmiStatus umi_ide_workflow_profile_release(
     UmiIdeWorkflowPolicy *out_policy);
 #ifdef __cplusplus

@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the terminal remote remote health evaluate operation used by this module and its
+ * client applications.
+ */
 UmiTerminalRemoteHealth umi_terminal_remote_remote_health_evaluate(uint32_t consecutive_failures,uint64_t latency_ms,uint64_t warning_latency_ms);
 #ifdef __cplusplus
 }

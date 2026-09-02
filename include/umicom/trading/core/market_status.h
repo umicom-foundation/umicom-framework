@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading market status data shared with callers of this public contract.
+ */
 typedef struct UmiTradingMarketStatus { UmiTradingCoreMarketPhase phase; uint64_t sequence; bool operational; } UmiTradingMarketStatus;
 /* Initialise and validate capture exchange phase, sequence and operational availability. */
 UmiStatus umi_trading_market_status_init(UmiTradingMarketStatus *value,UmiTradingCoreMarketPhase phase, uint64_t sequence, bool operational);

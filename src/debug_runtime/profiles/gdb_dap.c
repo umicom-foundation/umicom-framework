@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/profiles/gdb_dap.h"
 
+/*
+ * Provide the debug runtime profile gdb dap operation used by this module and its client
+ * applications.
+ */
 const UmiDebugAdapterProfile *umi_debug_runtime_profile_gdb_dap(void)
 {
     static const UmiDebugAdapterProfile profile = {

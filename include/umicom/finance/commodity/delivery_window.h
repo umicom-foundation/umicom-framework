@@ -28,6 +28,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the commodity delivery window data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCommodityDeliveryWindow {
     int64_t start_time_ms;
     int64_t end_time_ms;

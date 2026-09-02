@@ -18,6 +18,10 @@
 
 #include "umicom/ai/mcp/protocol.h"
 
+/*
+ * Exercise test ai mcp protocol prompts list and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 int test_ai_mcp_protocol_prompts_list(void)
 {
     assert(strcmp(umi_ai_mcp_method_prompts_list(), "prompts/list") == 0);

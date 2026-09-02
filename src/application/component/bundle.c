@@ -72,39 +72,66 @@ static const UmiApplicationComponentBundle BUNDLES[] = {
      TRADER_COMPONENTS, TRADER_REGIONS,
      sizeof(TRADER_COMPONENTS) / sizeof(TRADER_COMPONENTS[0])}};
 
+/*
+ * Return the number of records represented by application component bundle without
+ * changing their state.
+ */
 size_t umi_application_component_bundle_count(void) {
   return sizeof(BUNDLES) / sizeof(BUNDLES[0]);
 }
 
+/*
+ * Find application component bundle while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationComponentBundle *umi_application_component_bundle_at(
     size_t index) {
   return index < umi_application_component_bundle_count() ? &BUNDLES[index]
                                                            : NULL;
 }
 
+/*
+ * Find application component bundle while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiApplicationComponentBundle *umi_application_component_bundle_find(
     const char *bundle_id) {
   size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (bundle_id == NULL)
     return NULL;
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < umi_application_component_bundle_count(); ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (strcmp(BUNDLES[index].bundle_id, bundle_id) == 0)
       return &BUNDLES[index];
   }
   return NULL;
 }
 
+/*
+ * Provide the application component bundle layout operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_component_bundle_layout(
     const UmiApplicationComponentBundle *bundle,
     UmiApplicationComponentLayout *out_layout) {
   size_t index;
   UmiStatus status;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
   if (bundle == NULL || out_layout == NULL || bundle->bundle_id == NULL ||
       bundle->title == NULL || bundle->component_ids == NULL ||
       bundle->regions == NULL || bundle->component_count == 0U)
     return UMI_STATUS_INVALID_ARGUMENT;
   status = umi_application_component_layout_init(out_layout, bundle->bundle_id,
                                                  bundle->title);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; status == UMI_STATUS_OK && index < bundle->component_count;
        ++index) {
     status = umi_application_component_layout_add(

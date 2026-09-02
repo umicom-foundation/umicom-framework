@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant bond schedule data shared with callers of this public contract.
+ */
 typedef struct UmiQuantBondSchedule {
     int32_t maturity_days;
     int32_t frequency_days;

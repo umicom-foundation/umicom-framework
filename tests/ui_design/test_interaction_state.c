@@ -20,4 +20,8 @@
 #include "umicom/ui/design/interaction_state.h"
 
 #include <string.h>
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { return strcmp(umi_design_interaction_state_name(UMI_DESIGN_INTERACTION_INVALID),"invalid")==0 ? 0 : 1; }

@@ -33,6 +33,9 @@ extern "C" {
 #define UMI_DIAGNOSTIC_SUPPRESSION_REASON_CAPACITY 512U
 #define UMI_DIAGNOSTIC_SUPPRESSION_OWNER_CAPACITY 128U
 
+/**
+ * List the named diagnostic suppression kind values accepted by this public contract.
+ */
 typedef enum UmiDiagnosticSuppressionKind {
     UMI_DIAGNOSTIC_SUPPRESSION_EXTERNAL = 1,
     UMI_DIAGNOSTIC_SUPPRESSION_IN_SOURCE = 2,
@@ -40,12 +43,19 @@ typedef enum UmiDiagnosticSuppressionKind {
     UMI_DIAGNOSTIC_SUPPRESSION_POLICY = 4
 } UmiDiagnosticSuppressionKind;
 
+/**
+ * List the named diagnostic suppression status values accepted by this public contract.
+ */
 typedef enum UmiDiagnosticSuppressionStatus {
     UMI_DIAGNOSTIC_SUPPRESSION_ACCEPTED = 1,
     UMI_DIAGNOSTIC_SUPPRESSION_UNDER_REVIEW = 2,
     UMI_DIAGNOSTIC_SUPPRESSION_REJECTED = 3
 } UmiDiagnosticSuppressionStatus;
 
+/**
+ * Represent the diagnostic suppression rule data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSuppressionRule {
     uint32_t struct_size;
     uint32_t api_version;
@@ -68,6 +78,10 @@ typedef struct UmiDiagnosticSuppressionRule {
     int enabled;
 } UmiDiagnosticSuppressionRule;
 
+/**
+ * Represent the diagnostic suppression decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSuppressionDecision {
     uint32_t struct_size;
     uint32_t api_version;
@@ -81,6 +95,10 @@ typedef struct UmiDiagnosticSuppressionDecision {
     int expired;
 } UmiDiagnosticSuppressionDecision;
 
+/**
+ * Represent the diagnostic suppression set snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDiagnosticSuppressionSetSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -93,34 +111,78 @@ typedef struct UmiDiagnosticSuppressionSetSnapshot {
     uint64_t revision;
 } UmiDiagnosticSuppressionSetSnapshot;
 
+/**
+ * Represent the diagnostic suppression set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDiagnosticSuppressionSet UmiDiagnosticSuppressionSet;
 
+/**
+ * Initialise diagnostic suppression set from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_diagnostic_suppression_set_create(
     UmiDiagnosticSuppressionSet **out_set);
+/**
+ * Release or reset state held by diagnostic suppression set so the same storage can be
+ * reused safely.
+ */
 void umi_diagnostic_suppression_set_destroy(
     UmiDiagnosticSuppressionSet *set);
+/**
+ * Release or reset state held by diagnostic suppression set so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_diagnostic_suppression_set_clear(
     UmiDiagnosticSuppressionSet *set);
+/**
+ * Provide the diagnostic suppression set upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_suppression_set_upsert(
     UmiDiagnosticSuppressionSet *set,
     const UmiDiagnosticSuppressionRule *rule);
+/**
+ * Remove diagnostic suppression set while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_diagnostic_suppression_set_remove(
     UmiDiagnosticSuppressionSet *set,
     const char *rule_id);
+/**
+ * Find diagnostic suppression set while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_diagnostic_suppression_set_at(
     const UmiDiagnosticSuppressionSet *set,
     size_t position,
     UmiDiagnosticSuppressionRule *out_rule);
+/**
+ * Provide the diagnostic suppression set evaluate operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_suppression_set_evaluate(
     const UmiDiagnosticSuppressionSet *set,
     const UmiDiagnosticProviderFinding *finding,
     uint64_t timestamp_ns,
     UmiDiagnosticSuppressionDecision *out_decision);
+/**
+ * Provide the diagnostic suppression set snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_diagnostic_suppression_set_snapshot(
     const UmiDiagnosticSuppressionSet *set,
     UmiDiagnosticSuppressionSetSnapshot *out_snapshot);
+/**
+ * Return the number of records represented by diagnostic suppression set without changing
+ * their state.
+ */
 size_t umi_diagnostic_suppression_set_count(
     const UmiDiagnosticSuppressionSet *set);
+/**
+ * Provide the diagnostic suppression set revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_diagnostic_suppression_set_revision(
     const UmiDiagnosticSuppressionSet *set);
 

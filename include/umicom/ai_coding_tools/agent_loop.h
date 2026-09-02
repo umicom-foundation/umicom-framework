@@ -35,6 +35,10 @@ typedef UmiStatus (*UmiAiCodingToolApprovalCallback)(
     const UmiAiCodingToolCall *call,
     int *out_approved);
 
+/**
+ * Represent the ai coding tool loop config data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingToolLoopConfig {
     uint32_t maximum_tool_turns;
     uint32_t max_output_tokens;
@@ -44,6 +48,10 @@ typedef struct UmiAiCodingToolLoopConfig {
     void *approval_user_data;
 } UmiAiCodingToolLoopConfig;
 
+/**
+ * Represent the ai coding tool loop result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingToolLoopResult {
     UmiStatus status;
     uint32_t provider_turns;
@@ -57,9 +65,17 @@ typedef struct UmiAiCodingToolLoopResult {
     int completed;
 } UmiAiCodingToolLoopResult;
 
+/**
+ * Initialise ai coding tool loop config from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_tool_loop_config_init(
     UmiAiCodingToolLoopConfig *config);
 
+/**
+ * Perform ai coding tool agent loop through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_ai_coding_tool_agent_loop_run(
     UmiAiRuntime *runtime,
     UmiAiCodingToolEnvironment *environment,

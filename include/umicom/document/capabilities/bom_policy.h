@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_BOM_POLICY "umicom.document.encoding.bom_policy"
 
+/**
+ * Provide the document capability bom policy operation used by this module and its client
+ * applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_bom_policy(void);
 

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/terminal_ring_buffer.h"
 
+/*
+ * Provide the developer capability terminal ring buffer operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_ring_buffer(void)
 {

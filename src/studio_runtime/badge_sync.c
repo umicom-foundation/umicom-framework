@@ -16,11 +16,13 @@
 
 #include <limits.h>
 
+/* Provide the bounded badge operation used by this module and its client applications. */
 static uint32_t bounded_badge(size_t value)
 {
     return value > UINT32_MAX ? UINT32_MAX : (uint32_t)value;
 }
 
+/* Provide the set badge operation used by this module and its client applications. */
 static UmiStatus set_badge(
     UmiApplicationShellRegistry *registry,
     const char *contribution_id,
@@ -32,7 +34,9 @@ static UmiStatus set_badge(
         contribution_id,
         &contribution);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_OK;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_application_shell_registry_set_state(
@@ -44,6 +48,7 @@ static UmiStatus set_badge(
         badge);
 }
 
+/* Provide the studio badge sync operation used by this module and its client applications. */
 UmiStatus umi_studio_badge_sync(
     UmiStudioRuntimeBindings *bindings,
     const UmiIdeIntegrationPlatformSnapshot *snapshot)
@@ -51,13 +56,19 @@ UmiStatus umi_studio_badge_sync(
     UmiStatus status;
     size_t severe = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (bindings == NULL || snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_studio_runtime_bindings_validate(bindings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (snapshot->context.has_problems) {
         severe =
             snapshot->context.problems.errors +
@@ -68,6 +79,7 @@ UmiStatus umi_studio_badge_sync(
         bindings->shell_registry,
         "umicom.shell.status-bar.problems",
         bounded_badge(severe));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_badge(
             bindings->shell_registry,
@@ -76,6 +88,7 @@ UmiStatus umi_studio_badge_sync(
                 ? bounded_badge(snapshot->context.source_control.change_count)
                 : 0U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_badge(
             bindings->shell_registry,
@@ -84,6 +97,7 @@ UmiStatus umi_studio_badge_sync(
                 ? bounded_badge(snapshot->context.tests.result_count)
                 : 0U);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_badge(
             bindings->shell_registry,

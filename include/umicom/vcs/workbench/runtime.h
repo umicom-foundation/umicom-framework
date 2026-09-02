@@ -26,8 +26,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs workbench runtime data shared with callers of this public contract.
+ */
 typedef struct UmiVcsWorkbenchRuntime UmiVcsWorkbenchRuntime;
 
+/**
+ * Represent the vcs workbench runtime snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchRuntimeSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -49,10 +56,22 @@ typedef struct UmiVcsWorkbenchRuntimeSnapshot {
     uint64_t revision;
 } UmiVcsWorkbenchRuntimeSnapshot;
 
+/**
+ * Initialise vcs workbench runtime from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_vcs_workbench_runtime_create(
     UmiVcsWorkbenchRuntime **out_runtime);
+/**
+ * Release or reset state held by vcs workbench runtime so the same storage can be reused
+ * safely.
+ */
 void umi_vcs_workbench_runtime_destroy(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime open compare operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_open_compare(
     UmiVcsWorkbenchRuntime *runtime,
     const char *session_id,
@@ -61,6 +80,10 @@ UmiStatus umi_vcs_workbench_runtime_open_compare(
     const char *left_text,
     const char *right_text,
     const UmiVcsAdvancedDiffOptions *options);
+/**
+ * Provide the vcs workbench runtime open merge operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_open_merge(
     UmiVcsWorkbenchRuntime *runtime,
     const char *session_id,
@@ -68,29 +91,69 @@ UmiStatus umi_vcs_workbench_runtime_open_merge(
     const char *base_text,
     const char *ours_text,
     const char *theirs_text);
+/**
+ * Provide the vcs workbench runtime begin directory compare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_begin_directory_compare(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime begin partial stage operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_begin_partial_stage(
     UmiVcsWorkbenchRuntime *runtime,
     const char *repository_root,
     int reverse);
+/**
+ * Provide the vcs workbench runtime begin review operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_begin_review(
     UmiVcsWorkbenchRuntime *runtime,
     const char *session_id);
+/**
+ * Provide the vcs workbench runtime snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_vcs_workbench_runtime_snapshot(
     const UmiVcsWorkbenchRuntime *runtime,
     UmiVcsWorkbenchRuntimeSnapshot *out_snapshot);
 
+/**
+ * Provide the vcs workbench runtime compare operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchCompareModel *umi_vcs_workbench_runtime_compare(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime difference map operation used by this module and its
+ * client applications.
+ */
 UmiVcsWorkbenchDifferenceMap *umi_vcs_workbench_runtime_difference_map(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime directory operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchDirectoryModel *umi_vcs_workbench_runtime_directory(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime merge operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchMergeModel *umi_vcs_workbench_runtime_merge(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime partial stage operation used by this module and its
+ * client applications.
+ */
 UmiVcsWorkbenchPartialStageModel *umi_vcs_workbench_runtime_partial_stage(
     UmiVcsWorkbenchRuntime *runtime);
+/**
+ * Provide the vcs workbench runtime review operation used by this module and its client
+ * applications.
+ */
 UmiVcsWorkbenchReviewSession *umi_vcs_workbench_runtime_review(
     UmiVcsWorkbenchRuntime *runtime);
 

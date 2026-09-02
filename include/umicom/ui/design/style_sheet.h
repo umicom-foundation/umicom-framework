@@ -28,6 +28,9 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/style_rule.h"
+/**
+ * Represent the design style sheet data shared with callers of this public contract.
+ */
 typedef struct UmiDesignStyleSheet { char id[UMI_DESIGN_ID_CAPACITY]; UmiDesignStyleRule rules[UMI_DESIGN_MAX_ITEMS]; size_t count; } UmiDesignStyleSheet;
 /* Append a validated component style rule to the bounded stylesheet. */
 UmiStatus umi_design_style_sheet_add(UmiDesignStyleSheet *sheet, const UmiDesignStyleRule *rule);

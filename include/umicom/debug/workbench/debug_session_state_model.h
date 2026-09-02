@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the debug workbench debug session state model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDebugWorkbenchDebugSessionStateModel {
     char session_id[UMI_DEBUG_WORKBENCH_ID_CAPACITY];
     UmiDebugWorkbenchSessionPhase phase;
@@ -33,9 +37,25 @@ typedef struct UmiDebugWorkbenchDebugSessionStateModel {
     uint64_t revision;
 } UmiDebugWorkbenchDebugSessionStateModel;
 
+/**
+ * Initialise debug workbench debug session state model from caller-provided values so
+ * later operations receive a known state.
+ */
 UmiStatus umi_debug_workbench_debug_session_state_model_init(UmiDebugWorkbenchDebugSessionStateModel *model, const char *session_id);
+/**
+ * Provide the debug workbench debug session state model transition operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_session_state_model_transition(UmiDebugWorkbenchDebugSessionStateModel *model, UmiDebugWorkbenchSessionPhase phase);
+/**
+ * Provide the debug workbench debug session state model record stop operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_debug_workbench_debug_session_state_model_record_stop(UmiDebugWorkbenchDebugSessionStateModel *model);
+/**
+ * Check that debug workbench debug session state model satisfies its contract before
+ * another service relies on it.
+ */
 int umi_debug_workbench_debug_session_state_model_valid(const UmiDebugWorkbenchDebugSessionStateModel *model);
 
 #ifdef __cplusplus

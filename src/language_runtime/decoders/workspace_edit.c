@@ -26,6 +26,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Provide the language runtime decode workspace edit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_decode_workspace_edit(
     const char *json,
     UmiLanguageRuntimeWorkspaceEdit *out)
@@ -38,15 +42,21 @@ UmiStatus umi_language_runtime_decode_workspace_edit(
     size_t entry_count;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (json == NULL || out == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     (void)memset(out, 0, sizeof(*out));
     status = umi_language_runtime_json_parse(json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     result_token = umi_language_runtime_decoder_result_token(&document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (result_token < 0 ||
         umi_language_runtime_json_is_null(&document, result_token)) {
         return UMI_STATUS_OK;
@@ -56,16 +66,23 @@ UmiStatus umi_language_runtime_decode_workspace_edit(
         &document,
         result_token,
         "changes");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (changes_token < 0) return UMI_STATUS_NOT_IMPLEMENTED;
 
     entry_count = umi_language_runtime_json_object_count(
         &document,
         changes_token);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (entry_count == 0U) return UMI_STATUS_OK;
 
     edits = (UmiLanguageRuntimeTextEditList *)calloc(1U, sizeof(*edits));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (edits == NULL) return UMI_STATUS_OUT_OF_MEMORY;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (entry_index = 0U; entry_index < entry_count; ++entry_index) {
         int key_token = -1;
         int value_token = -1;
@@ -78,6 +95,7 @@ UmiStatus umi_language_runtime_decode_workspace_edit(
             entry_index,
             &key_token,
             &value_token);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto cleanup;
 
         status = umi_language_runtime_json_string(
@@ -85,6 +103,7 @@ UmiStatus umi_language_runtime_decode_workspace_edit(
             key_token,
             uri,
             sizeof(uri));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto cleanup;
 
         /* The same heap block is safely reused for each URI in the map. */
@@ -93,9 +112,12 @@ UmiStatus umi_language_runtime_decode_workspace_edit(
             &document,
             value_token,
             edits);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) goto cleanup;
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (edit_index = 0U; edit_index < edits->count; ++edit_index) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (out->count >= UMI_LANGUAGE_RUNTIME_MAX_EDITS) {
                 status = UMI_STATUS_CAPACITY_EXCEEDED;
                 goto cleanup;

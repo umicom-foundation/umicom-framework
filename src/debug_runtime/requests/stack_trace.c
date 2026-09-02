@@ -17,6 +17,10 @@
 #include <string.h>
 #include "umicom/language_runtime/json_writer.h"
 
+/*
+ * Provide the debug runtime request stack trace operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_debug_runtime_request_stack_trace(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t thread_id,
@@ -27,6 +31,10 @@ UmiStatus umi_debug_runtime_request_stack_trace(
     char arguments[512];
     UmiLanguageRuntimeJsonWriter writer;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (adapter == NULL || thread_id == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -39,6 +47,7 @@ UmiStatus umi_debug_runtime_request_stack_trace(
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"levels\":");
     (void)umi_language_runtime_json_writer_uint64(&writer, levels);
     (void)umi_language_runtime_json_writer_raw(&writer, "}");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (writer.status != UMI_STATUS_OK) return writer.status;
 
     return umi_debug_runtime_request_raw(

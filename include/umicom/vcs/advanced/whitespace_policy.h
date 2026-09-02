@@ -22,8 +22,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the vcs advanced whitespace normalize operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_advanced_whitespace_normalize(const char *input,UmiVcsWhitespaceMode mode,
                                                  char *output,size_t capacity);
+/**
+ * Provide the vcs advanced whitespace equal operation used by this module and its client
+ * applications.
+ */
 int umi_vcs_advanced_whitespace_equal(const char *left,const char *right,UmiVcsWhitespaceMode mode);
 #ifdef __cplusplus
 }

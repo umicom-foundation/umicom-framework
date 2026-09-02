@@ -117,11 +117,19 @@ static const UmiApplicationShellPersonaDefinition PERSONAS[] = {
     }
 };
 
+/*
+ * Return the number of records represented by application shell persona without changing
+ * their state.
+ */
 size_t umi_application_shell_persona_count(void)
 {
     return sizeof(PERSONAS) / sizeof(PERSONAS[0]);
 }
 
+/*
+ * Find application shell persona while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationShellPersonaDefinition *
 umi_application_shell_persona_at(size_t index)
 {
@@ -130,14 +138,24 @@ umi_application_shell_persona_at(size_t index)
         : NULL;
 }
 
+/*
+ * Find application shell persona while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiApplicationShellPersonaDefinition *
 umi_application_shell_persona_find(const char *persona_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (persona_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_application_shell_persona_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(PERSONAS[index].persona_id, persona_id) == 0) {
             return &PERSONAS[index];
         }
@@ -146,11 +164,19 @@ umi_application_shell_persona_find(const char *persona_id)
     return NULL;
 }
 
+/*
+ * Check that application shell persona satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_shell_persona_validate(
     const UmiApplicationShellPersonaDefinition *persona)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (persona == NULL ||
         persona->structure_size != sizeof(*persona) ||
         persona->api_version != UMI_APPLICATION_SHELL_API_VERSION ||
@@ -163,7 +189,9 @@ UmiStatus umi_application_shell_persona_validate(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < persona->profile_count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_application_shell_builtin_profile_find(
                 persona->profile_ids[index]) == NULL) {
             return UMI_STATUS_NOT_FOUND;
@@ -173,6 +201,10 @@ UmiStatus umi_application_shell_persona_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the application shell persona install operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_shell_persona_install(
     UmiApplicationShellRegistry *registry,
     const UmiApplicationShellPersonaDefinition *persona)
@@ -180,17 +212,24 @@ UmiStatus umi_application_shell_persona_install(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
     status = umi_application_shell_persona_validate(persona);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < persona->profile_count; ++index) {
         const UmiApplicationShellProfileDefinition *profile =
             umi_application_shell_builtin_profile_find(
                 persona->profile_ids[index]);
 
         status = umi_application_shell_profile_install(registry, profile);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

@@ -27,8 +27,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics dashboard filter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAnalyticsDashboardFilter { char key[UMI_ANALYTICS_ID_CAPACITY]; char value[UMI_ANALYTICS_VALUE_CAPACITY]; int case_sensitive; } UmiAnalyticsDashboardFilter;
+/**
+ * Initialise analytics dashboard filter from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_dashboard_filter_init(UmiAnalyticsDashboardFilter *item);
+/**
+ * Check that analytics dashboard filter satisfies its contract before another service
+ * relies on it.
+ */
 int umi_analytics_dashboard_filter_valid(const UmiAnalyticsDashboardFilter *item);
 
 #ifdef __cplusplus

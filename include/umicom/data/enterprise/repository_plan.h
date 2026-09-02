@@ -25,7 +25,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data repository operation data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDataRepositoryOperation { char operation_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char entity_id[UMI_DATA_ENTERPRISE_ID_CAPACITY]; char key[UMI_DATA_ENTERPRISE_ID_CAPACITY]; UmiDataChangeKind kind; uint32_t order; } UmiDataRepositoryOperation;
+/**
+ * Represent the data repository plan data shared with callers of this public contract.
+ */
 typedef struct UmiDataRepositoryPlan { UmiDataRepositoryOperation items[UMI_DATA_ENTERPRISE_MAX_OPERATIONS]; size_t count; } UmiDataRepositoryPlan;
 /* Reset a repository operation plan. */ void umi_data_repository_plan_init(UmiDataRepositoryPlan *plan);
 /* Build an ordered plan from a change tracker. */ UmiStatus umi_data_repository_plan_build(UmiDataRepositoryPlan *plan,const UmiDataChangeTracker *tracker);

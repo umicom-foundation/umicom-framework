@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise distributed job data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseDistributedJob { char job_id[UMI_ENTERPRISE_ID_CAPACITY]; char kind[UMI_ENTERPRISE_NAME_CAPACITY]; int priority; unsigned retry_count; unsigned max_retries; UmiEnterpriseWorkState state; } UmiEnterpriseDistributedJob;
 /* Initialise a pending distributed job with bounded priority and retry count. */
 UmiStatus umi_enterprise_distributed_job_init(UmiEnterpriseDistributedJob *job,const char *job_id,const char *kind,int priority,unsigned max_retries);

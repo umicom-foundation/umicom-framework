@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the portfolio registry data shared with callers of this public contract.
+ */
 typedef struct UmiPortfolioRegistry { UmiFinancialPortfolio items[UMI_FINANCIAL_CORE_MAX_ITEMS]; size_t count; } UmiPortfolioRegistry;
 /* Reset the bounded registry. */ void umi_portfolio_registry_init(UmiPortfolioRegistry *registry);
 /* Add a unique item. */ UmiStatus umi_portfolio_registry_add(UmiPortfolioRegistry *registry,const UmiFinancialPortfolio *item);

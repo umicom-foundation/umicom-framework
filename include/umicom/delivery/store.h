@@ -28,13 +28,27 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the generation store data shared with callers of this public contract.
+ */
 typedef struct UmiGenerationStore {
     UmiGeneration generations[UMI_DELIVERY_MAX_RELEASES];
     size_t count;
 } UmiGenerationStore;
+/**
+ * Initialise generation store from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_generation_store_init(UmiGenerationStore *store);
+/**
+ * Add generation store only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_generation_store_add(UmiGenerationStore *store,
                                    const UmiGeneration *generation);
+/**
+ * Provide the generation store active operation used by this module and its client
+ * applications.
+ */
 const UmiGeneration *umi_generation_store_active(const UmiGenerationStore *store);
 
 #ifdef __cplusplus

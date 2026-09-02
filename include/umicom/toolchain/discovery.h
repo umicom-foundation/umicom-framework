@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the toolchain discovery request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainDiscoveryRequest {
     const char *explicit_root;
     const char *preferred_profile;
@@ -37,6 +41,10 @@ typedef struct UmiToolchainDiscoveryRequest {
     void *diagnostic_user_data;
 } UmiToolchainDiscoveryRequest;
 
+/**
+ * Represent the toolchain discovery report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainDiscoveryReport {
     UmiToolchainProfile profile;
     size_t tools_found;
@@ -48,16 +56,32 @@ typedef struct UmiToolchainDiscoveryReport {
     int c23_probe_passed;
 } UmiToolchainDiscoveryReport;
 
+/**
+ * Initialise toolchain discovery request from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_discovery_request_init(
     UmiToolchainDiscoveryRequest *request);
 
+/**
+ * Provide the toolchain discover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_discover(
     const UmiToolchainDiscoveryRequest *request,
     UmiToolchainDiscoveryReport *out_report);
 
+/**
+ * Provide the toolchain find on path operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_find_on_path(const char *executable,
                                      char *out_path,
                                      size_t capacity);
+/**
+ * Provide the toolchain compile probe operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_compile_probe(
     const UmiToolchainProfile *profile,
     UmiToolchainDiscoveryReport *in_out_report);

@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the context codec data shared with callers of this public contract.
+ */
 typedef struct UmiContextCodec {
     uint32_t structure_size;
     char codec_id[UMI_CONTEXT_VALUE_CAPACITY];
@@ -33,12 +36,39 @@ typedef struct UmiContextCodec {
     bool enabled;
     uint64_t revision;
 } UmiContextCodec;
+/**
+ * Initialise context codec from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_context_codec_init(UmiContextCodec *state);
+/**
+ * Provide the context codec set field operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_codec_set_field(UmiContextCodec *state,size_t field_index,const char *value);
+/**
+ * Provide the context codec field operation used by this module and its client
+ * applications.
+ */
 const char *umi_context_codec_field(const UmiContextCodec *state,size_t field_index);
+/**
+ * Provide the context codec record success operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_codec_record_success(UmiContextCodec *state,uint64_t sequence);
+/**
+ * Provide the context codec record failure operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_context_codec_record_failure(UmiContextCodec *state,UmiStatus status,uint64_t sequence);
+/**
+ * Check that context codec satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_context_codec_validate(const UmiContextCodec *state);
+/**
+ * Provide the context codec covers sequence operation used by this module and its client
+ * applications.
+ */
 bool umi_context_codec_covers_sequence(const UmiContextCodec *state,uint64_t sequence);
 #ifdef __cplusplus
 }

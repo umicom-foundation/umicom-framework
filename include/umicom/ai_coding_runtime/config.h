@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding runtime config data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingRuntimeConfig {
     char provider_id[UMI_AI_ID_CAPACITY];
     char model_id[UMI_AI_ID_CAPACITY];
@@ -37,7 +40,15 @@ typedef struct UmiAiCodingRuntimeConfig {
     int allow_sensitive_context;
 } UmiAiCodingRuntimeConfig;
 
+/**
+ * Initialise ai coding runtime config from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_runtime_config_init(UmiAiCodingRuntimeConfig *config);
+/**
+ * Check that ai coding runtime config satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ai_coding_runtime_config_validate(
     const UmiAiCodingRuntimeConfig *config);
 

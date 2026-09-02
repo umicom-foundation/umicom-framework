@@ -29,6 +29,9 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the design tree spec data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTreeSpec {
     uint16_t maximum_depth;
     int virtualised;

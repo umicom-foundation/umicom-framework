@@ -26,6 +26,7 @@
 
 #define UMI_SCAFFOLD_TEMPLATE_CAPACITY 262144U
 
+/* Provide the scaffold replace operation used by this module and its client applications. */
 static UmiStatus umi_scaffold_replace(char *text,
                                       size_t capacity,
                                       const char *token,
@@ -38,17 +39,30 @@ static UmiStatus umi_scaffold_replace(char *text,
     size_t token_length;
     size_t replacement_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (text == NULL || token == NULL || replacement == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     buffer = (char *)malloc(capacity);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (buffer == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     token_length = strlen(token);
     replacement_length = strlen(replacement);
     cursor = text;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while ((match = strstr(cursor, token)) != NULL) {
         size_t prefix = (size_t)(match - cursor);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (used + prefix + replacement_length + 1U > capacity) {
             free(buffer);
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -59,6 +73,7 @@ static UmiStatus umi_scaffold_replace(char *text,
         used += replacement_length;
         cursor = match + token_length;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (used + strlen(cursor) + 1U > capacity) {
         free(buffer);
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -69,6 +84,10 @@ static UmiStatus umi_scaffold_replace(char *text,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the repository scaffold slug operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_repository_scaffold_slug(const char *name,
                                        char *out_slug,
                                        size_t capacity)
@@ -77,18 +96,26 @@ UmiStatus umi_repository_scaffold_slug(const char *name,
     size_t write_index = 0U;
     int previous_dash = 0;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (name == NULL || out_slug == NULL || capacity < 2U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (read_index = 0U; name[read_index] != '\0'; ++read_index) {
         unsigned char value = (unsigned char)name[read_index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (isalnum(value)) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (write_index + 1U >= capacity) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
             }
             out_slug[write_index++] = (char)tolower(value);
             previous_dash = 0;
-        } else if (!previous_dash && write_index > 0U) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (!previous_dash && write_index > 0U) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (write_index + 1U >= capacity) {
                 return UMI_STATUS_CAPACITY_EXCEEDED;
             }
@@ -96,6 +123,10 @@ UmiStatus umi_repository_scaffold_slug(const char *name,
             previous_dash = 1;
         }
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (write_index > 0U && out_slug[write_index - 1U] == '-') {
         --write_index;
     }
@@ -103,17 +134,26 @@ UmiStatus umi_repository_scaffold_slug(const char *name,
     return write_index > 0U ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
 }
 
+/*
+ * Provide the scaffold identifier operation used by this module and its client
+ * applications.
+ */
 static void umi_scaffold_identifier(const char *slug,
                                     char *out_identifier,
                                     size_t capacity)
 {
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; slug[index] != '\0' && index + 1U < capacity; ++index) {
         out_identifier[index] = slug[index] == '-' ? '_' : slug[index];
     }
     out_identifier[index] = '\0';
 }
 
+/*
+ * Provide the scaffold render text operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_scaffold_render_text(
     const UmiRepositoryScaffoldRequest *request,
     const UmiRepositoryScaffoldReport *report,
@@ -127,13 +167,19 @@ static UmiStatus umi_scaffold_render_text(
     char frontend_web[8];
     UmiStatus status = umi_fs_read_text(source, &text, NULL);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (strlen(text) + 8192U > UMI_SCAFFOLD_TEMPLATE_CAPACITY) {
         umi_fs_free_text(text);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     {
         char *expanded = (char *)calloc(UMI_SCAFFOLD_TEMPLATE_CAPACITY, 1U);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (expanded == NULL) {
             umi_fs_free_text(text);
             return UMI_STATUS_OUT_OF_MEMORY;
@@ -169,36 +215,43 @@ static UmiStatus umi_scaffold_render_text(
                                   UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                   "@APP_NAME@",
                                   report->application_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(text,
                                       UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                       "@APP_ID@",
                                       report->application_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(text,
                                       UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                       "@APP_SLUG@",
                                       report->application_slug);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(text,
                                       UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                       "@APP_IDENTIFIER@",
                                       identifier);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(text,
                                       UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                       "@ENABLE_CONSOLE@",
                                       frontend_console);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(text,
                                       UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                       "@ENABLE_GTK@",
                                       frontend_gtk);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(text,
                                       UMI_SCAFFOLD_TEMPLATE_CAPACITY,
                                       "@ENABLE_WEB@",
                                       frontend_web);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = umi_scaffold_replace(
             text,
@@ -208,6 +261,7 @@ static UmiStatus umi_scaffold_render_text(
                 ? "submodule"
                 : "installed"
         );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_fs_write_text(destination, text);
     }
@@ -215,6 +269,10 @@ static UmiStatus umi_scaffold_render_text(
     return status;
 }
 
+/*
+ * Provide the scaffold render path operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_scaffold_render_path(
     const UmiRepositoryScaffoldReport *report,
     const char *relative,
@@ -227,9 +285,11 @@ static UmiStatus umi_scaffold_render_path(
                             identifier,
                             sizeof(identifier));
     written = snprintf(out_relative, capacity, "%s", relative);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_scaffold_replace(out_relative,
                              capacity,
                              "@APP_SLUG@",
@@ -243,6 +303,10 @@ static UmiStatus umi_scaffold_render_path(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the scaffold copy tree operation used by this module and its client
+ * applications.
+ */
 static UmiStatus umi_scaffold_copy_tree(
     const UmiRepositoryScaffoldRequest *request,
     UmiRepositoryScaffoldReport *report,
@@ -260,23 +324,35 @@ static UmiStatus umi_scaffold_copy_tree(
                          sizeof(source_directory),
                          source_root,
                          relative_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_scaffold_render_path(report,
                                       relative_root,
                                       rendered_relative,
                                       sizeof(rendered_relative));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_fs_join(destination_directory,
                          sizeof(destination_directory),
                          report->repository_root,
                          rendered_relative);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_fs_make_directories(destination_directory);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     report->directories_created += 1U;
 
     directory = opendir(source_directory);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (directory == NULL) return UMI_STATUS_IO_ERROR;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while ((entry = readdir(directory)) != NULL) {
         char source_path[UMI_PATH_CAPACITY];
         char child_relative[UMI_PATH_CAPACITY];
@@ -285,22 +361,27 @@ static UmiStatus umi_scaffold_copy_tree(
         const char *name = entry->d_name;
         size_t name_length;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
         status = umi_fs_join(source_path,
                              sizeof(source_path),
                              source_directory,
                              name);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         status = umi_fs_join(child_relative,
                              sizeof(child_relative),
                              relative_root,
                              name);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_fs_is_directory(source_path)) {
             status = umi_scaffold_copy_tree(request,
                                             report,
                                             source_root,
                                             child_relative);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) break;
             continue;
         }
@@ -308,8 +389,10 @@ static UmiStatus umi_scaffold_copy_tree(
                                           child_relative,
                                           rendered_child,
                                           sizeof(rendered_child));
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         name_length = strlen(rendered_child);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (name_length > 3U &&
             strcmp(rendered_child + name_length - 3U, ".in") == 0) {
             rendered_child[name_length - 3U] = '\0';
@@ -318,11 +401,13 @@ static UmiStatus umi_scaffold_copy_tree(
                              sizeof(destination_path),
                              report->repository_root,
                              rendered_child);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         status = umi_scaffold_render_text(request,
                                           report,
                                           source_path,
                                           destination_path);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) break;
         report->files_created += 1U;
     }
@@ -330,6 +415,10 @@ static UmiStatus umi_scaffold_copy_tree(
     return status;
 }
 
+/*
+ * Initialise repository scaffold from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_repository_scaffold_create(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -340,6 +429,10 @@ UmiStatus umi_repository_scaffold_create(
     UmiStatus status;
     const char *framework_url;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (profile == NULL || request == NULL || out_report == NULL ||
         request->template_root == NULL ||
         request->destination_parent == NULL ||
@@ -358,21 +451,27 @@ UmiStatus umi_repository_scaffold_create(
         out_report->repository_name,
         sizeof(out_report->repository_name)
     );
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(out_report->application_slug,
                    sizeof(out_report->application_slug),
                    "%s",
                    out_report->repository_name);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (request->application_id != NULL &&
         request->application_id[0] != '\0') {
         (void)snprintf(out_report->application_id,
                        sizeof(out_report->application_id),
                        "%s",
                        request->application_id);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         static const char prefix[] = "org.umicom.";
         size_t prefix_length = sizeof(prefix) - 1U;
         size_t slug_length = strlen(out_report->application_slug);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (prefix_length + slug_length >=
             sizeof(out_report->application_id)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -388,20 +487,25 @@ UmiStatus umi_repository_scaffold_create(
                          sizeof(out_report->repository_root),
                          request->destination_parent,
                          out_report->repository_name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->dry_run) {
         return UMI_STATUS_OK;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_fs_exists(out_report->repository_root)) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
     status = umi_fs_make_directories(out_report->repository_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_scaffold_copy_tree(request,
                                     out_report,
                                     request->template_root,
                                     ".");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(&repository_request, 0, sizeof(repository_request));
@@ -418,8 +522,10 @@ UmiStatus umi_repository_scaffold_create(
                                        environment,
                                        &repository_request,
                                        &out_report->repository_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->framework_link == UMI_FRAMEWORK_LINK_SUBMODULE) {
         framework_url = request->framework_url != NULL
             ? request->framework_url
@@ -435,12 +541,14 @@ UmiStatus umi_repository_scaffold_create(
                 : "main",
             0
         );
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         out_report->framework_linked = 1;
-    } else if (request->framework_link == UMI_FRAMEWORK_LINK_VENDORED) {
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (request->framework_link == UMI_FRAMEWORK_LINK_VENDORED) {
         return UMI_STATUS_NOT_IMPLEMENTED;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->create_initial_commit) {
         repository_request.initialise_local = 0;
         repository_request.create_initial_commit = 1;
@@ -448,13 +556,16 @@ UmiStatus umi_repository_scaffold_create(
                                            environment,
                                            &repository_request,
                                            &out_report->repository_report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (request->create_remote) {
         status = umi_repository_create_remote(profile,
                                               environment,
                                               &repository_request,
                                               &out_report->repository_report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;

@@ -21,6 +21,10 @@
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/experience_plan.h"
 
+/*
+ * Exercise test experience priority and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 int test_experience_priority(void)
 {
     const UmiApplicationExperienceDefinition *trader =

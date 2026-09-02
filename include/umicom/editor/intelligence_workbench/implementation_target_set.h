@@ -24,11 +24,35 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor intel implementation target set data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorIntelImplementationTargetSet { UmiEditorIntelEntry items[UMI_EDITOR_INTEL_MAX_ITEMS]; size_t count; uint64_t revision; } UmiEditorIntelImplementationTargetSet;
+/**
+ * Initialise editor intel implementation target set from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_intel_implementation_target_set_init(UmiEditorIntelImplementationTargetSet *model);
+/**
+ * Add editor intel implementation target set only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_editor_intel_implementation_target_set_add(UmiEditorIntelImplementationTargetSet *model,const UmiEditorIntelEntry *entry);
+/**
+ * Find editor intel implementation target set while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiEditorIntelEntry *umi_editor_intel_implementation_target_set_find(const UmiEditorIntelImplementationTargetSet *model,const char *id);
+/**
+ * Release or reset state held by editor intel implementation target set so the same
+ * storage can be reused safely.
+ */
 UmiStatus umi_editor_intel_implementation_target_set_clear(UmiEditorIntelImplementationTargetSet *model);
+/**
+ * Check that editor intel implementation target set satisfies its contract before another
+ * service relies on it.
+ */
 int umi_editor_intel_implementation_target_set_valid(const UmiEditorIntelImplementationTargetSet *model);
 
 #ifdef __cplusplus

@@ -24,6 +24,10 @@
 #include <stdio.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s\n", #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiIntegrationTopology t;
     UmiIntegrationDependency d={UMI_INTEGRATION_TARGET_CAPABILITY,UMI_INTEGRATION_DEPENDENCY_REQUIRED,"cap/1"};

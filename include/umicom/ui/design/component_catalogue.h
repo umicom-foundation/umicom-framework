@@ -28,6 +28,10 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/component_descriptor.h"
+/**
+ * Represent the design component catalogue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignComponentCatalogue { UmiDesignComponentDescriptor items[UMI_DESIGN_MAX_ITEMS]; size_t count; uint64_t revision; } UmiDesignComponentCatalogue;
 /* Register or replace one semantic component descriptor by identifier. */
 UmiStatus umi_design_component_catalogue_upsert(UmiDesignComponentCatalogue *catalogue, const UmiDesignComponentDescriptor *descriptor);

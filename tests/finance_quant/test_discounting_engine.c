@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/discounting_engine.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     double amounts[2]={100.0,100.0}; double rates[2]={0.0,0.0}; int32_t days[2]={30,60}; double pv=0.0;

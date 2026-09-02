@@ -26,6 +26,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Check that time in force satisfies its contract before another service relies on it.
+ */
 int umi_time_in_force_valid(UmiTimeInForce tif);
 #ifdef __cplusplus
 }

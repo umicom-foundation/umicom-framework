@@ -19,8 +19,13 @@
 /* Copy text while preserving deterministic bounded public ABI storage. */
 UmiStatus umi_appearance_copy_text(char *destination, size_t capacity, const char *source) {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U || source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
@@ -28,14 +33,24 @@ UmiStatus umi_appearance_copy_text(char *destination, size_t capacity, const cha
 
 /* Validate identifiers before they enter catalogues, graphs or persistence records. */
 int umi_appearance_id_valid(const char *identifier) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (identifier == NULL || identifier[0] == '\0') return 0;
     return strlen(identifier) < UMI_APPEARANCE_ID_CAPACITY;
 }
 
 /* Clamp scale factors used for DPI, text and user accessibility transforms. */
 UmiStatus umi_appearance_clamp_scale(double value, double minimum, double maximum, double *out_value) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_value == NULL || !isfinite(value) || !isfinite(minimum) || !isfinite(maximum) || minimum > maximum) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value < minimum) value = minimum;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (value > maximum) value = maximum;
     *out_value = value;
     return UMI_STATUS_OK;

@@ -22,6 +22,10 @@
 
 #include "umicom/editor/edit_engine.h"
 
+/*
+ * Exercise expect text and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void expect_text(UmiEditorEditEngine *engine, const char *expected)
 {
     UmiEditorTextBufferView view;
@@ -30,6 +34,10 @@ static void expect_text(UmiEditorEditEngine *engine, const char *expected)
     assert(memcmp(view.bytes, expected, view.byte_count) == 0);
 }
 
+/*
+ * Exercise command and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorEditCommandRequest command(UmiEditorEditCommandKind kind,
                                            size_t cursor)
 {
@@ -40,6 +48,10 @@ static UmiEditorEditCommandRequest command(UmiEditorEditCommandKind kind,
     return request;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorEditEngine *engine = NULL;

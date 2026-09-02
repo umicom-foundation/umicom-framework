@@ -21,4 +21,4 @@
 #include "umicom/repository/remediation_policy.h"
 #include <string.h>
 /* Enable only explicitly safe automatic actions; this batch itself remains plan-only. */
-void umi_repository_remediation_policy_init(UmiRepositoryRemediationPolicy *policy){if(!policy)return;(void)memset(policy,0,sizeof(*policy));policy->allow_safe_automatic=1;}
+void umi_repository_remediation_policy_init(UmiRepositoryRemediationPolicy *policy){/* Apply this branch only when its contract condition is satisfied. */ if(!policy)return;(void)memset(policy,0,sizeof(*policy));policy->allow_safe_automatic=1;}

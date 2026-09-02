@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_BACKUP_COPY "umicom.document.persistence.backup_copy"
 
+/**
+ * Copy document capability backup into module-owned storage so callers keep ownership of
+ * their input values.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_backup_copy(void);
 

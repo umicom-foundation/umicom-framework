@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui mosaic designer drag data shared with callers of this public contract.
+ */
 typedef struct UmiUiMosaicDesignerDrag {
     char workspace_id[UMI_UI_MOSAIC_ID_CAPACITY];
     char active_id[UMI_UI_MOSAIC_ID_CAPACITY];

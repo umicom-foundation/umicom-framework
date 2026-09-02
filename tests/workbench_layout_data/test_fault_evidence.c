@@ -15,6 +15,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise test service failure metrics and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_service_failure_metrics(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -46,6 +50,10 @@ static int test_service_failure_metrics(void)
     return 0;
 }
 
+/*
+ * Exercise test cursor failure evidence and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_cursor_failure_evidence(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -76,6 +84,10 @@ static int test_cursor_failure_evidence(void)
     return 0;
 }
 
+/*
+ * Exercise test outbox error capacity and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 static int test_outbox_error_capacity(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -110,6 +122,10 @@ static int test_outbox_error_capacity(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_service_failure_metrics() == 0,

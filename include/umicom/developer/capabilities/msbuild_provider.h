@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_MSBUILD_PROVIDER "umicom.developer.integration.msbuild_provider"
 
+/**
+ * Provide the developer capability msbuild provider operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_msbuild_provider(void);
 

@@ -20,6 +20,9 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/auction_book.h"
+/**
+ * Represent the trading auction match data shared with callers of this public contract.
+ */
 typedef struct UmiTradingAuctionMatch { UmiTradingPriceTicks clearing_ticks; UmiTradingQuantityLots executable_lots; UmiTradingQuantityLots imbalance_lots; bool matched; } UmiTradingAuctionMatch;
 /* Evaluate candidate prices drawn from submitted limit prices and select a clearing result. */
 UmiStatus umi_trading_auction_match_compute(const UmiTradingAuctionBook *book,UmiTradingAuctionMatch *out_match);

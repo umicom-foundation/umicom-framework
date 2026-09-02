@@ -45,25 +45,42 @@ typedef struct CompletionSinkContext {
     int truncated;
 } CompletionSinkContext;
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (destination == NULL || capacity == 0U) return;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL) source = "";
     length = strlen(source);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= capacity) length = capacity - 1U;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) (void)memcpy(destination, source, length);
     destination[length] = '\0';
 }
 
+/* Provide the validate policy operation used by this module and its client applications. */
 static UmiStatus validate_policy(const UmiEditorCompletionPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy == NULL ||
         policy->struct_size != (uint32_t)sizeof(*policy) ||
         policy->api_version != UMI_EDITOR_COMPLETION_ORCHESTRATION_API_VERSION ||
@@ -75,55 +92,76 @@ static UmiStatus validate_policy(const UmiEditorCompletionPolicy *policy)
     return UMI_STATUS_OK;
 }
 
+/* Provide the reserve reports operation used by this module and its client applications. */
 static UmiStatus reserve_reports(UmiEditorCompletionOrchestration *orchestration,
                                  size_t required)
 {
     size_t capacity;
     UmiEditorCompletionProviderReport *replacement;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= orchestration->report_capacity) return UMI_STATUS_OK;
     capacity = orchestration->report_capacity > 0U
         ? orchestration->report_capacity
         : 8U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (UmiEditorCompletionProviderReport *)realloc(
         orchestration->reports, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     orchestration->reports = replacement;
     orchestration->report_capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the add report operation used by this module and its client applications. */
 static UmiStatus add_report(
     UmiEditorCompletionOrchestration *orchestration,
     const UmiEditorCompletionProviderReport *report)
 {
     UmiStatus status = reserve_reports(orchestration,
                                        orchestration->report_count + 1U);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     orchestration->reports[orchestration->report_count++] = *report;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the provider blocked by policy operation used by this module and its client
+ * applications.
+ */
 static int provider_blocked_by_policy(
     const UmiEditorCompletionProviderDescriptor *descriptor,
     const UmiEditorCompletionPolicy *policy,
     const UmiEditorCompletionRequest *request)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->source == UMI_EDITOR_COMPLETION_SOURCE_AI &&
         (!policy->allow_ai || !request->allow_ai)) {
         return 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->requires_network &&
         (!policy->allow_remote || !request->allow_remote)) {
         return 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor->requires_workspace_trust &&
         (!policy->trusted_workspace || !request->trusted_workspace)) {
         return 1;
@@ -131,6 +169,7 @@ static int provider_blocked_by_policy(
     return 0;
 }
 
+/* Provide the collect candidate operation used by this module and its client applications. */
 static UmiStatus collect_candidate(
     const UmiEditorCompletionCandidate *candidate,
     void *user_data)
@@ -139,9 +178,14 @@ static UmiStatus collect_candidate(
     UmiEditorCompletionCandidate stored;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context == NULL || candidate == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_completion_request_is_cancelled(
             &context->orchestration->request)) {
         return UMI_STATUS_CANCELLED;
@@ -149,11 +193,13 @@ static UmiStatus collect_candidate(
     {
         size_t maximum_candidates =
             context->orchestration->policy.maximum_candidates;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (context->orchestration->request.maximum_candidates <
             maximum_candidates) {
             maximum_candidates =
                 context->orchestration->request.maximum_candidates;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_editor_completion_candidate_collection_count(
                 context->orchestration->candidates) >= maximum_candidates) {
             context->truncated = 1;
@@ -164,42 +210,55 @@ static UmiStatus collect_candidate(
     stored = *candidate;
     stored.struct_size = (uint32_t)sizeof(stored);
     stored.api_version = UMI_EDITOR_COMPLETION_CANDIDATE_API_VERSION;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (stored.provider_id[0] == '\0') {
         copy_text(stored.provider_id,
                   sizeof(stored.provider_id),
                   context->descriptor.id);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (stored.item.document_id[0] == '\0') {
         copy_text(stored.item.document_id,
                   sizeof(stored.item.document_id),
                   context->orchestration->request.document_id);
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (stored.request_id == 0U) {
         stored.request_id = context->orchestration->request.request_id;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (stored.document_revision == 0U) {
         stored.document_revision =
             context->orchestration->request.document_revision;
     }
     stored.provider_priority = context->descriptor.priority;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (stored.source == UMI_EDITOR_COMPLETION_SOURCE_OTHER) {
         stored.source = context->descriptor.source;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (context->descriptor.source == UMI_EDITOR_COMPLETION_SOURCE_AI) {
         stored.flags |= UMI_EDITOR_COMPLETION_CANDIDATE_AI;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (context->descriptor.requires_network) {
         stored.flags |= UMI_EDITOR_COMPLETION_CANDIDATE_REMOTE;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (context->descriptor.requires_workspace_trust) {
         stored.flags |= UMI_EDITOR_COMPLETION_CANDIDATE_REQUIRES_TRUST;
     }
     status = umi_editor_completion_candidate_collection_upsert(
         context->orchestration->candidates, &stored);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++context->emitted_count;
     return status;
 }
 
+/*
+ * Provide the editor completion policy default operation used by this module and its
+ * client applications.
+ */
 UmiEditorCompletionPolicy umi_editor_completion_policy_default(void)
 {
     UmiEditorCompletionPolicy policy;
@@ -218,6 +277,10 @@ UmiEditorCompletionPolicy umi_editor_completion_policy_default(void)
     return policy;
 }
 
+/*
+ * Initialise editor completion orchestration from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_completion_orchestration_create(
     UmiEditorCompletionProviderRegistry *provider_registry,
     UmiEditorCompletionOrchestration **out_orchestration)
@@ -225,12 +288,20 @@ UmiStatus umi_editor_completion_orchestration_create(
     UmiEditorCompletionOrchestration *orchestration;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider_registry == NULL || out_orchestration == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_orchestration = NULL;
     orchestration = (UmiEditorCompletionOrchestration *)calloc(
         1U, sizeof(*orchestration));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     orchestration->provider_registry = provider_registry;
     orchestration->policy = umi_editor_completion_policy_default();
@@ -238,13 +309,16 @@ UmiStatus umi_editor_completion_orchestration_create(
     orchestration->revision = 1U;
     status = umi_editor_completion_candidate_collection_create(
         &orchestration->candidates);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_completion_query_result_create(
             &orchestration->result);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_editor_completion_session_create(&orchestration->session);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         umi_editor_completion_orchestration_destroy(orchestration);
         return status;
@@ -253,9 +327,17 @@ UmiStatus umi_editor_completion_orchestration_create(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor completion orchestration so the same storage can
+ * be reused safely.
+ */
 void umi_editor_completion_orchestration_destroy(
     UmiEditorCompletionOrchestration *orchestration)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return;
     umi_editor_completion_session_destroy(orchestration->session);
     umi_editor_completion_query_result_destroy(orchestration->result);
@@ -266,10 +348,18 @@ void umi_editor_completion_orchestration_destroy(
     free(orchestration);
 }
 
+/*
+ * Provide the editor completion orchestration set policy operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_set_policy(
     UmiEditorCompletionOrchestration *orchestration,
     const UmiEditorCompletionPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || validate_policy(policy) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -286,6 +376,10 @@ UmiStatus umi_editor_completion_orchestration_set_policy(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor completion orchestration begin operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_begin(
     UmiEditorCompletionOrchestration *orchestration,
     const UmiEditorCompletionRequest *request,
@@ -299,6 +393,10 @@ UmiStatus umi_editor_completion_orchestration_begin(
     size_t position;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL ||
         umi_editor_completion_request_validate(request) != UMI_STATUS_OK ||
         ranking == NULL) {
@@ -319,12 +417,14 @@ UmiStatus umi_editor_completion_orchestration_begin(
         orchestration->candidates);
     (void)umi_editor_completion_query_result_clear(orchestration->result);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < provider_count; ++position) {
         UmiEditorCompletionProviderDescriptor descriptor;
         UmiEditorCompletionProviderReport report;
         UmiEditorCompletionProviderResponse response;
         CompletionSinkContext context;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_editor_completion_request_is_cancelled(request)) {
             orchestration->state = UMI_EDITOR_COMPLETION_ORCHESTRATION_CANCELLED;
             orchestration->revision = next_revision(orchestration->revision);
@@ -332,7 +432,9 @@ UmiStatus umi_editor_completion_orchestration_begin(
         }
         status = umi_editor_completion_provider_registry_at(
             orchestration->provider_registry, position, &descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!umi_editor_completion_provider_supports_request(
                 &descriptor, request)) {
             continue;
@@ -344,6 +446,7 @@ UmiStatus umi_editor_completion_orchestration_begin(
         copy_text(report.provider_id,
                   sizeof(report.provider_id),
                   descriptor.id);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (provider_blocked_by_policy(&descriptor,
                                        &orchestration->policy,
                                        request) ||
@@ -351,12 +454,14 @@ UmiStatus umi_editor_completion_orchestration_begin(
                 orchestration->policy.maximum_providers) {
             report.status = UMI_STATUS_PERMISSION_DENIED;
             report.skipped_by_policy = 1;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (orchestration->invoked_provider_count >=
                 orchestration->policy.maximum_providers) {
                 report.truncated = 1;
                 orchestration->truncated = 1;
             }
             status = add_report(orchestration, &report);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status != UMI_STATUS_OK) return status;
             continue;
         }
@@ -372,6 +477,7 @@ UmiStatus umi_editor_completion_orchestration_begin(
             collect_candidate,
             &context,
             &response);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_CAPACITY_EXCEEDED && context.truncated) {
             status = UMI_STATUS_OK;
         }
@@ -380,10 +486,14 @@ UmiStatus umi_editor_completion_orchestration_begin(
         report.provider_revision = response.provider_revision;
         report.incomplete = response.incomplete;
         report.truncated = context.truncated;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (response.incomplete) orchestration->incomplete = 1;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) ++orchestration->failed_provider_count;
         status = add_report(orchestration, &report);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (report.status != UMI_STATUS_OK &&
             !orchestration->policy.continue_on_provider_error) {
             orchestration->state = UMI_EDITOR_COMPLETION_ORCHESTRATION_FAILED;
@@ -393,6 +503,7 @@ UmiStatus umi_editor_completion_orchestration_begin(
     }
 
     effective_ranking = *ranking;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (effective_ranking.maximum_results >
         orchestration->policy.maximum_results) {
         effective_ranking.maximum_results =
@@ -402,11 +513,13 @@ UmiStatus umi_editor_completion_orchestration_begin(
                                                   orchestration->candidates,
                                                   request,
                                                   &effective_ranking);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_CANCELLED) {
         orchestration->state = UMI_EDITOR_COMPLETION_ORCHESTRATION_CANCELLED;
         orchestration->revision = next_revision(orchestration->revision);
         return status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         orchestration->state = UMI_EDITOR_COMPLETION_ORCHESTRATION_FAILED;
         orchestration->revision = next_revision(orchestration->revision);
@@ -415,6 +528,7 @@ UmiStatus umi_editor_completion_orchestration_begin(
     status = umi_editor_completion_session_begin(orchestration->session,
                                                   orchestration->result,
                                                   request);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         orchestration->state = UMI_EDITOR_COMPLETION_ORCHESTRATION_FAILED;
         orchestration->revision = next_revision(orchestration->revision);
@@ -425,16 +539,27 @@ UmiStatus umi_editor_completion_orchestration_begin(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor completion orchestration cancel operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_cancel(
     UmiEditorCompletionOrchestration *orchestration)
 {
     size_t position;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (orchestration->request.request_id != 0U) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (position = 0U; position < orchestration->report_count; ++position) {
             const UmiEditorCompletionProviderReport *report =
                 &orchestration->reports[position];
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!report->skipped_by_policy) {
                 (void)umi_editor_completion_provider_registry_cancel(
                     orchestration->provider_registry,
@@ -449,51 +574,80 @@ UmiStatus umi_editor_completion_orchestration_cancel(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor completion orchestration resolve while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_completion_orchestration_resolve_selected(
     UmiEditorCompletionOrchestration *orchestration)
 {
     UmiEditorCompletionCandidate candidate;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this operation only while the related capability or state is available. */
     if (orchestration->state != UMI_EDITOR_COMPLETION_ORCHESTRATION_READY) {
         return UMI_STATUS_INVALID_STATE;
     }
     status = umi_editor_completion_session_selected(orchestration->session,
                                                      &candidate);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_completion_provider_registry_resolve(
         orchestration->provider_registry,
         candidate.provider_id,
         &orchestration->request,
         &candidate);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     candidate.flags |= UMI_EDITOR_COMPLETION_CANDIDATE_RESOLVED;
     status = umi_editor_completion_session_replace_selected(
         orchestration->session, &candidate);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         orchestration->revision = next_revision(orchestration->revision);
     }
     return status;
 }
 
+/*
+ * Find editor completion orchestration report while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_completion_orchestration_report_at(
     const UmiEditorCompletionOrchestration *orchestration,
     size_t position,
     UmiEditorCompletionProviderReport *out_report)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (position >= orchestration->report_count) return UMI_STATUS_NOT_FOUND;
     *out_report = orchestration->reports[position];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor completion orchestration snapshot operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_completion_orchestration_snapshot(
     const UmiEditorCompletionOrchestration *orchestration,
     UmiEditorCompletionOrchestrationSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -521,12 +675,20 @@ UmiStatus umi_editor_completion_orchestration_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor completion orchestration session operation used by this module and
+ * its client applications.
+ */
 UmiEditorCompletionSession *umi_editor_completion_orchestration_session(
     UmiEditorCompletionOrchestration *orchestration)
 {
     return orchestration != NULL ? orchestration->session : NULL;
 }
 
+/*
+ * Provide the editor completion orchestration result operation used by this module and its
+ * client applications.
+ */
 const UmiEditorCompletionQueryResult *
 umi_editor_completion_orchestration_result(
     const UmiEditorCompletionOrchestration *orchestration)
@@ -534,6 +696,10 @@ umi_editor_completion_orchestration_result(
     return orchestration != NULL ? orchestration->result : NULL;
 }
 
+/*
+ * Provide the editor completion orchestration revision operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_editor_completion_orchestration_revision(
     const UmiEditorCompletionOrchestration *orchestration)
 {

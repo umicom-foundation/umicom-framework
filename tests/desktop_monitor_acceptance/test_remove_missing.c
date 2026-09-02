@@ -17,6 +17,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test desktop monitor remove missing and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_desktop_monitor_remove_missing(void)
 {
     UmiDesktopMonitorTopology topology;

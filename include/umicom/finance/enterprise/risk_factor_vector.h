@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise risk factor vector data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseRiskFactorVector { UmiEnterpriseNamedMetric factors[UMI_ENTERPRISE_MAX_FACTORS]; size_t count; } UmiEnterpriseRiskFactorVector;
 /* Initialise an empty risk-factor vector. */
 void umi_enterprise_risk_factor_vector_init(UmiEnterpriseRiskFactorVector *vector);

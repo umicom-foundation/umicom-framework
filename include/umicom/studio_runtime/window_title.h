@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio window title build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_window_title_build(
     const char *application_name,
     const char *workspace_name,

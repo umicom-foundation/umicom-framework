@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/plugin/contribution.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiPluginContributionRegistry *r = NULL; UmiPluginContribution c = {0};
     (void)strcpy(c.plugin_id,"org.umicom.example"); (void)strcpy(c.contribution_type,"command"); (void)strcpy(c.contribution_id,"example.run");

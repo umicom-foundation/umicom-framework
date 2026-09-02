@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data backup plan data shared with callers of this public contract.
+ */
 typedef struct UmiDataBackupPlan {
     char backup_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char destination[UMI_DATA_ENTERPRISE_PATH_CAPACITY];

@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading order cancel data shared with callers of this public contract.
+ */
 typedef struct UmiTradingOrderCancel { UmiFinancialId client_order_id; uint64_t expected_version; uint32_t reason_code; } UmiTradingOrderCancel;
 /* Initialise and validate describe a cancellable order request with version control and reason code. */
 UmiStatus umi_trading_order_cancel_init(UmiTradingOrderCancel *value,const UmiFinancialId * client_order_id, uint64_t expected_version, uint32_t reason_code);

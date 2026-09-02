@@ -23,6 +23,10 @@ static const UmiStudioRuntimeSurfaceKind VISIBLE[] = {
     UMI_STUDIO_SURFACE_AI_TOOLS
 };
 
+/*
+ * Provide the studio layout preset ai development operation used by this module and its
+ * client applications.
+ */
 const UmiStudioRuntimeLayoutPresetDefinition *
 umi_studio_layout_preset_ai_development(void)
 {

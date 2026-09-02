@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the ui reactive conformance profile data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiUiReactiveConformanceProfile {
     bool two_way_binding;
     bool validation;
@@ -26,7 +30,15 @@ typedef struct UmiUiReactiveConformanceProfile {
     bool transactional_updates;
     bool renderer_neutral;
 } UmiUiReactiveConformanceProfile;
+/**
+ * Provide the ui reactive conformance profile strict operation used by this module and its
+ * client applications.
+ */
 UmiUiReactiveConformanceProfile umi_ui_reactive_conformance_profile_strict(void);
+/**
+ * Provide the ui reactive conformance profile complete operation used by this module and
+ * its client applications.
+ */
 int umi_ui_reactive_conformance_profile_complete(const UmiUiReactiveConformanceProfile *item);
 #ifdef __cplusplus
 }

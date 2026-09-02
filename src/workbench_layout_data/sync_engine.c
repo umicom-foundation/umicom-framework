@@ -19,14 +19,23 @@
 
 
 
+/* Initialise result from caller-provided values so later operations receive a known state. */
 static void result_init(UmiWorkbenchLayoutSyncResult *result)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (result == NULL) return;
     (void)memset(result, 0, sizeof(*result));
     result->structure_size = sizeof(*result);
     result->status = UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout sync policy default operation used by this module and its
+ * client applications.
+ */
 UmiWorkbenchLayoutSyncPolicy
 umi_workbench_layout_sync_policy_default(void)
 {
@@ -41,12 +50,20 @@ umi_workbench_layout_sync_policy_default(void)
     return policy;
 }
 
+/*
+ * Initialise workbench layout sync engine from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_workbench_layout_sync_engine_init(
     UmiWorkbenchLayoutSyncEngine *engine,
     UmiWorkbenchLayoutConflictStoreRepository *conflicts,
     UmiWorkbenchLayoutSyncCursorRepository *cursors,
     const UmiWorkbenchLayoutSyncPolicy *policy)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || conflicts == NULL || cursors == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -56,6 +73,7 @@ UmiStatus umi_workbench_layout_sync_engine_init(
     engine->cursors = cursors;
     engine->policy = policy != NULL
         ? *policy : umi_workbench_layout_sync_policy_default();
+    /* Apply this branch only when its contract condition is satisfied. */
     if (engine->policy.structure_size < sizeof(engine->policy) ||
         engine->policy.maximum_operations == 0U ||
         engine->policy.maximum_operations >
@@ -66,6 +84,10 @@ UmiStatus umi_workbench_layout_sync_engine_init(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout sync engine plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_sync_engine_plan(
     UmiWorkbenchLayoutSyncEngine *engine,
     const UmiWorkbenchLayoutSyncEndpoint *local,
@@ -76,6 +98,10 @@ UmiStatus umi_workbench_layout_sync_engine_plan(
     UmiWorkbenchLayoutSyncPlan *out_plan)
 {
     UmiWorkbenchLayoutSyncPlanningInput input;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || local == NULL || remote == NULL ||
         out_plan == NULL ||
         local->structure_size < sizeof(*local) ||
@@ -96,11 +122,16 @@ UmiStatus umi_workbench_layout_sync_engine_plan(
     return umi_workbench_layout_sync_plan_build(&input, out_plan);
 }
 
+/* Provide the load document operation used by this module and its client applications. */
 static UmiStatus load_document(
     UmiWorkbenchLayoutSyncEndpoint *endpoint,
     const char *layout_id,
     UmiWorkbenchLayoutDocument *out_document)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (endpoint == NULL || endpoint->store.load_layout == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -108,6 +139,7 @@ static UmiStatus load_document(
         &endpoint->store, layout_id, out_document);
 }
 
+/* Provide the save document operation used by this module and its client applications. */
 static UmiStatus save_document(
     UmiWorkbenchLayoutSyncEndpoint *endpoint,
     UmiWorkbenchLayoutDocument *document,
@@ -115,23 +147,33 @@ static UmiStatus save_document(
 {
     uint64_t resulting_revision = 0U;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (endpoint == NULL || endpoint->store.save_layout == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_workbench_layout_store_save(
         &endpoint->store, document, expected_revision,
         &resulting_revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         document->version.revision = resulting_revision;
     }
     return status;
 }
 
+/* Provide the delete document operation used by this module and its client applications. */
 static UmiStatus delete_document(
     UmiWorkbenchLayoutSyncEndpoint *endpoint,
     const char *layout_id,
     uint64_t expected_revision)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (endpoint == NULL || endpoint->store.delete_layout == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -139,6 +181,7 @@ static UmiStatus delete_document(
         &endpoint->store, layout_id, expected_revision);
 }
 
+/* Provide the copy document operation used by this module and its client applications. */
 static UmiStatus copy_document(
     UmiWorkbenchLayoutSyncEndpoint *source,
     UmiWorkbenchLayoutSyncEndpoint *destination,
@@ -151,11 +194,14 @@ static UmiStatus copy_document(
          item->remote_revision);
     UmiStatus status = load_document(
         source, item->layout_id, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (creating) document.version.revision = 0U;
     return save_document(destination, &document, expected_revision);
 }
 
+/* Provide the record conflict operation used by this module and its client applications. */
 static UmiStatus record_conflict(
     UmiWorkbenchLayoutSyncEngine *engine,
     const UmiWorkbenchLayoutSyncPlan *plan,
@@ -201,6 +247,7 @@ static UmiStatus record_conflict(
         engine->conflicts, &conflict);
 }
 
+/* Provide the apply item operation used by this module and its client applications. */
 static UmiStatus apply_item(
     UmiWorkbenchLayoutSyncEngine *engine,
     const UmiWorkbenchLayoutSyncPlan *plan,
@@ -210,6 +257,7 @@ static UmiStatus apply_item(
     const char *actor_id,
     uint64_t now_ms)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (item->action) {
     case UMI_WORKBENCH_LAYOUT_DATA_SYNC_NO_ACTION:
         return UMI_STATUS_OK;
@@ -239,6 +287,10 @@ static UmiStatus apply_item(
     }
 }
 
+/*
+ * Perform workbench layout sync engine through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_sync_engine_apply(
     UmiWorkbenchLayoutSyncEngine *engine,
     const UmiWorkbenchLayoutSyncPlan *plan,
@@ -251,6 +303,10 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
     UmiWorkbenchLayoutSyncResult local_result;
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (engine == NULL || plan == NULL || local == NULL ||
         remote == NULL || actor_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -258,6 +314,7 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
     result_init(&local_result);
     local_result.planned_count = plan->item_count;
     status = umi_workbench_layout_sync_plan_validate(plan);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          status == UMI_STATUS_OK &&
          index < plan->item_count &&
@@ -268,9 +325,11 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
         UmiStatus item_status = apply_item(
             engine, plan, item, local, remote,
             actor_id, now_ms);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->action ==
             UMI_WORKBENCH_LAYOUT_DATA_SYNC_RECORD_CONFLICT) {
             local_result.conflict_count += 1U;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (item_status != UMI_STATUS_OK) {
                 local_result.failed_count += 1U;
                 status = item_status;
@@ -279,26 +338,30 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
                     sizeof(local_result.failed_layout_id),
                     item->layout_id, true);
             }
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (item_status != UMI_STATUS_OK ||
                 !engine->policy.continue_after_conflict) {
                 break;
             }
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (item->action ==
             UMI_WORKBENCH_LAYOUT_DATA_SYNC_NO_ACTION) {
             local_result.skipped_count += 1U;
-        } else if (item_status == UMI_STATUS_OK) {
+        } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (item_status == UMI_STATUS_OK) {
             local_result.applied_count += 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             local_result.failed_count += 1U;
             status = item_status;
             (void)umi_workbench_layout_data_copy_text(
                 local_result.failed_layout_id,
                 sizeof(local_result.failed_layout_id),
                 item->layout_id, true);
+            /* Apply this branch only when its contract condition is satisfied. */
             if (!engine->policy.continue_after_conflict) break;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (item->action >=
                 UMI_WORKBENCH_LAYOUT_DATA_SYNC_CREATE_LOCAL &&
             item->action <=
@@ -306,6 +369,7 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
             item->sequence > local_result.last_pulled_sequence) {
             local_result.last_pulled_sequence = item->sequence;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (item->action >=
                 UMI_WORKBENCH_LAYOUT_DATA_SYNC_CREATE_REMOTE &&
             item->action <=
@@ -322,10 +386,18 @@ UmiStatus umi_workbench_layout_sync_engine_apply(
             : "Synchronisation stopped after a failed operation.",
         true);
     engine->revision += 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) *out_result = local_result;
     return status;
 }
 
+/*
+ * Provide the workbench layout sync engine synchronise operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_sync_engine_synchronise(
     UmiWorkbenchLayoutSyncEngine *engine,
     UmiWorkbenchLayoutSyncEndpoint *local,
@@ -339,18 +411,24 @@ UmiStatus umi_workbench_layout_sync_engine_synchronise(
     UmiWorkbenchLayoutSyncPlan plan;
     UmiWorkbenchLayoutSyncResult result;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (cursor == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_layout_sync_engine_plan(
         engine, local, remote, cursor, direction,
         now_ms, &plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_sync_engine_apply(
             engine, &plan, local, remote, actor_id,
             now_ms, &result);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         result_init(&result);
         result.status = status;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_sync_cursor_record_success(
             engine->cursors,
@@ -358,11 +436,15 @@ UmiStatus umi_workbench_layout_sync_engine_synchronise(
             result.last_pulled_sequence,
             result.last_pushed_sequence,
             now_ms);
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         (void)umi_workbench_layout_sync_cursor_record_attempt(
             engine->cursors, cursor, now_ms,
             result.message);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_result != NULL) *out_result = result;
     return status;
 }

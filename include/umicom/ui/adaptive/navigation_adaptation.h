@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive navigation decision data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveNavigationDecision {
     UmiAdaptiveNavigationPattern pattern;
     size_t visible_items;

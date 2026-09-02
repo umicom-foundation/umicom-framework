@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer workbench perspective definition data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiDeveloperWorkbenchPerspectiveDefinition {
     uint32_t structure_size;
     uint32_t api_version;
@@ -34,6 +38,10 @@ typedef struct UmiDeveloperWorkbenchPerspectiveDefinition {
     const char *default_focus_surface_id;
 } UmiDeveloperWorkbenchPerspectiveDefinition;
 
+/**
+ * Check that developer workbench perspective satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_workbench_perspective_validate(
     const UmiDeveloperWorkbenchPerspectiveDefinition *perspective);
 

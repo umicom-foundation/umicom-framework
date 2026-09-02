@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the liquidity ratio data shared with callers of this public contract.
+ */
 typedef struct UmiLiquidityRatio { double liquid_assets; double net_outflows; double ratio; } UmiLiquidityRatio;
 /* Compute liquid assets divided by positive net outflows. */
 UmiStatus umi_reg_liquidity_ratio_compute(UmiLiquidityRatio *result,double liquid_assets,double net_outflows);

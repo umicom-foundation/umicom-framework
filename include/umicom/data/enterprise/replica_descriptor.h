@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data replica descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiDataReplicaDescriptor {
     char replica_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char endpoint[UMI_DATA_ENTERPRISE_PATH_CAPACITY];

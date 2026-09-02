@@ -15,6 +15,9 @@
 #ifndef UMICOM_CODEGUARD_EVIDENCE_H
 #define UMICOM_CODEGUARD_EVIDENCE_H
 #include "umicom/codeguard/quality_types.h"
+/**
+ * Represent the code guard evidence data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardEvidence {
     char id[UMI_CODEGUARD_QUALITY_ID_CAPACITY];
     UmiCodeGuardEvidenceKind kind;
@@ -26,13 +29,32 @@ typedef struct UmiCodeGuardEvidence {
     char summary[UMI_CODEGUARD_QUALITY_TEXT_CAPACITY];
     char remediation[UMI_CODEGUARD_QUALITY_TEXT_CAPACITY];
 } UmiCodeGuardEvidence;
+/**
+ * Represent the code guard evidence store data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiCodeGuardEvidenceStore {
     UmiCodeGuardEvidence items[UMI_CODEGUARD_QUALITY_MAX_EVIDENCE];
     size_t count;
     uint64_t revision;
 } UmiCodeGuardEvidenceStore;
+/**
+ * Add codeguard evidence only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_codeguard_evidence_add(UmiCodeGuardEvidenceStore *store,const UmiCodeGuardEvidence *evidence);
+/**
+ * Find codeguard evidence while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiCodeGuardEvidence *umi_codeguard_evidence_find(const UmiCodeGuardEvidenceStore *store,const char *id);
+/**
+ * Provide the codeguard evidence count state operation used by this module and its client
+ * applications.
+ */
 size_t umi_codeguard_evidence_count_state(const UmiCodeGuardEvidenceStore *store,UmiCodeGuardEvidenceState state);
+/**
+ * Provide the codeguard evidence count kind operation used by this module and its client
+ * applications.
+ */
 size_t umi_codeguard_evidence_count_kind(const UmiCodeGuardEvidenceStore *store,UmiCodeGuardEvidenceKind kind);
 #endif

@@ -28,6 +28,10 @@ typedef UmiStatus (*UmiDeveloperWorkbenchSearchFunction)(
     size_t capacity,
     size_t *out_count);
 
+/**
+ * Represent the developer workbench search provider data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperWorkbenchSearchProvider {
     char provider_id[UMI_DEVELOPER_WORKBENCH_ID_CAPACITY];
     char title[UMI_DEVELOPER_WORKBENCH_TITLE_CAPACITY];
@@ -37,6 +41,10 @@ typedef struct UmiDeveloperWorkbenchSearchProvider {
     UmiDeveloperWorkbenchSearchFunction search;
 } UmiDeveloperWorkbenchSearchProvider;
 
+/**
+ * Check that developer workbench search provider satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_developer_workbench_search_provider_validate(
     const UmiDeveloperWorkbenchSearchProvider *provider);
 

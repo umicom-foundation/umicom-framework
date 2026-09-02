@@ -19,6 +19,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the trading venue descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiTradingVenueDescriptor {
     UmiFinancialId venue_id;
     char mic[8];

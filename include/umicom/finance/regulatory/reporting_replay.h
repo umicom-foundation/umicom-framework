@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting replay data shared with callers of this public contract.
+ */
 typedef struct UmiReportingReplay {
     char replay_id[UMI_REG_ID_CAPACITY];
     char checkpoint_id[UMI_REG_ID_CAPACITY];

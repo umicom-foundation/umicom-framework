@@ -19,9 +19,14 @@
 UmiStatus umi_designer_renderer_semantics_default(UmiRadTargetKind renderer,
                                                   UmiDesignerRendererSemantics *out_semantics)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(out_semantics==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_semantics,0,sizeof *out_semantics);
     out_semantics->renderer=renderer;
+    /* Select the behaviour associated with the requested command or state value. */
     switch(renderer){
     case UMI_RAD_TARGET_GTK4:
     case UMI_RAD_TARGET_QT6:

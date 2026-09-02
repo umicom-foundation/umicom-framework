@@ -15,6 +15,10 @@
 #include "test_support.h"
 #include <assert.h>
 
+/*
+ * Exercise test simulation idempotence and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 void test_simulation_idempotence(void)
 {
     UmiTradingUiTestFixture fixture;

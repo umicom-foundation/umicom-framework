@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ui workspace rect data shared with callers of this public contract.
+ */
 typedef struct UmiUiWorkspaceRect {
     double x;
     double y;

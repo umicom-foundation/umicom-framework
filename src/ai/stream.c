@@ -22,10 +22,18 @@
 
 #include <string.h>
 
+/*
+ * Initialise ai stream from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_ai_stream_init(UmiAiStreamCollector *stream,
                         UmiAiStreamSink sink,
                         void *user_data)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stream != NULL) {
         stream->text[0] = '\0';
         stream->length = 0U;
@@ -34,20 +42,30 @@ void umi_ai_stream_init(UmiAiStreamCollector *stream,
     }
 }
 
+/* Provide the ai stream push operation used by this module and its client applications. */
 UmiStatus umi_ai_stream_push(UmiAiStreamCollector *stream,
                              const char *text,
                              int final_chunk)
 {
     size_t length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stream == NULL || text == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (stream->length + length + 1U > sizeof(stream->text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     (void)memcpy(stream->text + stream->length, text, length + 1U);
     stream->length += length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (stream->sink != NULL) {
         stream->sink(text, final_chunk, stream->user_data);
     }

@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/sdk/sdk.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiSdkComponent c={"framework","Umicom::Framework",1};UmiSdkManifest m=umi_sdk_manifest_current(&c,1U);assert(umi_sdk_manifest_validate(&m)==UMI_STATUS_OK);return 0;}

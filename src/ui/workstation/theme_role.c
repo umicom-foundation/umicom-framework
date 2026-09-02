@@ -15,7 +15,12 @@
 
 #include "umicom/ui/workstation/theme_role.h"
 
+/*
+ * Provide the ws theme role token operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_theme_role_token(UmiWsThemeRole role) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
         case UMI_WS_THEME_BACKGROUND: return "workstation.background";
         case UMI_WS_THEME_SURFACE: return "workstation.surface";
@@ -33,7 +38,12 @@ const char *umi_ws_theme_role_token(UmiWsThemeRole role) {
     }
 }
 
+/*
+ * Provide the ws theme role css class operation used by this module and its client
+ * applications.
+ */
 const char *umi_ws_theme_role_css_class(UmiWsThemeRole role) {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
         case UMI_WS_THEME_ACCENT: return "umi-accent";
         case UMI_WS_THEME_SUCCESS: return "umi-success";

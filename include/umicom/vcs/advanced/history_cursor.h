@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs advanced history cursor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsAdvancedHistoryCursor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,8 +39,20 @@ typedef struct UmiVcsAdvancedHistoryCursor {
     int has_more;
 } UmiVcsAdvancedHistoryCursor;
 
+/**
+ * Initialise vcs advanced history cursor from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_advanced_history_cursor_init(UmiVcsAdvancedHistoryCursor *value);
+/**
+ * Check that vcs advanced history cursor satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_vcs_advanced_history_cursor_validate(const UmiVcsAdvancedHistoryCursor *value);
+/**
+ * Provide the vcs advanced history cursor advance operation used by this module and its
+ * client applications.
+ */
 void umi_vcs_advanced_history_cursor_advance(UmiVcsAdvancedHistoryCursor *value,
                                                 size_t returned,
                                                 int has_more);

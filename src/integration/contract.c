@@ -23,10 +23,18 @@
 
 #include <string.h>
 
+/*
+ * Provide the integration contract compatible operation used by this module and its client
+ * applications.
+ */
 bool umi_integration_contract_compatible(
     const UmiIntegrationContract *provider,
     const UmiIntegrationContract *consumer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (provider == NULL || consumer == NULL) {
         return false;
     }

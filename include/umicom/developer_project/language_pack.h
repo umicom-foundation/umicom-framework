@@ -25,6 +25,10 @@ extern "C" {
 #define UMI_DEVELOPER_PROJECT_LANGUAGE_EXTENSION_CAPACITY 16U
 #define UMI_DEVELOPER_PROJECT_LANGUAGE_TOOL_CAPACITY 12U
 
+/**
+ * Represent the developer project language pack data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectLanguagePack {
     uint32_t structure_size;
     uint32_t api_version;
@@ -44,13 +48,25 @@ typedef struct UmiDeveloperProjectLanguagePack {
     int built_in;
 } UmiDeveloperProjectLanguagePack;
 
+/**
+ * Check that developer project language pack satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_developer_project_language_pack_validate(
     const UmiDeveloperProjectLanguagePack *pack);
 
+/**
+ * Provide the developer project language pack supports extension operation used by this
+ * module and its client applications.
+ */
 int umi_developer_project_language_pack_supports_extension(
     const UmiDeveloperProjectLanguagePack *pack,
     const char *extension);
 
+/**
+ * Provide the developer project language pack has capability operation used by this module
+ * and its client applications.
+ */
 int umi_developer_project_language_pack_has_capability(
     const UmiDeveloperProjectLanguagePack *pack,
     UmiDeveloperProjectLanguageCapability capability);

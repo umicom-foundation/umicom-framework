@@ -22,6 +22,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ide command context data shared with callers of this public contract.
+ */
 typedef struct UmiIdeCommandContext {
     UmiIdeEditorSelection editor_selection;
     size_t problem_index;
@@ -37,6 +40,10 @@ typedef struct UmiIdeCommandContext {
     int has_editor_selection;
 } UmiIdeCommandContext;
 
+/**
+ * Initialise ide command context from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_ide_command_context_init(UmiIdeCommandContext *context);
 
 #ifdef __cplusplus

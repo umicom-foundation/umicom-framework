@@ -24,11 +24,17 @@
 UmiStatus umi_digital_asset_address_init(UmiDigitalAssetAddress *value, const char *network_id, const char *address, bool verified)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     status = umi_digital_asset_copy_text(value->network_id.value, sizeof value->network_id.value, network_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_digital_asset_copy_text(value->value, sizeof value->value, address);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     value->verified = verified;
     return UMI_STATUS_OK;

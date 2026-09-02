@@ -29,6 +29,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer model bundle data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerModelBundle {
     UmiWorkbenchDesignerSnapshot service_snapshot;
     UmiWorkbenchDesignerBreadcrumbs breadcrumbs;
@@ -40,8 +44,16 @@ typedef struct UmiWorkbenchDesignerModelBundle {
     uint64_t revision;
 } UmiWorkbenchDesignerModelBundle;
 
+/**
+ * Initialise workbench designer model bundle from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_model_bundle_init(
     UmiWorkbenchDesignerModelBundle *bundle);
+/**
+ * Provide the workbench designer model bundle capture operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_model_bundle_capture(
     UmiWorkbenchDesignerModelBundle *bundle,
     const UmiWorkbenchDesignerController *controller,

@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request terminate threads operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_request_terminate_threads(
     UmiDebugRuntimeAdapter *adapter,
     const uint64_t *thread_ids,

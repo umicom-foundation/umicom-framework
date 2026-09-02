@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise valuation lineage data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationLineage { char job_id[UMI_ENTERPRISE_ID_CAPACITY]; uint64_t market_fingerprint; char model_id[UMI_ENTERPRISE_ID_CAPACITY]; char source_revision[UMI_ENTERPRISE_ID_CAPACITY]; uint64_t lineage_fingerprint; } UmiEnterpriseValuationLineage;
 /* Initialise deterministic lineage evidence for one valuation job. */
 UmiStatus umi_enterprise_valuation_lineage_init(UmiEnterpriseValuationLineage *lineage,const char *job_id,uint64_t market_fingerprint,const char *model_id,const char *source_revision);

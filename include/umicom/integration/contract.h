@@ -24,12 +24,19 @@
 
 #include "umicom/integration/types.h"
 
+/**
+ * Represent the integration contract data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationContract {
     char id[UMI_INTEGRATION_ID_CAPACITY];
     unsigned major;
     unsigned minor;
 } UmiIntegrationContract;
 
+/**
+ * Provide the integration contract compatible operation used by this module and its client
+ * applications.
+ */
 bool umi_integration_contract_compatible(
     const UmiIntegrationContract *provider,
     const UmiIntegrationContract *consumer);

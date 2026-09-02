@@ -19,6 +19,10 @@
 
 #include "umicom/developer/pipeline.h"
 
+/*
+ * Exercise operation and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiDeveloperOperationSnapshot operation(
     const char *id,
     UmiDeveloperOperationKind kind,
@@ -31,6 +35,10 @@ static UmiDeveloperOperationSnapshot operation(
     return result;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDeveloperPipeline *pipeline = NULL;

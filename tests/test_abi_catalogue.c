@@ -18,4 +18,8 @@
  */
 #include <assert.h>
 #include "umicom/abi/abi.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiAbiCatalogue *c=NULL;UmiAbiDescriptor d={sizeof(UmiAbiDescriptor),"umicom.test",2U,umi_abi_platform_current(),NULL,0U,NULL,0U,NULL,0U};assert(umi_abi_catalogue_create(&c)==UMI_STATUS_OK);assert(umi_abi_catalogue_register(c,&d)==UMI_STATUS_OK);assert(umi_abi_catalogue_find(c,"umicom.test")==&d);umi_abi_catalogue_destroy(c);return 0;}

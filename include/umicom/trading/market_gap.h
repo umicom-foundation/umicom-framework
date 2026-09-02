@@ -26,6 +26,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the market event gap ms operation used by this module and its client
+ * applications.
+ */
 int64_t umi_market_event_gap_ms(int64_t previous_ms, int64_t current_ms);
 #ifdef __cplusplus
 }

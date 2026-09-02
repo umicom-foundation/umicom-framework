@@ -22,12 +22,20 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the workbench selection provider make id operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_selection_provider_make_id(
     char *out_id,
     size_t capacity,
     const char *prefix,
     const char *subject_id,
     uint64_t revision);
+/**
+ * Provide the workbench selection provider make indexed id operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_make_indexed_id(
     char *out_id,
     size_t capacity,

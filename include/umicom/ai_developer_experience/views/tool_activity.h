@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_coding_tools/result_history.h"
+/**
+ * Initialise ai developer tool activity view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_ai_developer_tool_activity_view_create(
     const char *view_id,
     const UmiAiCodingToolResultHistory *history,

@@ -18,13 +18,24 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the rad designer service data shared with callers of this public contract.
+ */
 typedef struct UmiRadDesignerService {
     size_t active_sessions;
     size_t open_documents;
     uint32_t conformance_score;
     bool initialized;
 } UmiRadDesignerService;
+/**
+ * Initialise rad designer service from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_rad_designer_service_init(UmiRadDesignerService *item);
+/**
+ * Check that rad designer service satisfies its contract before another service relies on
+ * it.
+ */
 int umi_rad_designer_service_is_valid(const UmiRadDesignerService *item);
 #ifdef __cplusplus
 }

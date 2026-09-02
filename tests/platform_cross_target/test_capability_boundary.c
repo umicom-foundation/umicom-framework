@@ -24,4 +24,8 @@
 
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiCtCapabilityBoundary b={"net",UMI_CT_CAP_NETWORK,UMI_CT_CAP_ADMIN};CHECK(umi_ct_capability_boundary_allows(&b,UMI_CT_CAP_NETWORK));CHECK(!umi_ct_capability_boundary_allows(&b,UMI_CT_CAP_NETWORK|UMI_CT_CAP_ADMIN));return 0;}

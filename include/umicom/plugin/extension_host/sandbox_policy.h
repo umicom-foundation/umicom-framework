@@ -29,8 +29,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host sandbox policy data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostSandboxPolicy { int allow_network; int allow_process_spawn; int allow_workspace_write; int allow_external_paths; int allow_environment_read; } UmiPluginExtensionHostSandboxPolicy;
+/**
+ * Initialise plugin extension host sandbox policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_sandbox_policy_init(UmiPluginExtensionHostSandboxPolicy *policy);
+/**
+ * Provide the plugin extension host sandbox policy evaluate operation used by this module
+ * and its client applications.
+ */
 UmiPluginExtensionHostDecision umi_plugin_extension_host_sandbox_policy_evaluate(const UmiPluginExtensionHostSandboxPolicy *policy, int network, int process_spawn, int workspace_write, int external_path, int environment_read);
 
 #ifdef __cplusplus

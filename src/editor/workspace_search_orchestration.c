@@ -31,23 +31,26 @@ struct UmiEditorWorkspaceSearchOrchestration {
     uint64_t revision;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the record status operation used by this module and its client applications. */
 static UmiStatus record_status(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     UmiStatus status,
     UmiEditorWorkspaceSearchOrchestrationState success_state)
 {
     orchestration->last_status = status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         orchestration->state = success_state;
-    } else if (status == UMI_STATUS_CANCELLED) {
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_CANCELLED) {
         orchestration->state =
             UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_CANCELLED;
-    } else if (status == UMI_STATUS_INVALID_STATE ||
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_INVALID_STATE ||
                status == UMI_STATUS_BUSY) {
         orchestration->state =
             UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_CONFLICT;
@@ -56,35 +59,54 @@ static UmiStatus record_status(
     return status;
 }
 
+/*
+ * Initialise editor workspace search orchestration from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_create(
     const UmiEditorWorkspaceSearchIndexConfig *index_config,
     UmiEditorWorkspaceSearchOrchestration **out_orchestration)
 {
     UmiEditorWorkspaceSearchOrchestration *orchestration;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_orchestration = NULL;
     orchestration = (UmiEditorWorkspaceSearchOrchestration *)calloc(
         1U, sizeof(*orchestration));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_editor_workspace_search_index_create(
         index_config, &orchestration->index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     status = umi_editor_workspace_search_exclusion_set_create(
         &orchestration->exclusions);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     status = umi_editor_workspace_search_pattern_create(
         &orchestration->pattern);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     status = umi_editor_workspace_search_query_create(&orchestration->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     status = umi_editor_workspace_replacement_preview_create(
         &orchestration->preview);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     status = umi_editor_workspace_replace_plan_create(&orchestration->plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     status = umi_editor_workspace_replace_transaction_create(
         &orchestration->transaction);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
     orchestration->state = UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_EMPTY;
     orchestration->last_status = UMI_STATUS_OK;
@@ -97,9 +119,17 @@ fail:
     return status;
 }
 
+/*
+ * Release or reset state held by editor workspace search orchestration so the same storage
+ * can be reused safely.
+ */
 void umi_editor_workspace_search_orchestration_destroy(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return;
     umi_editor_workspace_replace_transaction_destroy(
         orchestration->transaction);
@@ -113,6 +143,10 @@ void umi_editor_workspace_search_orchestration_destroy(
     free(orchestration);
 }
 
+/*
+ * Provide the editor workspace search orchestration search operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_search(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const UmiEditorWorkspaceSearchPatternRequest *pattern_request,
@@ -120,12 +154,17 @@ UmiStatus umi_editor_workspace_search_orchestration_search(
     UmiEditorWorkspaceSearchPatternDiagnostic *out_diagnostic)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || pattern_request == NULL ||
         query_request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     status = umi_editor_workspace_search_pattern_compile(
         orchestration->pattern, pattern_request, out_diagnostic);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return record_status(orchestration, status,
                              UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_EMPTY);
@@ -141,14 +180,23 @@ UmiStatus umi_editor_workspace_search_orchestration_search(
                          UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_SEARCHED);
 }
 
+/*
+ * Provide the editor workspace search orchestration preview operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_preview(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const UmiEditorWorkspaceReplacementRequest *replacement_request)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || replacement_request == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (orchestration->state !=
             UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_SEARCHED &&
         orchestration->state !=
@@ -167,11 +215,20 @@ UmiStatus umi_editor_workspace_search_orchestration_preview(
                          UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PREVIEWED);
 }
 
+/*
+ * Provide the editor workspace search orchestration plan operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_plan(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (orchestration->state !=
             UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PREVIEWED &&
         orchestration->state !=
@@ -186,10 +243,12 @@ UmiStatus umi_editor_workspace_search_orchestration_plan(
         orchestration->plan,
         orchestration->preview,
         orchestration->index);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         UmiEditorWorkspaceReplacePlanSnapshot snapshot;
         status = umi_editor_workspace_replace_plan_snapshot(
             orchestration->plan, &snapshot);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK && !snapshot.applicable) {
             status = UMI_STATUS_INVALID_STATE;
         }
@@ -199,15 +258,24 @@ UmiStatus umi_editor_workspace_search_orchestration_plan(
                          UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PLANNED);
 }
 
+/*
+ * Provide the editor workspace search orchestration prepare operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_prepare(
     UmiEditorWorkspaceSearchOrchestration *orchestration,
     const UmiEditorEditTransactionDocument *documents,
     size_t document_count)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || documents == NULL || document_count == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (orchestration->state !=
         UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PLANNED) {
         return record_status(orchestration,
@@ -224,11 +292,20 @@ UmiStatus umi_editor_workspace_search_orchestration_prepare(
                          UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PREFLIGHTED);
 }
 
+/*
+ * Provide the editor workspace search orchestration commit operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_commit(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (orchestration->state !=
         UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PREFLIGHTED) {
         return record_status(orchestration,
@@ -242,11 +319,20 @@ UmiStatus umi_editor_workspace_search_orchestration_commit(
                          UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_COMMITTED);
 }
 
+/*
+ * Provide the editor workspace search orchestration cancel operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_cancel(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (orchestration->state ==
             UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_PREFLIGHTED ||
         orchestration->state ==
@@ -261,19 +347,31 @@ UmiStatus umi_editor_workspace_search_orchestration_cancel(
     return status;
 }
 
+/*
+ * Provide the editor workspace search orchestration clear results operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_clear_results(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_editor_workspace_search_query_clear(orchestration->query);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_workspace_replacement_preview_clear(
         orchestration->preview);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_workspace_replace_plan_clear(orchestration->plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_editor_workspace_search_pattern_reset(orchestration->pattern);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     orchestration->last_status = UMI_STATUS_OK;
     orchestration->state = UMI_EDITOR_WORKSPACE_SEARCH_ORCHESTRATION_EMPTY;
@@ -281,6 +379,10 @@ UmiStatus umi_editor_workspace_search_orchestration_clear_results(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search orchestration snapshot operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_workspace_search_orchestration_snapshot(
     const UmiEditorWorkspaceSearchOrchestration *orchestration,
     UmiEditorWorkspaceSearchOrchestrationSnapshot *out_snapshot)
@@ -291,6 +393,10 @@ UmiStatus umi_editor_workspace_search_orchestration_snapshot(
     UmiEditorWorkspaceReplacementPreviewSnapshot preview_snapshot;
     UmiEditorWorkspaceReplacePlanSnapshot plan_snapshot;
     UmiEditorWorkspaceReplaceTransactionSnapshot transaction_snapshot;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (orchestration == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -301,15 +407,18 @@ UmiStatus umi_editor_workspace_search_orchestration_snapshot(
     out_snapshot->state = orchestration->state;
     out_snapshot->last_status = orchestration->last_status;
     out_snapshot->revision = orchestration->revision;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_workspace_search_index_snapshot(
             orchestration->index, &index_snapshot) == UMI_STATUS_OK) {
         out_snapshot->indexed_document_count = index_snapshot.document_count;
         out_snapshot->index_revision = index_snapshot.revision;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_workspace_search_pattern_snapshot(
             orchestration->pattern, &pattern_snapshot) == UMI_STATUS_OK) {
         out_snapshot->pattern_revision = pattern_snapshot.revision;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_workspace_search_query_snapshot(
             orchestration->query, &query_snapshot) == UMI_STATUS_OK) {
         out_snapshot->result_count = query_snapshot.result_count;
@@ -318,18 +427,21 @@ UmiStatus umi_editor_workspace_search_orchestration_snapshot(
         out_snapshot->query_revision = query_snapshot.revision;
         out_snapshot->search_complete = query_snapshot.complete;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_workspace_replacement_preview_snapshot(
             orchestration->preview, &preview_snapshot) == UMI_STATUS_OK) {
         out_snapshot->preview_item_count = preview_snapshot.item_count;
         out_snapshot->preview_revision = preview_snapshot.revision;
         out_snapshot->preview_ready = preview_snapshot.ready;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_workspace_replace_plan_snapshot(
             orchestration->plan, &plan_snapshot) == UMI_STATUS_OK) {
         out_snapshot->planned_edit_count = plan_snapshot.edit_count;
         out_snapshot->plan_revision = plan_snapshot.revision;
         out_snapshot->plan_applicable = plan_snapshot.applicable;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_workspace_replace_transaction_snapshot(
             orchestration->transaction,
             &transaction_snapshot) == UMI_STATUS_OK) {
@@ -342,12 +454,20 @@ UmiStatus umi_editor_workspace_search_orchestration_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search orchestration index operation used by this module
+ * and its client applications.
+ */
 UmiEditorWorkspaceSearchIndex *umi_editor_workspace_search_orchestration_index(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
     return orchestration != NULL ? orchestration->index : NULL;
 }
 
+/*
+ * Provide the editor workspace search orchestration exclusions operation used by this
+ * module and its client applications.
+ */
 UmiEditorWorkspaceSearchExclusionSet *
 umi_editor_workspace_search_orchestration_exclusions(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
@@ -355,12 +475,20 @@ umi_editor_workspace_search_orchestration_exclusions(
     return orchestration != NULL ? orchestration->exclusions : NULL;
 }
 
+/*
+ * Provide the editor workspace search orchestration query operation used by this module
+ * and its client applications.
+ */
 UmiEditorWorkspaceSearchQuery *umi_editor_workspace_search_orchestration_query(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
 {
     return orchestration != NULL ? orchestration->query : NULL;
 }
 
+/*
+ * Provide the editor workspace search orchestration replacement preview operation used by
+ * this module and its client applications.
+ */
 UmiEditorWorkspaceReplacementPreview *
 umi_editor_workspace_search_orchestration_replacement_preview(
     UmiEditorWorkspaceSearchOrchestration *orchestration)
@@ -368,6 +496,10 @@ umi_editor_workspace_search_orchestration_replacement_preview(
     return orchestration != NULL ? orchestration->preview : NULL;
 }
 
+/*
+ * Provide the editor workspace search orchestration replace plan operation used by this
+ * module and its client applications.
+ */
 const UmiEditorWorkspaceReplacePlan *
 umi_editor_workspace_search_orchestration_replace_plan(
     const UmiEditorWorkspaceSearchOrchestration *orchestration)
@@ -375,6 +507,10 @@ umi_editor_workspace_search_orchestration_replace_plan(
     return orchestration != NULL ? orchestration->plan : NULL;
 }
 
+/*
+ * Provide the editor workspace search orchestration revision operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_editor_workspace_search_orchestration_revision(
     const UmiEditorWorkspaceSearchOrchestration *orchestration)
 {

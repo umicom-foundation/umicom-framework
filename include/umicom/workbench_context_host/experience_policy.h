@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context host experience panel policy data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchContextHostExperiencePanelPolicy {
     uint32_t structure_size;
     UmiWorkbenchContextHostPanelRole role;
@@ -33,20 +37,40 @@ typedef struct UmiWorkbenchContextHostExperiencePanelPolicy {
     bool include_endpoint;
 } UmiWorkbenchContextHostExperiencePanelPolicy;
 
+/**
+ * Initialise workbench context host experience panel policy from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_context_host_experience_panel_policy_init(
     UmiWorkbenchContextHostExperiencePanelPolicy *policy);
 
+/**
+ * Provide the workbench context host experience panel policy resolve operation used by
+ * this module and its client applications.
+ */
 UmiStatus umi_workbench_context_host_experience_panel_policy_resolve(
     const UmiApplicationExperienceDefinition *experience,
     const UmiExperiencePanelDefinition *panel,
     UmiWorkbenchContextHostExperiencePanelPolicy *out_policy);
 
+/**
+ * Check that workbench context host experience panel policy satisfies its contract before
+ * another service relies on it.
+ */
 UmiStatus umi_workbench_context_host_experience_panel_policy_validate(
     const UmiWorkbenchContextHostExperiencePanelPolicy *policy);
 
+/**
+ * Provide the workbench context host experience group colour operation used by this module
+ * and its client applications.
+ */
 UmiContextChannelColour umi_workbench_context_host_experience_group_colour(
     const char *context_group_id);
 
+/**
+ * Provide the workbench context host experience group title operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_context_host_experience_group_title(
     const char *context_group_id,
     char *out_title,

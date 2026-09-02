@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_LOCAL_FILE_PROVIDER "umicom.document.provider.local_file_provider"
 
+/**
+ * Provide the document capability local file provider operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_local_file_provider(void);
 

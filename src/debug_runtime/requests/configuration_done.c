@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/debug_runtime/requests/configuration_done.h"
 
+/*
+ * Provide the debug runtime request configuration done operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_request_configuration_done(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t *out_sequence)

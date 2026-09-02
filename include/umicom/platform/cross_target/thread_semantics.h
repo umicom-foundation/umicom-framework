@@ -30,7 +30,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct thread semantics data shared with callers of this public contract.
+ */
 typedef struct UmiCtThreadSemantics { bool threads; bool tls; bool affinity; bool priority; bool naming; uint32_t maximum_logical_cpus; } UmiCtThreadSemantics;
+/**
+ * Provide the ct thread semantics support operation used by this module and its client
+ * applications.
+ */
 UmiCtSupportLevel umi_ct_thread_semantics_support(const UmiCtThreadSemantics *semantics,bool require_affinity,bool require_priority);
 
 #ifdef __cplusplus

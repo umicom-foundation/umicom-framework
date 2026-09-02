@@ -27,6 +27,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial core service data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialCoreService {
   UmiCurrencyCatalogue currencies;
   UmiLegalEntityRegistry legal_entities;

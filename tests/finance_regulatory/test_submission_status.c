@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/submission_status.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ CHECK(umi_reg_submission_status_transition_allowed(UMI_REG_STATE_APPROVED,UMI_REG_STATE_SUBMITTED)==1); CHECK(umi_reg_submission_status_transition_allowed(UMI_REG_STATE_ACCEPTED,UMI_REG_STATE_DRAFT)==0); return 0; }

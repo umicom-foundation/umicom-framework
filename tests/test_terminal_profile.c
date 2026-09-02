@@ -23,6 +23,10 @@
 
 #include "umicom/terminal/profile_registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTerminalProfile profile;

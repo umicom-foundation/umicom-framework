@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_TRAILING_WHITESPACE_POLICY "umicom.document.persistence.trailing_whitespace_policy"
 
+/**
+ * Provide the document capability trailing whitespace policy operation used by this module
+ * and its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_trailing_whitespace_policy(void);
 

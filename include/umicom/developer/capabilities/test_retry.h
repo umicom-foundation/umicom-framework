@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TEST_RETRY "umicom.developer.testing.test_retry"
 
+/**
+ * Provide the developer capability test retry operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_test_retry(void);
 

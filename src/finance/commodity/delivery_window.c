@@ -23,6 +23,10 @@
 /* Initialise the record without allocating memory or retaining caller buffers. */
 UmiStatus umi_commodity_delivery_window_init(UmiCommodityDeliveryWindow *value, int64_t start_time_ms, int64_t end_time_ms, bool inclusive_end)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (value == NULL || start_time_ms < 0 || end_time_ms <= start_time_ms) return UMI_STATUS_INVALID_ARGUMENT;
     memset(value, 0, sizeof *value);
     value->start_time_ms = start_time_ms;

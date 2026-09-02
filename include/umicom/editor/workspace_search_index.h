@@ -43,6 +43,10 @@ extern "C" {
 #define UMI_EDITOR_WORKSPACE_SEARCH_EXTENSION_CAPACITY 64U
 #define UMI_EDITOR_WORKSPACE_SEARCH_INDEX_LANGUAGE_CAPACITY 64U
 
+/**
+ * Represent the editor workspace search index config data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchIndexConfig {
     uint32_t struct_size;
     uint32_t api_version;
@@ -51,6 +55,10 @@ typedef struct UmiEditorWorkspaceSearchIndexConfig {
     size_t maximum_total_bytes;
 } UmiEditorWorkspaceSearchIndexConfig;
 
+/**
+ * Represent the editor workspace search document input data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchDocumentInput {
     uint32_t struct_size;
     uint32_t api_version;
@@ -92,6 +100,10 @@ typedef struct UmiEditorWorkspaceSearchDocumentView {
     int read_only;
 } UmiEditorWorkspaceSearchDocumentView;
 
+/**
+ * Represent the editor workspace search index snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorWorkspaceSearchIndexSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -107,40 +119,88 @@ typedef struct UmiEditorWorkspaceSearchIndexSnapshot {
     uint64_t revision;
 } UmiEditorWorkspaceSearchIndexSnapshot;
 
+/**
+ * Represent the editor workspace search index data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWorkspaceSearchIndex UmiEditorWorkspaceSearchIndex;
 
+/**
+ * Initialise editor workspace search index config from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_editor_workspace_search_index_config_init(
     UmiEditorWorkspaceSearchIndexConfig *config);
 
+/**
+ * Initialise editor workspace search index from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_index_create(
     const UmiEditorWorkspaceSearchIndexConfig *config,
     UmiEditorWorkspaceSearchIndex **out_index);
+/**
+ * Release or reset state held by editor workspace search index so the same storage can be
+ * reused safely.
+ */
 void umi_editor_workspace_search_index_destroy(
     UmiEditorWorkspaceSearchIndex *index);
 
+/**
+ * Release or reset state held by editor workspace search index so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_workspace_search_index_clear(
     UmiEditorWorkspaceSearchIndex *index);
+/**
+ * Provide the editor workspace search index upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_index_upsert(
     UmiEditorWorkspaceSearchIndex *index,
     const UmiEditorWorkspaceSearchDocumentInput *input);
+/**
+ * Remove editor workspace search index while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_workspace_search_index_remove(
     UmiEditorWorkspaceSearchIndex *index,
     const char *uri);
 
+/**
+ * Find editor workspace search index while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_workspace_search_index_at(
     const UmiEditorWorkspaceSearchIndex *index,
     size_t position,
     UmiEditorWorkspaceSearchDocumentView *out_document);
+/**
+ * Provide the editor workspace search index find uri operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_index_find_uri(
     const UmiEditorWorkspaceSearchIndex *index,
     const char *uri,
     UmiEditorWorkspaceSearchDocumentView *out_document);
+/**
+ * Provide the editor workspace search index snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_index_snapshot(
     const UmiEditorWorkspaceSearchIndex *index,
     UmiEditorWorkspaceSearchIndexSnapshot *out_snapshot);
 
+/**
+ * Return the number of records represented by editor workspace search index without
+ * changing their state.
+ */
 size_t umi_editor_workspace_search_index_count(
     const UmiEditorWorkspaceSearchIndex *index);
+/**
+ * Provide the editor workspace search index revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_workspace_search_index_revision(
     const UmiEditorWorkspaceSearchIndex *index);
 

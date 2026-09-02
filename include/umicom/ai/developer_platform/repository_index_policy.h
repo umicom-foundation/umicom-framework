@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev repository index policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevRepositoryIndexPolicy {
     uint64_t allowed_flags;
     uint64_t denied_flags;
@@ -38,9 +42,25 @@ typedef struct UmiAiDevRepositoryIndexPolicy {
     int enabled;
 } UmiAiDevRepositoryIndexPolicy;
 
+/**
+ * Initialise ai dev repository index policy from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_ai_dev_repository_index_policy_init(UmiAiDevRepositoryIndexPolicy *policy);
+/**
+ * Provide the ai dev repository index policy configure operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_ai_dev_repository_index_policy_configure(UmiAiDevRepositoryIndexPolicy *policy, uint64_t allowed_flags, uint64_t denied_flags, UmiAiDevRisk maximum_risk, UmiAiDevLocality locality, int require_approval);
+/**
+ * Provide the ai dev repository index policy allows operation used by this module and its
+ * client applications.
+ */
 int umi_ai_dev_repository_index_policy_allows(const UmiAiDevRepositoryIndexPolicy *policy, uint64_t requested_flags, UmiAiDevRisk risk, UmiAiDevLocality locality);
+/**
+ * Provide the ai dev repository index policy approval required operation used by this
+ * module and its client applications.
+ */
 int umi_ai_dev_repository_index_policy_approval_required(const UmiAiDevRepositoryIndexPolicy *policy, UmiAiDevRisk risk);
 
 #ifdef __cplusplus

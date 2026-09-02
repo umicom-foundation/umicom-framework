@@ -19,6 +19,10 @@
 #include "umicom/ai_coding_runtime/path.h"
 #include "umicom/language_runtime/arguments.h"
 
+/*
+ * Provide the ai coding tool safe path operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_safe_path(
     const UmiLanguageRuntimeJsonDocument *document,
     const char *key,
@@ -33,6 +37,7 @@ UmiStatus umi_ai_coding_tool_safe_path(
         key,
         requested,
         sizeof(requested));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_coding_runtime_path_normalize_relative(
@@ -41,11 +46,19 @@ UmiStatus umi_ai_coding_tool_safe_path(
         capacity);
 }
 
+/*
+ * Provide the ai coding tool write ok begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_write_ok_begin(
     UmiLanguageRuntimeJsonWriter *writer,
     char *output,
     size_t capacity)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer == NULL || output == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -54,14 +67,26 @@ UmiStatus umi_ai_coding_tool_write_ok_begin(
     return umi_language_runtime_json_writer_raw(writer, "{\"ok\":true");
 }
 
+/*
+ * Provide the ai coding tool write status end operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_write_status_end(
     UmiLanguageRuntimeJsonWriter *writer)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (writer == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     (void)umi_language_runtime_json_writer_raw(writer, "}");
     return writer->status;
 }
 
+/*
+ * Provide the ai coding tool execute program operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_tool_execute_program(
     UmiAiCodingToolEnvironment *environment,
     UmiDeveloperOperationKind kind,
@@ -78,6 +103,10 @@ UmiStatus umi_ai_coding_tool_execute_program(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || environment->executor == NULL ||
         environment->executor->execute == NULL ||
         operation_id == NULL || title == NULL ||
@@ -95,6 +124,7 @@ UmiStatus umi_ai_coding_tool_execute_program(
         operation_id,
         kind,
         title);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_developer_operation_set_program(
@@ -103,15 +133,19 @@ UmiStatus umi_ai_coding_tool_execute_program(
         working_directory[0] != '\0'
             ? working_directory
             : environment->workspace_root);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_language_runtime_arguments_parse(arguments, &parsed);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < parsed.count; ++index) {
         status = umi_developer_operation_add_argument(
             &operation,
             parsed.values[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

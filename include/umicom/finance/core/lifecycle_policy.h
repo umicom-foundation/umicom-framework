@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the lifecycle policy data shared with callers of this public contract.
+ */
 typedef struct UmiLifecyclePolicy { uint32_t flags; uint32_t limit; bool strict; } UmiLifecyclePolicy;
 /* Initialize conservative defaults. */ void umi_lifecycle_policy_default(UmiLifecyclePolicy *p);
 /* Evaluate a bounded numeric request. */ bool umi_lifecycle_policy_allows(const UmiLifecyclePolicy *p,uint32_t value,uint32_t required_flags);

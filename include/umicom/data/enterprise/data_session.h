@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data session data shared with callers of this public contract.
+ */
 typedef struct UmiDataSession {
     char session_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char principal_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];

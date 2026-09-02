@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the golden source data shared with callers of this public contract.
+ */
 typedef struct UmiGoldenSource {
     char domain_id[UMI_REG_ID_CAPACITY];
     char source_id[UMI_REG_ID_CAPACITY];

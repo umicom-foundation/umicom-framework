@@ -36,6 +36,9 @@ extern "C" {
 #define UMI_DESKTOP_CONTROL_PATH_CAPACITY 1024U
 #define UMI_DESKTOP_CONTROL_ITEM_CAPACITY 64U
 
+/**
+ * List the named desktop control severity values accepted by this public contract.
+ */
 typedef enum UmiDesktopControlSeverity {
     UMI_DESKTOP_CONTROL_SEVERITY_NONE = 0,
     UMI_DESKTOP_CONTROL_SEVERITY_INFO = 1,
@@ -44,6 +47,9 @@ typedef enum UmiDesktopControlSeverity {
     UMI_DESKTOP_CONTROL_SEVERITY_CRITICAL = 4
 } UmiDesktopControlSeverity;
 
+/**
+ * List the named desktop control availability values accepted by this public contract.
+ */
 typedef enum UmiDesktopControlAvailability {
     UMI_DESKTOP_CONTROL_AVAILABILITY_UNKNOWN = 0,
     UMI_DESKTOP_CONTROL_AVAILABILITY_AVAILABLE = 1,
@@ -51,6 +57,9 @@ typedef enum UmiDesktopControlAvailability {
     UMI_DESKTOP_CONTROL_AVAILABILITY_UNAVAILABLE = 3
 } UmiDesktopControlAvailability;
 
+/**
+ * List the named desktop control lifecycle state values accepted by this public contract.
+ */
 typedef enum UmiDesktopControlLifecycleState {
     UMI_DESKTOP_CONTROL_LIFECYCLE_STOPPED = 0,
     UMI_DESKTOP_CONTROL_LIFECYCLE_STARTING = 1,
@@ -59,6 +68,9 @@ typedef enum UmiDesktopControlLifecycleState {
     UMI_DESKTOP_CONTROL_LIFECYCLE_FAILED = 4
 } UmiDesktopControlLifecycleState;
 
+/**
+ * List the named desktop control direction values accepted by this public contract.
+ */
 typedef enum UmiDesktopControlDirection {
     UMI_DESKTOP_CONTROL_DIRECTION_NONE = 0,
     UMI_DESKTOP_CONTROL_DIRECTION_SOURCE = 1,
@@ -66,6 +78,9 @@ typedef enum UmiDesktopControlDirection {
     UMI_DESKTOP_CONTROL_DIRECTION_BIDIRECTIONAL = 3
 } UmiDesktopControlDirection;
 
+/**
+ * Represent the desktop control rect data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopControlRect {
     int32_t x;
     int32_t y;

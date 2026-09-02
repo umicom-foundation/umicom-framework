@@ -20,6 +20,7 @@
 
 #include "internal.h"
 
+/* Provide the node is visible operation used by this module and its client applications. */
 static bool node_is_visible(
     const UmiWorkbenchLayoutNode *node)
 {
@@ -28,6 +29,7 @@ static bool node_is_visible(
                UMI_WORKBENCH_LAYOUT_VISIBILITY_HIDDEN;
 }
 
+/* Provide the node is panel operation used by this module and its client applications. */
 static bool node_is_panel(
     const UmiWorkbenchLayoutNode *node)
 {
@@ -37,6 +39,7 @@ static bool node_is_panel(
                 UMI_WORKBENCH_LAYOUT_NODE_EDITOR_GROUP);
 }
 
+/* Provide the node is window operation used by this module and its client applications. */
 static bool node_is_window(
     const UmiWorkbenchLayoutNode *node)
 {
@@ -46,6 +49,10 @@ static bool node_is_window(
                 UMI_WORKBENCH_LAYOUT_NODE_FLOATING_WINDOW);
 }
 
+/*
+ * Provide the populate node snapshot operation used by this module and its client
+ * applications.
+ */
 static UmiStatus populate_node_snapshot(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutSession *session,
@@ -55,6 +62,10 @@ static UmiStatus populate_node_snapshot(
     const UmiWorkbenchLayoutNode *node;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || snapshot == NULL ||
         index >= document->node_count) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -69,6 +80,7 @@ static UmiStatus populate_node_snapshot(
         sizeof(snapshot->node_id),
         node->node_id,
         false);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             snapshot->title,
@@ -76,6 +88,7 @@ static UmiStatus populate_node_snapshot(
             node->title,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             snapshot->component_id,
@@ -83,6 +96,7 @@ static UmiStatus populate_node_snapshot(
             node->component_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             snapshot->owner_application_id,
@@ -90,6 +104,7 @@ static UmiStatus populate_node_snapshot(
             node->owner_application_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             snapshot->context_group_id,
@@ -97,6 +112,7 @@ static UmiStatus populate_node_snapshot(
             node->context_group_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_copy_text(
             snapshot->monitor_id,
@@ -104,6 +120,7 @@ static UmiStatus populate_node_snapshot(
             node->monitor_id,
             true);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -134,6 +151,10 @@ static UmiStatus populate_node_snapshot(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench layout snapshot build operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_workbench_layout_snapshot_build(
     const UmiWorkbenchLayoutDocument *document,
     const UmiWorkbenchLayoutSession *session,
@@ -142,6 +163,10 @@ UmiStatus umi_workbench_layout_snapshot_build(
     size_t index;
     UmiStatus status = UMI_STATUS_OK;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (document == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -170,6 +195,10 @@ UmiStatus umi_workbench_layout_snapshot_build(
             UMI_WORKBENCH_LAYOUT_DOCUMENT_DIRTY);
     out_snapshot->content_hash = document->content_hash;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session != NULL) {
         (void)umi_workbench_layout_copy_text(
             out_snapshot->focused_node_id,
@@ -178,6 +207,7 @@ UmiStatus umi_workbench_layout_snapshot_build(
             true);
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < document->node_count &&
          status == UMI_STATUS_OK;
@@ -189,20 +219,25 @@ UmiStatus umi_workbench_layout_snapshot_build(
 
         status = populate_node_snapshot(
             document, session, index, node_snapshot);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             break;
         }
 
         out_snapshot->node_count += 1U;
+        /* Apply this operation only while the related capability or state is available. */
         if (node_is_visible(node)) {
             out_snapshot->visible_node_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node_is_panel(node)) {
             out_snapshot->panel_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node_is_window(node)) {
             out_snapshot->window_count += 1U;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (node->kind ==
             UMI_WORKBENCH_LAYOUT_NODE_FLOATING_WINDOW) {
             out_snapshot->floating_window_count += 1U;
@@ -211,6 +246,10 @@ UmiStatus umi_workbench_layout_snapshot_build(
     return status;
 }
 
+/*
+ * Find workbench layout snapshot while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchLayoutNodeSnapshot *
 umi_workbench_layout_snapshot_find(
     const UmiWorkbenchLayoutSnapshot *snapshot,
@@ -218,11 +257,17 @@ umi_workbench_layout_snapshot_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (snapshot == NULL ||
         !umi_workbench_layout_text_present(node_id)) {
         return NULL;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < snapshot->node_count; ++index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (strcmp(
                 snapshot->nodes[index].node_id,
                 node_id) == 0) {
@@ -232,11 +277,19 @@ umi_workbench_layout_snapshot_find(
     return NULL;
 }
 
+/*
+ * Find workbench layout snapshot while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiWorkbenchLayoutNodeSnapshot *
 umi_workbench_layout_snapshot_at(
     const UmiWorkbenchLayoutSnapshot *snapshot,
     size_t index)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (snapshot == NULL || index >= snapshot->node_count) {
         return NULL;
     }

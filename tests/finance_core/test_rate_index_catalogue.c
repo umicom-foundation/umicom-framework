@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/rate_index_catalogue.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiRateIndexCatalogue r; UmiRateIndex x; umi_rate_index_catalogue_init(&r); CHECK(umi_rate_index_init(&x,"R","Rate","USD",1U)==UMI_STATUS_OK); CHECK(umi_rate_index_catalogue_add(&r,&x)==UMI_STATUS_OK);

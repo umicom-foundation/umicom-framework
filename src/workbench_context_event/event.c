@@ -17,11 +17,19 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench context event from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_context_event_init(
     UmiWorkbenchContextEvent *event,
     UmiWorkbenchContextEventKind kind,
     const char *event_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL) return;
     memset(event, 0, sizeof(*event));
     event->structure_size = (uint32_t)sizeof(*event);
@@ -31,18 +39,31 @@ void umi_workbench_context_event_init(
     event->priority = UMI_WORKBENCH_CONTEXT_EVENT_PRIORITY_INTERACTIVE;
     event->context_kind = UMI_CONTEXT_KIND_SELECTION;
     event->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event_id != NULL) {
         (void)umi_workbench_context_event_copy_text(
             event->event_id, sizeof(event->event_id), event_id);
     }
 }
 
+/*
+ * Check that workbench context event satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_workbench_context_event_validate(
     const UmiWorkbenchContextEvent *event)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL || event->structure_size != sizeof(*event)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (event->event_id[0] == '\0' ||
         event->application_id[0] == '\0' ||
         event->panel_id[0] == '\0' ||
@@ -56,6 +77,10 @@ UmiStatus umi_workbench_context_event_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context event add metadata operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_event_add_metadata(
     UmiWorkbenchContextEvent *event,
     const char *name,
@@ -63,32 +88,49 @@ UmiStatus umi_workbench_context_event_add_metadata(
 {
     UmiWorkbenchContextEventMetadata *item;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL || name == NULL || value == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (event->metadata_count >= UMI_WORKBENCH_CONTEXT_EVENT_MAX_METADATA) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     item = &event->metadata[event->metadata_count];
     status = umi_workbench_context_event_copy_text(
         item->name, sizeof(item->name), name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_workbench_context_event_copy_text(
         item->value, sizeof(item->value), value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     ++event->metadata_count;
     ++event->revision;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context event find metadata operation used by this module and its
+ * client applications.
+ */
 const UmiWorkbenchContextEventMetadata *
 umi_workbench_context_event_find_metadata(
     const UmiWorkbenchContextEvent *event,
     const char *name)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL || name == NULL) return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < event->metadata_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(event->metadata[index].name, name) == 0) {
             return &event->metadata[index];
         }
@@ -96,11 +138,19 @@ umi_workbench_context_event_find_metadata(
     return NULL;
 }
 
+/*
+ * Provide the workbench context event refresh hash operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_workbench_context_event_refresh_hash(
     UmiWorkbenchContextEvent *event)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (event == NULL) return 0U;
     hash = umi_workbench_context_event_hash_text(hash, event->source_id, sizeof(event->source_id));
     hash = umi_workbench_context_event_hash_text(hash, event->application_id, sizeof(event->application_id));
@@ -109,6 +159,7 @@ uint64_t umi_workbench_context_event_refresh_hash(
     hash = umi_workbench_context_event_hash_text(hash, event->workspace_id, sizeof(event->workspace_id));
     hash = umi_workbench_context_event_hash_text(hash, event->path, sizeof(event->path));
     hash = umi_workbench_context_event_hash_text(hash, event->secondary_id, sizeof(event->secondary_id));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < event->metadata_count; ++index) {
         hash = umi_workbench_context_event_hash_text(
             hash, event->metadata[index].name, sizeof(event->metadata[index].name));

@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_PROVIDER_HEALTH_API_VERSION 1U
+/**
+ * Represent the language intelligence provider health data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceProviderHealth {
     uint32_t struct_size;
     uint32_t api_version;
@@ -34,12 +38,28 @@ typedef struct UmiLanguageIntelligenceProviderHealth {
     uint64_t generation;
     uint64_t revision;
 } UmiLanguageIntelligenceProviderHealth;
+/**
+ * Initialise language intelligence provider health from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_provider_health_init(UmiLanguageIntelligenceProviderHealth *value, const char *id);
+/**
+ * Provide the language intelligence provider health transition operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_provider_health_transition(
     UmiLanguageIntelligenceProviderHealth *value,
     UmiLanguageIntelligenceState next_state,
     int explicit_release);
+/**
+ * Provide the language intelligence provider health record failure operation used by this
+ * module and its client applications.
+ */
 void umi_language_intelligence_provider_health_record_failure(UmiLanguageIntelligenceProviderHealth *value);
+/**
+ * Provide the language intelligence provider health is usable operation used by this
+ * module and its client applications.
+ */
 int umi_language_intelligence_provider_health_is_usable(const UmiLanguageIntelligenceProviderHealth *value);
 #ifdef __cplusplus
 }

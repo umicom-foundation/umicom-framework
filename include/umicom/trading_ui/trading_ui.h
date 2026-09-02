@@ -61,62 +61,122 @@ extern "C" {
 #define UMI_TRADING_UI_VIEW_FUNDAMENTALS \
     "umicom.trading.workspace.fundamentals"
 
+/**
+ * Initialise trading ui dashboard view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_dashboard_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui watchlist view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_watchlist_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui depth view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_depth_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui chart view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_chart_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui order ticket view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_order_ticket_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui orders view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_orders_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui executions view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_executions_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui portfolio risk view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_portfolio_risk_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui scanner view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_scanner_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui predictive lab view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_predictive_lab_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui news view from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_trading_ui_news_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui context inspector view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_context_inspector_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui strategy view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_strategy_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui replay view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_trading_ui_replay_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);
+/**
+ * Initialise trading ui research output view from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_trading_ui_research_output_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,

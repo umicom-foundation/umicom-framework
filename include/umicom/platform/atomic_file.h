@@ -25,9 +25,17 @@
 extern "C" {
 #endif
 
+/**
+ * Write atomic file in its stable representation and report capacity or input failures to
+ * the caller.
+ */
 UmiStatus umi_atomic_file_write(const char *path,
                                 const void *data,
                                 size_t size);
+/**
+ * Provide the atomic file write text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_atomic_file_write_text(const char *path,
                                      const char *text);
 

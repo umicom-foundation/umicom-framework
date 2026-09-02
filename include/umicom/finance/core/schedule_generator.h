@@ -20,6 +20,9 @@
 extern "C" {
 #endif
 #define UMI_SCHEDULE_MAX 256U
+/**
+ * Represent the schedule data shared with callers of this public contract.
+ */
 typedef struct UmiSchedule { UmiSchedulePeriod periods[UMI_SCHEDULE_MAX]; size_t count; } UmiSchedule;
 /* Generate forward schedule. */ UmiStatus umi_schedule_generate(const UmiScheduleRule *r,const UmiHolidayCalendar *c,UmiSchedule *out);
 #ifdef __cplusplus

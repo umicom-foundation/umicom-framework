@@ -16,6 +16,10 @@
 
 #include "test_fixture.h"
 
+/*
+ * Exercise change matches layout and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static UmiStatus change_matches_layout(
     const void *record_value,
     void *context,
@@ -24,6 +28,10 @@ static UmiStatus change_matches_layout(
     const UmiWorkbenchLayoutChange *change =
         (const UmiWorkbenchLayoutChange *)record_value;
     const char *layout_id = (const char *)context;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (change == NULL || layout_id == NULL || out_matches == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -31,6 +39,10 @@ static UmiStatus change_matches_layout(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise make cursor and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiWorkbenchLayoutSyncCursor make_cursor(void)
 {
     UmiWorkbenchLayoutSyncCursor cursor;
@@ -45,6 +57,10 @@ static UmiWorkbenchLayoutSyncCursor make_cursor(void)
     return cursor;
 }
 
+/*
+ * Exercise test feed order and layout filter and return a clear result when the behaviour
+ * no longer matches its contract.
+ */
 static int test_feed_order_and_layout_filter(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -109,6 +125,10 @@ static int test_feed_order_and_layout_filter(void)
     return 0;
 }
 
+/*
+ * Exercise test cursor monotonicity and idempotence and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_cursor_monotonicity_and_idempotence(void)
 {
     UmiDataServer *server = test_create_data_server();
@@ -155,6 +175,10 @@ static int test_cursor_monotonicity_and_idempotence(void)
     return 0;
 }
 
+/*
+ * Exercise test plan uses only unacknowledged changes and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 static int test_plan_uses_only_unacknowledged_changes(void)
 {
     UmiWorkbenchLayoutChange local[3];
@@ -221,6 +245,10 @@ static int test_plan_uses_only_unacknowledged_changes(void)
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     TEST_REQUIRE(test_feed_order_and_layout_filter() == 0,

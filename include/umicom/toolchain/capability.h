@@ -28,6 +28,9 @@ extern "C" {
 
 #define UMI_TOOLCHAIN_CAPABILITY_API_VERSION 1U
 
+/**
+ * List the named compiler vendor values accepted by this public contract.
+ */
 typedef enum UmiCompilerVendor {
     UMI_COMPILER_VENDOR_UNKNOWN = 0,
     UMI_COMPILER_VENDOR_CLANG = 1,
@@ -35,6 +38,10 @@ typedef enum UmiCompilerVendor {
     UMI_COMPILER_VENDOR_MSVC = 3
 } UmiCompilerVendor;
 
+/**
+ * Represent the toolchain capability snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainCapabilitySnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -57,15 +64,27 @@ typedef struct UmiToolchainCapabilitySnapshot {
     int environment_is_complete;
 } UmiToolchainCapabilitySnapshot;
 
+/**
+ * Provide the toolchain capability snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_capability_snapshot(
     const UmiToolchainProfile *profile,
     UmiToolchainCapabilitySnapshot *out_snapshot);
+/**
+ * Provide the toolchain capability compatible operation used by this module and its client
+ * applications.
+ */
 int umi_toolchain_capability_compatible(
     const UmiToolchainCapabilitySnapshot *snapshot,
     int require_c23,
     int require_cmake,
     int require_ninja,
     int require_pkg_config);
+/**
+ * Provide the compiler vendor text operation used by this module and its client
+ * applications.
+ */
 const char *umi_compiler_vendor_text(UmiCompilerVendor vendor);
 
 #ifdef __cplusplus

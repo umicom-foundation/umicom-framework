@@ -21,8 +21,19 @@
 extern "C" {
 #endif
 #define UMI_NC_ASSEMBLY_BUFFER_CAPACITY 32768U
+/**
+ * Represent the native assembly buffer data shared with callers of this public contract.
+ */
 typedef struct UmiNativeAssemblyBuffer { char text[UMI_NC_ASSEMBLY_BUFFER_CAPACITY]; size_t length; } UmiNativeAssemblyBuffer;
+/**
+ * Initialise nc assembly buffer from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_nc_assembly_buffer_init(UmiNativeAssemblyBuffer *buffer);
+/**
+ * Provide the nc assembly emit function operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_assembly_emit_function(const UmiNativeMachineFunction *function,UmiNativeAssemblyBuffer *buffer);
 #ifdef __cplusplus
 }

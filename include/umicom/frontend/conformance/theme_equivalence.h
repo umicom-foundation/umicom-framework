@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc theme equivalence data shared with callers of this public contract.
+ */
 typedef struct UmiFcThemeEquivalence { size_t required_tokens; size_t matched_tokens; size_t mismatched_tokens; } UmiFcThemeEquivalence;
+/**
+ * Provide the fc theme equivalence evaluate operation used by this module and its client
+ * applications.
+ */
 double umi_fc_theme_equivalence_evaluate(const UmiFcThemeEquivalence *item);
 
 #ifdef __cplusplus

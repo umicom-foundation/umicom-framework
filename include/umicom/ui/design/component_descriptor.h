@@ -28,6 +28,10 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/semantic_role.h"
+/**
+ * Represent the design component descriptor data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignComponentDescriptor { char id[UMI_DESIGN_ID_CAPACITY]; char display_name[UMI_DESIGN_NAME_CAPACITY]; UmiUiComponentKind kind; UmiDesignSemanticRole default_role; uint32_t capability_flags; int interactive; } UmiDesignComponentDescriptor;
 /* Initialise a semantic descriptor that augments an existing canonical component kind. */
 UmiStatus umi_design_component_descriptor_init(UmiDesignComponentDescriptor *descriptor, const char *id, const char *display_name, UmiUiComponentKind kind, UmiDesignSemanticRole default_role, int interactive);

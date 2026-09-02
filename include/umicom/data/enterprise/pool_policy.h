@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data pool policy data shared with callers of this public contract.
+ */
 typedef struct UmiDataPoolPolicy {
     size_t minimum_size;
     size_t maximum_size;

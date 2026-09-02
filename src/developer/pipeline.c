@@ -32,6 +32,10 @@ struct UmiDeveloperPipeline {
     uint64_t revision;
 };
 
+/*
+ * Provide the terminate operation operation used by this module and its client
+ * applications.
+ */
 static void terminate_operation(UmiDeveloperOperationSnapshot *operation)
 {
     size_t index;
@@ -45,38 +49,52 @@ static void terminate_operation(UmiDeveloperOperationSnapshot *operation)
     operation->working_directory[UMI_DEVELOPER_PATH_CAPACITY - 1U] = '\0';
     operation->summary[UMI_DEVELOPER_SUMMARY_CAPACITY - 1U] = '\0';
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->argument_count > UMI_DEVELOPER_MAX_ARGUMENTS) {
         operation->argument_count = UMI_DEVELOPER_MAX_ARGUMENTS;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < operation->argument_count; ++index) {
         operation->arguments[index][UMI_DEVELOPER_ARGUMENT_CAPACITY - 1U] = '\0';
     }
 
     operation->struct_size = (uint32_t)sizeof(*operation);
     operation->api_version = UMI_DEVELOPER_OPERATION_API_VERSION;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->max_attempts == 0U) {
         operation->max_attempts = 1U;
     }
 }
 
+/* Provide the copy summary operation used by this module and its client applications. */
 static UmiStatus copy_summary(
     UmiDeveloperOperationSnapshot *operation,
     const char *summary)
 {
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (operation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (summary == NULL) {
         operation->summary[0] = '\0';
         return UMI_STATUS_OK;
     }
 
     length = strlen(summary);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(operation->summary)) {
         length = sizeof(operation->summary) - 1U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U) {
         memcpy(operation->summary, summary, length);
     }
@@ -84,6 +102,7 @@ static UmiStatus copy_summary(
     return UMI_STATUS_OK;
 }
 
+/* Provide the find index operation used by this module and its client applications. */
 static int find_index(
     const UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -91,12 +110,22 @@ static int find_index(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL || operation_id[0] == '\0') {
         return 0;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pipeline->operation_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(pipeline->operations[index].id, operation_id) == 0) {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
             if (out_index != NULL) {
                 *out_index = index;
             }
@@ -106,6 +135,7 @@ static int find_index(
     return 0;
 }
 
+/* Provide the dependency exists operation used by this module and its client applications. */
 static int dependency_exists(
     const UmiDeveloperPipeline *pipeline,
     size_t operation_index,
@@ -113,7 +143,9 @@ static int dependency_exists(
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pipeline->dependency_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (pipeline->dependencies[index].operation_index == operation_index &&
             pipeline->dependencies[index].depends_on_index == depends_on_index) {
             return 1;
@@ -122,6 +154,10 @@ static int dependency_exists(
     return 0;
 }
 
+/*
+ * Provide the transitively depends on operation used by this module and its client
+ * applications.
+ */
 static int transitively_depends_on(
     const UmiDeveloperPipeline *pipeline,
     size_t start_index,
@@ -134,26 +170,35 @@ static int transitively_depends_on(
     memset(visited, 0, sizeof(visited));
     stack[stack_count++] = start_index;
 
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (stack_count > 0U) {
         size_t current = stack[--stack_count];
         size_t dependency_index;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (current == target_index) {
             return 1;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (visited[current] != 0U) {
             continue;
         }
         visited[current] = 1U;
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (dependency_index = 0U;
              dependency_index < pipeline->dependency_count;
              ++dependency_index) {
             const UmiDeveloperDependency *dependency =
                 &pipeline->dependencies[dependency_index];
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (dependency->operation_index == current &&
                 visited[dependency->depends_on_index] == 0U) {
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (stack_count >= UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY) {
                     return 1;
                 }
@@ -165,14 +210,20 @@ static int transitively_depends_on(
     return 0;
 }
 
+/*
+ * Provide the dependencies succeeded operation used by this module and its client
+ * applications.
+ */
 static int dependencies_succeeded(
     const UmiDeveloperPipeline *pipeline,
     size_t operation_index)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pipeline->dependency_count; ++index) {
         const UmiDeveloperDependency *dependency = &pipeline->dependencies[index];
+        /* Apply this branch only when its contract condition is satisfied. */
         if (dependency->operation_index == operation_index &&
             pipeline->operations[dependency->depends_on_index].state !=
                 UMI_DEVELOPER_OPERATION_SUCCEEDED) {
@@ -182,21 +233,28 @@ static int dependencies_succeeded(
     return 1;
 }
 
+/*
+ * Provide the dependency terminal failure operation used by this module and its client
+ * applications.
+ */
 static int dependency_terminal_failure(
     const UmiDeveloperPipeline *pipeline,
     size_t operation_index)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pipeline->dependency_count; ++index) {
         const UmiDeveloperDependency *dependency = &pipeline->dependencies[index];
         UmiDeveloperOperationState state;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (dependency->operation_index != operation_index) {
             continue;
         }
 
         state = pipeline->operations[dependency->depends_on_index].state;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (state == UMI_DEVELOPER_OPERATION_FAILED ||
             state == UMI_DEVELOPER_OPERATION_CANCELLED ||
             state == UMI_DEVELOPER_OPERATION_BLOCKED) {
@@ -206,16 +264,28 @@ static int dependency_terminal_failure(
     return 0;
 }
 
+/*
+ * Initialise developer pipeline from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_developer_pipeline_create(UmiDeveloperPipeline **out_pipeline)
 {
     UmiDeveloperPipeline *pipeline;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_pipeline == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     *out_pipeline = NULL;
     pipeline = (UmiDeveloperPipeline *)calloc(1U, sizeof(*pipeline));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL) {
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -227,6 +297,10 @@ UmiStatus umi_developer_pipeline_create(UmiDeveloperPipeline **out_pipeline)
         UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY,
         sizeof(*pipeline->dependencies));
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline->operations == NULL || pipeline->dependencies == NULL) {
         umi_developer_pipeline_destroy(pipeline);
         return UMI_STATUS_OUT_OF_MEMORY;
@@ -238,8 +312,16 @@ UmiStatus umi_developer_pipeline_create(UmiDeveloperPipeline **out_pipeline)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by developer pipeline so the same storage can be reused
+ * safely.
+ */
 void umi_developer_pipeline_destroy(UmiDeveloperPipeline *pipeline)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL) {
         return;
     }
@@ -248,21 +330,32 @@ void umi_developer_pipeline_destroy(UmiDeveloperPipeline *pipeline)
     free(pipeline);
 }
 
+/*
+ * Provide the developer pipeline submit operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperOperationSnapshot *operation)
 {
     UmiDeveloperOperationSnapshot copy;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation == NULL || operation->id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (pipeline->operation_count >= UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (find_index(pipeline, operation->id, NULL)) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->argument_count > UMI_DEVELOPER_MAX_ARGUMENTS) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -282,6 +375,10 @@ UmiStatus umi_developer_pipeline_submit(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer pipeline add dependency operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_pipeline_add_dependency(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -290,20 +387,28 @@ UmiStatus umi_developer_pipeline_add_dependency(
     size_t operation_index;
     size_t depends_on_index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL ||
         depends_on_operation_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (!find_index(pipeline, operation_id, &operation_index) ||
         !find_index(pipeline, depends_on_operation_id, &depends_on_index)) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation_index == depends_on_index) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (dependency_exists(pipeline, operation_index, depends_on_index)) {
         return UMI_STATUS_ALREADY_EXISTS;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (pipeline->dependency_count >=
         UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -327,6 +432,10 @@ UmiStatus umi_developer_pipeline_add_dependency(
     return umi_developer_pipeline_refresh(pipeline);
 }
 
+/*
+ * Find developer pipeline while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_developer_pipeline_find(
     const UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -334,9 +443,14 @@ UmiStatus umi_developer_pipeline_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL || out_operation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!find_index(pipeline, operation_id, &index)) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -345,14 +459,23 @@ UmiStatus umi_developer_pipeline_find(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find developer pipeline while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 UmiStatus umi_developer_pipeline_at(
     const UmiDeveloperPipeline *pipeline,
     size_t index,
     UmiDeveloperOperationSnapshot *out_operation)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || out_operation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= pipeline->operation_count) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -361,21 +484,37 @@ UmiStatus umi_developer_pipeline_at(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by developer pipeline without changing their
+ * state.
+ */
 size_t umi_developer_pipeline_count(const UmiDeveloperPipeline *pipeline)
 {
     return pipeline != NULL ? pipeline->operation_count : 0U;
 }
 
+/*
+ * Provide the developer pipeline revision operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_developer_pipeline_revision(const UmiDeveloperPipeline *pipeline)
 {
     return pipeline != NULL ? pipeline->revision : 0U;
 }
 
+/*
+ * Provide the developer pipeline refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_refresh(UmiDeveloperPipeline *pipeline)
 {
     size_t index;
     int changed = 0;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -387,16 +526,18 @@ UmiStatus umi_developer_pipeline_refresh(UmiDeveloperPipeline *pipeline)
     for (;;) {
         int pass_changed = 0;
 
+        /* Visit each bounded item once so every record receives the same rule. */
         for (index = 0U; index < pipeline->operation_count; ++index) {
             UmiDeveloperOperationSnapshot *operation =
                 &pipeline->operations[index];
 
+            /* Apply this branch only when its contract condition is satisfied. */
             if (operation->state == UMI_DEVELOPER_OPERATION_QUEUED &&
                 dependency_terminal_failure(pipeline, index)) {
                 operation->state = UMI_DEVELOPER_OPERATION_BLOCKED;
                 operation->revision += 1U;
                 pass_changed = 1;
-            } else if (operation->state == UMI_DEVELOPER_OPERATION_BLOCKED &&
+            } else /* Apply this branch only when its contract condition is satisfied. */ if (operation->state == UMI_DEVELOPER_OPERATION_BLOCKED &&
                        !dependency_terminal_failure(pipeline, index)) {
                 operation->state = UMI_DEVELOPER_OPERATION_QUEUED;
                 operation->revision += 1U;
@@ -404,18 +545,24 @@ UmiStatus umi_developer_pipeline_refresh(UmiDeveloperPipeline *pipeline)
             }
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (pass_changed == 0) {
             break;
         }
         changed = 1;
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (changed != 0) {
         pipeline->revision += 1U;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer pipeline next ready operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_next_ready(
     UmiDeveloperPipeline *pipeline,
     UmiDeveloperOperationSnapshot *out_operation)
@@ -426,19 +573,26 @@ UmiStatus umi_developer_pipeline_next_ready(
     int found = 0;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || out_operation == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_refresh(pipeline);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pipeline->operation_count; ++index) {
         const UmiDeveloperOperationSnapshot *operation =
             &pipeline->operations[index];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (operation->state == UMI_DEVELOPER_OPERATION_QUEUED &&
             dependencies_succeeded(pipeline, index) &&
             operation->sequence < best_sequence) {
@@ -448,6 +602,7 @@ UmiStatus umi_developer_pipeline_next_ready(
         }
     }
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (found == 0) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -456,6 +611,10 @@ UmiStatus umi_developer_pipeline_next_ready(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer pipeline start operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_start(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id)
@@ -464,23 +623,31 @@ UmiStatus umi_developer_pipeline_start(
     UmiDeveloperOperationSnapshot *operation;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_refresh(pipeline);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!find_index(pipeline, operation_id, &index)) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     operation = &pipeline->operations[index];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->state != UMI_DEVELOPER_OPERATION_QUEUED ||
         !dependencies_succeeded(pipeline, index)) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (operation->attempt_count >= operation->max_attempts) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -494,6 +661,10 @@ UmiStatus umi_developer_pipeline_start(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer pipeline set progress operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_set_progress(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -503,15 +674,21 @@ UmiStatus umi_developer_pipeline_set_progress(
     size_t index;
     UmiDeveloperOperationSnapshot *operation;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL ||
         progress_basis_points > 10000U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!find_index(pipeline, operation_id, &index)) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     operation = &pipeline->operations[index];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->state != UMI_DEVELOPER_OPERATION_RUNNING) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -523,6 +700,7 @@ UmiStatus umi_developer_pipeline_set_progress(
     return UMI_STATUS_OK;
 }
 
+/* Provide the finish operation operation used by this module and its client applications. */
 static UmiStatus finish_operation(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -533,14 +711,20 @@ static UmiStatus finish_operation(
     size_t index;
     UmiDeveloperOperationSnapshot *operation;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!find_index(pipeline, operation_id, &index)) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     operation = &pipeline->operations[index];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->state != UMI_DEVELOPER_OPERATION_RUNNING) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -548,6 +732,7 @@ static UmiStatus finish_operation(
     operation->state = state;
     operation->exit_code = exit_code;
     operation->has_exit_code = 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (state == UMI_DEVELOPER_OPERATION_SUCCEEDED) {
         operation->progress_basis_points = 10000U;
     }
@@ -557,6 +742,10 @@ static UmiStatus finish_operation(
     return umi_developer_pipeline_refresh(pipeline);
 }
 
+/*
+ * Provide the developer pipeline complete operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_complete(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -571,6 +760,10 @@ UmiStatus umi_developer_pipeline_complete(
         summary);
 }
 
+/*
+ * Provide the developer pipeline fail operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_fail(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -585,6 +778,10 @@ UmiStatus umi_developer_pipeline_fail(
         summary);
 }
 
+/*
+ * Provide the developer pipeline cancel operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_cancel(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -593,14 +790,20 @@ UmiStatus umi_developer_pipeline_cancel(
     size_t index;
     UmiDeveloperOperationSnapshot *operation;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!find_index(pipeline, operation_id, &index)) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     operation = &pipeline->operations[index];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (operation->state != UMI_DEVELOPER_OPERATION_QUEUED &&
         operation->state != UMI_DEVELOPER_OPERATION_RUNNING &&
         operation->state != UMI_DEVELOPER_OPERATION_BLOCKED) {
@@ -615,6 +818,10 @@ UmiStatus umi_developer_pipeline_cancel(
     return umi_developer_pipeline_refresh(pipeline);
 }
 
+/*
+ * Provide the developer pipeline retry operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_retry(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id)
@@ -622,18 +829,25 @@ UmiStatus umi_developer_pipeline_retry(
     size_t index;
     UmiDeveloperOperationSnapshot *operation;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || operation_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (!find_index(pipeline, operation_id, &index)) {
         return UMI_STATUS_NOT_FOUND;
     }
 
     operation = &pipeline->operations[index];
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (operation->state != UMI_DEVELOPER_OPERATION_FAILED &&
         operation->state != UMI_DEVELOPER_OPERATION_CANCELLED) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (operation->attempt_count >= operation->max_attempts) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -648,6 +862,10 @@ UmiStatus umi_developer_pipeline_retry(
     return umi_developer_pipeline_refresh(pipeline);
 }
 
+/*
+ * Provide the developer pipeline snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_pipeline_snapshot(
     UmiDeveloperPipeline *pipeline,
     UmiDeveloperPipelineSnapshot *out_snapshot)
@@ -655,11 +873,16 @@ UmiStatus umi_developer_pipeline_snapshot(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (pipeline == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_developer_pipeline_refresh(pipeline);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -671,11 +894,14 @@ UmiStatus umi_developer_pipeline_snapshot(
     out_snapshot->dependency_count = pipeline->dependency_count;
     out_snapshot->revision = pipeline->revision;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < pipeline->operation_count; ++index) {
         UmiDeveloperOperationState state = pipeline->operations[index].state;
+        /* Select the behaviour associated with the requested command or state value. */
         switch (state) {
             case UMI_DEVELOPER_OPERATION_QUEUED:
                 out_snapshot->queued_count += 1U;
+                /* Keep the operation inside its valid bounds before reading, writing or adding data. */
                 if (dependencies_succeeded(pipeline, index)) {
                     out_snapshot->ready_count += 1U;
                 }

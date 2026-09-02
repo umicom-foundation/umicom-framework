@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_CLONE_DOCUMENT "umicom.document.lifecycle.clone_document"
 
+/**
+ * Provide the document capability clone document operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_clone_document(void);
 

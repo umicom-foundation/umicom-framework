@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench context link command history data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchContextLinkCommandHistory {
     uint32_t structure_size;
     char entry_id[UMI_WORKBENCH_CONTEXT_LINK_ID_CAPACITY];
@@ -39,21 +43,49 @@ typedef struct UmiWorkbenchContextLinkCommandHistory {
     uint64_t revision;
 } UmiWorkbenchContextLinkCommandHistory;
 
+/**
+ * Initialise workbench context link command history from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_link_command_history_init(UmiWorkbenchContextLinkCommandHistory *record,
                                            const char *identity);
+/**
+ * Check that workbench context link command history satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_link_command_history_validate(
     const UmiWorkbenchContextLinkCommandHistory *record);
+/**
+ * Copy workbench context link command history into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_workbench_context_link_command_history_copy(
     UmiWorkbenchContextLinkCommandHistory *destination,
     const UmiWorkbenchContextLinkCommandHistory *source);
+/**
+ * Provide the workbench context link command history hash operation used by this module
+ * and its client applications.
+ */
 uint64_t umi_workbench_context_link_command_history_hash(
     const UmiWorkbenchContextLinkCommandHistory *record);
+/**
+ * Provide the workbench context link command history set primary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_command_history_set_primary(
     UmiWorkbenchContextLinkCommandHistory *record,
     const char *value);
+/**
+ * Provide the workbench context link command history set secondary operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_link_command_history_set_secondary(
     UmiWorkbenchContextLinkCommandHistory *record,
     const char *value);
+/**
+ * Provide the workbench context link command history touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_link_command_history_touch(
     UmiWorkbenchContextLinkCommandHistory *record,
     uint64_t sequence,

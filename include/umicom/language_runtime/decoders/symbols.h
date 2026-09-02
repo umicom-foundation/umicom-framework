@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the language runtime decode symbols operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_decode_symbols(const char*json,const char*default_uri,UmiLanguageRuntimeSymbolList*out);
 #ifdef __cplusplus
 }

@@ -17,6 +17,10 @@
 
 #include "umicom/application/application.h"
 
+/*
+ * Exercise handle ai and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus handle_ai(void *context,
                            const UmiFederationRequest *request,
                            UmiFederationResponse *response)
@@ -25,6 +29,10 @@ static UmiStatus handle_ai(void *context,
     int *calls = (int *)context;
     *calls += 1;
     assert(strcmp(request->operation_id, "chat.complete") == 0);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (response != NULL && response->payload != NULL &&
         response->capacity >= strlen(answer) + 1U) {
         (void)memcpy(response->payload, answer, strlen(answer) + 1U);
@@ -33,6 +41,10 @@ static UmiStatus handle_ai(void *context,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Exercise deny all and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static int deny_all(void *context, const UmiFederationRequest *request,
                     const char *provider_application_id)
 {
@@ -42,6 +54,10 @@ static int deny_all(void *context, const UmiFederationRequest *request,
     return 0;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFederationRouter *router = NULL;

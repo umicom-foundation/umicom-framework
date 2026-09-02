@@ -149,11 +149,19 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
     }
 };
 
+/*
+ * Return the number of records represented by teacher foundations curriculum without
+ * changing their state.
+ */
 size_t umi_teacher_foundations_curriculum_count(void)
 {
     return sizeof(FOUNDATIONS_LESSONS) / sizeof(FOUNDATIONS_LESSONS[0]);
 }
 
+/*
+ * Find teacher foundations curriculum while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiTeacherFoundationsLesson *umi_teacher_foundations_curriculum_at(
     size_t index)
 {
@@ -161,12 +169,22 @@ const UmiTeacherFoundationsLesson *umi_teacher_foundations_curriculum_at(
         ? &FOUNDATIONS_LESSONS[index] : NULL;
 }
 
+/*
+ * Find teacher foundations curriculum while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiTeacherFoundationsLesson *umi_teacher_foundations_curriculum_find(
     const char *lesson_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lesson_id == NULL || lesson_id[0] == '\0') return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_teacher_foundations_curriculum_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(FOUNDATIONS_LESSONS[index].id, lesson_id) == 0) {
             return &FOUNDATIONS_LESSONS[index];
         }
@@ -174,14 +192,24 @@ const UmiTeacherFoundationsLesson *umi_teacher_foundations_curriculum_find(
     return NULL;
 }
 
+/*
+ * Provide the teacher foundations curriculum next operation used by this module and its
+ * client applications.
+ */
 const UmiTeacherFoundationsLesson *umi_teacher_foundations_curriculum_next(
     const char *lesson_id)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (lesson_id == NULL || lesson_id[0] == '\0') {
         return umi_teacher_foundations_curriculum_at(0U);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_teacher_foundations_curriculum_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(FOUNDATIONS_LESSONS[index].id, lesson_id) == 0) {
             return umi_teacher_foundations_curriculum_at(index + 1U);
         }
@@ -189,36 +217,57 @@ const UmiTeacherFoundationsLesson *umi_teacher_foundations_curriculum_next(
     return NULL;
 }
 
+/*
+ * Provide the teacher foundations curriculum plan operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_teacher_foundations_curriculum_plan(
     UmiTeacherLearningPlan *out_plan)
 {
     size_t index;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_teacher_learning_plan_init(out_plan);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_teacher_foundations_curriculum_count(); ++index) {
         status = umi_teacher_learning_plan_append(
             out_plan, FOUNDATIONS_LESSONS[index].id);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the teacher foundations curriculum minutes operation used by this module and its
+ * client applications.
+ */
 uint32_t umi_teacher_foundations_curriculum_minutes(void)
 {
     size_t index;
     uint32_t total = 0U;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_teacher_foundations_curriculum_count(); ++index) {
         uint32_t minutes = FOUNDATIONS_LESSONS[index].estimated_minutes;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (UINT32_MAX - total < minutes) return UINT32_MAX;
         total += minutes;
     }
     return total;
 }
 
+/*
+ * Provide the teacher foundations stage text operation used by this module and its client
+ * applications.
+ */
 const char *umi_teacher_foundations_stage_text(
     UmiTeacherFoundationsStage stage)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (stage) {
         case UMI_TEACHER_FOUNDATIONS_ORIENTATION: return "orientation";
         case UMI_TEACHER_FOUNDATIONS_TOOLS: return "development tools";

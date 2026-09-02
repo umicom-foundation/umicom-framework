@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request threads operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_request_threads(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t *out_sequence);

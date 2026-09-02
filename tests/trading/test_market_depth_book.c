@@ -19,6 +19,10 @@
 
 #include <assert.h>
 #include "test_trading_common.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){
     UmiMarketDepth d={0};d.instrument=test_instrument();d.bid_count=1;d.ask_count=1;d.bids[0]=(UmiDepthLevel){25000,6};d.asks[0]=(UmiDepthLevel){25001,2};
     assert(umi_market_depth_valid(&d));assert(umi_market_depth_best_bid(&d)==25000);assert(umi_market_depth_best_ask(&d)==25001);

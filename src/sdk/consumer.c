@@ -18,4 +18,5 @@
  */
 #include "umicom/sdk/consumer.h"
 #include <stddef.h>
-UmiStatus umi_sdk_consumer_validate(const UmiSdkConsumer *c){size_t i;if(c==NULL||c->application_id==NULL||c->application_id[0]=='\0'||c->requirement.required_abi==0U)return UMI_STATUS_INVALID_ARGUMENT;for(i=0U;i<c->target_count;++i)if(c->required_targets[i]==NULL||c->required_targets[i][0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that sdk consumer satisfies its contract before another service relies on it. */
+UmiStatus umi_sdk_consumer_validate(const UmiSdkConsumer *c){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c==NULL||c->application_id==NULL||c->application_id[0]=='\0'||c->requirement.required_abi==0U)return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<c->target_count;++i)/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c->required_targets[i]==NULL||c->required_targets[i][0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

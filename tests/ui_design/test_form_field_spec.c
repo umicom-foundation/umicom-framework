@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/form_field_spec.h"
 
-int main(void){UmiDesignFormFieldSpec s;if(umi_design_form_field_spec_init(&s,"Account","Required",1,UMI_UI_SEVERITY_INFORMATION)!=UMI_STATUS_OK)return 1;return s.required?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignFormFieldSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_form_field_spec_init(&s,"Account","Required",1,UMI_UI_SEVERITY_INFORMATION)!=UMI_STATUS_OK)return 1;return s.required?0:2;}

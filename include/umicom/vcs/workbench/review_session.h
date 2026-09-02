@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the vcs workbench review thread data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchReviewThread {
     uint32_t struct_size;
     uint32_t api_version;
@@ -35,6 +39,10 @@ typedef struct UmiVcsWorkbenchReviewThread {
     uint64_t revision;
 } UmiVcsWorkbenchReviewThread;
 
+/**
+ * Represent the vcs workbench review comment data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchReviewComment {
     uint32_t struct_size;
     uint32_t api_version;
@@ -45,6 +53,10 @@ typedef struct UmiVcsWorkbenchReviewComment {
     uint64_t created_at_ms;
 } UmiVcsWorkbenchReviewComment;
 
+/**
+ * Represent the vcs workbench review session data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiVcsWorkbenchReviewSession {
     uint32_t struct_size;
     uint32_t api_version;
@@ -61,11 +73,23 @@ typedef struct UmiVcsWorkbenchReviewSession {
     uint64_t revision;
 } UmiVcsWorkbenchReviewSession;
 
+/**
+ * Initialise vcs workbench review session from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_vcs_workbench_review_session_init(
     UmiVcsWorkbenchReviewSession *session);
+/**
+ * Provide the vcs workbench review session begin operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_vcs_workbench_review_session_begin(
     UmiVcsWorkbenchReviewSession *session,
     const char *session_id);
+/**
+ * Provide the vcs workbench review session add thread operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_review_session_add_thread(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
@@ -76,6 +100,10 @@ UmiStatus umi_vcs_workbench_review_session_add_thread(
     const char *author,
     const char *body,
     uint64_t created_at_ms);
+/**
+ * Provide the vcs workbench review session add comment operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_review_session_add_comment(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
@@ -83,17 +111,33 @@ UmiStatus umi_vcs_workbench_review_session_add_comment(
     const char *author,
     const char *body,
     uint64_t created_at_ms);
+/**
+ * Provide the vcs workbench review session resolve thread operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_vcs_workbench_review_session_resolve_thread(
     UmiVcsWorkbenchReviewSession *session,
     const char *thread_id,
     int resolved);
+/**
+ * Provide the vcs workbench review session set decision operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_vcs_workbench_review_session_set_decision(
     UmiVcsWorkbenchReviewSession *session,
     UmiVcsWorkbenchReviewDecision decision);
+/**
+ * Find vcs workbench review session thread while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiVcsWorkbenchReviewThread *
 umi_vcs_workbench_review_session_thread_at(
     const UmiVcsWorkbenchReviewSession *session,
     size_t index);
+/**
+ * Find vcs workbench review session comment while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 const UmiVcsWorkbenchReviewComment *
 umi_vcs_workbench_review_session_comment_at(
     const UmiVcsWorkbenchReviewSession *session,

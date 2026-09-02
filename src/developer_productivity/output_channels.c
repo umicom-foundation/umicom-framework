@@ -17,15 +17,22 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the find index operation used by this module and its client applications. */
 static size_t find_index(
     const UmiDeveloperOutputChannels *channels,
     const char *channel_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (channels == NULL || channel_id == NULL) return (size_t)-1;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < channels->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(channels->channels[index].channel_id, channel_id) == 0) {
             return index;
         }
@@ -34,14 +41,26 @@ static size_t find_index(
     return (size_t)-1;
 }
 
+/*
+ * Initialise developer output channels from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_developer_output_channels_init(
     UmiDeveloperOutputChannels *channels)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (channels == NULL) return;
     (void)memset(channels, 0, sizeof(*channels));
     channels->revision = 1U;
 }
 
+/*
+ * Add developer output channel only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_developer_output_channel_append(
     UmiDeveloperOutputChannels *channels,
     const char *channel_id,
@@ -52,13 +71,19 @@ UmiStatus umi_developer_output_channel_append(
     UmiDeveloperOutputChannel *channel;
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (channels == NULL || channel_id == NULL ||
         title == NULL || text == NULL || channel_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = find_index(channels, channel_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == (size_t)-1) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (channels->count >= UMI_DEVELOPER_OUTPUT_CHANNEL_CAPACITY) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
@@ -79,6 +104,7 @@ UmiStatus umi_developer_output_channel_append(
     channel = &channels->channels[index];
     length = strlen(text);
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (channel->length + length + 2U > sizeof(channel->text)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -92,13 +118,22 @@ UmiStatus umi_developer_output_channel_append(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the developer output channels clear all operation used by this module and its
+ * client applications.
+ */
 void umi_developer_output_channels_clear_all(
     UmiDeveloperOutputChannels *channels)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (channels == NULL) return;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < channels->count; ++index) {
         channels->channels[index].text[0] = '\0';
         channels->channels[index].length = 0U;
@@ -108,17 +143,26 @@ void umi_developer_output_channels_clear_all(
     channels->revision += 1U;
 }
 
+/*
+ * Release or reset state held by developer output channel so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_developer_output_channel_clear(
     UmiDeveloperOutputChannels *channels,
     const char *channel_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (channels == NULL || channel_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = find_index(channels, channel_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == (size_t)-1) return UMI_STATUS_NOT_FOUND;
 
     channels->channels[index].text[0] = '\0';
@@ -128,6 +172,10 @@ UmiStatus umi_developer_output_channel_clear(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find developer output channel while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_developer_output_channel_find(
     const UmiDeveloperOutputChannels *channels,
     const char *channel_id,
@@ -135,11 +183,16 @@ UmiStatus umi_developer_output_channel_find(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (channels == NULL || channel_id == NULL || out_channel == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     index = find_index(channels, channel_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == (size_t)-1) return UMI_STATUS_NOT_FOUND;
 
     *out_channel = channels->channels[index];

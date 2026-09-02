@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/diagnostics/audit.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiAuditLog *log = NULL; UmiAuditRecord r = {0}, out;
     (void)strcpy(r.principal, "user.sammy"); (void)strcpy(r.action, "plugin.enable"); (void)strcpy(r.resource, "plugin.example"); r.outcome = UMI_AUDIT_SUCCEEDED;

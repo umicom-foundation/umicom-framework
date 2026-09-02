@@ -20,6 +20,10 @@
 #include <string.h>
 
 
+/*
+ * Exercise test command and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus test_command(void *user_data, const char *argument, char *out_message, size_t capacity)
 {
     int *count = (int *)user_data;
@@ -28,6 +32,10 @@ static UmiStatus test_command(void *user_data, const char *argument, char *out_m
     (void)snprintf(out_message, capacity, "%s", "executed");
     return UMI_STATUS_OK;
 }
+/*
+ * Exercise create workbench and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static UmiStatus create_workbench(UmiCommandRegistry **out_commands, UmiUiWorkbench **out_workbench, int *count)
 {
     UmiCommandDescriptor command = {0};
@@ -36,6 +44,7 @@ static UmiStatus create_workbench(UmiCommandRegistry **out_commands, UmiUiWorkbe
     UmiUiWorkspaceProfileSnapshot profile = {0};
     UmiUiPaneSnapshot pane = {0};
     UmiStatus status = umi_command_registry_create(out_commands);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     command.structure_size = (uint32_t)sizeof(command);
     command.command_id = "studio.test";
@@ -46,8 +55,10 @@ static UmiStatus create_workbench(UmiCommandRegistry **out_commands, UmiUiWorkbe
     command.handler = test_command;
     command.user_data = count;
     status = umi_command_registry_register(*out_commands, &command);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_ui_workbench_create("studio.workbench", *out_commands, out_workbench);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     (void)snprintf(action.action_id, sizeof(action.action_id), "%s", "studio.test.action");
     (void)snprintf(action.command_id, sizeof(action.command_id), "%s", "studio.test");
@@ -57,11 +68,13 @@ static UmiStatus create_workbench(UmiCommandRegistry **out_commands, UmiUiWorkbe
     (void)snprintf(perspective.perspective_id, sizeof(perspective.perspective_id), "%s", "studio.develop");
     (void)snprintf(perspective.title, sizeof(perspective.title), "%s", "Develop");
     perspective.active = 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_perspective_model_upsert(umi_ui_workbench_perspectives(*out_workbench), &perspective);
     (void)snprintf(pane.pane_id, sizeof(pane.pane_id), "%s", "studio.explorer");
     (void)snprintf(pane.title, sizeof(pane.title), "%s", "Explorer");
     (void)snprintf(pane.view_type, sizeof(pane.view_type), "%s", "studio.project-tree");
     pane.placement = UMI_UI_PLACEMENT_LEFT; pane.visible = 1;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_pane_model_upsert(umi_ui_workbench_panes(*out_workbench), &pane);
     (void)snprintf(profile.profile_id, sizeof(profile.profile_id), "%s", "focus");
     (void)snprintf(profile.label, sizeof(profile.label), "%s", "Focus");
@@ -73,14 +86,20 @@ static UmiStatus create_workbench(UmiCommandRegistry **out_commands, UmiUiWorkbe
     profile.bottom_panel_size = 240;
     profile.editor_split_mode = UMI_UI_EDITOR_SPLIT_ROWS;
     profile.editor_split_ratio = 6100;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ui_workspace_profile_model_upsert(
             umi_ui_workbench_workspace_profiles(*out_workbench), &profile);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = umi_ui_workbench_activate_perspective(*out_workbench, "studio.develop");
     return status;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiCommandRegistry *commands = NULL;

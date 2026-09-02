@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dr channel policy data shared with callers of this public contract.
+ */
 typedef struct UmiDrChannelPolicy { bool allow_downgrade; bool allow_prerelease_to_stable; } UmiDrChannelPolicy;
+/**
+ * Initialise dr channel policy from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dr_channel_policy_init(UmiDrChannelPolicy *policy); bool umi_dr_channel_policy_transition(const UmiDrChannelPolicy *policy,UmiDrChannelKind from,UmiDrChannelKind to);
 
 #ifdef __cplusplus

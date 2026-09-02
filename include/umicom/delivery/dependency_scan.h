@@ -27,13 +27,27 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the dependency scan data shared with callers of this public contract.
+ */
 typedef struct UmiDependencyScan {
     char dependencies[UMI_DELIVERY_MAX_COMPONENTS][UMI_DELIVERY_ID_CAPACITY];
     size_t count;
 } UmiDependencyScan;
+/**
+ * Initialise dependency scan from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_dependency_scan_init(UmiDependencyScan *scan);
+/**
+ * Add dependency scan only after its inputs and available capacity have been checked.
+ */
 UmiStatus umi_dependency_scan_add(UmiDependencyScan *scan,
                                   const char *dependency);
+/**
+ * Provide the dependency scan contains operation used by this module and its client
+ * applications.
+ */
 int umi_dependency_scan_contains(const UmiDependencyScan *scan,
                                  const char *dependency);
 

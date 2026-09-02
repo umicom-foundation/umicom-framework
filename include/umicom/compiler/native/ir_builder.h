@@ -20,10 +20,29 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the native ir builder data shared with callers of this public contract.
+ */
 typedef struct UmiNativeIrBuilder { UmiNativeIrFunction *function; UmiNativeIrBlock *block; } UmiNativeIrBuilder;
+/**
+ * Provide the nc ir builder begin operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ir_builder_begin(UmiNativeIrBuilder *builder,UmiNativeIrFunction *function,uint32_t block_id);
+/**
+ * Provide the nc ir builder const i64 operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ir_builder_const_i64(UmiNativeIrBuilder *builder,int64_t value,uint32_t *out_value_id);
+/**
+ * Provide the nc ir builder binary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ir_builder_binary(UmiNativeIrBuilder *builder,UmiNativeIrOpcode opcode,uint32_t left,uint32_t right,UmiNativeIrType type,uint32_t *out_value_id);
+/**
+ * Provide the nc ir builder return operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_nc_ir_builder_return(UmiNativeIrBuilder *builder,uint32_t value_id);
 #ifdef __cplusplus
 }

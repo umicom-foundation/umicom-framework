@@ -33,11 +33,19 @@ static const ParserFactory FACTORIES[] = {
     umi_developer_diagnostic_parser_typescript
 };
 
+/*
+ * Return the number of records represented by developer builtin diagnostic parser without
+ * changing their state.
+ */
 size_t umi_developer_builtin_diagnostic_parser_count(void)
 {
     return sizeof(FACTORIES) / sizeof(FACTORIES[0]);
 }
 
+/*
+ * Find developer builtin diagnostic parser while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperDiagnosticParser *
 umi_developer_builtin_diagnostic_parser_at(size_t index)
 {
@@ -46,13 +54,22 @@ umi_developer_builtin_diagnostic_parser_at(size_t index)
         : NULL;
 }
 
+/*
+ * Add developer builtin diagnostics only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_developer_builtin_diagnostics_register(
     UmiDeveloperDiagnosticRegistry *registry)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_developer_builtin_diagnostic_parser_count();
          ++index) {
@@ -60,6 +77,7 @@ UmiStatus umi_developer_builtin_diagnostics_register(
             registry,
             FACTORIES[index]());
 
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 

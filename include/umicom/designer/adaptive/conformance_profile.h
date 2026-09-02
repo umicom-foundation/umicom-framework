@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer adaptive conformance profile data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesignerAdaptiveConformanceProfile {
     UmiRadTargetKind renderer;
     uint32_t required_size_classes_mask;

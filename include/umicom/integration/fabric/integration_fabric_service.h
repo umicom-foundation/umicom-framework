@@ -33,9 +33,25 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the integration fabric service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiIntegrationFabricService { UmiFabricServiceCatalogue services; UmiFabricServiceRegistry instances; UmiFabricEndpointRegistry endpoints; UmiFabricConnectorCatalogue connectors; UmiFabricApiCatalogue apis; UmiFabricRouteTable routes; UmiFabricHealthSummary health; uint64_t revision; bool running; } UmiIntegrationFabricService;
+/**
+ * Initialise integration fabric service from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_integration_fabric_service_init(UmiIntegrationFabricService *service);
+/**
+ * Provide the integration fabric service start operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_fabric_service_start(UmiIntegrationFabricService *service);
+/**
+ * Provide the integration fabric service snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_integration_fabric_service_snapshot(const UmiIntegrationFabricService *service,UmiFabricSnapshot *out_snapshot);
 
 #ifdef __cplusplus

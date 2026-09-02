@@ -29,11 +29,34 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev context catalogue entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevContextCatalogueEntry { char id[UMI_AI_DEV_ID_CAPACITY]; uint32_t priority; uint64_t flags; int enabled; } UmiAiDevContextCatalogueEntry;
+/**
+ * Represent the ai dev context catalogue data shared with callers of this public contract.
+ */
 typedef struct UmiAiDevContextCatalogue { UmiAiDevContextCatalogueEntry entries[UMI_AI_DEV_SMALL_CAPACITY]; size_t count; uint64_t revision; } UmiAiDevContextCatalogue;
+/**
+ * Initialise ai dev context catalogue from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_context_catalogue_init(UmiAiDevContextCatalogue *catalogue);
+/**
+ * Provide the ai dev context catalogue upsert operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_dev_context_catalogue_upsert(UmiAiDevContextCatalogue *catalogue, const char *id, uint32_t priority, uint64_t flags);
+/**
+ * Find ai dev context catalogue while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiAiDevContextCatalogueEntry *umi_ai_dev_context_catalogue_find(const UmiAiDevContextCatalogue *catalogue, const char *id);
+/**
+ * Return the number of records represented by ai dev context catalogue enabled without
+ * changing their state.
+ */
 size_t umi_ai_dev_context_catalogue_enabled_count(const UmiAiDevContextCatalogue *catalogue);
 
 #ifdef __cplusplus

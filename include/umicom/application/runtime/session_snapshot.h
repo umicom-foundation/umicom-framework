@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application session snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationSessionSnapshot {
     uint32_t structure_size;
     char application_id[UMI_APPLICATION_RUNTIME_TEXT_CAPACITY];
@@ -33,9 +37,17 @@ typedef struct UmiApplicationSessionSnapshot {
     uint64_t revision;
 } UmiApplicationSessionSnapshot;
 
+/**
+ * Provide the application session snapshot capture operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_session_snapshot_capture(
     const UmiApplicationSession *session,
     UmiApplicationSessionSnapshot *out_snapshot);
+/**
+ * Provide the application session snapshot restore operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_session_snapshot_restore(
     const UmiApplicationExperienceDefinition *experience,
     const UmiApplicationSessionSnapshot *snapshot,

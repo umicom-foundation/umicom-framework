@@ -24,23 +24,36 @@ typedef struct UmiGtk4WsPanelFrameState {
     void *user_data;
 } UmiGtk4WsPanelFrameState;
 
+/* Provide the on action clicked operation used by this module and its client applications. */
 static void on_action_clicked(GtkButton *button, gpointer user_data)
 {
     UmiGtk4WsPanelFrameState *state =
         (UmiGtk4WsPanelFrameState *)user_data;
     UmiWsPanelAction action;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || state->action_handler == NULL) return;
     action = (UmiWsPanelAction)GPOINTER_TO_INT(
         g_object_get_data(G_OBJECT(button), "umicom-panel-action"));
     state->action_handler(action, &state->chrome, state->user_data);
 }
 
+/*
+ * Provide the make action button operation used by this module and its client
+ * applications.
+ */
 static GtkWidget *make_action_button(UmiGtk4WsPanelFrameState *state,
                                      UmiWsPanelAction action,
                                      const char *icon_name,
                                      bool enabled)
 {
     GtkWidget *button = gtk_button_new_from_icon_name(icon_name);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (button == NULL) return NULL;
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-panel-action");
@@ -52,6 +65,7 @@ static GtkWidget *make_action_button(UmiGtk4WsPanelFrameState *state,
     return button;
 }
 
+/* Provide the append action operation used by this module and its client applications. */
 static void append_action(GtkWidget *header,
                           UmiGtk4WsPanelFrameState *state,
                           UmiWsPanelAction action,
@@ -59,6 +73,10 @@ static void append_action(GtkWidget *header,
                           bool enabled)
 {
     GtkWidget *button = make_action_button(state, action, icon_name, enabled);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (button != NULL) gtk_box_append(GTK_BOX(header), button);
 }
 
@@ -79,7 +97,12 @@ static const char *context_colour_css_class(const char *colour_token)
     };
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (colour_token == NULL || colour_token[0] == '\0') return NULL;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < G_N_ELEMENTS(colours); ++index) {
         const char *colour = colours[index];
         char css_class[64U];
@@ -89,6 +112,7 @@ static const char *context_colour_css_class(const char *colour_token)
             css_class, sizeof(css_class), "umicom-context-%s", colour);
         (void)g_snprintf(
             token_id, sizeof(token_id), "umicom.context.colour.%s", colour);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (strcmp(colour_token, colour) == 0 ||
             strcmp(colour_token, css_class) == 0 ||
             strcmp(colour_token, token_id) == 0) {
@@ -100,6 +124,10 @@ static const char *context_colour_css_class(const char *colour_token)
     return NULL;
 }
 
+/*
+ * Provide the gtk4 ws panel frame create interactive operation used by this module and its
+ * client applications.
+ */
 GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     const UmiWsPanelChrome *chrome,
     GtkWidget *child,
@@ -118,11 +146,19 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     const char *context_class;
     bool editing_enabled;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || frame == NULL || root == NULL || header == NULL ||
         titles == NULL) {
         g_free(state);
         return frame;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chrome != NULL) state->chrome = *chrome;
     state->action_handler = action_handler;
     state->user_data = user_data;
@@ -137,53 +173,105 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     context_class = chrome != NULL
         ? context_colour_css_class(chrome->context_colour_token)
         : NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (context_class != NULL) {
         /* The group colour is presentation metadata only; linked selection and
          * routing continue to be owned by the toolkit-neutral context model. */
         gtk_widget_add_css_class(frame, context_class);
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chrome != NULL && chrome->compact)
         gtk_widget_add_css_class(header, "umicom-panel-header-compact");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chrome != NULL && chrome->locked)
         gtk_widget_add_css_class(header, "umicom-panel-header-locked");
     gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
     gtk_widget_set_hexpand(titles, TRUE);
     gtk_box_append(GTK_BOX(titles), title);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chrome != NULL && chrome->subtitle[0] != '\0') {
         gtk_label_set_xalign(GTK_LABEL(subtitle), 0.0F);
         gtk_widget_add_css_class(subtitle, "dim-label");
         gtk_box_append(GTK_BOX(titles), subtitle);
     }
     gtk_box_append(GTK_BOX(header), titles);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (chrome != NULL && chrome->badge[0] != '\0') {
         gtk_widget_add_css_class(badge, "umicom-panel-badge");
         gtk_box_append(GTK_BOX(header), badge);
     }
 
     editing_enabled = chrome == NULL || !chrome->locked;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_context)
         append_action(header, state, UMI_WS_PANEL_ACTION_CONTEXT_GROUP,
                       "insert-link-symbolic", editing_enabled);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_move)
         append_action(header, state, UMI_WS_PANEL_ACTION_MOVE,
                       "transform-move-symbolic", editing_enabled);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_pin)
         append_action(header, state, UMI_WS_PANEL_ACTION_PIN_TOGGLE,
                       "view-pin-symbolic", editing_enabled);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_float)
         append_action(header, state, UMI_WS_PANEL_ACTION_FLOAT_TOGGLE,
                       "view-restore-symbolic", editing_enabled);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_maximise)
         append_action(header, state, UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE,
                       "view-fullscreen-symbolic", editing_enabled);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_settings)
         append_action(header, state, UMI_WS_PANEL_ACTION_SETTINGS,
                       "emblem-system-symbolic", true);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (action_handler != NULL && chrome != NULL && chrome->show_close)
         append_action(header, state, UMI_WS_PANEL_ACTION_CLOSE,
                       "window-close-symbolic", editing_enabled);
 
     gtk_box_append(GTK_BOX(root), header);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (child != NULL) {
         gtk_widget_set_hexpand(child, TRUE);
         gtk_widget_set_vexpand(child, TRUE);
@@ -193,6 +281,10 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     return frame;
 }
 
+/*
+ * Initialise gtk4 ws panel frame from caller-provided values so later operations receive a
+ * known state.
+ */
 GtkWidget *umi_gtk4_ws_panel_frame_create(const UmiWsPanelChrome *chrome,
                                           GtkWidget *child)
 {

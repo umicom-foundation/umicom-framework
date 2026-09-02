@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/financial_core_service.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiFinancialCoreService s; umi_financial_core_service_init(&s); CHECK(umi_financial_core_service_start(&s)==UMI_STATUS_OK); CHECK(s.ready);

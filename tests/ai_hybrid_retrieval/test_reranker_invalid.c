@@ -15,4 +15,8 @@
 
 #include <assert.h>
 #include "umicom/ai/reranker.h"
+/*
+ * Exercise test ai hybrid reranker invalid and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_ai_hybrid_reranker_invalid(void){assert(umi_ai_reranker_apply(NULL,NULL,NULL,0)==UMI_STATUS_INVALID_ARGUMENT);return 0;}

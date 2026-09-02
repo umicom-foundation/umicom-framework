@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer persistence bridge data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerPersistenceBridge {
     UmiWorkbenchLayoutStoreAdapter adapter;
     UmiWorkbenchDesignerSaveState save_state;
@@ -36,11 +40,35 @@ typedef struct UmiWorkbenchDesignerPersistenceBridge {
     uint64_t revision;
 } UmiWorkbenchDesignerPersistenceBridge;
 
+/**
+ * Initialise workbench designer persistence bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_designer_persistence_bridge_init(UmiWorkbenchDesignerPersistenceBridge *bridge, const UmiWorkbenchLayoutStoreAdapter *adapter);
+/**
+ * Provide the workbench designer persistence bridge mark dirty operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_designer_persistence_bridge_mark_dirty(UmiWorkbenchDesignerPersistenceBridge *bridge);
+/**
+ * Write workbench designer persistence bridge in its stable representation and report
+ * capacity or input failures to the caller.
+ */
 UmiStatus umi_workbench_designer_persistence_bridge_save(UmiWorkbenchDesignerPersistenceBridge *bridge, UmiWorkbenchLayoutDocument *document, uint64_t expected_revision, uint64_t timestamp_ms);
+/**
+ * Read workbench designer persistence bridge into validated module state and return a
+ * status when input cannot be used.
+ */
 UmiStatus umi_workbench_designer_persistence_bridge_load(UmiWorkbenchDesignerPersistenceBridge *bridge, const char *layout_id, UmiWorkbenchLayoutDocument *out_document);
+/**
+ * Provide the workbench designer persistence bridge delete operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_designer_persistence_bridge_delete(UmiWorkbenchDesignerPersistenceBridge *bridge, const char *layout_id, uint64_t expected_revision);
+/**
+ * Provide the workbench designer persistence bridge list operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_persistence_bridge_list(UmiWorkbenchDesignerPersistenceBridge *bridge, const UmiWorkbenchLayoutStoreQuery *query, UmiWorkbenchLayoutStoreList *out_list);
 
 #ifdef __cplusplus

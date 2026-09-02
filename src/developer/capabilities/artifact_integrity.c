@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/artifact_integrity.h"
 
+/*
+ * Provide the developer capability artifact integrity operation used by this module and
+ * its client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_artifact_integrity(void)
 {

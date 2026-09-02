@@ -22,12 +22,13 @@ UmiAdaptiveMultiWindowPolicy umi_adaptive_multi_window_policy_resolve(UmiAdaptiv
     policy.allow_detach = 0;
     policy.allow_multiple_top_level = 0;
     policy.maximum_windows = 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if ((family == UMI_ADAPTIVE_DEVICE_DESKTOP || family == UMI_ADAPTIVE_DEVICE_LARGE_DISPLAY) &&
         size_class >= UMI_DESIGN_SIZE_EXPANDED) {
         policy.allow_detach = 1;
         policy.allow_multiple_top_level = 1;
         policy.maximum_windows = 16U;
-    } else if (family == UMI_ADAPTIVE_DEVICE_LAPTOP && size_class >= UMI_DESIGN_SIZE_EXPANDED) {
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (family == UMI_ADAPTIVE_DEVICE_LAPTOP && size_class >= UMI_DESIGN_SIZE_EXPANDED) {
         policy.allow_detach = 1;
         policy.maximum_windows = 4U;
     }

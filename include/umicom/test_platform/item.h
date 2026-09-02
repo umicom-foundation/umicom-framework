@@ -31,6 +31,10 @@ extern "C" {
 #define UMI_TEST_PLATFORM_ITEM_CAPACITY 4096U
 #define UMI_TEST_PLATFORM_ITEM_API_VERSION 2U
 
+/**
+ * Represent the test platform item snapshot data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformItemSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -54,18 +58,54 @@ typedef struct UmiTestPlatformItemSnapshot {
     uint64_t revision;
 } UmiTestPlatformItemSnapshot;
 
+/**
+ * Represent the test platform item registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTestPlatformItemRegistry UmiTestPlatformItemRegistry;
 
 /* The registry owns copied records; callers retain ownership of every snapshot
  * passed to upsert. Revisions make explorer refreshes cheap to compare. */
 UmiStatus umi_test_platform_item_registry_create(UmiTestPlatformItemRegistry **out_registry);
+/**
+ * Release or reset state held by test platform item registry so the same storage can be
+ * reused safely.
+ */
 void umi_test_platform_item_registry_destroy(UmiTestPlatformItemRegistry *registry);
+/**
+ * Provide the test platform item registry upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_test_platform_item_registry_upsert(UmiTestPlatformItemRegistry *registry, const UmiTestPlatformItemSnapshot *item);
+/**
+ * Remove test platform item registry while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_test_platform_item_registry_remove(UmiTestPlatformItemRegistry *registry, const char *id);
+/**
+ * Find test platform item registry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_test_platform_item_registry_find(const UmiTestPlatformItemRegistry *registry, const char *id, UmiTestPlatformItemSnapshot *out_item);
+/**
+ * Find test platform item registry while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_test_platform_item_registry_at(const UmiTestPlatformItemRegistry *registry, size_t index, UmiTestPlatformItemSnapshot *out_item);
+/**
+ * Return the number of records represented by test platform item registry without changing
+ * their state.
+ */
 size_t umi_test_platform_item_registry_count(const UmiTestPlatformItemRegistry *registry);
+/**
+ * Provide the test platform item registry revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_test_platform_item_registry_revision(const UmiTestPlatformItemRegistry *registry);
+/**
+ * Release or reset state held by test platform item registry so the same storage can be
+ * reused safely.
+ */
 void umi_test_platform_item_registry_clear(UmiTestPlatformItemRegistry *registry);
 
 #ifdef __cplusplus

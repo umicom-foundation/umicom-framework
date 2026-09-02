@@ -14,6 +14,10 @@
 #include <assert.h>
 #include <stdio.h>
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiDocumentCapabilityCatalog *catalog = NULL;
@@ -27,6 +31,7 @@ int main(void)
     assert(snapshot.total_count == 96U);
     assert(snapshot.implemented_count > 40U);
     assert(snapshot.headless_count == 96U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < UMI_DOCUMENT_CAPABILITY_CATEGORY_COUNT; ++index) {
         assert(snapshot.category_counts[index] == 8U);
     }

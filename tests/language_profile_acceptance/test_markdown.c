@@ -18,6 +18,10 @@
 
 #include "test_support.h"
 
+/*
+ * Exercise test language profile acceptance markdown and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_language_profile_acceptance_markdown(void)
 {
     UmiLanguageProfileRegistry *registry = NULL;

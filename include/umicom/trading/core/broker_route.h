@@ -18,6 +18,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the trading broker route data shared with callers of this public contract.
+ */
 typedef struct UmiTradingBrokerRoute { UmiFinancialId route_id; UmiFinancialId venue_id; uint32_t cost_bps; uint32_t latency_score; bool enabled; } UmiTradingBrokerRoute;
 /* Initialise and validate describe a candidate broker/venue route with cost and latency scores. */
 UmiStatus umi_trading_broker_route_init(UmiTradingBrokerRoute *value,const UmiFinancialId * route_id, const UmiFinancialId * venue_id, uint32_t cost_bps, uint32_t latency_score, bool enabled);

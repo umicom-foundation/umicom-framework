@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the ide builtin surfaces install operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_builtin_surfaces_install(UmiIdeSurfaceRegistry *registry);
 #ifdef __cplusplus
 }

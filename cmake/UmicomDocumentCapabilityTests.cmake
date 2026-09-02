@@ -1,4 +1,20 @@
 #-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDocumentCapabilityTests.cmake
+#
+# PURPOSE:
+#   Configure the umicom document capability tests build rules without
+#   duplicating product logic.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
 # Umicom Framework document capability conformance tests.
 # Created by Sammy Hegab, Umicom Foundation. Licence: MIT.
 #-----------------------------------------------------------------------------

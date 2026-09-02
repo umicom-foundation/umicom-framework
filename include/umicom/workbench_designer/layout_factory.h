@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer layout factory profile values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchDesignerLayoutFactoryProfile {
     UMI_WORKBENCH_DESIGNER_LAYOUT_BLANK = 1,
     UMI_WORKBENCH_DESIGNER_LAYOUT_MOSAIC = 2,
@@ -34,6 +38,10 @@ typedef enum UmiWorkbenchDesignerLayoutFactoryProfile {
     UMI_WORKBENCH_DESIGNER_LAYOUT_OPERATIONS = 6
 } UmiWorkbenchDesignerLayoutFactoryProfile;
 
+/**
+ * Represent the workbench designer layout factory request data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerLayoutFactoryRequest {
     UmiWorkbenchDesignerLayoutFactoryProfile profile;
     char layout_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -45,7 +53,15 @@ typedef struct UmiWorkbenchDesignerLayoutFactoryRequest {
     uint64_t timestamp_ms;
 } UmiWorkbenchDesignerLayoutFactoryRequest;
 
+/**
+ * Provide the workbench designer layout factory request default operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchDesignerLayoutFactoryRequest umi_workbench_designer_layout_factory_request_default(void);
+/**
+ * Initialise workbench designer layout factory from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_designer_layout_factory_create(
     const UmiWorkbenchDesignerLayoutFactoryRequest *request,
     const UmiWorkbenchDesignerPalette *palette,

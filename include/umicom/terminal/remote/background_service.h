@@ -22,8 +22,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the terminal remote background service data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTerminalRemoteBackgroundService { UmiTerminalRemoteNamedEntry identity; UmiTerminalRemoteState desired_state; UmiTerminalRemoteState observed_state; } UmiTerminalRemoteBackgroundService;
+/**
+ * Initialise terminal remote background service from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_terminal_remote_background_service_init(UmiTerminalRemoteBackgroundService *value,const char *id);
+/**
+ * Provide the terminal remote background service converged operation used by this module
+ * and its client applications.
+ */
 bool umi_terminal_remote_background_service_converged(const UmiTerminalRemoteBackgroundService *value);
 #ifdef __cplusplus
 }

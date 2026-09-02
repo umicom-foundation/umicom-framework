@@ -17,8 +17,14 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/vcs/advanced/patch_parser.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiVcsAdvancedPatchSummary s;const char *p="diff --git a/a b/a\n--- a/a\n+++ b/a\n@@ -1 +1 @@\n-old\n+new\n";
+/* Preserve the original failure result so the caller can respond to the correct cause. */
 if(umi_vcs_advanced_patch_parse_summary(p,&s)!=UMI_STATUS_OK)return 1;
+/* Apply this branch only when its contract condition is satisfied. */
 if(s.file_count!=1U||s.hunk_count!=1U||s.added_lines!=1U||s.deleted_lines!=1U)return 2;
     return 0;
 }

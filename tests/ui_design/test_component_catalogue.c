@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/component_catalogue.h"
 
-int main(void){UmiDesignComponentCatalogue c={0};UmiDesignComponentDescriptor d,o;if(umi_design_component_descriptor_init(&d,"card","Card",UMI_UI_COMPONENT_FRAME,UMI_DESIGN_ROLE_NEUTRAL,0)!=UMI_STATUS_OK)return 1;if(umi_design_component_catalogue_upsert(&c,&d)!=UMI_STATUS_OK)return 2;return umi_design_component_catalogue_find(&c,"card",&o)==UMI_STATUS_OK&&c.revision==1U?0:3;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignComponentCatalogue c={0};UmiDesignComponentDescriptor d,o;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_component_descriptor_init(&d,"card","Card",UMI_UI_COMPONENT_FRAME,UMI_DESIGN_ROLE_NEUTRAL,0)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_component_catalogue_upsert(&c,&d)!=UMI_STATUS_OK)return 2;return umi_design_component_catalogue_find(&c,"card",&o)==UMI_STATUS_OK&&c.revision==1U?0:3;}

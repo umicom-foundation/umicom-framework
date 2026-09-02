@@ -19,6 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the debug runtime request breakpoint locations operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_debug_runtime_request_breakpoint_locations(
     UmiDebugRuntimeAdapter *adapter,
     const char *source_path,

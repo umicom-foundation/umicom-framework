@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct timer descriptor data shared with callers of this public contract.
+ */
 typedef struct UmiCtTimerDescriptor { char timer_id[UMI_CT_ID_CAPACITY]; uint64_t frequency_hz; uint32_t counter_bits; bool monotonic; bool oneshot; bool per_cpu; } UmiCtTimerDescriptor;
+/**
+ * Check that ct timer descriptor satisfies its contract before another service relies on
+ * it.
+ */
 UmiStatus umi_ct_timer_descriptor_validate(const UmiCtTimerDescriptor *descriptor);
+/**
+ * Provide the ct timer ns to ticks operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ct_timer_ns_to_ticks(const UmiCtTimerDescriptor *descriptor,uint64_t nanoseconds);
 
 #ifdef __cplusplus

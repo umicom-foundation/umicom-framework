@@ -22,6 +22,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance animation gate data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceAnimationGate {
     char animation_id[UMI_APPEARANCE_ID_CAPACITY];
     bool essential;

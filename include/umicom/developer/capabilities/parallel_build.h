@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_PARALLEL_BUILD "umicom.developer.build.parallel_build"
 
+/**
+ * Provide the developer capability parallel build operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_parallel_build(void);
 

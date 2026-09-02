@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/time_in_force.h"
+/* Check that time in force satisfies its contract before another service relies on it. */
 int umi_time_in_force_valid(UmiTimeInForce tif){return tif>=UMI_TIF_DAY&&tif<=UMI_TIF_FOK;}

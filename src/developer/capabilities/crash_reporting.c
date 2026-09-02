@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/crash_reporting.h"
 
+/*
+ * Provide the developer capability crash reporting operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_crash_reporting(void)
 {

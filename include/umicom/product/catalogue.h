@@ -24,8 +24,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Return the number of records represented by reference product without changing their
+ * state.
+ */
 size_t umi_reference_product_count(void);
+/**
+ * Find reference product while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiProductProfile *umi_reference_product_at(size_t index);
+/**
+ * Find reference product while leaving the underlying catalogue or model owned by this
+ * module.
+ */
 const UmiProductProfile *umi_reference_product_find(const char *product_id);
 #ifdef __cplusplus
 }

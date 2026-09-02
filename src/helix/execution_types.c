@@ -11,8 +11,13 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/helix/execution_types.h"
 
+/*
+ * Provide the helix agent role text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_agent_role_text(UmiHelixAgentRole role)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (role) {
         case UMI_HELIX_AGENT_ROLE_DESIGNER: return "designer";
         case UMI_HELIX_AGENT_ROLE_BUILDER: return "builder";
@@ -23,8 +28,13 @@ const char *umi_helix_agent_role_text(UmiHelixAgentRole role)
     }
 }
 
+/*
+ * Provide the helix action kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_action_kind_text(UmiHelixActionKind kind)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (kind) {
         case UMI_HELIX_ACTION_READ: return "read";
         case UMI_HELIX_ACTION_FILESYSTEM: return "filesystem";
@@ -36,8 +46,13 @@ const char *umi_helix_action_kind_text(UmiHelixActionKind kind)
     }
 }
 
+/*
+ * Provide the helix operation state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_helix_operation_state_text(UmiHelixOperationState state)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (state) {
         case UMI_HELIX_OPERATION_DRAFT: return "draft";
         case UMI_HELIX_OPERATION_PLANNED: return "planned";
@@ -53,6 +68,10 @@ const char *umi_helix_operation_state_text(UmiHelixOperationState state)
     }
 }
 
+/*
+ * Provide the helix action kind is mutating operation used by this module and its client
+ * applications.
+ */
 int umi_helix_action_kind_is_mutating(UmiHelixActionKind kind)
 {
     return kind == UMI_HELIX_ACTION_FILESYSTEM ||
@@ -60,15 +79,22 @@ int umi_helix_action_kind_is_mutating(UmiHelixActionKind kind)
            kind == UMI_HELIX_ACTION_SOURCE_CONTROL;
 }
 
+/*
+ * Provide the helix operation state can transition operation used by this module and its
+ * client applications.
+ */
 int umi_helix_operation_state_can_transition(
     UmiHelixOperationState current,
     UmiHelixOperationState next)
 {
+    /* Apply this branch only when its contract condition is satisfied. */
     if (current == next) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (next == UMI_HELIX_OPERATION_CANCELLED) {
         return current != UMI_HELIX_OPERATION_SUCCEEDED &&
                current != UMI_HELIX_OPERATION_ROLLED_BACK;
     }
+    /* Select the behaviour associated with the requested command or state value. */
     switch (current) {
         case UMI_HELIX_OPERATION_DRAFT:
             return next == UMI_HELIX_OPERATION_PLANNED;

@@ -38,6 +38,9 @@ extern "C" {
 #define UMI_CT_MAX_DEPENDENCIES 32U
 #define UMI_CT_MAX_FEATURES 64U
 
+/**
+ * List the named ct architecture values accepted by this public contract.
+ */
 typedef enum UmiCtArchitecture {
     UMI_CT_ARCH_UNKNOWN = 0,
     UMI_CT_ARCH_X86_64 = 1,
@@ -46,6 +49,9 @@ typedef enum UmiCtArchitecture {
     UMI_CT_ARCH_RISCV64 = 4
 } UmiCtArchitecture;
 
+/**
+ * List the named ct operating system values accepted by this public contract.
+ */
 typedef enum UmiCtOperatingSystem {
     UMI_CT_OS_UNKNOWN = 0,
     UMI_CT_OS_WINDOWS = 1,
@@ -56,6 +62,9 @@ typedef enum UmiCtOperatingSystem {
     UMI_CT_OS_BARE_METAL = 6
 } UmiCtOperatingSystem;
 
+/**
+ * List the named ct environment values accepted by this public contract.
+ */
 typedef enum UmiCtEnvironment {
     UMI_CT_ENV_UNKNOWN = 0,
     UMI_CT_ENV_GNU = 1,
@@ -65,10 +74,22 @@ typedef enum UmiCtEnvironment {
     UMI_CT_ENV_UMICOM = 5
 } UmiCtEnvironment;
 
+/**
+ * List the named ct endian values accepted by this public contract.
+ */
 typedef enum UmiCtEndian { UMI_CT_ENDIAN_LITTLE = 1, UMI_CT_ENDIAN_BIG = 2 } UmiCtEndian;
+/**
+ * List the named ct support level values accepted by this public contract.
+ */
 typedef enum UmiCtSupportLevel { UMI_CT_SUPPORT_NONE = 0, UMI_CT_SUPPORT_DEGRADED = 1, UMI_CT_SUPPORT_NATIVE = 2 } UmiCtSupportLevel;
+/**
+ * List the named ct health values accepted by this public contract.
+ */
 typedef enum UmiCtHealth { UMI_CT_HEALTH_UNKNOWN = 0, UMI_CT_HEALTH_READY = 1, UMI_CT_HEALTH_DEGRADED = 2, UMI_CT_HEALTH_BLOCKED = 3 } UmiCtHealth;
 
+/**
+ * Represent the ct target data shared with callers of this public contract.
+ */
 typedef struct UmiCtTarget {
     uint32_t structure_size;
     uint32_t api_version;
@@ -81,11 +102,30 @@ typedef struct UmiCtTarget {
     UmiCtEndian endian;
 } UmiCtTarget;
 
+/**
+ * Check that ct id satisfies its contract before another service relies on it.
+ */
 bool umi_ct_id_valid(const char *text);
+/**
+ * Copy ct into module-owned storage so callers keep ownership of their input values.
+ */
 UmiStatus umi_ct_copy(char *destination, size_t capacity, const char *source);
+/**
+ * Provide the ct hash bytes operation used by this module and its client applications.
+ */
 uint64_t umi_ct_hash_bytes(uint64_t seed, const void *data, size_t size);
+/**
+ * Provide the ct hash text operation used by this module and its client applications.
+ */
 uint64_t umi_ct_hash_text(uint64_t seed, const char *text);
+/**
+ * Provide the ct support level text operation used by this module and its client
+ * applications.
+ */
 const char *umi_ct_support_level_text(UmiCtSupportLevel level);
+/**
+ * Provide the ct health text operation used by this module and its client applications.
+ */
 const char *umi_ct_health_text(UmiCtHealth health);
 
 #ifdef __cplusplus

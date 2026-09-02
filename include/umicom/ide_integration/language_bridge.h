@@ -21,11 +21,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide language symbol target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_language_symbol_target(
     UmiLanguageService *language,
     const char *symbol_id,
     UmiIdeNavigationTarget *out_target);
 
+/**
+ * Provide the ide language diagnostic target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_language_diagnostic_target(
     UmiLanguageService *language,
     size_t diagnostic_index,

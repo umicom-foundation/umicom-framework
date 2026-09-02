@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant recovery rate data shared with callers of this public contract.
+ */
 typedef struct UmiQuantRecoveryRate {
     double recovery;
 } UmiQuantRecoveryRate;

@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding ignore policy data shared with callers of this public contract.
+ */
 typedef struct UmiAiCodingIgnorePolicy {
     int ignore_git;
     int ignore_build;
@@ -30,7 +33,15 @@ typedef struct UmiAiCodingIgnorePolicy {
     int ignore_binary_extensions;
 } UmiAiCodingIgnorePolicy;
 
+/**
+ * Initialise ai coding ignore policy from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_coding_ignore_policy_init(UmiAiCodingIgnorePolicy *policy);
+/**
+ * Provide the ai coding ignore path operation used by this module and its client
+ * applications.
+ */
 int umi_ai_coding_ignore_path(
     const UmiAiCodingIgnorePolicy *policy,
     const char *relative_path,

@@ -16,6 +16,10 @@
 #include "umicom/project/workspace/package_profile.h"
 #include <string.h>
 #define CHECK(x) do { if (!(x)) return __LINE__; } while (0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) {
     UmiProjectWorkspacePackageProfile a,b;
     CHECK(umi_project_workspace_package_profile_init(&a,"item")==UMI_STATUS_OK);

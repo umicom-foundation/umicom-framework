@@ -3,6 +3,22 @@
  * File: tests/qt6/test_quick_access.cpp
  *
  * PURPOSE:
+ *   Verify the test quick access behaviour and report a clear failure when its
+ *   contract changes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/qt6/test_quick_access.cpp
+ *
+ * PURPOSE:
  *   Verify the public Qt6 adapter descriptor and stable surface contract for qt6.quick_access.
  *
  * Created by: Sammy Hegab
@@ -15,6 +31,10 @@
 
 #define CHECK(expr) do { if (!(expr)) return __LINE__; } while (0)
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main() {
     const UmiQt6SurfaceDescriptor *descriptor = umi_qt6_quick_access_descriptor();
     CHECK(descriptor != nullptr);

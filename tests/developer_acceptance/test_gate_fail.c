@@ -16,6 +16,10 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/developer/acceptance/gate.h"
+/*
+ * Exercise test developer acceptance gate fail and return a clear result when the
+ * behaviour no longer matches its contract.
+ */
 int test_developer_acceptance_gate_fail(void)
 {
     UmiDeveloperAcceptanceEvidenceStore store;

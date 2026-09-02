@@ -22,6 +22,10 @@
 
 #include "umicom/editor/symbol_hierarchy.h"
 
+/*
+ * Exercise node and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorSymbolHierarchyNode node(const char *node_id,
                                          const char *parent_id,
                                          const char *symbol_id,
@@ -50,6 +54,10 @@ static UmiEditorSymbolHierarchyNode node(const char *node_id,
     return value;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorSymbolHierarchy *hierarchy = NULL;

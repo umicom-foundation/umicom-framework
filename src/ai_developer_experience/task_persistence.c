@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Provide the key operation used by this module and its client applications. */
 static UmiStatus key(
     const char *prefix,
     const char *suffix,
@@ -30,6 +31,7 @@ static UmiStatus key(
         : UMI_STATUS_CAPACITY_EXCEEDED;
 }
 
+/* Provide the save text field operation used by this module and its client applications. */
 static UmiStatus save_text_field(
     UmiSessionStore *store,
     const char *prefix,
@@ -48,6 +50,7 @@ static UmiStatus save_text_field(
         "%s.%s",
         prefix,
         field);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(text_prefix)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -58,15 +61,18 @@ static UmiStatus save_text_field(
         text,
         strlen(text),
         &chunks);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = key(text_prefix, "count", count_key, sizeof(count_key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     return umi_ai_developer_persistence_set_uint64(
         store, count_key, chunks);
 }
 
+/* Provide the load text field operation used by this module and its client applications. */
 static UmiStatus load_text_field(
     const UmiSessionStore *store,
     const char *prefix,
@@ -87,15 +93,18 @@ static UmiStatus load_text_field(
         "%s.%s",
         prefix,
         field);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(text_prefix)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
     status = key(text_prefix, "count", count_key, sizeof(count_key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, count_key, 0U, &chunks);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK || chunks == 0U) {
         return status != UMI_STATUS_OK
             ? status : UMI_STATUS_PARSE_ERROR;
@@ -110,6 +119,7 @@ static UmiStatus load_text_field(
         &length);
 }
 
+/* Provide the save entry operation used by this module and its client applications. */
 static UmiStatus save_entry(
     UmiSessionStore *store,
     const char *prefix,
@@ -119,18 +129,22 @@ static UmiStatus save_entry(
     UmiStatus status;
 
     status = save_text_field(store, prefix, "id", entry->task_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = save_text_field(
             store, prefix, "request", entry->request_id);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = save_text_field(
             store, prefix, "title", entry->title);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = save_text_field(
             store, prefix, "summary", entry->summary);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
 #define SAVE_NUMBER(field_name, value) \
@@ -156,6 +170,7 @@ static UmiStatus save_entry(
     return UMI_STATUS_OK;
 }
 
+/* Provide the load entry operation used by this module and its client applications. */
 static UmiStatus load_entry(
     const UmiSessionStore *store,
     const char *prefix,
@@ -169,21 +184,25 @@ static UmiStatus load_entry(
 
     status = load_text_field(
         store, prefix, "id", entry->task_id, sizeof(entry->task_id));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = load_text_field(
             store, prefix, "request",
             entry->request_id, sizeof(entry->request_id));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = load_text_field(
             store, prefix, "title",
             entry->title, sizeof(entry->title));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = load_text_field(
             store, prefix, "summary",
             entry->summary, sizeof(entry->summary));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
 #define LOAD_NUMBER(field_name, target) \
@@ -215,6 +234,10 @@ static UmiStatus load_entry(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Write ai developer tasks in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_ai_developer_tasks_save(
     UmiSessionStore *store,
     const char *key_prefix,
@@ -227,6 +250,10 @@ UmiStatus umi_ai_developer_tasks_save(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL || registry == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -239,12 +266,15 @@ UmiStatus umi_ai_developer_tasks_save(
     first = total - count;
 
     status = key(key_prefix, "count", count_key, sizeof(count_key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_set_uint64(
             store, count_key, count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiAiDeveloperTaskEntry entry;
         char prefix[UMI_SESSION_KEY_CAPACITY];
@@ -252,21 +282,28 @@ UmiStatus umi_ai_developer_tasks_save(
 
         status = umi_ai_developer_task_registry_at(
             registry, first + index, &entry);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         written = snprintf(
             prefix, sizeof(prefix), "%s.t%zu", key_prefix, index);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(prefix)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
         status = save_entry(store, prefix, &entry);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ai developer tasks restore operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_developer_tasks_restore(
     const UmiSessionStore *store,
     const char *key_prefix,
@@ -278,6 +315,10 @@ UmiStatus umi_ai_developer_tasks_restore(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || key_prefix == NULL ||
         registry == NULL || out_restored_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -286,33 +327,40 @@ UmiStatus umi_ai_developer_tasks_restore(
     *out_restored_count = 0U;
 
     status = key(key_prefix, "count", count_key, sizeof(count_key));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_developer_persistence_get_uint64(
             store, count_key, 0U, &count);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > UMI_AI_DEVELOPER_PERSISTED_TASKS) {
         return UMI_STATUS_PARSE_ERROR;
     }
 
     umi_ai_developer_task_registry_clear(registry);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < (size_t)count; ++index) {
         UmiAiDeveloperTaskEntry entry;
         char prefix[UMI_SESSION_KEY_CAPACITY];
         int written = snprintf(
             prefix, sizeof(prefix), "%s.t%zu", key_prefix, index);
 
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(prefix)) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
 
         status = load_entry(store, prefix, &entry);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         status = umi_ai_developer_task_registry_upsert(
             registry, &entry);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
 
         *out_restored_count += 1U;

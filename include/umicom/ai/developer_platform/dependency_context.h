@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai dev dependency context data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiDevDependencyContext {
     char id[UMI_AI_DEV_ID_CAPACITY];
     char label[UMI_AI_DEV_TEXT_CAPACITY];
@@ -38,9 +42,25 @@ typedef struct UmiAiDevDependencyContext {
     int enabled;
 } UmiAiDevDependencyContext;
 
+/**
+ * Initialise ai dev dependency context from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_dev_dependency_context_init(UmiAiDevDependencyContext *value);
+/**
+ * Provide the ai dev dependency context configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_dev_dependency_context_configure(UmiAiDevDependencyContext *value, const char *id, const char *label, uint32_t priority, uint64_t flags);
+/**
+ * Check that ai dev dependency context satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_ai_dev_dependency_context_validate(const UmiAiDevDependencyContext *value);
+/**
+ * Provide the ai dev dependency context evidence score operation used by this module and
+ * its client applications.
+ */
 uint32_t umi_ai_dev_dependency_context_evidence_score(const UmiAiDevDependencyContext *value, uint32_t relevance);
 
 #ifdef __cplusplus

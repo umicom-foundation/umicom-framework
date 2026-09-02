@@ -13,4 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/reactive/dependency_edge.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void) { UmiUiReactiveDependencyEdge item; umi_ui_reactive_dependency_edge_init(&item); return umi_ui_reactive_dependency_edge_valid(&item) ? 0 : 1; }

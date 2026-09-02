@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace workspace resource binding data shared with callers of
+ * this public contract.
+ */
     typedef struct UmiProjectWorkspaceWorkspaceResourceBinding {
         char owner_id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];
         char target_id[UMI_PROJECT_WORKSPACE_ID_CAPACITY];

@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data admin model data shared with callers of this public contract.
+ */
 typedef struct UmiDataAdminModel {
     uint32_t struct_size;
     uint32_t api_version;
@@ -37,7 +40,15 @@ typedef struct UmiDataAdminModel {
     uint64_t revision;
 } UmiDataAdminModel;
 
+/**
+ * Initialise data admin model from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_data_admin_model_init(UmiDataAdminModel *model);
+/**
+ * Provide the data admin model refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_data_admin_model_refresh(
     UmiDataAdminModel *model,
     const UmiDataServer *server,

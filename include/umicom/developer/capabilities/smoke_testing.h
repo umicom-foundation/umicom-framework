@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_SMOKE_TESTING "umicom.developer.delivery.smoke_testing"
 
+/**
+ * Provide the developer capability smoke testing operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_smoke_testing(void);
 

@@ -15,6 +15,9 @@
 #ifndef UMICOM_INTEGRATION_RUN_HISTORY_H
 #define UMICOM_INTEGRATION_RUN_HISTORY_H
 #include "umicom/integration/simulator.h"
+/**
+ * Represent the integration run record data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationRunRecord {
     char run_id[UMI_INTEGRATION_DESIGNER_ID_CAPACITY];
     char workflow_id[UMI_INTEGRATION_DESIGNER_ID_CAPACITY];
@@ -23,11 +26,17 @@ typedef struct UmiIntegrationRunRecord {
     unsigned attempted_requests;
     uint64_t ordinal;
 } UmiIntegrationRunRecord;
+/**
+ * Represent the integration run history data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationRunHistory {
     UmiIntegrationRunRecord items[UMI_INTEGRATION_DESIGNER_MAX_RUNS];
     size_t count;
     uint64_t next_ordinal;
 } UmiIntegrationRunHistory;
+/**
+ * Represent the integration run metrics data shared with callers of this public contract.
+ */
 typedef struct UmiIntegrationRunMetrics {
     size_t total;
     size_t succeeded;
@@ -35,7 +44,19 @@ typedef struct UmiIntegrationRunMetrics {
     size_t cancelled;
     unsigned attempted_requests;
 } UmiIntegrationRunMetrics;
+/**
+ * Add integration run history only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_integration_run_history_append(UmiIntegrationRunHistory *history,const UmiIntegrationSimulation *simulation);
+/**
+ * Find integration run history while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiIntegrationRunRecord *umi_integration_run_history_find(const UmiIntegrationRunHistory *history,const char *run_id);
+/**
+ * Provide the integration run history metrics operation used by this module and its client
+ * applications.
+ */
 void umi_integration_run_history_metrics(const UmiIntegrationRunHistory *history,UmiIntegrationRunMetrics *out_metrics);
 #endif

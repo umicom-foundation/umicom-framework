@@ -19,4 +19,8 @@
 
 #include "umicom/finance/regulatory/timeliness_check.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ CHECK(umi_reg_timeliness_check(900,1000,100)==1); CHECK(umi_reg_timeliness_check(800,1000,100)==0); return 0; }

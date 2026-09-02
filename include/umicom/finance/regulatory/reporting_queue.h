@@ -25,7 +25,13 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the reporting queue item data shared with callers of this public contract.
+ */
 typedef struct UmiReportingQueueItem { char job_id[UMI_REG_ID_CAPACITY]; uint32_t priority; uint64_t sequence; } UmiReportingQueueItem;
+/**
+ * Represent the reporting queue data shared with callers of this public contract.
+ */
 typedef struct UmiReportingQueue { UmiReportingQueueItem items[UMI_REG_MAX_JOBS]; size_t count; uint64_t next_sequence; } UmiReportingQueue;
 /* Initialise an empty stable priority queue. */
 void umi_reg_reporting_queue_init(UmiReportingQueue *queue);

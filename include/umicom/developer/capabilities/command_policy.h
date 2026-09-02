@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_COMMAND_POLICY "umicom.developer.security.command_policy"
 
+/**
+ * Provide the developer capability command policy operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_command_policy(void);
 

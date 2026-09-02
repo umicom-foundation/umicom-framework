@@ -48,23 +48,32 @@ static const UmiIdeCommandDescriptor COMMANDS[] = {
     {"ide.ai.open-review","Open AI Patch Review","AI","Open the current AI governed patch review.",0,0,0,0,0,0,1,0,1}
 };
 
+/* Return the number of records represented by ide command without changing their state. */
 size_t umi_ide_command_count(void)
 {
     return sizeof(COMMANDS) / sizeof(COMMANDS[0]);
 }
 
+/* Find ide command while leaving the underlying catalogue or model owned by this module. */
 const UmiIdeCommandDescriptor *umi_ide_command_at(size_t index)
 {
     return index < umi_ide_command_count() ? &COMMANDS[index] : NULL;
 }
 
+/* Find ide command while leaving the underlying catalogue or model owned by this module. */
 const UmiIdeCommandDescriptor *umi_ide_command_find(const char *command_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (command_id == NULL) return NULL;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_ide_command_count(); ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(COMMANDS[index].command_id, command_id) == 0) {
             return &COMMANDS[index];
         }

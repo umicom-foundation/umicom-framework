@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_COLD_START "umicom.developer.performance.cold_start"
 
+/**
+ * Provide the developer capability cold start operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_cold_start(void);
 

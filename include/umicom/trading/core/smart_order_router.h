@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/trading/core/broker_route_table.h"
+/**
+ * Represent the trading smart order router policy data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiTradingSmartOrderRouterPolicy { uint32_t cost_weight; uint32_t latency_weight; } UmiTradingSmartOrderRouterPolicy;
 /* Select the enabled route with the lowest weighted score. */
 const UmiTradingBrokerRoute *umi_trading_smart_order_router_select(const UmiTradingBrokerRouteTable *table,const UmiTradingSmartOrderRouterPolicy *policy);

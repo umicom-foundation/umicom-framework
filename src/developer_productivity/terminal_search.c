@@ -17,14 +17,20 @@
 #include <ctype.h>
 #include <string.h>
 
+/* Provide the contains folded operation used by this module and its client applications. */
 static int contains_folded(const char *text, const char *query)
 {
     const char *start;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (start = text; *start != '\0'; ++start) {
         const char *a = start;
         const char *b = query;
 
+        /*
+         * Continue only while work remains available; the loop body advances the state on each
+         * pass.
+         */
         while (*a != '\0' && *b != '\0' &&
                tolower((unsigned char)*a) ==
                tolower((unsigned char)*b)) {
@@ -32,12 +38,17 @@ static int contains_folded(const char *text, const char *query)
             ++b;
         }
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (*b == '\0') return 1;
     }
 
     return query[0] == '\0';
 }
 
+/*
+ * Provide the developer terminal search operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_developer_terminal_search(
     const UmiTerminalTranscript *transcript,
     const char *query,
@@ -49,11 +60,16 @@ UmiStatus umi_developer_terminal_search(
     size_t index;
     size_t used = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (transcript == NULL || query == NULL ||
         out_matches == NULL || out_count == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < umi_terminal_transcript_count(transcript) &&
          used < capacity;
@@ -61,6 +77,7 @@ UmiStatus umi_developer_terminal_search(
         UmiTerminalTranscriptLine line;
         int matched;
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_terminal_transcript_at(
                 transcript, index, &line) != UMI_STATUS_OK) {
             continue;
@@ -70,6 +87,7 @@ UmiStatus umi_developer_terminal_search(
             ? strstr(line.text, query) != NULL
             : contains_folded(line.text, query);
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!matched) continue;
 
         out_matches[used].transcript_index = index;

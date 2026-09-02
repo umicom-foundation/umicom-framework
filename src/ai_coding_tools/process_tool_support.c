@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/*
+ * Provide the ai coding tool invoke process kind operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_tool_invoke_process_kind(
     UmiAiCodingToolEnvironment *environment,
     UmiDeveloperOperationKind kind,
@@ -37,6 +41,10 @@ UmiStatus umi_ai_coding_tool_invoke_process_kind(
     uint64_t timeout = 120000U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (environment == NULL || operation_prefix == NULL ||
         title == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -44,14 +52,17 @@ UmiStatus umi_ai_coding_tool_invoke_process_kind(
 
     status = umi_ai_coding_tool_json_parse_object(
         arguments_json, &document);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_required_string(
             &document, "program", program, sizeof(program));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_string(
             &document, "arguments", "", arguments, sizeof(arguments));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_string(
             &document,
@@ -60,12 +71,15 @@ UmiStatus umi_ai_coding_tool_invoke_process_kind(
             working_directory,
             sizeof(working_directory));
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_ai_coding_tool_json_optional_uint64(
             &document, "timeoutMs", 120000U, &timeout);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (timeout > UINT32_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     (void)snprintf(
@@ -85,10 +99,12 @@ UmiStatus umi_ai_coding_tool_invoke_process_kind(
         working_directory,
         (uint32_t)timeout,
         &result);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK && !result.launched) return status;
 
     status = umi_ai_coding_tool_write_ok_begin(
         &writer, output, output_capacity);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_language_runtime_json_writer_raw(&writer, ",\"launched\":");

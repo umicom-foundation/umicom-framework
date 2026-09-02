@@ -16,6 +16,10 @@
 #include <string.h>
 #include "umicom/finance/core/trade_registry.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiTradeRegistry r; UmiTradeDescriptor x; umi_trade_registry_init(&r); CHECK(umi_trade_descriptor_init(&x,"T","Trade","BOOK",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_trade_registry_add(&r,&x)==UMI_STATUS_OK);

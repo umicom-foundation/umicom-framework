@@ -22,6 +22,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap graph edge from caller-provided values so later operations receive
+ * a known state.
+ */
 UmiStatus umi_bootstrap_graph_edge_init(UmiBootstrapGraphEdge *edge,
                                         const char *dependency_id,
                                         const char *dependent_id,

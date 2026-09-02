@@ -35,6 +35,10 @@ extern "C" {
 #define UMI_DEVELOPER_EXECUTION_API_VERSION 1U
 #define UMI_DEVELOPER_EXECUTION_OUTPUT_CAPACITY 4096U
 
+/**
+ * Represent the developer execution result data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperExecutionResult {
     uint32_t struct_size;
     uint32_t api_version;
@@ -52,6 +56,9 @@ typedef UmiStatus (*UmiDeveloperExecuteFunction)(
     const UmiDeveloperOperationSnapshot *operation,
     UmiDeveloperExecutionResult *out_result);
 
+/**
+ * Represent the developer executor data shared with callers of this public contract.
+ */
 typedef struct UmiDeveloperExecutor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -59,11 +66,19 @@ typedef struct UmiDeveloperExecutor {
     UmiDeveloperExecuteFunction execute;
 } UmiDeveloperExecutor;
 
+/**
+ * Initialise developer executor from caller-provided values so later operations receive a
+ * known state.
+ */
 void umi_developer_executor_init(
     UmiDeveloperExecutor *executor,
     UmiDeveloperExecuteFunction execute,
     void *user_data);
 
+/**
+ * Perform developer process through the module contract so client applications do not
+ * duplicate its policy.
+ */
 UmiStatus umi_developer_process_execute(
     void *user_data,
     const UmiDeveloperOperationSnapshot *operation,

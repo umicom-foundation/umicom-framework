@@ -28,6 +28,10 @@ extern "C" {
 
 #define UMI_DESKTOP_WORKBENCH_ACTIVATION_API_VERSION 1U
 
+/**
+ * Represent the desktop workbench activation snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDesktopWorkbenchActivationSnapshot {
     uint32_t struct_size;
     uint32_t api_version;

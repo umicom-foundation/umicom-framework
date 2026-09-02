@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital scenario data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialCapitalScenario { char scenario_id[UMI_PRU_ID_CAPACITY]; double earnings_delta; double loss_delta; double rwa_multiplier; } UmiPrudentialCapitalScenario;
 /* Initialise a capital scenario with explicit earnings, loss and RWA effects. */
 UmiStatus umi_pru_capital_scenario_init(UmiPrudentialCapitalScenario *scenario, const char *scenario_id, double earnings_delta, double loss_delta, double rwa_multiplier);

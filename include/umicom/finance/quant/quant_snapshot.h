@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant quant snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiQuantQuantSnapshot {
     uint32_t curve_count;
     uint32_t surface_count;

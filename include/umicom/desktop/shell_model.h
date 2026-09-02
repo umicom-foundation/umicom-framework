@@ -28,6 +28,9 @@ extern "C" {
 
 #define UMI_DESKTOP_TASKBAR_MAX_APPLICATIONS 64U
 
+/**
+ * List the named desktop application state values accepted by this public contract.
+ */
 typedef enum UmiDesktopApplicationState {
     UMI_DESKTOP_APPLICATION_UNAVAILABLE = 1,
     UMI_DESKTOP_APPLICATION_STOPPED = 2,
@@ -37,6 +40,9 @@ typedef enum UmiDesktopApplicationState {
     UMI_DESKTOP_APPLICATION_FAILED = 6
 } UmiDesktopApplicationState;
 
+/**
+ * Represent the desktop taskbar item data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopTaskbarItem {
     char application_id[UMI_DESKTOP_ID_CAPACITY];
     char display_name[UMI_DESKTOP_TITLE_CAPACITY];
@@ -60,6 +66,9 @@ typedef struct UmiDesktopTaskbarItem {
     uint64_t revision;
 } UmiDesktopTaskbarItem;
 
+/**
+ * Represent the desktop shell tab data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopShellTab {
     char tab_id[UMI_DESKTOP_ID_CAPACITY];
     char layout_id[UMI_DESKTOP_ID_CAPACITY];
@@ -71,6 +80,9 @@ typedef struct UmiDesktopShellTab {
     bool closable;
 } UmiDesktopShellTab;
 
+/**
+ * Represent the desktop shell snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopShellSnapshot {
     char active_application_id[UMI_DESKTOP_ID_CAPACITY];
     char active_layout_id[UMI_DESKTOP_ID_CAPACITY];
@@ -90,12 +102,27 @@ typedef struct UmiDesktopShellSnapshot {
     uint64_t revision;
 } UmiDesktopShellSnapshot;
 
+/**
+ * Represent the desktop shell model data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopShellModel UmiDesktopShellModel;
 
+/**
+ * Initialise desktop shell model from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_desktop_shell_model_create(
     UmiDesktopRuntime *runtime,
     UmiDesktopShellModel **out_model);
+/**
+ * Release or reset state held by desktop shell model so the same storage can be reused
+ * safely.
+ */
 void umi_desktop_shell_model_destroy(UmiDesktopShellModel *model);
+/**
+ * Provide the desktop shell model set viewport operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_shell_model_set_viewport(
     UmiDesktopShellModel *model,
     double width,
@@ -108,25 +135,49 @@ UmiStatus umi_desktop_shell_model_set_application_presence(
     bool installed,
     bool compatible,
     bool enabled);
+/**
+ * Provide the desktop shell model set application state operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_desktop_shell_model_set_application_state(
     UmiDesktopShellModel *model,
     const char *application_id,
     UmiDesktopApplicationState state);
+/**
+ * Provide the desktop shell model pin application operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_shell_model_pin_application(
     UmiDesktopShellModel *model,
     const char *application_id,
     bool pinned);
+/**
+ * Provide the desktop shell model activate application operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_desktop_shell_model_activate_application(
     UmiDesktopShellModel *model,
     const char *application_id);
+/**
+ * Find desktop shell model application while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 UmiStatus umi_desktop_shell_model_application_at(
     const UmiDesktopShellModel *model,
     size_t visible_index,
     UmiDesktopTaskbarItem *out_item);
+/**
+ * Provide the desktop shell model find application operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_shell_model_find_application(
     const UmiDesktopShellModel *model,
     const char *application_id,
     UmiDesktopTaskbarItem *out_item);
+/**
+ * Provide the desktop application state text operation used by this module and its client
+ * applications.
+ */
 const char *umi_desktop_application_state_text(
     UmiDesktopApplicationState state);
 
@@ -134,38 +185,78 @@ const char *umi_desktop_application_state_text(
 UmiStatus umi_desktop_shell_model_activate_layout(
     UmiDesktopShellModel *model,
     const char *layout_id);
+/**
+ * Provide the desktop shell model begin design operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_desktop_shell_model_begin_design(
     UmiDesktopShellModel *model,
     const char *working_layout_id,
     const char *working_name);
+/**
+ * Provide the desktop shell model end design operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_shell_model_end_design(
     UmiDesktopShellModel *model,
     bool commit);
+/**
+ * Find desktop shell model select while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_desktop_shell_model_select_at(
     UmiDesktopShellModel *model,
     double canvas_x,
     double canvas_y);
+/**
+ * Provide the desktop shell model move selected canvas operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_desktop_shell_model_move_selected_canvas(
     UmiDesktopShellModel *model,
     double canvas_delta_x,
     double canvas_delta_y);
+/**
+ * Provide the desktop shell model snapshot operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_desktop_shell_model_snapshot(
     const UmiDesktopShellModel *model,
     UmiDesktopShellSnapshot *out_snapshot);
+/**
+ * Find desktop shell model tab while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_desktop_shell_model_tab_at(
     const UmiDesktopShellModel *model,
     size_t index,
     UmiDesktopShellTab *out_tab);
+/**
+ * Find desktop shell model monitor while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_desktop_shell_model_monitor_at(
     const UmiDesktopShellModel *model,
     size_t index,
     UmiDesktopCanvasMonitor *out_monitor);
+/**
+ * Find desktop shell model window while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 UmiStatus umi_desktop_shell_model_window_at(
     const UmiDesktopShellModel *model,
     size_t index,
     UmiDesktopCanvasWindow *out_window);
+/**
+ * Provide the desktop shell model designer operation used by this module and its client
+ * applications.
+ */
 UmiDesktopLayoutDesigner *umi_desktop_shell_model_designer(
     UmiDesktopShellModel *model);
+/**
+ * Provide the desktop shell model runtime operation used by this module and its client
+ * applications.
+ */
 UmiDesktopRuntime *umi_desktop_shell_model_runtime(UmiDesktopShellModel *model);
 
 #ifdef __cplusplus

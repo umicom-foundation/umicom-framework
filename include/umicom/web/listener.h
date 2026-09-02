@@ -23,8 +23,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the web listener data shared with callers of this public contract.
+ */
 typedef struct UmiWebListener { intptr_t native_handle; int open; uint16_t port; } UmiWebListener;
+/**
+ * Provide the web listener open operation used by this module and its client applications.
+ */
 UmiStatus umi_web_listener_open(const UmiWebServerConfig *config,UmiWebListener *out_listener);
+/**
+ * Provide the web listener close operation used by this module and its client
+ * applications.
+ */
 void umi_web_listener_close(UmiWebListener *listener);
 #ifdef __cplusplus
 }

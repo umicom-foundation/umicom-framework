@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderSnapshot {
     uint32_t structure_size;
     size_t provider_count;
@@ -31,6 +35,10 @@ typedef struct UmiWorkbenchSelectionProviderSnapshot {
     bool suspended;
 } UmiWorkbenchSelectionProviderSnapshot;
 
+/**
+ * Provide the workbench selection provider snapshot build operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_snapshot_build(
     const UmiWorkbenchSelectionProviderService *service,
     UmiWorkbenchSelectionProviderSnapshot *out_snapshot);

@@ -26,6 +26,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the workbench selection provider metrics data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderMetrics {
     uint64_t provider_registration_count;
     uint64_t provider_removal_count;
@@ -37,6 +41,10 @@ typedef struct UmiWorkbenchSelectionProviderMetrics {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderMetrics;
 
+/**
+ * Represent the workbench selection provider service data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderService {
     UmiWorkbenchSelectionService *selections;
     UmiWorkbenchSelectionProviderRegistry registry;
@@ -60,23 +68,47 @@ typedef struct UmiWorkbenchSelectionProviderService {
 typedef struct UmiWorkbenchSelectionProviderPipeline
     UmiWorkbenchSelectionProviderPipeline;
 
+/**
+ * Initialise workbench selection provider service from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_selection_provider_service_create(
     UmiWorkbenchSelectionService *selections,
     UmiWorkbenchSelectionProviderService **out_service);
+/**
+ * Release or reset state held by workbench selection provider service so the same storage
+ * can be reused safely.
+ */
 void umi_workbench_selection_provider_service_destroy(
     UmiWorkbenchSelectionProviderService *service);
+/**
+ * Add workbench selection provider service only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_workbench_selection_provider_service_register(
     UmiWorkbenchSelectionProviderService *service,
     const UmiWorkbenchSelectionProviderDescriptor *descriptor);
+/**
+ * Remove workbench selection provider service while keeping the remaining records in a
+ * valid and discoverable state.
+ */
 UmiStatus umi_workbench_selection_provider_service_unregister(
     UmiWorkbenchSelectionProviderService *service,
     const char *provider_id);
+/**
+ * Provide the workbench selection provider service publish operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_service_publish(
     UmiWorkbenchSelectionProviderService *service,
     const char *provider_id,
     UmiWorkbenchSelection *selection,
     UmiWorkbenchContextSourceKind source_kind,
     UmiWorkbenchContextSourceTrigger trigger);
+/**
+ * Provide the workbench selection provider service set suspended operation used by this
+ * module and its client applications.
+ */
 void umi_workbench_selection_provider_service_set_suspended(
     UmiWorkbenchSelectionProviderService *service,
     bool suspended);
@@ -89,6 +121,10 @@ void umi_workbench_selection_provider_service_set_suspended(
 UmiStatus umi_workbench_selection_provider_pipeline_create(
     UmiWorkbenchContextHost *host,
     UmiWorkbenchSelectionProviderPipeline **out_pipeline);
+/**
+ * Release or reset state held by workbench selection provider pipeline so the same storage
+ * can be reused safely.
+ */
 void umi_workbench_selection_provider_pipeline_destroy(
     UmiWorkbenchSelectionProviderPipeline *pipeline);
 
@@ -96,12 +132,24 @@ void umi_workbench_selection_provider_pipeline_destroy(
 UmiWorkbenchContextEventService *
 umi_workbench_selection_provider_pipeline_event_service(
     UmiWorkbenchSelectionProviderPipeline *pipeline);
+/**
+ * Provide the workbench selection provider pipeline source service operation used by this
+ * module and its client applications.
+ */
 UmiWorkbenchContextSourceService *
 umi_workbench_selection_provider_pipeline_source_service(
     UmiWorkbenchSelectionProviderPipeline *pipeline);
+/**
+ * Provide the workbench selection provider pipeline selection service operation used by
+ * this module and its client applications.
+ */
 UmiWorkbenchSelectionService *
 umi_workbench_selection_provider_pipeline_selection_service(
     UmiWorkbenchSelectionProviderPipeline *pipeline);
+/**
+ * Provide the workbench selection provider pipeline provider service operation used by
+ * this module and its client applications.
+ */
 UmiWorkbenchSelectionProviderService *
 umi_workbench_selection_provider_pipeline_provider_service(
     UmiWorkbenchSelectionProviderPipeline *pipeline);

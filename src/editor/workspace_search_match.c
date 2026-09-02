@@ -18,10 +18,12 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the hash text operation used by this module and its client applications. */
 static uint64_t hash_text(const char *text)
 {
     uint64_t value = UINT64_C(1469598103934665603);
     size_t index;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; text[index] != '\0'; ++index) {
         value ^= (uint64_t)(unsigned char)text[index];
         value *= UINT64_C(1099511628211);
@@ -29,11 +31,13 @@ static uint64_t hash_text(const char *text)
     return value;
 }
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the locate offset operation used by this module and its client applications. */
 static void locate_offset(const char *content,
                           size_t content_length,
                           size_t offset,
@@ -43,12 +47,15 @@ static void locate_offset(const char *content,
     size_t position;
     uint64_t line = 1U;
     uint64_t column = 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (offset > content_length) offset = content_length;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < offset; ++position) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (content[position] == '\n') {
             line += 1U;
             column = 1U;
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             column += 1U;
         }
     }
@@ -56,6 +63,7 @@ static void locate_offset(const char *content,
     *out_column = column;
 }
 
+/* Provide the copy bounded operation used by this module and its client applications. */
 static void copy_bounded(char *destination,
                          size_t capacity,
                          const char *source,
@@ -63,14 +71,21 @@ static void copy_bounded(char *destination,
                          int *out_truncated)
 {
     size_t copy_count = source_length;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (copy_count >= capacity) {
         copy_count = capacity - 1U;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (out_truncated != NULL) *out_truncated = 1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (copy_count > 0U) (void)memcpy(destination, source, copy_count);
     destination[copy_count] = '\0';
 }
 
+/* Provide the make line preview operation used by this module and its client applications. */
 static void make_line_preview(const char *content,
                               size_t content_length,
                               size_t match_start,
@@ -79,10 +94,18 @@ static void make_line_preview(const char *content,
 {
     size_t line_start = match_start;
     size_t line_end = match_start;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (line_start > 0U && content[line_start - 1U] != '\n' &&
            content[line_start - 1U] != '\r') {
         --line_start;
     }
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (line_end < content_length && content[line_end] != '\n' &&
            content[line_end] != '\r') {
         ++line_end;
@@ -94,6 +117,10 @@ static void make_line_preview(const char *content,
                  NULL);
 }
 
+/*
+ * Initialise editor workspace search match from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_workspace_search_match_initialize(
     UmiEditorWorkspaceSearchMatch *match,
     const UmiEditorWorkspaceSearchDocumentView *document,
@@ -107,6 +134,10 @@ UmiStatus umi_editor_workspace_search_match_initialize(
     uint64_t end_column;
     int written;
     uint64_t identity_hash;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (match == NULL || document == NULL || pattern_match == NULL ||
         document->struct_size != (uint32_t)sizeof(*document) ||
         document->api_version != UMI_EDITOR_WORKSPACE_SEARCH_INDEX_API_VERSION ||
@@ -120,6 +151,7 @@ UmiStatus umi_editor_workspace_search_match_initialize(
     }
     start = (size_t)pattern_match->start_byte_offset;
     end = (size_t)pattern_match->end_byte_offset;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (start > end || end > document->content_length ||
         pattern_match->capture_count >
             UMI_EDITOR_WORKSPACE_SEARCH_MAX_CAPTURES) {
@@ -128,6 +160,7 @@ UmiStatus umi_editor_workspace_search_match_initialize(
     (void)memset(match, 0, sizeof(*match));
     match->struct_size = (uint32_t)sizeof(*match);
     match->api_version = UMI_EDITOR_WORKSPACE_SEARCH_MATCH_API_VERSION;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_editor_source_location_initialize(
             &match->location, document->uri, 1U, 1U) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -169,6 +202,7 @@ UmiStatus umi_editor_workspace_search_match_initialize(
                    (unsigned long long)match->location.line,
                    (unsigned long long)match->location.column);
     match->capture_count = pattern_match->capture_count;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (match->capture_count > 0U) {
         (void)memcpy(match->captures,
                      pattern_match->captures,
@@ -189,16 +223,25 @@ UmiStatus umi_editor_workspace_search_match_initialize(
                        (unsigned long long)pattern_match->start_byte_offset,
                        (unsigned long long)pattern_match->end_byte_offset,
                        ordinal_in_document);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= sizeof(match->id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Check that editor workspace search match satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_editor_workspace_search_match_validate(
     const UmiEditorWorkspaceSearchMatch *match)
 {
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (match == NULL ||
         match->struct_size != (uint32_t)sizeof(*match) ||
         match->api_version != UMI_EDITOR_WORKSPACE_SEARCH_MATCH_API_VERSION ||
@@ -210,9 +253,11 @@ UmiStatus umi_editor_workspace_search_match_validate(
         match->location.end_byte_offset < match->location.byte_offset) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < match->capture_count; ++index) {
         const UmiEditorWorkspaceSearchCapture *capture =
             &match->captures[index];
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (capture->matched &&
             (capture->end_byte_offset < capture->start_byte_offset ||
              capture->start_byte_offset < match->location.byte_offset ||
@@ -223,33 +268,59 @@ UmiStatus umi_editor_workspace_search_match_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor workspace search match compare operation used by this module and its
+ * client applications.
+ */
 int umi_editor_workspace_search_match_compare(
     const UmiEditorWorkspaceSearchMatch *left,
     const UmiEditorWorkspaceSearchMatch *right)
 {
     int order;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL && right == NULL) return 0;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (left == NULL) return -1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (right == NULL) return 1;
     order = strcmp(left->location.uri, right->location.uri);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (order != 0) return order;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.byte_offset < right->location.byte_offset) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.byte_offset > right->location.byte_offset) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.end_byte_offset < right->location.end_byte_offset) {
         return -1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.end_byte_offset > right->location.end_byte_offset) {
         return 1;
     }
     return strcmp(left->id, right->id);
 }
 
+/*
+ * Provide the editor workspace search match format operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_workspace_search_match_format(
     const UmiEditorWorkspaceSearchMatch *match,
     char *out_text,
     size_t out_capacity)
 {
     int written;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_editor_workspace_search_match_validate(match) != UMI_STATUS_OK ||
         out_text == NULL || out_capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -261,6 +332,7 @@ UmiStatus umi_editor_workspace_search_match_format(
                        (unsigned long long)match->location.line,
                        (unsigned long long)match->location.column,
                        match->line_preview);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (written < 0 || (size_t)written >= out_capacity) {
         out_text[0] = '\0';
         return UMI_STATUS_CAPACITY_EXCEEDED;

@@ -15,14 +15,21 @@
 
 #include "umicom/ui/gtk4/workstation/chart_surface.h"
 
+/* Provide the draw chart operation used by this module and its client applications. */
 static void draw_chart(GtkDrawingArea *area, cairo_t *cr, int width, int height, gpointer data) {
     const UmiWsChartSurface *surface = data;
     int x;
     (void)area;
     cairo_set_line_width(cr, 1.0);
     cairo_set_source_rgba(cr, 0.5, 0.55, 0.65, 0.18);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (surface == NULL || surface->show_grid) {
+        /* Visit each bounded item once so every record receives the same rule. */
         for (x = 0; x < width; x += 48) { cairo_move_to(cr, (double)x, 0.0); cairo_line_to(cr, (double)x, (double)height); }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (x = 0; x < height; x += 36) { cairo_move_to(cr, 0.0, (double)x); cairo_line_to(cr, (double)width, (double)x); }
         cairo_stroke(cr);
     }
@@ -32,6 +39,10 @@ static void draw_chart(GtkDrawingArea *area, cairo_t *cr, int width, int height,
     cairo_stroke(cr);
 }
 
+/*
+ * Initialise gtk4 ws chart surface from caller-provided values so later operations receive
+ * a known state.
+ */
 GtkWidget *umi_gtk4_ws_chart_surface_create(const UmiWsChartSurface *surface) {
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     GtkWidget *header = gtk_label_new(surface != NULL ? surface->title : "Chart");

@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Provide the workbench context link snapshot build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_context_link_snapshot_build(
     const UmiWorkbenchContextLinkService *service,
     UmiWorkbenchContextLinkSnapshot *out_snapshot)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (service == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_snapshot, 0, sizeof(*out_snapshot));
     out_snapshot->structure_size = (uint32_t)sizeof(*out_snapshot);

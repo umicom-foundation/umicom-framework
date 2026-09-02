@@ -14,4 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/command_context.h"
-int main(void){ UmiEditorWbCommandContext s={true,true,false,true}; if(!umi_editor_wb_command_context_can_edit(&s)||!umi_editor_wb_command_context_can_find(&s))return 1; s.writable=false; if(umi_editor_wb_command_context_can_edit(&s))return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){ UmiEditorWbCommandContext s={true,true,false,true}; /* Apply this branch only when its contract condition is satisfied. */ if(!umi_editor_wb_command_context_can_edit(&s)||!umi_editor_wb_command_context_can_find(&s))return 1; s.writable=false; /* Apply this branch only when its contract condition is satisfied. */ if(umi_editor_wb_command_context_can_edit(&s))return 2; return 0; }

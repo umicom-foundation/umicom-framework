@@ -88,7 +88,7 @@ static const UmiExperienceFeatureDefinition FEATURES[] = {
       "Accounting and reconciliation core", UMI_EXPERIENCE_FEATURE_IMPLEMENTED, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.accounting" },
     { sizeof(UmiExperienceFeatureDefinition), "bank.ui", "Web/desktop/mobile composition",
-      "Consumer-facing application clients", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P1,
+      "Consumer-facing application clients", UMI_EXPERIENCE_FEATURE_FOUNDATION, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_APPLICATION, "umicom.ui" },
     { sizeof(UmiExperienceFeatureDefinition), "bank.cards", "Card issuing boundary",
       "Physical/virtual card provider abstraction", UMI_EXPERIENCE_FEATURE_PLANNED, UMI_EXPERIENCE_PRIORITY_P2,
@@ -124,6 +124,10 @@ static const UmiApplicationExperienceDefinition DEFINITION = {
     COUNT_OF(FEATURES)
 };
 
+/*
+ * Provide the application experience bank operation used by this module and its client
+ * applications.
+ */
 const UmiApplicationExperienceDefinition *umi_application_experience_bank(void)
 {
     return &DEFINITION;

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the developer acceptance evidence store data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperAcceptanceEvidenceStore {
     UmiDeveloperAcceptanceEvidence items[UMI_DEVELOPER_ACCEPTANCE_MAX_EVIDENCE];
     size_t count;

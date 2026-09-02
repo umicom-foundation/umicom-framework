@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product id data shared with callers of this public contract.
+ */
 typedef struct UmiProductId { UmiFinancialId id; } UmiProductId;
 /* Assign identifier. */ UmiStatus umi_product_id_set(UmiProductId *id,const char *value);
 /* Validate identifier. */ bool umi_product_id_is_valid(const UmiProductId *id);

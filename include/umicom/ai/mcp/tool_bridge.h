@@ -23,11 +23,17 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai mcp tool binding data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpToolBinding {
     UmiAiMcpSession *session;
     char remote_name[UMI_AI_ID_CAPACITY];
 } UmiAiMcpToolBinding;
 
+/**
+ * Represent the ai mcp tool bridge data shared with callers of this public contract.
+ */
 typedef struct UmiAiMcpToolBridge {
     UmiAiMcpToolBinding bindings[UMI_AI_MCP_MAX_TOOL_BINDINGS];
     size_t binding_count;

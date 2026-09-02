@@ -30,6 +30,9 @@
 #define UMI_DESKTOP_MAX_LAYOUTS 32U
 #define UMI_DESKTOP_MAX_LAYOUT_WINDOWS 32U
 
+/**
+ * List the named desktop dock placement values accepted by this public contract.
+ */
 typedef enum UmiDesktopDockPlacement {
     UMI_DESKTOP_DOCK_CANVAS = 1,
     UMI_DESKTOP_DOCK_DOCUMENT,
@@ -40,10 +43,16 @@ typedef enum UmiDesktopDockPlacement {
     UMI_DESKTOP_DOCK_FLOATING
 } UmiDesktopDockPlacement;
 
+/**
+ * List the named desktop layout tab placement values accepted by this public contract.
+ */
 typedef enum UmiDesktopLayoutTabPlacement {
     UMI_DESKTOP_LAYOUT_TABS_BOTTOM = 1
 } UmiDesktopLayoutTabPlacement;
 
+/**
+ * Represent the desktop rect data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopRect {
     int32_t x;
     int32_t y;
@@ -51,6 +60,9 @@ typedef struct UmiDesktopRect {
     int32_t height;
 } UmiDesktopRect;
 
+/**
+ * Represent the desktop monitor data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopMonitor {
     char monitor_id[UMI_DESKTOP_ID_CAPACITY];
     char name[UMI_DESKTOP_TITLE_CAPACITY];
@@ -62,6 +74,9 @@ typedef struct UmiDesktopMonitor {
     bool enabled;
 } UmiDesktopMonitor;
 
+/**
+ * Represent the desktop window data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopWindow {
     char window_id[UMI_DESKTOP_ID_CAPACITY];
     char title[UMI_DESKTOP_TITLE_CAPACITY];
@@ -78,6 +93,9 @@ typedef struct UmiDesktopWindow {
     bool resizable;
 } UmiDesktopWindow;
 
+/**
+ * Represent the desktop layout tab data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopLayoutTab {
     char tab_id[UMI_DESKTOP_ID_CAPACITY];
     char layout_id[UMI_DESKTOP_ID_CAPACITY];
@@ -89,6 +107,9 @@ typedef struct UmiDesktopLayoutTab {
     bool closable;
 } UmiDesktopLayoutTab;
 
+/**
+ * Represent the desktop layout data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopLayout {
     char layout_id[UMI_DESKTOP_ID_CAPACITY];
     char name[UMI_DESKTOP_TITLE_CAPACITY];
@@ -101,6 +122,9 @@ typedef struct UmiDesktopLayout {
     uint64_t revision;
 } UmiDesktopLayout;
 
+/**
+ * Represent the desktop snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiDesktopSnapshot {
     size_t monitor_count;
     size_t layout_count;

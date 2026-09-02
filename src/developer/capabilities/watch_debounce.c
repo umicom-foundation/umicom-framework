@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer/capabilities/watch_debounce.h"
 
+/*
+ * Provide the developer capability watch debounce operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_watch_debounce(void)
 {

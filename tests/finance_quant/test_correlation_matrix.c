@@ -19,6 +19,10 @@
 #include <math.h>
 #include "umicom/finance/quant/correlation_matrix.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiQuantCorrelationMatrix matrix; double value=0.0;

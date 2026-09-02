@@ -20,6 +20,10 @@ extern "C" {
 #endif
 
 #include "umicom/ai_developer_experience/approval_queue.h"
+/**
+ * Initialise ai developer approvals view from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_ai_developer_approvals_view_create(
     const char *view_id,
     const UmiAiDeveloperApprovalQueue *approvals,

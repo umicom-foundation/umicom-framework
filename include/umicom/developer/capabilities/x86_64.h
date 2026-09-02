@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_X86_64 "umicom.developer.portability.x86_64"
 
+/**
+ * Provide the developer capability x86 64 operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_x86_64(void);
 

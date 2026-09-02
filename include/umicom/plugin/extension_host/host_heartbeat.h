@@ -29,10 +29,30 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the plugin extension host host heartbeat data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiPluginExtensionHostHostHeartbeat { uint64_t interval_ms; uint64_t timeout_ms; uint64_t last_sent_ms; uint64_t last_received_ms; uint32_t missed; } UmiPluginExtensionHostHostHeartbeat;
+/**
+ * Initialise plugin extension host host heartbeat from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_plugin_extension_host_host_heartbeat_init(UmiPluginExtensionHostHostHeartbeat *heartbeat, uint64_t interval_ms, uint64_t timeout_ms);
+/**
+ * Provide the plugin extension host host heartbeat sent operation used by this module and
+ * its client applications.
+ */
 void umi_plugin_extension_host_host_heartbeat_sent(UmiPluginExtensionHostHostHeartbeat *heartbeat, uint64_t now_ms);
+/**
+ * Provide the plugin extension host host heartbeat received operation used by this module
+ * and its client applications.
+ */
 void umi_plugin_extension_host_host_heartbeat_received(UmiPluginExtensionHostHostHeartbeat *heartbeat, uint64_t now_ms);
+/**
+ * Provide the plugin extension host host heartbeat expired operation used by this module
+ * and its client applications.
+ */
 int umi_plugin_extension_host_host_heartbeat_expired(const UmiPluginExtensionHostHostHeartbeat *heartbeat, uint64_t now_ms);
 
 #ifdef __cplusplus

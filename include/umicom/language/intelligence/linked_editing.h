@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 #define UMI_LANGUAGE_INTELLIGENCE_LINKED_EDITING_API_VERSION 1U
+/**
+ * Represent the language intelligence linked editing data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiLanguageIntelligenceLinkedEditing {
     uint32_t struct_size;
     uint32_t api_version;
@@ -33,12 +37,28 @@ typedef struct UmiLanguageIntelligenceLinkedEditing {
     uint32_t depth;
     uint64_t revision;
 } UmiLanguageIntelligenceLinkedEditing;
+/**
+ * Initialise language intelligence linked editing from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_language_intelligence_linked_editing_init(UmiLanguageIntelligenceLinkedEditing *value, const char *uri);
+/**
+ * Provide the language intelligence linked editing set ranges operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_language_intelligence_linked_editing_set_ranges(
     UmiLanguageIntelligenceLinkedEditing *value,
     const UmiLanguageIntelligenceRange *primary,
     const UmiLanguageIntelligenceRange *parent);
+/**
+ * Check that language intelligence linked editing satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_language_intelligence_linked_editing_validate(const UmiLanguageIntelligenceLinkedEditing *value);
+/**
+ * Provide the language intelligence linked editing is nested operation used by this module
+ * and its client applications.
+ */
 int umi_language_intelligence_linked_editing_is_nested(const UmiLanguageIntelligenceLinkedEditing *value);
 #ifdef __cplusplus
 }

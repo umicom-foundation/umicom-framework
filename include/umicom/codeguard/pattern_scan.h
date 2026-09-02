@@ -27,6 +27,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the codeguard pattern scan line operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_codeguard_pattern_scan_line(const UmiCodeGuardRuleRegistry *registry,
                                           const char *path,
                                           size_t line_number,

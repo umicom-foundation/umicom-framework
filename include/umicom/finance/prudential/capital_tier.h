@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential capital tier data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialCapitalTier { char resource_id[UMI_PRU_ID_CAPACITY]; UmiCapitalTierKind tier; double amount; UmiCurrency currency; } UmiPrudentialCapitalTier;
 /* Initialise one eligible capital tier amount. */
 UmiStatus umi_pru_capital_tier_init(UmiPrudentialCapitalTier *record, const char *resource_id, UmiCapitalTierKind tier, double amount, UmiCurrency currency);

@@ -20,14 +20,24 @@
 
 #include <string.h>
 
+/*
+ * Initialise reg reporting value from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_reg_reporting_value_init(UmiReportingValue *record, const char *field_id, const char *source_id, double value, int64_t as_of_ms)
 {
     UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || !(umi_reg_number_valid(value) && as_of_ms >= 0)) return UMI_STATUS_INVALID_ARGUMENT;
     memset(record, 0, sizeof *record);
     status = umi_reg_copy_text(record->field_id, sizeof record->field_id, field_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_reg_copy_text(record->source_id, sizeof record->source_id, source_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     record->value = value;
     record->as_of_ms = as_of_ms;

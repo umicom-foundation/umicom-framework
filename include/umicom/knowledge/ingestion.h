@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the knowledge ingestion report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiKnowledgeIngestionReport {
     UmiKnowledgeRefreshDecision decision;
     size_t chunks_created;
@@ -30,6 +34,10 @@ typedef struct UmiKnowledgeIngestionReport {
     uint64_t index_revision;
 } UmiKnowledgeIngestionReport;
 
+/**
+ * Provide the knowledge ingest text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_knowledge_ingest_text(
     UmiKnowledgeCatalogue *catalogue,
     UmiKnowledgeVectorIndex *index,

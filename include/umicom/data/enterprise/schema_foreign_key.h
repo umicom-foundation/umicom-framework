@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the data schema foreign key data shared with callers of this public contract.
+ */
 typedef struct UmiDataSchemaForeignKey {
     char constraint_id[UMI_DATA_ENTERPRISE_ID_CAPACITY];
     char source_table[UMI_DATA_ENTERPRISE_ID_CAPACITY];

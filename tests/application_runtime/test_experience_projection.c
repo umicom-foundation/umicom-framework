@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "test_fixture.h"
+/*
+ * Exercise test experience projection and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 int test_experience_projection(void){ UmiApplicationPanelProjection p; UmiApplicationLayoutProjection l; UmiApplicationFeatureProjection f; const UmiApplicationExperienceDefinition *e=test_trader_experience(); assert(umi_application_panel_projection_at(e,0U,&p)==UMI_STATUS_OK); assert(umi_application_layout_projection_at(e,0U,&l)==UMI_STATUS_OK); assert(umi_application_feature_projection_at(e,0U,&f)==UMI_STATUS_OK); return 0; }

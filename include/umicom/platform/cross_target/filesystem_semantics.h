@@ -30,8 +30,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ct filesystem semantics data shared with callers of this public contract.
+ */
 typedef struct UmiCtFilesystemSemantics { bool symlink; bool posix_permissions; bool atomic_replace; bool recursive_watch; bool sparse_files; bool case_preserving; } UmiCtFilesystemSemantics;
+/**
+ * Provide the ct filesystem semantics default operation used by this module and its client
+ * applications.
+ */
 UmiCtFilesystemSemantics umi_ct_filesystem_semantics_default(UmiCtOperatingSystem os);
+/**
+ * Provide the ct filesystem semantics score operation used by this module and its client
+ * applications.
+ */
 uint32_t umi_ct_filesystem_semantics_score(const UmiCtFilesystemSemantics *s);
 
 #ifdef __cplusplus

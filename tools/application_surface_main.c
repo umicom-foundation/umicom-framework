@@ -17,6 +17,10 @@
 
 #include "umicom/application/presentation/presentation.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(int argc, char **argv)
 {
     const char *recipe_id = argc > 1
@@ -28,6 +32,7 @@ int main(int argc, char **argv)
     UmiStatus status;
     status = umi_application_presentation_surface_runtime_init(
         recipe_id, &runtime);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr, "Unable to load recipe '%s': %d\n",
                       recipe_id, (int)status);
@@ -37,13 +42,16 @@ int main(int argc, char **argv)
     status = umi_application_presentation_surface_runtime_bind_host(
         &runtime,
         umi_application_presentation_headless_surface_host_interface(&host));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_application_presentation_surface_runtime_start(&runtime);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = umi_application_presentation_surface_runtime_snapshot(
             &runtime, &snapshot);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr, "Unable to start recipe '%s': %d\n",
                       recipe_id, (int)status);

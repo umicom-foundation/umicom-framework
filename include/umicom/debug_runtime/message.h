@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the debug runtime build request operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_build_request(
     uint64_t sequence,
     const char *command,
@@ -32,6 +36,10 @@ UmiStatus umi_debug_runtime_build_request(
     char *out_json,
     size_t capacity);
 
+/**
+ * Provide the debug runtime build response operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_debug_runtime_build_response(
     uint64_t sequence,
     uint64_t request_sequence,
@@ -42,10 +50,18 @@ UmiStatus umi_debug_runtime_build_response(
     char *out_json,
     size_t capacity);
 
+/**
+ * Read debug runtime message into validated module state and return a status when input
+ * cannot be used.
+ */
 UmiStatus umi_debug_runtime_message_parse(
     const char *json,
     UmiDebugRuntimeEnvelope *out_envelope);
 
+/**
+ * Provide the debug runtime message body token operation used by this module and its
+ * client applications.
+ */
 int umi_debug_runtime_message_body_token(
     const UmiLanguageRuntimeJsonDocument *document);
 

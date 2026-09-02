@@ -20,8 +20,13 @@ UmiStatus umi_designer_adaptive_conformance_profile_default(
     UmiRadTargetKind renderer,
     UmiDesignerAdaptiveConformanceProfile *out_profile)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(out_profile==NULL)return UMI_STATUS_INVALID_ARGUMENT;
     memset(out_profile,0,sizeof *out_profile);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(renderer<UMI_RAD_TARGET_ABSTRACT||renderer>UMI_RAD_TARGET_NATIVE_WEB)return UMI_STATUS_INVALID_ARGUMENT;
     out_profile->renderer=renderer;
     out_profile->required_size_classes_mask=0x0FU;

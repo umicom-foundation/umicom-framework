@@ -27,15 +27,24 @@
 
 #include "internal.h"
 
+/*
+ * Provide the release layout records operation used by this module and its client
+ * applications.
+ */
 static void release_layout_records(
     UmiWorkbenchMemoryLayoutRecord *records,
     size_t capacity)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (records == NULL) {
         return;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < capacity; ++index) {
         free(records[index].document);
         records[index].document = NULL;
@@ -43,15 +52,24 @@ static void release_layout_records(
     }
 }
 
+/*
+ * Provide the release session records operation used by this module and its client
+ * applications.
+ */
 static void release_session_records(
     UmiWorkbenchMemorySessionRecord *records,
     size_t capacity)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (records == NULL) {
         return;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < capacity; ++index) {
         free(records[index].session);
         records[index].session = NULL;
@@ -59,6 +77,10 @@ static void release_session_records(
     }
 }
 
+/*
+ * Provide the clone layout records operation used by this module and its client
+ * applications.
+ */
 static UmiStatus clone_layout_records(
     const UmiWorkbenchMemoryLayoutRecord *source,
     UmiWorkbenchMemoryLayoutRecord *destination,
@@ -66,12 +88,18 @@ static UmiStatus clone_layout_records(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || destination == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     release_layout_records(destination, capacity);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < capacity; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!source[index].occupied ||
             source[index].document == NULL) {
             continue;
@@ -79,6 +107,10 @@ static UmiStatus clone_layout_records(
         destination[index].document =
             (UmiWorkbenchLayoutDocument *)malloc(
                 sizeof(*destination[index].document));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (destination[index].document == NULL) {
             release_layout_records(destination, capacity);
             return UMI_STATUS_OUT_OF_MEMORY;
@@ -89,6 +121,10 @@ static UmiStatus clone_layout_records(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the clone session records operation used by this module and its client
+ * applications.
+ */
 static UmiStatus clone_session_records(
     const UmiWorkbenchMemorySessionRecord *source,
     UmiWorkbenchMemorySessionRecord *destination,
@@ -96,12 +132,18 @@ static UmiStatus clone_session_records(
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (source == NULL || destination == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     release_session_records(destination, capacity);
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < capacity; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!source[index].occupied ||
             source[index].session == NULL) {
             continue;
@@ -109,6 +151,10 @@ static UmiStatus clone_session_records(
         destination[index].session =
             (UmiWorkbenchLayoutSession *)malloc(
                 sizeof(*destination[index].session));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (destination[index].session == NULL) {
             release_session_records(destination, capacity);
             return UMI_STATUS_OUT_OF_MEMORY;
@@ -119,6 +165,10 @@ static UmiStatus clone_session_records(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the move layout records operation used by this module and its client
+ * applications.
+ */
 static void move_layout_records(
     UmiWorkbenchMemoryLayoutRecord *source,
     UmiWorkbenchMemoryLayoutRecord *destination,
@@ -127,6 +177,7 @@ static void move_layout_records(
     size_t index;
 
     release_layout_records(destination, capacity);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < capacity; ++index) {
         destination[index] = source[index];
         source[index].document = NULL;
@@ -134,6 +185,10 @@ static void move_layout_records(
     }
 }
 
+/*
+ * Provide the move session records operation used by this module and its client
+ * applications.
+ */
 static void move_session_records(
     UmiWorkbenchMemorySessionRecord *source,
     UmiWorkbenchMemorySessionRecord *destination,
@@ -142,6 +197,7 @@ static void move_session_records(
     size_t index;
 
     release_session_records(destination, capacity);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < capacity; ++index) {
         destination[index] = source[index];
         source[index].session = NULL;
@@ -149,19 +205,26 @@ static void move_session_records(
     }
 }
 
+/* Provide the find layout slot operation used by this module and its client applications. */
 static size_t find_layout_slot(
     const UmiWorkbenchMemoryStore *store,
     const char *layout_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL ||
         !umi_workbench_layout_text_present(layout_id)) {
         return UMI_WORKBENCH_LAYOUT_INDEX_NONE;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->layouts[index].occupied &&
             store->layouts[index].document != NULL &&
             strcmp(
@@ -173,15 +236,21 @@ static size_t find_layout_slot(
     return UMI_WORKBENCH_LAYOUT_INDEX_NONE;
 }
 
+/*
+ * Provide the find free layout slot operation used by this module and its client
+ * applications.
+ */
 static size_t find_free_layout_slot(
     const UmiWorkbenchMemoryStore *store)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          store != NULL &&
          index < UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!store->layouts[index].occupied) {
             return index;
         }
@@ -189,19 +258,26 @@ static size_t find_free_layout_slot(
     return UMI_WORKBENCH_LAYOUT_INDEX_NONE;
 }
 
+/* Provide the find session slot operation used by this module and its client applications. */
 static size_t find_session_slot(
     const UmiWorkbenchMemoryStore *store,
     const char *session_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL ||
         !umi_workbench_layout_text_present(session_id)) {
         return UMI_WORKBENCH_LAYOUT_INDEX_NONE;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_MEMORY_STORE_MAX_SESSIONS;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->sessions[index].occupied &&
             store->sessions[index].session != NULL &&
             strcmp(
@@ -213,15 +289,21 @@ static size_t find_session_slot(
     return UMI_WORKBENCH_LAYOUT_INDEX_NONE;
 }
 
+/*
+ * Provide the find free session slot operation used by this module and its client
+ * applications.
+ */
 static size_t find_free_session_slot(
     const UmiWorkbenchMemoryStore *store)
 {
     size_t index;
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          store != NULL &&
          index < UMI_WORKBENCH_MEMORY_STORE_MAX_SESSIONS;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (!store->sessions[index].occupied) {
             return index;
         }
@@ -229,15 +311,21 @@ static size_t find_free_session_slot(
     return UMI_WORKBENCH_LAYOUT_INDEX_NONE;
 }
 
+/*
+ * Provide the query text matches operation used by this module and its client
+ * applications.
+ */
 static bool query_text_matches(
     const UmiWorkbenchLayoutStoreQuery *query,
     const UmiWorkbenchLayoutDocument *document)
 {
     size_t index;
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->text[0] == '\0') {
         return true;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_text_contains_case_insensitive(
             document->identity.layout_id, query->text) ||
         umi_workbench_layout_text_contains_case_insensitive(
@@ -246,7 +334,9 @@ static bool query_text_matches(
             document->description, query->text)) {
         return true;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < document->tag_count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_workbench_layout_text_contains_case_insensitive(
                 document->tags[index].value, query->text)) {
             return true;
@@ -255,44 +345,52 @@ static bool query_text_matches(
     return false;
 }
 
+/* Provide the query matches operation used by this module and its client applications. */
 static bool query_matches(
     const UmiWorkbenchLayoutStoreQuery *query,
     const UmiWorkbenchLayoutDocument *document)
 {
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (query->owner_user_id[0] != '\0' &&
         strcmp(
             query->owner_user_id,
             document->identity.owner_user_id) != 0) {
         return false;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (query->owner_application_id[0] != '\0' &&
         strcmp(
             query->owner_application_id,
             document->identity.owner_application_id) != 0) {
         return false;
     }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (query->workspace_id[0] != '\0' &&
         strcmp(
             query->workspace_id,
             document->identity.workspace_id) != 0) {
         return false;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (query->category[0] != '\0' &&
         strcmp(query->category, document->category) != 0) {
         return false;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!query->include_built_in &&
         umi_workbench_layout_document_has_flag(
             document,
             UMI_WORKBENCH_LAYOUT_DOCUMENT_BUILT_IN)) {
         return false;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!query->include_shared &&
         umi_workbench_layout_document_has_flag(
             document,
             UMI_WORKBENCH_LAYOUT_DOCUMENT_SHARED)) {
         return false;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!query->include_read_only &&
         umi_workbench_layout_document_has_flag(
             document,
@@ -302,6 +400,7 @@ static bool query_matches(
     return query_text_matches(query, document);
 }
 
+/* Provide the fill summary operation used by this module and its client applications. */
 static void fill_summary(
     UmiWorkbenchLayoutRecordSummary *summary,
     const UmiWorkbenchLayoutDocument *document)
@@ -344,16 +443,32 @@ static void fill_summary(
     summary->flags = document->flags;
 }
 
+/*
+ * Provide the ensure layout record operation used by this module and its client
+ * applications.
+ */
 static UmiStatus ensure_layout_record(
     UmiWorkbenchMemoryLayoutRecord *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record->document == NULL) {
         record->document =
             (UmiWorkbenchLayoutDocument *)malloc(
                 sizeof(*record->document));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (record->document == NULL) {
             return UMI_STATUS_OUT_OF_MEMORY;
         }
@@ -361,16 +476,32 @@ static UmiStatus ensure_layout_record(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ensure session record operation used by this module and its client
+ * applications.
+ */
 static UmiStatus ensure_session_record(
     UmiWorkbenchMemorySessionRecord *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record->session == NULL) {
         record->session =
             (UmiWorkbenchLayoutSession *)malloc(
                 sizeof(*record->session));
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
         if (record->session == NULL) {
             return UMI_STATUS_OUT_OF_MEMORY;
         }
@@ -378,6 +509,10 @@ static UmiStatus ensure_session_record(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory save layout operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_save_layout(
     void *context,
     const UmiWorkbenchLayoutDocument *document,
@@ -390,6 +525,10 @@ static UmiStatus memory_save_layout(
     uint64_t revision;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || document == NULL ||
         out_revision == NULL ||
         !umi_workbench_layout_text_present(
@@ -399,31 +538,37 @@ static UmiStatus memory_save_layout(
 
     index = find_layout_slot(
         store, document->identity.layout_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (expected_revision != 0U) {
             return UMI_STATUS_NOT_FOUND;
         }
         index = find_free_layout_slot(store);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         revision = document->version.revision > 0U
             ? document->version.revision
             : 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         uint64_t current =
             store->layouts[index].document->version.revision;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (expected_revision != 0U &&
             expected_revision != current) {
             return UMI_STATUS_BUSY;
         }
         revision = current + 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (document->version.revision > revision) {
             revision = document->version.revision;
         }
     }
 
     status = ensure_layout_record(&store->layouts[index]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -437,6 +582,10 @@ static UmiStatus memory_save_layout(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory load layout operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_load_layout(
     void *context,
     const char *layout_id,
@@ -446,10 +595,15 @@ static UmiStatus memory_load_layout(
         (UmiWorkbenchMemoryStore *)context;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || out_document == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_layout_slot(store, layout_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -457,6 +611,10 @@ static UmiStatus memory_load_layout(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory delete layout operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_delete_layout(
     void *context,
     const char *layout_id,
@@ -466,13 +624,19 @@ static UmiStatus memory_delete_layout(
         (UmiWorkbenchMemoryStore *)context;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_layout_slot(store, layout_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (expected_revision != 0U &&
         expected_revision !=
             store->layouts[index].document->version.revision) {
@@ -488,6 +652,10 @@ static UmiStatus memory_delete_layout(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory list layouts operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_list_layouts(
     void *context,
     const UmiWorkbenchLayoutStoreQuery *query,
@@ -500,6 +668,10 @@ static UmiStatus memory_list_layouts(
     size_t included = 0U;
     size_t limit;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || query == NULL || out_list == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -509,21 +681,25 @@ static UmiStatus memory_list_layouts(
     limit = query->limit > 0U
         ? query->limit
         : UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (limit > UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS) {
         limit = UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
     }
 
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
          ++index) {
         const UmiWorkbenchMemoryLayoutRecord *record =
             &store->layouts[index];
 
+        /* Apply this branch only when its contract condition is satisfied. */
         if (!record->occupied ||
             record->document == NULL ||
             !query_matches(query, record->document)) {
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (matched >= query->offset && included < limit) {
             fill_summary(
                 &out_list->records[included],
@@ -540,6 +716,10 @@ static UmiStatus memory_list_layouts(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory save session operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_save_session(
     void *context,
     const UmiWorkbenchLayoutSession *session,
@@ -552,6 +732,10 @@ static UmiStatus memory_save_session(
     uint64_t revision;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || session == NULL ||
         out_revision == NULL ||
         !umi_workbench_layout_text_present(session->session_id)) {
@@ -559,31 +743,37 @@ static UmiStatus memory_save_session(
     }
 
     index = find_session_slot(store, session->session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
+        /* Apply this branch only when its contract condition is satisfied. */
         if (expected_revision != 0U) {
             return UMI_STATUS_NOT_FOUND;
         }
         index = find_free_session_slot(store);
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         revision = session->revision > 0U
             ? session->revision
             : 1U;
-    } else {
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
         uint64_t current =
             store->sessions[index].session->revision;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (expected_revision != 0U &&
             expected_revision != current) {
             return UMI_STATUS_BUSY;
         }
         revision = current + 1U;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (session->revision > revision) {
             revision = session->revision;
         }
     }
 
     status = ensure_session_record(&store->sessions[index]);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -597,6 +787,10 @@ static UmiStatus memory_save_session(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory load session operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_load_session(
     void *context,
     const char *session_id,
@@ -606,10 +800,15 @@ static UmiStatus memory_load_session(
         (UmiWorkbenchMemoryStore *)context;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL || out_session == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_session_slot(store, session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         return UMI_STATUS_NOT_FOUND;
     }
@@ -617,6 +816,10 @@ static UmiStatus memory_load_session(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory delete session operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_delete_session(
     void *context,
     const char *session_id,
@@ -626,13 +829,19 @@ static UmiStatus memory_delete_session(
         (UmiWorkbenchMemoryStore *)context;
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_session_slot(store, session_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == UMI_WORKBENCH_LAYOUT_INDEX_NONE) {
         return UMI_STATUS_NOT_FOUND;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (expected_revision != 0U &&
         expected_revision !=
             store->sessions[index].session->revision) {
@@ -648,15 +857,24 @@ static UmiStatus memory_delete_session(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory begin transaction operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_begin_transaction(void *context)
 {
     UmiWorkbenchMemoryStore *store =
         (UmiWorkbenchMemoryStore *)context;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (store->transaction_open) {
         return UMI_STATUS_BUSY;
     }
@@ -665,12 +883,14 @@ static UmiStatus memory_begin_transaction(void *context)
         store->layouts,
         store->transaction_layouts,
         UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = clone_session_records(
             store->sessions,
             store->transaction_sessions,
             UMI_WORKBENCH_MEMORY_STORE_MAX_SESSIONS);
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         release_layout_records(
             store->transaction_layouts,
@@ -685,14 +905,23 @@ static UmiStatus memory_begin_transaction(void *context)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory commit transaction operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_commit_transaction(void *context)
 {
     UmiWorkbenchMemoryStore *store =
         (UmiWorkbenchMemoryStore *)context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!store->transaction_open) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -708,14 +937,23 @@ static UmiStatus memory_commit_transaction(void *context)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the memory rollback transaction operation used by this module and its client
+ * applications.
+ */
 static UmiStatus memory_rollback_transaction(void *context)
 {
     UmiWorkbenchMemoryStore *store =
         (UmiWorkbenchMemoryStore *)context;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (!store->transaction_open) {
         return UMI_STATUS_INVALID_STATE;
     }
@@ -733,9 +971,17 @@ static UmiStatus memory_rollback_transaction(void *context)
     return UMI_STATUS_OK;
 }
 
+/*
+ * Initialise workbench memory store from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_memory_store_init(
     UmiWorkbenchMemoryStore *store)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return;
     }
@@ -744,6 +990,10 @@ void umi_workbench_memory_store_init(
     store->revision = 1U;
 }
 
+/*
+ * Provide the workbench memory store adapter operation used by this module and its client
+ * applications.
+ */
 UmiWorkbenchLayoutStoreAdapter umi_workbench_memory_store_adapter(
     UmiWorkbenchMemoryStore *store)
 {
@@ -766,18 +1016,28 @@ UmiWorkbenchLayoutStoreAdapter umi_workbench_memory_store_adapter(
     return adapter;
 }
 
+/*
+ * Return the number of records represented by workbench memory store layout without
+ * changing their state.
+ */
 size_t umi_workbench_memory_store_layout_count(
     const UmiWorkbenchMemoryStore *store)
 {
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_LAYOUT_MAX_STORE_RECORDS;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->layouts[index].occupied &&
             store->layouts[index].document != NULL) {
             count += 1U;
@@ -786,18 +1046,28 @@ size_t umi_workbench_memory_store_layout_count(
     return count;
 }
 
+/*
+ * Return the number of records represented by workbench memory store session without
+ * changing their state.
+ */
 size_t umi_workbench_memory_store_session_count(
     const UmiWorkbenchMemoryStore *store)
 {
     size_t index;
     size_t count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return 0U;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U;
          index < UMI_WORKBENCH_MEMORY_STORE_MAX_SESSIONS;
          ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (store->sessions[index].occupied &&
             store->sessions[index].session != NULL) {
             count += 1U;
@@ -806,9 +1076,17 @@ size_t umi_workbench_memory_store_session_count(
     return count;
 }
 
+/*
+ * Release or reset state held by workbench memory store so the same storage can be reused
+ * safely.
+ */
 void umi_workbench_memory_store_clear(
     UmiWorkbenchMemoryStore *store)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (store == NULL) {
         return;
     }

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/conformance/accessibility_contract.h"
 
-bool umi_fc_accessibility_contract_validate(const UmiFcAccessibilityContract *item){if(item==NULL)return false;return item->named && item->keyboard_reachable && item->state_exposed;}
+/*
+ * Check that fc accessibility contract satisfies its contract before another service
+ * relies on it.
+ */
+bool umi_fc_accessibility_contract_validate(const UmiFcAccessibilityContract *item){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return false;return item->named && item->keyboard_reachable && item->state_exposed;}

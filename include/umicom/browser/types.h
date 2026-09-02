@@ -28,7 +28,13 @@ extern "C" {
 #define UMI_BROWSER_URL_CAPACITY 1024U
 #define UMI_BROWSER_MESSAGE_CAPACITY 4096U
 #define UMI_BROWSER_HISTORY_CAPACITY 64U
+/**
+ * List the named browser event kind values accepted by this public contract.
+ */
 typedef enum UmiBrowserEventKind { UMI_BROWSER_NAVIGATED=1, UMI_BROWSER_TITLE_CHANGED=2, UMI_BROWSER_MESSAGE=3, UMI_BROWSER_CLOSED=4 } UmiBrowserEventKind;
+/**
+ * Represent the browser event data shared with callers of this public contract.
+ */
 typedef struct UmiBrowserEvent { UmiBrowserEventKind kind; char text[UMI_BROWSER_MESSAGE_CAPACITY]; } UmiBrowserEvent;
 typedef void (*UmiBrowserEventSink)(const UmiBrowserEvent *event,void *user_data);
 #ifdef __cplusplus

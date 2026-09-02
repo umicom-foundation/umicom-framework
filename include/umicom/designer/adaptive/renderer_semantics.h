@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer renderer semantics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerRendererSemantics {
     UmiRadTargetKind renderer;
     int supports_hover;

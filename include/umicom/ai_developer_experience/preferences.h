@@ -20,11 +20,17 @@
 extern "C" {
 #endif
 
+/**
+ * List the named ai developer diff layout values accepted by this public contract.
+ */
 typedef enum UmiAiDeveloperDiffLayout {
     UMI_AI_DEVELOPER_DIFF_LAYOUT_UNIFIED = 0,
     UMI_AI_DEVELOPER_DIFF_LAYOUT_SIDE_BY_SIDE = 1
 } UmiAiDeveloperDiffLayout;
 
+/**
+ * Represent the ai developer preferences data shared with callers of this public contract.
+ */
 typedef struct UmiAiDeveloperPreferences {
     UmiAiDeveloperDiffLayout diff_layout;
     size_t diff_context_lines;
@@ -37,9 +43,17 @@ typedef struct UmiAiDeveloperPreferences {
     uint64_t revision;
 } UmiAiDeveloperPreferences;
 
+/**
+ * Initialise ai developer preferences from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_ai_developer_preferences_init(
     UmiAiDeveloperPreferences *preferences);
 
+/**
+ * Check that ai developer preferences satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_ai_developer_preferences_validate(
     const UmiAiDeveloperPreferences *preferences);
 

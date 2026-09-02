@@ -28,14 +28,25 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai embedding data shared with callers of this public contract.
+ */
 typedef struct UmiAiEmbedding {
     float values[UMI_AI_EMBEDDING_CAPACITY];
     size_t dimension;
 } UmiAiEmbedding;
 
+/**
+ * Copy ai embedding into module-owned storage so callers keep ownership of their input
+ * values.
+ */
 UmiStatus umi_ai_embedding_set(UmiAiEmbedding *embedding,
                                const float *values,
                                size_t dimension);
+/**
+ * Provide the ai embedding cosine operation used by this module and its client
+ * applications.
+ */
 double umi_ai_embedding_cosine(const UmiAiEmbedding *left,
                                const UmiAiEmbedding *right);
 

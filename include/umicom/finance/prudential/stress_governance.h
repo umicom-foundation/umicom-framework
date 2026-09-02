@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress governance data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressGovernance { char run_id[UMI_PRU_ID_CAPACITY]; int model_validated; int independent_reviewed; int management_approved; UmiStressRunState state; } UmiPrudentialStressGovernance;
 /* Derive stress-run readiness from model validation, independent review and management approval. */
 UmiStatus umi_pru_stress_governance_evaluate(UmiPrudentialStressGovernance *record, const char *run_id, int model_validated, int independent_reviewed, int management_approved);

@@ -18,4 +18,5 @@
  */
 
 #include "umicom/trading/support_resistance.h"
+/* Provide the room to level operation used by this module and its client applications. */
 double umi_room_to_level(double price,double level,int direction){double room=direction>=0?level-price:price-level;return room>0.0?room:0.0;}

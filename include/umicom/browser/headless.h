@@ -23,6 +23,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Initialise browser headless from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_browser_headless_create(UmiBrowserEventSink sink,void *user_data,UmiBrowser *out_browser);
 #ifdef __cplusplus
 }

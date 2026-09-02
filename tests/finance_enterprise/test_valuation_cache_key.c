@@ -18,4 +18,8 @@
 
 #include "umicom/finance/enterprise/valuation_cache_key.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiEnterpriseValuationCacheKey k; CHECK(umi_enterprise_valuation_cache_key_init(&k,"swap",123U,"discount")==UMI_STATUS_OK); CHECK(k.fingerprint!=0U); return 0; }

@@ -25,7 +25,13 @@ extern "C" {
 typedef UmiStatus (*UmiPluginDiscoverySink)(const char *manifest_path,
                                             const UmiPluginManifest *manifest,
                                             void *user_data);
+/**
+ * Represent the plugin discovery report data shared with callers of this public contract.
+ */
 typedef struct UmiPluginDiscoveryReport { size_t files_examined; size_t manifests_loaded; size_t invalid_manifests; } UmiPluginDiscoveryReport;
+/**
+ * Provide the plugin discover operation used by this module and its client applications.
+ */
 UmiStatus umi_plugin_discover(const char *root,
                               int recursive,
                               UmiPluginDiscoverySink sink,

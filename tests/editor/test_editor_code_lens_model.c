@@ -28,6 +28,10 @@
 
 #include "umicom/editor/code_lens_model.h"
 
+/*
+ * Exercise make item and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiEditorCodeLensItem make_item(const char *id,
                                        uint64_t line,
                                        UmiEditorCodeLensKind kind)
@@ -49,6 +53,10 @@ static UmiEditorCodeLensItem make_item(const char *id,
     return item;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorCodeLensModel *model = NULL;

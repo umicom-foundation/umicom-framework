@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant pricing request data shared with callers of this public contract.
+ */
 typedef struct UmiQuantPricingRequest {
     int32_t product_class;
     double quantity;

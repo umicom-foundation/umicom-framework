@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/capabilities/final_newline_policy.h"
 
+/*
+ * Provide the document capability final newline policy operation used by this module and
+ * its client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_final_newline_policy(void)
 {

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/analytics/dashboard_layout.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiAnalyticsDashboardLayout l;return umi_analytics_dashboard_layout_init(&l,"ops","Operations",6,12)==0&&l.grid.columns==12?0:1;}

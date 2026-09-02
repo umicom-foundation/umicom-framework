@@ -19,12 +19,24 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/teacher/static_analysis_rule.h"
 #include <string.h>
-void umi_teacher_static_analysis_rule_init(UmiTeacherStaticAnalysisRule *policy) { if (policy!=NULL) { memset(policy,0,sizeof(*policy));
+/*
+ * Initialise teacher static analysis rule from caller-provided values so later operations
+ * receive a known state.
+ */
+void umi_teacher_static_analysis_rule_init(UmiTeacherStaticAnalysisRule *policy) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (policy!=NULL) { memset(policy,0,sizeof(*policy));
     policy->maximum_level=UMI_TEACHER_LEVEL_EXPERT;
     policy->language_mask=UINT32_MAX;
     policy->enabled=1;
     } }
+/*
+ * Provide the teacher static analysis rule configure operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_teacher_static_analysis_rule_configure(UmiTeacherStaticAnalysisRule *policy,uint32_t minimum_mastery,uint32_t minimum_attempts,uint32_t maximum_failures,UmiTeacherLevel maximum_level,uint32_t language_mask) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy==NULL || minimum_mastery>100U) return UMI_STATUS_INVALID_ARGUMENT;
     umi_teacher_static_analysis_rule_init(policy);
     policy->minimum_mastery=minimum_mastery;
@@ -34,12 +46,24 @@ UmiStatus umi_teacher_static_analysis_rule_configure(UmiTeacherStaticAnalysisRul
     policy->language_mask=language_mask;
     return UMI_STATUS_OK;
 }
+/*
+ * Provide the teacher static analysis rule allows operation used by this module and its
+ * client applications.
+ */
 int umi_teacher_static_analysis_rule_allows(const UmiTeacherStaticAnalysisRule *policy,uint32_t mastery,uint32_t attempts,uint32_t failures,UmiTeacherLevel level,UmiTeacherLanguage language) {
     uint32_t bit;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (policy==NULL || !policy->enabled || mastery<policy->minimum_mastery || attempts<policy->minimum_attempts || failures>policy->maximum_failures || level>policy->maximum_level) return 0;
     bit = UINT32_C(1) << (uint32_t)language;
     return (policy->language_mask & bit) != 0U;
 }
-uint32_t umi_teacher_static_analysis_rule_deficit(const UmiTeacherStaticAnalysisRule *policy,uint32_t mastery) { if (policy==NULL || mastery>=policy->minimum_mastery) return 0U;
+/*
+ * Provide the teacher static analysis rule deficit operation used by this module and its
+ * client applications.
+ */
+uint32_t umi_teacher_static_analysis_rule_deficit(const UmiTeacherStaticAnalysisRule *policy,uint32_t mastery) { /* Protect caller-owned memory by checking that required state is available before it is used. */ if (policy==NULL || mastery>=policy->minimum_mastery) return 0U;
     return policy->minimum_mastery-mastery;
     }

@@ -22,9 +22,17 @@ extern "C" {
 #endif
 
 
+/**
+ * Initialise bootstrap constructor binding from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_bootstrap_constructor_binding_init(
     UmiBootstrapConstructorBinding *binding,
     const char *implementation_id);
+/**
+ * Provide the bootstrap constructor binding add dependency operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_bootstrap_constructor_binding_add_dependency(
     UmiBootstrapConstructorBinding *binding,
     const UmiBootstrapDependencyDescriptor *dependency);

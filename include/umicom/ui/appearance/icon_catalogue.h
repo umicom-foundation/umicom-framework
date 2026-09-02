@@ -24,6 +24,10 @@ extern "C" {
 #endif
 #include "umicom/ui/appearance/icon_descriptor.h"
 
+/**
+ * Represent the appearance icon catalogue data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceIconCatalogue { UmiAppearanceIconDescriptor items[UMI_APPEARANCE_MAX_ICONS]; size_t count; uint64_t revision; } UmiAppearanceIconCatalogue;
 
 /* Initialise an empty bounded registry. */

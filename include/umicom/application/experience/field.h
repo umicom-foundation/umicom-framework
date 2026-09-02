@@ -22,12 +22,20 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the application experience field option data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationExperienceFieldOption {
   const char *option_id;
   const char *label;
   int disabled;
 } UmiApplicationExperienceFieldOption;
 
+/**
+ * Represent the application experience field data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiApplicationExperienceField {
   const char *field_id;
   const char *label;
@@ -47,9 +55,21 @@ typedef struct UmiApplicationExperienceField {
   UmiApplicationExperienceValue default_value;
 } UmiApplicationExperienceField;
 
+/**
+ * Check that application experience field satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_application_experience_field_validate(const UmiApplicationExperienceField *field);
+/**
+ * Provide the application experience field accepts operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_application_experience_field_accepts(const UmiApplicationExperienceField *field,
                                                    const UmiApplicationExperienceValue *value);
+/**
+ * Provide the application experience field option operation used by this module and its
+ * client applications.
+ */
 const UmiApplicationExperienceFieldOption *
 umi_application_experience_field_option(const UmiApplicationExperienceField *field,
                                         const char *option_id);

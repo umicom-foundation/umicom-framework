@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant option contract data shared with callers of this public contract.
+ */
 typedef struct UmiQuantOptionContract {
     double quantity;
     double strike;

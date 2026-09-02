@@ -24,7 +24,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the editor wb editor status model data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEditorWbEditorStatusModel { uint32_t line; uint32_t column; size_t selection_length; char language[64]; char encoding[32]; char eol[16]; bool dirty; } UmiEditorWbEditorStatusModel;
+/**
+ * Initialise editor wb editor status model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_wb_editor_status_model_init(UmiEditorWbEditorStatusModel *state,const char *language,const char *encoding); UmiStatus umi_editor_wb_editor_status_model_set_position(UmiEditorWbEditorStatusModel *state,uint32_t line,uint32_t column);
 
 #ifdef __cplusplus

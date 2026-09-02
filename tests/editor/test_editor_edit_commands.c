@@ -22,6 +22,10 @@
 
 #include "umicom/editor/edit_command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiEditorEditCommandRequest request;
@@ -29,6 +33,7 @@ int main(void)
     size_t index;
 
     assert(umi_editor_edit_command_count() == 14U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_editor_edit_command_count(); ++index) {
         descriptor = umi_editor_edit_command_at(index);
         assert(descriptor != NULL);

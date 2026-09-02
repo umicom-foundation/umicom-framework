@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential stress projection data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiPrudentialStressProjection { double values[UMI_PRU_MAX_PERIODS]; size_t count; } UmiPrudentialStressProjection;
 /* Project a base value across a sequence of non-negative multipliers. */
 UmiStatus umi_pru_stress_projection_calculate(UmiPrudentialStressProjection *result, double base_value, const double *multipliers, size_t count);

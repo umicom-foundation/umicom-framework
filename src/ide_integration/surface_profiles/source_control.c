@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ide_integration/surface_profiles/source_control.h"
 
+/*
+ * Provide the ide surface profile source control operation used by this module and its
+ * client applications.
+ */
 const UmiIdeSurfaceDescriptor *umi_ide_surface_profile_source_control(void)
 {
     static const UmiIdeSurfaceDescriptor descriptor = {

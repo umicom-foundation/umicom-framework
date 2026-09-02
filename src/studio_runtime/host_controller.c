@@ -16,6 +16,10 @@
 
 #include <string.h>
 
+/*
+ * Initialise studio host controller from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_studio_host_controller_init(
     UmiStudioRuntimeHostController *controller,
     UmiStudioRuntimeBootstrap *bootstrap,
@@ -23,12 +27,17 @@ UmiStatus umi_studio_host_controller_init(
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || bootstrap == NULL ||
         bootstrap->platform == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_studio_host_adapter_validate(adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)memset(controller, 0, sizeof(*controller));
@@ -41,26 +50,40 @@ UmiStatus umi_studio_host_controller_init(
         &controller->adapter);
 }
 
+/*
+ * Provide the studio host controller refresh operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_host_controller_refresh(
     UmiStudioRuntimeHostController *controller)
 {
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->bootstrap == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
     status = umi_studio_runtime_bootstrap_refresh(
         controller->bootstrap);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_host_sync(
         controller->bootstrap->platform,
         &controller->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) controller->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the studio host controller execute command operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_studio_host_controller_execute_command(
     UmiStudioRuntimeHostController *controller,
     const char *command_id,
@@ -69,6 +92,10 @@ UmiStatus umi_studio_host_controller_execute_command(
     char message[UMI_STUDIO_RUNTIME_TEXT_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->bootstrap == NULL ||
         command_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -82,23 +109,34 @@ UmiStatus umi_studio_host_controller_execute_command(
         argument,
         message,
         sizeof(message));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_host_sync(
         controller->bootstrap->platform,
         &controller->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller->adapter.notify != NULL && message[0] != '\0') {
         status = controller->adapter.notify(
             controller->adapter.user_data,
             message);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) controller->revision += 1U;
     return status;
 }
 
+/*
+ * Provide the studio host controller execute contribution operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_studio_host_controller_execute_contribution(
     UmiStudioRuntimeHostController *controller,
     const char *contribution_id,
@@ -107,6 +145,10 @@ UmiStatus umi_studio_host_controller_execute_contribution(
     char message[UMI_STUDIO_RUNTIME_TEXT_CAPACITY];
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller == NULL || controller->bootstrap == NULL ||
         contribution_id == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -120,19 +162,26 @@ UmiStatus umi_studio_host_controller_execute_contribution(
         argument,
         message,
         sizeof(message));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = umi_studio_host_sync(
         controller->bootstrap->platform,
         &controller->adapter);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (controller->adapter.notify != NULL && message[0] != '\0') {
         status = controller->adapter.notify(
             controller->adapter.user_data,
             message);
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) controller->revision += 1U;
     return status;
 }

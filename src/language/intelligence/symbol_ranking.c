@@ -15,18 +15,34 @@
 
 #include "umicom/language/intelligence/symbol_ranking.h"
 #include <string.h>
+/*
+ * Initialise language intelligence symbol ranking input from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_language_intelligence_symbol_ranking_input_init(UmiLanguageIntelligenceSymbolRankingInput *input)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (input == NULL) return;
     (void)memset(input, 0, sizeof(*input));
     input->struct_size = (uint32_t)sizeof(*input);
     input->api_version = UMI_LANGUAGE_INTELLIGENCE_SYMBOL_RANKING_API_VERSION;
     input->enabled = 1;
 }
+/*
+ * Provide the language intelligence symbol ranking score operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_language_intelligence_symbol_ranking_score(const UmiLanguageIntelligenceSymbolRankingInput *input)
 {
     uint64_t score;
     uint64_t penalty;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (input == NULL || input->enabled == 0 ||
         input->struct_size < sizeof(*input) ||
         input->api_version != UMI_LANGUAGE_INTELLIGENCE_SYMBOL_RANKING_API_VERSION)
@@ -45,6 +61,10 @@ uint64_t umi_language_intelligence_symbol_ranking_score(const UmiLanguageIntelli
     penalty = (uint64_t)input->penalty * UINT64_C(1000);
     return penalty >= score ? 0U : score - penalty;
 }
+/*
+ * Provide the language intelligence symbol ranking prefer operation used by this module
+ * and its client applications.
+ */
 int umi_language_intelligence_symbol_ranking_prefer(
     const UmiLanguageIntelligenceSymbolRankingInput *left,
     const UmiLanguageIntelligenceSymbolRankingInput *right)

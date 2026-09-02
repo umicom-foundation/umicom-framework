@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/enterprise/tree_expansion.h"
 #include <stdio.h>
-int main(void){UmiUiEntTreeExpansion e;umi_ui_ent_tree_expansion_init(&e);umi_ui_ent_tree_expansion_set(&e,"n",1);if(!umi_ui_ent_tree_expansion_is_expanded(&e,"n"))return 1;umi_ui_ent_tree_expansion_set(&e,"n",0);if(umi_ui_ent_tree_expansion_is_expanded(&e,"n"))return 2;puts("ok");return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiUiEntTreeExpansion e;umi_ui_ent_tree_expansion_init(&e);umi_ui_ent_tree_expansion_set(&e,"n",1);/* Apply this branch only when its contract condition is satisfied. */ if(!umi_ui_ent_tree_expansion_is_expanded(&e,"n"))return 1;umi_ui_ent_tree_expansion_set(&e,"n",0);/* Apply this branch only when its contract condition is satisfied. */ if(umi_ui_ent_tree_expansion_is_expanded(&e,"n"))return 2;puts("ok");return 0;}

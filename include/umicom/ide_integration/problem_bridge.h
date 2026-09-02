@@ -21,11 +21,19 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ide problem target operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_problem_target(
     const UmiDeveloperProblemStore *problems,
     size_t index,
     UmiIdeNavigationTarget *out_target);
 
+/**
+ * Provide the ide problem ai summary operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ide_problem_ai_summary(
     const UmiDeveloperProblemStore *problems,
     size_t index,

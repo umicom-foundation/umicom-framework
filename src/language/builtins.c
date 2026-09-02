@@ -45,5 +45,13 @@ static const Builtin BUILTINS[]={
  {"umicc","Umicc",".umc;.umicc","text/x-umicc","umicc-lsp","umicc format"},
  {"uai","Umicom AI Language",".uai","text/x-uai","uai-lsp","uai format"}
 };
-UmiStatus umi_language_register_builtin_definitions(UmiLanguageDefinitionRegistry*r){size_t i;UmiStatus s;if(r==NULL)return UMI_STATUS_INVALID_ARGUMENT;for(i=0U;i<sizeof(BUILTINS)/sizeof(BUILTINS[0]);++i){UmiLanguageDefinitionSnapshot d={0};(void)strcpy(d.id,BUILTINS[i].id);(void)strcpy(d.name,BUILTINS[i].name);(void)strcpy(d.file_extensions,BUILTINS[i].extensions);(void)strcpy(d.mime_types,BUILTINS[i].mimes);(void)strcpy(d.language_server,BUILTINS[i].server);(void)strcpy(d.formatter,BUILTINS[i].formatter);d.enabled=1;s=umi_language_definition_registry_upsert(r,&d);if(s!=UMI_STATUS_OK)return s;}return UMI_STATUS_OK;}
+/*
+ * Provide the language register builtin definitions operation used by this module and its
+ * client applications.
+ */
+UmiStatus umi_language_register_builtin_definitions(UmiLanguageDefinitionRegistry*r){size_t i;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<sizeof(BUILTINS)/sizeof(BUILTINS[0]);++i){UmiLanguageDefinitionSnapshot d={0};(void)strcpy(d.id,BUILTINS[i].id);(void)strcpy(d.name,BUILTINS[i].name);(void)strcpy(d.file_extensions,BUILTINS[i].extensions);(void)strcpy(d.mime_types,BUILTINS[i].mimes);(void)strcpy(d.language_server,BUILTINS[i].server);(void)strcpy(d.formatter,BUILTINS[i].formatter);d.enabled=1;s=umi_language_definition_registry_upsert(r,&d);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;}return UMI_STATUS_OK;}
+/*
+ * Return the number of records represented by language builtin definition without changing
+ * their state.
+ */
 size_t umi_language_builtin_definition_count(void){return sizeof(BUILTINS)/sizeof(BUILTINS[0]);}

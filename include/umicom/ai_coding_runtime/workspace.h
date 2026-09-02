@@ -45,6 +45,10 @@ typedef UmiStatus (*UmiAiCodingWorkspaceExists)(
     const char *relative_path,
     int *out_exists);
 
+/**
+ * Represent the ai coding workspace adapter data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingWorkspaceAdapter {
     uint32_t structure_size;
     uint32_t api_version;
@@ -55,9 +59,17 @@ typedef struct UmiAiCodingWorkspaceAdapter {
     void *user_data;
 } UmiAiCodingWorkspaceAdapter;
 
+/**
+ * Check that ai coding workspace adapter satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_ai_coding_workspace_adapter_validate(
     const UmiAiCodingWorkspaceAdapter *adapter);
 
+/**
+ * Provide the ai coding workspace file adapter operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ai_coding_workspace_file_adapter(
     const UmiAiCodingWorkspaceAdapter *workspace,
     UmiAiCodingFileAdapter *out_adapter);

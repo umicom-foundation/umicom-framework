@@ -18,6 +18,10 @@
 
 #include "umicom/editor/completion_command.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     size_t position;
@@ -26,6 +30,7 @@ int main(void)
     size_t confirmation_commands = 0U;
 
     assert(umi_editor_completion_command_count() == 24U);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (position = 0U; position < umi_editor_completion_command_count();
          ++position) {
         const UmiEditorCompletionCommandDescriptor *descriptor =
@@ -40,8 +45,11 @@ int main(void)
                descriptor);
         assert(umi_editor_completion_command_for_kind(descriptor->kind) ==
                descriptor);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (descriptor->mutates_document) ++document_mutations;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (descriptor->requires_confirmation) ++confirmation_commands;
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = position + 1U;
              comparison < umi_editor_completion_command_count();
              ++comparison) {

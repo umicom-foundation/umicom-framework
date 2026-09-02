@@ -20,6 +20,10 @@
 extern "C" {
 #endif
 
+/**
+ * List the named workbench selection provider controller state values accepted by this
+ * public contract.
+ */
 typedef enum UmiWorkbenchSelectionProviderControllerState {
     UMI_WORKBENCH_SELECTION_PROVIDER_CONTROLLER_INITIALISED = 1,
     UMI_WORKBENCH_SELECTION_PROVIDER_CONTROLLER_RUNNING = 2,
@@ -28,6 +32,10 @@ typedef enum UmiWorkbenchSelectionProviderControllerState {
     UMI_WORKBENCH_SELECTION_PROVIDER_CONTROLLER_FAILED = 5
 } UmiWorkbenchSelectionProviderControllerState;
 
+/**
+ * Represent the workbench selection provider slave controller data shared with callers of
+ * this public contract.
+ */
 typedef struct UmiWorkbenchSelectionProviderSlaveController {
     UmiWorkbenchSelectionProviderService *service;
     UmiWorkbenchSelectionProviderControllerState state;
@@ -35,15 +43,35 @@ typedef struct UmiWorkbenchSelectionProviderSlaveController {
     uint64_t revision;
 } UmiWorkbenchSelectionProviderSlaveController;
 
+/**
+ * Initialise workbench selection provider slave controller from caller-provided values so
+ * later operations receive a known state.
+ */
 void umi_workbench_selection_provider_slave_controller_init(
     UmiWorkbenchSelectionProviderSlaveController *controller,
     UmiWorkbenchSelectionProviderService *service);
+/**
+ * Provide the workbench selection provider slave controller start operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_slave_controller_start(
     UmiWorkbenchSelectionProviderSlaveController *controller);
+/**
+ * Provide the workbench selection provider slave controller quiesce operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_slave_controller_quiesce(
     UmiWorkbenchSelectionProviderSlaveController *controller);
+/**
+ * Provide the workbench selection provider slave controller resume operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_slave_controller_resume(
     UmiWorkbenchSelectionProviderSlaveController *controller);
+/**
+ * Provide the workbench selection provider slave controller stop operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_slave_controller_stop(
     UmiWorkbenchSelectionProviderSlaveController *controller);
 

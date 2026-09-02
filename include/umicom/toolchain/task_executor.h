@@ -36,6 +36,9 @@ extern "C" {
 
 #define UMI_TOOLCHAIN_TASK_EXECUTOR_API_VERSION 2U
 
+/**
+ * Represent the toolchain task executor data shared with callers of this public contract.
+ */
 typedef struct UmiToolchainTaskExecutor {
     uint32_t structure_size;
     uint32_t api_version;
@@ -47,25 +50,45 @@ typedef struct UmiToolchainTaskExecutor {
     uint64_t revision;
 } UmiToolchainTaskExecutor;
 
+/**
+ * Initialise toolchain task executor from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_toolchain_task_executor_init(
     UmiToolchainTaskExecutor *executor,
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
     const UmiBuildRequest *request);
 
+/**
+ * Provide the toolchain task executor set workspace trust operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_toolchain_task_executor_set_workspace_trust(
     UmiToolchainTaskExecutor *executor,
     const UmiWorkspaceTrustStore *trust_store,
     const char *workspace_root);
 
+/**
+ * Provide the toolchain task executor authorise operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_toolchain_task_executor_authorise(
     const UmiToolchainTaskExecutor *executor,
     const UmiBuildTaskSnapshot *task);
 
+/**
+ * Provide the toolchain task executor action operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_task_executor_action(
     const UmiBuildTaskSnapshot *task,
     UmiBuildAction *out_action);
 
+/**
+ * Perform toolchain task executor through the module contract so client applications do
+ * not duplicate its policy.
+ */
 UmiStatus umi_toolchain_task_executor_execute(
     UmiToolchainTaskExecutor *executor,
     const UmiBuildTaskSnapshot *task,

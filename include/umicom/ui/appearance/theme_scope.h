@@ -22,6 +22,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the appearance theme scope data shared with callers of this public contract.
+ */
 typedef struct UmiAppearanceThemeScope {
     char scope_id[UMI_APPEARANCE_ID_CAPACITY];
     UmiAppearanceScope scope;

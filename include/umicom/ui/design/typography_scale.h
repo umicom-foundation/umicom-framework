@@ -28,7 +28,14 @@ extern "C" {
 #endif
 
 #include "umicom/ui/design/typography.h"
+/**
+ * Represent the design typography scale entry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignTypographyScaleEntry { char level_id[UMI_DESIGN_ID_CAPACITY]; UmiDesignTypography typography; } UmiDesignTypographyScaleEntry;
+/**
+ * Represent the design typography scale data shared with callers of this public contract.
+ */
 typedef struct UmiDesignTypographyScale { UmiDesignTypographyScaleEntry entries[UMI_DESIGN_MAX_ITEMS]; size_t count; } UmiDesignTypographyScale;
 /* Insert or replace one named typography level. */
 UmiStatus umi_design_typography_scale_upsert(UmiDesignTypographyScale *scale, const char *level_id, const UmiDesignTypography *typography);

@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/workbench/indentation_guides.h"
 
-uint32_t umi_editor_wb_indentation_guides_depth(uint32_t cols,uint32_t tabw){if(tabw==0U)return 0U;return cols/tabw;}
+/*
+ * Provide the editor wb indentation guides depth operation used by this module and its
+ * client applications.
+ */
+uint32_t umi_editor_wb_indentation_guides_depth(uint32_t cols,uint32_t tabw){/* Apply this branch only when its contract condition is satisfied. */ if(tabw==0U)return 0U;return cols/tabw;}

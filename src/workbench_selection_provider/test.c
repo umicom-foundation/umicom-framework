@@ -20,8 +20,10 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Provide the outcome text operation used by this module and its client applications. */
 static const char *outcome_text(int outcome)
 {
+    /* Select the behaviour associated with the requested command or state value. */
     switch (outcome) {
     case 1: return "passed";
     case 2: return "failed";
@@ -31,6 +33,7 @@ static const char *outcome_text(int outcome)
     }
 }
 
+/* Provide the add text operation used by this module and its client applications. */
 static UmiStatus add_text(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -41,10 +44,12 @@ static UmiStatus add_text(
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_text(
         &field, value != NULL ? value : "");
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/* Provide the add boolean operation used by this module and its client applications. */
 static UmiStatus add_boolean(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -54,10 +59,12 @@ static UmiStatus add_boolean(
     UmiStatus status;
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_boolean(&field, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/* Provide the add decimal operation used by this module and its client applications. */
 static UmiStatus add_decimal(
     UmiWorkbenchSelection *selection,
     const char *name,
@@ -67,10 +74,15 @@ static UmiStatus add_decimal(
     UmiStatus status;
     umi_workbench_selection_field_init(&field, name);
     status = umi_workbench_selection_field_set_decimal(&field, value);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_add_field(selection, &field);
 }
 
+/*
+ * Provide the workbench selection provider from test item operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_test_item(
     const UmiTestPlatformItemSnapshot *item,
     const char *application_id,
@@ -82,6 +94,10 @@ UmiStatus umi_workbench_selection_provider_from_test_item(
     char selection_id[UMI_WORKBENCH_SELECTION_ID_CAPACITY];
     const char *source_uri;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item == NULL || application_id == NULL ||
         panel_id == NULL || out_selection == NULL ||
         item->id[0] == '\0') {
@@ -93,6 +109,7 @@ UmiStatus umi_workbench_selection_provider_from_test_item(
         "test",
         item->id,
         item->revision);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     source_uri = item->source_uri[0] != '\0'
@@ -111,25 +128,35 @@ UmiStatus umi_workbench_selection_provider_from_test_item(
         (uint64_t)(item->last_duration_ms > 0.0
             ? item->last_duration_ms : 0.0),
         timestamp_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     status = add_text(out_selection, "parent-id", item->parent_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "name", item->name);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "framework", item->framework);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "test-kind", item->kind);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "labels", item->labels);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_text(out_selection, "working-directory", item->working_directory);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "enabled", item->enabled != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_boolean(out_selection, "discovered", item->discovered != 0);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = add_decimal(out_selection, "last-duration-ms", item->last_duration_ms);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     (void)umi_workbench_selection_set_display_text(
@@ -139,6 +166,10 @@ UmiStatus umi_workbench_selection_provider_from_test_item(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench selection provider from test row operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_selection_provider_from_test_row(
     const UmiTestExplorerRow *row,
     const char *application_id,
@@ -148,6 +179,10 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
     UmiWorkbenchSelection *out_selection)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (row == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_selection_provider_from_test_item(
         &row->item,
@@ -156,6 +191,7 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
         workspace_id,
         timestamp_ms,
         out_selection);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
     {
@@ -163,10 +199,12 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
         umi_workbench_selection_field_init(&field, "selected");
         status = umi_workbench_selection_field_set_boolean(
             &field, row->selected != 0);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_workbench_selection_add_field(
                 out_selection, &field);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     {
@@ -174,10 +212,12 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
         umi_workbench_selection_field_init(&field, "depth");
         status = umi_workbench_selection_field_set_unsigned(
             &field, (uint64_t)row->depth);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_workbench_selection_add_field(
                 out_selection, &field);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
     {
@@ -185,10 +225,12 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
         umi_workbench_selection_field_init(&field, "child-count");
         status = umi_workbench_selection_field_set_unsigned(
             &field, (uint64_t)row->child_count);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK) {
             status = umi_workbench_selection_add_field(
                 out_selection, &field);
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
     }
 
@@ -197,6 +239,10 @@ UmiStatus umi_workbench_selection_provider_from_test_row(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find workbench selection provider test model while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_test_model_find(
     const UmiTestExplorerModel *model,
     const char *item_id,
@@ -208,10 +254,16 @@ UmiStatus umi_workbench_selection_provider_test_model_find(
 {
     size_t count;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || item_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     count = umi_test_explorer_model_count(model);
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
         UmiTestExplorerRow row;
+        /* Apply this branch only when its contract condition is satisfied. */
         if (umi_test_explorer_model_row_at(
                 model, index, &row) == UMI_STATUS_OK &&
             strcmp(row.item.id, item_id) == 0) {
@@ -227,6 +279,10 @@ UmiStatus umi_workbench_selection_provider_test_model_find(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Find workbench selection provider test model visible while leaving the underlying
+ * catalogue or model owned by this module.
+ */
 UmiStatus umi_workbench_selection_provider_test_model_visible_at(
     const UmiTestExplorerModel *model,
     size_t visible_index,
@@ -238,9 +294,14 @@ UmiStatus umi_workbench_selection_provider_test_model_visible_at(
 {
     UmiTestExplorerRow row;
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_test_explorer_model_visible_row_at(
         model, visible_index, &row);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     return umi_workbench_selection_provider_from_test_row(
         &row,

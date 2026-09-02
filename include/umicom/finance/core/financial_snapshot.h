@@ -19,6 +19,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the financial snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiFinancialSnapshot { UmiFinancialId snapshot_id; char name[UMI_FINANCIAL_CORE_NAME_CAPACITY]; char code[UMI_FINANCIAL_CORE_CODE_CAPACITY]; uint32_t state; bool active; } UmiFinancialSnapshot;
 /* Initialize the typed financial record. */ UmiStatus umi_financial_snapshot_init(UmiFinancialSnapshot *item,const char *id,const char *name,const char *code,uint32_t state);
 /* Validate the typed financial record. */ bool umi_financial_snapshot_is_valid(const UmiFinancialSnapshot *item);

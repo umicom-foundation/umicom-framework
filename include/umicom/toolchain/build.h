@@ -53,6 +53,9 @@ typedef enum UmiBuildAction {
     UMI_BUILD_COMMAND = 10
 } UmiBuildAction;
 
+/**
+ * Represent the build request data shared with callers of this public contract.
+ */
 typedef struct UmiBuildRequest {
     const char *source_root;
     const char *build_directory;
@@ -76,6 +79,9 @@ typedef struct UmiBuildRequest {
     UmiProcessWindowMode window_mode;
 } UmiBuildRequest;
 
+/**
+ * Represent the build report data shared with callers of this public contract.
+ */
 typedef struct UmiBuildReport {
     int configure_exit_code;
     int build_exit_code;
@@ -94,29 +100,58 @@ typedef struct UmiBuildReport {
     uint64_t duration_ms;
 } UmiBuildReport;
 
+/**
+ * Initialise build request from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_build_request_init(UmiBuildRequest *request);
+/**
+ * Initialise build report from caller-provided values so later operations receive a known
+ * state.
+ */
 void umi_build_report_init(UmiBuildReport *report);
 
+/**
+ * Check that build request satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_build_request_validate(UmiBuildAction action,
                                      const UmiBuildRequest *request,
                                      char *out_message,
                                      size_t message_capacity);
 
+/**
+ * Provide the build action text operation used by this module and its client applications.
+ */
 const char *umi_build_action_text(UmiBuildAction action);
 
+/**
+ * Perform build through the module contract so client applications do not duplicate its
+ * policy.
+ */
 UmiStatus umi_build_execute(const UmiToolchainProfile *profile,
                             UmiEnvironmentPlan *environment,
                             UmiBuildAction action,
                             const UmiBuildRequest *request,
                             UmiBuildReport *out_report);
+/**
+ * Provide the build repair cache operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_build_repair_cache(const UmiToolchainProfile *profile,
                                  const char *build_directory,
                                  char *out_recovery_path,
                                  size_t capacity,
                                  int dry_run);
+/**
+ * Provide the build write user presets operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_build_write_user_presets(const UmiToolchainProfile *profile,
                                        const char *project_root,
                                        const char *path);
+/**
+ * Provide the build open shell operation used by this module and its client applications.
+ */
 UmiStatus umi_build_open_shell(const UmiToolchainProfile *profile,
                                UmiEnvironmentPlan *environment,
                                const char *working_directory,

@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the developer diagnostic parser linker operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperDiagnosticParser *umi_developer_diagnostic_parser_linker(void);
 
 #ifdef __cplusplus

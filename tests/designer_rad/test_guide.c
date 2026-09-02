@@ -14,4 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/designer/rad/guide.h"
 #define CHECK(x) do{if(!(x))return 1;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){UmiRadGuide item;CHECK(umi_rad_guide_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_guide_is_valid(&item));return 0;}

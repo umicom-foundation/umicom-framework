@@ -15,11 +15,20 @@
 
 #include "umicom/ui/workstation/workstation.h"
 
+/*
+ * Initialise ws workstation from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_ws_workstation_init(UmiWsWorkstation *workstation,
                                   const char *workstation_id,
                                   UmiWsDensity density) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || !umi_ws_id_valid(workstation_id)) return UMI_STATUS_INVALID_ARGUMENT;
     *workstation = (UmiWsWorkstation){0};
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ws_copy_text(workstation->workstation_id, sizeof(workstation->workstation_id), workstation_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
     umi_ws_surface_catalogue_init(&workstation->surfaces);
     umi_ws_layout_catalogue_init(&workstation->layouts);
@@ -33,23 +42,57 @@ UmiStatus umi_ws_workstation_init(UmiWsWorkstation *workstation,
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws workstation activate layout operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ws_workstation_activate_layout(UmiWsWorkstation *workstation, const char *layout_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || !umi_ws_id_valid(layout_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_ws_layout_catalogue_find(&workstation->layouts, layout_id) == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ws_copy_text(workstation->active_layout_id, sizeof(workstation->active_layout_id), layout_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
     ++workstation->revision;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws workstation activate perspective operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_ws_workstation_activate_perspective(UmiWsWorkstation *workstation, const char *perspective_id) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL || !umi_ws_id_valid(perspective_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (umi_ws_perspective_catalogue_find(&workstation->perspectives, perspective_id) == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ws_copy_text(workstation->active_perspective_id, sizeof(workstation->active_perspective_id), perspective_id) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
     ++workstation->revision;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the ws workstation ready operation used by this module and its client
+ * applications.
+ */
 bool umi_ws_workstation_ready(const UmiWsWorkstation *workstation) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return false;
     return workstation->surfaces.count > 0U &&
            workstation->layouts.count > 0U &&
@@ -58,8 +101,16 @@ bool umi_ws_workstation_ready(const UmiWsWorkstation *workstation) {
            workstation->active_perspective_id[0] != '\0';
 }
 
+/*
+ * Provide the ws workstation fingerprint operation used by this module and its client
+ * applications.
+ */
 uint64_t umi_ws_workstation_fingerprint(const UmiWsWorkstation *workstation) {
     uint64_t hash;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (workstation == NULL) return 0U;
     hash = umi_ws_hash_text(workstation->workstation_id);
     hash ^= umi_ws_hash_text(workstation->active_layout_id);

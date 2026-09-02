@@ -18,10 +18,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the product execution dependency data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionDependency {
     size_t prerequisite;
     size_t dependent;
 } UmiProductExecutionDependency;
+/**
+ * Represent the product execution dependency graph data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiProductExecutionDependencyGraph {
     UmiProductExecutionDependency edges[UMI_PRODUCT_EXECUTION_MAX_DEPENDENCIES];
     size_t count;

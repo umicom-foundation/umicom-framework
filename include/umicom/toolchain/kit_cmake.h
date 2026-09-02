@@ -20,10 +20,18 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the toolchain kit cmake render operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_toolchain_kit_cmake_render(
     const UmiToolchainKitSnapshot *kit,
     char *out_text,
     size_t capacity);
+/**
+ * Write toolchain kit cmake in its stable representation and report capacity or input
+ * failures to the caller.
+ */
 UmiStatus umi_toolchain_kit_cmake_write(
     const UmiToolchainKitSnapshot *kit,
     const char *path);

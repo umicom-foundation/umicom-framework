@@ -25,7 +25,15 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the enterprise calibration audit event data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationAuditEvent { uint64_t sequence; char job_id[UMI_ENTERPRISE_ID_CAPACITY]; double fit_error; int64_t event_time_ms; } UmiEnterpriseCalibrationAuditEvent;
+/**
+ * Represent the enterprise calibration audit data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseCalibrationAudit { UmiEnterpriseCalibrationAuditEvent events[64U]; size_t count; } UmiEnterpriseCalibrationAudit;
 /* Initialise an empty ordered calibration audit. */
 void umi_enterprise_calibration_audit_init(UmiEnterpriseCalibrationAudit *audit);

@@ -21,6 +21,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_developer)
     message(FATAL_ERROR
         "IDE Integration requires the canonical umicom_developer target")
@@ -96,15 +97,18 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ide_integration/workflow_service.c"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     add_executable(
         umicom-ide-integration-ai-editor-bridge-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_ai_editor_bridge.c"
     )
     target_link_libraries(umicom-ide-integration-ai-editor-bridge-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-ai-editor-bridge-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-ai-editor-bridge-test)
     endif()
@@ -115,9 +119,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_command_catalogue.c"
     )
     target_link_libraries(umicom-ide-integration-command-catalogue-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-command-catalogue-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-command-catalogue-test)
     endif()
@@ -128,9 +134,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_command_context.c"
     )
     target_link_libraries(umicom-ide-integration-command-context-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-command-context-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-command-context-test)
     endif()
@@ -141,9 +149,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_edit_adapter.c"
     )
     target_link_libraries(umicom-ide-integration-edit-adapter-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-edit-adapter-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-edit-adapter-test)
     endif()
@@ -154,9 +164,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_inline_controller_conflict.c"
     )
     target_link_libraries(umicom-ide-integration-inline-controller-conflict-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-inline-controller-conflict-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-inline-controller-conflict-test)
     endif()
@@ -167,9 +179,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_inline_history.c"
     )
     target_link_libraries(umicom-ide-integration-inline-history-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-inline-history-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-inline-history-test)
     endif()
@@ -180,9 +194,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_language_bridge.c"
     )
     target_link_libraries(umicom-ide-integration-language-bridge-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-language-bridge-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-language-bridge-test)
     endif()
@@ -193,9 +209,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_location.c"
     )
     target_link_libraries(umicom-ide-integration-location-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-location-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-location-test)
     endif()
@@ -206,9 +224,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_navigation_history.c"
     )
     target_link_libraries(umicom-ide-integration-navigation-history-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-navigation-history-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-navigation-history-test)
     endif()
@@ -219,9 +239,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_perspective.c"
     )
     target_link_libraries(umicom-ide-integration-perspective-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-perspective-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-perspective-test)
     endif()
@@ -232,9 +254,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_problem_bridge.c"
     )
     target_link_libraries(umicom-ide-integration-problem-bridge-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-problem-bridge-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-problem-bridge-test)
     endif()
@@ -245,9 +269,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_selection.c"
     )
     target_link_libraries(umicom-ide-integration-selection-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-selection-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-selection-test)
     endif()
@@ -258,9 +284,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_self_host_checker.c"
     )
     target_link_libraries(umicom-ide-integration-self-host-checker-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-self-host-checker-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-self-host-checker-test)
     endif()
@@ -271,9 +299,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_self_host_manifest.c"
     )
     target_link_libraries(umicom-ide-integration-self-host-manifest-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-self-host-manifest-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-self-host-manifest-test)
     endif()
@@ -284,9 +314,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_source_control_target.c"
     )
     target_link_libraries(umicom-ide-integration-source-control-target-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-source-control-target-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-source-control-target-test)
     endif()
@@ -297,9 +329,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_manifest_closure.c"
     )
     target_link_libraries(umicom-ide-integration-surface-manifest-closure-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-manifest-closure-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-manifest-closure-test)
     endif()
@@ -310,9 +344,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_ai_approvals.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-ai-approvals-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-ai-approvals-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-ai-approvals-test)
     endif()
@@ -323,9 +359,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_ai_chat.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-ai-chat-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-ai-chat-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-ai-chat-test)
     endif()
@@ -336,9 +374,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_ai_review.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-ai-review-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-ai-review-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-ai-review-test)
     endif()
@@ -349,9 +389,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_ai_tools.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-ai-tools-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-ai-tools-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-ai-tools-test)
     endif()
@@ -362,9 +404,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_ai_validation.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-ai-validation-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-ai-validation-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-ai-validation-test)
     endif()
@@ -375,9 +419,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_build.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-build-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-build-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-build-test)
     endif()
@@ -388,9 +434,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_debug.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-debug-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-debug-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-debug-test)
     endif()
@@ -401,9 +449,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_editor.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-editor-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-editor-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-editor-test)
     endif()
@@ -414,9 +464,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_explorer.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-explorer-test)
     endif()
@@ -427,9 +479,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_outline.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-outline-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-outline-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-outline-test)
     endif()
@@ -440,9 +494,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_output.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-output-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-output-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-output-test)
     endif()
@@ -453,9 +509,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_problems.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-problems-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-problems-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-problems-test)
     endif()
@@ -466,9 +524,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_search.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-search-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-search-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-search-test)
     endif()
@@ -479,9 +539,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_source_control.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-source-control-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-source-control-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-source-control-test)
     endif()
@@ -492,9 +554,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_terminal.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-terminal-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-terminal-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-terminal-test)
     endif()
@@ -505,9 +569,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_profile_test_explorer.c"
     )
     target_link_libraries(umicom-ide-integration-surface-profile-test-explorer-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-profile-test-explorer-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-profile-test-explorer-test)
     endif()
@@ -518,9 +584,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_surface_registry.c"
     )
     target_link_libraries(umicom-ide-integration-surface-registry-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-surface-registry-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-surface-registry-test)
     endif()
@@ -531,9 +599,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_test_bridge.c"
     )
     target_link_libraries(umicom-ide-integration-test-bridge-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-test-bridge-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-test-bridge-test)
     endif()
@@ -544,9 +614,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_types.c"
     )
     target_link_libraries(umicom-ide-integration-types-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-types-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-types-test)
     endif()
@@ -557,9 +629,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_uri.c"
     )
     target_link_libraries(umicom-ide-integration-uri-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-uri-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-uri-test)
     endif()
@@ -570,9 +644,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_view_ids.c"
     )
     target_link_libraries(umicom-ide-integration-view-ids-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-view-ids-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-view-ids-test)
     endif()
@@ -583,9 +659,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_evaluator.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-evaluator-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-evaluator-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-evaluator-test)
     endif()
@@ -596,9 +674,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_policy.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-policy-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-policy-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-policy-test)
     endif()
@@ -609,9 +689,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_profile_autonomous_ai.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-profile-autonomous-ai-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-profile-autonomous-ai-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-profile-autonomous-ai-test)
     endif()
@@ -622,9 +704,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_profile_development.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-profile-development-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-profile-development-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-profile-development-test)
     endif()
@@ -635,9 +719,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_profile_pre_commit.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-profile-pre-commit-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-profile-pre-commit-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-profile-pre-commit-test)
     endif()
@@ -648,9 +734,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_profile_release.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-profile-release-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-profile-release-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-profile-release-test)
     endif()
@@ -661,9 +749,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_profile_self_host.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-profile-self-host-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-profile-self-host-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-profile-self-host-test)
     endif()
@@ -674,9 +764,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ide_integration/test_workflow_report.c"
     )
     target_link_libraries(umicom-ide-integration-workflow-report-test PRIVATE Umicom::Framework)
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_warnings)
         umicom_apply_warnings(umicom-ide-integration-workflow-report-test)
     endif()
+    # Use the shared build helper when it is available from the parent composition.
     if(COMMAND umicom_apply_sanitizers)
         umicom_apply_sanitizers(umicom-ide-integration-workflow-report-test)
     endif()

@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the designer navigation designer data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDesignerNavigationDesigner {
     UmiAdaptiveNavigationModel model;
     char selected_item_id[UMI_DESIGNER_ADAPTIVE_ID_CAPACITY];

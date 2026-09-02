@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/resource_budget.h"
-int main(void) { UmiPluginExtensionHostResourceBudget b; UmiPluginExtensionHostResourceBudgetUsage u={1024U,100U,1U,2U}; umi_plugin_extension_host_resource_budget_init(&b); if(umi_plugin_extension_host_resource_budget_evaluate(&b,&u)!=UMI_PLUGIN_EXTENSION_HOST_ALLOW) return 1; u.process_count=10U; if(umi_plugin_extension_host_resource_budget_evaluate(&b,&u)!=UMI_PLUGIN_EXTENSION_HOST_DENY) return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostResourceBudget b; UmiPluginExtensionHostResourceBudgetUsage u={1024U,100U,1U,2U}; umi_plugin_extension_host_resource_budget_init(&b); /* Apply this branch only when its contract condition is satisfied. */ if(umi_plugin_extension_host_resource_budget_evaluate(&b,&u)!=UMI_PLUGIN_EXTENSION_HOST_ALLOW) return 1; u.process_count=10U; /* Apply this branch only when its contract condition is satisfied. */ if(umi_plugin_extension_host_resource_budget_evaluate(&b,&u)!=UMI_PLUGIN_EXTENSION_HOST_DENY) return 2; return 0; }

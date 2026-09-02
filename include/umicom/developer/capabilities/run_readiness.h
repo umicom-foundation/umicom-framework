@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_RUN_READINESS "umicom.developer.execution.run_readiness"
 
+/**
+ * Provide the developer capability run readiness operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_run_readiness(void);
 

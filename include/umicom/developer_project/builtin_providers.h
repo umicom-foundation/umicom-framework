@@ -21,11 +21,23 @@
 extern "C" {
 #endif
 
+/**
+ * Return the number of records represented by developer project builtin provider without
+ * changing their state.
+ */
 size_t umi_developer_project_builtin_provider_count(void);
 
+/**
+ * Find developer project builtin provider while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiDeveloperProjectLanguageProvider *
 umi_developer_project_builtin_provider_at(size_t index);
 
+/**
+ * Add developer project builtin providers only after its inputs and available capacity
+ * have been checked.
+ */
 UmiStatus umi_developer_project_builtin_providers_register(
     UmiDeveloperProjectProviderRegistry *registry);
 

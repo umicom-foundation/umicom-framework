@@ -91,6 +91,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
     }
 };
 
+/*
+ * Provide the application shell profile application launcher operation used by this module
+ * and its client applications.
+ */
 const UmiApplicationShellProfileDefinition *umi_application_shell_profile_application_launcher(void)
 {
     static const UmiApplicationShellProfileDefinition profile = {

@@ -14,6 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_productivity/terminal_profiles/wsl.h"
 
+/*
+ * Provide the developer terminal profile wsl operation used by this module and its client
+ * applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_wsl(void)
 {
     static const UmiDeveloperTerminalProfile profile = {

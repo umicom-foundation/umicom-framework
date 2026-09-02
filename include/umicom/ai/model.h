@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai model data shared with callers of this public contract.
+ */
 typedef struct UmiAiModel {
     char model_id[UMI_AI_ID_CAPACITY];
     char display_name[UMI_AI_SMALL_TEXT_CAPACITY];
@@ -38,6 +41,10 @@ typedef struct UmiAiModel {
     int supports_embeddings;
 } UmiAiModel;
 
+/**
+ * Initialise ai model from caller-provided values so later operations receive a known
+ * state.
+ */
 UmiStatus umi_ai_model_init(UmiAiModel *value);
 
 #ifdef __cplusplus

@@ -26,19 +26,43 @@ extern "C" {
 
 #define UMI_TOOLCHAIN_REQUIREMENT_CAPACITY 32U
 
+/**
+ * Represent the toolchain requirement set data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiToolchainRequirementSet {
     UmiToolchainRequirement items[UMI_TOOLCHAIN_REQUIREMENT_CAPACITY];
     size_t count;
 } UmiToolchainRequirementSet;
 
+/**
+ * Initialise toolchain requirement set from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_toolchain_requirement_set_init(UmiToolchainRequirementSet *set);
+/**
+ * Add toolchain requirement set only after its inputs and available capacity have been
+ * checked.
+ */
 UmiStatus umi_toolchain_requirement_set_add(UmiToolchainRequirementSet *set,
                                             UmiToolKind kind,
                                             int required);
+/**
+ * Find toolchain requirement set while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiToolchainRequirement *umi_toolchain_requirement_set_find(
     const UmiToolchainRequirementSet *set, UmiToolKind kind);
+/**
+ * Provide the toolchain requirement set contains operation used by this module and its
+ * client applications.
+ */
 int umi_toolchain_requirement_set_contains(const UmiToolchainRequirementSet *set,
                                            UmiToolKind kind);
+/**
+ * Check that toolchain requirement set satisfies its contract before another service
+ * relies on it.
+ */
 UmiStatus umi_toolchain_requirement_set_validate(const UmiToolchainRequirementSet *set);
 
 #ifdef __cplusplus

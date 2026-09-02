@@ -22,8 +22,13 @@ UmiStatus umi_designer_window_class_init(UmiDesignerAdaptiveWindowClass *window_
                                          int32_t minimum_height,
                                          int detachable)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if(window_class==NULL||class_id==NULL||minimum_width<=0||minimum_height<=0)return UMI_STATUS_INVALID_ARGUMENT;
     memset(window_class,0,sizeof *window_class);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(umi_designer_adaptive_copy_text(window_class->class_id,sizeof window_class->class_id,class_id)!=UMI_STATUS_OK)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     window_class->minimum_width=minimum_width;

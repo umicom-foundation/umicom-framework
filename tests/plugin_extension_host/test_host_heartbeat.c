@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/plugin/extension_host/host_heartbeat.h"
-int main(void) { UmiPluginExtensionHostHostHeartbeat h; umi_plugin_extension_host_host_heartbeat_init(&h,100U,300U); umi_plugin_extension_host_host_heartbeat_received(&h,1000U); if(umi_plugin_extension_host_host_heartbeat_expired(&h,1200U)) return 1; if(!umi_plugin_extension_host_host_heartbeat_expired(&h,1401U)) return 2; return 0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiPluginExtensionHostHostHeartbeat h; umi_plugin_extension_host_host_heartbeat_init(&h,100U,300U); umi_plugin_extension_host_host_heartbeat_received(&h,1000U); /* Apply this branch only when its contract condition is satisfied. */ if(umi_plugin_extension_host_host_heartbeat_expired(&h,1200U)) return 1; /* Apply this branch only when its contract condition is satisfied. */ if(!umi_plugin_extension_host_host_heartbeat_expired(&h,1401U)) return 2; return 0; }

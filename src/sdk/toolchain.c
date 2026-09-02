@@ -18,4 +18,5 @@
  */
 #include "umicom/sdk/toolchain.h"
 #include <stddef.h>
-UmiStatus umi_sdk_toolchain_validate(const UmiSdkToolchainEvidence *t){if(t==NULL||t->compiler_id==NULL||t->compiler_version==NULL||t->architecture==NULL||t->pointer_size==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that sdk toolchain satisfies its contract before another service relies on it. */
+UmiStatus umi_sdk_toolchain_validate(const UmiSdkToolchainEvidence *t){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(t==NULL||t->compiler_id==NULL||t->compiler_version==NULL||t->architecture==NULL||t->pointer_size==0U)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

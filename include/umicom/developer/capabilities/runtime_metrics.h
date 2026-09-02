@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_RUNTIME_METRICS "umicom.developer.diagnostics.runtime_metrics"
 
+/**
+ * Provide the developer capability runtime metrics operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_runtime_metrics(void);
 

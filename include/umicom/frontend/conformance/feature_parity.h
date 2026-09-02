@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc feature parity data shared with callers of this public contract.
+ */
 typedef struct UmiFcFeatureParity { uint64_t shared; uint64_t missing; uint64_t extra; double score; } UmiFcFeatureParity;
+/**
+ * Provide the fc feature parity calculate operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_fc_feature_parity_calculate(uint64_t canonical,uint64_t candidate,UmiFcFeatureParity *out_parity);
 
 #ifdef __cplusplus

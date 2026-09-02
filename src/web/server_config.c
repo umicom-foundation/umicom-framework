@@ -19,5 +19,10 @@
 
 #include "umicom/web/server_config.h"
 #include <string.h>
+/*
+ * Provide the web server config default operation used by this module and its client
+ * applications.
+ */
 UmiWebServerConfig umi_web_server_config_default(void){UmiWebServerConfig c;(void)memset(&c,0,sizeof(c));(void)umi_web_copy_text(c.bind_address,sizeof(c.bind_address),"127.0.0.1");c.port=8080U;c.max_request_bytes=UMI_WEB_BODY_CAPACITY;c.loopback_only=1;return c;}
-UmiStatus umi_web_server_config_validate(const UmiWebServerConfig *config){if(config==NULL||config->bind_address[0]=='\0'||config->port==0U)return UMI_STATUS_INVALID_ARGUMENT;if(config->max_request_bytes==0U||config->max_request_bytes>UMI_WEB_BODY_CAPACITY)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}
+/* Check that web server config satisfies its contract before another service relies on it. */
+UmiStatus umi_web_server_config_validate(const UmiWebServerConfig *config){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(config==NULL||config->bind_address[0]=='\0'||config->port==0U)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(config->max_request_bytes==0U||config->max_request_bytes>UMI_WEB_BODY_CAPACITY)return UMI_STATUS_INVALID_ARGUMENT;return UMI_STATUS_OK;}

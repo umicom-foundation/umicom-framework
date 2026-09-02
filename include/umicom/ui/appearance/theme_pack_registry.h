@@ -24,6 +24,10 @@ extern "C" {
 #endif
 #include "umicom/ui/appearance/theme_pack.h"
 
+/**
+ * Represent the appearance theme pack registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAppearanceThemePackRegistry { UmiAppearanceThemePack items[UMI_APPEARANCE_MAX_ITEMS]; size_t count; uint64_t revision; } UmiAppearanceThemePackRegistry;
 
 /* Initialise an empty bounded registry. */

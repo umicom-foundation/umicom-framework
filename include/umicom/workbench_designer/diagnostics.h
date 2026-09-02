@@ -27,6 +27,9 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench designer issue code values accepted by this public contract.
+ */
 typedef enum UmiWorkbenchDesignerIssueCode {
     UMI_WORKBENCH_DESIGNER_ISSUE_NONE = 0,
     UMI_WORKBENCH_DESIGNER_ISSUE_LAYOUT_INVALID = 1,
@@ -40,6 +43,9 @@ typedef enum UmiWorkbenchDesignerIssueCode {
     UMI_WORKBENCH_DESIGNER_ISSUE_MONITOR_MISSING = 9
 } UmiWorkbenchDesignerIssueCode;
 
+/**
+ * Represent the workbench designer issue data shared with callers of this public contract.
+ */
 typedef struct UmiWorkbenchDesignerIssue {
     UmiWorkbenchDesignerIssueCode code;
     UmiWorkbenchDesignerIssueSeverity severity;
@@ -49,6 +55,10 @@ typedef struct UmiWorkbenchDesignerIssue {
     char remediation[UMI_WORKBENCH_DESIGNER_TEXT_CAPACITY];
 } UmiWorkbenchDesignerIssue;
 
+/**
+ * Represent the workbench designer diagnostics data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerDiagnostics {
     UmiWorkbenchDesignerIssue issues[UMI_WORKBENCH_DESIGNER_MAX_ISSUES];
     size_t count;
@@ -58,9 +68,25 @@ typedef struct UmiWorkbenchDesignerDiagnostics {
     uint64_t revision;
 } UmiWorkbenchDesignerDiagnostics;
 
+/**
+ * Initialise workbench designer diagnostics from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_diagnostics_init(UmiWorkbenchDesignerDiagnostics *diagnostics);
+/**
+ * Add workbench designer diagnostics only after its inputs and available capacity have
+ * been checked.
+ */
 UmiStatus umi_workbench_designer_diagnostics_add(UmiWorkbenchDesignerDiagnostics *diagnostics, UmiWorkbenchDesignerIssueCode code, UmiWorkbenchDesignerIssueSeverity severity, const char *issue_id, const char *node_id, const char *message, const char *remediation);
+/**
+ * Provide the workbench designer diagnostics build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_diagnostics_build(UmiWorkbenchDesignerDiagnostics *diagnostics, const UmiWorkbenchLayoutDocument *document, const UmiWorkbenchDesignerSelection *selection, const UmiWorkbenchDesignerViewport *viewport, const UmiWorkbenchDesignerLeaseView *lease, UmiWorkbenchDesignerSaveState save_state);
+/**
+ * Find workbench designer diagnostics while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiWorkbenchDesignerIssue *umi_workbench_designer_diagnostics_at(const UmiWorkbenchDesignerDiagnostics *diagnostics, size_t index);
 
 #ifdef __cplusplus

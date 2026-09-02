@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TASK_STATUS "umicom.developer.experience.task_status"
 
+/**
+ * Provide the developer capability task status operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_task_status(void);
 

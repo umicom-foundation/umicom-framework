@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * List the named workbench layout data command kind values accepted by this public
+ * contract.
+ */
 typedef enum UmiWorkbenchLayoutDataCommandKind {
     UMI_WORKBENCH_LAYOUT_DATA_COMMAND_START = 1,
     UMI_WORKBENCH_LAYOUT_DATA_COMMAND_QUIESCE = 2,
@@ -39,6 +43,10 @@ typedef enum UmiWorkbenchLayoutDataCommandKind {
     UMI_WORKBENCH_LAYOUT_DATA_COMMAND_HEALTH = 11
 } UmiWorkbenchLayoutDataCommandKind;
 
+/**
+ * Represent the workbench layout data command data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchLayoutDataCommand {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataCommandKind kind;
@@ -52,6 +60,10 @@ typedef struct UmiWorkbenchLayoutDataCommand {
     size_t payload_size;
 } UmiWorkbenchLayoutDataCommand;
 
+/**
+ * Represent the workbench layout data command result data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataCommandResult {
     uint32_t structure_size;
     UmiStatus status;
@@ -61,6 +73,10 @@ typedef struct UmiWorkbenchLayoutDataCommandResult {
     char message[UMI_WORKBENCH_LAYOUT_DATA_MESSAGE_CAPACITY];
 } UmiWorkbenchLayoutDataCommandResult;
 
+/**
+ * Represent the workbench layout data slave controller data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchLayoutDataSlaveController {
     uint32_t structure_size;
     UmiWorkbenchLayoutDataService *service;
@@ -72,31 +88,59 @@ typedef struct UmiWorkbenchLayoutDataSlaveController {
     uint64_t revision;
 } UmiWorkbenchLayoutDataSlaveController;
 
+/**
+ * Initialise workbench layout data controller from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_workbench_layout_data_controller_init(
     UmiWorkbenchLayoutDataSlaveController *controller,
     UmiWorkbenchLayoutDataService *service,
     const char *controller_id,
     const char *master_controller_id);
 
+/**
+ * Provide the workbench layout data controller initialise operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_workbench_layout_data_controller_initialise(
     UmiWorkbenchLayoutDataSlaveController *controller);
 
+/**
+ * Provide the workbench layout data controller start operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_controller_start(
     UmiWorkbenchLayoutDataSlaveController *controller,
     uint64_t now_ms);
 
+/**
+ * Provide the workbench layout data controller quiesce operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_layout_data_controller_quiesce(
     UmiWorkbenchLayoutDataSlaveController *controller);
 
+/**
+ * Provide the workbench layout data controller stop operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_layout_data_controller_stop(
     UmiWorkbenchLayoutDataSlaveController *controller,
     uint64_t now_ms);
 
+/**
+ * Perform workbench layout data controller through the module contract so client
+ * applications do not duplicate its policy.
+ */
 UmiStatus umi_workbench_layout_data_controller_handle(
     UmiWorkbenchLayoutDataSlaveController *controller,
     const UmiWorkbenchLayoutDataCommand *command,
     UmiWorkbenchLayoutDataCommandResult *out_result);
 
+/**
+ * Provide the workbench layout data command kind text operation used by this module and
+ * its client applications.
+ */
 const char *umi_workbench_layout_data_command_kind_text(
     UmiWorkbenchLayoutDataCommandKind kind);
 

@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer merge row data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerMergeRow {
     char conflict_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char node_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
@@ -38,6 +42,10 @@ typedef struct UmiWorkbenchDesignerMergeRow {
     bool selected;
 } UmiWorkbenchDesignerMergeRow;
 
+/**
+ * Represent the workbench designer merge view data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerMergeView {
     UmiWorkbenchDesignerMergeRow rows[UMI_WORKBENCH_LAYOUT_MAX_CONFLICTS];
     size_t count;
@@ -46,10 +54,30 @@ typedef struct UmiWorkbenchDesignerMergeView {
     uint64_t revision;
 } UmiWorkbenchDesignerMergeView;
 
+/**
+ * Initialise workbench designer merge view from caller-provided values so later operations
+ * receive a known state.
+ */
 void umi_workbench_designer_merge_view_init(UmiWorkbenchDesignerMergeView *view);
+/**
+ * Provide the workbench designer merge view build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_merge_view_build(UmiWorkbenchDesignerMergeView *view, const UmiWorkbenchLayoutMergePlan *plan);
+/**
+ * Provide the workbench designer merge view resolve operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_merge_view_resolve(UmiWorkbenchDesignerMergeView *view, const char *conflict_id, UmiWorkbenchLayoutMergeResolution resolution, const char *custom_value);
+/**
+ * Perform workbench designer merge view through the module contract so client applications
+ * do not duplicate its policy.
+ */
 UmiStatus umi_workbench_designer_merge_view_apply(const UmiWorkbenchDesignerMergeView *view, UmiWorkbenchLayoutMergePlan *plan);
+/**
+ * Find workbench designer merge view while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiWorkbenchDesignerMergeRow *umi_workbench_designer_merge_view_at(const UmiWorkbenchDesignerMergeView *view, size_t index);
 
 #ifdef __cplusplus

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_LATENCY_METRICS "umicom.developer.performance.latency_metrics"
 
+/**
+ * Provide the developer capability latency metrics operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_latency_metrics(void);
 

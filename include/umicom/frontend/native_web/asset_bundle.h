@@ -27,7 +27,13 @@ extern "C" {
 
 #include "umicom/frontend/native_web/types.h"
 
+/**
+ * Represent the native web asset data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebAsset { char path[UMI_NATIVE_WEB_TEXT_CAPACITY]; char content_type[64]; uint64_t checksum; bool immutable; } UmiNativeWebAsset;
+/**
+ * Represent the native web asset bundle data shared with callers of this public contract.
+ */
 typedef struct UmiNativeWebAssetBundle { UmiNativeWebAsset items[UMI_NATIVE_WEB_MAX_ASSETS]; size_t count; uint64_t revision; } UmiNativeWebAssetBundle;
 /* Initialise an empty browser asset bundle. */
 void umi_native_web_asset_bundle_init(UmiNativeWebAssetBundle *bundle);

@@ -38,12 +38,21 @@ static UmiStatus create_view(const char *view_id, const char *view_kind,
                              UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (view_id == NULL || view_kind == NULL || out_view == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_ui_view_model_create(view_id, "umicom.finance-ui",
                                       UMI_UI_ROLE_PANE, out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(*out_view, "umicom.view-kind", view_kind);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (status != UMI_STATUS_OK && *out_view != NULL) {
         umi_ui_view_model_destroy(*out_view);
         *out_view = NULL;
@@ -58,19 +67,29 @@ UmiStatus umi_finance_ui_banking_summary_view_create(
     UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (snapshot == NULL || !umi_banking_banking_snapshot_valid(snapshot))
         return UMI_STATUS_INVALID_ARGUMENT;
     status = create_view(view_id, "banking-summary", out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "banking.customer-count", (int64_t)snapshot->customer_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "banking.deposit-account-count", (int64_t)snapshot->deposit_account_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "banking.loan-count", (int64_t)snapshot->loan_count);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "banking.deposit-balance-minor", snapshot->deposit_balance_minor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "banking.loan-balance-minor", snapshot->loan_balance_minor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "banking.net-funding-minor",
             umi_banking_banking_snapshot_net_funding_minor(snapshot));
@@ -84,13 +103,22 @@ UmiStatus umi_finance_ui_cash_position_view_create(
     UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (position == NULL || !umi_treasury_cash_position_valid(position))
         return UMI_STATUS_INVALID_ARGUMENT;
     status = create_view(view_id, "treasury-cash-position", out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "treasury.position-id", position->id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "treasury.currency", position->currency.code);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.settled-minor", position->settled_minor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.projected-minor", position->projected_minor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.delta-minor",
         umi_treasury_cash_position_delta_minor(position));
     return status;
@@ -103,13 +131,22 @@ UmiStatus umi_finance_ui_cash_forecast_view_create(
     UmiUiViewModel **out_view)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (forecast == NULL || !umi_treasury_cash_forecast_valid(forecast))
         return UMI_STATUS_INVALID_ARGUMENT;
     status = create_view(view_id, "treasury-cash-forecast", out_view);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_string(*out_view, "treasury.forecast-id", forecast->id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.horizon-end-ms", forecast->horizon_end_epoch_millis);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.inflow-minor", forecast->inflow_minor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.outflow-minor", forecast->outflow_minor);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_integer(*out_view, "treasury.net-minor",
         umi_treasury_cash_forecast_net_minor(forecast));
     return status;

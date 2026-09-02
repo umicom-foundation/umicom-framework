@@ -28,21 +28,28 @@ struct UmiEditorLinkedEditingModel {
     int has_active_group;
 };
 
+/* Provide the next revision operation used by this module and its client applications. */
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
 }
 
+/* Provide the terminated operation used by this module and its client applications. */
 static int terminated(const char *text, size_t capacity)
 {
     return text != NULL && memchr(text, '\0', capacity) != NULL;
 }
 
+/* Provide the validate range operation used by this module and its client applications. */
 static UmiStatus validate_range(const UmiEditorLinkedRange *range)
 {
     uint64_t span;
     size_t text_length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (range == NULL || range->struct_size != (uint32_t)sizeof(*range) ||
         range->api_version != UMI_EDITOR_LINKED_EDITING_API_VERSION ||
         !terminated(range->id, sizeof(range->id)) || range->id[0] == '\0' ||
@@ -56,47 +63,68 @@ static UmiStatus validate_range(const UmiEditorLinkedRange *range)
     }
     span = range->location.end_byte_offset - range->location.byte_offset;
     text_length = strlen(range->original_text);
+    /* Apply this branch only when its contract condition is satisfied. */
     if (span == 0U || span > SIZE_MAX || (size_t)span != text_length) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return UMI_STATUS_OK;
 }
 
+/* Provide the reserve ranges operation used by this module and its client applications. */
 static UmiStatus reserve_ranges(UmiEditorLinkedEditingModel *model,
                                 size_t required)
 {
     size_t capacity;
     UmiEditorLinkedRange *replacement;
 
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (required <= model->capacity) return UMI_STATUS_OK;
     capacity = model->capacity > 0U ? model->capacity : 16U;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (capacity < required) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (capacity > SIZE_MAX / 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
         capacity *= 2U;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (capacity > SIZE_MAX / sizeof(*replacement)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     replacement = (UmiEditorLinkedRange *)realloc(
         model->ranges, capacity * sizeof(*replacement));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     model->ranges = replacement;
     model->capacity = capacity;
     return UMI_STATUS_OK;
 }
 
+/* Provide the find range operation used by this module and its client applications. */
 static size_t find_range(const UmiEditorLinkedEditingModel *model,
                          const char *range_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || range_id == NULL) return SIZE_MAX;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(model->ranges[index].id, range_id) == 0) return index;
     }
     return SIZE_MAX;
 }
 
+/* Provide the compare ranges operation used by this module and its client applications. */
 static int compare_ranges(const void *left_pointer, const void *right_pointer)
 {
     const UmiEditorLinkedRange *left =
@@ -105,48 +133,82 @@ static int compare_ranges(const void *left_pointer, const void *right_pointer)
         (const UmiEditorLinkedRange *)right_pointer;
     int order = strcmp(left->location.uri, right->location.uri);
 
+    /* Apply this branch only when its contract condition is satisfied. */
     if (order != 0) return order;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.byte_offset < right->location.byte_offset) return -1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.byte_offset > right->location.byte_offset) return 1;
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.end_byte_offset < right->location.end_byte_offset) {
         return -1;
     }
+    /* Apply this branch only when its contract condition is satisfied. */
     if (left->location.end_byte_offset > right->location.end_byte_offset) {
         return 1;
     }
     return strcmp(left->id, right->id);
 }
 
+/* Provide the groups equal operation used by this module and its client applications. */
 static int groups_equal(const char *left, const char *right)
 {
     return strcmp(left, right) == 0;
 }
 
+/*
+ * Initialise editor linked editing model from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_editor_linked_editing_model_create(
     UmiEditorLinkedEditingModel **out_model)
 {
     UmiEditorLinkedEditingModel *model;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (out_model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_model = NULL;
     model = (UmiEditorLinkedEditingModel *)calloc(1U, sizeof(*model));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     model->revision = 1U;
     *out_model = model;
     return UMI_STATUS_OK;
 }
 
+/*
+ * Release or reset state held by editor linked editing model so the same storage can be
+ * reused safely.
+ */
 void umi_editor_linked_editing_model_destroy(UmiEditorLinkedEditingModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return;
     free(model->ranges);
     model->ranges = NULL;
     free(model);
 }
 
+/*
+ * Release or reset state held by editor linked editing model so the same storage can be
+ * reused safely.
+ */
 UmiStatus umi_editor_linked_editing_model_clear(
     UmiEditorLinkedEditingModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     model->count = 0U;
     model->active_group_id[0] = '\0';
@@ -156,6 +218,10 @@ UmiStatus umi_editor_linked_editing_model_clear(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor linked editing model upsert operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_linked_editing_model_upsert(
     UmiEditorLinkedEditingModel *model,
     const UmiEditorLinkedRange *range)
@@ -164,12 +230,18 @@ UmiStatus umi_editor_linked_editing_model_upsert(
     size_t index;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || validate_range(range) != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_range(model, range->id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
         status = reserve_ranges(model, model->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         index = model->count++;
     }
@@ -183,17 +255,27 @@ UmiStatus umi_editor_linked_editing_model_upsert(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Remove editor linked editing model while keeping the remaining records in a valid and
+ * discoverable state.
+ */
 UmiStatus umi_editor_linked_editing_model_remove(
     UmiEditorLinkedEditingModel *model,
     const char *range_id)
 {
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || range_id == NULL || range_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     index = find_range(model, range_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < model->count) {
         (void)memmove(&model->ranges[index], &model->ranges[index + 1U],
                       (model->count - index - 1U) * sizeof(*model->ranges));
@@ -204,6 +286,10 @@ UmiStatus umi_editor_linked_editing_model_remove(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor linked editing model remove group operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_editor_linked_editing_model_remove_group(
     UmiEditorLinkedEditingModel *model,
     const char *group_id)
@@ -212,21 +298,30 @@ UmiStatus umi_editor_linked_editing_model_remove_group(
     size_t write_index = 0U;
     size_t removed = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || group_id == NULL || group_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (read_index = 0U; read_index < model->count; ++read_index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (groups_equal(model->ranges[read_index].group_id, group_id)) {
             ++removed;
             continue;
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (write_index != read_index) {
             model->ranges[write_index] = model->ranges[read_index];
         }
         ++write_index;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (removed == 0U) return UMI_STATUS_NOT_FOUND;
     model->count = write_index;
+    /* Apply this operation only while the related capability or state is available. */
     if (model->has_active_group &&
         groups_equal(model->active_group_id, group_id)) {
         model->active_group_id[0] = '\0';
@@ -237,6 +332,10 @@ UmiStatus umi_editor_linked_editing_model_remove_group(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor linked editing model finalize operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_linked_editing_model_finalize(
     UmiEditorLinkedEditingModel *model)
 {
@@ -244,19 +343,28 @@ UmiStatus umi_editor_linked_editing_model_finalize(
     size_t comparison;
     size_t conflict_count = 0U;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (model->count > 1U) {
         qsort(model->ranges, model->count, sizeof(*model->ranges),
               compare_ranges);
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         model->ranges[index].conflict = 0;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         UmiEditorLinkedRange *current = &model->ranges[index];
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = index + 1U; comparison < model->count;
              ++comparison) {
             UmiEditorLinkedRange *candidate = &model->ranges[comparison];
+            /* Use the stable identifier comparison to choose the matching record or policy. */
             if (strcmp(current->location.uri, candidate->location.uri) != 0 ||
                 candidate->location.byte_offset >=
                     current->location.end_byte_offset) {
@@ -266,7 +374,9 @@ UmiStatus umi_editor_linked_editing_model_finalize(
             candidate->conflict = 1;
         }
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (model->ranges[index].conflict) ++conflict_count;
     }
     model->finalized = 1;
@@ -274,6 +384,10 @@ UmiStatus umi_editor_linked_editing_model_finalize(
     return conflict_count == 0U ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
 }
 
+/*
+ * Provide the editor linked editing model set active group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_linked_editing_model_set_active_group(
     UmiEditorLinkedEditingModel *model,
     const char *group_id)
@@ -281,16 +395,24 @@ UmiStatus umi_editor_linked_editing_model_set_active_group(
     size_t index;
     size_t length;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || group_id == NULL || group_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     length = strlen(group_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length >= sizeof(model->active_group_id)) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (groups_equal(model->ranges[index].group_id, group_id)) break;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == model->count) return UMI_STATUS_NOT_FOUND;
     (void)memcpy(model->active_group_id, group_id, length + 1U);
     model->has_active_group = 1;
@@ -298,9 +420,17 @@ UmiStatus umi_editor_linked_editing_model_set_active_group(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the editor linked editing model clear active group operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_editor_linked_editing_model_clear_active_group(
     UmiEditorLinkedEditingModel *model)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     model->active_group_id[0] = '\0';
     model->has_active_group = 0;
@@ -308,6 +438,10 @@ UmiStatus umi_editor_linked_editing_model_clear_active_group(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Copy editor linked editing model build edit into module-owned storage so callers keep
+ * ownership of their input values.
+ */
 UmiStatus umi_editor_linked_editing_model_build_edit_set(
     const UmiEditorLinkedEditingModel *model,
     const char *replacement_text,
@@ -318,34 +452,47 @@ UmiStatus umi_editor_linked_editing_model_build_edit_set(
     size_t added = 0U;
     UmiStatus status;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || replacement_text == NULL || edit_set == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Apply this operation only while the related capability or state is available. */
     if (!model->finalized || !model->has_active_group) {
         return UMI_STATUS_INVALID_STATE;
     }
     replacement_length = strlen(replacement_text);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (replacement_length >= UMI_EDITOR_WORKSPACE_EDIT_TEXT_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         const UmiEditorLinkedRange *range = &model->ranges[index];
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!groups_equal(range->group_id, model->active_group_id) ||
             !range->editable) {
             continue;
         }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (range->conflict) return UMI_STATUS_INVALID_STATE;
         ++added;
     }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (added == 0U) return UMI_STATUS_NOT_FOUND;
     added = 0U;
     status = umi_editor_workspace_edit_set_clear(edit_set);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         const UmiEditorLinkedRange *range = &model->ranges[index];
         UmiEditorWorkspaceTextEdit edit;
 
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!groups_equal(range->group_id, model->active_group_id) ||
             !range->editable) {
             continue;
@@ -364,23 +511,37 @@ UmiStatus umi_editor_linked_editing_model_build_edit_set(
         edit.state = UMI_EDITOR_WORKSPACE_EDIT_READY;
         edit.required = 1;
         status = umi_editor_workspace_edit_set_upsert(edit_set, &edit);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         ++added;
     }
     return umi_editor_workspace_edit_set_finalize(edit_set);
 }
 
+/*
+ * Find editor linked editing model while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 UmiStatus umi_editor_linked_editing_model_at(
     const UmiEditorLinkedEditingModel *model,
     size_t index,
     UmiEditorLinkedRange *out_range)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_range == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index >= model->count) return UMI_STATUS_NOT_FOUND;
     *out_range = model->ranges[index];
     return UMI_STATUS_OK;
 }
 
+/*
+ * Find editor linked editing model active group while leaving the underlying catalogue or
+ * model owned by this module.
+ */
 UmiStatus umi_editor_linked_editing_model_active_group_at(
     const UmiEditorLinkedEditingModel *model,
     size_t index,
@@ -389,13 +550,21 @@ UmiStatus umi_editor_linked_editing_model_active_group_at(
     size_t position = 0U;
     size_t range_index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_range == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!model->has_active_group) return UMI_STATUS_INVALID_STATE;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (range_index = 0U; range_index < model->count; ++range_index) {
+        /* Use the stable identifier comparison to choose the matching record or policy. */
         if (!groups_equal(model->ranges[range_index].group_id,
                           model->active_group_id)) {
             continue;
         }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (position++ == index) {
             *out_range = model->ranges[range_index];
             return UMI_STATUS_OK;
@@ -404,6 +573,10 @@ UmiStatus umi_editor_linked_editing_model_active_group_at(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/*
+ * Provide the editor linked editing model snapshot operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_editor_linked_editing_model_snapshot(
     const UmiEditorLinkedEditingModel *model,
     UmiEditorLinkedEditingSnapshot *out_snapshot)
@@ -411,6 +584,10 @@ UmiStatus umi_editor_linked_editing_model_snapshot(
     size_t index;
     size_t comparison;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL || out_snapshot == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -423,33 +600,48 @@ UmiStatus umi_editor_linked_editing_model_snapshot(
     out_snapshot->has_active_group = model->has_active_group;
     (void)memcpy(out_snapshot->active_group_id, model->active_group_id,
                  sizeof(out_snapshot->active_group_id));
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         int first_group = 1;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (model->ranges[index].editable) ++out_snapshot->editable_count;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (model->ranges[index].conflict) ++out_snapshot->conflict_count;
+        /* Apply this operation only while the related capability or state is available. */
         if (model->has_active_group &&
             groups_equal(model->ranges[index].group_id,
                          model->active_group_id)) {
             ++out_snapshot->active_group_range_count;
         }
+        /* Visit each bounded item once so every record receives the same rule. */
         for (comparison = 0U; comparison < index; ++comparison) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (groups_equal(model->ranges[index].group_id,
                              model->ranges[comparison].group_id)) {
                 first_group = 0;
                 break;
             }
         }
+        /* Apply this branch only when its contract condition is satisfied. */
         if (first_group) ++out_snapshot->group_count;
     }
     return UMI_STATUS_OK;
 }
 
+/*
+ * Return the number of records represented by editor linked editing model without changing
+ * their state.
+ */
 size_t umi_editor_linked_editing_model_count(
     const UmiEditorLinkedEditingModel *model)
 {
     return model != NULL ? model->count : 0U;
 }
 
+/*
+ * Provide the editor linked editing model revision operation used by this module and its
+ * client applications.
+ */
 uint64_t umi_editor_linked_editing_model_revision(
     const UmiEditorLinkedEditingModel *model)
 {

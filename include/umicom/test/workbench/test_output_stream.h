@@ -22,16 +22,39 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the test output stream data shared with callers of this public contract.
+ */
 typedef struct UmiTestOutputStream {
     UmiTestWorkbenchEntry value;
     uint64_t generation;
     uint32_t item_count;
     bool active;
 } UmiTestOutputStream;
+/**
+ * Initialise test output stream from caller-provided values so later operations receive a
+ * known state.
+ */
 UmiStatus umi_test_output_stream_init(UmiTestOutputStream *model,const char *id,const char *label);
+/**
+ * Exercise test output stream set active and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_output_stream_set_active(UmiTestOutputStream *model,bool active);
+/**
+ * Return the number of records represented by test output stream set without changing
+ * their state.
+ */
 UmiStatus umi_test_output_stream_set_count(UmiTestOutputStream *model,uint32_t item_count);
+/**
+ * Exercise test output stream set state and return a clear result when the behaviour no
+ * longer matches its contract.
+ */
 UmiStatus umi_test_output_stream_set_state(UmiTestOutputStream *model,UmiTestWorkbenchState state);
+/**
+ * Check that test output stream satisfies its contract before another service relies on
+ * it.
+ */
 int umi_test_output_stream_valid(const UmiTestOutputStream *model);
 #ifdef __cplusplus
 }

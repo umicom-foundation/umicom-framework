@@ -24,10 +24,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the code guard suppression data shared with callers of this public contract.
+ */
 typedef struct UmiCodeGuardSuppression {
     const char *rule_id;
     const char *path_substring;
 } UmiCodeGuardSuppression;
+/**
+ * Provide the codeguard suppression matches operation used by this module and its client
+ * applications.
+ */
 int umi_codeguard_suppression_matches(const UmiCodeGuardSuppression *suppression,
                                       const UmiCodeGuardFinding *finding);
 #ifdef __cplusplus

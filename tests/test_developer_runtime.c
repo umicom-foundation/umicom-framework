@@ -19,6 +19,10 @@
 
 #include "umicom/developer/runtime.h"
 
+/*
+ * Exercise fake success and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static UmiStatus fake_success(
     void *user_data,
     const UmiDeveloperOperationSnapshot *operation,
@@ -39,6 +43,10 @@ static UmiStatus fake_success(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiProjectWorkspace *projects = NULL;

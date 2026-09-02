@@ -17,6 +17,10 @@
 #include "workbench_designer_gtk4_internal.h"
 
 
+/*
+ * Provide the workbench designer gtk4 build properties operation used by this module and
+ * its client applications.
+ */
 GtkWidget *umi_workbench_designer_gtk4_build_properties(
     UmiWorkbenchDesignerGtk4 *designer)
 {
@@ -32,9 +36,14 @@ GtkWidget *umi_workbench_designer_gtk4_build_properties(
     return root;
 }
 
+/* Provide the clear grid operation used by this module and its client applications. */
 static void clear_grid(GtkWidget *grid)
 {
     GtkWidget *child = gtk_widget_get_first_child(grid);
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
     while (child != NULL) {
         GtkWidget *next = gtk_widget_get_next_sibling(child);
         gtk_grid_remove(GTK_GRID(grid), child);
@@ -42,34 +51,52 @@ static void clear_grid(GtkWidget *grid)
     }
 }
 
+/*
+ * Provide the workbench designer gtk4 refresh properties operation used by this module and
+ * its client applications.
+ */
 void umi_workbench_designer_gtk4_refresh_properties(
     UmiWorkbenchDesignerGtk4 *designer)
 {
     UmiWorkbenchDesignerSession *session;
     const UmiWorkbenchDesignerPropertyModel *model;
     size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (designer == NULL || designer->property_grid == NULL) return;
     clear_grid(designer->property_grid);
     session = umi_workbench_designer_service_active(
         designer->config.controller->service);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (session == NULL) return;
     model = umi_workbench_designer_session_properties(session);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (model == NULL) return;
+    /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < model->count; ++index) {
         const UmiWorkbenchDesignerProperty *property = &model->properties[index];
         GtkWidget *label = gtk_label_new(property->label);
         GtkWidget *value;
         char number[64];
         gtk_label_set_xalign(GTK_LABEL(label), 0.0F);
+        /* Apply this branch only when its contract condition is satisfied. */
         if (property->kind == UMI_WORKBENCH_DESIGNER_PROPERTY_BOOLEAN) {
             value = gtk_check_button_new();
             gtk_check_button_set_active(
                 GTK_CHECK_BUTTON(value), property->boolean_value ? TRUE : FALSE);
-        } else if (property->kind == UMI_WORKBENCH_DESIGNER_PROPERTY_NUMBER) {
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (property->kind == UMI_WORKBENCH_DESIGNER_PROPERTY_NUMBER) {
             g_snprintf(number, sizeof(number), "%.3f", property->number_value);
             value = gtk_entry_new();
             gtk_editable_set_text(GTK_EDITABLE(value), number);
-        } else {
+        } /* Use this fallback path when the earlier condition does not apply. */ else {
             value = gtk_entry_new();
             gtk_editable_set_text(GTK_EDITABLE(value), property->text_value);
         }

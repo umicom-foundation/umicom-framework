@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_RENAME_COMMAND "umicom.document.command.rename_command"
 
+/**
+ * Provide the document capability rename command operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_rename_command(void);
 

@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/finance/enterprise/valuation_queue.h"
 #include "umicom/finance/enterprise/valuation_worker_pool.h"
+/**
+ * Represent the enterprise valuation grid data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiEnterpriseValuationGrid { UmiEnterpriseValuationQueue queue; UmiEnterpriseValuationWorkerPool workers; uint64_t dispatched_jobs; uint64_t blocked_dispatches; } UmiEnterpriseValuationGrid;
 /* Initialise an empty valuation grid. */
 void umi_enterprise_valuation_grid_init(UmiEnterpriseValuationGrid *grid);

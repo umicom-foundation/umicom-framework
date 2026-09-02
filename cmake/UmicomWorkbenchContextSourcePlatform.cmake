@@ -19,10 +19,12 @@ include(GNUInstallDirs)
 set(UMICOM_WORKBENCH_CONTEXT_SOURCE_FRAMEWORK_ROOT
     "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_workbench_context_source)
     return()
 endif()
 
+# Load the dependency only when the parent build has not already provided its target.
 if(NOT TARGET umicom_workbench_context_event)
     message(FATAL_ERROR
         "Workbench Context Source requires Umicom::workbench_context_event")
@@ -119,19 +121,23 @@ target_link_libraries(umicom_workbench_context_source PUBLIC
     Umicom::workbench_context_event
 )
 
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_workbench_context_source)
 endif()
+# Use the shared build helper when it is available from the parent composition.
 if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_workbench_context_source)
 endif()
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE
         Umicom::workbench_context_source
     )
 endif()
 
+# Configure the optional target only when its feature has created it.
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${UMICOM_WORKBENCH_CONTEXT_SOURCE_FRAMEWORK_ROOT}/adapters/gtk4/context_interaction_gtk4.c"
@@ -163,14 +169,19 @@ install(
         "${CMAKE_INSTALL_DATADIR}/umicom/resources/workbench-context-source"
 )
 
+# Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Define the configure workbench context source test build helper so parent and
+    # application projects apply one consistent rule.
     function(umicom_configure_workbench_context_source_test target test_name)
         target_link_libraries("${target}" PRIVATE
             Umicom::workbench_context_source
         )
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_warnings)
             umicom_apply_warnings("${target}")
         endif()
+        # Use the shared build helper when it is available from the parent composition.
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers("${target}")
         endif()
@@ -180,6 +191,8 @@ if(BUILD_TESTING)
         )
     endfunction()
 
+    # Define the add workbench context source test build helper so parent and application
+    # projects apply one consistent rule.
     function(umicom_add_workbench_context_source_test target test_name source)
         add_executable("${target}"
             "${UMICOM_WORKBENCH_CONTEXT_SOURCE_FRAMEWORK_ROOT}/${source}"
@@ -188,6 +201,8 @@ if(BUILD_TESTING)
             "${target}" "${test_name}")
     endfunction()
 
+    # Define the add workbench context source integration test build helper so parent and
+    # application projects apply one consistent rule.
     function(umicom_add_workbench_context_source_integration_test
              target test_name source)
         add_executable("${target}"

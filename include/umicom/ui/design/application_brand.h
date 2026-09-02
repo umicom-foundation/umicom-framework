@@ -30,6 +30,9 @@ extern "C" {
 
 #include "umicom/ui/design/color.h"
 #include "umicom/ui/design/density.h"
+/**
+ * Represent the design application brand data shared with callers of this public contract.
+ */
 typedef struct UmiDesignApplicationBrand { char application_id[UMI_DESIGN_ID_CAPACITY]; char display_name[UMI_DESIGN_NAME_CAPACITY]; UmiDesignRgba accent; UmiDesignRgba secondary; UmiDesignDensity density; } UmiDesignApplicationBrand;
 /* Initialise an application brand profile from semantic colours and density. */
 UmiStatus umi_design_application_brand_init(UmiDesignApplicationBrand *brand, const char *application_id, const char *display_name, UmiDesignRgba accent, UmiDesignRgba secondary, UmiDesignDensity density);

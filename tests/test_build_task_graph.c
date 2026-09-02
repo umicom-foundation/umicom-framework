@@ -17,6 +17,10 @@
 
 #include "umicom/build/task_graph.h"
 
+/*
+ * Exercise add task and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static void add_task(UmiBuildTaskRegistry *registry,
                      const char *id,
                      UmiBuildTaskKind kind,
@@ -27,6 +31,10 @@ static void add_task(UmiBuildTaskRegistry *registry,
     umi_build_task_init(&task, id, id, kind);
     assert(umi_build_task_set_command(&task, id, ".") == UMI_STATUS_OK);
     task.maximum_attempts = attempts;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (dependency != NULL) {
         assert(umi_build_task_add_dependency(&task, dependency) ==
                UMI_STATUS_OK);
@@ -34,6 +42,10 @@ static void add_task(UmiBuildTaskRegistry *registry,
     assert(umi_build_task_registry_upsert(registry, &task) == UMI_STATUS_OK);
 }
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     UmiBuildTaskRegistry *registry = NULL;

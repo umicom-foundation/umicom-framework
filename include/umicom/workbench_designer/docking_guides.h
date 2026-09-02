@@ -24,6 +24,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer docking guide data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerDockingGuide {
     char guide_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     UmiWorkbenchDesignerDropZone zone;
@@ -32,6 +36,10 @@ typedef struct UmiWorkbenchDesignerDockingGuide {
     bool enabled;
 } UmiWorkbenchDesignerDockingGuide;
 
+/**
+ * Represent the workbench designer docking guide model data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiWorkbenchDesignerDockingGuideModel {
     UmiWorkbenchDesignerDockingGuide guides[UMI_WORKBENCH_DESIGNER_MAX_GUIDES];
     size_t count;
@@ -39,9 +47,25 @@ typedef struct UmiWorkbenchDesignerDockingGuideModel {
     uint64_t revision;
 } UmiWorkbenchDesignerDockingGuideModel;
 
+/**
+ * Initialise workbench designer docking guides from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_docking_guides_init(UmiWorkbenchDesignerDockingGuideModel *model);
+/**
+ * Provide the workbench designer docking guides build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_docking_guides_build(UmiWorkbenchDesignerDockingGuideModel *model, const UmiWorkbenchDesignerDropTargetSet *targets, const char *target_node_id);
+/**
+ * Provide the workbench designer docking guides activate operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_docking_guides_activate(UmiWorkbenchDesignerDockingGuideModel *model, const char *guide_id);
+/**
+ * Provide the workbench designer docking guide active operation used by this module and
+ * its client applications.
+ */
 const UmiWorkbenchDesignerDockingGuide *umi_workbench_designer_docking_guide_active(const UmiWorkbenchDesignerDockingGuideModel *model);
 
 #ifdef __cplusplus

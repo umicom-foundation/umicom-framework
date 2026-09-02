@@ -17,35 +17,53 @@
 #include "umicom/base/text.h"
 #include <stdio.h>
 #include <string.h>
+/* Provide the ok operation used by this module and its client applications. */
 static UmiStatus ok(UmiLanguageRuntimeServiceBridge *b) {
   return b && b->language ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
 }
+/*
+ * Initialise language runtime service bridge from caller-provided values so later
+ * operations receive a known state.
+ */
 UmiStatus umi_language_runtime_service_bridge_init(UmiLanguageRuntimeServiceBridge *b,
                                                    UmiLanguageService *l) {
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!b || !l)
     return UMI_STATUS_INVALID_ARGUMENT;
   b->language = l;
   b->revision = 1;
   return UMI_STATUS_OK;
 }
+/* Provide the clear completion operation used by this module and its client applications. */
 static void clear_completion(UmiLanguageCompletionRegistry *r, const char *d) {
   size_t i = umi_language_completion_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageCompletionSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_completion_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_completion_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish completion operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_completion(UmiLanguageRuntimeServiceBridge *b, const char *d,
                                                   uint32_t line, uint32_t col,
                                                   const UmiLanguageRuntimeCompletionResult *r) {
   size_t i;
   UmiLanguageCompletionRegistry *g;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_completion(b->language);
   clear_completion(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageCompletionSnapshot x = {0};
     UmiStatus s;
@@ -62,29 +80,42 @@ UmiStatus umi_language_runtime_publish_completion(UmiLanguageRuntimeServiceBridg
     x.column = col;
     x.revision = b->revision + 1;
     s = umi_language_completion_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/* Provide the clear hover operation used by this module and its client applications. */
 static void clear_hover(UmiLanguageHoverRegistry *r, const char *d) {
   size_t i = umi_language_hover_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageHoverSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_hover_registry_at(r, i, &x) == UMI_STATUS_OK && strcmp(x.document_id, d) == 0)
       (void)umi_language_hover_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish hover operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_publish_hover(UmiLanguageRuntimeServiceBridge *b, const char *d,
                                              uint32_t line, uint32_t col,
                                              const UmiLanguageRuntimeHoverResult *r) {
   UmiLanguageHoverSnapshot x = {0};
   UmiLanguageHoverRegistry *g;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_hover(b->language);
   clear_hover(g, d);
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!r->contents[0])
     return UMI_STATUS_OK;
   x.struct_size = sizeof(x);
@@ -94,6 +125,7 @@ UmiStatus umi_language_runtime_publish_hover(UmiLanguageRuntimeServiceBridge *b,
   (void)umi_text_format(x.contents, sizeof(x.contents), "%s", r->contents);
   x.line = line;
   x.column = col;
+  /* Apply this branch only when its contract condition is satisfied. */
   if (r->has_range) {
     x.start_line = r->range.start.line;
     x.start_column = r->range.start.character;
@@ -103,24 +135,36 @@ UmiStatus umi_language_runtime_publish_hover(UmiLanguageRuntimeServiceBridge *b,
   x.revision = ++b->revision;
   return umi_language_hover_registry_upsert(g, &x);
 }
+/* Provide the clear sig operation used by this module and its client applications. */
 static void clear_sig(UmiLanguageSignatureRegistry *r, const char *d) {
   size_t i = umi_language_signature_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageSignatureSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_signature_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_signature_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish signature operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_signature(UmiLanguageRuntimeServiceBridge *b, const char *d,
                                                  uint32_t line, uint32_t col,
                                                  const UmiLanguageRuntimeSignatureResult *r) {
   UmiLanguageSignatureSnapshot x = {0};
   UmiLanguageSignatureRegistry *g;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_signature(b->language);
   clear_sig(g, d);
+  /* Apply this branch only when its contract condition is satisfied. */
   if (!r->available)
     return UMI_STATUS_OK;
   x.struct_size = sizeof(x);
@@ -135,15 +179,21 @@ UmiStatus umi_language_runtime_publish_signature(UmiLanguageRuntimeServiceBridge
   x.revision = ++b->revision;
   return umi_language_signature_registry_upsert(g, &x);
 }
+/*
+ * Provide the language runtime publish locations operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_locations(UmiLanguageRuntimeServiceBridge *b, const char *d,
                                                  const char *sid, int def,
                                                  const UmiLanguageRuntimeLocationList *r) {
   UmiLanguageReferenceRegistry *g;
   size_t i;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !sid || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_reference(b->language);
   umi_language_reference_registry_clear(g);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageReferenceSnapshot x = {0};
     UmiStatus s;
@@ -158,28 +208,41 @@ UmiStatus umi_language_runtime_publish_locations(UmiLanguageRuntimeServiceBridge
     x.definition = def;
     x.revision = b->revision + 1;
     s = umi_language_reference_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/* Provide the clear symbols operation used by this module and its client applications. */
 static void clear_symbols(UmiLanguageSymbolRegistry *r, const char *d) {
   size_t i = umi_language_symbol_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageSymbolSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_symbol_registry_at(r, i, &x) == UMI_STATUS_OK && strcmp(x.document_id, d) == 0)
       (void)umi_language_symbol_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish symbols operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_symbols(UmiLanguageRuntimeServiceBridge *b, const char *d,
                                                const UmiLanguageRuntimeSymbolList *r) {
   UmiLanguageSymbolRegistry *g;
   size_t i;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_symbol(b->language);
   clear_symbols(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageSymbolSnapshot x = {0};
     UmiStatus s;
@@ -196,6 +259,7 @@ UmiStatus umi_language_runtime_publish_symbols(UmiLanguageRuntimeServiceBridge *
     x.end_column = r->items[i].range.end.character;
     x.revision = b->revision + 1;
     s = umi_language_symbol_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
@@ -203,24 +267,36 @@ UmiStatus umi_language_runtime_publish_symbols(UmiLanguageRuntimeServiceBridge *
   return UMI_STATUS_OK;
 }
 
+/* Provide the clear diag operation used by this module and its client applications. */
 static void clear_diag(UmiLanguageDiagnosticRegistry *r, const char *d) {
   size_t i = umi_language_diagnostic_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageDiagnosticSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_diagnostic_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_diagnostic_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish diagnostics operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_diagnostics(UmiLanguageRuntimeServiceBridge *b,
                                                    const char *d,
                                                    const UmiLanguageRuntimeDiagnosticList *r) {
   UmiLanguageDiagnosticRegistry *g;
   size_t i;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_diagnostic(b->language);
   clear_diag(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageDiagnosticSnapshot x = {0};
     UmiStatus s;
@@ -238,30 +314,43 @@ UmiStatus umi_language_runtime_publish_diagnostics(UmiLanguageRuntimeServiceBrid
     x.end_column = r->items[i].range.end.character;
     x.revision = b->revision + 1;
     s = umi_language_diagnostic_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/* Provide the clear actions operation used by this module and its client applications. */
 static void clear_actions(UmiLanguageCodeActionRegistry *r, const char *d) {
   size_t i = umi_language_code_action_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageCodeActionSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_code_action_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_code_action_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish code actions operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_code_actions(UmiLanguageRuntimeServiceBridge *b,
                                                     const char *d,
                                                     const UmiLanguageRuntimeCodeActionList *r) {
   UmiLanguageCodeActionRegistry *g;
   size_t i;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_code_action(b->language);
   clear_actions(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageCodeActionSnapshot x = {0};
     UmiStatus s;
@@ -275,39 +364,53 @@ UmiStatus umi_language_runtime_publish_code_actions(UmiLanguageRuntimeServiceBri
     x.preferred = r->items[i].preferred;
     x.revision = b->revision + 1;
     s = umi_language_code_action_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/* Provide the clear sem operation used by this module and its client applications. */
 static void clear_sem(UmiLanguageSemanticTokenRegistry *r, const char *d) {
   size_t i = umi_language_semantic_token_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageSemanticTokenSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_semantic_token_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_semantic_token_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish semantic tokens operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_runtime_publish_semantic_tokens(UmiLanguageRuntimeServiceBridge *b,
                                                        const char *d,
                                                        const UmiLanguageRuntimeSemanticTokens *r) {
   UmiLanguageSemanticTokenRegistry *g;
   size_t i;
   uint32_t line = 0, col = 0;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_semantic_token(b->language);
   clear_sem(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i + 4 < r->count; i += 5) {
     UmiLanguageSemanticTokenSnapshot x = {0};
     UmiStatus s;
     uint32_t dl = r->data[i], ds = r->data[i + 1];
+    /* Apply this branch only when its contract condition is satisfied. */
     if (dl) {
       line += dl;
       col = ds;
-    } else
+    } /* Use this fallback path when the earlier condition does not apply. */ else
       col += ds;
     x.struct_size = sizeof(x);
     x.api_version = UMI_LANGUAGE_SEMANTIC_TOKEN_API_VERSION;
@@ -320,30 +423,43 @@ UmiStatus umi_language_runtime_publish_semantic_tokens(UmiLanguageRuntimeService
     x.length = r->data[i + 2];
     x.revision = b->revision + 1;
     s = umi_language_semantic_token_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/* Provide the clear hint operation used by this module and its client applications. */
 static void clear_hint(UmiLanguageInlayHintRegistry *r, const char *d) {
   size_t i = umi_language_inlay_hint_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageInlayHintSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_inlay_hint_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_inlay_hint_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish inlay hints operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_language_runtime_publish_inlay_hints(UmiLanguageRuntimeServiceBridge *b,
                                                    const char *d,
                                                    const UmiLanguageRuntimeInlayHintList *r) {
   UmiLanguageInlayHintRegistry *g;
   size_t i;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_inlay_hint(b->language);
   clear_hint(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageInlayHintSnapshot x = {0};
     UmiStatus s;
@@ -358,30 +474,43 @@ UmiStatus umi_language_runtime_publish_inlay_hints(UmiLanguageRuntimeServiceBrid
     x.visible = 1;
     x.revision = b->revision + 1;
     s = umi_language_inlay_hint_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/* Provide the clear fold operation used by this module and its client applications. */
 static void clear_fold(UmiLanguageFoldingRangeRegistry *r, const char *d) {
   size_t i = umi_language_folding_range_registry_count(r);
+  /*
+   * Continue only while work remains available; the loop body advances the state on each
+   * pass.
+   */
   while (i--) {
     UmiLanguageFoldingRangeSnapshot x;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_language_folding_range_registry_at(r, i, &x) == UMI_STATUS_OK &&
         strcmp(x.document_id, d) == 0)
       (void)umi_language_folding_range_registry_remove(r, x.id);
   }
 }
+/*
+ * Provide the language runtime publish folding ranges operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_language_runtime_publish_folding_ranges(UmiLanguageRuntimeServiceBridge *b,
                                                       const char *d,
                                                       const UmiLanguageRuntimeFoldingRangeList *r) {
   UmiLanguageFoldingRangeRegistry *g;
   size_t i;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !r)
     return UMI_STATUS_INVALID_ARGUMENT;
   g = umi_language_service_folding_range(b->language);
   clear_fold(g, d);
+  /* Visit each bounded item once so every record receives the same rule. */
   for (i = 0; i < r->count; i++) {
     UmiLanguageFoldingRangeSnapshot x = {0};
     UmiStatus s;
@@ -395,16 +524,22 @@ UmiStatus umi_language_runtime_publish_folding_ranges(UmiLanguageRuntimeServiceB
     x.collapsed = 0;
     x.revision = b->revision + 1;
     s = umi_language_folding_range_registry_upsert(g, &x);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (s != UMI_STATUS_OK)
       return s;
   }
   b->revision++;
   return UMI_STATUS_OK;
 }
+/*
+ * Provide the language runtime publish formatting available operation used by this module
+ * and its client applications.
+ */
 UmiStatus umi_language_runtime_publish_formatting_available(UmiLanguageRuntimeServiceBridge *b,
                                                             const char *d, const char *p,
                                                             uint32_t tab, int spaces) {
   UmiLanguageFormattingSnapshot x = {0};
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !p || !tab)
     return UMI_STATUS_INVALID_ARGUMENT;
   x.struct_size = sizeof(x);
@@ -419,10 +554,15 @@ UmiStatus umi_language_runtime_publish_formatting_available(UmiLanguageRuntimeSe
   x.revision = ++b->revision;
   return umi_language_formatting_registry_upsert(umi_language_service_formatting(b->language), &x);
 }
+/*
+ * Provide the language runtime publish rename operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_language_runtime_publish_rename(UmiLanguageRuntimeServiceBridge *b, const char *d,
                                               const char *sid, const char *old, const char *newn,
                                               const UmiLanguageRuntimeWorkspaceEdit *e) {
   UmiLanguageRenameSnapshot x = {0};
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
   if (ok(b) != UMI_STATUS_OK || !d || !sid || !old || !newn || !e)
     return UMI_STATUS_INVALID_ARGUMENT;
   x.struct_size = sizeof(x);

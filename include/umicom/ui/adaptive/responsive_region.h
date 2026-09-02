@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the adaptive responsive region data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAdaptiveResponsiveRegion {
     char region_id[UMI_ADAPTIVE_ID_CAPACITY];
     UmiAdaptiveRegionRole role;

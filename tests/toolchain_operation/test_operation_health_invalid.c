@@ -15,4 +15,8 @@
 #include <assert.h>
 #include <string.h>
 #include "umicom/toolchain/operation_health.h"
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void){ UmiToolchainOperationHealth h; assert(umi_toolchain_operation_health_from_context(NULL,&h)==UMI_STATUS_INVALID_ARGUMENT); return 0; }

@@ -22,6 +22,9 @@
 #include "umicom/ai/mcp/mcp.h"
 #include "umicom/ai/runtime.h"
 
+/**
+ * Represent the test mcp transport state data shared with callers of this public contract.
+ */
 typedef struct UmiTestMcpTransportState {
     char last_method[128];
     char last_params[UMI_AI_MCP_TEXT_CAPACITY];
@@ -30,6 +33,10 @@ typedef struct UmiTestMcpTransportState {
     UmiStatus forced_status;
 } UmiTestMcpTransportState;
 
+/**
+ * Exercise test mcp request and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiStatus umi_test_mcp_request(
     void *user_data,
     const char *method,
@@ -41,6 +48,10 @@ static inline UmiStatus umi_test_mcp_request(
         (UmiTestMcpTransportState *)user_data;
     const char *result = "{}";
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL ||
         method == NULL ||
         params_json == NULL ||
@@ -59,40 +70,43 @@ static inline UmiStatus umi_test_mcp_request(
         params_json,
         sizeof(state->last_params) - 1U);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (state->forced_status != UMI_STATUS_OK) {
         return state->forced_status;
     }
 
+    /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(method, "initialize") == 0) {
         result =
             "{\"protocolVersion\":\"2025-06-18\","
             "\"capabilities\":{\"tools\":{},\"resources\":{},\"prompts\":{}},"
             "\"serverInfo\":{\"name\":\"test-server\",\"version\":\"1.0\"}}";
-    } else if (strcmp(method, "tools/list") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(method, "tools/list") == 0) {
         result =
             "{\"tools\":["
             "{\"name\":\"read_file\",\"description\":\"Read a file\","
             "\"inputSchema\":{\"type\":\"object\"}},"
             "{\"name\":\"write_file\",\"description\":\"Write a file\","
             "\"inputSchema\":{\"type\":\"object\"}}]}";
-    } else if (strcmp(method, "resources/list") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(method, "resources/list") == 0) {
         result =
             "{\"resources\":["
             "{\"uri\":\"file:///one\",\"name\":\"One\",\"mimeType\":\"text/plain\"},"
             "{\"uri\":\"file:///two\",\"name\":\"Two\",\"mimeType\":\"text/plain\"}]}";
-    } else if (strcmp(method, "prompts/list") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(method, "prompts/list") == 0) {
         result =
             "{\"prompts\":["
             "{\"name\":\"review\",\"description\":\"Review code\"},"
             "{\"name\":\"explain\",\"description\":\"Explain code\"}]}";
-    } else if (strcmp(method, "tools/call") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(method, "tools/call") == 0) {
         result = "{\"content\":[{\"type\":\"text\",\"text\":\"tool-ok\"}]}";
-    } else if (strcmp(method, "resources/read") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(method, "resources/read") == 0) {
         result = "{\"contents\":[{\"uri\":\"file:///one\",\"text\":\"resource-ok\"}]}";
-    } else if (strcmp(method, "prompts/get") == 0) {
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(method, "prompts/get") == 0) {
         result = "{\"messages\":[{\"role\":\"user\",\"content\":\"prompt-ok\"}]}";
     }
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (strlen(result) + 1U > result_capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -101,6 +115,10 @@ static inline UmiStatus umi_test_mcp_request(
     return UMI_STATUS_OK;
 }
 
+/**
+ * Exercise test mcp notify and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiStatus umi_test_mcp_notify(
     void *user_data,
     const char *method,
@@ -109,6 +127,10 @@ static inline UmiStatus umi_test_mcp_notify(
     UmiTestMcpTransportState *state =
         (UmiTestMcpTransportState *)user_data;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (state == NULL || method == NULL || params_json == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
@@ -126,6 +148,10 @@ static inline UmiStatus umi_test_mcp_notify(
     return state->forced_status;
 }
 
+/**
+ * Exercise test mcp server and return a clear result when the behaviour no longer matches
+ * its contract.
+ */
 static inline UmiStatus umi_test_mcp_server(
     UmiAiMcpServerDescriptor *server)
 {
@@ -136,6 +162,7 @@ static inline UmiStatus umi_test_mcp_server(
         "stdio://test",
         UMI_AI_MCP_TRUST_LOCAL);
 
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         (void)strcpy(
             server->permission_prefix,
@@ -145,6 +172,10 @@ static inline UmiStatus umi_test_mcp_server(
     return status;
 }
 
+/**
+ * Exercise test mcp transport and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiAiMcpTransport umi_test_mcp_transport(
     UmiTestMcpTransportState *state)
 {
@@ -157,6 +188,10 @@ static inline UmiAiMcpTransport umi_test_mcp_transport(
     return transport;
 }
 
+/**
+ * Exercise test mcp ready session and return a clear result when the behaviour no longer
+ * matches its contract.
+ */
 static inline UmiStatus umi_test_mcp_ready_session(
     UmiAiMcpSession *session,
     UmiTestMcpTransportState *state)
@@ -168,6 +203,7 @@ static inline UmiStatus umi_test_mcp_ready_session(
     (void)memset(state, 0, sizeof(*state));
 
     status = umi_test_mcp_server(&server);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -178,6 +214,7 @@ static inline UmiStatus umi_test_mcp_ready_session(
         session,
         &server,
         &transport);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;
     }

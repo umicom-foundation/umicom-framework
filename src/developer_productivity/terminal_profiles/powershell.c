@@ -18,6 +18,10 @@ static const char *const ARGUMENTS[] = {
     "-NoLogo"
 };
 
+/*
+ * Provide the developer terminal profile powershell operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperTerminalProfile *umi_developer_terminal_profile_powershell(void)
 {
     static const UmiDeveloperTerminalProfile profile = {

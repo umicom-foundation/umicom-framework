@@ -34,6 +34,9 @@ extern "C" {
 #define UMI_QUANT_MAX_SCENARIOS 64U
 #define UMI_QUANT_MAX_MODELS 32U
 
+/**
+ * List the named quant product class values accepted by this public contract.
+ */
 typedef enum UmiQuantProductClass {
     UMI_QUANT_PRODUCT_UNKNOWN = 0,
     UMI_QUANT_PRODUCT_FX = 1,
@@ -47,11 +50,17 @@ typedef enum UmiQuantProductClass {
     UMI_QUANT_PRODUCT_INFLATION = 9
 } UmiQuantProductClass;
 
+/**
+ * List the named quant option right values accepted by this public contract.
+ */
 typedef enum UmiQuantOptionRight {
     UMI_QUANT_CALL = 1,
     UMI_QUANT_PUT = -1
 } UmiQuantOptionRight;
 
+/**
+ * List the named quant model kind values accepted by this public contract.
+ */
 typedef enum UmiQuantModelKind {
     UMI_QUANT_MODEL_DISCOUNTING = 0,
     UMI_QUANT_MODEL_BLACK76 = 1,
@@ -61,11 +70,17 @@ typedef enum UmiQuantModelKind {
     UMI_QUANT_MODEL_MONTE_CARLO = 5
 } UmiQuantModelKind;
 
+/**
+ * Represent the quant curve point data shared with callers of this public contract.
+ */
 typedef struct UmiQuantCurvePoint {
     int32_t tenor_days;
     double value;
 } UmiQuantCurvePoint;
 
+/**
+ * Represent the quant named value data shared with callers of this public contract.
+ */
 typedef struct UmiQuantNamedValue {
     char name[UMI_QUANT_NAME_CAPACITY];
     double value;

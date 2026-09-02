@@ -23,6 +23,10 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the studio status sync operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_studio_status_sync(
     UmiStudioRuntimeBindings *bindings,
     const UmiStudioRuntimeStatusModel *model);

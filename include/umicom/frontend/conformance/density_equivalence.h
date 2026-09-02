@@ -24,7 +24,14 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the fc density equivalence data shared with callers of this public contract.
+ */
 typedef struct UmiFcDensityEquivalence { double expected; double actual; double tolerance; } UmiFcDensityEquivalence;
+/**
+ * Provide the fc density equivalence evaluate operation used by this module and its client
+ * applications.
+ */
 double umi_fc_density_equivalence_evaluate(const UmiFcDensityEquivalence *item);
 
 #ifdef __cplusplus

@@ -21,6 +21,10 @@
 
 #include "umicom/codeguard/profile.h"
 
+/*
+ * Provide the codeguard profile default operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_default(void)
 {
     /* Designated fields make future profile additions explicit and prevent a
@@ -43,6 +47,10 @@ UmiCodeGuardProfile umi_codeguard_profile_default(void)
     return profile;
 }
 
+/*
+ * Provide the codeguard profile security operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_security(void)
 {
     UmiCodeGuardProfile profile = umi_codeguard_profile_default();
@@ -52,6 +60,10 @@ UmiCodeGuardProfile umi_codeguard_profile_security(void)
     return profile;
 }
 
+/*
+ * Provide the codeguard profile architecture operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_architecture(void)
 {
     UmiCodeGuardProfile profile = umi_codeguard_profile_default();
@@ -61,6 +73,10 @@ UmiCodeGuardProfile umi_codeguard_profile_architecture(void)
     return profile;
 }
 
+/*
+ * Provide the codeguard profile ci operation used by this module and its client
+ * applications.
+ */
 UmiCodeGuardProfile umi_codeguard_profile_ci(void)
 {
     UmiCodeGuardProfile profile = umi_codeguard_profile_default();

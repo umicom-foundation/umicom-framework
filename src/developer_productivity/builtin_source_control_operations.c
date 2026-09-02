@@ -35,11 +35,19 @@ static const OperationFactory FACTORIES[] = {
     umi_developer_source_control_operation_diff
 };
 
+/*
+ * Return the number of records represented by developer builtin source control operation
+ * without changing their state.
+ */
 size_t umi_developer_builtin_source_control_operation_count(void)
 {
     return sizeof(FACTORIES) / sizeof(FACTORIES[0]);
 }
 
+/*
+ * Find developer builtin source control operation while leaving the underlying catalogue
+ * or model owned by this module.
+ */
 const UmiDeveloperSourceControlOperationDefinition *
 umi_developer_builtin_source_control_operation_at(size_t index)
 {

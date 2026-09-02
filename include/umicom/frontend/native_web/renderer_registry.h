@@ -27,6 +27,10 @@ extern "C" {
 
 #include "umicom/frontend/native_web/renderer_descriptor.h"
 
+/**
+ * Represent the native web renderer registry data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiNativeWebRendererRegistry { UmiNativeWebRendererDescriptor items[UMI_NATIVE_WEB_MAX_RENDERERS]; size_t count; uint64_t revision; } UmiNativeWebRendererRegistry;
 /* Initialise an empty renderer registry. */
 void umi_native_web_renderer_registry_init(UmiNativeWebRendererRegistry *registry);

@@ -17,10 +17,18 @@
 
 #include <string.h>
 
+/*
+ * Initialise workbench context event health record from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_context_event_health_record_init(
     UmiWorkbenchContextEventHealthRecord *record,
     const char *record_id)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     memset(record, 0, sizeof(*record));
     record->structure_size = (uint32_t)sizeof(*record);
@@ -29,15 +37,27 @@ void umi_workbench_context_event_health_record_init(
     record->priority = UMI_WORKBENCH_CONTEXT_EVENT_PRIORITY_NORMAL;
     record->state = UMI_WORKBENCH_CONTEXT_EVENT_CREATED;
     record->revision = 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record_id != NULL) {
         (void)umi_workbench_context_event_copy_text(
             record->record_id, sizeof(record->record_id), record_id);
     }
 }
 
+/*
+ * Check that workbench context event health record satisfies its contract before another
+ * service relies on it.
+ */
 UmiStatus umi_workbench_context_event_health_record_validate(
     const UmiWorkbenchContextEventHealthRecord *record)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || record->structure_size != sizeof(*record) ||
         record->record_id[0] == '\0' ||
         record->event_kind <= UMI_WORKBENCH_CONTEXT_EVENT_NONE ||
@@ -49,58 +69,102 @@ UmiStatus umi_workbench_context_event_health_record_validate(
     return UMI_STATUS_OK;
 }
 
+/*
+ * Provide the workbench context event health record set source operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_health_record_set_source(
     UmiWorkbenchContextEventHealthRecord *record,
     const char *source_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || source_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_event_copy_text(
         record->source_id, sizeof(record->source_id), source_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context event health record set subject operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_health_record_set_subject(
     UmiWorkbenchContextEventHealthRecord *record,
     const char *subject_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || subject_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_event_copy_text(
         record->subject_id, sizeof(record->subject_id), subject_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context event health record set group operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_health_record_set_group(
     UmiWorkbenchContextEventHealthRecord *record,
     const char *group_id)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || group_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_event_copy_text(
         record->group_id, sizeof(record->group_id), group_id);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context event health record set label operation used by this
+ * module and its client applications.
+ */
 UmiStatus umi_workbench_context_event_health_record_set_label(
     UmiWorkbenchContextEventHealthRecord *record,
     const char *label)
 {
     UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL || label == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_workbench_context_event_copy_text(
         record->label, sizeof(record->label), label);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) ++record->revision;
     return status;
 }
 
+/*
+ * Provide the workbench context event health record hash operation used by this module and
+ * its client applications.
+ */
 uint64_t umi_workbench_context_event_health_record_hash(
     const UmiWorkbenchContextEventHealthRecord *record)
 {
     uint64_t hash = UINT64_C(1469598103934665603);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return 0U;
     hash = umi_workbench_context_event_hash_text(
         hash, record->record_id, sizeof(record->record_id));
@@ -119,11 +183,19 @@ uint64_t umi_workbench_context_event_health_record_hash(
     return hash;
 }
 
+/*
+ * Provide the workbench context event health record touch operation used by this module
+ * and its client applications.
+ */
 void umi_workbench_context_event_health_record_touch(
     UmiWorkbenchContextEventHealthRecord *record,
     uint64_t sequence,
     uint64_t timestamp_ms)
 {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (record == NULL) return;
     record->sequence = sequence;
     record->timestamp_ms = timestamp_ms;

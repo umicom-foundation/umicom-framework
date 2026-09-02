@@ -18,6 +18,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the project workspace project identity data shared with callers of this public
+ * contract.
+ */
     typedef struct UmiProjectWorkspaceProjectIdentity {
         UmiProjectWorkspaceNamedState base;
         uint64_t metric;

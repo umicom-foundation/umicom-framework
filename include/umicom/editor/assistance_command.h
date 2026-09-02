@@ -28,6 +28,9 @@ extern "C" {
 #define UMI_EDITOR_ASSISTANCE_COMMAND_LABEL_CAPACITY 128U
 #define UMI_EDITOR_ASSISTANCE_COMMAND_KEY_CAPACITY 48U
 
+/**
+ * List the named editor assistance command kind values accepted by this public contract.
+ */
 typedef enum UmiEditorAssistanceCommandKind {
     UMI_EDITOR_ASSISTANCE_COMMAND_SHOW_HOVER = 1,
     UMI_EDITOR_ASSISTANCE_COMMAND_PIN_HOVER = 2,
@@ -45,6 +48,10 @@ typedef enum UmiEditorAssistanceCommandKind {
     UMI_EDITOR_ASSISTANCE_COMMAND_REFRESH = 14
 } UmiEditorAssistanceCommandKind;
 
+/**
+ * Represent the editor assistance command descriptor data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiEditorAssistanceCommandDescriptor {
     uint32_t struct_size;
     uint32_t api_version;
@@ -58,11 +65,27 @@ typedef struct UmiEditorAssistanceCommandDescriptor {
     int opens_view;
 } UmiEditorAssistanceCommandDescriptor;
 
+/**
+ * Return the number of records represented by editor assistance command without changing
+ * their state.
+ */
 size_t umi_editor_assistance_command_count(void);
+/**
+ * Find editor assistance command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorAssistanceCommandDescriptor *
 umi_editor_assistance_command_at(size_t index);
+/**
+ * Find editor assistance command while leaving the underlying catalogue or model owned by
+ * this module.
+ */
 const UmiEditorAssistanceCommandDescriptor *
 umi_editor_assistance_command_find(const char *id);
+/**
+ * Provide the editor assistance command for kind operation used by this module and its
+ * client applications.
+ */
 const UmiEditorAssistanceCommandDescriptor *
 umi_editor_assistance_command_for_kind(UmiEditorAssistanceCommandKind kind);
 

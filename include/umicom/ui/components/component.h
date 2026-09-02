@@ -37,6 +37,9 @@ extern "C" {
 #define UMI_UI_COMPONENT_CLASS_CAPACITY 128U
 #define UMI_UI_COMPONENT_MAX_CHILDREN 128U
 
+/**
+ * List the named ui component kind values accepted by this public contract.
+ */
 typedef enum UmiUiComponentKind {
     UMI_UI_COMPONENT_WINDOW = 1,
     UMI_UI_COMPONENT_HEADER_BAR = 2,
@@ -71,6 +74,9 @@ typedef enum UmiUiComponentKind {
     UMI_UI_COMPONENT_CUSTOM = 31
 } UmiUiComponentKind;
 
+/**
+ * Represent the ui component spec data shared with callers of this public contract.
+ */
 typedef struct UmiUiComponentSpec {
     uint32_t structure_size;
     UmiUiComponentKind kind;
@@ -90,10 +96,29 @@ typedef struct UmiUiComponentSpec {
     bool vexpand;
 } UmiUiComponentSpec;
 
+/**
+ * Provide the ui component spec default operation used by this module and its client
+ * applications.
+ */
 UmiUiComponentSpec umi_ui_component_spec_default(UmiUiComponentKind kind);
+/**
+ * Provide the ui component spec set id operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_component_spec_set_id(UmiUiComponentSpec *spec, const char *id);
+/**
+ * Provide the ui component spec set text operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ui_component_spec_set_text(UmiUiComponentSpec *spec, const char *text);
+/**
+ * Check that ui component spec satisfies its contract before another service relies on it.
+ */
 UmiStatus umi_ui_component_spec_validate(const UmiUiComponentSpec *spec);
+/**
+ * Provide the ui component kind name operation used by this module and its client
+ * applications.
+ */
 const char *umi_ui_component_kind_name(UmiUiComponentKind kind);
 
 #ifdef __cplusplus

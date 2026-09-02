@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_ORPHAN_CLEANUP "umicom.document.recovery.orphan_cleanup"
 
+/**
+ * Provide the document capability orphan cleanup operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_orphan_cleanup(void);
 

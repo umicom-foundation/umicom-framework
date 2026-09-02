@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_LSP_DOCUMENT_SYNC "umicom.document.integration.lsp_document_sync"
 
+/**
+ * Provide the document capability lsp document sync operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_lsp_document_sync(void);
 

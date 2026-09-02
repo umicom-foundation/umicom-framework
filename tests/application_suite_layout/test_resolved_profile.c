@@ -14,6 +14,10 @@
 #include <string.h>
 #include "umicom/application/experience_catalogue.h"
 #include "umicom/application/suite_layout/profile_projection.h"
+/*
+ * Exercise resolve and return a clear result when the behaviour no longer matches its
+ * contract.
+ */
 static const char *resolve(const UmiExperiencePanelDefinition *panel, void *data)
 {
     static char id[UMI_UI_ID_CAPACITY];
@@ -21,6 +25,10 @@ static const char *resolve(const UmiExperiencePanelDefinition *panel, void *data
     (void)snprintf(id, sizeof(id), "thin.%s", panel->panel_id);
     return id;
 }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     const UmiApplicationExperienceDefinition *experience =

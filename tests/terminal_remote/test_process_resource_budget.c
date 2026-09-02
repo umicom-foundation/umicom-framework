@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/process_resource_budget.h"
-int main(void) { UmiTerminalRemoteProcessResourceBudget v; umi_terminal_remote_process_resource_budget_init(&v,1000U,500U); if(!umi_terminal_remote_process_resource_budget_within(&v,900U,400U)) return 1; return umi_terminal_remote_process_resource_budget_within(&v,1001U,400U)?2:0; }
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void) { UmiTerminalRemoteProcessResourceBudget v; umi_terminal_remote_process_resource_budget_init(&v,1000U,500U); /* Apply this branch only when its contract condition is satisfied. */ if(!umi_terminal_remote_process_resource_budget_within(&v,900U,400U)) return 1; return umi_terminal_remote_process_resource_budget_within(&v,1001U,400U)?2:0; }

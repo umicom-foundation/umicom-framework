@@ -25,6 +25,10 @@ extern "C" {
 #endif
 
 
+/**
+ * Represent the workbench designer browser preview data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerBrowserPreview {
     char layout_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char name[UMI_WORKBENCH_DESIGNER_LABEL_CAPACITY];
@@ -39,8 +43,16 @@ typedef struct UmiWorkbenchDesignerBrowserPreview {
     uint64_t revision;
 } UmiWorkbenchDesignerBrowserPreview;
 
+/**
+ * Initialise workbench designer browser preview from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_browser_preview_init(
     UmiWorkbenchDesignerBrowserPreview *preview);
+/**
+ * Provide the workbench designer browser preview build operation used by this module and
+ * its client applications.
+ */
 UmiStatus umi_workbench_designer_browser_preview_build(
     UmiWorkbenchDesignerBrowserPreview *preview,
     const UmiWorkbenchLayoutDocument *document,

@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_RESTART_POLICY "umicom.developer.execution.restart_policy"
 
+/**
+ * Provide the developer capability restart policy operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_restart_policy(void);
 

@@ -18,16 +18,31 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Represent the treasury cash sweep plan data shared with callers of this public contract.
+ */
 typedef struct UmiTreasuryCashSweepPlan {
     char id[UMI_TREASURY_ID_CAPACITY];
     int64_t requested_minor;
     int64_t maximum_minor;
 } UmiTreasuryCashSweepPlan;
+/**
+ * Initialise treasury cash sweep plan from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_treasury_cash_sweep_plan_init(UmiTreasuryCashSweepPlan *value,
     const char *id,
     int64_t requested_minor,
     int64_t maximum_minor);
+/**
+ * Check that treasury cash sweep plan satisfies its contract before another service relies
+ * on it.
+ */
 bool umi_treasury_cash_sweep_plan_valid(const UmiTreasuryCashSweepPlan *value);
+/**
+ * Provide the treasury cash sweep plan executable minor operation used by this module and
+ * its client applications.
+ */
 int64_t umi_treasury_cash_sweep_plan_executable_minor(const UmiTreasuryCashSweepPlan *value);
 #ifdef __cplusplus
 }

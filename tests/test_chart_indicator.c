@@ -19,4 +19,8 @@
 
 #include "umicom/umicom.h"
 #include <assert.h>
-int main(void){UmiChartSeries in,out;assert(umi_chart_series_init(&in,"close",UMI_CHART_LINE)==UMI_STATUS_OK);for(int i=0;i<5;++i)assert(umi_chart_series_add(&in,(UmiChartPoint){i,(double)(i+1)})==UMI_STATUS_OK);assert(umi_chart_indicator_sma(&in,3U,&out)==UMI_STATUS_OK);assert(out.point_count==3U);assert(out.points[0].value==2.0);return 0;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiChartSeries in,out;assert(umi_chart_series_init(&in,"close",UMI_CHART_LINE)==UMI_STATUS_OK);/* Visit each bounded item once so every record receives the same rule. */ for(int i=0;i<5;++i)assert(umi_chart_series_add(&in,(UmiChartPoint){i,(double)(i+1)})==UMI_STATUS_OK);assert(umi_chart_indicator_sma(&in,3U,&out)==UMI_STATUS_OK);assert(out.point_count==3U);assert(out.points[0].value==2.0);return 0;}

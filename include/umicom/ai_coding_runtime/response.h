@@ -21,6 +21,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the ai coding parsed response data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiAiCodingParsedResponse {
     char summary[UMI_AI_CODING_RUNTIME_TEXT_CAPACITY];
     UmiAiCodingPatch patch;
@@ -29,6 +33,10 @@ typedef struct UmiAiCodingParsedResponse {
     uint64_t revision;
 } UmiAiCodingParsedResponse;
 
+/**
+ * Provide the ai coding parse response operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_coding_parse_response(
     const UmiAiResponse *response,
     const UmiAiCodingTaskPlan *plan,

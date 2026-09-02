@@ -23,7 +23,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * Provide the chart indicator sma operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_indicator_sma(const UmiChartSeries *input,size_t period,UmiChartSeries *output);
+/**
+ * Provide the chart indicator ema operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_chart_indicator_ema(const UmiChartSeries *input,size_t period,UmiChartSeries *output);
 #ifdef __cplusplus
 }

@@ -29,6 +29,10 @@ extern "C" {
 
 #define UMI_REPOSITORY_WORKFLOW_REPORT_API_VERSION 1U
 
+/**
+ * Represent the repository workflow report data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiRepositoryWorkflowReport {
     uint32_t structure_size;
     uint32_t api_version;
@@ -51,6 +55,10 @@ typedef struct UmiRepositoryWorkflowReport {
     char output[UMI_PROCESS_OUTPUT_CAPACITY];
 } UmiRepositoryWorkflowReport;
 
+/**
+ * Initialise repository workflow report from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_repository_workflow_report_initialize(
     UmiRepositoryWorkflowReport *report,
     size_t caller_structure_size,

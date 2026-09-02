@@ -27,8 +27,19 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the analytics heatmap scale data shared with callers of this public contract.
+ */
 typedef struct UmiAnalyticsHeatmapScale { double minimum; double center; double maximum; int diverging; } UmiAnalyticsHeatmapScale;
+/**
+ * Initialise analytics heatmap scale from caller-provided values so later operations
+ * receive a known state.
+ */
 UmiStatus umi_analytics_heatmap_scale_init(UmiAnalyticsHeatmapScale *s,double minimum,double center,double maximum,int diverging);
+/**
+ * Provide the analytics heatmap scale normalize operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_analytics_heatmap_scale_normalize(const UmiAnalyticsHeatmapScale *s,double value,double *out_normalized);
 
 #ifdef __cplusplus

@@ -19,4 +19,8 @@
 
 #include "umicom/ui/design/component_property.h"
 
-int main(void){UmiDesignComponentProperty p;if(umi_design_component_property_init(&p,"padding",UMI_DESIGN_VALUE_LENGTH,0,"space.2")!=UMI_STATUS_OK)return 1;return p.value_kind==UMI_DESIGN_VALUE_LENGTH?0:2;}
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiDesignComponentProperty p;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_component_property_init(&p,"padding",UMI_DESIGN_VALUE_LENGTH,0,"space.2")!=UMI_STATUS_OK)return 1;return p.value_kind==UMI_DESIGN_VALUE_LENGTH?0:2;}

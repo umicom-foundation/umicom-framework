@@ -27,6 +27,10 @@ extern "C" {
 
 #define UMI_WORKBENCH_DESIGNER_MAX_BREADCRUMBS 32U
 
+/**
+ * Represent the workbench designer breadcrumb data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerBreadcrumb {
     char node_id[UMI_WORKBENCH_DESIGNER_ID_CAPACITY];
     char label[UMI_WORKBENCH_DESIGNER_LABEL_CAPACITY];
@@ -35,6 +39,10 @@ typedef struct UmiWorkbenchDesignerBreadcrumb {
     bool active;
 } UmiWorkbenchDesignerBreadcrumb;
 
+/**
+ * Represent the workbench designer breadcrumbs data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiWorkbenchDesignerBreadcrumbs {
     UmiWorkbenchDesignerBreadcrumb items[UMI_WORKBENCH_DESIGNER_MAX_BREADCRUMBS];
     size_t count;
@@ -42,12 +50,24 @@ typedef struct UmiWorkbenchDesignerBreadcrumbs {
     uint64_t revision;
 } UmiWorkbenchDesignerBreadcrumbs;
 
+/**
+ * Initialise workbench designer breadcrumbs from caller-provided values so later
+ * operations receive a known state.
+ */
 void umi_workbench_designer_breadcrumbs_init(
     UmiWorkbenchDesignerBreadcrumbs *breadcrumbs);
+/**
+ * Provide the workbench designer breadcrumbs build operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_workbench_designer_breadcrumbs_build(
     UmiWorkbenchDesignerBreadcrumbs *breadcrumbs,
     const UmiWorkbenchLayoutDocument *document,
     const char *active_node_id);
+/**
+ * Find workbench designer breadcrumb while leaving the underlying catalogue or model owned
+ * by this module.
+ */
 const UmiWorkbenchDesignerBreadcrumb *umi_workbench_designer_breadcrumb_at(
     const UmiWorkbenchDesignerBreadcrumbs *breadcrumbs,
     size_t index);

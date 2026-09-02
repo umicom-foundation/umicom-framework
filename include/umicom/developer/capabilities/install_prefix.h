@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_INSTALL_PREFIX "umicom.developer.delivery.install_prefix"
 
+/**
+ * Provide the developer capability install prefix operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_install_prefix(void);
 

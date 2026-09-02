@@ -26,7 +26,13 @@
 extern "C" {
 #endif
 
+/**
+ * List the named design component event kind values accepted by this public contract.
+ */
 typedef enum UmiDesignComponentEventKind { UMI_DESIGN_EVENT_ACTIVATE=1, UMI_DESIGN_EVENT_CHANGE=2, UMI_DESIGN_EVENT_SUBMIT=3, UMI_DESIGN_EVENT_SELECT=4, UMI_DESIGN_EVENT_EXPAND=5, UMI_DESIGN_EVENT_COLLAPSE=6, UMI_DESIGN_EVENT_CONTEXT=7 } UmiDesignComponentEventKind;
+/**
+ * Represent the design component event data shared with callers of this public contract.
+ */
 typedef struct UmiDesignComponentEvent { UmiDesignComponentEventKind kind; char command_id[UMI_DESIGN_ID_CAPACITY]; } UmiDesignComponentEvent;
 /* Initialise a semantic event-to-command binding. */
 UmiStatus umi_design_component_event_init(UmiDesignComponentEvent *event, UmiDesignComponentEventKind kind, const char *command_id);

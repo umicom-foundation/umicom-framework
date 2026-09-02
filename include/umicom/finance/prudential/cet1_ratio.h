@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential cet1 ratio data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialCet1Ratio { double numerator; double denominator; double ratio; } UmiPrudentialCet1Ratio;
 /* Calculate the guarded prudential ratio for this measure. */
 UmiStatus umi_pru_cet1_ratio_calculate(UmiPrudentialCet1Ratio *result, double numerator, double denominator);

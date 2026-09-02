@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the quant money market loan data shared with callers of this public contract.
+ */
 typedef struct UmiQuantMoneyMarketLoan {
     double principal;
     double rate;

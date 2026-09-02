@@ -25,14 +25,26 @@
 extern "C" {
 #endif
 
+/**
+ * Provide the ai mcp discover tools operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_discover_tools(
     UmiAiMcpSession *session,
     UmiAiMcpToolCatalogue *catalogue);
 
+/**
+ * Provide the ai mcp discover resources operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_discover_resources(
     UmiAiMcpSession *session,
     UmiAiMcpResourceCatalogue *catalogue);
 
+/**
+ * Provide the ai mcp discover prompts operation used by this module and its client
+ * applications.
+ */
 UmiStatus umi_ai_mcp_discover_prompts(
     UmiAiMcpSession *session,
     UmiAiMcpPromptCatalogue *catalogue);

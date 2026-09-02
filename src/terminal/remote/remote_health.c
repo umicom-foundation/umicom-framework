@@ -17,4 +17,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/terminal/remote/remote_health.h"
-UmiTerminalRemoteHealth umi_terminal_remote_remote_health_evaluate(uint32_t consecutive_failures,uint64_t latency_ms,uint64_t warning_latency_ms) { if(consecutive_failures>=3U) return UMI_TERMINAL_REMOTE_HEALTH_CRITICAL; if(consecutive_failures>0U || (warning_latency_ms>0U && latency_ms>=warning_latency_ms)) return UMI_TERMINAL_REMOTE_HEALTH_WARNING; return UMI_TERMINAL_REMOTE_HEALTH_HEALTHY; }
+/*
+ * Provide the terminal remote remote health evaluate operation used by this module and its
+ * client applications.
+ */
+UmiTerminalRemoteHealth umi_terminal_remote_remote_health_evaluate(uint32_t consecutive_failures,uint64_t latency_ms,uint64_t warning_latency_ms) { /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(consecutive_failures>=3U) return UMI_TERMINAL_REMOTE_HEALTH_CRITICAL; /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(consecutive_failures>0U || (warning_latency_ms>0U && latency_ms>=warning_latency_ms)) return UMI_TERMINAL_REMOTE_HEALTH_WARNING; return UMI_TERMINAL_REMOTE_HEALTH_HEALTHY; }

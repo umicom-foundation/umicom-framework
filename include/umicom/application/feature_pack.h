@@ -41,6 +41,10 @@ enum {
     UMI_APPLICATION_FEATURE_PACK_EXTENSIBLE = 1U << 7
 };
 
+/**
+ * Represent the application feature pack definition data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiApplicationFeaturePackDefinition {
     uint32_t structure_size;
     uint32_t api_version;
@@ -56,14 +60,30 @@ typedef struct UmiApplicationFeaturePackDefinition {
     UmiApplicationFeaturePackFlags flags;
 } UmiApplicationFeaturePackDefinition;
 
+/**
+ * Return the number of records represented by application feature pack catalogue without
+ * changing their state.
+ */
 size_t umi_application_feature_pack_catalogue_count(void);
 
+/**
+ * Find application feature pack catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationFeaturePackDefinition *
 umi_application_feature_pack_catalogue_at(size_t index);
 
+/**
+ * Find application feature pack catalogue while leaving the underlying catalogue or model
+ * owned by this module.
+ */
 const UmiApplicationFeaturePackDefinition *
 umi_application_feature_pack_catalogue_find(const char *pack_id);
 
+/**
+ * Check that application feature pack satisfies its contract before another service relies
+ * on it.
+ */
 UmiStatus umi_application_feature_pack_validate(
     const UmiApplicationFeaturePackDefinition *pack);
 

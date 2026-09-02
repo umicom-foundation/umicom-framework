@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DOCUMENT_CAPABILITY_SESSION_RESTORE "umicom.document.recovery.session_restore"
 
+/**
+ * Provide the document capability session restore operation used by this module and its
+ * client applications.
+ */
 const UmiDocumentCapabilityDescriptor *
 umi_document_capability_session_restore(void);
 

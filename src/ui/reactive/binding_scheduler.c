@@ -17,6 +17,10 @@
 
 /* Initialise the binding scheduler contract to deterministic zero/default state. */
 void umi_ui_reactive_binding_scheduler_init(UmiUiReactiveBindingScheduler *item) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (item != NULL) memset(item, 0, sizeof *item);
 }
 

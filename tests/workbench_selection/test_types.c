@@ -18,6 +18,10 @@
 
 #include "umicom/workbench_selection/types.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     char text[16U];

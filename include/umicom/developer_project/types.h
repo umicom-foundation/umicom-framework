@@ -40,6 +40,9 @@ extern "C" {
 #define UMI_DEVELOPER_PROJECT_TREE_CAPACITY 4096U
 #define UMI_DEVELOPER_PROJECT_COMMAND_ARGUMENT_CAPACITY 32U
 
+/**
+ * List the named developer project kind values accepted by this public contract.
+ */
 typedef enum UmiDeveloperProjectKind {
     UMI_DEVELOPER_PROJECT_EXECUTABLE = 1,
     UMI_DEVELOPER_PROJECT_STATIC_LIBRARY = 2,
@@ -50,6 +53,9 @@ typedef enum UmiDeveloperProjectKind {
     UMI_DEVELOPER_PROJECT_META = 7
 } UmiDeveloperProjectKind;
 
+/**
+ * List the named developer project build system values accepted by this public contract.
+ */
 typedef enum UmiDeveloperProjectBuildSystem {
     UMI_DEVELOPER_PROJECT_BUILD_NONE = 0,
     UMI_DEVELOPER_PROJECT_BUILD_CMAKE = 1,
@@ -59,6 +65,10 @@ typedef enum UmiDeveloperProjectBuildSystem {
     UMI_DEVELOPER_PROJECT_BUILD_CUSTOM = 5
 } UmiDeveloperProjectBuildSystem;
 
+/**
+ * List the named developer project language capability values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperProjectLanguageCapability {
     UMI_DEVELOPER_PROJECT_LANGUAGE_SYNTAX = 1U << 0,
     UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD = 1U << 1,
@@ -74,12 +84,24 @@ typedef enum UmiDeveloperProjectLanguageCapability {
 
 typedef uint32_t UmiDeveloperProjectLanguageCapabilities;
 
+/**
+ * Represent the developer project variable data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectVariable {
     char name[UMI_DEVELOPER_PROJECT_VARIABLE_NAME_CAPACITY];
     char value[UMI_DEVELOPER_PROJECT_VARIABLE_VALUE_CAPACITY];
 } UmiDeveloperProjectVariable;
 
+/**
+ * Provide the developer project kind text operation used by this module and its client
+ * applications.
+ */
 const char *umi_developer_project_kind_text(UmiDeveloperProjectKind kind);
+/**
+ * Provide the developer project build system text operation used by this module and its
+ * client applications.
+ */
 const char *umi_developer_project_build_system_text(
     UmiDeveloperProjectBuildSystem build_system);
 

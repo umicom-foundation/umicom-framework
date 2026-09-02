@@ -36,6 +36,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_PROJECT_WORKFLOW_API_VERSION 1U
 
+/**
+ * List the named developer project workflow preset values accepted by this public
+ * contract.
+ */
 typedef enum UmiDeveloperProjectWorkflowPreset {
     UMI_DEVELOPER_PROJECT_WORKFLOW_BUILD = 1,
     UMI_DEVELOPER_PROJECT_WORKFLOW_TEST = 2,
@@ -44,6 +48,10 @@ typedef enum UmiDeveloperProjectWorkflowPreset {
     UMI_DEVELOPER_PROJECT_WORKFLOW_FULL = 5
 } UmiDeveloperProjectWorkflowPreset;
 
+/**
+ * Represent the developer project workflow request data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiDeveloperProjectWorkflowRequest {
     uint32_t struct_size;
     uint32_t api_version;
@@ -60,6 +68,10 @@ typedef struct UmiDeveloperProjectWorkflowRequest {
     int include_configure;
 } UmiDeveloperProjectWorkflowRequest;
 
+/**
+ * Represent the developer project workflow snapshot data shared with callers of this
+ * public contract.
+ */
 typedef struct UmiDeveloperProjectWorkflowSnapshot {
     uint32_t struct_size;
     uint32_t api_version;
@@ -72,6 +84,10 @@ typedef struct UmiDeveloperProjectWorkflowSnapshot {
     int uses_launch_profile;
 } UmiDeveloperProjectWorkflowSnapshot;
 
+/**
+ * Provide the developer project workflow submit operation used by this module and its
+ * client applications.
+ */
 UmiStatus umi_developer_project_workflow_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperProjectWorkflowRequest *request,

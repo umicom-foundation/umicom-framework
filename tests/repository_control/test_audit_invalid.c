@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include "umicom/repository/audit.h"
 
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
 int main(void)
 {
     assert(umi_repository_audit_append(NULL,UMI_REPOSITORY_CONTROL_IDLE,UMI_STATUS_OK,"","x")==UMI_STATUS_INVALID_ARGUMENT);

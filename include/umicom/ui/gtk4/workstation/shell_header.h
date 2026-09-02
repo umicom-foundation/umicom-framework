@@ -29,6 +29,10 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the gtk4 workstation shell header data shared with callers of this public
+ * contract.
+ */
 typedef struct UmiGtk4WorkstationShellHeader
     UmiGtk4WorkstationShellHeader;
 

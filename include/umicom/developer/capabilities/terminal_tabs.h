@@ -23,6 +23,10 @@ extern "C" {
 
 #define UMI_DEVELOPER_CAPABILITY_TERMINAL_TABS "umicom.developer.terminal.terminal_tabs"
 
+/**
+ * Provide the developer capability terminal tabs operation used by this module and its
+ * client applications.
+ */
 const UmiDeveloperCapabilityDescriptor *
 umi_developer_capability_terminal_tabs(void);
 

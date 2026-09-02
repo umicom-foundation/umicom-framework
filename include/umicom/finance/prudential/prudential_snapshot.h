@@ -25,6 +25,9 @@
 extern "C" {
 #endif
 
+/**
+ * Represent the prudential snapshot data shared with callers of this public contract.
+ */
 typedef struct UmiPrudentialSnapshot { uint64_t as_of_millis; double cet1_ratio; double total_capital_ratio; double lcr; double nsfr; size_t failed_stress_metrics; size_t breached_limits; } UmiPrudentialSnapshot;
 /* Initialise an aggregate prudential snapshot with core capital and liquidity metrics. */
 UmiStatus umi_pru_prudential_snapshot_init(UmiPrudentialSnapshot *snapshot, uint64_t as_of_millis, double cet1_ratio, double total_capital_ratio, double lcr, double nsfr, size_t failed_stress_metrics, size_t breached_limits);
