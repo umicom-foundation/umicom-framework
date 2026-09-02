@@ -23,6 +23,7 @@
 
 #include "umicom/ui/accessibility.h"
 #include "umicom/ui/action.h"
+#include "umicom/ui/automation.h"
 #include "umicom/ui/activity.h"
 #include "umicom/ui/adapter.h"
 #include "umicom/ui/application_shell.h"

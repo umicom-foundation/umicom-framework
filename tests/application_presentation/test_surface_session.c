@@ -26,9 +26,13 @@ int main(void)
     UmiApplicationPresentationSurfaceSession session;
     UmiApplicationPresentationSurfaceSnapshot snapshot;
     UmiApplicationPresentationSurfaceItem *editor;
+    const UmiApplicationComponentRecipe *recipe =
+        umi_application_component_recipe_catalogue_find(
+            "org.umicom.workspace.studio.standard");
+    assert(recipe != NULL);
     assert(umi_application_presentation_surface_session_init(
                "org.umicom.workspace.studio.standard", &session) == UMI_STATUS_OK);
-    assert(session.item_count == 10U);
+    assert(session.item_count == recipe->slot_count);
     editor = umi_application_presentation_surface_session_find(
         &session, "umicom.development.editor");
     assert(editor != NULL && editor->visible && editor->focused);
@@ -39,7 +43,7 @@ int main(void)
                &session, "umicom.ai.chat") == UMI_STATUS_OK);
     assert(umi_application_presentation_surface_session_snapshot(
                &session, &snapshot) == UMI_STATUS_OK);
-    assert(snapshot.panel_count == 10U);
+    assert(snapshot.panel_count == recipe->slot_count);
     assert(snapshot.focused_component_id != NULL);
     return 0;
 }

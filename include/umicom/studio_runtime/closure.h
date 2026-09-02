@@ -25,7 +25,10 @@
 extern "C" {
 #endif
 
-#define UMI_STUDIO_RUNTIME_MISSING_CAPACITY 96U
+/* A closure report can include the combined IDE, assistant, alias and Studio
+ * command catalogues. Leave growth room so adding commands does not turn a
+ * useful diagnostic pass into a capacity failure. */
+#define UMI_STUDIO_RUNTIME_MISSING_CAPACITY 192U
 
 /**
  * Represent the studio runtime closure report data shared with callers of this public

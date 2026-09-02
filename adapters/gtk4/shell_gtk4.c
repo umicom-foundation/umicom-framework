@@ -286,6 +286,9 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
      * text setting.  The popover is populated from Framework profiles during
      * refresh, alongside the saved-layout selector. */
     adapter->appearance_button = gtk_menu_button_new();
+    (void)umi_gtk4_automation_tag_widget(
+        adapter->appearance_button,
+        "umicom.appearance.menu");
     gtk_widget_add_css_class(adapter->appearance_button,
                              "umicom-appearance-button");
     appearance_content = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -302,6 +305,9 @@ UmiStatus umi_gtk4_build_shell(UmiGtk4Adapter *adapter)
 
     /* Command palette / quick access stays visible but compact in the toolbar. */
     adapter->quick_access_entry = gtk_search_entry_new();
+    (void)umi_gtk4_automation_tag_widget(
+        adapter->quick_access_entry,
+        "umicom.command.search");
     gtk_search_entry_set_placeholder_text(
         GTK_SEARCH_ENTRY(adapter->quick_access_entry),
         "Search commands and actions (Ctrl+Shift+P)"

@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include "umicom/debug_runtime/workbench_bridge.h"
+#include "umicom/security/workspace_trust.h"
 #include "umicom/test_runtime/check.h"
 
 /*
@@ -31,19 +32,44 @@ int main(void)
         (UmiToolchainProfile *)calloc(1U, sizeof(*toolchain));
     UmiDeveloperWorkbenchBindings bindings;
     UmiDeveloperWorkbench *workbench = NULL;
+    UmiDeveloperWorkbenchConfiguration *configuration =
+        (UmiDeveloperWorkbenchConfiguration *)calloc(1U, sizeof(*configuration));
+    UmiWorkspaceTrustStore *trust = NULL;
     UmiDebugRuntimeWorkbenchBridge *bridge = NULL;
     UmiDebugRuntimeWorkbenchContext *context =
         (UmiDebugRuntimeWorkbenchContext *)calloc(1U, sizeof(*context));
     int written;
 
-    UMI_TEST_REQUIRE(toolchain != NULL && context != NULL);
+    UMI_TEST_REQUIRE(toolchain != NULL && context != NULL &&
+                     configuration != NULL);
     UMI_TEST_REQUIRE(umi_debug_runtime_platform_create(&runtime) == UMI_STATUS_OK);
 
     umi_toolchain_profile_init(toolchain);
+    umi_developer_workbench_configuration_init(
+        configuration, "config.1", "Debug");
+    written = snprintf(configuration->source_root,
+                       sizeof(configuration->source_root),
+                       "%s", "C:/work/example");
+    UMI_TEST_REQUIRE(written >= 0 &&
+                     (size_t)written < sizeof(configuration->source_root));
+    written = snprintf(configuration->build_directory,
+                       sizeof(configuration->build_directory),
+                       "%s", "build/debug");
+    UMI_TEST_REQUIRE(written >= 0 &&
+                     (size_t)written < sizeof(configuration->build_directory));
+    UMI_TEST_REQUIRE(umi_workspace_trust_store_create(&trust) == UMI_STATUS_OK);
+    UMI_TEST_REQUIRE(umi_workspace_trust_store_set(
+        trust, configuration->source_root, UMI_WORKSPACE_TRUSTED,
+        "debug-runtime-test", 1U) == UMI_STATUS_OK);
     (void)memset(&bindings, 0, sizeof(bindings));
     bindings.toolchain = toolchain;
+    bindings.trust_store = trust;
     UMI_TEST_REQUIRE(umi_developer_workbench_create(
         &bindings, &workbench) == UMI_STATUS_OK);
+    /* Debug start is a trusted executable action. The fixture installs a real
+     * active configuration instead of bypassing that production safeguard. */
+    UMI_TEST_REQUIRE(umi_developer_workbench_add_configuration(
+        workbench, configuration, 1) == UMI_STATUS_OK);
 
     UMI_TEST_REQUIRE(umi_debug_runtime_workbench_bridge_create(
         workbench, runtime, &bridge) == UMI_STATUS_OK);
@@ -79,7 +105,9 @@ int main(void)
     UMI_TEST_REQUIRE(!umi_developer_workbench_command_enabled(
         workbench, "debug.start", NULL));
     umi_developer_workbench_destroy(workbench);
+    umi_workspace_trust_store_destroy(trust);
     umi_debug_runtime_platform_destroy(runtime);
+    free(configuration);
     free(context);
     free(toolchain);
     return 0;

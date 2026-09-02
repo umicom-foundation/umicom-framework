@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/workstation/panel_frame.h"
+#include "umicom/ui/gtk4/automation.h"
 
 #include <string.h>
 
@@ -23,6 +24,21 @@ typedef struct UmiGtk4WsPanelFrameState {
     UmiGtk4WsPanelActionHandler action_handler;
     void *user_data;
 } UmiGtk4WsPanelFrameState;
+
+/* Return a short stable token for panel-header automation IDs. */
+static const char *panel_action_token(UmiWsPanelAction action)
+{
+    switch (action) {
+        case UMI_WS_PANEL_ACTION_PIN_TOGGLE: return "pin";
+        case UMI_WS_PANEL_ACTION_CONTEXT_GROUP: return "context";
+        case UMI_WS_PANEL_ACTION_MOVE: return "move";
+        case UMI_WS_PANEL_ACTION_FLOAT_TOGGLE: return "float";
+        case UMI_WS_PANEL_ACTION_MAXIMISE_TOGGLE: return "maximise";
+        case UMI_WS_PANEL_ACTION_SETTINGS: return "settings";
+        case UMI_WS_PANEL_ACTION_CLOSE: return "close";
+        default: return "unknown";
+    }
+}
 
 /* Provide the on action clicked operation used by this module and its client applications. */
 static void on_action_clicked(GtkButton *button, gpointer user_data)
@@ -50,6 +66,8 @@ static GtkWidget *make_action_button(UmiGtk4WsPanelFrameState *state,
                                      bool enabled)
 {
     GtkWidget *button = gtk_button_new_from_icon_name(icon_name);
+    char automation_id[UMI_UI_ID_CAPACITY];
+    int written;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -59,6 +77,16 @@ static GtkWidget *make_action_button(UmiGtk4WsPanelFrameState *state,
     gtk_widget_add_css_class(button, "umicom-panel-action");
     gtk_widget_set_tooltip_text(button, umi_ws_panel_action_text(action));
     gtk_widget_set_sensitive(button, enabled);
+    written = g_snprintf(
+        automation_id,
+        sizeof(automation_id),
+        "%s.action.%s",
+        state != NULL ? state->chrome.panel_id : "panel",
+        panel_action_token(action));
+    /* Skip an ID that would be truncated instead of creating an ambiguous address. */
+    if (written >= 0 && (size_t)written < sizeof(automation_id)) {
+        (void)umi_gtk4_automation_tag_widget(button, automation_id);
+    }
     g_object_set_data(G_OBJECT(button), "umicom-panel-action",
                       GINT_TO_POINTER((int)action));
     g_signal_connect(button, "clicked", G_CALLBACK(on_action_clicked), state);
@@ -164,6 +192,10 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     state->user_data = user_data;
     g_object_set_data_full(G_OBJECT(frame), "umicom-panel-frame-state", state,
                            g_free);
+    if (chrome != NULL && umi_ui_id_is_valid(chrome->panel_id)) {
+        /* The whole frame is addressable for visibility and evidence checks. */
+        (void)umi_gtk4_automation_tag_widget(frame, chrome->panel_id);
+    }
 
     title = gtk_label_new(chrome != NULL ? chrome->title : "Panel");
     subtitle = gtk_label_new(chrome != NULL ? chrome->subtitle : "");

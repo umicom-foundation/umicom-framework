@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
 #include "umicom/ui/gtk4/drop_down.h"
+#include "umicom/ui/gtk4/automation.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiGtk4AppearanceEditor *appearance;
     UmiGtk4WorkstationShellHeader *identity;
     UmiGtk4WorkstationCommandBar *command_bar;
+    UmiGtk4AutomationDriver *automation;
     UmiWsCommandBarModel command_model;
     GtkWidget *root;
     GtkWidget *layout_dropdown;
@@ -1692,6 +1694,20 @@ static GtkWidget *build_new_window_popover(
         "Floating");
     workstation->new_window_status = gtk_label_new("");
 
+    /* Shared IDs make the catalogue testable in every Umicom application. */
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->new_window_search,
+        "umicom.window-catalogue.search");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->new_window_category,
+        "umicom.window-catalogue.category");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->new_window_region,
+        "umicom.window-catalogue.region");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->new_window_floating,
+        "umicom.window-catalogue.floating");
+
     gtk_widget_add_css_class(root, "umicom-new-window-catalogue");
     gtk_widget_add_css_class(heading, "title-4");
     gtk_widget_add_css_class(help, "dim-label");
@@ -1749,6 +1765,10 @@ static GtkWidget *build_new_window_popover(
         gtk_box_prepend(GTK_BOX(row), title);
         gtk_box_append(GTK_BOX(row), detail);
         gtk_button_set_child(GTK_BUTTON(button), row);
+        /* Window type IDs stay stable when the catalogue is filtered or sorted. */
+        (void)umi_gtk4_automation_tag_widget(
+            button,
+            descriptor->window_type_id);
         g_object_set_data(
             G_OBJECT(button), "umicom-window-descriptor", (gpointer)descriptor);
         g_signal_connect(
@@ -2118,6 +2138,9 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         gtk_string_list_append(choices, workstation->selector.choices[index].title);
     workstation->layout_dropdown =
         umi_ui_gtk4_drop_down_new_take_string_list(choices);
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->layout_dropdown,
+        "umicom.layout.selector");
     gtk_drop_down_set_selected(GTK_DROP_DOWN(workstation->layout_dropdown),
                                (guint)workstation->selector.selected_index);
     g_signal_connect(workstation->layout_dropdown, "notify::selected",
@@ -2131,6 +2154,9 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         umi_gtk4_appearance_editor_widget(workstation->appearance));
 
     workstation->new_window_button = gtk_menu_button_new();
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->new_window_button,
+        "umicom.window-catalogue.menu");
     gtk_menu_button_set_label(
         GTK_MENU_BUTTON(workstation->new_window_button), "New Window");
     gtk_widget_set_tooltip_text(
@@ -2146,6 +2172,12 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     workstation->save_layout_button = gtk_button_new_with_label("Save");
     workstation->restore_layout_button = gtk_button_new_with_label("Restore");
     workstation->layout_status = gtk_label_new("");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->save_layout_button,
+        "umicom.layout.save");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->restore_layout_button,
+        "umicom.layout.restore");
     gtk_widget_add_css_class(workstation->save_layout_button, "flat");
     gtk_widget_add_css_class(workstation->restore_layout_button, "flat");
     gtk_widget_add_css_class(workstation->layout_status, "dim-label");
@@ -2173,6 +2205,12 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         gtk_button_new_with_label("Edit Layout");
     workstation->cancel_edit_button =
         gtk_button_new_with_label("Cancel");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->edit_layout_button,
+        "umicom.layout.edit");
+    (void)umi_gtk4_automation_tag_widget(
+        workstation->cancel_edit_button,
+        "umicom.layout.cancel-edit");
     gtk_widget_add_css_class(workstation->cancel_edit_button, "flat");
     g_signal_connect(
         workstation->edit_layout_button,
@@ -2214,6 +2252,11 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
                    umi_gtk4_workspace_layout_host_widget(workstation->host));
     refresh_heading(workstation);
     refresh_edit_controls(workstation);
+    /* Retain one in-process driver after every shared control has been built. */
+    status = umi_gtk4_automation_driver_create(
+        workstation->root,
+        &workstation->automation);
+    if (status != UMI_STATUS_OK) goto fail;
     workstation->revision = 1U;
     *out_workstation = workstation;
     return UMI_STATUS_OK;
@@ -2235,6 +2278,9 @@ void umi_application_suite_gtk4_workstation_destroy(
      * used.
      */
     if (workstation == NULL) return;
+    /* Release the driver's retained root before dismantling child services. */
+    umi_gtk4_automation_driver_destroy(workstation->automation);
+    workstation->automation = NULL;
     umi_gtk4_workspace_layout_host_destroy(workstation->host);
     workstation->host = NULL;
     /* Disconnect the borrowed callback before releasing its target. */
@@ -2268,6 +2314,21 @@ GtkWidget *umi_application_suite_gtk4_workstation_widget(
     UmiApplicationSuiteGtk4Workstation *workstation)
 {
     return workstation != NULL ? workstation->root : NULL;
+}
+
+/* Copy the shared workstation's borrowed UAT interface for a suite application. */
+UmiStatus umi_application_suite_gtk4_workstation_automation(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiAutomationDriver *out_driver)
+{
+    if (workstation == NULL || workstation->automation == NULL ||
+        out_driver == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    *out_driver = umi_gtk4_automation_driver_interface(
+        workstation->automation);
+    return UMI_STATUS_OK;
 }
 
 /*

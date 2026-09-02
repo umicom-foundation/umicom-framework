@@ -20,6 +20,13 @@
 #include "ui_internal.h"
 
 struct UmiUiActionModel { UmiUiActionSnapshot items[UMI_UI_ACTION_MAX]; size_t count; uint64_t revision; UmiMutex *mutex; };
+/* Reject unknown prompt kinds before a toolkit adapter tries to interpret them.
+ * This also makes newly added kinds an explicit part of the public contract. */
+static int argument_kind_is_valid(UmiUiActionArgumentKind kind)
+{
+    return kind >= UMI_UI_ACTION_ARGUMENT_NONE &&
+           kind <= UMI_UI_ACTION_ARGUMENT_FOLDER_PATH;
+}
 /* Provide the find item operation used by this module and its client applications. */
 static size_t find_item(const UmiUiActionModel *model,const char *id){size_t i;/* Visit each bounded item once so every record receives the same rule. */ for(i=0U;i<model->count;++i)/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(strcmp(model->items[i].action_id,id)==0)return i;return SIZE_MAX;}
 /*
@@ -33,7 +40,36 @@ void umi_ui_action_model_destroy(UmiUiActionModel *m){/* Protect caller-owned me
  * Provide the ui action model upsert operation used by this module and its client
  * applications.
  */
-UmiStatus umi_ui_action_model_upsert(UmiUiActionModel *m,const UmiUiActionSnapshot *item){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m==NULL||item==NULL||!umi_ui_id_is_valid(item->action_id))return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(m->mutex);i=find_item(m,item->action_id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m->count>=UMI_UI_ACTION_MAX){(void)umi_mutex_unlock(m->mutex);return UMI_STATUS_CAPACITY_EXCEEDED;}i=m->count++;}m->items[i]=*item;m->revision=umi_ui_next_revision(m->revision);(void)umi_mutex_unlock(m->mutex);return UMI_STATUS_OK;}
+UmiStatus umi_ui_action_model_upsert(
+    UmiUiActionModel *model,
+    const UmiUiActionSnapshot *item)
+{
+    size_t index;
+
+    /* Validate both the stable identity and the prompt contract before taking
+     * the model lock. Invalid records therefore cannot alter model state. */
+    if (model == NULL || item == NULL ||
+        !umi_ui_id_is_valid(item->action_id) ||
+        !argument_kind_is_valid(item->argument_kind)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    (void)umi_mutex_lock(model->mutex);
+    index = find_item(model, item->action_id);
+    if (index == SIZE_MAX) {
+        /* A new action consumes one bounded slot; existing actions continue to
+         * update in place even when the catalogue has reached its capacity. */
+        if (model->count >= UMI_UI_ACTION_MAX) {
+            (void)umi_mutex_unlock(model->mutex);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        index = model->count++;
+    }
+    model->items[index] = *item;
+    model->revision = umi_ui_next_revision(model->revision);
+    (void)umi_mutex_unlock(model->mutex);
+    return UMI_STATUS_OK;
+}
 /*
  * Remove ui action model while keeping the remaining records in a valid and discoverable
  * state.

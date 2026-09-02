@@ -593,6 +593,7 @@ add_library(umicom_ui STATIC
     src/ui/property.c
     src/ui/view_model.c
     src/ui/action.c
+    src/ui/automation.c
     src/ui/menu.c
     src/ui/toolbar.c
     src/ui/status.c
@@ -755,6 +756,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     pkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 QUIET IMPORTED_TARGET gtksourceview-5)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
+        adapters/gtk4/automation_gtk4.c
         adapters/gtk4/drop_down_gtk4.c
         adapters/gtk4/shell_gtk4.c
         adapters/gtk4/workbench_gtk4.c
@@ -3319,6 +3321,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-workspace-profile-persistence-tests framework.ui.workspace_profile_persistence tests/test_ui_workspace_profile_persistence.c)
     umicom_add_framework_test(umicom-ui-workspace-profile-designer-tests framework.ui.workspace_profile_designer tests/test_ui_workspace_profile_designer.c)
     umicom_add_framework_test(umicom-ui-appearance-tests framework.ui.appearance tests/test_ui_appearance.c)
+    umicom_add_framework_test(umicom-ui-automation-tests framework.ui.automation tests/test_ui_automation.c)
     umicom_add_framework_test(umicom-ui-appearance-persistence-tests framework.ui.appearance_persistence tests/test_ui_appearance_persistence.c)
     umicom_add_framework_test(umicom-ui-view-presentation-tests framework.ui.view_presentation tests/test_ui_view_presentation.c)
     umicom_add_framework_test(umicom-ui-headless-view-presentation-tests framework.ui.headless_view_presentation tests/test_ui_headless_view_presentation.c)

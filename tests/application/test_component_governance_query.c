@@ -31,7 +31,9 @@ int main(void) {
   umi_component_query_init(&query);
   query.domain_id = "trading";
   assert(umi_component_inventory_query(&inventory, &query, &result) == UMI_STATUS_OK);
-  assert(result.count == 9U);
+  /* Query coverage follows the live catalogue, including newly introduced
+   * trading panels, instead of copying a count into this test. */
+  assert(result.count == umi_application_component_domain_count("trading"));
 
   query.domain_id = NULL;
   query.search_text = "CHART";

@@ -27,6 +27,7 @@ int main(void) {
                            "games",    "cad",         "kitchen",    "author",   "web",
                            "database", "integration", "operations", "os",       "education"};
   size_t index;
+  size_t trading_count;
   size_t role_total = 0U;
   size_t maturity_total = 0U;
   assert(umi_application_component_catalogue_count() >= 90U);
@@ -57,8 +58,13 @@ int main(void) {
   assert(umi_application_component_catalogue_find("umicom.treasury.settlement") != NULL);
   assert(umi_application_component_catalogue_find("umicom.media.timeline") != NULL);
   assert(umi_application_component_catalogue_find("umicom.cad.viewport") != NULL);
-  assert(umi_application_component_domain_at("trading", 8U) != NULL);
-  assert(umi_application_component_domain_at("trading", 9U) == NULL);
+  /* The final valid record and the first out-of-range record define the
+   * catalogue boundary without freezing the test at an old component count. */
+  trading_count = umi_application_component_domain_count("trading");
+  assert(trading_count > 0U);
+  assert(umi_application_component_domain_at(
+             "trading", trading_count - 1U) != NULL);
+  assert(umi_application_component_domain_at("trading", trading_count) == NULL);
   assert(umi_application_component_domain_is_alias("banking"));
   assert(umi_application_component_domain_is_alias("logistics"));
   assert(umi_application_component_domain_capability_id("banking") != NULL);

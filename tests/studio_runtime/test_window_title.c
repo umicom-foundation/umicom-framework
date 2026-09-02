@@ -29,9 +29,11 @@ int main(void)
     documents.active.dirty=1;
     (void)strcpy(documents.active.display_name,"main.c");
     assert(umi_studio_window_title_build(
-        "Umicom Studio","workspace",&documents,&title)==UMI_STATUS_OK);
+        "Umicom Studio IDE","workspace",&documents,&title)==UMI_STATUS_OK);
+    /* The product identity leads the native title, followed by document and
+     * workspace context. This keeps the correct icon/name pair recognisable. */
+    assert(strstr(title.title, "Umicom Studio IDE — ") == title.title);
     assert(strstr(title.title,"main.c *")!=NULL);
     assert(strstr(title.title,"workspace")!=NULL);
     return 0;
 }
-

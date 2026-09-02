@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "umicom/ui/command_view.h"
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/workstation/chart_surface.h"
 #include "umicom/ui/property.h"
 #include "umicom/ui/workstation/chart_surface.h"
@@ -219,6 +220,16 @@ GtkWidget *umi_gtk4_view_model_panel_create(
     gtk_widget_set_hexpand(content, TRUE);
     gtk_widget_set_vexpand(content, TRUE);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), content);
+    {
+        UmiUiViewSnapshot view_snapshot;
+
+        /* The view ID lets UAT wait for an entire business panel to appear. */
+        if (umi_ui_view_model_snapshot(view, &view_snapshot) == UMI_STATUS_OK) {
+            (void)umi_gtk4_automation_tag_widget(
+                scroller,
+                view_snapshot.view_id);
+        }
+    }
 
     {
         GtkWidget *heading = gtk_label_new(title);
@@ -295,6 +306,8 @@ GtkWidget *umi_gtk4_view_model_panel_create(
         if (umi_ui_command_view_action_at(view, index, &action) != UMI_STATUS_OK)
             continue;
         button = gtk_button_new_with_label(action.label);
+        /* View-model actions carry canonical IDs shared by all native adapters. */
+        (void)umi_gtk4_automation_tag_widget(button, action.action_id);
         gtk_widget_set_tooltip_text(button, action.tooltip);
         gtk_widget_set_sensitive(button, action.enabled && action_handler != NULL);
         /*

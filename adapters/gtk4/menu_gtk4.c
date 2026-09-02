@@ -131,6 +131,8 @@ static GtkWidget *create_menu_item(UmiGtk4Adapter *adapter,
     gtk_widget_set_halign(button, GTK_ALIGN_FILL);
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-menu-item");
+    /* Menu item IDs are unique even when several menus reuse one action. */
+    (void)umi_gtk4_automation_tag_widget(button, item->item_id);
     /* Apply this branch only when its contract condition is satisfied. */
     if (action->checkable && action->checked) {
         gtk_widget_add_css_class(button, "checked");
@@ -189,6 +191,8 @@ UmiStatus umi_gtk4_refresh_menu(UmiGtk4Adapter *adapter, UmiUiWorkbench *workben
         menu_title(root.menu_id, title, sizeof(title));
         menu_button = gtk_menu_button_new();
         gtk_menu_button_set_label(GTK_MENU_BUTTON(menu_button), title);
+        /* The model's menu ID is stable while its visible title may be translated. */
+        (void)umi_gtk4_automation_tag_widget(menu_button, root.menu_id);
         gtk_widget_add_css_class(menu_button, "umicom-menu-button");
         popover = gtk_popover_new();
         gtk_widget_add_css_class(popover, "umicom-menu-popover");

@@ -3,8 +3,8 @@
  * File: tests/application_component/test_contract_registry.c
  *
  * PURPOSE:
- *   Verify all 132 catalogue records become discoverable, versioned component
- *   contracts through the single Framework registry.
+ *   Verify every current catalogue record becomes a discoverable, versioned
+ *   component contract through the single Framework registry.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -25,14 +25,18 @@
 int main(void) {
   UmiApplicationComponentRegistry registry;
   const UmiApplicationComponentContract *contract;
+  size_t catalogue_count = umi_application_component_catalogue_count();
   UmiApplicationComponentVersion required = {1U, 0U, 0U};
   UmiApplicationComponentVersion future = {1U, 1U, 0U};
 
   umi_application_component_registry_init(&registry);
   assert(umi_application_component_registry_seed_catalogue(&registry) ==
          UMI_STATUS_OK);
-  assert(umi_application_component_registry_count(&registry) == 132U);
-  assert(umi_application_component_registry_revision(&registry) == 133U);
+  /* The catalogue is authoritative. This assertion continues to protect full
+   * registry coverage when a new reusable component is added later. */
+  assert(umi_application_component_registry_count(&registry) == catalogue_count);
+  assert(umi_application_component_registry_revision(&registry) ==
+         (uint64_t)catalogue_count + 1U);
   contract = umi_application_component_registry_find(
       &registry, "umicom.trading.chart");
   assert(contract != NULL);

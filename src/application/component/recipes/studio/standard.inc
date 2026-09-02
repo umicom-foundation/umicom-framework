@@ -26,6 +26,8 @@ static const UmiApplicationComponentRecipeSlot STUDIO_STANDARD_SLOTS[] = {
      1U, 1, 0},
     {"umicom.development.testing", "umicom.development.testing",
      UMI_APPLICATION_COMPONENT_REGION_LEFT, 1U, 1, 0},
+    {"umicom.quality.automated-tests", "umicom.quality.automated-tests",
+     UMI_APPLICATION_COMPONENT_REGION_BOTTOM, 1U, 0, 0},
     {"umicom.development.source-control", "umicom.development.source-control",
      UMI_APPLICATION_COMPONENT_REGION_LEFT, 1U, 1, 0},
     {"umicom.development.terminal", "umicom.development.terminal",

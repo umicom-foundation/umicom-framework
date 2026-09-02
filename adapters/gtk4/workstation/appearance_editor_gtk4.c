@@ -23,6 +23,7 @@
 
 #include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/appearance_persistence.h"
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/drop_down.h"
 
 #define UMI_GTK4_APPEARANCE_COLOUR_COUNT 14U
@@ -155,11 +156,15 @@ static char *profile_css(const UmiUiAppearanceProfile *profile) {
       " min-height: %dpx; padding: %dpx 7px; background: %s;"
       " border-bottom: 1px solid %s; }"
       ".umicom-appearance-scope .umicom-workstation-identity {"
-      " min-height: 24px; color: %s; }"
+      " min-height: 24px; padding: 1px 7px 1px 4px; color: %s;"
+      " border: 1px solid alpha(black,0.20); border-radius: 3px;"
+      " background: alpha(black,0.08);"
+      " box-shadow: inset 0 1px alpha(white,0.05),"
+      " inset 0 -1px alpha(black,0.24); }"
       ".umicom-appearance-scope .umicom-workstation-identity-title {"
-      " color: %s; font-weight: 700; }"
+      " color: %s; font-weight: 700; text-shadow: 0 1px alpha(black,0.42); }"
       ".umicom-appearance-scope .umicom-workstation-identity-icon {"
-      " margin-right: 2px; }"
+      " margin-right: 2px; opacity: 0.94; }"
       ".umicom-appearance-scope .umicom-mode-badge {"
       " color: %s; background: %s; border-radius: 3px; padding: 1px 5px; }"
       ".umicom-appearance-scope .umicom-workstation-panel {"
@@ -493,6 +498,7 @@ static void on_apply_custom(GtkButton *button, gpointer user_data) {
 static GtkWidget *build_colour_entry(UmiGtk4AppearanceEditor *editor, GtkGrid *grid, size_t index) {
   GtkWidget *label;
   GtkWidget *entry;
+  char automation_id[64];
   int column;
   int row;
 
@@ -531,6 +537,13 @@ static GtkWidget *build_colour_entry(UmiGtk4AppearanceEditor *editor, GtkGrid *g
   /* Width is part of the shared editable interface in GTK4, so use that
    * public contract instead of the removed entry-specific helper. */
   gtk_editable_set_width_chars(GTK_EDITABLE(entry), 9);
+  /* A numbered semantic field remains stable when the grid is rearranged. */
+  (void)snprintf(
+      automation_id,
+      sizeof(automation_id),
+      "umicom.appearance.colour.%zu",
+      index);
+  (void)umi_gtk4_automation_tag_widget(entry, automation_id);
   column = index < 7U ? 0 : 2;
   row = (int)(index % 7U);
   gtk_grid_attach(grid, label, column, row, 1, 1);
@@ -581,6 +594,26 @@ static GtkWidget *build_editor_popover(UmiGtk4AppearanceEditor *editor) {
   editor->interface_font = gtk_entry_new();
   editor->editor_font = gtk_entry_new();
   editor->status = gtk_label_new("");
+
+  /* Tag each preference control before it is placed into the popover. */
+  (void)umi_gtk4_automation_tag_widget(
+      editor->profile_dropdown,
+      "umicom.appearance.profile");
+  (void)umi_gtk4_automation_tag_widget(
+      editor->density_dropdown,
+      "umicom.appearance.density");
+  (void)umi_gtk4_automation_tag_widget(
+      editor->font_scale,
+      "umicom.appearance.font-scale");
+  (void)umi_gtk4_automation_tag_widget(
+      editor->interface_font,
+      "umicom.appearance.interface-font");
+  (void)umi_gtk4_automation_tag_widget(
+      editor->editor_font,
+      "umicom.appearance.content-font");
+  (void)umi_gtk4_automation_tag_widget(
+      apply,
+      "umicom.appearance.apply");
 
   /* Stop before calling GTK APIs when a control allocation failed. This
    * keeps a rare low-memory condition from becoming a null dereference. */
@@ -713,6 +746,9 @@ UmiStatus umi_gtk4_appearance_editor_create(GtkWidget *scope_root,
   /* The editor keeps one reference while the application header keeps its
    * normal parent reference. Either owner can therefore be released first. */
   g_object_ref_sink(editor->button);
+  (void)umi_gtk4_automation_tag_widget(
+      editor->button,
+      "umicom.appearance.menu");
   gtk_widget_add_css_class(scope_root, "umicom-appearance-scope");
   gtk_widget_add_css_class(editor->button, "umicom-appearance-button");
   gtk_menu_button_set_label(GTK_MENU_BUTTON(editor->button), "Appearance");

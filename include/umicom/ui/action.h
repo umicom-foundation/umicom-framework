@@ -34,7 +34,10 @@ typedef enum UmiUiActionArgumentKind {
     UMI_UI_ACTION_ARGUMENT_SAVE_PATH = 2,
     UMI_UI_ACTION_ARGUMENT_TEXT = 3,
     UMI_UI_ACTION_ARGUMENT_FIND_REPLACE = 4,
-    UMI_UI_ACTION_ARGUMENT_LINE_NUMBER = 5
+    UMI_UI_ACTION_ARGUMENT_LINE_NUMBER = 5,
+    /* Ask the native frontend for a directory rather than a regular file.
+     * Applications receive the selected path through their normal command. */
+    UMI_UI_ACTION_ARGUMENT_FOLDER_PATH = 6
 } UmiUiActionArgumentKind;
 
 

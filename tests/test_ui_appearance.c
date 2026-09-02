@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/umicom.h"
+#include "umicom/ui/brand_palette.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -30,9 +31,13 @@ int main(void)
     UmiUiAppearanceProfile dark;
     UmiUiAppearanceProfile light;
     UmiUiAppearanceProfile result;
+    const UmiUiBrandPalette *dark_palette;
     char reason[192U];
 
     assert(umi_ui_appearance_model_create(&model) == UMI_STATUS_OK);
+    dark_palette = umi_ui_brand_palette_get(UMI_UI_BRAND_SURFACE_DARK);
+    assert(dark_palette != NULL);
+    assert(umi_ui_brand_palette_validate(dark_palette) == UMI_STATUS_OK);
     assert(umi_ui_appearance_profile_init(
                &dark, "umicom-dark", "Umicom Dark",
                UMI_UI_THEME_MODE_DARK, UMI_UI_DENSITY_COMPACT) ==
@@ -40,8 +45,8 @@ int main(void)
     dark.built_in = 1;
     dark.active = 1;
     /* Appearance profiles project the canonical shared interaction accent. */
-    assert(strcmp(dark.accent, "#4C8ED9") == 0);
-    assert(strcmp(dark.surface, "#1D2731") == 0);
+    assert(strcmp(dark.accent, dark_palette->accent) == 0);
+    assert(strcmp(dark.surface, dark_palette->surface) == 0);
     assert(umi_ui_appearance_profile_validate(
                &dark, reason, sizeof(reason)) == UMI_STATUS_OK);
     assert(umi_ui_appearance_model_upsert(model, &dark) == UMI_STATUS_OK);

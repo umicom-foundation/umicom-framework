@@ -80,18 +80,18 @@ UmiStatus umi_studio_window_title_build(
         written = snprintf(
             out_title->title,
             sizeof(out_title->title),
-            "%.240s%s — %.240s — %.120s",
+            "%.120s — %.240s%s — %.240s",
+            application_name,
             out_title->document_name,
             out_title->document_dirty ? " *" : "",
-            workspace_name,
-            application_name);
+            workspace_name);
     } else /* Apply this branch only when its contract condition is satisfied. */ if (workspace_name[0] != '\0') {
         written = snprintf(
             out_title->title,
             sizeof(out_title->title),
-            "%.300s — %.120s",
-            workspace_name,
-            application_name);
+            "%.120s — %.300s",
+            application_name,
+            workspace_name);
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         written = snprintf(
             out_title->title,

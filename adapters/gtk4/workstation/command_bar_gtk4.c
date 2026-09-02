@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/workstation/command_bar.h"
+#include "umicom/ui/gtk4/automation.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -469,6 +470,10 @@ UmiStatus umi_gtk4_ws_command_bar_create_managed(
     command_bar->result_button = gtk_menu_button_new();
     command_bar->popover = gtk_popover_new();
     command_bar->result_list = gtk_list_box_new();
+    /* The command field uses one shared address in every Umicom application. */
+    (void)umi_gtk4_automation_tag_widget(
+        command_bar->entry,
+        "umicom.command.search");
     popover_root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     help = gtk_label_new(
         "Use > for commands, + for windows, / for settings or ? for the assistant.");

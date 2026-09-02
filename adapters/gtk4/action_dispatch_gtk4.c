@@ -68,9 +68,15 @@ static void file_prompt_complete(GObject *source_object,
     GError *error = NULL;
     GFile *file;
 
-    file = prompt->kind == UMI_UI_ACTION_ARGUMENT_OPEN_PATH
-        ? gtk_file_dialog_open_finish(dialog, result, &error)
-        : gtk_file_dialog_save_finish(dialog, result, &error);
+    /* Finish the same native operation that show_file_prompt() started. GTK
+     * uses distinct completion functions for files, folders and save targets. */
+    if (prompt->kind == UMI_UI_ACTION_ARGUMENT_OPEN_PATH) {
+        file = gtk_file_dialog_open_finish(dialog, result, &error);
+    } else if (prompt->kind == UMI_UI_ACTION_ARGUMENT_FOLDER_PATH) {
+        file = gtk_file_dialog_select_folder_finish(dialog, result, &error);
+    } else {
+        file = gtk_file_dialog_save_finish(dialog, result, &error);
+    }
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -157,14 +163,15 @@ static void show_file_prompt(UmiGtk4Adapter *adapter,
     (void)g_strlcpy(prompt->action_id, action->action_id,
                     sizeof(prompt->action_id));
     gtk_file_dialog_set_title(dialog, action->label);
-    filters = create_file_filters();
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (filters != NULL) {
-        gtk_file_dialog_set_filters(dialog, G_LIST_MODEL(filters));
-        g_object_unref(filters);
+    /* File filters describe document extensions and do not apply when the user
+     * is choosing a directory. Keeping the folder prompt unfiltered also makes
+     * empty project folders selectable. */
+    if (action->argument_kind != UMI_UI_ACTION_ARGUMENT_FOLDER_PATH) {
+        filters = create_file_filters();
+        if (filters != NULL) {
+            gtk_file_dialog_set_filters(dialog, G_LIST_MODEL(filters));
+            g_object_unref(filters);
+        }
     }
 
     /* GtkFileDialog is GTK 4.10's non-deprecated asynchronous replacement for
@@ -176,7 +183,13 @@ static void show_file_prompt(UmiGtk4Adapter *adapter,
                              NULL,
                              file_prompt_complete,
                              prompt);
-    } /* Use this fallback path when the earlier condition does not apply. */ else {
+    } else if (action->argument_kind == UMI_UI_ACTION_ARGUMENT_FOLDER_PATH) {
+        gtk_file_dialog_select_folder(dialog,
+                                      adapter->window,
+                                      NULL,
+                                      file_prompt_complete,
+                                      prompt);
+    } else {
         gtk_file_dialog_save(dialog,
                              adapter->window,
                              NULL,
@@ -252,6 +265,10 @@ static void show_text_prompt(UmiGtk4Adapter *adapter,
     gtk_widget_set_margin_start(box, 12);
     gtk_widget_set_margin_end(box, 12);
     prompt->primary = gtk_entry_new();
+    /* One modal prompt is active at a time, so these shared IDs stay unambiguous. */
+    (void)umi_gtk4_automation_tag_widget(
+        prompt->primary,
+        "umicom.prompt.primary");
     gtk_entry_set_placeholder_text(GTK_ENTRY(prompt->primary),
         action->argument_kind == UMI_UI_ACTION_ARGUMENT_LINE_NUMBER
             ? "Line number"
@@ -260,6 +277,9 @@ static void show_text_prompt(UmiGtk4Adapter *adapter,
     /* Apply this branch only when its contract condition is satisfied. */
     if (action->argument_kind == UMI_UI_ACTION_ARGUMENT_FIND_REPLACE) {
         prompt->secondary = gtk_entry_new();
+        (void)umi_gtk4_automation_tag_widget(
+            prompt->secondary,
+            "umicom.prompt.secondary");
         gtk_entry_set_placeholder_text(GTK_ENTRY(prompt->secondary), "Replace with");
         gtk_box_append(GTK_BOX(box), prompt->secondary);
     }
@@ -267,6 +287,8 @@ static void show_text_prompt(UmiGtk4Adapter *adapter,
     gtk_widget_set_halign(buttons, GTK_ALIGN_END);
     cancel = gtk_button_new_with_label("Cancel");
     accept = gtk_button_new_with_label(action->label);
+    (void)umi_gtk4_automation_tag_widget(cancel, "umicom.prompt.cancel");
+    (void)umi_gtk4_automation_tag_widget(accept, "umicom.prompt.accept");
     g_signal_connect(cancel, "clicked", G_CALLBACK(text_prompt_close), prompt);
     g_signal_connect(accept, "clicked", G_CALLBACK(text_prompt_accept), prompt);
     gtk_box_append(GTK_BOX(buttons), cancel);
@@ -296,7 +318,8 @@ void umi_gtk4_dispatch_action(UmiGtk4Adapter *adapter, const char *action_id)
                                  action_id, &action) != UMI_STATUS_OK) return;
     /* Apply this branch only when its contract condition is satisfied. */
     if (action.argument_kind == UMI_UI_ACTION_ARGUMENT_OPEN_PATH ||
-        action.argument_kind == UMI_UI_ACTION_ARGUMENT_SAVE_PATH) {
+        action.argument_kind == UMI_UI_ACTION_ARGUMENT_SAVE_PATH ||
+        action.argument_kind == UMI_UI_ACTION_ARGUMENT_FOLDER_PATH) {
         show_file_prompt(adapter, &action);
     } else /* Apply this branch only when its contract condition is satisfied. */ if (action.argument_kind == UMI_UI_ACTION_ARGUMENT_TEXT ||
                action.argument_kind == UMI_UI_ACTION_ARGUMENT_FIND_REPLACE ||

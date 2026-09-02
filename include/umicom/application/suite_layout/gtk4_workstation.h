@@ -21,6 +21,7 @@
 #include "umicom/application/suite_layout/runtime.h"
 #include "umicom/application/suite_layout/selector_model.h"
 #include "umicom/ui/gtk4/workstation/appearance_editor.h"
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/workstation/command_bar.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
@@ -336,6 +337,13 @@ UmiStatus umi_application_suite_gtk4_workstation_apply_panel_settings(
  */
 GtkWidget *umi_application_suite_gtk4_workstation_widget(
     UmiApplicationSuiteGtk4Workstation *workstation);
+/**
+ * Copy the live UAT driver for this shared workstation. The interface borrows
+ * the workstation and remains valid until the workstation is destroyed.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_automation(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiAutomationDriver *out_driver);
 /**
  * Rebuilds visible panels from the current layout and panel factory state.
  *

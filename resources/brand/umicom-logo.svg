@@ -26,21 +26,11 @@
      aria-labelledby="umicom-logo-title umicom-logo-description">
   <title id="umicom-logo-title">Umicom</title>
   <desc id="umicom-logo-description">The Umicom code mark and wordmark.</desc>
-  <!-- The grouped paths draw the reusable interlocking code mark. -->
-  <g>
-    <!-- The upper red band starts the left-facing half of the mark. -->
-    <path fill="#B4363F" d="M22 57 101 12v37L22 94Z"/>
-    <!-- The upper blue band forms the open right edge. -->
-    <path fill="#315B78" d="m115 12 119 68-30 17-89-51Z"/>
-    <!-- This folded path forms the left chevron and lower return. -->
-    <path fill="#315B78" d="m22 104 79-45 30 17-79 45 52 30v37l-82-47Z"/>
-    <!-- The centre chevron keeps the identity clear at smaller sizes. -->
-    <path fill="#315B78" d="m116 58 88 51-56 32-30-17 56-32-58-34Z"/>
-    <!-- The lower red band closes the right-facing half of the mark. -->
-    <path fill="#B4363F" d="m148 153 86-49v37l-86 49Z"/>
-    <!-- The final blue band provides a stable lower edge. -->
-    <path fill="#315B78" d="m22 149 87 50v36l-87-50Z"/>
-  </g>
+  <!-- Reuse the supplied canonical angle-bracket symbol without redrawing or
+       approximating its geometry. Both files are installed together. -->
+  <image href="umicom-icon.svg"
+         x="10" y="10" width="236" height="236"
+         preserveAspectRatio="xMidYMid meet"/>
   <!-- Text is used deliberately so its counters remain transparent. -->
   <text x="282" y="184"
         fill="#203247"

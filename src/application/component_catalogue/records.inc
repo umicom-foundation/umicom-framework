@@ -40,6 +40,7 @@
 #include "development/shared_terminal.inc"
 #include "application/shared_application_federation.inc"
 #include "quality/shared_quality.inc"
+#include "quality/quality_automated_tests.inc"
 #include "governance/shared_audit.inc"
 #include "finance/shared_banking.inc"
 #include "finance/shared_payments.inc"

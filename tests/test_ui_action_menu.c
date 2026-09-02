@@ -29,15 +29,24 @@ int main(void)
     UmiUiActionModel *actions = NULL;
     UmiUiMenuModel *menus = NULL;
     UmiUiActionSnapshot action = {0};
+    UmiUiActionSnapshot stored = {0};
     UmiUiMenuSnapshot menu = {0};
     assert(umi_ui_action_model_create(&actions) == UMI_STATUS_OK);
     assert(umi_ui_menu_model_create(&menus) == UMI_STATUS_OK);
-    (void)snprintf(action.action_id, sizeof(action.action_id), "%s", "studio.file.open");
-    (void)snprintf(action.command_id, sizeof(action.command_id), "%s", "studio.file.open");
-    (void)snprintf(action.label, sizeof(action.label), "%s", "Open File");
+    (void)snprintf(action.action_id, sizeof(action.action_id), "%s", "studio.workspace.open-folder");
+    (void)snprintf(action.command_id, sizeof(action.command_id), "%s", "workspace.open-folder");
+    (void)snprintf(action.label, sizeof(action.label), "%s", "Open Folder");
+    action.argument_kind = UMI_UI_ACTION_ARGUMENT_FOLDER_PATH;
     action.enabled = 1; action.visible = 1;
     assert(umi_ui_action_model_upsert(actions, &action) == UMI_STATUS_OK);
-    (void)snprintf(menu.item_id, sizeof(menu.item_id), "%s", "menu.file.open");
+    assert(umi_ui_action_model_find(actions, action.action_id, &stored) ==
+           UMI_STATUS_OK);
+    assert(stored.argument_kind == UMI_UI_ACTION_ARGUMENT_FOLDER_PATH);
+    /* Unknown kinds must fail before a native frontend receives ambiguous input. */
+    action.argument_kind = (UmiUiActionArgumentKind)99;
+    assert(umi_ui_action_model_upsert(actions, &action) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+    (void)snprintf(menu.item_id, sizeof(menu.item_id), "%s", "menu.file.open-folder");
     (void)snprintf(menu.menu_id, sizeof(menu.menu_id), "%s", "menu.file");
     (void)snprintf(menu.section_id, sizeof(menu.section_id), "%s", "file.primary");
     (void)snprintf(menu.action_id, sizeof(menu.action_id), "%s", action.action_id);

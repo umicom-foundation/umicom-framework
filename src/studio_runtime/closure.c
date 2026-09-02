@@ -32,8 +32,17 @@ static UmiStatus add_missing(
     size_t *count,
     const char *value)
 {
+    size_t index;
     size_t length;
 
+    if (items == NULL || count == NULL || value == NULL || value[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The same command may be projected by more than one catalogue. Report it
+     * once so the diagnostic describes missing work rather than projections. */
+    for (index = 0U; index < *count; ++index) {
+        if (strcmp(items[index], value) == 0) return UMI_STATUS_OK;
+    }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (*count >= UMI_STUDIO_RUNTIME_MISSING_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -122,6 +131,10 @@ static UmiStatus check_commands(
     for (index = 0U; index < umi_ide_command_count(); ++index) {
         const UmiIdeCommandDescriptor *command = umi_ide_command_at(index);
 
+        if (command == NULL || command->command_id == NULL) {
+            return UMI_STATUS_INTERNAL_ERROR;
+        }
+
         status = check_command_id(
             commands,
             command->command_id,
@@ -140,6 +153,10 @@ static UmiStatus check_commands(
         const UmiAiDeveloperCommandDescriptor *command =
             umi_ai_developer_command_at(index);
 
+        if (command == NULL || command->command_id == NULL) {
+            return UMI_STATUS_INTERNAL_ERROR;
+        }
+
         status = check_command_id(
             commands,
             command->command_id,
@@ -157,6 +174,10 @@ static UmiStatus check_commands(
     for (index = 0U; index < umi_studio_command_alias_count(); ++index) {
         const UmiStudioRuntimeCommandAliasDefinition *alias =
             umi_studio_command_alias_at(index);
+
+        if (alias == NULL || alias->alias_id == NULL) {
+            return UMI_STATUS_INTERNAL_ERROR;
+        }
 
         status = check_command_id(
             commands,

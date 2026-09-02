@@ -21,6 +21,7 @@
 #include "umicom/ui/adapter.h"
 #include "umicom/ui/application_shell.h"
 #include "umicom/ui/gtk4/widget_catalogue.h"
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/desktop/shell_model.h"
 
 #ifdef __cplusplus

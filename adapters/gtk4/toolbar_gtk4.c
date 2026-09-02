@@ -89,6 +89,10 @@ UmiStatus umi_gtk4_refresh_toolbar(UmiGtk4Adapter *adapter, UmiUiWorkbench *work
                 /* Preserve the original failure result so the caller can respond to the correct cause. */
                 if (umi_ui_action_model_find(actions, item.action_id, &action) == UMI_STATUS_OK && action.visible) {
                     GtkWidget *button = create_action_button(&action);
+                    /* UAT activates toolbar actions through their canonical action IDs. */
+                    (void)umi_gtk4_automation_tag_widget(
+                        button,
+                        action.action_id);
                     gtk_widget_set_sensitive(button, action.enabled);
                     gtk_widget_set_tooltip_text(button, action.tooltip);
                     g_object_set_data_full(G_OBJECT(button), "umicom-action-id", g_strdup(action.action_id), g_free);

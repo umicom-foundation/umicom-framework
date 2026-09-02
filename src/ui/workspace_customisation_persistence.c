@@ -209,7 +209,8 @@ UmiStatus umi_ui_workspace_customisation_export_active(
     size_t capacity)
 {
     const UmiUiWorkspaceLayout *layout;
-    UmiUiLayoutPersistenceRecord record;
+    UmiUiLayoutPersistenceRecord *record;
+    UmiStatus status;
 
     /* The destination must be writable and have at least room for one byte so
      * the lower-level encoder can always maintain a terminated string. */
@@ -224,11 +225,16 @@ UmiStatus umi_ui_workspace_customisation_export_active(
     if (layout == NULL) {
         return UMI_STATUS_NOT_FOUND;
     }
-    (void)memset(&record, 0, sizeof(record));
-    record.schema_version = UMI_UI_LAYOUT_PERSISTENCE_SCHEMA_VERSION;
-    record.saved_at_ns = saved_at_ns;
-    record.layout = *layout;
-    return umi_ui_layout_persistence_encode(&record, out_text, capacity);
+    /* A persistence record contains a complete layout. Keep it off the stack
+     * so export remains safe when called from an already deep GUI callback. */
+    record = (UmiUiLayoutPersistenceRecord *)calloc(1U, sizeof(*record));
+    if (record == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    record->schema_version = UMI_UI_LAYOUT_PERSISTENCE_SCHEMA_VERSION;
+    record->saved_at_ns = saved_at_ns;
+    record->layout = *layout;
+    status = umi_ui_layout_persistence_encode(record, out_text, capacity);
+    free(record);
+    return status;
 }
 
 /* Import a saved layout into a heap-backed candidate and publish it atomically. */
@@ -240,14 +246,13 @@ UmiStatus umi_ui_workspace_customisation_import(
 {
     UmiUiWorkspaceImportOptions default_options;
     const UmiUiWorkspaceImportOptions *effective_options = options;
-    UmiUiLayoutPersistenceRecord record;
+    UmiUiLayoutPersistenceRecord *record;
     UmiUiWorkspaceCustomisation *candidate;
     size_t existing_index;
     size_t linked_context_count = 0U;
     bool added = false;
     bool replaced = false;
-    UmiUiWorkspaceLayout replaced_layout;
-    bool has_replaced_layout = false;
+    UmiUiWorkspaceLayout *replaced_layout = NULL;
     UmiStatus status;
     char validation_reason[192U];
 
@@ -283,33 +288,41 @@ UmiStatus umi_ui_workspace_customisation_import(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
-    status = umi_ui_layout_persistence_decode(text, &record);
+    /* Decoding and replacement each need a complete layout. Heap storage
+     * avoids stacking several large fixed-capacity records in GUI callbacks. */
+    record = (UmiUiLayoutPersistenceRecord *)calloc(1U, sizeof(*record));
+    if (record == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_ui_layout_persistence_decode(text, record);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        free(record);
         return status;
     }
     status = umi_ui_workspace_layout_validate(
-        &record.layout, validation_reason, sizeof(validation_reason));
+        &record->layout, validation_reason, sizeof(validation_reason));
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        free(record);
         return status;
     }
     status = validate_import_dependencies(
         customisation,
-        &record.layout,
+        &record->layout,
         effective_options,
         &linked_context_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        free(record);
         return status;
     }
 
     existing_index = persistence_layout_index(
-        customisation, record.layout.layout_id);
+        customisation, record->layout.layout_id);
     /* Apply this branch only when its contract condition is satisfied. */
     if (existing_index < UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS &&
         effective_options->conflict_policy ==
             UMI_UI_WORKSPACE_IMPORT_REJECT_CONFLICT) {
+        free(record);
         return UMI_STATUS_ALREADY_EXISTS;
     }
     /* Some hosts expose only a fixed application-owned layout selector. They
@@ -317,11 +330,13 @@ UmiStatus umi_ui_workspace_customisation_import(
      * replace its older copy. */
     if (existing_index == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS &&
         !effective_options->allow_new_layout) {
+        free(record);
         return UMI_STATUS_NOT_FOUND;
     }
     /* Apply this branch only when its contract condition is satisfied. */
     if (existing_index == UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS &&
         customisation->layout_count >= UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS) {
+        free(record);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
 
@@ -333,6 +348,7 @@ UmiStatus umi_ui_workspace_customisation_import(
      * used.
      */
     if (candidate == NULL) {
+        free(record);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     *candidate = *customisation;
@@ -341,17 +357,24 @@ UmiStatus umi_ui_workspace_customisation_import(
     if (existing_index < UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS) {
         /* Keep the previous layout long enough to clear memberships belonging
          * to panels which the imported replacement no longer contains. */
-        replaced_layout = candidate->layouts[existing_index];
-        has_replaced_layout = true;
-        candidate->layouts[existing_index] = record.layout;
+        replaced_layout =
+            (UmiUiWorkspaceLayout *)malloc(sizeof(*replaced_layout));
+        if (replaced_layout == NULL) {
+            free(candidate);
+            free(record);
+            return UMI_STATUS_OUT_OF_MEMORY;
+        }
+        *replaced_layout = candidate->layouts[existing_index];
+        candidate->layouts[existing_index] = record->layout;
         candidate->revision += 1U;
         replaced = true;
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_ui_workspace_customisation_add_layout(
-            candidate, &record.layout);
+            candidate, &record->layout);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             free(candidate);
+            free(record);
             return status;
         }
         added = true;
@@ -359,17 +382,19 @@ UmiStatus umi_ui_workspace_customisation_import(
 
     status = reconcile_imported_contexts(
         candidate,
-        &record.layout,
-        has_replaced_layout ? &replaced_layout : NULL);
+        &record->layout,
+        replaced_layout);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK &&
         effective_options->activate_imported_layout) {
         status = umi_ui_workspace_customisation_activate(
-            candidate, record.layout.layout_id);
+            candidate, record->layout.layout_id);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        free(replaced_layout);
         free(candidate);
+        free(record);
         return status;
     }
 
@@ -385,15 +410,17 @@ UmiStatus umi_ui_workspace_customisation_import(
     if (out_report != NULL) {
         (void)memcpy(
             out_report->layout_id,
-            record.layout.layout_id,
+            record->layout.layout_id,
             sizeof(out_report->layout_id));
-        out_report->imported_window_count = record.layout.window_count;
+        out_report->imported_window_count = record->layout.window_count;
         out_report->linked_context_count = linked_context_count;
         out_report->added = added;
         out_report->replaced = replaced;
         out_report->activated = effective_options->activate_imported_layout;
-        out_report->saved_at_ns = record.saved_at_ns;
+        out_report->saved_at_ns = record->saved_at_ns;
         out_report->customisation_revision = customisation->revision;
     }
+    free(replaced_layout);
+    free(record);
     return UMI_STATUS_OK;
 }

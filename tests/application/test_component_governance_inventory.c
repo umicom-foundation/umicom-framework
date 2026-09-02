@@ -30,12 +30,12 @@ int main(void) {
 
   assert(umi_component_inventory_build(NULL, 0U, &inventory) == UMI_STATUS_OK);
   assert(inventory.component_count == umi_application_component_catalogue_count());
-  assert(inventory.component_count == 132U);
   assert(inventory.domain_count == 31U);
   assert(umi_component_inventory_validate(&inventory) == UMI_STATUS_OK);
   trading = umi_component_inventory_domain_find(&inventory, "trading");
   assert(trading != NULL);
-  assert(trading->component_count == 9U);
+  assert(trading->component_count ==
+         umi_application_component_domain_count("trading"));
   chart = umi_component_inventory_find(&inventory, "umicom.trading.chart");
   assert(chart != NULL);
   assert(chart->api_status == UMI_COMPONENT_API_CANDIDATE);
