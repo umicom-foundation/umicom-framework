@@ -1765,10 +1765,12 @@ static GtkWidget *build_new_window_popover(
         gtk_box_prepend(GTK_BOX(row), title);
         gtk_box_append(GTK_BOX(row), detail);
         gtk_button_set_child(GTK_BUTTON(button), row);
-        /* Window type IDs stay stable when the catalogue is filtered or sorted. */
+        /* The catalogue tool identifier is the public, stable window type key.
+         * Reusing it for automation keeps the adapter aligned with the current
+         * descriptor contract when the catalogue is filtered or sorted. */
         (void)umi_gtk4_automation_tag_widget(
             button,
-            descriptor->window_type_id);
+            descriptor->tool_id);
         g_object_set_data(
             G_OBJECT(button), "umicom-window-descriptor", (gpointer)descriptor);
         g_signal_connect(

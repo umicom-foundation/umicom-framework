@@ -145,6 +145,33 @@ umicom dev run studio --preset windows-ucrt64-debug
 `deliver` composes configure, build, test, install and package. Use it only when
 you intend to run the complete delivery sequence.
 
+## Build only what changed
+
+The Automated Build System removes the need to name a product or test group.
+First inspect its read-only plan:
+
+```powershell
+umicom automate plan "C:\umicom\umicom-applications"
+```
+
+Then ask it to build affected products and run their focused tests:
+
+```powershell
+umicom automate run "C:\umicom\umicom-applications" `
+    --preset windows-ucrt64-debug `
+    --jobs 2
+```
+
+Application manifests supply the product catalogue. A source change normally
+selects one application. A shared Framework change selects its application
+consumers, and a root build-definition change selects the configured workspace.
+Documentation-only changes do not start compilation.
+
+Use `--no-tests` only for a temporary compilation diagnosis. Use `--all` when a
+complete configured-product and test pass is intentional. Installation is never
+implicit; add `--deploy` and an optional `--prefix` only when build and test
+success should be followed by installation.
+
 `clean` removes generated content from the selected build directory. It does
 not remove source files, but you should still confirm the selected preset or
 `--build` path before running it.

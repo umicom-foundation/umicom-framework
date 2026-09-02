@@ -56,6 +56,7 @@ target_sources(umicom_platform PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/kernel_boundary.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/memory_region.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/memory_semantics.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_architecture_decision.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_catalogue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_dependency.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/platform/cross_target/os_service_descriptor.c"
@@ -262,6 +263,11 @@ umicom_add_cross_target_test(
     umicom-cross-target-memory-semantics-test
     framework.cross_target.memory.semantics
     tests/platform_cross_target/test_memory_semantics.c
+)
+umicom_add_cross_target_test(
+    umicom-cross-target-os-architecture-decision-test
+    framework.cross_target.os.architecture.decision
+    tests/platform_cross_target/test_os_architecture_decision.c
 )
 umicom_add_cross_target_test(
     umicom-cross-target-os-service-catalogue-test

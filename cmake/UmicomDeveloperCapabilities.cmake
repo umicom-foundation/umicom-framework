@@ -180,6 +180,7 @@ if(NOT TARGET umicom_build)
 endif()
 
 target_sources(umicom_build PRIVATE
+    src/build/automation.c
     src/build/incremental.c
     src/build/task.c
     src/build/task_graph.c

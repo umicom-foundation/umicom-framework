@@ -42,6 +42,8 @@ int main(void)
     assert(request.timeout_ms == 0U);
     assert(request.cancellation == NULL);
     assert(request.window_mode == UMI_PROCESS_WINDOW_HIDDEN);
+    assert(request.test_expression == NULL);
+    assert(request.install_component == NULL);
 
     umi_build_report_init(&report);
     assert(report.configure_exit_code == -1);

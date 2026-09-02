@@ -81,6 +81,12 @@ int umi_cli_command_build(UmiCliContext *context,
                           int argc,
                           char **argv);
 /**
+ * Discover changed files and plan or execute only their affected build scopes.
+ */
+int umi_cli_command_automation(UmiCliContext *context,
+                               int argc,
+                               char **argv);
+/**
  * Provide the cli command repair operation used by this module and its client
  * applications.
  */

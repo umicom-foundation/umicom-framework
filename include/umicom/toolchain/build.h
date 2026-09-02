@@ -77,6 +77,14 @@ typedef struct UmiBuildRequest {
     uint32_t timeout_ms;
     const UmiCancellationToken *cancellation;
     UmiProcessWindowMode window_mode;
+
+    /*
+     * Optional selectors are appended to preserve the established structure
+     * prefix. test_expression is passed to CTest's regular-expression filter;
+     * install_component selects one configured installer component.
+     */
+    const char *test_expression;
+    const char *install_component;
 } UmiBuildRequest;
 
 /**

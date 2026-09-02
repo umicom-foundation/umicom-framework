@@ -31,7 +31,7 @@ static int umi_cli_command_dev(
         (void)puts(
             "Usage: umicom dev COMMAND [options]\n"
             "Commands: doctor, configure, build, test, clean, install, "
-            "package, deliver, run, workflow");
+            "package, deliver, run, automate, workflow");
         return 0;
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
@@ -77,6 +77,11 @@ static int umi_cli_command_dev(
     if (strcmp(argv[0], "run") == 0) {
         return umi_cli_command_build(
             context, UMI_BUILD_RUN, argc - 1, argv + 1);
+    }
+    /* Automated planning composes existing build services for changed files. */
+    if (strcmp(argv[0], "automate") == 0 ||
+        strcmp(argv[0], "auto-build") == 0) {
+        return umi_cli_command_automation(context, argc - 1, argv + 1);
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(argv[0], "workflow") == 0) {
@@ -180,6 +185,10 @@ int main(int argc, char **argv)
                                      UMI_BUILD_RUN,
                                      argc - 2,
                                      argv + 2);
+    /* Offer one memorable entry point for target-free incremental work. */
+    if (strcmp(command, "automate") == 0 ||
+        strcmp(command, "auto-build") == 0)
+        return umi_cli_command_automation(&context, argc - 2, argv + 2);
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "dev") == 0)
         return umi_cli_command_dev(&context, argc - 2, argv + 2);

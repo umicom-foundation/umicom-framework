@@ -201,6 +201,8 @@ int umi_cli_command_build(UmiCliContext *context,
     request.clean = umi_cli_has_flag(argc, argv, "--clean");
     request.configuration = umi_cli_option_value(argc, argv, "--config");
     request.install_prefix = umi_cli_option_value(argc, argv, "--prefix");
+    request.test_expression = umi_cli_option_value(argc, argv, "--tests");
+    request.install_component = umi_cli_option_value(argc, argv, "--component");
     request.package_target = umi_cli_option_value(
         argc, argv, "--package-target");
 

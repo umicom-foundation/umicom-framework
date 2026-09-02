@@ -95,7 +95,7 @@ rules remain outside generic UI components.
 | Accountant | Ledger, sales, purchases, banking, reconciliation, tax, payroll, HR, reporting and period close. | Forms, grids, account context, workflow, documents, approvals, audit and reporting. |
 | RAG | Collections, source connectors, ingestion, chunk inspection, hybrid retrieval, reranking, evaluation and citations. | Jobs, data sources, permissions, knowledge panels, provenance, metrics and model adapters. |
 | Desktop | Application launcher, task surfaces, notifications, search, session restore, settings and user workspaces. | Shell, command palette, layout service, notifications, application bootstrap and themes. |
-| OS Control Centre | System inventory, storage, network, services, processes, updates, logs and developer controls. | Service panels, metrics, jobs, privilege boundary and platform adapters. Kernel work remains external. |
+| OS Control Centre | System inventory, storage, network, services, processes, updates, logs and developer controls. The production distribution uses a maintained Linux LTS kernel, FreeBSD is a portability target, and original microkernel work remains independent research. | Service panels, metrics, jobs, privilege boundary, platform adapters and the versioned OS architecture-decision contract. Kernel, boot and recovery work remains external to Framework. |
 | Games | Scene hierarchy, game view, assets, inspector, animation, scripting, profiler, build and packaging. | Designer canvas, media timeline, documents, debug, assets, jobs and deployment. |
 | Kitchen | Floor-plan design, equipment catalogue, constraints, costing, documentation and preview. | Designer, properties, snapping, validation, documents, reports and component recipes. |
 | CAD | Parametric model tree, sketches, constraints, properties, layers, assemblies, measurements and export. | High-precision designer contracts, history, properties, jobs, file adapters and undo. |
@@ -125,3 +125,20 @@ Use this checklist:
 The goal is that every new file owns a
 clear responsibility and reduces the amount of code future applications need
 to write.
+
+## Umicom OS delivery boundary
+
+Umicom OS follows three deliberate tracks: a Linux LTS production distribution,
+a FreeBSD portability target, and a separately governed original microkernel
+research project. Umicom Framework performs the reusable work in normal user
+space. The production kernel and recovery environment never depend on the full
+Framework, so boot and repair remain available when application services are
+not running.
+
+The installable distribution belongs in `umicom-os`, original kernel research
+belongs in `umicom-kernel`, portable user-space services belong in
+`umicom-framework`, and the thin Control Centre presentation belongs in
+`applications/os`. A research kernel must pass documented security,
+compatibility, reliability, performance and recovery gates before it can become
+a selectable product profile. Making it the default requires another explicit
+architecture decision.

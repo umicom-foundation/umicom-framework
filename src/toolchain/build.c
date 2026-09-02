@@ -537,7 +537,7 @@ static UmiStatus umi_build_test_internal(
 {
     const UmiToolInfo *ctest =
         umi_toolchain_profile_tool(profile, UMI_TOOL_CTEST);
-    const char *arguments[8];
+    const char *arguments[10];
     size_t count = 0U;
 
     /* Apply this branch only when its contract condition is satisfied. */
@@ -554,6 +554,15 @@ static UmiStatus umi_build_test_internal(
     if (umi_build_has_text(request->configuration)) {
         arguments[count++] = "-C";
         arguments[count++] = request->configuration;
+    }
+
+    /*
+     * A focused regular expression lets the automated coordinator run only
+     * tests owned by affected scopes instead of traversing the whole suite.
+     */
+    if (umi_build_has_text(request->test_expression)) {
+        arguments[count++] = "-R";
+        arguments[count++] = request->test_expression;
     }
 
     return umi_build_run_process(
@@ -580,7 +589,7 @@ static UmiStatus umi_build_install_internal(
 {
     const UmiToolInfo *cmake =
         umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
-    const char *arguments[8];
+    const char *arguments[10];
     size_t count = 0U;
 
     arguments[count++] = "--install";
@@ -596,6 +605,12 @@ static UmiStatus umi_build_install_internal(
     if (umi_build_has_text(request->install_prefix)) {
         arguments[count++] = "--prefix";
         arguments[count++] = request->install_prefix;
+    }
+
+    /* Install only the product component selected by an automated plan. */
+    if (umi_build_has_text(request->install_component)) {
+        arguments[count++] = "--component";
+        arguments[count++] = request->install_component;
     }
 
     return umi_build_run_process(
