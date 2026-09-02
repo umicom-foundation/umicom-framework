@@ -50,6 +50,32 @@ run `winget`, update all MSYS2 packages, edit PowerShell profiles or start an
 authentication browser. Those are operating-system setup decisions and should
 remain visible to the developer.
 
+## Make the command discoverable on Windows
+
+PowerShell reports that `umicom` is not recognised when the directory that
+contains `umicom.exe` is absent from `PATH`. A successful source build creates
+the program but does not change the terminal's search path.
+
+The command can always be called by its explicit path:
+
+```powershell
+& "C:\umicom\umicom-applications\build\windows-ucrt64-debug\bin\umicom.exe" `
+    version
+```
+
+For the current PowerShell window only, prepend the build directory and then
+confirm which executable will run:
+
+```powershell
+$env:Path = "C:\umicom\umicom-applications\build\windows-ucrt64-debug\bin;$env:Path"
+Get-Command umicom
+```
+
+Closing that PowerShell window restores its earlier environment. The Windows
+installer provides an explicit option to add the installed `bin` directory to
+`PATH`; a newly opened terminal then finds the installed command. This option
+is also removed by the uninstaller.
+
 ## Check the complete Windows development environment
 
 From the Umicom Applications directory:
@@ -318,6 +344,8 @@ umicom repo stage "C:\umicom\my-project"
 umicom repo commit "C:\umicom\my-project" `
     --message "feat(project): describe the completed change"
 
+umicom repo commit "C:\umicom\my-project" --auto-message
+
 umicom repo push "C:\umicom\my-project" `
     --remote origin `
     --branch main
@@ -326,10 +354,10 @@ umicom repo push "C:\umicom\my-project" `
 `stage` uses `git add -A`. `commit` first runs `git diff --cached --check` and
 skips an empty commit. `push` performs a normal push and never force-pushes.
 
-If `umicom add` or `umicom commit` is reported as unknown, the terminal is
-running an older executable. Use Git for the current commit, rebuild Umicom,
-then put `C:\umicom\umicom-applications\build\windows-ucrt64-debug\bin` at the
-front of `PATH` before trying the short commands again.
+If PowerShell says that `umicom` itself is not recognised, use the explicit
+path or current-session `PATH` instructions above. If `umicom` runs but reports
+that `add`, `commit` or `--auto-message` is unknown, the terminal has found an
+older executable; `Get-Command umicom` shows which file needs to be replaced.
 
 ## Publish one repository safely
 
@@ -343,6 +371,22 @@ umicom repo publish "C:\umicom\umicom-applications\framework" `
     --branch main
 ```
 
+When a reviewed message has not been supplied, the command can derive a
+conservative message locally from the staged path names:
+
+```powershell
+umicom repo publish "C:\umicom\umicom-applications\framework" `
+    --auto-message `
+    --remote origin `
+    --branch main
+```
+
+Automatic generation does not read file contents or contact an online service.
+It selects a `docs`, `test`, `build` or `feat` prefix only when the complete
+staged path list supports that classification, and it rejects a partial path
+list instead of guessing. Supply either `--message` or `--auto-message`, never
+both.
+
 It performs these steps in order:
 
 1. `git add -A`
@@ -355,8 +399,10 @@ It performs these steps in order:
 If no new content exists, the empty commit is skipped but already-created local
 commits can still be pushed.
 
-Always supply a meaningful message. A message should explain the capability,
-fix or user-visible result rather than a release number.
+Prefer a reviewed manual message when it can explain a specific capability,
+fix or user-visible result. Use `--auto-message` for a safe, general message
+when the staged paths are the only available evidence. Neither form uses a
+release or batch number as a substitute for purpose.
 
 ## Publish submodules before the parent repository
 

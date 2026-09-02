@@ -4916,10 +4916,13 @@ endif()
 # Create this optional product surface only when its build option is enabled.
 if(UMICOM_BUILD_NATIVE_TOOL)
     install(TARGETS umicom umicom-developer-reference
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT Framework)
 endif()
 
-install(TARGETS umicom-codeguard RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS umicom-codeguard
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT Framework)
 
 install(EXPORT UmicomFrameworkTargets
     FILE UmicomFrameworkTargets.cmake

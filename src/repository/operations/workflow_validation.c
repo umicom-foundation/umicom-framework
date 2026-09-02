@@ -51,7 +51,9 @@ UmiStatus umi_repository_workflow_validate(
         request->action > UMI_REPOSITORY_WORKFLOW_UPDATE ||
         !umi_repository_workflow_has_text(request->repository_root) ||
         !umi_repository_workflow_safe_identifier(request->branch) ||
-        !umi_repository_workflow_safe_identifier(request->remote_name)) {
+        !umi_repository_workflow_safe_identifier(request->remote_name) ||
+        (request->auto_commit_message != 0 &&
+         request->auto_commit_message != 1)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
@@ -80,8 +82,10 @@ UmiStatus umi_repository_workflow_validate(
             }
             break;
         case UMI_REPOSITORY_WORKFLOW_COMMIT:
-            /* Apply this branch only when its contract condition is satisfied. */
-            if (!umi_repository_workflow_has_text(request->commit_message)) {
+            /* Exactly one message source avoids silently ignoring either a
+             * reviewed manual message or the explicit automatic request. */
+            if (umi_repository_workflow_has_text(request->commit_message) ==
+                request->auto_commit_message) {
                 return UMI_STATUS_INVALID_ARGUMENT;
             }
             break;
@@ -93,8 +97,9 @@ UmiStatus umi_repository_workflow_validate(
             }
             break;
         case UMI_REPOSITORY_WORKFLOW_PUBLISH:
-            /* Apply this branch only when its contract condition is satisfied. */
-            if (!umi_repository_workflow_has_text(request->commit_message) ||
+            /* Publish uses the same exclusive message-source rule as commit. */
+            if (umi_repository_workflow_has_text(request->commit_message) ==
+                    request->auto_commit_message ||
                 !umi_repository_workflow_has_text(request->branch) ||
                 !umi_repository_workflow_has_text(request->remote_name)) {
                 return UMI_STATUS_INVALID_ARGUMENT;

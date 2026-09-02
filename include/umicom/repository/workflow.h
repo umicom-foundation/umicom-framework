@@ -17,6 +17,7 @@
 #define UMICOM_REPOSITORY_WORKFLOW_H
 
 #include "umicom/repository/workflow_types.h"
+#include "umicom/repository/commit_message.h"
 #include "umicom/repository/workflow_request.h"
 #include "umicom/repository/workflow_report.h"
 #include "umicom/repository/workflow_validation.h"

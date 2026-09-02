@@ -37,6 +37,19 @@ int main(void)
     if (umi_repository_workflow_validate(&request) != UMI_STATUS_OK) {
         return EXIT_FAILURE;
     }
+    /* Automatic and manual messages are individually valid but deliberately
+     * cannot be requested together. */
+    request.commit_message = NULL;
+    request.auto_commit_message = 1;
+    if (umi_repository_workflow_validate(&request) != UMI_STATUS_OK) {
+        return EXIT_FAILURE;
+    }
+    request.commit_message = "feat(repository): conflicting message";
+    if (umi_repository_workflow_validate(&request) !=
+        UMI_STATUS_INVALID_ARGUMENT) {
+        return EXIT_FAILURE;
+    }
+    request.auto_commit_message = 0;
     request.remote_name = "--force";
     /* Apply this operation only while the related capability or state is available. */
     if (umi_repository_workflow_validate(&request) !=

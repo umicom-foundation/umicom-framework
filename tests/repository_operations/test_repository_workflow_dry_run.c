@@ -54,6 +54,15 @@ int main(void)
         strstr(report.output, request.commit_message) == NULL) {
         return EXIT_FAILURE;
     }
+    /* Dry-run describes automatic generation without requiring Git or staging
+     * files, while the real workflow generates only after validation. */
+    request.commit_message = NULL;
+    request.auto_commit_message = 1;
+    if (umi_repository_workflow_execute(
+            NULL, NULL, &request, &report) != UMI_STATUS_OK ||
+        strstr(report.output, "generated locally from staged paths") == NULL) {
+        return EXIT_FAILURE;
+    }
     umi_repository_workflow_request_init(
         &request, UMI_REPOSITORY_WORKFLOW_UPDATE, ".");
     request.dry_run = 1;

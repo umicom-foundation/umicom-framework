@@ -31,6 +31,7 @@ target_sources(umicom_repository PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/repository_operation_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/repository_operation_result.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/repository_operation_service.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/commit_message.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_types.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/repository/operations/workflow_report.c"
@@ -87,6 +88,10 @@ umicom_add_framework_completion_test(
     umicom-repository-operations-repository-operation-service-test
     framework.repository_operations.repository.operation.service
     tests/repository_operations/test_repository_operation_service.c)
+umicom_add_framework_completion_test(
+    umicom-repository-operations-commit-message-test
+    framework.repository_operations.commit.message
+    tests/repository_operations/test_repository_commit_message.c)
 umicom_add_framework_completion_test(
     umicom-repository-operations-workflow-types-test
     framework.repository_operations.workflow.types

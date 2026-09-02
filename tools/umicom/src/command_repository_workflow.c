@@ -382,6 +382,10 @@ static int umi_cli_repository_simple(
     static const char *const dry_run_flag[] = {"--dry-run"};
     static const char *const stage_flags[] = {"-A", "--all", "--dry-run"};
     static const char *const push_flags[] = {"--set-upstream", "--dry-run"};
+    static const char *const commit_flags[] = {"--dry-run", "--auto-message"};
+    static const char *const publish_flags[] = {
+        "--set-upstream", "--dry-run", "--auto-message"
+    };
     static const char *const message_option[] = {"--message", "-m"};
     static const char *const push_options[] = {"--remote", "--branch"};
     static const char *const publish_options[] = {
@@ -403,6 +407,8 @@ static int umi_cli_repository_simple(
         flags = stage_flags;
         flag_count = sizeof(stage_flags) / sizeof(stage_flags[0]);
     } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_COMMIT) {
+        flags = commit_flags;
+        flag_count = sizeof(commit_flags) / sizeof(commit_flags[0]);
         options = message_option;
         option_count = sizeof(message_option) / sizeof(message_option[0]);
     } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_PUSH) {
@@ -411,8 +417,8 @@ static int umi_cli_repository_simple(
         options = push_options;
         option_count = sizeof(push_options) / sizeof(push_options[0]);
     } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_PUBLISH) {
-        flags = push_flags;
-        flag_count = sizeof(push_flags) / sizeof(push_flags[0]);
+        flags = publish_flags;
+        flag_count = sizeof(publish_flags) / sizeof(publish_flags[0]);
         options = publish_options;
         option_count = sizeof(publish_options) / sizeof(publish_options[0]);
     } else /* Apply this branch only when its contract condition is satisfied. */ if (action == UMI_REPOSITORY_WORKFLOW_UPDATE) {
@@ -438,13 +444,21 @@ static int umi_cli_repository_simple(
         request.commit_message = umi_cli_repository_option_value(
             argc, argv, "-m");
     }
-    /* Apply this branch only when its contract condition is satisfied. */
+    request.auto_commit_message = umi_cli_repository_has_flag(
+        argc, argv, "--auto-message");
+    /* Commit and publish require one unambiguous source for the message. */
     if ((action == UMI_REPOSITORY_WORKFLOW_COMMIT ||
          action == UMI_REPOSITORY_WORKFLOW_PUBLISH) &&
-        request.commit_message == NULL) {
+        request.commit_message == NULL && !request.auto_commit_message) {
         (void)fprintf(stderr,
-                      "-m MESSAGE (or --message MESSAGE) is required for "
-                      "this command.\n");
+                      "Use -m MESSAGE, --message MESSAGE, or "
+                      "--auto-message for this command.\n");
+        return 2;
+    }
+    if (request.commit_message != NULL && request.auto_commit_message) {
+        (void)fprintf(stderr,
+                      "Choose either a manual message or --auto-message, "
+                      "not both.\n");
         return 2;
     }
     /*

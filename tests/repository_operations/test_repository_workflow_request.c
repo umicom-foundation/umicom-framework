@@ -32,7 +32,7 @@ int main(void)
         strcmp(request.repository_root, ".") != 0 ||
         strcmp(request.branch, "main") != 0 ||
         strcmp(request.remote_name, "origin") != 0 ||
-        !request.recursive || request.dry_run) {
+        !request.recursive || request.auto_commit_message || request.dry_run) {
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

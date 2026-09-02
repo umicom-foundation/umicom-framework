@@ -17,10 +17,12 @@
 #include "umicom/repository/workflow_executor.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/process.h"
+#include "umicom/repository/commit_message.h"
 #include "umicom/repository/repository.h"
 #include "umicom/repository/workflow_validation.h"
 
@@ -81,8 +83,9 @@ static UmiStatus umi_repository_workflow_run_git(
     UmiRepositoryWorkflowReport *report)
 {
     UmiProcessRequest process_request;
-    UmiProcessResult process_result;
+    UmiProcessResult *process_result;
     UmiStatus status;
+    int exit_code;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -94,7 +97,10 @@ static UmiStatus umi_repository_workflow_run_git(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(&process_request, 0, sizeof(process_request));
-    (void)memset(&process_result, 0, sizeof(process_result));
+    /* The captured process buffer is 64 KiB, so keep it off the thread stack.
+     * This matters for callers that already hold a large workflow report. */
+    process_result = (UmiProcessResult *)calloc(1U, sizeof(*process_result));
+    if (process_result == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     process_request.program = git->path;
     process_request.arguments = arguments;
     process_request.argument_count = argument_count;
@@ -111,18 +117,129 @@ static UmiStatus umi_repository_workflow_run_git(
     process_request.poll_interval_ms = 20U;
     process_request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
 
-    status = umi_process_execute(&process_request, &process_result);
-    report->last_exit_code = process_result.exit_code;
+    status = umi_process_execute(&process_request, process_result);
+    report->last_exit_code = process_result->exit_code;
     report->output_truncated =
-        report->output_truncated || process_result.output_truncated;
-    (void)umi_repository_workflow_append_output(report, process_result.output);
+        report->output_truncated || process_result->output_truncated;
+    (void)umi_repository_workflow_append_output(report, process_result->output);
+    exit_code = process_result->exit_code;
+    free(process_result);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (!accept_nonzero && process_result.exit_code != 0) {
+    if (!accept_nonzero && exit_code != 0) {
         return UMI_STATUS_IO_ERROR;
     }
     return UMI_STATUS_OK;
+}
+
+/* Capture one successful Git query without mixing its machine-readable output
+ * into the human diagnostic transcript. Failures are still appended so users
+ * can diagnose the exact Git response. */
+static UmiStatus umi_repository_workflow_capture_git(
+    const UmiToolInfo *git,
+    UmiEnvironmentPlan *environment,
+    const char *working_directory,
+    const char *const *arguments,
+    size_t argument_count,
+    char *out_text,
+    size_t capacity,
+    UmiRepositoryWorkflowReport *report)
+{
+    UmiProcessRequest process_request;
+    UmiProcessResult *process_result;
+    UmiStatus status;
+    size_t output_length;
+
+    if (git == NULL || git->state != UMI_TOOL_VALIDATED ||
+        working_directory == NULL || arguments == NULL ||
+        argument_count == 0U || out_text == NULL || capacity == 0U ||
+        report == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    out_text[0] = '\0';
+    (void)memset(&process_request, 0, sizeof(process_request));
+    /* Use checked heap storage because the process result owns a 64 KiB
+     * capture buffer and this helper may run inside another service call. */
+    process_result = (UmiProcessResult *)calloc(1U, sizeof(*process_result));
+    if (process_result == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    process_request.program = git->path;
+    process_request.arguments = arguments;
+    process_request.argument_count = argument_count;
+    process_request.working_directory = working_directory;
+    process_request.environment = environment != NULL
+        ? umi_environment_plan_variables(environment)
+        : NULL;
+    process_request.environment_count = environment != NULL
+        ? environment->count
+        : 0U;
+    process_request.capture_stdout = 1;
+    process_request.capture_stderr = 1;
+    process_request.timeout_ms = 300000U;
+    process_request.poll_interval_ms = 20U;
+    process_request.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
+
+    status = umi_process_execute(&process_request, process_result);
+    report->last_exit_code = process_result->exit_code;
+    if (status != UMI_STATUS_OK || process_result->exit_code != 0) {
+        (void)umi_repository_workflow_append_output(
+            report, process_result->output);
+        free(process_result);
+        return status != UMI_STATUS_OK ? status : UMI_STATUS_IO_ERROR;
+    }
+    /* Refuse a partial path list because it could produce a misleading
+     * classification. A manual message remains available for very large sets. */
+    if (process_result->output_truncated) {
+        report->output_truncated = 1;
+        free(process_result);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    output_length = strlen(process_result->output);
+    if (output_length >= capacity) {
+        free(process_result);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)memcpy(out_text, process_result->output, output_length + 1U);
+    free(process_result);
+    return UMI_STATUS_OK;
+}
+
+/* Ask Git only for staged path names, classify them locally, and retain the
+ * generated result in the report so the exact committed message is visible. */
+static UmiStatus umi_repository_workflow_generate_commit_message(
+    const UmiToolInfo *git,
+    UmiEnvironmentPlan *environment,
+    const char *repository_root,
+    char *out_message,
+    size_t capacity,
+    UmiRepositoryWorkflowReport *report)
+{
+    const char *arguments[] = {"diff", "--cached", "--name-only"};
+    UmiRepositoryCommitMessage generated;
+    char *staged_paths;
+    char notice[UMI_REPOSITORY_COMMIT_MESSAGE_CAPACITY + 32U];
+    UmiStatus status;
+    int written;
+
+    staged_paths = (char *)calloc(UMI_PROCESS_OUTPUT_CAPACITY, 1U);
+    if (staged_paths == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_repository_workflow_capture_git(
+        git, environment, repository_root, arguments, 3U,
+        staged_paths, UMI_PROCESS_OUTPUT_CAPACITY, report);
+    if (status == UMI_STATUS_OK) {
+        status = umi_repository_commit_message_generate(
+            repository_root, staged_paths, &generated);
+    }
+    free(staged_paths);
+    if (status != UMI_STATUS_OK) return status;
+
+    written = snprintf(out_message, capacity, "%s", generated.message);
+    if (written < 0 || (size_t)written >= capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)snprintf(notice, sizeof(notice),
+                   "Generated commit message: %s", generated.message);
+    return umi_repository_workflow_append_output(report, notice);
 }
 
 /*
@@ -212,11 +329,13 @@ static UmiStatus umi_repository_workflow_commit(
     UmiEnvironmentPlan *environment,
     const char *repository_root,
     const char *message,
+    int auto_message,
     UmiRepositoryWorkflowReport *report)
 {
     const char *quiet_arguments[] = {"diff", "--cached", "--quiet"};
     const char *check_arguments[] = {"diff", "--cached", "--check"};
-    const char *commit_arguments[] = {"commit", "-m", message};
+    const char *commit_arguments[] = {"commit", "-m", NULL};
+    char generated_message[UMI_REPOSITORY_COMMIT_MESSAGE_CAPACITY];
     UmiStatus status;
 
     status = umi_repository_workflow_run_git(
@@ -237,6 +356,17 @@ static UmiStatus umi_repository_workflow_commit(
         check_arguments, 3U, 0, report);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Generate only after Git confirms that staged content exists and passes
+     * whitespace validation. Manual messages never incur this extra query. */
+    if (auto_message) {
+        status = umi_repository_workflow_generate_commit_message(
+            git, environment, repository_root,
+            generated_message, sizeof(generated_message), report);
+        if (status != UMI_STATUS_OK) return status;
+        commit_arguments[2] = generated_message;
+    } else {
+        commit_arguments[2] = message;
+    }
     status = umi_repository_workflow_run_git(
         git, environment, repository_root,
         commit_arguments, 3U, 0, report);
@@ -541,7 +671,9 @@ static void umi_repository_workflow_format_plan(
                 sizeof(report->output),
                 "Would validate and commit staged files in %s. Message: %s",
                 request->repository_root,
-                request->commit_message);
+                request->auto_commit_message
+                    ? "generated locally from staged paths"
+                    : request->commit_message);
             break;
         case UMI_REPOSITORY_WORKFLOW_PUSH:
             (void)snprintf(
@@ -562,7 +694,9 @@ static void umi_repository_workflow_format_plan(
                 request->repository_root,
                 request->remote_name,
                 request->branch,
-                request->commit_message,
+                request->auto_commit_message
+                    ? "generated locally from staged paths"
+                    : request->commit_message,
                 request->set_upstream ? " Upstream tracking would be set." : "");
             break;
         case UMI_REPOSITORY_WORKFLOW_UPDATE:
@@ -675,7 +809,8 @@ UmiStatus umi_repository_workflow_execute_sized(
         case UMI_REPOSITORY_WORKFLOW_COMMIT:
             status = umi_repository_workflow_commit(
                 git, environment, request->repository_root,
-                request->commit_message, out_report);
+                request->commit_message, request->auto_commit_message,
+                out_report);
             break;
         case UMI_REPOSITORY_WORKFLOW_PUSH:
             status = umi_repository_workflow_push(
@@ -688,7 +823,8 @@ UmiStatus umi_repository_workflow_execute_sized(
             if (status == UMI_STATUS_OK) {
                 status = umi_repository_workflow_commit(
                     git, environment, request->repository_root,
-                    request->commit_message, out_report);
+                    request->commit_message, request->auto_commit_message,
+                    out_report);
             }
             /* Preserve the original failure result so the caller can respond to the correct cause. */
             if (status == UMI_STATUS_OK) {

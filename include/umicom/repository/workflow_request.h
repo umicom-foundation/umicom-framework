@@ -39,6 +39,9 @@ typedef struct UmiRepositoryWorkflowRequest {
     unsigned clone_depth;
     int recursive;
     int set_upstream;
+    /* Generate a deterministic message from staged paths when the caller did
+     * not supply a reviewed message explicitly. */
+    int auto_commit_message;
     int dry_run;
 } UmiRepositoryWorkflowRequest;
 

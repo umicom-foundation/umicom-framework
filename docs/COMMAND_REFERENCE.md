@@ -111,9 +111,9 @@ umicom repo verify [PATH]
 umicom repo update [PATH] [--remote NAME] [--branch NAME]
 umicom repo stage [PATH]
 umicom repo add [PATH]        # Friendly alias for stage
-umicom repo commit [PATH] --message MESSAGE
+umicom repo commit [PATH] (--message MESSAGE | --auto-message)
 umicom repo push [PATH]
-umicom repo publish [PATH] --message MESSAGE
+umicom repo publish [PATH] (--message MESSAGE | --auto-message)
 ```
 
 `repo audit` is read-only. It uses the same Framework CodeGuard service as
@@ -122,6 +122,11 @@ batch-labelled filenames. It never renames or deletes files automatically.
 
 Update requires a clean tracked worktree and applies only a fast-forward. It
 does not rebase, reset or create an automatic merge commit.
+
+`--auto-message` derives a conservative conventional commit message from the
+complete staged path list. Generation is local, does not inspect source
+contents, and rejects truncated input instead of guessing. A command accepts
+either a reviewed manual message or `--auto-message`, never both.
 
 ## Catalogue and suite commands
 
