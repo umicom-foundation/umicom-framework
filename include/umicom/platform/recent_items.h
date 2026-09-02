@@ -53,6 +53,29 @@ typedef struct UmiRecentItemSnapshot {
 typedef struct UmiRecentItemRegistry UmiRecentItemRegistry;
 
 /**
+ * Describe a bounded recent-item search. Empty text and kind values mean
+ * "match every value". Set pinned_only to a non-zero value when a surface
+ * should show only items that the user deliberately kept.
+ */
+typedef struct UmiRecentItemQuery {
+    const char *text;
+    const char *kind;
+    int pinned_only;
+    size_t limit;
+} UmiRecentItemQuery;
+
+/**
+ * Build a stable bounded identifier from a resource URI. Applications supply
+ * a short scope such as "studio-workspace" to keep different item families
+ * distinct without duplicating hashing code.
+ */
+UmiStatus umi_platform_recent_item_id_from_uri(
+    const char *scope,
+    const char *uri,
+    char *out_id,
+    size_t out_capacity);
+
+/**
  * Initialise platform recent items registry from caller-provided values so later
  * operations receive a known state.
  */
@@ -97,6 +120,13 @@ UmiStatus umi_platform_recent_items_registry_set_pinned(UmiRecentItemRegistry *r
                                                         const char *id,
                                                         int pinned);
 /**
+ * Remove the oldest unpinned items until the registry reaches maximum_count.
+ * Pinned work is preserved even when pinned items alone exceed that limit.
+ */
+UmiStatus umi_platform_recent_items_registry_trim(
+    UmiRecentItemRegistry *registry,
+    size_t maximum_count);
+/**
  * Return the number of records represented by platform recent items registry without
  * changing their state.
  */
@@ -106,6 +136,35 @@ size_t umi_platform_recent_items_registry_count(const UmiRecentItemRegistry *reg
  * its client applications.
  */
 uint64_t umi_platform_recent_items_registry_revision(const UmiRecentItemRegistry *registry);
+
+/**
+ * Copy the best matching recent items into caller-owned storage. Results are
+ * ordered with pinned items first, followed by the most recently opened item.
+ * A zero query limit uses the full output capacity.
+ */
+UmiStatus umi_platform_recent_items_registry_query(
+    const UmiRecentItemRegistry *registry,
+    const UmiRecentItemQuery *query,
+    UmiRecentItemSnapshot *out_items,
+    size_t out_capacity,
+    size_t *out_count);
+
+/**
+ * Save the complete registry with atomic file replacement. Text fields are
+ * encoded so paths and labels cannot break record boundaries.
+ */
+UmiStatus umi_platform_recent_items_registry_save(
+    const UmiRecentItemRegistry *registry,
+    const char *path);
+
+/**
+ * Load a registry transactionally. A missing file returns an empty registry
+ * and sets out_loaded to zero; malformed content never leaks a partial model.
+ */
+UmiStatus umi_platform_recent_items_registry_load(
+    const char *path,
+    UmiRecentItemRegistry **out_registry,
+    int *out_loaded);
 
 #ifdef __cplusplus
 }

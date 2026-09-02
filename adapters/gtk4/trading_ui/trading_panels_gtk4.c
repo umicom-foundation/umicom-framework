@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "umicom/trading_ui/trading_ui.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/ui/gtk4/workstation/view_model_panel.h"
 
 #define UMI_GTK4_TRADING_TEXT_CAPACITY 384U
@@ -77,8 +78,7 @@ static GtkWidget *new_dropdown(const char *const *labels,
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index)
         gtk_string_list_append(items, labels[index]);
-    dropdown = gtk_drop_down_new(G_LIST_MODEL(items), NULL);
-    g_object_unref(items);
+    dropdown = umi_ui_gtk4_drop_down_new_take_string_list(items);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (count > 0U)
         gtk_drop_down_set_selected(GTK_DROP_DOWN(dropdown), (guint)selected);
@@ -376,8 +376,8 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
             selected_index = state->instrument_count;
         state->instrument_count += 1U;
     }
-    state->instrument_dropdown = gtk_drop_down_new(G_LIST_MODEL(items), NULL);
-    g_object_unref(items);
+    state->instrument_dropdown =
+        umi_ui_gtk4_drop_down_new_take_string_list(items);
     /* Apply this branch only when its contract condition is satisfied. */
     if (state->instrument_count > 0U)
         gtk_drop_down_set_selected(GTK_DROP_DOWN(state->instrument_dropdown),
@@ -745,8 +745,8 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
             selected_index = state->order_count;
         state->order_count += 1U;
     }
-    state->order_dropdown = gtk_drop_down_new(G_LIST_MODEL(orders), NULL);
-    g_object_unref(orders);
+    state->order_dropdown =
+        umi_ui_gtk4_drop_down_new_take_string_list(orders);
     /* Apply this branch only when its contract condition is satisfied. */
     if (state->order_count > 0U)
         gtk_drop_down_set_selected(GTK_DROP_DOWN(state->order_dropdown),

@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/gtk4_workstation.h"
+#include "umicom/ui/gtk4/drop_down.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1327,8 +1328,7 @@ static GtkWidget *build_panel_editor(
             workstation->customisation.groups.items[index].group_id);
     }
     workstation->panel_editor_context =
-        gtk_drop_down_new(G_LIST_MODEL(contexts), NULL);
-    g_object_unref(contexts);
+        umi_ui_gtk4_drop_down_new_take_string_list(contexts);
     workstation->panel_editor_auto_hide =
         gtk_check_button_new_with_label("Auto-hide");
     workstation->panel_editor_apply =
@@ -2116,8 +2116,8 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < workstation->selector.count; ++index)
         gtk_string_list_append(choices, workstation->selector.choices[index].title);
-    workstation->layout_dropdown = gtk_drop_down_new(G_LIST_MODEL(choices), NULL);
-    g_object_unref(choices);
+    workstation->layout_dropdown =
+        umi_ui_gtk4_drop_down_new_take_string_list(choices);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(workstation->layout_dropdown),
                                (guint)workstation->selector.selected_index);
     g_signal_connect(workstation->layout_dropdown, "notify::selected",

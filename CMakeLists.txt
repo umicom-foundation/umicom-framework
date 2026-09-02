@@ -155,6 +155,14 @@ if(BUILD_TESTING)
     set_tests_properties(
         framework.build.public-contract-fingerprint
         PROPERTIES LABELS "build;contracts;incremental;abi")
+    add_test(
+        NAME framework.gtk4.dropdown-ownership
+        COMMAND "${CMAKE_COMMAND}"
+            -DUMICOM_SUITE_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/test_gtk_dropdown_ownership.cmake")
+    set_tests_properties(
+        framework.gtk4.dropdown-ownership
+        PROPERTIES LABELS "framework;gtk4;ownership;static-analysis")
 endif()
 
 # -----------------------------------------------------------------------------
@@ -720,6 +728,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     pkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 QUIET IMPORTED_TARGET gtksourceview-5)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
+        adapters/gtk4/drop_down_gtk4.c
         adapters/gtk4/shell_gtk4.c
         adapters/gtk4/workbench_gtk4.c
         adapters/gtk4/workspace_profile_gtk4.c
@@ -3277,6 +3286,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-headless-view-presentation-tests framework.ui.headless_view_presentation tests/test_ui_headless_view_presentation.c)
     umicom_add_framework_test(umicom-ui-platform-models-tests framework.ui.platform_models tests/test_ui_platform_models.c)
     umicom_add_framework_test(umicom-resource-navigation-tests framework.resource_navigation tests/test_resource_navigation.c)
+    umicom_add_framework_test(umicom-recent-items-query-test framework.recent_items.query tests/platform/test_recent_items_query.c)
+    umicom_add_framework_test(umicom-recent-items-persistence-test framework.recent_items.persistence tests/platform/test_recent_items_persistence.c)
     umicom_add_framework_test(umicom-frontend-platform-tests framework.frontend_platform tests/test_frontend_platform.c)
     umicom_add_framework_test(umicom-product-marketplace-tests framework.product_marketplace tests/test_product_marketplace.c)
     umicom_add_framework_test(umicom-chart-interaction-tests framework.chart_interaction tests/test_chart_interaction.c)

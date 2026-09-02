@@ -23,6 +23,7 @@
 
 #include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/appearance_persistence.h"
+#include "umicom/ui/gtk4/drop_down.h"
 
 #define UMI_GTK4_APPEARANCE_COLOUR_COUNT 14U
 
@@ -573,8 +574,8 @@ static GtkWidget *build_editor_popover(UmiGtk4AppearanceEditor *editor) {
       gtk_string_list_append(profiles, profile.label);
     }
   }
-  editor->profile_dropdown = gtk_drop_down_new(G_LIST_MODEL(profiles), NULL);
-  g_object_unref(profiles);
+  editor->profile_dropdown =
+      umi_ui_gtk4_drop_down_new_take_string_list(profiles);
   editor->density_dropdown = gtk_drop_down_new_from_strings(DENSITIES);
   editor->font_scale = gtk_spin_button_new_with_range(0.75, 2.0, 0.05);
   editor->interface_font = gtk_entry_new();
