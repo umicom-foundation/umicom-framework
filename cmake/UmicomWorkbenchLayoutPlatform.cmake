@@ -30,10 +30,11 @@ if(TARGET umicom_workbench_layout)
 endif()
 
 # Load the dependency only when the parent build has not already provided its target.
-if(NOT TARGET Umicom::base OR NOT TARGET Umicom::desktop)
+if(NOT TARGET Umicom::base OR NOT TARGET Umicom::desktop OR
+   NOT TARGET Umicom::platform OR NOT TARGET Umicom::reflection)
     message(FATAL_ERROR
         "The workbench layout platform requires the established Framework "
-        "base and desktop targets.")
+        "base, desktop, platform and reflection targets.")
 endif()
 
 add_library(umicom_workbench_layout STATIC
@@ -44,6 +45,7 @@ add_library(umicom_workbench_layout STATIC
     "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/desktop_projection.c"
     "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/diagnostics.c"
     "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/diff.c"
+    "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/discovery.c"
     "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/document.c"
     "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/events.c"
     "${UMICOM_WORKBENCH_LAYOUT_FRAMEWORK_ROOT}/src/workbench_layout/history.c"
@@ -88,6 +90,8 @@ target_link_libraries(umicom_workbench_layout
     PUBLIC
         Umicom::base
         Umicom::desktop
+        Umicom::platform
+        Umicom::reflection
 )
 
 # Use the shared build helper when it is available from the parent composition.
@@ -166,6 +170,11 @@ if(BUILD_TESTING)
         umicom-workbench-layout-templates-registries-test
         framework.workbench_layout.templates_registries
         tests/workbench_layout/test_templates_registries.c
+    )
+    umicom_add_workbench_layout_test(
+        umicom-workbench-layout-dynamic-discovery-test
+        framework.workbench_layout.dynamic_discovery
+        tests/workbench_layout/test_dynamic_discovery.c
     )
     umicom_add_workbench_layout_test(
         umicom-workbench-layout-monitor-responsive-test

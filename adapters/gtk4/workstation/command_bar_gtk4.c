@@ -574,6 +574,7 @@ UmiStatus umi_gtk4_ws_command_bar_set_model(
     const UmiWsCommandBarModel *model)
 {
     UmiWsCommandBarQuery current_query;
+    UmiWsCommandBarPresentation current_presentation;
     UmiStatus status;
 
     /*
@@ -584,10 +585,15 @@ UmiStatus umi_gtk4_ws_command_bar_set_model(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     current_query = command_bar->model.query;
+    current_presentation = command_bar->model.presentation;
     status = copy_model_with_query(
         &command_bar->model, model, &current_query);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* A catalogue refresh changes available actions, not the space assigned to
+     * the widget. Keep the responsive presentation chosen for the current
+     * window width instead of accepting the source model's default value. */
+    command_bar->model.presentation = current_presentation;
     rebuild_result_widgets(command_bar);
     return UMI_STATUS_OK;
 }

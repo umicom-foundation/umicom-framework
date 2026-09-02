@@ -237,6 +237,7 @@ add_library(umicom_messaging STATIC
     src/messaging/command_bus.c
     src/messaging/query_bus.c
     src/messaging/journal.c
+    src/messaging/change_broker.c
 )
 add_library(Umicom::messaging ALIAS umicom_messaging)
 set_target_properties(umicom_messaging PROPERTIES EXPORT_NAME messaging)
@@ -447,6 +448,32 @@ target_include_directories(umicom_runtime PUBLIC
 )
 umicom_apply_warnings(umicom_runtime)
 umicom_apply_sanitizers(umicom_runtime)
+
+# -----------------------------------------------------------------------------
+# Portable reflection and runtime discovery
+# -----------------------------------------------------------------------------
+# Reflection stores explicit, validated C metadata.  It does not inspect raw
+# process memory or depend on platform debug symbols, so every application can
+# use the same contracts on desktop, server, web and mobile targets.
+add_library(umicom_reflection STATIC
+    src/reflection/types.c
+    src/reflection/registry.c
+    src/reflection/engine.c
+)
+add_library(Umicom::reflection ALIAS umicom_reflection)
+set_target_properties(umicom_reflection PROPERTIES EXPORT_NAME reflection)
+target_link_libraries(umicom_reflection PUBLIC
+    Umicom::base
+    Umicom::messaging
+    Umicom::platform
+    Umicom::runtime
+)
+target_include_directories(umicom_reflection PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+umicom_apply_warnings(umicom_reflection)
+umicom_apply_sanitizers(umicom_reflection)
 
 
 # -----------------------------------------------------------------------------
@@ -1720,6 +1747,7 @@ add_library(umicom_browser STATIC
     src/browser/bridge.c
     src/browser/headless.c
     src/browser/policy.c
+    src/browser/document_preview.c
 )
 add_library(Umicom::browser ALIAS umicom_browser)
 set_target_properties(umicom_browser PROPERTIES EXPORT_NAME browser)
@@ -3071,6 +3099,7 @@ target_link_libraries(umicom_framework INTERFACE
     Umicom::platform
     Umicom::security
     Umicom::runtime
+    Umicom::reflection
     Umicom::integration
     Umicom::resilience
     Umicom::observability
@@ -3189,6 +3218,15 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
     endfunction()
+    # Reflection tests exercise owned metadata and durable change publication.
+    umicom_add_framework_test(
+        umicom-reflection-registry-test
+        framework.reflection.registry
+        tests/reflection/test_registry.c)
+    umicom_add_framework_test(
+        umicom-reflection-engine-events-test
+        framework.reflection.engine_events
+        tests/reflection/test_engine_events.c)
     # Engine tests exercise real ownership, capacity and adapter behaviour.
     umicom_add_framework_test(
         umicom-engine-catalogue-test
@@ -4049,6 +4087,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-web-server-config-tests framework.web_server_config tests/test_web_server_config.c)
     umicom_add_framework_test(umicom-browser-tests framework.browser tests/test_browser.c)
     umicom_add_framework_test(umicom-browser-policy-tests framework.browser_policy tests/test_browser_policy.c)
+    umicom_add_framework_test(umicom-browser-document-preview-tests framework.browser_document_preview tests/test_browser_document_preview.c)
     umicom_add_framework_test(umicom-chart-model-tests framework.chart_model tests/test_chart_model.c)
     umicom_add_framework_test(umicom-chart-indicator-tests framework.chart_indicator tests/test_chart_indicator.c)
     umicom_add_framework_test(umicom-frontend-plan-tests framework.frontend_plan tests/test_frontend_plan.c)
@@ -4796,6 +4835,7 @@ install(TARGETS
     umicom_platform
     umicom_security
     umicom_runtime
+    umicom_reflection
     umicom_integration
     umicom_resilience
     umicom_observability

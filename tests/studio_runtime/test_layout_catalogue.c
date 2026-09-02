@@ -22,11 +22,12 @@
  */
 int main(void)
 {
-    assert(umi_studio_layout_catalogue_count()==7U);
+    assert(umi_studio_layout_catalogue_count()==8U);
     assert(umi_studio_layout_catalogue_find(
         "umicom.studio.layout.default")!=NULL);
     assert(strcmp(umi_studio_layout_catalogue_at(0)->title,
                   "Default Development")==0);
+    assert(umi_studio_layout_catalogue_find(
+        "umicom.studio.layout.learning")!=NULL);
     return 0;
 }
-

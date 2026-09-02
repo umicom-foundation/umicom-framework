@@ -23,6 +23,7 @@
 #include "umicom/workbench_layout/desktop_projection.h"
 #include "umicom/workbench_layout/diagnostics.h"
 #include "umicom/workbench_layout/diff.h"
+#include "umicom/workbench_layout/discovery.h"
 #include "umicom/workbench_layout/document.h"
 #include "umicom/workbench_layout/events.h"
 #include "umicom/workbench_layout/history.h"

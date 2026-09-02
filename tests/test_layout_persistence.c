@@ -31,6 +31,8 @@ int main(void)
     UmiUiLayoutPersistenceRecord legacy;
     char encoded[UMI_UI_LAYOUT_ENCODED_CAPACITY];
     char trailing_record[UMI_UI_LAYOUT_ENCODED_CAPACITY];
+    static const char trailing_suffix[] = "EXTRA\n";
+    size_t encoded_length;
     (void)snprintf(explorer.window_id, sizeof(explorer.window_id), "explorer");
     (void)snprintf(explorer.title, sizeof(explorer.title), "Explorer");
     (void)snprintf(explorer.tool_id, sizeof(explorer.tool_id), "explorer");
@@ -69,11 +71,17 @@ int main(void)
     assert(restored.layout.locked);
     /* A record is one complete reviewed unit; undeclared trailing windows or
      * metadata must not be silently ignored by the decoder. */
-    (void)snprintf(
-        trailing_record,
-        sizeof(trailing_record),
-        "%sEXTRA\n",
-        encoded);
+    encoded_length = strlen(encoded);
+    assert(encoded_length + sizeof(trailing_suffix) <=
+           sizeof(trailing_record));
+    /* Copy the known-sized record and suffix separately. This makes the test's
+     * capacity proof visible to the compiler and avoids a false truncation
+     * warning from formatting an almost-capacity input string. */
+    (void)memcpy(trailing_record, encoded, encoded_length);
+    (void)memcpy(
+        trailing_record + encoded_length,
+        trailing_suffix,
+        sizeof(trailing_suffix));
     assert(umi_ui_layout_persistence_decode(
                trailing_record, &restored) == UMI_STATUS_PARSE_ERROR);
     assert(umi_ui_layout_persistence_decode(

@@ -31,4 +31,6 @@
 #include "umicom/studio_runtime/surface_profiles/ai_tools.h"
 #include "umicom/studio_runtime/surface_profiles/ai_validation.h"
 #include "umicom/studio_runtime/surface_profiles/ai_model_comparison.h"
+#include "umicom/studio_runtime/surface_profiles/learning.h"
+#include "umicom/studio_runtime/surface_profiles/documentation.h"
 #endif

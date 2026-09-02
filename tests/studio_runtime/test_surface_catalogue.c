@@ -23,11 +23,15 @@
 int main(void)
 {
     size_t i,j;
-    assert(umi_studio_surface_catalogue_count() == 17U);
+    assert(umi_studio_surface_catalogue_count() == 19U);
     assert(umi_studio_surface_catalogue_for_kind(
         UMI_STUDIO_SURFACE_EDITOR) != NULL);
     assert(umi_studio_surface_catalogue_for_kind(
         UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON) != NULL);
+    assert(umi_studio_surface_catalogue_for_kind(
+        UMI_STUDIO_SURFACE_LEARNING) != NULL);
+    assert(umi_studio_surface_catalogue_for_kind(
+        UMI_STUDIO_SURFACE_DOCUMENTATION) != NULL);
     /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<umi_studio_surface_catalogue_count();++i) {
         const UmiStudioRuntimeSurfaceBinding *a =

@@ -21,4 +21,5 @@
 #include "umicom/studio_runtime/layout_presets/ai_development.h"
 #include "umicom/studio_runtime/layout_presets/review.h"
 #include "umicom/studio_runtime/layout_presets/zen.h"
+#include "umicom/studio_runtime/layout_presets/learning.h"
 #endif

@@ -23,6 +23,8 @@
 static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
     {"umicom.runtime", "runtime", UMI_CAPABILITY_IMPLEMENTED,
      "Aggregate runtime lifecycle, services, capabilities, health, and product composition."},
+    {"umicom.reflection", "runtime", UMI_CAPABILITY_IMPLEMENTED,
+     "Owned type, module and resource metadata with bounded queries and durable change events."},
     {"umicom.messaging", "messaging", UMI_CAPABILITY_IMPLEMENTED,
      "Aggregate commands, queries, events, durable channels, routing, reliability, and replay."},
     {"umicom.ui", "presentation", UMI_CAPABILITY_IMPLEMENTED,
@@ -59,6 +61,8 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      "Typed request and response operations without state changes."},
     {"umicom.messaging.journal", "messaging", UMI_CAPABILITY_IMPLEMENTED,
      "Append-only event journal and replay foundation."},
+    {"umicom.messaging.change-broker", "messaging", UMI_CAPABILITY_IMPLEMENTED,
+     "Embedded publish-subscribe change delivery with optional append-only recording."},
     {"umicom.data", "persistence", UMI_CAPABILITY_IMPLEMENTED,
      "Single-authority Data Server with memory and SQLite adapters."},
     {"umicom.configuration", "configuration", UMI_CAPABILITY_IMPLEMENTED,
@@ -296,6 +300,9 @@ static const UmiFrameworkCapabilityDefinition UMI_CAPABILITIES[] = {
      * persistence and recovery behavior already owned by Framework. */
     {"umicom.workbench-layout", "presentation", UMI_CAPABILITY_IMPLEMENTED,
      "Customisable docked, floating, grouped, linked, locked and recoverable workspace layouts."},
+    {"umicom.workbench-layout.discovery", "presentation",
+     UMI_CAPABILITY_IMPLEMENTED,
+     "Validated runtime discovery and refresh of portable layout resources without rebuilding an application."},
     /* Localisation remains planned until resource extraction, translation
      * editing, preview and validation form one complete reusable workflow. */
     {"umicom.localisation", "development", UMI_CAPABILITY_PLANNED,

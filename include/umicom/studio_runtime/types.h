@@ -60,11 +60,13 @@ typedef enum UmiStudioRuntimeSurfaceKind {
     UMI_STUDIO_SURFACE_AI_APPROVALS = 14,
     UMI_STUDIO_SURFACE_AI_TOOLS = 15,
     UMI_STUDIO_SURFACE_AI_VALIDATION = 16,
-    UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON = 17
+    UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON = 17,
+    UMI_STUDIO_SURFACE_LEARNING = 18,
+    UMI_STUDIO_SURFACE_DOCUMENTATION = 19
 } UmiStudioRuntimeSurfaceKind;
 
 /* Keep bounded surface loops aligned when a reusable Studio panel is added. */
-#define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON
+#define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_DOCUMENTATION
 
 /**
  * List the named studio runtime selection kind values accepted by this public contract.

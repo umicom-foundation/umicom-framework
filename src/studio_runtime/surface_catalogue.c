@@ -35,7 +35,9 @@ static const SurfaceFactory FACTORIES[] = {
     umi_studio_surface_profile_ai_approvals,
     umi_studio_surface_profile_ai_tools,
     umi_studio_surface_profile_ai_validation,
-    umi_studio_surface_profile_ai_model_comparison
+    umi_studio_surface_profile_ai_model_comparison,
+    umi_studio_surface_profile_learning,
+    umi_studio_surface_profile_documentation
 };
 
 /*

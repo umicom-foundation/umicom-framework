@@ -51,6 +51,7 @@
 #include "umicom/messaging/saga.h"
 #include "umicom/messaging/topic.h"
 #include "umicom/messaging/metrics.h"
+#include "umicom/messaging/change_broker.h"
 
 #include "umicom/data/data_server.h"
 #include "umicom/data/store.h"
@@ -129,6 +130,8 @@
 #include "umicom/runtime/module_registry.h"
 #include "umicom/runtime/master_controller.h"
 #include "umicom/runtime/scheduler.h"
+
+#include "umicom/reflection/reflection.h"
 
 #include "umicom/integration/integration.h"
 
@@ -264,6 +267,7 @@
 #include "umicom/browser/bridge.h"
 #include "umicom/browser/headless.h"
 #include "umicom/browser/policy.h"
+#include "umicom/browser/document_preview.h"
 
 #include "umicom/chart/types.h"
 #include "umicom/chart/candle.h"
