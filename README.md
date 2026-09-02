@@ -44,6 +44,8 @@ umicom make
 umicom automate plan "C:/umicom/umicom-applications"
 umicom automate run "C:/umicom/umicom-applications" --preset windows-ucrt64-debug
 umicom automate watch "C:/umicom/umicom-applications" --preset windows-ucrt64-debug
+umicom automate settings "C:/umicom/umicom-applications"
+umicom automate trigger "C:/umicom/umicom-applications"
 umicom run desk
 umicom run studio
 umicom create repo "Umicom Designer" --console --gtk

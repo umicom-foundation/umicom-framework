@@ -197,6 +197,12 @@ UmiStatus umi_build_automation_add_change(
     UmiBuildAutomation *automation,
     const UmiBuildAutomationChange *change);
 
+/* Copy one changed-file record for verification without exposing owned storage. */
+UmiStatus umi_build_automation_change_at(
+    const UmiBuildAutomation *automation,
+    size_t position,
+    UmiBuildAutomationChange *out_change);
+
 /* Build a deterministic direct and transitive plan from current evidence. */
 UmiStatus umi_build_automation_evaluate(UmiBuildAutomation *automation);
 

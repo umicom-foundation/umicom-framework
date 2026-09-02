@@ -175,6 +175,29 @@ The controller builds and tests only affected scopes, then writes a durable
 versioned update notice that running Umicom applications can discover. Press
 Ctrl+C when you want it to stop after the current safe operation.
 
+By default, changed source is checked after ten quiet minutes. An unchanged,
+approved revision builds twenty minutes later, while a sixty-minute watchdog
+prevents ordinary pending work from being forgotten. View the effective values:
+
+```powershell
+umicom automate settings "C:\umicom\umicom-applications"
+```
+
+Developers can change the ignored local
+`.umicom/automation.conf` file. For example,
+`build_interval_minutes=480` holds approved changes for an eight-hour
+controller interval. `automatic_deploy=true` permits installation only after
+the build and focused executable tests pass.
+
+To finish sooner, wake the running controller:
+
+```powershell
+umicom automate trigger "C:\umicom\umicom-applications"
+```
+
+This cancels the waiting periods but still runs source verification,
+incremental compilation and executable tests.
+
 Application manifests supply the product catalogue. A source change normally
 selects one application. A shared Framework change selects its application
 consumers, and a root build-definition change selects the configured workspace.

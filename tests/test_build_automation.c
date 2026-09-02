@@ -102,10 +102,14 @@ static UmiBuildAutomation *create_workspace(void)
 static void test_application_selection(void)
 {
     UmiBuildAutomation *automation = create_workspace();
+    UmiBuildAutomationChange change;
     UmiBuildAutomationPlanItem item;
     UmiBuildAutomationSnapshot snapshot;
 
     add_change(automation, ".\\applications\\studio\\src\\app.c");
+    assert(umi_build_automation_change_at(automation, 0U, &change) ==
+           UMI_STATUS_OK);
+    assert(strcmp(change.path, "applications/studio/src/app.c") == 0);
     assert(umi_build_automation_evaluate(automation) == UMI_STATUS_OK);
     assert(umi_build_automation_count(automation) == 1U);
     assert(umi_build_automation_item_at(automation, 0U, &item) ==

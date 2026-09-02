@@ -183,6 +183,7 @@
 #include "umicom/build/artifact.h"
 #include "umicom/build/workspace.h"
 #include "umicom/build/automation.h"
+#include "umicom/build/automation_schedule.h"
 #include "umicom/build/continuous_integration.h"
 #include "umicom/build_ui/build_ui.h"
 #include "umicom/diagnostic_ui/diagnostic_ui.h"

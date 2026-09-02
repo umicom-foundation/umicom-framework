@@ -28,9 +28,11 @@ umicom automate plan [PATH] [--all]
 umicom automate run  [PATH] [--preset NAME | --build PATH]
                      [--jobs N] [--no-tests] [--deploy] [--prefix PATH]
 umicom automate watch [PATH] [--preset NAME | --build PATH]
-                      [--jobs N] [--debounce MS] [--interval MS]
+                      [--jobs N] [--config PATH] [--interval MS]
                       [--no-tests] [--deploy] [--prefix PATH]
                       [--ignore-existing] [--all]
+umicom automate trigger [PATH]
+umicom automate settings [PATH] [--config PATH]
 umicom make      [--source PATH] [--preset NAME | --build PATH]
 umicom run studio [--source PATH] [--preset NAME]
 umicom run --executable PATH [--source PATH] [--preset NAME]
@@ -39,10 +41,13 @@ umicom run --executable PATH [--source PATH] [--preset NAME]
 `make` performs check, configure, build, and test as one fail-fast operation.
 
 `automate plan` reads changed paths and prints affected product and test scopes
-without compiling. `automate run` builds those scopes and their focused tests.
-`automate watch` continuously discovers edits, verifies affected scopes and
-records durable module-update notices. It installs only when `--deploy` is
-present. The complete planning rules and
+without compiling. `automate run` verifies changed source, builds those scopes
+and runs their focused tests. `automate watch` continuously discovers edits,
+uses the local timing policy, and records durable module-update notices.
+`automate trigger` wakes a running controller without bypassing its gates.
+`automate settings` prints effective defaults or
+`.umicom/automation.conf`. Automatic installation remains disabled unless
+local policy or `--deploy` enables it. The complete planning rules and
 Framework API are described in [Automated Build System](automated-build-system.md).
 
 ## Governed workflow commands

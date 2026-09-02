@@ -37,8 +37,11 @@ typedef struct UmiCliAutomationApplicationScan {
 /* Carry the continuous service and safe callback state into watcher events. */
 typedef struct UmiCliAutomationWatch {
     UmiBuildContinuousIntegration *continuous;
+    UmiBuildAutomationSchedule *schedule;
     UmiClock clock;
     char source_root[UMI_PATH_CAPACITY];
+    char manual_request_path[UMI_PATH_CAPACITY];
+    uint64_t manual_request_modified_nanoseconds;
     UmiStatus event_status;
     size_t ignored_event_count;
     int priming;
@@ -617,7 +620,30 @@ static int automation_watch_ignores_path(const char *relative_path)
     return 0;
 }
 
-/* Feed a changed repository path into the continuous debounce lifecycle. */
+/* Record one path in both the affected-scope planner and timing state machine. */
+static UmiStatus automation_record_scheduled_change(
+    UmiCliAutomationWatch *watch,
+    const char *path,
+    int deleted)
+{
+    uint64_t observed_at_ms;
+    UmiStatus status;
+
+    if (watch == NULL || watch->continuous == NULL ||
+        watch->schedule == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    observed_at_ms = automation_clock_milliseconds(&watch->clock, 0);
+    status = umi_build_continuous_record_change(
+        watch->continuous, path, deleted, observed_at_ms);
+    if (status == UMI_STATUS_OK) {
+        status = umi_build_automation_schedule_record_change(
+            watch->schedule, observed_at_ms);
+    }
+    return status;
+}
+
+/* Feed a changed repository path into planning and scheduling lifecycles. */
 static UmiStatus automation_continuous_change_sink(void *user_data,
                                                    const char *path,
                                                    int deleted)
@@ -631,11 +657,7 @@ static UmiStatus automation_continuous_change_sink(void *user_data,
         watch->ignored_event_count += 1U;
         return UMI_STATUS_OK;
     }
-    return umi_build_continuous_record_change(
-        watch->continuous,
-        path,
-        deleted,
-        automation_clock_milliseconds(&watch->clock, 0));
+    return automation_record_scheduled_change(watch, path, deleted);
 }
 
 /* Translate one filesystem event into a normalised workspace-relative change. */
@@ -654,11 +676,8 @@ static void automation_watch_event_sink(const UmiWatchEvent *event,
         event->kind == UMI_WATCH_RESCAN_REQUIRED) {
         /* An overflow means detail was lost, so a root definition change is
          * the safe signal that asks the planner for a complete rebuild. */
-        watch->event_status = umi_build_continuous_record_change(
-            watch->continuous,
-            "CMakeLists.txt",
-            0,
-            automation_clock_milliseconds(&watch->clock, 0));
+        watch->event_status = automation_record_scheduled_change(
+            watch, "CMakeLists.txt", 0);
         return;
     }
     status = umi_path_relative(watch->source_root,
@@ -674,11 +693,10 @@ static void automation_watch_event_sink(const UmiWatchEvent *event,
         watch->ignored_event_count += 1U;
         return;
     }
-    watch->event_status = umi_build_continuous_record_change(
-        watch->continuous,
+    watch->event_status = automation_record_scheduled_change(
+        watch,
         relative_path,
-        event->kind == UMI_WATCH_DELETED,
-        automation_clock_milliseconds(&watch->clock, 0));
+        event->kind == UMI_WATCH_DELETED);
 }
 
 /* Persist one successful generation before reporting it to the operator. */
@@ -750,6 +768,232 @@ static UmiStatus automation_print_plan(const UmiBuildAutomation *automation)
         }
     }
     return UMI_STATUS_OK;
+}
+
+/* Return true for source kinds understood by the local CodeGuard scanners. */
+static int automation_change_requires_source_scan(
+    UmiBuildAutomationChangeKind kind)
+{
+    return kind == UMI_BUILD_AUTOMATION_CHANGE_SOURCE ||
+           kind == UMI_BUILD_AUTOMATION_CHANGE_PUBLIC_HEADER ||
+           kind == UMI_BUILD_AUTOMATION_CHANGE_PRIVATE_HEADER;
+}
+
+/* Build the ignored local path used for the latest machine-readable findings. */
+static UmiStatus automation_quality_report_path(const char *source_root,
+                                                char *out_path,
+                                                size_t capacity)
+{
+    char local_root[UMI_PATH_CAPACITY];
+    char runtime_root[UMI_PATH_CAPACITY];
+    UmiStatus status;
+
+    if (source_root == NULL || out_path == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_fs_join(local_root,
+                         sizeof(local_root),
+                         source_root,
+                         ".umicom");
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_join(runtime_root,
+                             sizeof(runtime_root),
+                             local_root,
+                             "runtime");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_make_directories(runtime_root);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_join(out_path,
+                             capacity,
+                             runtime_root,
+                             "quality-latest.sarif");
+    }
+    return status;
+}
+
+/* Resolve the ignored local marker used to wake a running build controller. */
+static UmiStatus automation_manual_request_path(const char *source_root,
+                                                char *out_path,
+                                                size_t capacity)
+{
+    char local_root[UMI_PATH_CAPACITY];
+    char runtime_root[UMI_PATH_CAPACITY];
+    UmiStatus status;
+
+    if (source_root == NULL || out_path == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_fs_join(local_root,
+                         sizeof(local_root),
+                         source_root,
+                         ".umicom");
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_join(runtime_root,
+                             sizeof(runtime_root),
+                             local_root,
+                             "runtime");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_make_directories(runtime_root);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_join(out_path,
+                             capacity,
+                             runtime_root,
+                             "build-now.request");
+    }
+    return status;
+}
+
+/* Write a new request value so the designated watcher starts without waiting. */
+static UmiStatus automation_write_manual_request(const char *source_root)
+{
+    char request_path[UMI_PATH_CAPACITY];
+    char request_text[96];
+    const UmiClock clock = umi_clock_system();
+    const uint64_t requested_at_ms =
+        automation_clock_milliseconds(&clock, 1);
+    int written;
+    UmiStatus status = automation_manual_request_path(
+        source_root, request_path, sizeof(request_path));
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    written = snprintf(request_text,
+                       sizeof(request_text),
+                       "requested_at_ms=%llu\n",
+                       (unsigned long long)requested_at_ms);
+    if (written < 0 || (size_t)written >= sizeof(request_text)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = umi_fs_write_text(request_path, request_text);
+    if (status == UMI_STATUS_OK) {
+        (void)printf(
+            "Manual build requested. The workspace controller will verify "
+            "the pending revision and build it immediately.\n");
+    }
+    return status;
+}
+
+/* Observe a newer request marker without deleting local developer evidence. */
+static UmiStatus automation_poll_manual_request(UmiCliAutomationWatch *watch)
+{
+    UmiFileInfo info;
+    UmiStatus status;
+
+    if (watch == NULL || watch->schedule == NULL ||
+        watch->manual_request_path[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!umi_fs_is_file(watch->manual_request_path)) {
+        return UMI_STATUS_OK;
+    }
+    status = umi_directory_stat(watch->manual_request_path, &info);
+    if (status != UMI_STATUS_OK ||
+        info.modified_nanoseconds <=
+            watch->manual_request_modified_nanoseconds) {
+        return status;
+    }
+    watch->manual_request_modified_nanoseconds = info.modified_nanoseconds;
+    status = umi_build_automation_schedule_request_manual(watch->schedule);
+    if (status == UMI_STATUS_INVALID_STATE) {
+        (void)puts("Manual build request observed; no changes are pending.");
+        return UMI_STATUS_OK;
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)puts(
+            "Manual build request observed; scheduled waits were cancelled.");
+    }
+    return status;
+}
+
+/*
+ * Scan only changed C-family files before compilation. Build definitions and
+ * manifests are still validated by planning/configuration, while focused
+ * executable tests run after compilation because they need current binaries.
+ */
+static UmiStatus automation_verify_changes(
+    const UmiBuildAutomation *automation,
+    const char *source_root,
+    int *out_passed)
+{
+    UmiBuildAutomationSnapshot snapshot;
+    UmiCodeGuardConfig config;
+    UmiCodeGuardProfile profile = umi_codeguard_profile_ci();
+    UmiCodeGuardResult *findings = NULL;
+    UmiCodeGuardSummary summary;
+    char report_path[UMI_PATH_CAPACITY];
+    size_t scanned_count = 0U;
+    size_t index;
+    UmiStatus status;
+
+    if (automation == NULL || source_root == NULL || out_passed == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_passed = 0;
+    status = umi_build_automation_snapshot(automation, &snapshot);
+    if (status == UMI_STATUS_OK) {
+        status = umi_codeguard_result_create(256U, &findings);
+    }
+    config = umi_codeguard_config_default(source_root);
+    config.profile = profile;
+    for (index = 0U;
+         status == UMI_STATUS_OK && index < snapshot.change_count;
+         ++index) {
+        UmiBuildAutomationChange change;
+        char absolute_path[UMI_PATH_CAPACITY];
+
+        status = umi_build_automation_change_at(
+            automation, index, &change);
+        if (status != UMI_STATUS_OK || change.deleted ||
+            !automation_change_requires_source_scan(change.kind)) {
+            continue;
+        }
+        status = umi_fs_join(absolute_path,
+                             sizeof(absolute_path),
+                             source_root,
+                             change.path);
+        if (status == UMI_STATUS_OK) {
+            status = umi_codeguard_scan_file(
+                &config, absolute_path, findings);
+        }
+        if (status == UMI_STATUS_OK) {
+            scanned_count += 1U;
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        status = automation_quality_report_path(
+            source_root, report_path, sizeof(report_path));
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_codeguard_report_file(
+            report_path, UMI_CODEGUARD_REPORT_SARIF, findings);
+    }
+    summary = umi_codeguard_summary_build(findings);
+    if (status == UMI_STATUS_OK) {
+        *out_passed = !umi_codeguard_summary_failed(
+            &summary, profile.fail_on);
+        (void)printf(
+            "Source verification: %zu files, %zu findings "
+            "(critical=%zu high=%zu medium=%zu).\n"
+            "Quality evidence: %s\n",
+            scanned_count,
+            summary.total,
+            summary.critical,
+            summary.high,
+            summary.medium,
+            report_path);
+        if (!*out_passed) {
+            (void)fputs(
+                "Build paused because the required source quality gate failed.\n",
+                stderr);
+        }
+    }
+    umi_codeguard_result_destroy(findings);
+    return status;
 }
 
 /*
@@ -879,6 +1123,21 @@ static int automation_execute(UmiCliContext *context,
     int built_all = 0;
     int tested_all = 0;
     UmiStatus status;
+
+    /* Validate required caller state before reading the retained toolchain
+     * profile or planning any child process. */
+    if (context == NULL || automation == NULL || source_root == NULL ||
+        source_root[0] == '\0') {
+        return 1;
+    }
+    /* Installation consumes compiled artifacts, so diagnostic compile-only
+     * mode must never be combined with deployment. */
+    if (deploy && !run_tests) {
+        (void)fputs(
+            "Deployment requires focused executable tests; remove --no-tests.\n",
+            stderr);
+        return 1;
+    }
 
     /* Preserve the path before the first full preparation resets the command
      * context. A continuous host keeps the successful compiler profile and
@@ -1065,7 +1324,7 @@ static int automation_watch(UmiCliContext *context,
                             int jobs,
                             int run_tests,
                             int deploy,
-                            uint32_t debounce_ms,
+                            const UmiBuildAutomationSchedulePolicy *policy,
                             uint32_t poll_ms,
                             int seed_existing_changes,
                             int stop_after_generation,
@@ -1074,6 +1333,7 @@ static int automation_watch(UmiCliContext *context,
     UmiChangeBroker *broker = NULL;
     UmiBuildContinuousIntegration *continuous = NULL;
     UmiWatcher *watcher = NULL;
+    UmiBuildAutomationSchedule schedule;
     UmiCliAutomationPublication publication;
     UmiCliAutomationWatch watch;
     UmiBuildContinuousConfig continuous_config =
@@ -1086,9 +1346,14 @@ static int automation_watch(UmiCliContext *context,
     (void)memset(&publication, 0, sizeof(publication));
     (void)memset(&watch, 0, sizeof(watch));
     watch.clock = umi_clock_system();
+    status = umi_build_automation_schedule_init(
+        &schedule,
+        policy,
+        automation_clock_milliseconds(&watch.clock, 0));
+    watch.schedule = &schedule;
     watch.event_status = automation_copy_text(
         watch.source_root, sizeof(watch.source_root), source_root);
-    if (watch.event_status != UMI_STATUS_OK) {
+    if (status != UMI_STATUS_OK || watch.event_status != UMI_STATUS_OK) {
         return 1;
     }
     status = automation_create_update_broker(source_root,
@@ -1096,7 +1361,10 @@ static int automation_watch(UmiCliContext *context,
                                              journal_path,
                                              sizeof(journal_path));
     publication.broker = broker;
-    continuous_config.debounce_ms = debounce_ms;
+    /* The schedule owns human timing. The one-millisecond planner debounce
+     * merely protects its existing begin contract when a manual request wakes
+     * the controller. */
+    continuous_config.debounce_ms = 1U;
     continuous_config.initial_generation =
         umi_change_broker_last_sequence(broker);
     continuous_config.update_sink = automation_publish_update;
@@ -1115,6 +1383,25 @@ static int automation_watch(UmiCliContext *context,
         status = automation_register_application_scopes(
             umi_build_continuous_planner(continuous), source_root);
     }
+    if (status == UMI_STATUS_OK) {
+        status = automation_manual_request_path(
+            source_root,
+            watch.manual_request_path,
+            sizeof(watch.manual_request_path));
+    }
+    if (status == UMI_STATUS_OK &&
+        umi_fs_is_file(watch.manual_request_path)) {
+        UmiFileInfo request_info;
+
+        status = umi_directory_stat(
+            watch.manual_request_path, &request_info);
+        if (status == UMI_STATUS_OK) {
+            /* Existing request files are historical. Only a later write made
+             * after this controller starts should wake its pending batch. */
+            watch.manual_request_modified_nanoseconds =
+                request_info.modified_nanoseconds;
+        }
+    }
     watcher_config = umi_watcher_config_default(source_root);
     watcher_config.polling_interval_ms = poll_ms;
     watcher_config.maximum_entries = 131072U;
@@ -1131,16 +1418,19 @@ static int automation_watch(UmiCliContext *context,
         watch.priming = 0;
     }
     if (status == UMI_STATUS_OK && force_initial_generation) {
-        status = umi_build_continuous_record_change(
-            continuous,
-            "CMakeLists.txt",
-            0,
-            automation_clock_milliseconds(&watch.clock, 0));
+        status = automation_record_scheduled_change(
+            &watch, "CMakeLists.txt", 0);
     } else if (status == UMI_STATUS_OK && seed_existing_changes) {
         /* Existing uncommitted work is seeded once so edits made before the
          * watcher started are not silently left without verification. */
         status = automation_visit_repository_changes(
             source_root, automation_continuous_change_sink, &watch);
+    }
+    if (status == UMI_STATUS_OK && stop_after_generation &&
+        schedule.pending_changes) {
+        /* One-shot watcher use is an explicit manual request, so its tests do
+         * not sleep through the normal developer quiet periods. */
+        status = umi_build_automation_schedule_request_manual(&schedule);
     }
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr,
@@ -1157,20 +1447,35 @@ static int automation_watch(UmiCliContext *context,
     (void)signal(SIGTERM, automation_stop_handler);
     (void)printf(
         "Watching %s\n"
-        "Affected modules will build and test after %u ms without edits.\n"
+        "Source verification starts after %llu quiet minutes.\n"
+        "Approved changes wait %llu minutes before automatic build.\n"
+        "Automatic build interval: %llu minutes (zero uses the quiet policy).\n"
+        "Automatic deployment: %s\n"
         "Module update notices are recorded in %s\n"
+        "Use 'umicom automate trigger %s' to cancel the waits safely.\n"
         "Press Ctrl+C to stop after the current safe operation.\n",
         source_root,
-        debounce_ms,
-        journal_path);
+        (unsigned long long)(
+            policy->verification_quiet_ms / UINT64_C(60000)),
+        (unsigned long long)(
+            policy->build_delay_ms / UINT64_C(60000)),
+        (unsigned long long)(
+            policy->build_interval_ms / UINT64_C(60000)),
+        (deploy || policy->automatic_deploy) ? "enabled" : "disabled",
+        journal_path,
+        source_root);
 
     while (!automation_stop_requested) {
         const uint64_t now_ms =
             automation_clock_milliseconds(&watch.clock, 0);
+        UmiBuildAutomationScheduleAction next_action;
 
         status = umi_watcher_scan_once(watcher);
         if (status == UMI_STATUS_OK) {
             status = watch.event_status;
+        }
+        if (status == UMI_STATUS_OK) {
+            status = automation_poll_manual_request(&watch);
         }
         if (status != UMI_STATUS_OK) {
             (void)fprintf(stderr,
@@ -1179,13 +1484,61 @@ static int automation_watch(UmiCliContext *context,
             result = 1;
             break;
         }
-        if (umi_build_continuous_ready(continuous, now_ms)) {
+        next_action = umi_build_automation_schedule_next_action(
+            &schedule, now_ms);
+        if (next_action ==
+            UMI_BUILD_AUTOMATION_SCHEDULE_ACTION_VERIFY) {
+            int verification_passed = 0;
+            UmiStatus verification_status =
+                umi_build_automation_schedule_begin_verification(
+                    &schedule, now_ms);
+
+            if (verification_status == UMI_STATUS_OK) {
+                verification_status = automation_verify_changes(
+                    umi_build_continuous_planner(continuous),
+                    source_root,
+                    &verification_passed);
+            }
+            if (schedule.phase ==
+                UMI_BUILD_AUTOMATION_SCHEDULE_VERIFYING) {
+                const UmiStatus completion_status =
+                    umi_build_automation_schedule_complete_verification(
+                        &schedule,
+                        verification_status == UMI_STATUS_OK &&
+                            verification_passed,
+                        automation_clock_milliseconds(&watch.clock, 0));
+
+                if (verification_status == UMI_STATUS_OK &&
+                    completion_status != UMI_STATUS_OK) {
+                    verification_status = completion_status;
+                }
+            }
+            if (verification_status != UMI_STATUS_OK ||
+                !verification_passed) {
+                (void)fprintf(
+                    stderr,
+                    "Verification blocked the pending generation: %s\n",
+                    umi_status_text(verification_status));
+                result = 1;
+                if (stop_after_generation) {
+                    break;
+                }
+            } else {
+                (void)puts(
+                    "Verification passed; the unchanged revision is approved.");
+            }
+        } else if (next_action ==
+                   UMI_BUILD_AUTOMATION_SCHEDULE_ACTION_BUILD) {
             int generation_succeeded;
             int generation_started = 0;
             UmiBuildContinuousSnapshot snapshot;
             UmiStatus generation_status;
 
-            status = umi_build_continuous_begin(continuous, now_ms);
+            status = umi_build_automation_schedule_begin_build(
+                &schedule, now_ms);
+            if (status == UMI_STATUS_OK) {
+                status = umi_build_continuous_begin(continuous, now_ms);
+            }
             generation_started = status == UMI_STATUS_OK;
             if (status == UMI_STATUS_OK) {
                 status = automation_print_plan(
@@ -1201,7 +1554,7 @@ static int automation_watch(UmiCliContext *context,
                     install_prefix,
                     jobs,
                     run_tests,
-                    deploy) == 0;
+                    deploy || policy->automatic_deploy) == 0;
             generation_status = status;
             if (generation_started) {
                 const UmiStatus completion_status =
@@ -1215,6 +1568,19 @@ static int automation_watch(UmiCliContext *context,
                  * report publication or finalisation failures to the caller. */
                 if (generation_status == UMI_STATUS_OK) {
                     generation_status = completion_status;
+                }
+            }
+            if (schedule.phase ==
+                UMI_BUILD_AUTOMATION_SCHEDULE_BUILDING) {
+                const UmiStatus schedule_status =
+                    umi_build_automation_schedule_complete_build(
+                        &schedule,
+                        generation_succeeded &&
+                            generation_status == UMI_STATUS_OK,
+                        automation_clock_milliseconds(&watch.clock, 0));
+
+                if (generation_status == UMI_STATUS_OK) {
+                    generation_status = schedule_status;
                 }
             }
             if (umi_build_continuous_snapshot(
@@ -1247,6 +1613,37 @@ static int automation_watch(UmiCliContext *context,
     return result;
 }
 
+/* Print resolved local timing so developers can confirm policy before use. */
+static void automation_print_schedule_policy(
+    const UmiBuildAutomationSchedulePolicy *policy,
+    const char *config_path,
+    int config_loaded)
+{
+    if (policy == NULL) {
+        return;
+    }
+    (void)printf(
+        "Automation configuration: %s (%s)\n"
+        "  verification_quiet_minutes=%llu\n"
+        "  build_delay_minutes=%llu\n"
+        "  watchdog_minutes=%llu\n"
+        "  build_interval_minutes=%llu\n"
+        "  automatic_builds=%s\n"
+        "  automatic_deploy=%s\n",
+        config_path != NULL ? config_path : UMI_BUILD_AUTOMATION_DEFAULT_CONFIG,
+        config_loaded ? "loaded" : "using Framework defaults",
+        (unsigned long long)(
+            policy->verification_quiet_ms / UINT64_C(60000)),
+        (unsigned long long)(
+            policy->build_delay_ms / UINT64_C(60000)),
+        (unsigned long long)(
+            policy->watchdog_ms / UINT64_C(60000)),
+        (unsigned long long)(
+            policy->build_interval_ms / UINT64_C(60000)),
+        policy->automatic_builds ? "true" : "false",
+        policy->automatic_deploy ? "true" : "false");
+}
+
 /* Show command-specific help without requiring toolchain or repository discovery. */
 static void automation_print_help(void)
 {
@@ -1257,12 +1654,17 @@ static void automation_print_help(void)
         "  umicom automate run [PATH] [--preset NAME | --build PATH] [--jobs N]\n"
         "                      [--no-tests] [--deploy] [--prefix PATH] [--all]\n"
         "  umicom automate watch [PATH] [--preset NAME | --build PATH] [--jobs N]\n"
-        "                      [--debounce MS] [--interval MS] [--no-tests]\n"
-        "                      [--deploy] [--prefix PATH] [--ignore-existing]\n\n"
+        "                      [--config PATH] [--interval MS] [--no-tests]\n"
+        "                      [--deploy] [--prefix PATH] [--ignore-existing]\n"
+        "  umicom automate trigger [PATH]\n"
+        "  umicom automate settings [PATH] [--config PATH]\n\n"
         "plan discovers changes and prints actions without building anything.\n"
-        "run builds affected product targets and their focused tests.\n"
-        "watch continuously discovers edits, builds and tests affected modules,\n"
+        "run immediately verifies, builds and tests affected product targets.\n"
+        "watch uses local timing policy to verify, build and test affected modules,\n"
         "then records versioned update notices for running applications.\n"
+        "trigger asks an existing watcher to cancel waits and start its gates now.\n"
+        "settings prints the effective local scheduling policy.\n"
+        "The default local configuration is .umicom/automation.conf.\n"
         "--deploy installs only after successful build and test work.\n"
         "--ignore-existing watches only edits made after the watcher starts.\n"
         "--all requests a complete product and test plan even with a clean tree.\n");
@@ -1280,13 +1682,19 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
     const char *build_directory = automation_option_value(argc, argv, "--build");
     const char *install_prefix = automation_option_value(argc, argv, "--prefix");
     const char *jobs_text = automation_option_value(argc, argv, "--jobs");
+    const char *config_option =
+        automation_option_value(argc, argv, "--config");
     const char *debounce_text =
         automation_option_value(argc, argv, "--debounce");
     const char *interval_text =
         automation_option_value(argc, argv, "--interval");
     const char *source_root = source_option;
-    uint32_t debounce_ms = 750U;
+    UmiBuildAutomationSchedulePolicy schedule_policy =
+        umi_build_automation_schedule_policy_default();
+    char config_path[UMI_PATH_CAPACITY];
     uint32_t poll_ms = 500U;
+    uint32_t debounce_override_ms = 0U;
+    int config_loaded = 0;
     int jobs = 0;
     int result = 1;
     UmiStatus status;
@@ -1297,7 +1705,8 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
         return 0;
     }
     if (strcmp(mode, "plan") != 0 && strcmp(mode, "run") != 0 &&
-        strcmp(mode, "watch") != 0) {
+        strcmp(mode, "watch") != 0 && strcmp(mode, "trigger") != 0 &&
+        strcmp(mode, "settings") != 0) {
         (void)fprintf(stderr, "Unknown automated build command: %s\n", mode);
         automation_print_help();
         return 2;
@@ -1312,10 +1721,10 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
         return 2;
     }
     status = automation_parse_milliseconds(
-        debounce_text, 750U, &debounce_ms);
-    if (status == UMI_STATUS_OK) {
+        interval_text, 500U, &poll_ms);
+    if (status == UMI_STATUS_OK && debounce_text != NULL) {
         status = automation_parse_milliseconds(
-            interval_text, 500U, &poll_ms);
+            debounce_text, 1U, &debounce_override_ms);
     }
     if (status != UMI_STATUS_OK) {
         (void)fputs(
@@ -1341,6 +1750,54 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
         return 1;
     }
     source_root = context->project_root;
+    if (strcmp(mode, "watch") == 0 || strcmp(mode, "settings") == 0) {
+        if (config_option != NULL && umi_path_is_absolute(config_option)) {
+            status = automation_copy_text(
+                config_path, sizeof(config_path), config_option);
+        } else {
+            status = umi_fs_join(
+                config_path,
+                sizeof(config_path),
+                source_root,
+                config_option != NULL
+                    ? config_option
+                    : UMI_BUILD_AUTOMATION_DEFAULT_CONFIG);
+        }
+        if (status == UMI_STATUS_OK) {
+            status = umi_build_automation_schedule_policy_load(
+                config_path, &schedule_policy, &config_loaded);
+        }
+        if (status != UMI_STATUS_OK) {
+            (void)fprintf(
+                stderr,
+                "Unable to load automation configuration %s: %s\n",
+                config_path,
+                umi_status_text(status));
+            return 1;
+        }
+        /* This compatibility switch is useful for short-lived test hosts. A
+         * committed or local configuration remains the normal human-readable
+         * way to express minutes or an eight-hour interval. */
+        if (debounce_text != NULL) {
+            schedule_policy.verification_quiet_ms =
+                (uint64_t)debounce_override_ms;
+        }
+        if (strcmp(mode, "settings") == 0) {
+            automation_print_schedule_policy(
+                &schedule_policy, config_path, config_loaded);
+            return 0;
+        }
+    }
+    if (strcmp(mode, "trigger") == 0) {
+        status = automation_write_manual_request(source_root);
+        if (status != UMI_STATUS_OK) {
+            (void)fprintf(stderr,
+                          "Unable to request a manual build: %s\n",
+                          umi_status_text(status));
+            return 1;
+        }
+        return 0;
+    }
 #ifdef _WIN32
     if (preset == NULL && build_directory == NULL) {
         preset = "windows-ucrt64-headless-debug";
@@ -1360,7 +1817,7 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
             jobs,
             !automation_has_flag(argc, argv, "--no-tests"),
             automation_has_flag(argc, argv, "--deploy"),
-            debounce_ms,
+            &schedule_policy,
             poll_ms,
             !automation_has_flag(argc, argv, "--ignore-existing"),
             automation_has_flag(argc, argv, "--once"),
@@ -1403,6 +1860,20 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
     if (strcmp(mode, "plan") == 0) {
         umi_build_automation_destroy(automation);
         return 0;
+    }
+    {
+        int verification_passed = 0;
+
+        status = automation_verify_changes(
+            automation, source_root, &verification_passed);
+        if (status != UMI_STATUS_OK || !verification_passed) {
+            (void)fprintf(
+                stderr,
+                "Automated build did not start because verification %s.\n",
+                status != UMI_STATUS_OK ? umi_status_text(status) : "failed");
+            umi_build_automation_destroy(automation);
+            return 1;
+        }
     }
     result = automation_execute(
         context,

@@ -2,10 +2,9 @@
 
 The Umicom Automated Build System is the Framework decision layer that turns
 changed files into a small, safe build and test plan. It keeps the existing
-compiler toolchain: CMake describes the project, Ninja performs dependency-aware
-incremental compilation, and CTest runs the selected tests. The new layer decides
-which of those actions are necessary, so a developer does not need to name a
-module or remember a test expression.
+configured compiler, incremental builder and test runner. The new layer decides
+which actions are necessary, so a developer does not need to name a module or
+remember a test expression.
 
 ## How it works
 
@@ -36,7 +35,7 @@ Planning prepares only the repository-read capability. Compiler discovery and
 environment preparation begin only for `run`, after a non-empty plan exists,
 and are reused for every selected target in that run.
 
-Build affected products and run their focused tests:
+Verify changed source, build affected products and run their focused tests:
 
 ```text
 umicom automate run C:\umicom\umicom-applications --preset windows-ucrt64-debug --jobs 2
@@ -62,7 +61,8 @@ umicom automate run C:\umicom\umicom-applications --preset windows-ucrt64-debug 
 
 Deployment is deliberately opt-in because installation changes files outside the
 build directory. Planning and ordinary automated builds never install, publish,
-commit, push or delete source files.
+commit, push or delete source files. Deployment cannot be combined with
+`--no-tests`; installed artifacts must have focused executable-test evidence.
 
 ## Continuous local integration
 
@@ -74,25 +74,31 @@ umicom automate watch C:\umicom\umicom-applications --preset windows-ucrt64-debu
 ```
 
 The controller establishes a file baseline, seeds changes that were already in
-the working tree, and then watches recursively. A short quiet period groups the
-several file writes made by one editor save. Generated build, package, install
-and local runtime paths are ignored, which prevents a completed build from
-starting itself again.
+the working tree, and then watches recursively. Generated build, package,
+install and local runtime paths are ignored, which prevents a completed build
+from starting itself again.
 
-For each quiet batch the controller performs the following lifecycle:
+The default lifecycle deliberately separates checking source from compiling it:
 
-1. normalise and deduplicate changed paths;
-2. calculate direct module ownership and shared Framework consumers;
-3. configure only when build definitions or manifests require it;
-4. build affected aggregate targets and compile their test targets;
-5. run the focused application and integration tests;
-6. optionally stage an installation when `--deploy` was explicitly supplied;
-7. publish version, build target and generation metadata only after success.
+1. each save normalises and deduplicates its changed path;
+2. ten quiet minutes after the last save, changed C and header files pass the
+   local security and quality gate;
+3. a new save invalidates older verification and restarts the quiet timer;
+4. after successful verification, the unchanged revision waits twenty minutes;
+5. the Framework calculates direct module ownership and shared consumers;
+6. affected targets compile and their focused executable tests run;
+7. an installation is staged only when local policy or `--deploy` enables it;
+8. version, build target and generation metadata publish only after success.
 
-Use `--debounce MS` to change the quiet period and `--interval MS` to change how
-often the portable watcher scans. `--ignore-existing` omits working-tree changes
-made before startup. `--all` requests one complete initial generation and then
-continues watching. Ctrl+C asks the controller to stop at a safe boundary.
+The latest machine-readable quality evidence is stored in the untracked
+`.umicom/runtime/quality-latest.sarif` file. A failed gate blocks compilation,
+keeps the changed-file evidence and waits for a repair. No source file is
+deleted or rewritten by the controller.
+
+Use `--interval MS` to change how often the portable watcher scans.
+`--ignore-existing` omits working-tree changes made before startup. `--all`
+requests one complete initial generation and then continues watching. Ctrl+C
+asks the controller to stop at a safe boundary.
 
 Compiler discovery happens before the first non-empty generation and is reused
 afterwards. Native incremental compilation remains the responsibility of the
@@ -103,6 +109,64 @@ A failed generation never publishes an update and its changed-file evidence is
 retained. The next source edit retries that failed slice together with the new
 change, while avoiding an uncontrolled retry loop when nobody has changed the
 code.
+
+## Local timing configuration
+
+Scheduling uses the ignored local file `.umicom/automation.conf`. A missing
+file is valid and uses Framework defaults. The file is not committed because
+different developers and build machines may use different working hours.
+
+```text
+# Wait for active editing to become quiet before checking changed source.
+verification_quiet_minutes=10
+
+# Wait after a successful check before compiling the unchanged revision.
+build_delay_minutes=20
+
+# Prevent an ordinary quiet-time generation from being forgotten.
+watchdog_minutes=60
+
+# Zero uses the quiet-time policy. A positive value creates a build interval.
+build_interval_minutes=0
+
+# Automatic work can be paused without disabling manual requests.
+automatic_builds=true
+
+# Installation remains disabled unless a developer explicitly enables it.
+automatic_deploy=false
+```
+
+The parser rejects unknown keys, incomplete lines, invalid booleans and numeric
+overflow. It applies the whole file or none of it, preventing a partly loaded
+safety policy. Inspect the effective policy without starting a compiler:
+
+```text
+umicom automate settings C:\umicom\umicom-applications
+```
+
+For a controller that collects approved work and runs at eight-hour intervals,
+set:
+
+```text
+build_interval_minutes=480
+automatic_deploy=true
+```
+
+Interval mode still verifies changed source after its quiet period, but holds
+the approved revision until the next interval boundary. The normal watchdog
+does not force an interval build to run early.
+
+When development finishes sooner, request the pending generation immediately:
+
+```text
+umicom automate trigger C:\umicom\umicom-applications
+```
+
+The request wakes the already running controller. It cancels timing waits but
+does not bypass source verification, compilation, executable tests or
+deployment policy. The request marker remains in the ignored runtime folder as
+local evidence; the controller remembers its modification time and does not
+replay an old request after restart.
 
 ## Discovering module updates
 
@@ -132,7 +196,8 @@ live-reload policy in the future.
 
 ## Stable aggregate targets
 
-Configuration creates the following names from checked-in application manifests:
+Workspace preparation creates the following names from checked-in application
+manifests:
 
 - `umicom-products` builds the configured application entry points and native
   Framework command.
@@ -153,10 +218,10 @@ estate because a public contract can affect every enabled consumer.
 
 ## Framework API
 
-`umicom/build/automation.h` and `umicom/build/continuous_integration.h` are
-toolkit-neutral. File watchers, Umicom Studio,
-continuous-integration workers and future build dashboards can all use the same
-contract:
+`umicom/build/automation.h`, `umicom/build/automation_schedule.h` and
+`umicom/build/continuous_integration.h` are toolkit-neutral. File watchers,
+Umicom Studio, continuous-integration workers and future build dashboards can
+all use the same contract:
 
 - initialise and register scopes;
 - add changed-path evidence;
@@ -164,10 +229,12 @@ contract:
 - read copied plan items and aggregate snapshots;
 - display stable action and change-kind descriptions.
 
-The continuous contract adds debounce state, generation counters, copied plan
-items and a synchronous update sink. The command-line host composes it with the
-Framework watcher, clock, build executor and durable change broker. Applications
-can host the same contract without copying the planning rules.
+The schedule contract adds quiet-time, watchdog, recurring interval, manual
+request and verification/build phases. The continuous contract adds generation
+counters, copied plan items and a synchronous update sink. The command-line host
+composes them with the Framework watcher, clock, quality scanner, build executor
+and durable change broker. Applications can host the same contracts without
+copying policy.
 
 The API does not execute commands. This separation makes planning independently
 testable and prevents a user-interface client from bypassing toolchain safety,

@@ -650,6 +650,22 @@ UmiStatus umi_build_automation_add_change(
     return UMI_STATUS_OK;
 }
 
+/* Return a defensive copy so scanners cannot mutate the planner's evidence. */
+UmiStatus umi_build_automation_change_at(
+    const UmiBuildAutomation *automation,
+    size_t position,
+    UmiBuildAutomationChange *out_change)
+{
+    if (automation == NULL || out_change == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (position >= automation->change_count) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    *out_change = automation->changes[position];
+    return UMI_STATUS_OK;
+}
+
 /* Evaluate direct ownership first, then add safe transitive consumers. */
 UmiStatus umi_build_automation_evaluate(UmiBuildAutomation *automation)
 {
