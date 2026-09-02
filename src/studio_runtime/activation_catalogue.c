@@ -42,7 +42,8 @@ static const ActivationFactory FACTORIES[] = {
     umi_studio_activation_profile_object_inspector,
     umi_studio_activation_profile_design_code,
     umi_studio_activation_profile_design_mixed,
-    umi_studio_activation_profile_design_preview
+    umi_studio_activation_profile_design_preview,
+    umi_studio_activation_profile_live_preview
 };
 
 /*

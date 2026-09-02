@@ -84,6 +84,11 @@ int main(void)
     static const char HTML[] =
         "<html><head><title>Live page</title><style>hidden</style></head>"
         "<body><h1>Preview body</h1><script>not executed</script></body></html>";
+    static const char LONG_PATH[] =
+        "workspace/a-very-long-folder-name/a-very-long-folder-name/"
+        "a-very-long-folder-name/a-very-long-folder-name/"
+        "a-very-long-folder-name/a-very-long-folder-name/"
+        "source-file-with-a-readable-name.c";
     UmiBrowserSourcePreviewService *service = NULL;
     UmiBrowserSourcePreviewProvider provider;
     UmiBrowserSourcePreviewRequest request;
@@ -117,6 +122,15 @@ int main(void)
     assert(strcmp(result.provider_id, "umicom.preview.plain-text") == 0);
     assert(strcmp(result.content, request.source) == 0);
     assert(result.executed_source == 0);
+
+    /* Long display paths are safely shortened instead of producing an empty
+     * panel heading or changing the stable provider identity. */
+    request = request_for(LONG_PATH, "c", "int value = 1;", 81U);
+    assert(umi_browser_source_preview_service_render(
+        service, &request, &result) == UMI_STATUS_OK);
+    assert(result.title[0] != '\0');
+    assert(result.title[sizeof(result.title) - 1U] == '\0');
+    assert(strlen(result.title) == sizeof(result.title) - 1U);
 
     /* An executable provider cannot run until both trust and consent are present. */
     umi_browser_source_preview_provider_init(&provider);

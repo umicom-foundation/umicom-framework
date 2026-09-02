@@ -22,7 +22,7 @@
 int main(void)
 {
     UmiStudioRuntimeActivationRule rule;
-    assert(umi_studio_activation_profile_count() == 26U);
+    assert(umi_studio_activation_profile_count() == 27U);
     assert(umi_studio_activation_resolve(
         "ide.open.problem", &rule) == UMI_STATUS_OK);
     assert(rule.surface == UMI_STUDIO_SURFACE_EDITOR);
@@ -59,5 +59,10 @@ int main(void)
     assert(umi_studio_activation_resolve(
         "designer.preview", &rule) == UMI_STATUS_OK);
     assert(rule.surface == UMI_STUDIO_SURFACE_DESIGN_PREVIEW);
+    /* Opening Live Preview must focus the active-document surface rather than
+     * the visual designer's separate preview mode. */
+    assert(umi_studio_activation_resolve(
+        "view.live-preview", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_LIVE_PREVIEW);
     return 0;
 }

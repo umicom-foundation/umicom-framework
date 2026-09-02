@@ -23,7 +23,7 @@
 int main(void)
 {
     size_t i,j;
-    assert(umi_studio_surface_catalogue_count() == 26U);
+    assert(umi_studio_surface_catalogue_count() == 27U);
     assert(umi_studio_surface_catalogue_for_kind(
         UMI_STUDIO_SURFACE_EDITOR) != NULL);
     assert(umi_studio_surface_catalogue_for_kind(
@@ -46,6 +46,8 @@ int main(void)
         UMI_STUDIO_SURFACE_DESIGN_MIXED) != NULL);
     assert(umi_studio_surface_catalogue_for_kind(
         UMI_STUDIO_SURFACE_DESIGN_PREVIEW) != NULL);
+    assert(umi_studio_surface_catalogue_for_kind(
+        UMI_STUDIO_SURFACE_LIVE_PREVIEW) != NULL);
     /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<umi_studio_surface_catalogue_count();++i) {
         const UmiStudioRuntimeSurfaceBinding *a =

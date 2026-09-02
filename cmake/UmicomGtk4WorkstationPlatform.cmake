@@ -86,6 +86,12 @@ target_sources(umicom_ui PRIVATE
 
 # Native GTK4 renderers are attached only when the optional canonical adapter exists.
 if(TARGET umicom_ui_gtk4)
+    # The native chart surface consumes the same core scene and optional Cairo
+    # adapter used by other GTK4 applications, keeping product code thin.
+    target_link_libraries(umicom_ui_gtk4 PUBLIC
+        Umicom::chart
+        Umicom::chart_cairo
+    )
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"

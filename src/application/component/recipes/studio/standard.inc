@@ -16,6 +16,10 @@
 static const UmiApplicationComponentRecipeSlot STUDIO_STANDARD_SLOTS[] = {
     {"umicom.development.editor", "umicom.development.editor",
      UMI_APPLICATION_COMPONENT_REGION_PRIMARY, 5U, 1, 1},
+    /* Preview stays optional in the default recipe and can be docked beside
+     * the editor, grouped as a tab or detached to another display. */
+    {"umicom.development.live-preview", "umicom.development.live-preview",
+     UMI_APPLICATION_COMPONENT_REGION_RIGHT, 4U, 0, 0},
     {"umicom.development.explorer", "umicom.development.explorer",
      UMI_APPLICATION_COMPONENT_REGION_LEFT, 1U, 1, 0},
     {"umicom.development.designer", "umicom.development.designer",

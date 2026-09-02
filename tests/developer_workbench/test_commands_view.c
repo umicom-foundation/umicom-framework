@@ -31,7 +31,7 @@ int main(void)
     size_t other;
 
     assert(items != NULL);
-    assert(count == 12U);
+    assert(count == 13U);
 
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {

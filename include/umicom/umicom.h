@@ -274,6 +274,9 @@
 
 #include "umicom/chart/types.h"
 #include "umicom/chart/candle.h"
+#include "umicom/chart/render_scene.h"
+#include "umicom/chart/renderer.h"
+#include "umicom/chart/plot.h"
 #include "umicom/chart/series.h"
 #include "umicom/chart/viewport.h"
 #include "umicom/chart/model.h"

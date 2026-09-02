@@ -23,12 +23,13 @@
 int main(void)
 {
     const UmiStudioRuntimeLayoutPresetDefinition *design;
+    const UmiStudioRuntimeLayoutPresetDefinition *code_preview;
     size_t index;
     int has_code = 0;
     int has_mixed = 0;
     int has_preview = 0;
 
-    assert(umi_studio_layout_catalogue_count()==9U);
+    assert(umi_studio_layout_catalogue_count()==10U);
     assert(umi_studio_layout_catalogue_find(
         "umicom.studio.layout.default")!=NULL);
     assert(strcmp(umi_studio_layout_catalogue_at(0)->title,
@@ -52,5 +53,14 @@ int main(void)
         }
     }
     assert(has_code && has_mixed && has_preview);
+    code_preview = umi_studio_layout_catalogue_find(
+        "umicom.studio.layout.code-preview");
+    /* The named authoring layout must keep both sides of the workflow visible. */
+    assert(code_preview != NULL);
+    assert(umi_studio_layout_preset_contains_surface(
+        code_preview, UMI_STUDIO_SURFACE_EDITOR));
+    assert(umi_studio_layout_preset_contains_surface(
+        code_preview, UMI_STUDIO_SURFACE_LIVE_PREVIEW));
+    assert(umi_studio_layout_preset_validate(code_preview) == UMI_STATUS_OK);
     return 0;
 }

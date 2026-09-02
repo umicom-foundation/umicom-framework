@@ -1773,6 +1773,9 @@ umicom_apply_sanitizers(umicom_browser)
 add_library(umicom_chart STATIC
     src/chart/types.c
     src/chart/candle.c
+    src/chart/render_scene.c
+    src/chart/renderer.c
+    src/chart/plot.c
     src/chart/series.c
     src/chart/viewport.c
     src/chart/model.c
@@ -1801,6 +1804,28 @@ target_include_directories(umicom_chart PUBLIC
 )
 umicom_apply_warnings(umicom_chart)
 umicom_apply_sanitizers(umicom_chart)
+
+# Cairo is already a native dependency of the optional GTK4 frontend. Keep it
+# in a separate adapter target so the core chart library remains headless and
+# future graphics adapters can implement the same renderer contract.
+if(UMICOM_BUILD_GTK4_ADAPTER)
+    pkg_check_modules(UMICOM_FRAMEWORK_CAIRO REQUIRED IMPORTED_TARGET cairo>=1.16)
+    add_library(umicom_chart_cairo STATIC
+        adapters/cairo/chart_renderer_cairo.c
+    )
+    add_library(Umicom::chart_cairo ALIAS umicom_chart_cairo)
+    set_target_properties(umicom_chart_cairo PROPERTIES EXPORT_NAME chart_cairo)
+    target_link_libraries(umicom_chart_cairo PUBLIC
+        Umicom::chart
+        PkgConfig::UMICOM_FRAMEWORK_CAIRO
+    )
+    target_include_directories(umicom_chart_cairo PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+    umicom_apply_warnings(umicom_chart_cairo)
+    umicom_apply_sanitizers(umicom_chart_cairo)
+endif()
 
 # -----------------------------------------------------------------------------
 # Multi-frontend application plans and browser-project generators
@@ -4100,6 +4125,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-browser-source-preview-tests framework.browser_source_preview tests/test_browser_source_preview.c)
     umicom_add_framework_test(umicom-chart-model-tests framework.chart_model tests/test_chart_model.c)
     umicom_add_framework_test(umicom-chart-indicator-tests framework.chart_indicator tests/test_chart_indicator.c)
+    umicom_add_framework_test(umicom-chart-renderer-tests framework.chart_renderer tests/test_chart_renderer.c)
     umicom_add_framework_test(umicom-frontend-plan-tests framework.frontend_plan tests/test_frontend_plan.c)
     umicom_add_framework_test(umicom-frontend-headless-tests framework.frontend_headless tests/test_frontend_headless.c)
     umicom_add_framework_test(umicom-frontend-devices-tests framework.frontend_devices tests/test_frontend_devices.c)
@@ -4912,7 +4938,7 @@ install(TARGETS
 
 # Create this optional product surface only when its build option is enabled.
 if(UMICOM_BUILD_GTK4_ADAPTER)
-    install(TARGETS umicom_ui_gtk4
+    install(TARGETS umicom_ui_gtk4 umicom_chart_cairo
         EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -4941,6 +4967,13 @@ set(UMICOM_FRAMEWORK_FIND_SQLITE "")
 # Apply this branch only when its contract condition is satisfied.
 if(SQLite3_FOUND)
     set(UMICOM_FRAMEWORK_FIND_SQLITE "find_dependency(SQLite3)")
+endif()
+
+set(UMICOM_FRAMEWORK_FIND_CAIRO "")
+# Installed consumers need the same imported target used by the optional chart adapter.
+if(TARGET umicom_chart_cairo)
+    set(UMICOM_FRAMEWORK_FIND_CAIRO
+        "find_dependency(PkgConfig)\npkg_check_modules(UMICOM_FRAMEWORK_CAIRO REQUIRED IMPORTED_TARGET cairo>=1.16)")
 endif()
 
 configure_package_config_file(

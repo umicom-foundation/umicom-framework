@@ -23,6 +23,7 @@
 #include "shell/shell_notifications.inc"
 #include "development/development_explorer.inc"
 #include "development/development_editor.inc"
+#include "development/development_live_preview.inc"
 #include "development/development_build.inc"
 #include "development/development_debug.inc"
 #include "development/development_testing.inc"

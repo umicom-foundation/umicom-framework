@@ -23,4 +23,5 @@
 #include "umicom/studio_runtime/layout_presets/zen.h"
 #include "umicom/studio_runtime/layout_presets/learning.h"
 #include "umicom/studio_runtime/layout_presets/visual_design.h"
+#include "umicom/studio_runtime/layout_presets/code_preview.h"
 #endif

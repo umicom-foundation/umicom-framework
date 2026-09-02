@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include <assert.h>
+#include <string.h>
 
 #include "umicom/application_shell/profiles/view_menu.h"
 
@@ -28,7 +29,7 @@ int main(void)
     UmiApplicationShellContribution contribution;
 
     assert(profile != NULL);
-    assert(profile->contribution_count == 11U);
+    assert(profile->contribution_count == 12U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -40,6 +41,12 @@ int main(void)
         registry,
         "umicom.shell.view-menu.root",
         &contribution) == UMI_STATUS_OK);
+    /* The command is public through the normal View menu profile. */
+    assert(umi_application_shell_registry_find(
+        registry,
+        "umicom.shell.view-menu.live-preview",
+        &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "view.live-preview") == 0);
 
     umi_application_shell_registry_destroy(registry);
     return 0;

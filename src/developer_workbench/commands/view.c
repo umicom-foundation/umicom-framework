@@ -112,6 +112,14 @@ static const UmiDeveloperWorkbenchCommandDefinition COMMANDS[] = {
         "Show or focus Run and Debug.",
         UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL,
         UMI_DEVELOPER_WORKBENCH_COMMAND_NONE
+    },
+    {
+        "view.live-preview",
+        "Live Preview",
+        "View",
+        "Show or focus the active document preview.",
+        UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL,
+        UMI_DEVELOPER_WORKBENCH_COMMAND_NONE
     }
 };
 

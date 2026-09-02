@@ -44,7 +44,8 @@ static const SurfaceFactory FACTORIES[] = {
     umi_studio_surface_profile_object_inspector,
     umi_studio_surface_profile_design_code,
     umi_studio_surface_profile_design_mixed,
-    umi_studio_surface_profile_design_preview
+    umi_studio_surface_profile_design_preview,
+    umi_studio_surface_profile_live_preview
 };
 
 /*

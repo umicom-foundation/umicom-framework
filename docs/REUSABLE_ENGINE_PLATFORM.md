@@ -41,7 +41,7 @@ foundation or an operational implementation.
 |---|---|---|
 | Game | Foundation | Stable entities, bounded worlds, 2D/3D/retro profiles and deterministic participant tick acknowledgement. |
 | 3D rendering | Foundation | Toolkit-neutral scene nodes, parent-child safety, transforms, visibility and portable mesh/material resource IDs. |
-| Chart and analytics | Operational | Chart panes, series, scales, indicators, drawings, annotations, streams and workspaces. |
+| Chart and analytics | Operational | Chart panes, series, scales, indicators, drawings, annotations, streams, workspaces, safe data-to-pixel projection and a backend-neutral render scene. |
 | Document generation | Foundation | Output plans, text/script/storyboard generation and adapters for binary document containers. |
 | Media rendering | Foundation | Owned RGBA image surfaces and deterministic step/linear animation tracks. |
 | Trading and matching | Operational | Order books, matching, brokerage, risk, surveillance, positions, replay and execution evidence. |
@@ -116,7 +116,7 @@ The next engine updates should add:
 1. game component storage, deterministic system scheduling, save-state and
    transport adapters;
 2. camera, lighting, material, mesh, spatial index and graphics-backend plans;
-3. richer statistical pipelines and GPU-ready chart render data;
+3. richer statistical pipelines, axis label formatting, interaction hit-testing and additional chart-rendering adapters;
 4. tested PDF and open document-package adapters;
 5. animation curves, tracks for vectors/colours and frame composition;
 6. community relationships, feeds, privacy, reporting and federation policy;

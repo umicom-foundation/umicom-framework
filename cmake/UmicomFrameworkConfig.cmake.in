@@ -3,6 +3,7 @@
 include(CMakeFindDependencyMacro)
 find_dependency(Threads)
 @UMICOM_FRAMEWORK_FIND_SQLITE@
+@UMICOM_FRAMEWORK_FIND_CAIRO@
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkTargets.cmake")
 set(UMICOM_FRAMEWORK_RESOURCE_ROOT

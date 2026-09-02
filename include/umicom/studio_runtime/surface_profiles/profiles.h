@@ -40,4 +40,5 @@
 #include "umicom/studio_runtime/surface_profiles/design_code.h"
 #include "umicom/studio_runtime/surface_profiles/design_mixed.h"
 #include "umicom/studio_runtime/surface_profiles/design_preview.h"
+#include "umicom/studio_runtime/surface_profiles/live_preview.h"
 #endif

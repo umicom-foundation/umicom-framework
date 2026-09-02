@@ -20,6 +20,10 @@ Start with the [Umicom Framework Developer Guide](UMICOM_FRAMEWORK_DEVELOPER_GUI
 if you are new to C or to Framework. It explains how public contracts fit
 together and how a thin application reuses them.
 
+The [Chart Rendering Platform](CHART_RENDERING_PLATFORM.md) explains how chart
+data becomes a reusable, responsive scene and then reaches an optional graphics
+adapter without coupling an application to that adapter.
+
 The `umicom-developer-reference` program generates the current engine,
 component, panel, layout and application-feature catalogue from live Framework
 data. This short page remains an orientation map; it must not duplicate the
@@ -39,6 +43,8 @@ Framework headers from `src`.
 | Process | `platform/process.h` | Implemented |
 | Time | `platform/clock.h`, `runtime/scheduler.h` | Implemented |
 | Documents and workspace | `platform/document.h`, `platform/workspace.h` | Foundation |
+| Safe source preview | `browser/source_preview.h`, `browser/document_preview.h` | Implemented provider service with readable HTML and plain-text fallbacks |
+| Chart data and rendering | `chart/model.h`, `chart/plot.h`, `chart/render_scene.h`, `chart/renderer.h` | Implemented toolkit-neutral line, scatter, bar and candlestick scene pipeline with an optional native vector adapter |
 | Runtime | `runtime/module.h`, `module_registry.h`, `master_controller.h` | Implemented ABI 2 |
 | Capabilities | `runtime/capability_registry.h`, `capability_catalogue.h` | Implemented |
 | Product metadata | `runtime/application_manifest.h`, `runtime/suite.h` | Implemented |

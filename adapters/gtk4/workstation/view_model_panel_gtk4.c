@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "umicom/chart/plot.h"
 #include "umicom/ui/command_view.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/workstation/chart_surface.h"
@@ -100,6 +101,129 @@ static const char *read_string(UmiUiViewModel *view, const char *key,
     return fallback;
 }
 
+/* Read one real property while rejecting a missing value or a different value kind. */
+static UmiStatus read_real_property(
+    UmiUiViewModel *view,
+    const char *key,
+    double *out_value)
+{
+    UmiUiValue value;
+    UmiStatus status;
+
+    /* The model, key and output are all required for a safe property read. */
+    if (view == NULL || key == NULL || out_value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_ui_view_model_get_property(view, key, &value);
+    /* Preserve a missing-property result so the caller can show an empty chart. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    /* A value with another kind must not be interpreted through the real field. */
+    if (value.kind != UMI_UI_VALUE_REAL) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    *out_value = value.real_value;
+    return UMI_STATUS_OK;
+}
+
+/* Build a responsive scene from the selected market bar stored in the view model. */
+static UmiStatus build_trading_chart_scene(
+    UmiUiViewModel *view,
+    UmiChartRenderScene **out_scene)
+{
+    UmiUiValue has_bar;
+    UmiChartCandle candle = {0};
+    UmiChartPlotViewport viewport;
+    UmiChartPlotStyle style;
+    UmiChartRenderScene *scene = NULL;
+    UmiStatus status;
+
+    /* Clear the output first so every failure leaves an unambiguous empty result. */
+    if (view == NULL || out_scene == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_scene = NULL;
+
+    status = umi_ui_view_model_get_property(view, "trading.has-bar", &has_bar);
+    /* A missing current bar is a normal empty chart state. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    /* Only a true Boolean value authorises reading the associated OHLC fields. */
+    if (has_bar.kind != UMI_UI_VALUE_BOOLEAN || !has_bar.boolean_value) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    status = read_real_property(view, "trading.open", &candle.open);
+    /* Read the high only when the opening value was available and correctly typed. */
+    if (status == UMI_STATUS_OK) {
+        status = read_real_property(view, "trading.high", &candle.high);
+    }
+    /* Read the low only when every earlier value in this property group is valid. */
+    if (status == UMI_STATUS_OK) {
+        status = read_real_property(view, "trading.low", &candle.low);
+    }
+    /* Read the close only when the partial candle is still valid to complete. */
+    if (status == UMI_STATUS_OK) {
+        status = read_real_property(view, "trading.close", &candle.close);
+    }
+    /* Read volume last so no later logic can confuse an incomplete candle with data. */
+    if (status == UMI_STATUS_OK) {
+        status = read_real_property(view, "trading.volume", &candle.volume);
+    }
+    /* Do not create a visual from an incomplete property group. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    candle.time_ms = 0;
+    status = umi_chart_render_scene_create(32U, &scene);
+    /* Preserve allocation failure and leave ownership with no caller. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    status = umi_chart_render_scene_set_coordinate_size(scene, 640.0, 360.0);
+    /* Calculate a padded visible range only after responsive scene setup succeeds. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_plot_viewport_from_candles(
+            &candle,
+            1U,
+            (UmiChartRenderRectangle){12.0, 12.0, 616.0, 336.0},
+            0.08,
+            &viewport);
+    }
+    umi_chart_plot_style_dark(&style);
+    /* Keep the application theme visible beneath the chart's grid and data. */
+    style.background_color.alpha = 0.0;
+    /* Add the shared frame before data so the candle is painted above its grid. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_plot_add_frame(scene, &viewport, &style);
+    }
+    /* Add market data only after the complete background and grid were stored. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_plot_add_candlesticks(
+            scene,
+            &candle,
+            1U,
+            &viewport,
+            &style);
+    }
+
+    /* Release partial scene data when any stage could not finish safely. */
+    if (status != UMI_STATUS_OK) {
+        umi_chart_render_scene_destroy(scene);
+        return status;
+    }
+
+    *out_scene = scene;
+    return UMI_STATUS_OK;
+}
+
 /* Provide the is row property operation used by this module and its client applications. */
 static int is_row_property(const char *key)
 {
@@ -126,9 +250,11 @@ static GtkWidget *create_chart_if_needed(UmiUiViewModel *view,
                                          const char *view_kind,
                                          const char *title)
 {
-    UmiWsChartSurface *chart;
+    UmiWsChartSurface chart = {0};
+    UmiChartRenderScene *scene = NULL;
     UmiUiViewSnapshot snapshot;
     GtkWidget *widget;
+    UmiStatus scene_status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -138,36 +264,24 @@ static GtkWidget *create_chart_if_needed(UmiUiViewModel *view,
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ui_view_model_snapshot(view, &snapshot) != UMI_STATUS_OK)
         return NULL;
-    chart = (UmiWsChartSurface *)calloc(1U, sizeof(*chart));
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (chart == NULL) return NULL;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (umi_ws_chart_surface_init(chart, snapshot.view_id, title) != UMI_STATUS_OK) {
-        free(chart);
+    if (umi_ws_chart_surface_init(&chart, snapshot.view_id, title) != UMI_STATUS_OK) {
         return NULL;
     }
-    chart->show_grid = true;
-    chart->sync_symbol = true;
-    chart->sync_time = true;
-    chart->sync_crosshair = true;
-    widget = umi_gtk4_ws_chart_surface_create(chart);
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (widget == NULL) {
-        free(chart);
-        return NULL;
+    chart.show_grid = true;
+    chart.sync_symbol = true;
+    chart.sync_time = true;
+    chart.sync_crosshair = true;
+
+    scene_status = build_trading_chart_scene(view, &scene);
+    /* Missing data is a normal state; other failures also retain an honest empty chart. */
+    if (scene_status != UMI_STATUS_OK) {
+        scene = NULL;
     }
-    /* The existing chart renderer borrows the model pointer for its draw
-     * callback, so keep the small presentation model alive with the widget. */
-    g_object_set_data_full(G_OBJECT(widget),
-                           "umicom-view-model-chart-surface",
-                           chart,
-                           free);
+
+    widget = umi_gtk4_ws_chart_surface_create_with_scene(&chart, scene);
+    /* The widget owns a clone, so this temporary scene is always released here. */
+    umi_chart_render_scene_destroy(scene);
     return widget;
 }
 

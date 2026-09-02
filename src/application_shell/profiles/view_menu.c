@@ -144,6 +144,26 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .revision = 1U
     },
     {
+        /* Live Preview is a normal Framework surface, so applications can
+         * dock, float, group and restore it through the shared layout model. */
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.view-menu.live-preview",
+        .title = "Live Preview",
+        .description = "Preview the active editor document",
+        .command_id = "view.live-preview",
+        .component_id = "umicom.development.live-preview",
+        .group_id = "views",
+        .icon_id = "view-preview-symbolic",
+        .context_key = "",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 240,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .badge_count = 0U,
+        .revision = 1U
+    },
+    {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
         .api_version = UMI_APPLICATION_SHELL_API_VERSION,
         .contribution_id = "umicom.shell.view-menu.terminal",

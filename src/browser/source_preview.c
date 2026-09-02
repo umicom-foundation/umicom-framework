@@ -51,6 +51,30 @@ static UmiStatus copy_text(
     return UMI_STATUS_OK;
 }
 
+/* Copy a display label up to the available capacity. Catalogue identifiers use
+ * copy_text because truncating identity would be unsafe, while a long path or
+ * document title may be shortened without changing provider behavior. */
+static void copy_display_text(
+    char *destination,
+    size_t capacity,
+    const char *source)
+{
+    size_t length;
+
+    /* Without writable storage there is no display value to produce. */
+    if (destination == NULL || capacity == 0U) return;
+    /* A missing optional label is represented by a valid empty C string. */
+    if (source == NULL) {
+        destination[0] = '\0';
+        return;
+    }
+    length = strlen(source);
+    /* Leave one byte for the terminator when the label is shortened. */
+    if (length >= capacity) length = capacity - 1U;
+    (void)memcpy(destination, source, length);
+    destination[length] = '\0';
+}
+
 /* Compare ASCII identifiers without applying locale-dependent case rules. */
 static int text_equals_casefold(const char *left, const char *right)
 {
@@ -203,10 +227,10 @@ static UmiStatus render_plain_text(
     (void)copy_text(out_result->provider_id,
                     sizeof(out_result->provider_id),
                     "umicom.preview.plain-text");
-    (void)copy_text(out_result->title, sizeof(out_result->title),
-                    request->path != NULL && request->path[0] != '\0'
-                        ? request->path
-                        : "Text Preview");
+    copy_display_text(out_result->title, sizeof(out_result->title),
+                      request->path != NULL && request->path[0] != '\0'
+                          ? request->path
+                          : "Text Preview");
     (void)copy_text(out_result->summary, sizeof(out_result->summary),
                     "Read-only source preview; no source was executed.");
     out_result->source_bytes = request->source_length;
@@ -242,10 +266,10 @@ static UmiStatus render_readable_html(
     (void)copy_text(out_result->provider_id,
                     sizeof(out_result->provider_id),
                     "umicom.preview.readable-html");
-    (void)copy_text(out_result->title, sizeof(out_result->title),
-                    document.title[0] != '\0'
-                        ? document.title
-                        : "HTML Preview");
+    copy_display_text(out_result->title, sizeof(out_result->title),
+                      document.title[0] != '\0'
+                          ? document.title
+                          : "HTML Preview");
     (void)copy_text(out_result->summary, sizeof(out_result->summary),
                     "Readable document preview; scripts and styles were not executed.");
     out_result->source_bytes = request->source_length;

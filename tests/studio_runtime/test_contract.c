@@ -25,9 +25,9 @@ int main(void)
     const UmiStudioRuntimeContract *contract=umi_studio_runtime_contract();
     assert(contract!=NULL);
     assert(strcmp(contract->application_id,"umicom.studio")==0);
-    assert(contract->required_surface_count==26U);
+    assert(contract->required_surface_count==27U);
     assert(contract->required_alias_count==23U);
-    assert(contract->required_studio_command_count==16U);
-    assert(contract->required_layout_count==9U);
+    assert(contract->required_studio_command_count==17U);
+    assert(contract->required_layout_count==10U);
     return 0;
 }

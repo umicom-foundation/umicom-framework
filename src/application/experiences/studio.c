@@ -29,6 +29,10 @@ static const UmiExperiencePanelDefinition PANELS[] = {
     { sizeof(UmiExperiencePanelDefinition), "editor", "Editor",
       "Source and document editing", "umicom.editor", "development.blue", "centre",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
+    /* Preview follows editor context while remaining independently movable. */
+    { sizeof(UmiExperiencePanelDefinition), "live-preview", "Live Preview",
+      "Safe active-document preview", "umicom.browser", "development.blue", "right",
+      UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_MULTI_MONITOR | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
     { sizeof(UmiExperiencePanelDefinition), "problems", "Problems",
       "Diagnostics and issues", "umicom.diagnostics", "development.blue", "bottom",
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_AUTO_HIDE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED },
@@ -112,7 +116,7 @@ static const UmiExperiencePanelDefinition PANELS[] = {
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED }
 };
 
-static const char *const LAYOUT_DEVELOPMENT[] = {"resource-explorer", "editor", "problems", "output", "terminal", "source-control", "test-explorer", "debug"};
+static const char *const LAYOUT_DEVELOPMENT[] = {"resource-explorer", "editor", "live-preview", "problems", "output", "terminal", "source-control", "test-explorer", "debug"};
 static const char *const LAYOUT_REVIEW[] = {"resource-explorer", "editor", "source-control", "problems", "quality", "context-inspector"};
 static const char *const LAYOUT_AI_ASSISTED[] = {"resource-explorer", "editor", "ai-chat", "ai-assistant", "ai-model-comparison", "knowledge", "context-inspector", "output"};
 /* Engine development keeps reusable components, design and profiling visible. */
@@ -147,6 +151,9 @@ static const UmiExperienceFeatureDefinition FEATURES[] = {
     { sizeof(UmiExperienceFeatureDefinition), "studio.editor", "Professional editor platform",
       "Split editor, navigation and document state", UMI_EXPERIENCE_FEATURE_VERIFIED, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.editor" },
+    { sizeof(UmiExperienceFeatureDefinition), "studio.live-preview", "Active-document live preview",
+      "Safe revision-aware previews with extensible renderer providers", UMI_EXPERIENCE_FEATURE_IMPLEMENTED, UMI_EXPERIENCE_PRIORITY_P1,
+      UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.browser" },
     { sizeof(UmiExperienceFeatureDefinition), "studio.build-test-debug", "Build/test/debug workflow",
       "Unified developer pipeline", UMI_EXPERIENCE_FEATURE_IMPLEMENTED, UMI_EXPERIENCE_PRIORITY_P1,
       UMI_EXPERIENCE_OWNER_FRAMEWORK, "umicom.build" },

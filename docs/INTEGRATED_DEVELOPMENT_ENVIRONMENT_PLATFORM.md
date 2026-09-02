@@ -48,6 +48,7 @@ or implementation.
 | Project manager | Files, resources, dependencies, targets and configurations | Implemented foundation |
 | Multi-root workspace | Open and coordinate several related source roots | Implemented |
 | Code editor | Tabs, dirty state, syntax services, find, replace and line navigation | Implemented foundation |
+| Active-document preview | Revision-aware HTML and plain-text preview beside the editor | Implemented with provider and execution-safety contracts |
 | Editor groups | Split, move, balance, pin and focus document groups | Implemented |
 | Language intelligence | Completion, symbols, diagnostics, hover and navigation | Implemented service contracts; language coverage is expanding |
 | Search and navigation | File, symbol, reference, bookmark and command navigation | Implemented foundation |
@@ -83,6 +84,13 @@ Studio. Other languages use the same `UmiDesignerLiveSourceWorkspace` revision,
 debounce and error-retention contract, while their compiler, browser or script
 runtime remains a replaceable provider. Executable source must run only through
 an approved sandbox provider; editing text never grants permission to run it.
+
+Ordinary editor documents also use the separate
+`UmiBrowserSourcePreviewService`. This service supplies readable HTML and
+plain-text fallbacks, rejects stale provider results and requires both
+workspace trust and explicit permission before an executable provider can be
+selected. The Studio Live Preview panel and Code + Preview layout present this
+Framework service without creating another rendering model.
 
 The next visual-design increments are direct manipulation with selection
 handles, drag-and-drop insertion, snapping guides, alignment commands, event
