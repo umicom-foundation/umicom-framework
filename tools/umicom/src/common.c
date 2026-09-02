@@ -40,7 +40,7 @@ void umi_cli_print_help(void)
         "  umicom package [--source PATH] [--preset NAME] [--jobs N]\n"
         "  umicom deliver [--source PATH] [--preset NAME] [--prefix PATH]\n"
         "  umicom make [--source PATH] [--preset NAME | --build PATH] [--jobs N]\n"
-        "  umicom automate plan|run [PATH] [--all] [--no-tests] [--deploy]\n"
+        "  umicom automate plan|run|watch [PATH] [--all] [--no-tests] [--deploy]\n"
         "  umicom run studio [--source PATH] [--preset NAME]\n"
         "  umicom run --executable PATH [--source PATH] [--preset NAME]\n"
         "  umicom dev doctor|configure|build|test|clean|install|package|deliver|run|automate\n"

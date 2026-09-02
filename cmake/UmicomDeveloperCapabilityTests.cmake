@@ -54,6 +54,7 @@ function(umicom_add_developer_capability_tests)
 
     # Incremental build graph, professional tasks, artifacts and deployment.
     umicom_add_framework_test(umicom-build-automation-tests framework.build.automation tests/test_build_automation.c)
+    umicom_add_framework_test(umicom-build-continuous-integration-tests framework.build.continuous_integration tests/test_build_continuous_integration.c)
     umicom_add_framework_test(umicom-build-incremental-tests framework.build.incremental tests/test_build_incremental.c)
     umicom_add_framework_test(umicom-build-task-tests framework.build.task tests/test_build_task.c)
     umicom_add_framework_test(umicom-build-task-graph-tests framework.build.task_graph tests/test_build_task_graph.c)

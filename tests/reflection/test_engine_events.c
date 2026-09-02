@@ -68,6 +68,8 @@ int main(void)
     char temporary_directory[UMI_PATH_CAPACITY] = {0};
     char journal_name[96] = {0};
     char journal_path[UMI_PATH_CAPACITY] = {0};
+    size_t replay_count = 0U;
+    uint64_t replay_checkpoint = 0U;
     int result = 0;
 
     (void)memset(&capture, 0, sizeof(capture));
@@ -134,6 +136,33 @@ int main(void)
     REQUIRE(strcmp(capture.topic,
                    UMI_REFLECTION_TOPIC_RESOURCE_REGISTERED) == 0);
     REQUIRE(umi_change_broker_last_sequence(broker) == 1U);
+
+    /* Reopening the same durable channel must continue after its last record
+     * rather than publishing another event with sequence one. */
+    umi_reflection_engine_destroy(engine);
+    engine = NULL;
+    umi_change_broker_destroy(broker);
+    broker = NULL;
+    REQUIRE(umi_change_broker_create(&broker_config, &broker) == UMI_STATUS_OK);
+    REQUIRE(umi_change_broker_last_sequence(broker) == 1U);
+    REQUIRE(umi_change_broker_subscribe(
+                broker,
+                UMI_REFLECTION_TOPIC_RESOURCE_REGISTERED,
+                capture_event,
+                &capture) == UMI_STATUS_OK);
+    REQUIRE(umi_change_broker_publish(
+                broker,
+                UMI_REFLECTION_TOPIC_RESOURCE_REGISTERED,
+                "continued",
+                2U) == UMI_STATUS_OK);
+    REQUIRE(umi_change_broker_last_sequence(broker) == 2U);
+    REQUIRE(umi_change_broker_replay_after(broker,
+                                           1U,
+                                           &replay_count,
+                                           &replay_checkpoint) ==
+            UMI_STATUS_OK);
+    REQUIRE(replay_count == 1U);
+    REQUIRE(replay_checkpoint == 2U);
 
 cleanup:
     umi_reflection_engine_destroy(engine);

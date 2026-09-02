@@ -23,6 +23,7 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,29 @@ typedef struct UmiCliAutomationApplicationScan {
     UmiBuildAutomation *automation;
     char applications_root[UMI_PATH_CAPACITY];
 } UmiCliAutomationApplicationScan;
+
+/* Carry the continuous service and safe callback state into watcher events. */
+typedef struct UmiCliAutomationWatch {
+    UmiBuildContinuousIntegration *continuous;
+    UmiClock clock;
+    char source_root[UMI_PATH_CAPACITY];
+    UmiStatus event_status;
+    size_t ignored_event_count;
+    int priming;
+} UmiCliAutomationWatch;
+
+/* Keep the durable broker beside the update callback that publishes to it. */
+typedef struct UmiCliAutomationPublication {
+    UmiChangeBroker *broker;
+} UmiCliAutomationPublication;
+
+/* Let repository discovery feed either a one-shot or continuous planner. */
+typedef UmiStatus (*UmiCliAutomationChangeSink)(void *user_data,
+                                                const char *path,
+                                                int deleted);
+
+/* A signal handler may safely change only this small atomic flag. */
+static volatile sig_atomic_t automation_stop_requested = 0;
 
 /* Return the value following a named command option, or NULL when absent. */
 static const char *automation_option_value(int argc,
@@ -85,6 +109,31 @@ static UmiStatus automation_parse_jobs(const char *text, int *out_jobs)
     return UMI_STATUS_OK;
 }
 
+/* Parse a positive millisecond option without narrowing an overflowing value. */
+static UmiStatus automation_parse_milliseconds(const char *text,
+                                               uint32_t default_value,
+                                               uint32_t *out_value)
+{
+    char *end = NULL;
+    unsigned long value;
+
+    if (out_value == NULL || default_value == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_value = default_value;
+    if (text == NULL) {
+        return UMI_STATUS_OK;
+    }
+    errno = 0;
+    value = strtoul(text, &end, 10);
+    if (errno == ERANGE || end == text || end == NULL || *end != '\0' ||
+        value == 0UL || value > UINT32_MAX) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_value = (uint32_t)value;
+    return UMI_STATUS_OK;
+}
+
 /* Copy a command-owned string only when the destination can hold it. */
 static UmiStatus automation_copy_text(char *destination,
                                       size_t capacity,
@@ -119,6 +168,32 @@ static void automation_normalise_separators(char *path)
             path[index] = '/';
         }
     }
+}
+
+/* Resolve the workspace once so watcher events and manifests share one base. */
+static UmiStatus automation_resolve_project_root(UmiCliContext *context)
+{
+    char current_directory[UMI_PATH_CAPACITY];
+    char absolute_root[UMI_PATH_CAPACITY];
+    UmiStatus status;
+
+    if (context == NULL || context->project_root[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_fs_current_directory(current_directory,
+                                      sizeof(current_directory));
+    if (status == UMI_STATUS_OK) {
+        status = umi_path_absolute(context->project_root,
+                                   current_directory,
+                                   absolute_root,
+                                   sizeof(absolute_root));
+    }
+    if (status == UMI_STATUS_OK) {
+        status = automation_copy_text(context->project_root,
+                                      sizeof(context->project_root),
+                                      absolute_root);
+    }
+    return status;
 }
 
 /*
@@ -196,9 +271,14 @@ static UmiStatus automation_register_foundation_scopes(
 
     umi_build_automation_scope_init(
         &scope, "framework", "Umicom Framework", "framework");
-    status = automation_copy_text(scope.build_target,
+    status = automation_copy_text(scope.version,
+                                  sizeof(scope.version),
+                                  UMICOM_FRAMEWORK_VERSION_STRING);
+    if (status == UMI_STATUS_OK) {
+        status = automation_copy_text(scope.build_target,
                                   sizeof(scope.build_target),
                                   "umicom-products");
+    }
     if (status == UMI_STATUS_OK) {
         status = automation_copy_text(scope.test_build_target,
                                       sizeof(scope.test_build_target),
@@ -300,9 +380,14 @@ static UmiStatus automation_manifest_visitor(const UmiFileInfo *info,
     }
     umi_build_automation_scope_init(
         &scope, slug, manifest.name, prefix);
-    status = automation_copy_text(scope.build_target,
+    status = automation_copy_text(scope.version,
+                                  sizeof(scope.version),
+                                  manifest.version);
+    if (status == UMI_STATUS_OK) {
+        status = automation_copy_text(scope.build_target,
                                   sizeof(scope.build_target),
                                   target);
+    }
     if (status == UMI_STATUS_OK) {
         status = automation_copy_text(scope.test_build_target,
                                       sizeof(scope.test_build_target),
@@ -358,9 +443,11 @@ static UmiStatus automation_register_application_scopes(
                               &scan);
 }
 
-/* Add working-tree and index changes exposed by the Framework VCS provider. */
-static UmiStatus automation_discover_changes(UmiBuildAutomation *automation,
-                                             const char *project_root)
+/* Read working-tree and index changes once, then pass each path to a caller. */
+static UmiStatus automation_visit_repository_changes(
+    const char *project_root,
+    UmiCliAutomationChangeSink sink,
+    void *sink_user_data)
 {
     UmiVcsProvider provider;
     UmiVcsRepository *repository = NULL;
@@ -369,6 +456,11 @@ static UmiStatus automation_discover_changes(UmiBuildAutomation *automation,
     size_t index;
     UmiStatus status;
 
+    /* Both values are required because the visitor calls the sink directly
+     * for every discovered path. */
+    if (project_root == NULL || project_root[0] == '\0' || sink == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     (void)memset(&provider, 0, sizeof(provider));
     (void)memset(&branch, 0, sizeof(branch));
     status = umi_vcs_git_cli_provider(&provider);
@@ -392,7 +484,6 @@ static UmiStatus automation_discover_changes(UmiBuildAutomation *automation,
              ++index) {
             const UmiVcsChange *vcs_change =
                 umi_vcs_change_list_at(changes, index);
-            UmiBuildAutomationChange build_change;
             const int deleted = vcs_change != NULL &&
                 (vcs_change->index_state == UMI_VCS_CHANGE_DELETED ||
                  vcs_change->worktree_state == UMI_VCS_CHANGE_DELETED);
@@ -401,10 +492,7 @@ static UmiStatus automation_discover_changes(UmiBuildAutomation *automation,
                 status = UMI_STATUS_INVALID_STATE;
                 break;
             }
-            umi_build_automation_change_init(
-                &build_change, vcs_change->path, deleted);
-            status = umi_build_automation_add_change(
-                automation, &build_change);
+            status = sink(sink_user_data, vcs_change->path, deleted);
             if (status != UMI_STATUS_OK) {
                 break;
             }
@@ -412,6 +500,217 @@ static UmiStatus automation_discover_changes(UmiBuildAutomation *automation,
     }
     umi_vcs_change_list_destroy(changes);
     umi_vcs_repository_destroy(repository);
+    return status;
+}
+
+/* Adapt repository discovery to the one-shot affected-scope planner. */
+static UmiStatus automation_planner_change_sink(void *user_data,
+                                                const char *path,
+                                                int deleted)
+{
+    UmiBuildAutomationChange change;
+
+    if (user_data == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    umi_build_automation_change_init(&change, path, deleted);
+    return umi_build_automation_add_change(
+        (UmiBuildAutomation *)user_data, &change);
+}
+
+/* Add working-tree and index changes exposed by the Framework VCS provider. */
+static UmiStatus automation_discover_changes(UmiBuildAutomation *automation,
+                                             const char *project_root)
+{
+    return automation_visit_repository_changes(
+        project_root, automation_planner_change_sink, automation);
+}
+
+/* Convert a Framework clock reading to milliseconds without losing ordering. */
+static uint64_t automation_clock_milliseconds(const UmiClock *clock,
+                                              int wall_time)
+{
+    UmiClockNowFn now;
+
+    if (clock == NULL) {
+        return 0U;
+    }
+    now = wall_time ? clock->wall_nanoseconds : clock->monotonic_nanoseconds;
+    return now != NULL ? now(clock) / 1000000U : 0U;
+}
+
+/* Stop the watch loop at a safe boundary after the user presses Ctrl+C. */
+static void automation_stop_handler(int signal_number)
+{
+    (void)signal_number;
+    automation_stop_requested = 1;
+}
+
+/* Match one complete top-level path segment, with an optional name prefix. */
+static int automation_matches_root_segment(const char *path,
+                                           const char *name,
+                                           int prefix_match)
+{
+    const char *separator;
+    size_t segment_length;
+    size_t name_length;
+
+    if (path == NULL || name == NULL) {
+        return 0;
+    }
+    separator = strchr(path, '/');
+    segment_length = separator != NULL
+        ? (size_t)(separator - path)
+        : strlen(path);
+    name_length = strlen(name);
+    return prefix_match
+        ? segment_length >= name_length &&
+              strncmp(path, name, name_length) == 0
+        : segment_length == name_length &&
+              strncmp(path, name, name_length) == 0;
+}
+
+/* Ignore generated output so a successful build cannot trigger itself again. */
+static int automation_watch_ignores_path(const char *relative_path)
+{
+    static const char *const GENERATED_DIRECTORIES[] = {
+        ".git", ".umicom", "out", "dist", "install", "_CPack_Packages"
+    };
+    static const char *const GENERATED_SUFFIXES[] = {
+        ".a", ".dll", ".dylib", ".exe", ".exp", ".ilk", ".lib",
+        ".o", ".obj", ".pdb", ".so", ".tmp", ".temp", ".log"
+    };
+    size_t index;
+    size_t path_length;
+
+    if (relative_path == NULL || relative_path[0] == '\0' ||
+        strncmp(relative_path, "../", 3U) == 0) {
+        return 1;
+    }
+    for (index = 0U;
+         index < sizeof(GENERATED_DIRECTORIES) /
+                     sizeof(GENERATED_DIRECTORIES[0]);
+         ++index) {
+        if (automation_matches_root_segment(
+                relative_path, GENERATED_DIRECTORIES[index], 0)) {
+            return 1;
+        }
+    }
+    if (automation_matches_root_segment(relative_path, "build", 0) ||
+        automation_matches_root_segment(relative_path, "build-", 1) ||
+        automation_matches_root_segment(relative_path, "build_", 1) ||
+        automation_matches_root_segment(relative_path, "cmake-build-", 1)) {
+        return 1;
+    }
+    path_length = strlen(relative_path);
+    for (index = 0U;
+         index < sizeof(GENERATED_SUFFIXES) / sizeof(GENERATED_SUFFIXES[0]);
+         ++index) {
+        const size_t suffix_length = strlen(GENERATED_SUFFIXES[index]);
+
+        if (path_length >= suffix_length &&
+            strcmp(relative_path + path_length - suffix_length,
+                   GENERATED_SUFFIXES[index]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* Feed a changed repository path into the continuous debounce lifecycle. */
+static UmiStatus automation_continuous_change_sink(void *user_data,
+                                                   const char *path,
+                                                   int deleted)
+{
+    UmiCliAutomationWatch *watch = (UmiCliAutomationWatch *)user_data;
+
+    if (watch == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (automation_watch_ignores_path(path)) {
+        watch->ignored_event_count += 1U;
+        return UMI_STATUS_OK;
+    }
+    return umi_build_continuous_record_change(
+        watch->continuous,
+        path,
+        deleted,
+        automation_clock_milliseconds(&watch->clock, 0));
+}
+
+/* Translate one filesystem event into a normalised workspace-relative change. */
+static void automation_watch_event_sink(const UmiWatchEvent *event,
+                                        void *user_data)
+{
+    UmiCliAutomationWatch *watch = (UmiCliAutomationWatch *)user_data;
+    char relative_path[UMI_PATH_CAPACITY];
+    UmiStatus status;
+
+    if (watch == NULL || event == NULL || watch->priming ||
+        watch->event_status != UMI_STATUS_OK || event->directory) {
+        return;
+    }
+    if (event->kind == UMI_WATCH_OVERFLOW ||
+        event->kind == UMI_WATCH_RESCAN_REQUIRED) {
+        /* An overflow means detail was lost, so a root definition change is
+         * the safe signal that asks the planner for a complete rebuild. */
+        watch->event_status = umi_build_continuous_record_change(
+            watch->continuous,
+            "CMakeLists.txt",
+            0,
+            automation_clock_milliseconds(&watch->clock, 0));
+        return;
+    }
+    status = umi_path_relative(watch->source_root,
+                               event->path,
+                               relative_path,
+                               sizeof(relative_path));
+    if (status != UMI_STATUS_OK) {
+        watch->event_status = status;
+        return;
+    }
+    automation_normalise_separators(relative_path);
+    if (automation_watch_ignores_path(relative_path)) {
+        watch->ignored_event_count += 1U;
+        return;
+    }
+    watch->event_status = umi_build_continuous_record_change(
+        watch->continuous,
+        relative_path,
+        event->kind == UMI_WATCH_DELETED,
+        automation_clock_milliseconds(&watch->clock, 0));
+}
+
+/* Persist one successful generation before reporting it to the operator. */
+static UmiStatus automation_publish_update(
+    const UmiBuildContinuousUpdate *update,
+    void *user_data)
+{
+    UmiCliAutomationPublication *publication =
+        (UmiCliAutomationPublication *)user_data;
+    char payload[2048];
+    UmiStatus status;
+
+    if (publication == NULL || publication->broker == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_build_continuous_update_format_json(
+        update, payload, sizeof(payload));
+    if (status == UMI_STATUS_OK) {
+        status = umi_change_broker_publish(
+            publication->broker,
+            UMI_BUILD_CONTINUOUS_UPDATE_TOPIC,
+            payload,
+            update->generation);
+    }
+    if (status == UMI_STATUS_OK) {
+        (void)printf(
+            "Update available: %s %s, generation %llu%s\n",
+            update->display_name,
+            update->version,
+            (unsigned long long)update->generation,
+            update->restart_required ? " (restart required)" : "");
+    }
     return status;
 }
 
@@ -581,17 +880,25 @@ static int automation_execute(UmiCliContext *context,
     int tested_all = 0;
     UmiStatus status;
 
-    /* Preserve the path before full preparation resets the command context.
-     * The prepared compiler and environment are then reused by every action
-     * in this plan instead of being rediscovered for each target. */
+    /* Preserve the path before the first full preparation resets the command
+     * context. A continuous host keeps the successful compiler profile and
+     * environment, so later generations do not repeat the discovery probe. */
     status = automation_copy_text(stable_source_root,
                                   sizeof(stable_source_root),
                                   source_root);
-    if (status == UMI_STATUS_OK) {
+    if (status == UMI_STATUS_OK &&
+        !context->discovery.compile_probe_passed) {
         status = umi_cli_context_prepare(
             context, stable_source_root, 0, 0);
     }
     if (status != UMI_STATUS_OK) {
+        return 1;
+    }
+    status = automation_resolve_project_root(context);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr,
+                      "Unable to resolve workspace path: %s\n",
+                      umi_status_text(status));
         return 1;
     }
     source_root = context->project_root;
@@ -705,6 +1012,241 @@ static int automation_execute(UmiCliContext *context,
     return 0;
 }
 
+/* Create the local durable update channel used by running applications. */
+static UmiStatus automation_create_update_broker(
+    const char *source_root,
+    UmiChangeBroker **out_broker,
+    char *out_journal_path,
+    size_t journal_capacity)
+{
+    UmiChangeBrokerConfig config = umi_change_broker_config_default();
+    char local_root[UMI_PATH_CAPACITY];
+    char runtime_root[UMI_PATH_CAPACITY];
+    UmiStatus status;
+
+    if (source_root == NULL || out_broker == NULL ||
+        out_journal_path == NULL || journal_capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_broker = NULL;
+    status = umi_fs_join(local_root,
+                         sizeof(local_root),
+                         source_root,
+                         ".umicom");
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_join(runtime_root,
+                             sizeof(runtime_root),
+                             local_root,
+                             "runtime");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_make_directories(runtime_root);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_fs_join(out_journal_path,
+                             journal_capacity,
+                             runtime_root,
+                             "module-updates.journal");
+    }
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    config.journal_path = out_journal_path;
+    config.source_id = "umicom.automated-build";
+    return umi_change_broker_create(&config, out_broker);
+}
+
+/* Run one workspace watcher until Ctrl+C or an optional first generation. */
+static int automation_watch(UmiCliContext *context,
+                            const char *source_root,
+                            const char *preset,
+                            const char *build_directory,
+                            const char *install_prefix,
+                            int jobs,
+                            int run_tests,
+                            int deploy,
+                            uint32_t debounce_ms,
+                            uint32_t poll_ms,
+                            int seed_existing_changes,
+                            int stop_after_generation,
+                            int force_initial_generation)
+{
+    UmiChangeBroker *broker = NULL;
+    UmiBuildContinuousIntegration *continuous = NULL;
+    UmiWatcher *watcher = NULL;
+    UmiCliAutomationPublication publication;
+    UmiCliAutomationWatch watch;
+    UmiBuildContinuousConfig continuous_config =
+        umi_build_continuous_config_default();
+    UmiWatcherConfig watcher_config;
+    char journal_path[UMI_PATH_CAPACITY];
+    int result = 0;
+    UmiStatus status;
+
+    (void)memset(&publication, 0, sizeof(publication));
+    (void)memset(&watch, 0, sizeof(watch));
+    watch.clock = umi_clock_system();
+    watch.event_status = automation_copy_text(
+        watch.source_root, sizeof(watch.source_root), source_root);
+    if (watch.event_status != UMI_STATUS_OK) {
+        return 1;
+    }
+    status = automation_create_update_broker(source_root,
+                                             &broker,
+                                             journal_path,
+                                             sizeof(journal_path));
+    publication.broker = broker;
+    continuous_config.debounce_ms = debounce_ms;
+    continuous_config.initial_generation =
+        umi_change_broker_last_sequence(broker);
+    continuous_config.update_sink = automation_publish_update;
+    continuous_config.update_user_data = &publication;
+    continuous_config.require_update_record = 1;
+    if (status == UMI_STATUS_OK) {
+        status = umi_build_continuous_create(
+            &continuous_config, &continuous);
+    }
+    watch.continuous = continuous;
+    if (status == UMI_STATUS_OK) {
+        status = automation_register_foundation_scopes(
+            umi_build_continuous_planner(continuous));
+    }
+    if (status == UMI_STATUS_OK) {
+        status = automation_register_application_scopes(
+            umi_build_continuous_planner(continuous), source_root);
+    }
+    watcher_config = umi_watcher_config_default(source_root);
+    watcher_config.polling_interval_ms = poll_ms;
+    watcher_config.maximum_entries = 131072U;
+    watcher_config.sink = automation_watch_event_sink;
+    watcher_config.sink_user_data = &watch;
+    if (status == UMI_STATUS_OK) {
+        status = umi_watcher_create(&watcher_config, &watcher);
+    }
+    if (status == UMI_STATUS_OK) {
+        /* The first polling scan establishes a baseline. Its created events
+         * describe files that already exist, not edits made by the user. */
+        watch.priming = 1;
+        status = umi_watcher_scan_once(watcher);
+        watch.priming = 0;
+    }
+    if (status == UMI_STATUS_OK && force_initial_generation) {
+        status = umi_build_continuous_record_change(
+            continuous,
+            "CMakeLists.txt",
+            0,
+            automation_clock_milliseconds(&watch.clock, 0));
+    } else if (status == UMI_STATUS_OK && seed_existing_changes) {
+        /* Existing uncommitted work is seeded once so edits made before the
+         * watcher started are not silently left without verification. */
+        status = automation_visit_repository_changes(
+            source_root, automation_continuous_change_sink, &watch);
+    }
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr,
+                      "Unable to start continuous integration: %s\n",
+                      umi_status_text(status));
+        umi_watcher_destroy(watcher);
+        umi_build_continuous_destroy(continuous);
+        umi_change_broker_destroy(broker);
+        return 1;
+    }
+
+    automation_stop_requested = 0;
+    (void)signal(SIGINT, automation_stop_handler);
+    (void)signal(SIGTERM, automation_stop_handler);
+    (void)printf(
+        "Watching %s\n"
+        "Affected modules will build and test after %u ms without edits.\n"
+        "Module update notices are recorded in %s\n"
+        "Press Ctrl+C to stop after the current safe operation.\n",
+        source_root,
+        debounce_ms,
+        journal_path);
+
+    while (!automation_stop_requested) {
+        const uint64_t now_ms =
+            automation_clock_milliseconds(&watch.clock, 0);
+
+        status = umi_watcher_scan_once(watcher);
+        if (status == UMI_STATUS_OK) {
+            status = watch.event_status;
+        }
+        if (status != UMI_STATUS_OK) {
+            (void)fprintf(stderr,
+                          "Source watcher failed: %s\n",
+                          umi_status_text(status));
+            result = 1;
+            break;
+        }
+        if (umi_build_continuous_ready(continuous, now_ms)) {
+            int generation_succeeded;
+            int generation_started = 0;
+            UmiBuildContinuousSnapshot snapshot;
+            UmiStatus generation_status;
+
+            status = umi_build_continuous_begin(continuous, now_ms);
+            generation_started = status == UMI_STATUS_OK;
+            if (status == UMI_STATUS_OK) {
+                status = automation_print_plan(
+                    umi_build_continuous_planner(continuous));
+            }
+            generation_succeeded = status == UMI_STATUS_OK &&
+                automation_execute(
+                    context,
+                    umi_build_continuous_planner(continuous),
+                    source_root,
+                    preset,
+                    build_directory,
+                    install_prefix,
+                    jobs,
+                    run_tests,
+                    deploy) == 0;
+            generation_status = status;
+            if (generation_started) {
+                const UmiStatus completion_status =
+                    umi_build_continuous_complete(
+                    continuous,
+                    generation_succeeded,
+                    automation_clock_milliseconds(&watch.clock, 0),
+                    automation_clock_milliseconds(&watch.clock, 1));
+
+                /* A planning diagnostic remains the primary failure; otherwise
+                 * report publication or finalisation failures to the caller. */
+                if (generation_status == UMI_STATUS_OK) {
+                    generation_status = completion_status;
+                }
+            }
+            if (umi_build_continuous_snapshot(
+                    continuous, &snapshot) == UMI_STATUS_OK) {
+                (void)printf(
+                    "Generation %llu %s: %zu files, %zu affected scopes.\n",
+                    (unsigned long long)snapshot.generation,
+                    umi_build_continuous_phase_text(snapshot.phase),
+                    snapshot.batch_change_count,
+                    snapshot.batch_scope_count);
+            }
+            if (!generation_succeeded ||
+                generation_status != UMI_STATUS_OK) {
+                result = 1;
+            }
+            if (stop_after_generation) {
+                break;
+            }
+        }
+        if (watch.clock.sleep_milliseconds != NULL) {
+            (void)watch.clock.sleep_milliseconds(&watch.clock, poll_ms);
+        }
+    }
+
+    (void)signal(SIGINT, SIG_DFL);
+    (void)signal(SIGTERM, SIG_DFL);
+    umi_watcher_destroy(watcher);
+    umi_build_continuous_destroy(continuous);
+    umi_change_broker_destroy(broker);
+    return result;
+}
+
 /* Show command-specific help without requiring toolchain or repository discovery. */
 static void automation_print_help(void)
 {
@@ -713,14 +1255,20 @@ static void automation_print_help(void)
         "Usage:\n"
         "  umicom automate plan [PATH] [--all]\n"
         "  umicom automate run [PATH] [--preset NAME | --build PATH] [--jobs N]\n"
-        "                      [--no-tests] [--deploy] [--prefix PATH] [--all]\n\n"
+        "                      [--no-tests] [--deploy] [--prefix PATH] [--all]\n"
+        "  umicom automate watch [PATH] [--preset NAME | --build PATH] [--jobs N]\n"
+        "                      [--debounce MS] [--interval MS] [--no-tests]\n"
+        "                      [--deploy] [--prefix PATH] [--ignore-existing]\n\n"
         "plan discovers changes and prints actions without building anything.\n"
         "run builds affected product targets and their focused tests.\n"
+        "watch continuously discovers edits, builds and tests affected modules,\n"
+        "then records versioned update notices for running applications.\n"
         "--deploy installs only after successful build and test work.\n"
+        "--ignore-existing watches only edits made after the watcher starts.\n"
         "--all requests a complete product and test plan even with a clean tree.\n");
 }
 
-/* Plan or execute a target-free incremental workspace update. */
+/* Plan, execute once or continuously verify target-free workspace updates. */
 int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
 {
     UmiBuildAutomation *automation = NULL;
@@ -732,7 +1280,13 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
     const char *build_directory = automation_option_value(argc, argv, "--build");
     const char *install_prefix = automation_option_value(argc, argv, "--prefix");
     const char *jobs_text = automation_option_value(argc, argv, "--jobs");
+    const char *debounce_text =
+        automation_option_value(argc, argv, "--debounce");
+    const char *interval_text =
+        automation_option_value(argc, argv, "--interval");
     const char *source_root = source_option;
+    uint32_t debounce_ms = 750U;
+    uint32_t poll_ms = 500U;
     int jobs = 0;
     int result = 1;
     UmiStatus status;
@@ -742,7 +1296,8 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
         automation_print_help();
         return 0;
     }
-    if (strcmp(mode, "plan") != 0 && strcmp(mode, "run") != 0) {
+    if (strcmp(mode, "plan") != 0 && strcmp(mode, "run") != 0 &&
+        strcmp(mode, "watch") != 0) {
         (void)fprintf(stderr, "Unknown automated build command: %s\n", mode);
         automation_print_help();
         return 2;
@@ -756,6 +1311,18 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
                     stderr);
         return 2;
     }
+    status = automation_parse_milliseconds(
+        debounce_text, 750U, &debounce_ms);
+    if (status == UMI_STATUS_OK) {
+        status = automation_parse_milliseconds(
+            interval_text, 500U, &poll_ms);
+    }
+    if (status != UMI_STATUS_OK) {
+        (void)fputs(
+            "--debounce and --interval require positive whole milliseconds.\n",
+            stderr);
+        return 2;
+    }
     /* Planning reads repository state only. Compiler discovery is deferred
      * until run mode has a non-empty plan, so a read-only plan cannot start a
      * compiler probe or require an installed build toolchain. */
@@ -764,6 +1331,13 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
         source_root,
         UMI_TOOLCHAIN_OPERATION_REPOSITORY_READ);
     if (status != UMI_STATUS_OK) {
+        return 1;
+    }
+    status = automation_resolve_project_root(context);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr,
+                      "Unable to resolve workspace path: %s\n",
+                      umi_status_text(status));
         return 1;
     }
     source_root = context->project_root;
@@ -776,6 +1350,22 @@ int umi_cli_command_automation(UmiCliContext *context, int argc, char **argv)
         preset = "headless-debug";
     }
 #endif
+    if (strcmp(mode, "watch") == 0) {
+        return automation_watch(
+            context,
+            source_root,
+            preset,
+            build_directory,
+            install_prefix,
+            jobs,
+            !automation_has_flag(argc, argv, "--no-tests"),
+            automation_has_flag(argc, argv, "--deploy"),
+            debounce_ms,
+            poll_ms,
+            !automation_has_flag(argc, argv, "--ignore-existing"),
+            automation_has_flag(argc, argv, "--once"),
+            automation_has_flag(argc, argv, "--all"));
+    }
     status = umi_build_automation_create(&automation);
     if (status == UMI_STATUS_OK) {
         status = automation_register_foundation_scopes(automation);

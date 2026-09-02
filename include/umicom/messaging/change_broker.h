@@ -71,6 +71,16 @@ UmiStatus umi_change_broker_publish(UmiChangeBroker *broker,
 UmiStatus umi_change_broker_replay(UmiChangeBroker *broker,
                                    size_t *out_event_count);
 
+/**
+ * Replay only durable events newer than a saved checkpoint. Applications can
+ * call this operation periodically to discover updates written by another
+ * local process without receiving the whole history again.
+ */
+UmiStatus umi_change_broker_replay_after(UmiChangeBroker *broker,
+                                         uint64_t after_sequence,
+                                         size_t *out_event_count,
+                                         uint64_t *out_last_sequence);
+
 /** Report the number assigned to the most recently accepted change. */
 uint64_t umi_change_broker_last_sequence(const UmiChangeBroker *broker);
 

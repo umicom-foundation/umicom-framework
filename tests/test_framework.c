@@ -137,15 +137,26 @@ static void test_journal(void)
         .payload = "payload"
     };
     size_t count = 0U;
+    size_t incremental_count = 0U;
+    uint64_t last_sequence = 0U;
     (void)remove(path);
     assert(umi_journal_open(path, &journal) == UMI_STATUS_OK);
     assert(umi_journal_append(journal, &event) == UMI_STATUS_OK);
     umi_journal_close(journal);
+    assert(umi_journal_last_sequence(path, &last_sequence) == UMI_STATUS_OK);
+    assert(last_sequence == 7U);
     assert(umi_event_bus_create(&bus) == UMI_STATUS_OK);
     assert(umi_event_bus_subscribe(bus, "umi.test.event.v1", replay_handler, 0) == UMI_STATUS_OK);
     assert(umi_journal_replay(path, bus, &count) == UMI_STATUS_OK);
     assert(count == 1U);
     assert(replay_events == 1U);
+    assert(umi_journal_replay_after(path,
+                                    bus,
+                                    7U,
+                                    &incremental_count,
+                                    &last_sequence) == UMI_STATUS_OK);
+    assert(incremental_count == 0U);
+    assert(last_sequence == 7U);
     umi_event_bus_destroy(bus);
     (void)remove(path);
 }

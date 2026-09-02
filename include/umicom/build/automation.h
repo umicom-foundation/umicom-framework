@@ -101,6 +101,7 @@ typedef struct UmiBuildAutomationScope {
     uint32_t api_version;
     char scope_id[UMI_BUILD_ID_CAPACITY];
     char display_name[UMI_BUILD_NAME_CAPACITY];
+    char version[UMI_BUILD_NAME_CAPACITY];
     char source_prefix[UMI_BUILD_PATH_CAPACITY];
     char build_target[UMI_BUILD_NAME_CAPACITY];
     char test_build_target[UMI_BUILD_NAME_CAPACITY];
@@ -130,6 +131,7 @@ typedef struct UmiBuildAutomationPlanItem {
     uint32_t api_version;
     char scope_id[UMI_BUILD_ID_CAPACITY];
     char display_name[UMI_BUILD_NAME_CAPACITY];
+    char version[UMI_BUILD_NAME_CAPACITY];
     char build_target[UMI_BUILD_NAME_CAPACITY];
     char test_build_target[UMI_BUILD_NAME_CAPACITY];
     char test_expression[UMI_BUILD_ARGUMENT_CAPACITY];
@@ -181,6 +183,9 @@ void umi_build_automation_destroy(UmiBuildAutomation *automation);
 
 /* Remove scopes, changes and the evaluated plan while retaining the object. */
 void umi_build_automation_clear(UmiBuildAutomation *automation);
+
+/* Remove batch evidence while retaining the registered workspace scopes. */
+void umi_build_automation_clear_changes(UmiBuildAutomation *automation);
 
 /* Register or replace a scope with the same stable identifier. */
 UmiStatus umi_build_automation_register_scope(

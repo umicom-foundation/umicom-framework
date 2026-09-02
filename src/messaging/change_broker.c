@@ -108,6 +108,8 @@ UmiStatus umi_change_broker_create(const UmiChangeBrokerConfig *config,
     /* A missing or empty path deliberately selects non-durable operation. */
     if (effective_config.journal_path != NULL &&
         effective_config.journal_path[0] != '\0') {
+        uint64_t last_sequence = 0U;
+
         broker->journal_path = copy_text(effective_config.journal_path);
         if (broker->journal_path == NULL) {
             umi_change_broker_destroy(broker);
@@ -118,9 +120,20 @@ UmiStatus umi_change_broker_create(const UmiChangeBrokerConfig *config,
             umi_change_broker_destroy(broker);
             return status;
         }
+        status = umi_journal_last_sequence(
+            broker->journal_path, &last_sequence);
+        if (status != UMI_STATUS_OK || last_sequence == UINT64_MAX) {
+            umi_change_broker_destroy(broker);
+            return status != UMI_STATUS_OK
+                ? status
+                : UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        broker->next_sequence = last_sequence + 1U;
     }
 
-    broker->next_sequence = 1U;
+    if (broker->next_sequence == 0U) {
+        broker->next_sequence = 1U;
+    }
     *out_broker = broker;
     return UMI_STATUS_OK;
 }
@@ -159,6 +172,11 @@ UmiStatus umi_change_broker_publish(UmiChangeBroker *broker,
     if (broker == NULL || topic == NULL || topic[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Refuse the final value before incrementing it could wrap to zero and
+     * make a future update appear older than its predecessors. */
+    if (broker->next_sequence == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
 
     umi_message_envelope_init(
         &event, UMI_MESSAGE_EVENT, topic, payload != NULL ? payload : "");
@@ -189,6 +207,16 @@ UmiStatus umi_change_broker_publish(UmiChangeBroker *broker,
 UmiStatus umi_change_broker_replay(UmiChangeBroker *broker,
                                    size_t *out_event_count)
 {
+    return umi_change_broker_replay_after(
+        broker, 0U, out_event_count, NULL);
+}
+
+/* Replay new durable records while preserving the publisher sequence state. */
+UmiStatus umi_change_broker_replay_after(UmiChangeBroker *broker,
+                                         uint64_t after_sequence,
+                                         size_t *out_event_count,
+                                         uint64_t *out_last_sequence)
+{
     UmiStatus status;
 
     if (broker == NULL) {
@@ -199,12 +227,11 @@ UmiStatus umi_change_broker_replay(UmiChangeBroker *broker,
     }
 
     /* Flush the writer before a second file handle begins replaying the log. */
-    status = umi_journal_replay(
-        broker->journal_path, broker->event_bus, out_event_count);
-    if (status == UMI_STATUS_OK) {
-        broker->next_sequence =
-            umi_event_bus_last_sequence(broker->event_bus) + 1U;
-    }
+    status = umi_journal_replay_after(broker->journal_path,
+                                      broker->event_bus,
+                                      after_sequence,
+                                      out_event_count,
+                                      out_last_sequence);
     return status;
 }
 

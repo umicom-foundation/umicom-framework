@@ -162,6 +162,19 @@ umicom automate run "C:\umicom\umicom-applications" `
     --jobs 2
 ```
 
+To keep discovering and verifying saved changes without naming modules, start
+one continuous workspace controller:
+
+```powershell
+umicom automate watch "C:\umicom\umicom-applications" `
+    --preset windows-ucrt64-debug `
+    --jobs 2
+```
+
+The controller builds and tests only affected scopes, then writes a durable
+versioned update notice that running Umicom applications can discover. Press
+Ctrl+C when you want it to stop after the current safe operation.
+
 Application manifests supply the product catalogue. A source change normally
 selects one application. A shared Framework change selects its application
 consumers, and a root build-definition change selects the configured workspace.

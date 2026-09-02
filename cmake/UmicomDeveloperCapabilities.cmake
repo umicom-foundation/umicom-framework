@@ -181,6 +181,7 @@ endif()
 
 target_sources(umicom_build PRIVATE
     src/build/automation.c
+    src/build/continuous_integration.c
     src/build/incremental.c
     src/build/task.c
     src/build/task_graph.c

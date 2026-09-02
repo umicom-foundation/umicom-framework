@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/messaging/journal.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -122,14 +123,17 @@ UmiStatus umi_journal_append(UmiJournal *journal,
     return fflush(journal->file) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 }
 
-/* Provide the journal replay operation used by this module and its client applications. */
-UmiStatus umi_journal_replay(const char *path,
-                             UmiEventBus *event_bus,
-                             size_t *out_event_count)
+/* Replay durable records newer than a caller-owned sequence checkpoint. */
+UmiStatus umi_journal_replay_after(const char *path,
+                                   UmiEventBus *event_bus,
+                                   uint64_t after_sequence,
+                                   size_t *out_event_count,
+                                   uint64_t *out_last_sequence)
 {
     FILE *file;
     char line[4096];
     size_t count = 0U;
+    uint64_t last_sequence = after_sequence;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -156,7 +160,7 @@ UmiStatus umi_journal_replay(const char *path,
         char *source = strtok(NULL, "\t");
         char *payload = strtok(NULL, "\r\n");
         UmiStatus status;
-        (void)sequence;
+        uint64_t durable_sequence;
         (void)message_id;
         (void)causation;
         (void)version;
@@ -166,7 +170,14 @@ UmiStatus umi_journal_replay(const char *path,
          * Protect caller-owned memory by checking that required state is available before it is
          * used.
          */
-        if (correlation == NULL || name == NULL) continue;
+        if (sequence == NULL || correlation == NULL || name == NULL) continue;
+        durable_sequence = (uint64_t)strtoull(sequence, NULL, 10);
+        if (durable_sequence > last_sequence) {
+            last_sequence = durable_sequence;
+        }
+        if (durable_sequence <= after_sequence) {
+            continue;
+        }
         status = umi_event_bus_publish(
             event_bus,
             name,
@@ -179,11 +190,63 @@ UmiStatus umi_journal_replay(const char *path,
         }
         count++;
     }
+    if (ferror(file)) {
+        (void)fclose(file);
+        return UMI_STATUS_IO_ERROR;
+    }
     (void)fclose(file);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (out_event_count != NULL) *out_event_count = count;
+    if (out_last_sequence != NULL) *out_last_sequence = last_sequence;
+    return UMI_STATUS_OK;
+}
+
+/* Preserve the original replay-all convenience operation for existing clients. */
+UmiStatus umi_journal_replay(const char *path,
+                             UmiEventBus *event_bus,
+                             size_t *out_event_count)
+{
+    return umi_journal_replay_after(
+        path, event_bus, 0U, out_event_count, NULL);
+}
+
+/* Scan the first bounded field of each complete journal record. */
+UmiStatus umi_journal_last_sequence(const char *path,
+                                    uint64_t *out_sequence)
+{
+    FILE *file;
+    char line[4096];
+    uint64_t last_sequence = 0U;
+
+    if (path == NULL || out_sequence == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_sequence = 0U;
+    file = fopen(path, "rb");
+    if (file == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char *end = NULL;
+        unsigned long long value;
+
+        /* A valid record starts with decimal sequence text followed by a tab.
+         * Ignore a damaged trailing record rather than inventing a sequence. */
+        errno = 0;
+        value = strtoull(line, &end, 10);
+        if (errno == 0 && end != line && end != NULL && *end == '\t' &&
+            (uint64_t)value > last_sequence) {
+            last_sequence = (uint64_t)value;
+        }
+    }
+    if (ferror(file)) {
+        (void)fclose(file);
+        return UMI_STATUS_IO_ERROR;
+    }
+    (void)fclose(file);
+    *out_sequence = last_sequence;
     return UMI_STATUS_OK;
 }

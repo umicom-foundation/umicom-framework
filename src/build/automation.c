@@ -288,6 +288,9 @@ static void initialise_item(UmiBuildAutomationPlanItem *item,
     (void)copy_text(item->display_name,
                     sizeof(item->display_name),
                     scope->display_name);
+    (void)copy_text(item->version,
+                    sizeof(item->version),
+                    scope->version);
     (void)copy_text(item->build_target,
                     sizeof(item->build_target),
                     scope->build_target);
@@ -545,6 +548,25 @@ void umi_build_automation_clear(UmiBuildAutomation *automation)
     automation->snapshot.structure_size =
         (uint32_t)sizeof(automation->snapshot);
     automation->snapshot.api_version = UMI_BUILD_AUTOMATION_API_VERSION;
+    automation->snapshot.revision = automation->revision;
+}
+
+/* Finish one batch without forcing clients to rediscover stable scope data. */
+void umi_build_automation_clear_changes(UmiBuildAutomation *automation)
+{
+    if (automation == NULL) {
+        return;
+    }
+    (void)memset(automation->changes, 0, sizeof(automation->changes));
+    (void)memset(automation->items, 0, sizeof(automation->items));
+    automation->change_count = 0U;
+    automation->item_count = 0U;
+    automation->revision += 1U;
+    (void)memset(&automation->snapshot, 0, sizeof(automation->snapshot));
+    automation->snapshot.structure_size =
+        (uint32_t)sizeof(automation->snapshot);
+    automation->snapshot.api_version = UMI_BUILD_AUTOMATION_API_VERSION;
+    automation->snapshot.scope_count = automation->scope_count;
     automation->snapshot.revision = automation->revision;
 }
 

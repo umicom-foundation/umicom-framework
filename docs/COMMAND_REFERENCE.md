@@ -27,6 +27,10 @@ umicom test      [--source PATH] [--preset NAME | --build PATH] [--tests REGEX]
 umicom automate plan [PATH] [--all]
 umicom automate run  [PATH] [--preset NAME | --build PATH]
                      [--jobs N] [--no-tests] [--deploy] [--prefix PATH]
+umicom automate watch [PATH] [--preset NAME | --build PATH]
+                      [--jobs N] [--debounce MS] [--interval MS]
+                      [--no-tests] [--deploy] [--prefix PATH]
+                      [--ignore-existing] [--all]
 umicom make      [--source PATH] [--preset NAME | --build PATH]
 umicom run studio [--source PATH] [--preset NAME]
 umicom run --executable PATH [--source PATH] [--preset NAME]
@@ -36,7 +40,9 @@ umicom run --executable PATH [--source PATH] [--preset NAME]
 
 `automate plan` reads changed paths and prints affected product and test scopes
 without compiling. `automate run` builds those scopes and their focused tests.
-It installs only when `--deploy` is present. The complete planning rules and
+`automate watch` continuously discovers edits, verifies affected scopes and
+records durable module-update notices. It installs only when `--deploy` is
+present. The complete planning rules and
 Framework API are described in [Automated Build System](automated-build-system.md).
 
 ## Governed workflow commands
