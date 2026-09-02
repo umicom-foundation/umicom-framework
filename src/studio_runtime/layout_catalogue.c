@@ -26,7 +26,8 @@ static const PresetFactory FACTORIES[] = {
     umi_studio_layout_preset_ai_development,
     umi_studio_layout_preset_review,
     umi_studio_layout_preset_zen,
-    umi_studio_layout_preset_learning
+    umi_studio_layout_preset_learning,
+    umi_studio_layout_preset_visual_design
 };
 
 /*

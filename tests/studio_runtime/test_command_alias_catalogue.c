@@ -23,8 +23,9 @@
 int main(void)
 {
     size_t i,j;
-    assert(umi_studio_command_alias_count()==22U);
+    assert(umi_studio_command_alias_count()==23U);
     assert(umi_studio_command_alias_find("view.explorer")!=NULL);
+    assert(umi_studio_command_alias_find("designer.open")!=NULL);
     /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<umi_studio_command_alias_count();++i)
         /* Visit each bounded item once so every record receives the same rule. */
@@ -33,4 +34,3 @@ int main(void)
                           umi_studio_command_alias_at(j)->alias_id)!=0);
     return 0;
 }
-

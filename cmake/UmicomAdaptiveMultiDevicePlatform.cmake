@@ -7,7 +7,7 @@
 #   shell runtime semantics and multi-device responsive visual-authoring services.
 #
 # ARCHITECTURE:
-#   Existing Design System, reactive UI, data-view, workbench and RAD designer
+#   Existing Design System, reactive UI, data-view, workbench and visual designer
 #   contracts remain authoritative. This platform composes them without creating
 #   a competing UI, designer or renderer target.
 #

@@ -36,4 +36,5 @@
 #include "umicom/studio_runtime/command_aliases/layout_manager.h"
 #include "umicom/studio_runtime/command_aliases/layout_save.h"
 #include "umicom/studio_runtime/command_aliases/layout_restore.h"
+#include "umicom/studio_runtime/command_aliases/designer_open.h"
 #endif

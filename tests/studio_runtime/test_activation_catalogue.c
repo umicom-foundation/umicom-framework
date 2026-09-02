@@ -22,7 +22,7 @@
 int main(void)
 {
     UmiStudioRuntimeActivationRule rule;
-    assert(umi_studio_activation_profile_count() == 19U);
+    assert(umi_studio_activation_profile_count() == 26U);
     assert(umi_studio_activation_resolve(
         "ide.open.problem", &rule) == UMI_STATUS_OK);
     assert(rule.surface == UMI_STUDIO_SURFACE_EDITOR);
@@ -38,5 +38,26 @@ int main(void)
     assert(umi_studio_activation_resolve(
         "help.documentation", &rule) == UMI_STATUS_OK);
     assert(rule.surface == UMI_STUDIO_SURFACE_DOCUMENTATION);
+    assert(umi_studio_activation_resolve(
+        "designer.open", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_VISUAL_DESIGNER);
+    assert(umi_studio_activation_resolve(
+        "designer.palette.search", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_COMPONENT_PALETTE);
+    assert(umi_studio_activation_resolve(
+        "designer.structure.select", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_COMPONENT_STRUCTURE);
+    assert(umi_studio_activation_resolve(
+        "designer.inspector.property", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR);
+    assert(umi_studio_activation_resolve(
+        "designer.code", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_DESIGN_CODE);
+    assert(umi_studio_activation_resolve(
+        "designer.mixed", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_DESIGN_MIXED);
+    assert(umi_studio_activation_resolve(
+        "designer.preview", &rule) == UMI_STATUS_OK);
+    assert(rule.surface == UMI_STUDIO_SURFACE_DESIGN_PREVIEW);
     return 0;
 }

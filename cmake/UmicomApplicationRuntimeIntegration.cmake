@@ -160,7 +160,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomReactiveUiStatePlatform.cmake")
 
 # Production visual application/form/page authoring, canvas editing, bindings,
 # preview and inspectable declarative generation extend canonical designer;
-# Studio remains a thin frontend over the Framework-owned RAD designer engine.
+# Studio remains a thin frontend over the Framework-owned visual designer engine.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomVisualApplicationDesignerPlatform.cmake")
 
 # Adaptive device families, safe areas, navigation/shell adaptation and responsive

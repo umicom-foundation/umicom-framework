@@ -62,11 +62,20 @@ typedef enum UmiStudioRuntimeSurfaceKind {
     UMI_STUDIO_SURFACE_AI_VALIDATION = 16,
     UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON = 17,
     UMI_STUDIO_SURFACE_LEARNING = 18,
-    UMI_STUDIO_SURFACE_DOCUMENTATION = 19
+    UMI_STUDIO_SURFACE_DOCUMENTATION = 19,
+    UMI_STUDIO_SURFACE_VISUAL_DESIGNER = 20,
+    UMI_STUDIO_SURFACE_COMPONENT_PALETTE = 21,
+    UMI_STUDIO_SURFACE_COMPONENT_STRUCTURE = 22,
+    UMI_STUDIO_SURFACE_OBJECT_INSPECTOR = 23,
+    UMI_STUDIO_SURFACE_DESIGN_CODE = 24,
+    UMI_STUDIO_SURFACE_DESIGN_MIXED = 25,
+    UMI_STUDIO_SURFACE_DESIGN_PREVIEW = 26,
+    /* Preview the active editor document independently from visual design. */
+    UMI_STUDIO_SURFACE_LIVE_PREVIEW = 27
 } UmiStudioRuntimeSurfaceKind;
 
 /* Keep bounded surface loops aligned when a reusable Studio panel is added. */
-#define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_DOCUMENTATION
+#define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_LIVE_PREVIEW
 
 /**
  * List the named studio runtime selection kind values accepted by this public contract.

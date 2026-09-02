@@ -50,6 +50,8 @@
 #include "umicom/designer/template.h"
 #include "umicom/designer/layout.h"
 #include "umicom/designer/live_preview.h"
+#include "umicom/designer/live_source_workspace.h"
 #include "umicom/designer/source_generation.h"
 #include "umicom/designer/builder_session.h"
+#include "umicom/designer/workspace_model.h"
 #endif

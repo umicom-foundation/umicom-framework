@@ -33,4 +33,11 @@
 #include "umicom/studio_runtime/activation_profiles/ai_model_comparison.h"
 #include "umicom/studio_runtime/activation_profiles/learning.h"
 #include "umicom/studio_runtime/activation_profiles/documentation.h"
+#include "umicom/studio_runtime/activation_profiles/visual_designer.h"
+#include "umicom/studio_runtime/activation_profiles/component_palette.h"
+#include "umicom/studio_runtime/activation_profiles/component_structure.h"
+#include "umicom/studio_runtime/activation_profiles/object_inspector.h"
+#include "umicom/studio_runtime/activation_profiles/design_code.h"
+#include "umicom/studio_runtime/activation_profiles/design_mixed.h"
+#include "umicom/studio_runtime/activation_profiles/design_preview.h"
 #endif

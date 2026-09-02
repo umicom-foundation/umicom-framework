@@ -37,12 +37,12 @@ const UmiStudioRuntimeContract *umi_studio_runtime_contract(void)
         .shell_persona_id = "umicom.shell.persona.studio-ide",
         .perspective_id = "umicom.perspective.integrated-development",
         .default_layout_id = "umicom.studio.layout.default",
-        .required_surface_count = 19U,
+        .required_surface_count = 26U,
         .required_ide_command_count = 29U,
         .required_ai_command_count = 23U,
-        .required_alias_count = 22U,
-        .required_studio_command_count = 15U,
-        .required_layout_count = 8U
+        .required_alias_count = 23U,
+        .required_studio_command_count = 16U,
+        .required_layout_count = 9U
     };
 
     return &contract;

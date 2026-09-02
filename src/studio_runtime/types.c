@@ -43,6 +43,15 @@ const char *umi_studio_runtime_surface_kind_text(
             return "ai-model-comparison";
         case UMI_STUDIO_SURFACE_LEARNING: return "learning";
         case UMI_STUDIO_SURFACE_DOCUMENTATION: return "documentation";
+        case UMI_STUDIO_SURFACE_VISUAL_DESIGNER: return "visual-designer";
+        case UMI_STUDIO_SURFACE_COMPONENT_PALETTE: return "component-palette";
+        case UMI_STUDIO_SURFACE_COMPONENT_STRUCTURE:
+            return "component-structure";
+        case UMI_STUDIO_SURFACE_OBJECT_INSPECTOR: return "object-inspector";
+        case UMI_STUDIO_SURFACE_DESIGN_CODE: return "design-code";
+        case UMI_STUDIO_SURFACE_DESIGN_MIXED: return "design-mixed";
+        case UMI_STUDIO_SURFACE_DESIGN_PREVIEW: return "design-preview";
+        case UMI_STUDIO_SURFACE_LIVE_PREVIEW: return "live-preview";
         default: return "unknown";
     }
 }

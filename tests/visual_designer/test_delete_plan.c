@@ -1,0 +1,21 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/visual_designer/test_delete_plan.c
+ *
+ * PURPOSE:
+ *   Validate describe a bounded set of component identifiers scheduled for deletion.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/designer/visual_designer/delete_plan.h"
+#define CHECK(x) do{if(!(x))return 1;}while(0)
+/*
+ * Start this command or application, report setup failures, and return a process exit code
+ * to the operating system.
+ */
+int main(void){UmiRadDeletePlan p;CHECK(umi_rad_delete_plan_init(&p)==UMI_STATUS_OK);CHECK(umi_rad_delete_plan_add(&p,"button") == UMI_STATUS_OK);CHECK(umi_rad_delete_plan_contains(&p,"button"));return 0;}

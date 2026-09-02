@@ -22,12 +22,35 @@
  */
 int main(void)
 {
-    assert(umi_studio_layout_catalogue_count()==8U);
+    const UmiStudioRuntimeLayoutPresetDefinition *design;
+    size_t index;
+    int has_code = 0;
+    int has_mixed = 0;
+    int has_preview = 0;
+
+    assert(umi_studio_layout_catalogue_count()==9U);
     assert(umi_studio_layout_catalogue_find(
         "umicom.studio.layout.default")!=NULL);
     assert(strcmp(umi_studio_layout_catalogue_at(0)->title,
                   "Default Development")==0);
     assert(umi_studio_layout_catalogue_find(
         "umicom.studio.layout.learning")!=NULL);
+    assert(umi_studio_layout_catalogue_find(
+        "umicom.studio.layout.visual-design")!=NULL);
+    design = umi_studio_layout_catalogue_find(
+        "umicom.studio.layout.visual-design");
+    /* Confirm the saved layout opens every central authoring mode. */
+    for (index = 0U; index < design->visible_surface_count; ++index) {
+        if (design->visible_surfaces[index] == UMI_STUDIO_SURFACE_DESIGN_CODE) {
+            has_code = 1;
+        }
+        if (design->visible_surfaces[index] == UMI_STUDIO_SURFACE_DESIGN_MIXED) {
+            has_mixed = 1;
+        }
+        if (design->visible_surfaces[index] == UMI_STUDIO_SURFACE_DESIGN_PREVIEW) {
+            has_preview = 1;
+        }
+    }
+    assert(has_code && has_mixed && has_preview);
     return 0;
 }

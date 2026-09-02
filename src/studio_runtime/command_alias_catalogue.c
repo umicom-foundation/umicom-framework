@@ -40,7 +40,8 @@ static const AliasFactory FACTORIES[] = {
     umi_studio_command_alias_navigate_forward,
     umi_studio_command_alias_layout_manager,
     umi_studio_command_alias_layout_save,
-    umi_studio_command_alias_layout_restore
+    umi_studio_command_alias_layout_restore,
+    umi_studio_command_alias_designer_open
 };
 
 /*

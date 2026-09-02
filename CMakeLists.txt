@@ -916,8 +916,10 @@ add_library(umicom_designer STATIC
     src/designer/template.c
     src/designer/layout.c
     src/designer/live_preview.c
+    src/designer/live_source_workspace.c
     src/designer/source_generation.c
     src/designer/builder_session.c
+    src/designer/workspace_model.c
     adapters/headless/designer_preview_headless.c
 )
 add_library(Umicom::designer ALIAS umicom_designer)
@@ -1750,6 +1752,7 @@ add_library(umicom_browser STATIC
     src/browser/headless.c
     src/browser/policy.c
     src/browser/document_preview.c
+    src/browser/source_preview.c
 )
 add_library(Umicom::browser ALIAS umicom_browser)
 set_target_properties(umicom_browser PROPERTIES EXPORT_NAME browser)
@@ -4073,6 +4076,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-designer-template-tests framework.designer.template tests/test_designer_template.c)
     umicom_add_framework_test(umicom-designer-layout-tests framework.designer.layout tests/test_designer_layout.c)
     umicom_add_framework_test(umicom-designer-session-tests framework.designer.session tests/test_designer_session.c)
+    umicom_add_framework_test(umicom-designer-workspace-model-tests framework.designer.workspace_model tests/test_designer_workspace_model.c)
+    umicom_add_framework_test(umicom-designer-live-source-workspace-tests framework.designer.live_source_workspace tests/test_designer_live_source_workspace.c)
 
 
     # Web Server, browser, charting and multi-frontend contracts.
@@ -4092,6 +4097,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-browser-tests framework.browser tests/test_browser.c)
     umicom_add_framework_test(umicom-browser-policy-tests framework.browser_policy tests/test_browser_policy.c)
     umicom_add_framework_test(umicom-browser-document-preview-tests framework.browser_document_preview tests/test_browser_document_preview.c)
+    umicom_add_framework_test(umicom-browser-source-preview-tests framework.browser_source_preview tests/test_browser_source_preview.c)
     umicom_add_framework_test(umicom-chart-model-tests framework.chart_model tests/test_chart_model.c)
     umicom_add_framework_test(umicom-chart-indicator-tests framework.chart_indicator tests/test_chart_indicator.c)
     umicom_add_framework_test(umicom-frontend-plan-tests framework.frontend_plan tests/test_frontend_plan.c)

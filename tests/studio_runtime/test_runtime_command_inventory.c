@@ -23,7 +23,7 @@
 int main(void)
 {
     size_t i,j;
-    assert(umi_studio_runtime_command_count()==15U);
+    assert(umi_studio_runtime_command_count()==16U);
     /* Visit each bounded item once so every record receives the same rule. */
     for(i=0U;i<umi_studio_runtime_command_count();++i) {
         const char *a=umi_studio_runtime_command_id_at(i);

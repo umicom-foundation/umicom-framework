@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
-#include "umicom/designer/rad/types.h"
+#include "umicom/designer/visual_designer/types.h"
 #include "umicom/ui/adaptive/types.h"
 #include "umicom/ui/design/breakpoint.h"
 
