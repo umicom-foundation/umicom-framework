@@ -20,7 +20,8 @@ umi_studio_surface_profile_object_inspector(void)
         .container_id = "studio.sidebar.secondary",
         .title = "Object Inspector",
         .role = UMI_APPLICATION_SHELL_ROLE_PANEL,
-        .region = UMI_APPLICATION_SHELL_REGION_RIGHT,
+        /* Properties sit opposite navigation in the secondary sidebar. */
+        .region = UMI_APPLICATION_SHELL_REGION_SECONDARY_SIDEBAR,
         .order = 230,
         .default_visible = 0,
         .create_if_missing = 1

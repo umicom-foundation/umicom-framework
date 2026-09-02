@@ -349,6 +349,90 @@ UmiStatus umi_trading_ui_watchlist_view_create(
     return finish_view(status, out_view);
 }
 
+/* Project price-alert rules, activity and acknowledgement state. */
+UmiStatus umi_trading_ui_alerts_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    size_t count;
+    size_t index;
+    UmiStatus status = create_view(
+        view_id,
+        "trading-alerts",
+        "Price Alerts",
+        "Price crossings for linked instruments with explicit acknowledgement.",
+        out_view);
+
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = take_snapshot(workspace, &snapshot);
+    if (status == UMI_STATUS_OK) {
+        status = set_workspace_properties(*out_view, &snapshot);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(*out_view,
+                             "alerts.rule-count",
+                             (int64_t)snapshot.alert_count);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(*out_view,
+                             "alerts.active-count",
+                             (int64_t)snapshot.active_alert_count);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(*out_view,
+                             "alerts.unacknowledged-count",
+                             (int64_t)snapshot.unacknowledged_alert_count);
+    }
+    count = visible_rows(snapshot.alert_count);
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(*out_view,
+                             "trading.row-count",
+                             (int64_t)count);
+    }
+    for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
+        UmiTradingPriceAlert alert;
+        char key[64];
+        char text[480];
+        const char *state_text;
+
+        status = umi_trading_workspace_price_alert_at(
+            workspace, index, &alert);
+        if (status != UMI_STATUS_OK) {
+            break;
+        }
+        /* Present active state first so urgent rules are clear in compact panels. */
+        state_text = alert.active
+            ? "ACTIVE"
+            : (alert.enabled ? "watching" : "paused");
+        (void)snprintf(key, sizeof(key), "trading.row.%zu", index);
+        (void)snprintf(
+            text,
+            sizeof(text),
+            "%s — %s %s %.5f — %s — %llu occurrence%s",
+            alert.alert_id,
+            alert.instrument_id,
+            umi_trading_price_alert_direction_text(alert.direction),
+            alert.threshold,
+            state_text,
+            (unsigned long long)alert.occurrences,
+            alert.occurrences == 1U ? "" : "s");
+        status = set_string(*out_view, key, text);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_action(*out_view,
+                            0U,
+                            "studio.action.trading.refresh",
+                            "Refresh",
+                            "Refresh alert and linked market state",
+                            1);
+    }
+    return finish_view(status, out_view);
+}
+
 /*
  * Initialise trading ui depth view from caller-provided values so later operations receive
  * a known state.

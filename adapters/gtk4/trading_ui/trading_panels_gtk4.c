@@ -30,6 +30,12 @@ typedef struct UmiGtk4TradingPanelState {
     GtkWidget *environment_dropdown;
     GtkWidget *filter_entry;
     GtkWidget *instrument_dropdown;
+    GtkWidget *alert_dropdown;
+    GtkWidget *alert_direction_dropdown;
+    GtkWidget *alert_threshold_spin;
+    GtkWidget *alert_toggle_button;
+    GtkWidget *alert_acknowledge_button;
+    GtkWidget *alert_remove_button;
     GtkWidget *order_filter_dropdown;
     GtkWidget *order_dropdown;
     GtkWidget *side_dropdown;
@@ -41,6 +47,8 @@ typedef struct UmiGtk4TradingPanelState {
     GtkWidget *risk_label;
     char instrument_ids[UMI_TRADING_MAX_WATCHLIST][UMI_FINANCE_ID_CAPACITY];
     size_t instrument_count;
+    char alert_ids[UMI_TRADING_MAX_ALERTS][UMI_FINANCE_ID_CAPACITY];
+    size_t alert_count;
     char order_ids[UMI_TRADING_MAX_ORDERS][UMI_FINANCE_ID_CAPACITY];
     size_t order_count;
     int building;
@@ -391,6 +399,323 @@ static GtkWidget *create_watchlist_panel(UmiGtk4TradingPanelContext *context)
         gtk_box_append(GTK_BOX(root),
             new_text_label("No instruments match the current filter.", 0));
     state->building = 0;
+    return root;
+}
+
+/* Return the stable identifier selected in an Alerts panel. */
+static const char *selected_alert_id(const UmiGtk4TradingPanelState *state)
+{
+    guint selected;
+
+    if (state == NULL || state->alert_dropdown == NULL) {
+        return NULL;
+    }
+    selected = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(state->alert_dropdown));
+    if ((size_t)selected >= state->alert_count) {
+        return NULL;
+    }
+    return state->alert_ids[selected];
+}
+
+/* Copy the selected Framework alert so callbacks never retain internal state. */
+static int selected_price_alert(const UmiGtk4TradingPanelState *state,
+                                UmiTradingPriceAlert *out_alert)
+{
+    const char *alert_id = selected_alert_id(state);
+    size_t index;
+
+    if (state == NULL || state->context == NULL ||
+        state->context->workspace == NULL || alert_id == NULL ||
+        out_alert == NULL) {
+        return 0;
+    }
+    for (index = 0U; index < UMI_TRADING_MAX_ALERTS; ++index) {
+        UmiTradingPriceAlert alert;
+
+        /* A missing position means the compact alert collection has ended. */
+        if (umi_trading_workspace_price_alert_at(
+                state->context->workspace, index, &alert) != UMI_STATUS_OK) {
+            break;
+        }
+        /* Stable identifiers connect display order to the owned rule. */
+        if (strcmp(alert.alert_id, alert_id) == 0) {
+            *out_alert = alert;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/*
+ * Keep the alert action buttons consistent with the rule currently selected
+ * by the user. An active rule may be acknowledged, while any existing rule
+ * may be removed from the workspace.
+ */
+static void on_alert_selected(GObject *object,
+                              GParamSpec *parameter,
+                              gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    UmiTradingPriceAlert alert;
+    int has_selection;
+    int selected_is_active = 0;
+
+    (void)object;
+    (void)parameter;
+    if (state == NULL) return;
+    has_selection = selected_price_alert(state, &alert);
+    if (has_selection) selected_is_active = alert.active;
+    if (state->alert_toggle_button != NULL) {
+        gtk_widget_set_sensitive(state->alert_toggle_button, has_selection);
+        gtk_button_set_label(
+            GTK_BUTTON(state->alert_toggle_button),
+            has_selection && alert.enabled ? "Pause" : "Resume");
+    }
+    if (state->alert_acknowledge_button != NULL) {
+        gtk_widget_set_sensitive(state->alert_acknowledge_button,
+                                 selected_is_active);
+    }
+    if (state->alert_remove_button != NULL) {
+        gtk_widget_set_sensitive(state->alert_remove_button,
+                                 has_selection);
+    }
+}
+
+/* Create a rule from the selected instrument, direction and threshold controls. */
+static void on_create_price_alert_clicked(GtkButton *button, gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    UmiTradingPriceAlertDirection direction;
+    guint selected_direction;
+    double threshold;
+    int64_t now_ms;
+
+    (void)button;
+    if (state == NULL || state->context == NULL ||
+        state->alert_direction_dropdown == NULL ||
+        state->alert_threshold_spin == NULL) {
+        return;
+    }
+    selected_direction = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(state->alert_direction_dropdown));
+    if (selected_direction > 1U) {
+        return;
+    }
+    direction = selected_direction == 0U
+        ? UMI_TRADING_PRICE_ALERT_CROSSES_ABOVE
+        : UMI_TRADING_PRICE_ALERT_CROSSES_BELOW;
+    threshold = gtk_spin_button_get_value(
+        GTK_SPIN_BUTTON(state->alert_threshold_spin));
+    now_ms = (int64_t)(g_get_real_time() / 1000);
+    (void)umi_trading_ui_controller_create_price_alert(
+        state->context->controller, direction, threshold, now_ms);
+    set_feedback(state, "Price alert request completed.");
+}
+
+/* Acknowledge the active rule chosen in the Alerts panel. */
+static void on_acknowledge_price_alert_clicked(GtkButton *button,
+                                               gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    const char *alert_id = selected_alert_id(state);
+
+    (void)button;
+    if (state == NULL || state->context == NULL || alert_id == NULL) {
+        return;
+    }
+    (void)umi_trading_ui_controller_acknowledge_price_alert(
+        state->context->controller, alert_id);
+    set_feedback(state, "Price alert acknowledgement completed.");
+}
+
+/* Pause or resume the rule chosen in the Alerts panel. */
+static void on_toggle_price_alert_clicked(GtkButton *button, gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    UmiTradingPriceAlert alert;
+
+    (void)button;
+    if (!selected_price_alert(state, &alert)) return;
+    (void)umi_trading_ui_controller_set_price_alert_enabled(
+        state->context->controller,
+        alert.alert_id,
+        !alert.enabled);
+    set_feedback(state,
+                 alert.enabled
+                     ? "Price alert pause request completed."
+                     : "Price alert resume request completed.");
+}
+
+/* Remove the rule chosen in the Alerts panel. */
+static void on_remove_price_alert_clicked(GtkButton *button, gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    const char *alert_id = selected_alert_id(state);
+
+    (void)button;
+    if (state == NULL || state->context == NULL || alert_id == NULL) {
+        return;
+    }
+    (void)umi_trading_ui_controller_remove_price_alert(
+        state->context->controller, alert_id);
+    set_feedback(state, "Price alert removal completed.");
+}
+
+/* Build the interactive price-alert panel over Framework-owned alert state. */
+static GtkWidget *create_alerts_panel(UmiGtk4TradingPanelContext *context)
+{
+    static const char *const direction_labels[] = {
+        "Crosses above", "Crosses below"
+    };
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiGtk4TradingPanelState *state;
+    GtkWidget *root;
+    GtkWidget *summary;
+    GtkWidget *rule_row;
+    GtkWidget *create_button;
+    GtkWidget *button_row;
+    GtkStringList *items;
+    size_t count;
+    size_t index;
+    size_t selected_index = 0U;
+    int selected_is_active = 0;
+    char text[UMI_GTK4_TRADING_TEXT_CAPACITY];
+
+    if (context == NULL || context->workspace == NULL ||
+        umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
+            UMI_STATUS_OK) {
+        return NULL;
+    }
+    state = calloc(1U, sizeof(*state));
+    if (state == NULL) {
+        return NULL;
+    }
+    state->context = context;
+    root = new_section("Price Alerts");
+    g_object_set_data_full(G_OBJECT(root),
+                           "umicom-trading-panel-state",
+                           state,
+                           free);
+
+    (void)snprintf(text,
+                   sizeof(text),
+                   "%zu rules  •  %zu active  •  %zu need acknowledgement",
+                   snapshot.alert_count,
+                   snapshot.active_alert_count,
+                   snapshot.unacknowledged_alert_count);
+    summary = new_text_label(text, 0);
+    gtk_box_append(GTK_BOX(root), summary);
+
+    rule_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    state->alert_direction_dropdown = new_dropdown(
+        direction_labels, 2U, 0U);
+    state->alert_threshold_spin = gtk_spin_button_new_with_range(
+        0.00001, 1000000000.0, 0.01);
+    gtk_spin_button_set_digits(
+        GTK_SPIN_BUTTON(state->alert_threshold_spin), 5U);
+    gtk_spin_button_set_value(
+        GTK_SPIN_BUTTON(state->alert_threshold_spin),
+        snapshot.has_quote && snapshot.selected_mid > 0.0
+            ? snapshot.selected_mid : 1.0);
+    create_button = gtk_button_new_with_label("Create Alert");
+    gtk_widget_set_sensitive(
+        create_button,
+        snapshot.has_selected_instrument && snapshot.has_quote);
+    g_signal_connect(create_button,
+                     "clicked",
+                     G_CALLBACK(on_create_price_alert_clicked),
+                     state);
+    gtk_box_append(GTK_BOX(rule_row), state->alert_direction_dropdown);
+    gtk_box_append(GTK_BOX(rule_row), state->alert_threshold_spin);
+    gtk_box_append(GTK_BOX(rule_row), create_button);
+    gtk_box_append(GTK_BOX(root), rule_row);
+
+    items = gtk_string_list_new(NULL);
+    count = snapshot.alert_count < UMI_TRADING_MAX_ALERTS
+        ? snapshot.alert_count : UMI_TRADING_MAX_ALERTS;
+    for (index = 0U; index < count; ++index) {
+        UmiTradingPriceAlert alert;
+        const char *state_text;
+        size_t identifier_length;
+
+        if (umi_trading_workspace_price_alert_at(
+                context->workspace, index, &alert) != UMI_STATUS_OK) {
+            continue;
+        }
+        state_text = alert.active
+            ? "ACTIVE"
+            : (alert.enabled ? "watching" : "paused");
+        (void)snprintf(
+            text,
+            sizeof(text),
+            "%s  •  %s %s %.5f  •  %s",
+            alert.alert_id,
+            alert.instrument_id,
+            umi_trading_price_alert_direction_text(alert.direction),
+            alert.threshold,
+            state_text);
+        gtk_string_list_append(items, text);
+        identifier_length = strlen(alert.alert_id);
+        (void)memcpy(state->alert_ids[state->alert_count],
+                     alert.alert_id,
+                     identifier_length + 1U);
+        /* Select the first active rule so acknowledgement is one clear action. */
+        if (alert.active && !selected_is_active) {
+            selected_index = state->alert_count;
+            selected_is_active = 1;
+        }
+        state->alert_count += 1U;
+    }
+    state->alert_dropdown =
+        umi_ui_gtk4_drop_down_new_take_string_list(items);
+    if (state->alert_count > 0U) {
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(state->alert_dropdown),
+                                   (guint)selected_index);
+    }
+    gtk_widget_set_hexpand(state->alert_dropdown, TRUE);
+    gtk_box_append(GTK_BOX(root), state->alert_dropdown);
+
+    button_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    state->alert_toggle_button = gtk_button_new_with_label("Pause");
+    state->alert_acknowledge_button =
+        gtk_button_new_with_label("Acknowledge");
+    state->alert_remove_button = gtk_button_new_with_label("Remove");
+    gtk_widget_set_sensitive(state->alert_toggle_button,
+                             state->alert_count > 0U);
+    gtk_widget_set_sensitive(state->alert_acknowledge_button,
+                             selected_is_active);
+    gtk_widget_set_sensitive(state->alert_remove_button,
+                             state->alert_count > 0U);
+    g_signal_connect(state->alert_dropdown,
+                     "notify::selected",
+                     G_CALLBACK(on_alert_selected),
+                     state);
+    g_signal_connect(state->alert_toggle_button,
+                     "clicked",
+                     G_CALLBACK(on_toggle_price_alert_clicked),
+                     state);
+    g_signal_connect(state->alert_acknowledge_button,
+                     "clicked",
+                     G_CALLBACK(on_acknowledge_price_alert_clicked),
+                     state);
+    g_signal_connect(state->alert_remove_button,
+                     "clicked",
+                     G_CALLBACK(on_remove_price_alert_clicked),
+                     state);
+    /* Synchronize labels and availability after all three buttons exist. */
+    on_alert_selected(G_OBJECT(state->alert_dropdown), NULL, state);
+    gtk_box_append(GTK_BOX(button_row), state->alert_toggle_button);
+    gtk_box_append(GTK_BOX(button_row), state->alert_acknowledge_button);
+    gtk_box_append(GTK_BOX(button_row), state->alert_remove_button);
+    gtk_box_append(GTK_BOX(root), button_row);
+
+    state->risk_label = new_text_label(
+        snapshot.alert_count == 0U
+            ? "Create an alert after selecting an instrument with a current quote."
+            : "Alert conditions observe market data and never submit an order.",
+        0);
+    gtk_box_append(GTK_BOX(root), state->risk_label);
     return root;
 }
 
@@ -846,6 +1171,9 @@ static GtkWidget *create_generic_panel(const UmiUiWorkspaceWindow *window,
     else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "fundamentals") == 0)
         status = umi_trading_ui_fundamentals_view_create(
             window->window_id, context->workspace, &view);
+    else if (strcmp(window->tool_id, "alerts") == 0)
+        status = umi_trading_ui_alerts_view_create(
+            window->window_id, context->workspace, &view);
     else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(window->tool_id, "price-ladder") == 0)
         status = umi_trading_ui_depth_view_create(
             window->window_id, context->workspace, &view);
@@ -886,5 +1214,8 @@ GtkWidget *umi_gtk4_trading_panel_create(
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(window->tool_id, "blotter") == 0)
         return create_orders_panel(context);
+    /* Alerts need native creation and acknowledgement controls, not only rows. */
+    if (strcmp(window->tool_id, "alerts") == 0)
+        return create_alerts_panel(context);
     return create_generic_panel(window, context);
 }

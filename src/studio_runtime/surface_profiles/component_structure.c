@@ -20,7 +20,8 @@ umi_studio_surface_profile_component_structure(void)
         .container_id = "studio.sidebar.primary",
         .title = "Structure",
         .role = UMI_APPLICATION_SHELL_ROLE_PANEL,
-        .region = UMI_APPLICATION_SHELL_REGION_LEFT,
+        /* The component tree shares the shell's main navigation side. */
+        .region = UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR,
         .order = 220,
         .default_visible = 0,
         .create_if_missing = 1

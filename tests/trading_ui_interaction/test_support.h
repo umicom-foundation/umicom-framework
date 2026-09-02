@@ -80,6 +80,8 @@ void test_controller_preview(void);
  * longer matches its contract.
  */
 void test_controller_kill_switch(void);
+/** Verify price-alert creation, market activation and acknowledgement. */
+void test_controller_alerts(void);
 /**
  * Exercise test simulation seed and return a clear result when the behaviour no longer
  * matches its contract.

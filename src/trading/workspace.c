@@ -55,6 +55,7 @@ struct UmiTradingWorkspace {
     UmiOms oms;
     UmiExecutionStore executions;
     UmiPositionBook positions;
+    UmiTradingAlertBook alerts;
     UmiChartWorkspace *charts;
     UmiOrderRequest draft_order;
     UmiRiskDecision draft_risk;
@@ -416,6 +417,7 @@ UmiStatus umi_trading_workspace_create(
     umi_oms_init(&workspace->oms, effective.risk_limit);
     umi_execution_store_init(&workspace->executions);
     umi_position_book_init(&workspace->positions);
+    umi_trading_alert_book_init(&workspace->alerts);
     initialise_draft(workspace);
     status = umi_chart_workspace_create(&workspace->charts);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -488,6 +490,7 @@ UmiStatus umi_trading_workspace_remove_instrument(
     const char *instrument_id)
 {
     size_t index;
+    size_t alert_index;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -498,6 +501,22 @@ UmiStatus umi_trading_workspace_remove_instrument(
     index = market_index(workspace, instrument_id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /*
+     * Remove dependent alerts first so the workspace cannot retain rules for
+     * an instrument that is no longer available. Reverse iteration remains
+     * correct while each successful removal compacts the alert array.
+     */
+    for (alert_index = workspace->alerts.count;
+         alert_index > 0U;
+         --alert_index) {
+        UmiTradingPriceAlert *alert =
+            &workspace->alerts.alerts[alert_index - 1U];
+
+        if (strcmp(alert->instrument_id, instrument_id) == 0) {
+            (void)umi_trading_alert_book_remove(&workspace->alerts,
+                                                alert->alert_id);
+        }
+    }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < workspace->market_count) {
         memmove(&workspace->markets[index], &workspace->markets[index + 1U],
@@ -524,6 +543,7 @@ UmiStatus umi_trading_workspace_update_quote(
     const UmiQuote *quote)
 {
     size_t index;
+    UmiStatus alert_status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -533,6 +553,19 @@ UmiStatus umi_trading_workspace_update_quote(
     index = market_index(workspace, quote->instrument.instrument_id.value);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /*
+     * Alerts observe the neutral quote midpoint. A legacy provider may omit a
+     * timestamp, so zero is used instead of rejecting otherwise valid prices.
+     */
+    alert_status = umi_trading_alert_book_evaluate(
+        &workspace->alerts,
+        quote->instrument.instrument_id.value,
+        umi_quote_mid(quote),
+        quote->event_time_ms >= 0 ? quote->event_time_ms : 0);
+    if (alert_status != UMI_STATUS_OK) {
+        return alert_status;
+    }
+    /* Commit the quote only after every dependent alert accepted the value. */
     workspace->markets[index].quote = *quote;
     workspace->markets[index].has_quote = 1;
     workspace->markets[index].revision += 1U;
@@ -1102,6 +1135,109 @@ UmiStatus umi_trading_workspace_refresh(UmiTradingWorkspace *workspace)
     return UMI_STATUS_OK;
 }
 
+/* Add a price alert for an instrument already known to the workspace. */
+UmiStatus umi_trading_workspace_add_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id,
+    const char *instrument_id,
+    UmiTradingPriceAlertDirection direction,
+    double threshold,
+    int64_t created_at_ms)
+{
+    UmiTradingPriceAlert alert;
+    size_t market_position;
+    UmiStatus status;
+
+    if (workspace == NULL || instrument_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    market_position = market_index(workspace, instrument_id);
+    if (market_position == SIZE_MAX) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    status = umi_trading_price_alert_init(&alert,
+                                          alert_id,
+                                          instrument_id,
+                                          direction,
+                                          threshold,
+                                          created_at_ms);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    /* Seed from known market data so simply creating a rule cannot trigger it. */
+    if (workspace->markets[market_position].has_quote) {
+        status = umi_trading_price_alert_seed(
+            &alert,
+            umi_quote_mid(&workspace->markets[market_position].quote));
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+        alert.last_observed_at_ms =
+            workspace->markets[market_position].quote.event_time_ms >= 0
+                ? workspace->markets[market_position].quote.event_time_ms
+                : 0;
+    }
+    status = umi_trading_alert_book_add(&workspace->alerts, &alert);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
+
+/* Remove a price alert by stable identifier. */
+UmiStatus umi_trading_workspace_remove_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_alert_book_remove(&workspace->alerts, alert_id);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
+
+/* Enable or pause an existing price alert. */
+UmiStatus umi_trading_workspace_set_price_alert_enabled(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id,
+    int enabled)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_alert_book_set_enabled(
+        &workspace->alerts, alert_id, enabled);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
+
+/* Acknowledge an active price alert without deleting its rule. */
+UmiStatus umi_trading_workspace_acknowledge_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_alert_book_acknowledge(
+        &workspace->alerts, alert_id);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
+
 /*
  * Provide the trading workspace snapshot operation used by this module and its client
  * applications.
@@ -1151,6 +1287,12 @@ UmiStatus umi_trading_workspace_snapshot(
     out_snapshot->visible_order_count = visible_order_count(workspace);
     out_snapshot->execution_count = workspace->executions.count;
     out_snapshot->position_count = workspace->positions.count;
+    out_snapshot->alert_count =
+        umi_trading_alert_book_count(&workspace->alerts);
+    out_snapshot->active_alert_count =
+        umi_trading_alert_book_active_count(&workspace->alerts);
+    out_snapshot->unacknowledged_alert_count =
+        umi_trading_alert_book_unacknowledged_count(&workspace->alerts);
     out_snapshot->gross_position_quantity =
         umi_portfolio_gross_quantity(&workspace->positions);
     out_snapshot->realised_pnl = realised_pnl(workspace);
@@ -1271,6 +1413,18 @@ UmiStatus umi_trading_workspace_selected_market(
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_market = workspace->markets[index];
     return UMI_STATUS_OK;
+}
+
+/* Copy one price alert by position for presentation or persistence. */
+UmiStatus umi_trading_workspace_price_alert_at(
+    const UmiTradingWorkspace *workspace,
+    size_t index,
+    UmiTradingPriceAlert *out_alert)
+{
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return umi_trading_alert_book_at(&workspace->alerts, index, out_alert);
 }
 
 /*

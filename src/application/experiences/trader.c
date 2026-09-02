@@ -106,11 +106,11 @@ static const UmiExperiencePanelDefinition PANELS[] = {
       UMI_EXPERIENCE_PANEL_DOCKABLE | UMI_EXPERIENCE_PANEL_FLOATABLE | UMI_EXPERIENCE_PANEL_CONTEXT_LINKED | UMI_EXPERIENCE_PANEL_READ_ONLY }
 };
 
-static const char *const LAYOUT_TRADING[] = {"watchlist", "chart", "depth", "order-entry", "blotter", "positions", "risk", "account"};
+static const char *const LAYOUT_TRADING[] = {"watchlist", "chart", "depth", "order-entry", "blotter", "positions", "risk", "account", "alerts"};
 static const char *const LAYOUT_RESEARCH[] = {"watchlist", "chart", "scanner", "predictive-lab", "news", "context-inspector"};
 static const char *const LAYOUT_STRATEGY_DEVELOPMENT[] = {"chart", "strategy", "replay", "predictive-lab", "output", "risk"};
 /* Market analysis links discovery, chart, tape, events and fundamentals. */
-static const char *const LAYOUT_MARKET_ANALYSIS[] = {"scanner", "watchlist", "chart", "time-and-sales", "economic-calendar", "fundamentals", "news"};
+static const char *const LAYOUT_MARKET_ANALYSIS[] = {"scanner", "watchlist", "chart", "time-and-sales", "economic-calendar", "fundamentals", "news", "alerts"};
 /* Options work keeps risk and guarded entry visible beside analysis. */
 static const char *const LAYOUT_OPTIONS[] = {"watchlist", "options-chain", "chart", "order-entry", "risk", "positions"};
 /* Strategy analysis separates research evidence from live execution surfaces. */

@@ -27,7 +27,8 @@ umi_studio_surface_profile_live_preview(void)
         .container_id = "studio.secondary",
         .title = "Live Preview",
         .role = UMI_APPLICATION_SHELL_ROLE_PANEL,
-        .region = UMI_APPLICATION_SHELL_REGION_RIGHT,
+        /* Preview tools sit opposite navigation in the secondary sidebar. */
+        .region = UMI_APPLICATION_SHELL_REGION_SECONDARY_SIDEBAR,
         .order = 114,
         .default_visible = 0,
         .create_if_missing = 1

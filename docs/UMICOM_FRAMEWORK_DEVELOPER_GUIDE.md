@@ -67,6 +67,22 @@ That one helper applies the Umicom `<>` icon to native packages and puts the
 runtime vectors beside the executable. New applications should use this helper
 instead of copying an icon or creating another resource script.
 
+### Moving components on a visual design surface
+
+`umicom/designer/surface_interaction.h` provides one toolkit-neutral gesture
+model for visual design tools. A frontend first calls
+`umi_designer_surface_hit_test` to find the topmost semantic component. It then
+begins a move or resize session, sends pointer locations to the update function,
+and draws the returned preview rectangle. The document is deliberately left
+unchanged during those updates.
+
+When the pointer is released, the frontend commits the session through the
+designer history. Framework checks that the rectangle has not been changed by
+another operation, applies minimum size and canvas limits, and stores the whole
+gesture as one undoable operation. Cancelling simply discards the preview. This
+separation lets different graphical toolkits share the same behavior without
+sharing toolkit objects or dangling pointers.
+
 ### Finding every public C function
 
 The authoritative method index is the public header tree. Function names begin
@@ -179,6 +195,7 @@ unless an allocator contract explicitly permits transfer.
 | Workstation components | Reusable command search, toolbars, status, surfaces and responsive presentation | `umicom/ui/workstation` |
 | Workbench layout | Docking, tabs, splits, floating windows and restoration | `umicom/workbench_layout` |
 | Workbench designer | Palette, canvas, hierarchy and properties | `umicom/workbench_designer` |
+| Visual designer | Semantic documents, geometry, direct manipulation, preview and history | `umicom/designer` |
 | Context channels | Typed links between panels and applications | `umicom/context_channel` |
 | Selection providers | Publish active selections without coupling panels | `umicom/workbench_selection_provider` |
 | Cross-application panels | Share one panel model between running applications | `umicom/cross_application_panel` |

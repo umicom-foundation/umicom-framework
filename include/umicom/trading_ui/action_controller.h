@@ -73,6 +73,7 @@ typedef struct UmiTradingUiController {
     UmiTradingUiChangedHandler changed_handler;
     void *changed_user_data;
     UmiTradingUiControllerSnapshot state;
+    uint64_t next_alert_sequence;
 } UmiTradingUiController;
 
 /**
@@ -201,6 +202,29 @@ UmiStatus umi_trading_ui_controller_engage_kill_switch(
  */
 UmiStatus umi_trading_ui_controller_reset_kill_switch(
     UmiTradingUiController *controller);
+
+/** Create a price alert for the currently selected instrument. */
+UmiStatus umi_trading_ui_controller_create_price_alert(
+    UmiTradingUiController *controller,
+    UmiTradingPriceAlertDirection direction,
+    double threshold,
+    int64_t now_ms);
+
+/** Pause or resume a price alert selected by stable identifier. */
+UmiStatus umi_trading_ui_controller_set_price_alert_enabled(
+    UmiTradingUiController *controller,
+    const char *alert_id,
+    int enabled);
+
+/** Acknowledge an active price alert selected by stable identifier. */
+UmiStatus umi_trading_ui_controller_acknowledge_price_alert(
+    UmiTradingUiController *controller,
+    const char *alert_id);
+
+/** Remove a price alert selected by stable identifier. */
+UmiStatus umi_trading_ui_controller_remove_price_alert(
+    UmiTradingUiController *controller,
+    const char *alert_id);
 
 /**
  * Perform trading ui controller through the module contract so client applications do not

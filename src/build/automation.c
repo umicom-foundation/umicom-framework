@@ -59,6 +59,106 @@ static UmiStatus copy_text(char *destination,
 }
 
 /*
+ * Append at most max_characters without writing beyond the destination. This
+ * small helper is used for display text, where a shortened value is safer and
+ * more useful than treating a long diagnostic as a planning failure.
+ */
+static size_t append_summary_text(char *destination,
+                                  size_t capacity,
+                                  size_t offset,
+                                  const char *source,
+                                  size_t max_characters)
+{
+    size_t source_index = 0U;
+
+    /* Invalid storage cannot receive text, so leave the caller's offset alone. */
+    if (destination == NULL || capacity == 0U || offset >= capacity) {
+        return offset;
+    }
+    if (source == NULL) {
+        destination[offset] = '\0';
+        return offset;
+    }
+    while (source[source_index] != '\0' &&
+           source_index < max_characters &&
+           offset < capacity - 1U) {
+        destination[offset++] = source[source_index++];
+    }
+    destination[offset] = '\0';
+    return offset;
+}
+
+/*
+ * Explain the first direct change while keeping the fixed-size plan record
+ * valid for every legal path. The change record still retains the full path;
+ * only this human-readable summary is shortened when necessary.
+ */
+static void write_direct_change_reason(char *destination,
+                                       size_t capacity,
+                                       UmiBuildAutomationChangeKind kind,
+                                       const char *path)
+{
+    static const char changed_text[] = " changed: ";
+    static const char ellipsis[] = "...";
+    const char *kind_text = umi_build_automation_change_kind_text(kind);
+    const size_t path_length = path != NULL ? strlen(path) : 0U;
+    size_t offset = 0U;
+    size_t available;
+
+    /* A zero-capacity destination has no byte available for a terminator. */
+    if (destination == NULL || capacity == 0U) {
+        return;
+    }
+    destination[0] = '\0';
+    offset = append_summary_text(destination,
+                                 capacity,
+                                 offset,
+                                 kind_text,
+                                 capacity);
+    offset = append_summary_text(destination,
+                                 capacity,
+                                 offset,
+                                 changed_text,
+                                 sizeof(changed_text) - 1U);
+    available = capacity - offset - 1U;
+
+    /* A path that fits is copied completely so ordinary diagnostics stay exact. */
+    if (path_length <= available) {
+        (void)append_summary_text(destination,
+                                  capacity,
+                                  offset,
+                                  path,
+                                  path_length);
+        return;
+    }
+
+    /* Reserve the last three visible bytes to show that the path was shortened. */
+    if (available >= sizeof(ellipsis) - 1U) {
+        const size_t visible_path_length =
+            available - (sizeof(ellipsis) - 1U);
+
+        offset = append_summary_text(destination,
+                                     capacity,
+                                     offset,
+                                     path,
+                                     visible_path_length);
+        (void)append_summary_text(destination,
+                                  capacity,
+                                  offset,
+                                  ellipsis,
+                                  sizeof(ellipsis) - 1U);
+        return;
+    }
+
+    /* Very small caller-owned buffers receive as much path text as can fit. */
+    (void)append_summary_text(destination,
+                              capacity,
+                              offset,
+                              path,
+                              available);
+}
+
+/*
  * Convert Windows separators to the workspace's portable forward-slash form,
  * remove a leading "./", collapse repeated separators and trim a final slash.
  */
@@ -326,11 +426,11 @@ static UmiStatus add_direct_item(UmiBuildAutomation *automation,
     item->changed_file_count += 1U;
     item->direct_change = 1;
     if (item->changed_file_count == 1U) {
-        (void)snprintf(item->reason,
-                       sizeof(item->reason),
-                       "%s changed: %s",
-                       umi_build_automation_change_kind_text(change->kind),
-                       change->path);
+        /* The summary can be shorter than the full path without losing evidence. */
+        write_direct_change_reason(item->reason,
+                                   sizeof(item->reason),
+                                   change->kind,
+                                   change->path);
     } else {
         (void)snprintf(item->reason,
                        sizeof(item->reason),

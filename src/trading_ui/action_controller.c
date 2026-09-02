@@ -118,6 +118,7 @@ UmiStatus umi_trading_ui_controller_init(
     controller->workspace = workspace;
     controller->config = effective;
     controller->state.revision = 1U;
+    controller->next_alert_sequence = 1U;
     controller->state.last_status = UMI_STATUS_OK;
     controller->state.live_environment_allowed =
         effective.allow_live_environment != 0;
@@ -479,6 +480,129 @@ UmiStatus umi_trading_ui_controller_reset_kill_switch(
     umi_trading_workspace_reset_kill_switch(controller->workspace);
     return finish_action(controller, UMI_STATUS_OK, NULL,
         "Trading kill switch reset through the canonical workspace.", 1);
+}
+
+/* Create a price alert for the currently selected instrument. */
+UmiStatus umi_trading_ui_controller_create_price_alert(
+    UmiTradingUiController *controller,
+    UmiTradingPriceAlertDirection direction,
+    double threshold,
+    int64_t now_ms)
+{
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiStatus status;
+    char alert_id[UMI_FINANCE_ID_CAPACITY];
+
+    if (controller == NULL || controller->workspace == NULL || now_ms < 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_workspace_snapshot(controller->workspace, &snapshot);
+    if (status != UMI_STATUS_OK) {
+        return finish_action(controller, status, NULL, NULL, 0);
+    }
+    if (!snapshot.has_selected_instrument || !snapshot.has_quote) {
+        return finish_action(
+            controller,
+            UMI_STATUS_INVALID_STATE,
+            NULL,
+            "Select an instrument with a current quote before creating an alert.",
+            0);
+    }
+
+    /*
+     * Controller-owned sequence numbers create readable local identifiers. If
+     * restored state already contains one, advance until a free identifier is
+     * found rather than replacing an existing rule.
+     */
+    do {
+        const unsigned long long sequence =
+            (unsigned long long)controller->next_alert_sequence++;
+
+        (void)snprintf(alert_id,
+                       sizeof(alert_id),
+                       "price-alert-%llu",
+                       sequence);
+        status = umi_trading_workspace_add_price_alert(
+            controller->workspace,
+            alert_id,
+            snapshot.selected_instrument_id,
+            direction,
+            threshold,
+            now_ms);
+    } while (status == UMI_STATUS_ALREADY_EXISTS &&
+             controller->next_alert_sequence != 0U);
+
+    return finish_action(
+        controller,
+        status,
+        NULL,
+        status == UMI_STATUS_OK
+            ? "Price alert created for the selected instrument."
+            : NULL,
+        1);
+}
+
+/* Pause or resume a price alert selected by stable identifier. */
+UmiStatus umi_trading_ui_controller_set_price_alert_enabled(
+    UmiTradingUiController *controller,
+    const char *alert_id,
+    int enabled)
+{
+    UmiStatus status;
+
+    if (controller == NULL || controller->workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_workspace_set_price_alert_enabled(
+        controller->workspace, alert_id, enabled);
+    return finish_action(
+        controller,
+        status,
+        NULL,
+        status == UMI_STATUS_OK
+            ? (enabled ? "Price alert resumed." : "Price alert paused.")
+            : NULL,
+        1);
+}
+
+/* Acknowledge an active price alert selected by stable identifier. */
+UmiStatus umi_trading_ui_controller_acknowledge_price_alert(
+    UmiTradingUiController *controller,
+    const char *alert_id)
+{
+    UmiStatus status;
+
+    if (controller == NULL || controller->workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_workspace_acknowledge_price_alert(
+        controller->workspace, alert_id);
+    return finish_action(
+        controller,
+        status,
+        NULL,
+        status == UMI_STATUS_OK ? "Price alert acknowledged." : NULL,
+        1);
+}
+
+/* Remove a price alert selected by stable identifier. */
+UmiStatus umi_trading_ui_controller_remove_price_alert(
+    UmiTradingUiController *controller,
+    const char *alert_id)
+{
+    UmiStatus status;
+
+    if (controller == NULL || controller->workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_workspace_remove_price_alert(
+        controller->workspace, alert_id);
+    return finish_action(
+        controller,
+        status,
+        NULL,
+        status == UMI_STATUS_OK ? "Price alert removed." : NULL,
+        1);
 }
 
 /*

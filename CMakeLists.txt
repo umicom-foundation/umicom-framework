@@ -894,6 +894,7 @@ add_library(umicom_designer STATIC
     src/designer/palette.c
     src/designer/inspector.c
     src/designer/surface.c
+    src/designer/surface_interaction.c
     src/designer/preview.c
     src/designer/project.c
     src/designer/catalogue.c
@@ -4100,6 +4101,10 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-designer-clipboard-tests framework.designer.clipboard tests/test_designer_clipboard.c)
     umicom_add_framework_test(umicom-designer-template-tests framework.designer.template tests/test_designer_template.c)
     umicom_add_framework_test(umicom-designer-layout-tests framework.designer.layout tests/test_designer_layout.c)
+    umicom_add_framework_test(
+        umicom-designer-surface-interaction-tests
+        framework.designer.surface_interaction
+        tests/test_designer_surface_interaction.c)
     umicom_add_framework_test(umicom-designer-session-tests framework.designer.session tests/test_designer_session.c)
     umicom_add_framework_test(umicom-designer-workspace-model-tests framework.designer.workspace_model tests/test_designer_workspace_model.c)
     umicom_add_framework_test(umicom-designer-live-source-workspace-tests framework.designer.live_source_workspace tests/test_designer_live_source_workspace.c)

@@ -104,6 +104,8 @@ int main(void)
                 "trading-economic-calendar", workspace);
     verify_view(umi_trading_ui_fundamentals_view_create, "fundamentals",
                 "trading-fundamentals", workspace);
+    verify_view(umi_trading_ui_alerts_view_create, "alerts",
+                "trading-alerts", workspace);
 
     assert(umi_trading_ui_order_ticket_view_create(
                "ticket.actions", workspace, &ticket) == UMI_STATUS_OK);

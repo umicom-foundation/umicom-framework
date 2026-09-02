@@ -29,6 +29,7 @@
 #include <stdint.h>
 
 #include "umicom/chart/workspace.h"
+#include "umicom/trading/alert.h"
 #include "umicom/trading/execution_store.h"
 #include "umicom/trading/oms.h"
 #include "umicom/trading/position_book.h"
@@ -38,7 +39,7 @@
 extern "C" {
 #endif
 
-#define UMI_TRADING_WORKSPACE_API_VERSION 1U
+#define UMI_TRADING_WORKSPACE_API_VERSION 2U
 #define UMI_TRADING_WORKSPACE_FILTER_CAPACITY 96U
 
 /**
@@ -106,6 +107,9 @@ typedef struct UmiTradingWorkspaceSnapshot {
     size_t visible_order_count;
     size_t execution_count;
     size_t position_count;
+    size_t alert_count;
+    size_t active_alert_count;
+    size_t unacknowledged_alert_count;
     double gross_position_quantity;
     double realised_pnl;
     double selected_bid;
@@ -333,6 +337,31 @@ void umi_trading_workspace_reset_kill_switch(UmiTradingWorkspace *workspace);
  */
 UmiStatus umi_trading_workspace_refresh(UmiTradingWorkspace *workspace);
 
+/** Add a price alert for an instrument already known to the workspace. */
+UmiStatus umi_trading_workspace_add_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id,
+    const char *instrument_id,
+    UmiTradingPriceAlertDirection direction,
+    double threshold,
+    int64_t created_at_ms);
+
+/** Remove a price alert by stable identifier. */
+UmiStatus umi_trading_workspace_remove_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id);
+
+/** Enable or pause an existing price alert. */
+UmiStatus umi_trading_workspace_set_price_alert_enabled(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id,
+    int enabled);
+
+/** Acknowledge an active price alert without deleting its rule. */
+UmiStatus umi_trading_workspace_acknowledge_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id);
+
 /**
  * Provide the trading workspace snapshot operation used by this module and its client
  * applications.
@@ -355,6 +384,12 @@ UmiStatus umi_trading_workspace_visible_instrument_at(
 UmiStatus umi_trading_workspace_selected_market(
     UmiTradingWorkspace *workspace,
     UmiTradingMarketSnapshot *out_market);
+
+/** Copy one price alert by position for presentation or persistence. */
+UmiStatus umi_trading_workspace_price_alert_at(
+    const UmiTradingWorkspace *workspace,
+    size_t index,
+    UmiTradingPriceAlert *out_alert);
 /**
  * Find trading workspace visible order while leaving the underlying catalogue or model
  * owned by this module.

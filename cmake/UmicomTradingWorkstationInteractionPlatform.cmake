@@ -73,6 +73,7 @@ function(umicom_trading_workstation_attach)
             "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_controller_draft.c"
             "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_controller_preview.c"
             "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_controller_kill_switch.c"
+            "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_controller_alerts.c"
             "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_simulation_seed.c"
             "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_simulation_step.c"
             "${UMICOM_TRADING_WORKSTATION_ROOT}/tests/trading_ui_interaction/test_controller_dispatch.c"

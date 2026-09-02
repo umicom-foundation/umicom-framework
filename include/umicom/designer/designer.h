@@ -28,6 +28,7 @@
 #include "umicom/designer/palette.h"
 #include "umicom/designer/inspector.h"
 #include "umicom/designer/surface.h"
+#include "umicom/designer/surface_interaction.h"
 #include "umicom/designer/preview.h"
 #include "umicom/designer/project.h"
 #include "umicom/designer/catalogue.h"

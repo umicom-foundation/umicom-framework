@@ -30,6 +30,7 @@ int main(void)
     test_controller_draft();
     test_controller_preview();
     test_controller_kill_switch();
+    test_controller_alerts();
     test_simulation_seed();
     test_simulation_step();
     test_controller_dispatch();

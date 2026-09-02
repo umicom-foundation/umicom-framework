@@ -60,6 +60,7 @@ extern "C" {
     "umicom.trading.workspace.economic-calendar"
 #define UMI_TRADING_UI_VIEW_FUNDAMENTALS \
     "umicom.trading.workspace.fundamentals"
+#define UMI_TRADING_UI_VIEW_ALERTS "umicom.trading.workspace.alerts"
 
 /**
  * Initialise trading ui dashboard view from caller-provided values so later operations
@@ -193,6 +194,12 @@ UmiStatus umi_trading_ui_economic_calendar_view_create(
     UmiUiViewModel **out_view);
 /* Project instrument facts already held by the canonical trading workspace. */
 UmiStatus umi_trading_ui_fundamentals_view_create(
+    const char *view_id,
+    UmiTradingWorkspace *workspace,
+    UmiUiViewModel **out_view);
+
+/* Project price-alert rules, activity and acknowledgement state. */
+UmiStatus umi_trading_ui_alerts_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
     UmiUiViewModel **out_view);

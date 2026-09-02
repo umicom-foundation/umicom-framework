@@ -170,6 +170,36 @@ static void test_documentation_selection(void)
     umi_build_automation_destroy(automation);
 }
 
+/*
+ * Verify that the plan presents a safe, clearly shortened explanation when a
+ * legal workspace path is larger than the plan item's display field.
+ */
+static void test_long_path_reason(void)
+{
+    static const char prefix[] = "applications/studio/src/";
+    UmiBuildAutomation *automation = create_workspace();
+    UmiBuildAutomationPlanItem item;
+    char path[UMI_BUILD_PATH_CAPACITY];
+    const size_t prefix_length = sizeof(prefix) - 1U;
+    const size_t extension_position = sizeof(path) - 3U;
+
+    /* Fill nearly the entire public path capacity while retaining a C suffix. */
+    (void)memset(path, 'a', sizeof(path));
+    (void)memcpy(path, prefix, prefix_length);
+    path[extension_position] = '.';
+    path[extension_position + 1U] = 'c';
+    path[extension_position + 2U] = '\0';
+
+    add_change(automation, path);
+    assert(umi_build_automation_evaluate(automation) == UMI_STATUS_OK);
+    assert(umi_build_automation_item_at(automation, 0U, &item) ==
+           UMI_STATUS_OK);
+    assert(strncmp(item.reason, "source changed: ", 16U) == 0);
+    assert(strlen(item.reason) == sizeof(item.reason) - 1U);
+    assert(strcmp(&item.reason[sizeof(item.reason) - 4U], "...") == 0);
+    umi_build_automation_destroy(automation);
+}
+
 /* Run the independent scenarios and return success only when every assertion holds. */
 int main(void)
 {
@@ -188,5 +218,6 @@ int main(void)
     test_application_selection();
     test_shared_contract_selection();
     test_documentation_selection();
+    test_long_path_reason();
     return 0;
 }
