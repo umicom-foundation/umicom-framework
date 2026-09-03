@@ -16,6 +16,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/providers/c_language_assistance.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 struct UmiEditorCLanguageAssistance {

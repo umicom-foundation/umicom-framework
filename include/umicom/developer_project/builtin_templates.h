@@ -15,6 +15,8 @@
 #ifndef UMICOM_DEVELOPER_PROJECT_BUILTIN_TEMPLATES_H
 #define UMICOM_DEVELOPER_PROJECT_BUILTIN_TEMPLATES_H
 
+#include <stddef.h>
+
 #include "umicom/developer_project/template_registry.h"
 
 #ifdef __cplusplus

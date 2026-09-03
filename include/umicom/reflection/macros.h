@@ -17,6 +17,7 @@
 #define UMICOM_REFLECTION_MACROS_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "umicom/reflection/types.h"
 

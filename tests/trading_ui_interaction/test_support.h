@@ -15,6 +15,8 @@
 #ifndef UMICOM_TRADING_UI_INTERACTION_TEST_SUPPORT_H
 #define UMICOM_TRADING_UI_INTERACTION_TEST_SUPPORT_H
 
+#include <stdint.h>
+
 #include "umicom/trading_ui/trading_ui.h"
 
 /**

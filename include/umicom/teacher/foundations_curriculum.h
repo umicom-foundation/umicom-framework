@@ -16,6 +16,9 @@
 #ifndef UMICOM_TEACHER_FOUNDATIONS_CURRICULUM_H
 #define UMICOM_TEACHER_FOUNDATIONS_CURRICULUM_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "umicom/teacher/learning_plan.h"
 
 #ifdef __cplusplus

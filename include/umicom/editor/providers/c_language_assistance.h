@@ -22,6 +22,7 @@
 #define UMICOM_EDITOR_PROVIDERS_C_LANGUAGE_ASSISTANCE_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "umicom/editor/completion_orchestration.h"
 #include "umicom/editor/completion_provider.h"
