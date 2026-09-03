@@ -39,8 +39,9 @@
 extern "C" {
 #endif
 
-#define UMI_TRADING_WORKSPACE_API_VERSION 2U
+#define UMI_TRADING_WORKSPACE_API_VERSION 3U
 #define UMI_TRADING_WORKSPACE_FILTER_CAPACITY 96U
+#define UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY 256U
 
 /**
  * List the named trading workspace order filter values accepted by this public contract.
@@ -52,6 +53,13 @@ typedef enum UmiTradingWorkspaceOrderFilter {
     UMI_TRADING_WORKSPACE_ORDERS_CANCELLED = 3,
     UMI_TRADING_WORKSPACE_ORDERS_REJECTED = 4
 } UmiTradingWorkspaceOrderFilter;
+
+/** Name the built-in price study shown over a trading candle chart. */
+typedef enum UmiTradingChartStudy {
+    UMI_TRADING_CHART_STUDY_NONE = 0,
+    UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE = 1,
+    UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE = 2
+} UmiTradingChartStudy;
 
 /**
  * Represent the trading market snapshot data shared with callers of this public contract.
@@ -97,6 +105,8 @@ typedef struct UmiTradingWorkspaceSnapshot {
     UmiChartWorkspaceSnapshot charts;
     char instrument_filter[UMI_TRADING_WORKSPACE_FILTER_CAPACITY];
     UmiTradingWorkspaceOrderFilter order_filter;
+    UmiTradingChartStudy chart_study;
+    size_t chart_study_period;
     char selected_instrument_id[UMI_FINANCE_ID_CAPACITY];
     char selected_order_id[UMI_FINANCE_ID_CAPACITY];
     char kill_switch_reason[UMI_TRADING_TEXT_CAPACITY];
@@ -110,6 +120,7 @@ typedef struct UmiTradingWorkspaceSnapshot {
     size_t alert_count;
     size_t active_alert_count;
     size_t unacknowledged_alert_count;
+    size_t selected_bar_count;
     double gross_position_quantity;
     double realised_pnl;
     double selected_bid;
@@ -221,6 +232,15 @@ UmiStatus umi_trading_workspace_set_instrument_filter(
 UmiStatus umi_trading_workspace_set_order_filter(
     UmiTradingWorkspace *workspace,
     UmiTradingWorkspaceOrderFilter order_filter);
+
+/**
+ * Store the selected chart study and period in workspace state so the choice
+ * survives panel reconstruction and can later participate in persistence.
+ */
+UmiStatus umi_trading_workspace_set_chart_study(
+    UmiTradingWorkspace *workspace,
+    UmiTradingChartStudy study,
+    size_t period);
 /**
  * Provide the trading workspace select instrument operation used by this module and its
  * client applications.
@@ -384,6 +404,19 @@ UmiStatus umi_trading_workspace_visible_instrument_at(
 UmiStatus umi_trading_workspace_selected_market(
     UmiTradingWorkspace *workspace,
     UmiTradingMarketSnapshot *out_market);
+
+/** Return the number of retained candles for the selected instrument. */
+size_t umi_trading_workspace_selected_bar_count(
+    const UmiTradingWorkspace *workspace);
+
+/**
+ * Copy one retained candle in chronological order. Callers receive their own
+ * value and never borrow the workspace's internal history storage.
+ */
+UmiStatus umi_trading_workspace_selected_bar_at(
+    const UmiTradingWorkspace *workspace,
+    size_t index,
+    UmiBar *out_bar);
 
 /** Copy one price alert by position for presentation or persistence. */
 UmiStatus umi_trading_workspace_price_alert_at(

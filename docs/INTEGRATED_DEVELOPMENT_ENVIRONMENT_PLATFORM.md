@@ -96,16 +96,19 @@ workspace trust and explicit permission before an executable provider can be
 selected. The Studio Live Preview panel and Code + Preview layout present this
 Framework service without creating another rendering model.
 
-Studio now performs direct manipulation through a toolkit-neutral Framework
-interaction session. A pointer press selects the topmost semantic component,
+Studio now performs direct manipulation and palette placement through a
+toolkit-neutral Framework interaction session. A pointer press selects the
+topmost semantic component,
 movement changes only a preview rectangle, and release records one undoable
 operation. Edge and corner handles resize safely, the component cannot shrink
 below its minimum size, and grid snapping can be disabled when precise placement
-is needed. If another operation changes the same component during a gesture, the
-stale gesture is rejected instead of overwriting newer work.
+is needed. A palette drop creates its semantic node and bounded geometry in one
+history operation, so an unsuccessful drop cannot leave a partial component. If
+another operation changes the same component during a gesture, the stale
+gesture is rejected instead of overwriting newer work.
 
-The next visual-design increments are palette drag-and-drop insertion, peer
-alignment guides, multi-selection alignment commands, event handler wiring,
+The next visual-design increments are peer alignment guides, multi-selection
+alignment commands, event handler wiring,
 data bindings, device-size preview, resource editors and form inheritance.
 These must extend the same Framework document and history services rather than
 introduce frontend-owned models.

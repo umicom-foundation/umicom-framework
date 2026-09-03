@@ -25,10 +25,12 @@ void test_simulation_step(void)
     UmiTradingUiTestFixture fixture;
     UmiTradingMarketSnapshot before;
     UmiTradingMarketSnapshot after;
+    size_t bars_before;
     uint64_t sequence;
     umi_trading_ui_test_fixture_init(&fixture, 1);
     assert(umi_trading_workspace_selected_market(fixture.workspace, &before) ==
            UMI_STATUS_OK);
+    bars_before = umi_trading_workspace_selected_bar_count(fixture.workspace);
     sequence = umi_trading_simulation_market_sequence(&fixture.simulation);
     assert(umi_trading_simulation_market_step(&fixture.simulation, 1000) ==
            UMI_STATUS_OK);
@@ -39,5 +41,9 @@ void test_simulation_step(void)
     assert(after.quote.bid != before.quote.bid ||
            after.quote.ask != before.quote.ask);
     assert(after.revision > before.revision);
+    /* Each simulation step is a discrete event candle, so retained history
+     * must advance instead of repeatedly overwriting an overlapping window. */
+    assert(umi_trading_workspace_selected_bar_count(fixture.workspace) ==
+           bars_before + 1U);
     umi_trading_ui_test_fixture_destroy(&fixture);
 }

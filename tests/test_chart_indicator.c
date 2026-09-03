@@ -23,4 +23,32 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
-int main(void){UmiChartSeries in,out;assert(umi_chart_series_init(&in,"close",UMI_CHART_LINE)==UMI_STATUS_OK);/* Visit each bounded item once so every record receives the same rule. */ for(int i=0;i<5;++i)assert(umi_chart_series_add(&in,(UmiChartPoint){i,(double)(i+1)})==UMI_STATUS_OK);assert(umi_chart_indicator_sma(&in,3U,&out)==UMI_STATUS_OK);assert(out.point_count==3U);assert(out.points[0].value==2.0);return 0;}
+int main(void)
+{
+    UmiChartSeries input;
+    UmiChartSeries output;
+    int index;
+
+    assert(umi_chart_series_init(&input, "close", UMI_CHART_LINE) ==
+        UMI_STATUS_OK);
+    /* Add a small predictable sequence so both study formulas can be checked
+     * without depending on a graphical renderer. */
+    for (index = 0; index < 5; ++index) {
+        assert(umi_chart_series_add(
+            &input,
+            (UmiChartPoint){index, (double)(index + 1)}) == UMI_STATUS_OK);
+    }
+    assert(umi_chart_indicator_sma(&input, 3U, &output) == UMI_STATUS_OK);
+    assert(output.point_count == 3U);
+    assert(output.points[0].value == 2.0);
+    assert(output.points[2].value == 4.0);
+    assert(umi_chart_indicator_ema(&input, 3U, &output) == UMI_STATUS_OK);
+    assert(output.point_count == 5U);
+    assert(output.points[0].value == 1.0);
+    assert(output.points[4].value == 4.0625);
+    assert(umi_chart_indicator_sma(&input, 0U, &output) ==
+        UMI_STATUS_INVALID_ARGUMENT);
+    assert(umi_chart_indicator_sma(&input, 3U, &input) ==
+        UMI_STATUS_INVALID_ARGUMENT);
+    return 0;
+}

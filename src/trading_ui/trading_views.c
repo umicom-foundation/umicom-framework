@@ -555,6 +555,21 @@ UmiStatus umi_trading_ui_chart_view_create(
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "chart.drawing-count",
                              (int64_t)snapshot.charts.drawings_count);
+    /* Publish the retained history size so every presentation adapter can
+     * explain how much market evidence is currently available to the chart. */
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "chart.bar-count",
+                             (int64_t)snapshot.selected_bar_count);
+    /* Keep the selected study in the shared view model instead of requiring
+     * each desktop or web adapter to invent its own preference state. */
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "chart.study",
+                             (int64_t)snapshot.chart_study);
+    /* Publish the calculation period beside the study because the two values
+     * must travel together when a panel is detached or restored later. */
+    if (status == UMI_STATUS_OK)
+        status = set_integer(*out_view, "chart.study-period",
+                             (int64_t)snapshot.chart_study_period);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && snapshot.has_selected_instrument)
         status = umi_trading_workspace_selected_market(workspace, &market);

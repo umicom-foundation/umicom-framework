@@ -65,6 +65,15 @@ can be passed to `umi_chart_plot_add_line_series`. This lets one calculated
 indicator appear in a desktop chart, exported image or report without running
 the calculation again in each frontend.
 
+The trading workspace retains up to
+`UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY` chronological candles for each
+instrument. A repeated start time replaces the current forming candle, a newer
+start time appends a candle, and stale older data is rejected. Frontends query
+the selected series through count and copy functions; they never borrow a
+pointer into mutable market state. The native trading chart uses this contract
+for candle history and configurable simple or exponential moving-average
+overlays.
+
 ## Renderer contract
 
 `UmiChartRenderer` is a small versioned callback table. A renderer declares

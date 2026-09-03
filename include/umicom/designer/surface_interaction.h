@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-#define UMI_DESIGNER_SURFACE_INTERACTION_API_VERSION 1U
+#define UMI_DESIGNER_SURFACE_INTERACTION_API_VERSION 2U
 #define UMI_DESIGNER_SURFACE_DEFAULT_HANDLE_SIZE 7
 #define UMI_DESIGNER_SURFACE_DEFAULT_MINIMUM_SIZE 16
 
@@ -87,6 +87,23 @@ typedef struct UmiDesignerSurfaceInteraction {
     int snapped_x;
     int snapped_y;
 } UmiDesignerSurfaceInteraction;
+
+/**
+ * Insert a new semantic component at a requested canvas rectangle. Framework
+ * snaps and bounds the rectangle before recording the complete node as one
+ * undoable history operation, so palette drops behave consistently in every
+ * frontend.
+ */
+UmiStatus umi_designer_surface_insert_component(
+    UmiDesignerDocument *document,
+    UmiDesignerHistory *history,
+    const char *node_id,
+    const char *component_type,
+    const char *parent_id,
+    UmiDesignerRect requested_rect,
+    UmiDesignerRect canvas_bounds,
+    const UmiDesignerSurfaceOptions *options,
+    UmiDesignerRect *out_rect);
 
 /**
  * Find the topmost component below a canvas point. A non-zero handle size also

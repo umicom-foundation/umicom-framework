@@ -34,6 +34,7 @@ int main(void)
     UmiDesignerRect canvas = {0, 0, 320, 240};
     UmiDesignerRect rect = {16, 24, 96, 40};
     UmiDesignerRect current;
+    UmiDesignerRect inserted;
 
     assert(umi_designer_document_create(
         "org.umicom.designer.interaction",
@@ -58,6 +59,30 @@ int main(void)
         UMI_STATUS_OK);
     assert(umi_designer_history_create(document, &history) == UMI_STATUS_OK);
     umi_designer_surface_options_init(&options);
+
+    /* A palette drop becomes a complete semantic node, snaps to the same grid
+     * as pointer movement, and can be undone without leaving partial geometry. */
+    assert(umi_designer_surface_insert_component(
+        document,
+        history,
+        "dropped-label",
+        "label",
+        "root",
+        (UmiDesignerRect){301, 221, 80, 32},
+        canvas,
+        &options,
+        &inserted) == UMI_STATUS_OK);
+    assert(inserted.x == 240 && inserted.y == 208);
+    assert(umi_designer_surface_get_rect(
+        document,
+        "dropped-label",
+        &current) == UMI_STATUS_OK);
+    assert(current.x == inserted.x && current.y == inserted.y);
+    assert(umi_designer_history_undo(history) == UMI_STATUS_OK);
+    assert(umi_decl_document_find_node(
+        umi_designer_document_declarative(document),
+        "dropped-label",
+        &metadata) == UMI_STATUS_NOT_FOUND);
 
     /* The later child is hit before its overlapping parent and its right edge
      * becomes a resize handle. */

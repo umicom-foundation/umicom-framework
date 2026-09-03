@@ -457,6 +457,83 @@ static UmiStatus set_node_rect(UmiDeclNode *node, UmiDesignerRect rect)
     return status;
 }
 
+/* Validate surface options at the public boundary so imported or manually
+ * assembled settings cannot create an invalid grid calculation. */
+static int surface_options_valid(const UmiDesignerSurfaceOptions *options)
+{
+    return options == NULL ||
+           (options->grid_size > 0U && options->grid_size <= 256U &&
+            options->zoom >= 0.25F && options->zoom <= 4.0F);
+}
+
+/* Add a component and its geometry as one history operation. The document is
+ * unchanged when validation, node construction, or history execution fails. */
+UmiStatus umi_designer_surface_insert_component(
+    UmiDesignerDocument *document,
+    UmiDesignerHistory *history,
+    const char *node_id,
+    const char *component_type,
+    const char *parent_id,
+    UmiDesignerRect requested_rect,
+    UmiDesignerRect canvas_bounds,
+    const UmiDesignerSurfaceOptions *options,
+    UmiDesignerRect *out_rect)
+{
+    UmiDesignerSurfaceOptions effective_options;
+    UmiDesignerOperation operation;
+    UmiDesignerRect placed_rect = requested_rect;
+    UmiDeclNode node;
+    UmiStatus status;
+
+    if (out_rect != NULL) *out_rect = (UmiDesignerRect){0, 0, 0, 0};
+    if (document == NULL || history == NULL ||
+        !umi_decl_id_is_valid(node_id) ||
+        !umi_decl_id_is_valid(component_type) ||
+        !umi_decl_id_is_valid(parent_id) ||
+        requested_rect.width <= 0 || requested_rect.height <= 0 ||
+        !surface_options_valid(options)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Components larger than a bounded canvas are reduced before position is
+     * constrained, which guarantees the final rectangle fits on both axes. */
+    if (canvas_bounds.width > 0 && placed_rect.width > canvas_bounds.width) {
+        placed_rect.width = canvas_bounds.width;
+    }
+    if (canvas_bounds.height > 0 && placed_rect.height > canvas_bounds.height) {
+        placed_rect.height = canvas_bounds.height;
+    }
+    if (options != NULL) {
+        effective_options = *options;
+    } else {
+        umi_designer_surface_options_init(&effective_options);
+    }
+    if (effective_options.snap_to_grid) {
+        placed_rect.x = snap_coordinate(
+            placed_rect.x,
+            effective_options.grid_size);
+        placed_rect.y = snap_coordinate(
+            placed_rect.y,
+            effective_options.grid_size);
+    }
+    constrain_move(canvas_bounds, &placed_rect);
+
+    status = umi_decl_node_init(&node, node_id, component_type, parent_id);
+    if (status == UMI_STATUS_OK) {
+        status = set_node_rect(&node, placed_rect);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_designer_operation_add(&node, &operation);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_designer_history_execute(history, &operation);
+    }
+    if (status == UMI_STATUS_OK && out_rect != NULL) {
+        *out_rect = placed_rect;
+    }
+    return status;
+}
+
 /* Apply the completed preview once, after checking that its source is current. */
 UmiStatus umi_designer_surface_interaction_commit(
     UmiDesignerSurfaceInteraction *interaction,

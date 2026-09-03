@@ -24,6 +24,18 @@
 typedef UmiStatus (*TradingViewFactory)(
     const char *, UmiTradingWorkspace *, UmiUiViewModel **);
 
+/* Read one integer property and verify its type so a failed projection is
+ * reported at the contract boundary rather than becoming a GUI-only fault. */
+static int64_t integer_property(UmiUiViewModel *view, const char *key)
+{
+    UmiUiValue value;
+
+    assert(umi_ui_view_model_get_property(view, key, &value) ==
+           UMI_STATUS_OK);
+    assert(value.kind == UMI_UI_VALUE_INTEGER);
+    return value.integer_value;
+}
+
 /*
  * Exercise verify view and return a clear result when the behaviour no longer matches its
  * contract.
@@ -52,6 +64,8 @@ int main(void)
     UmiTradingWorkspace *workspace = NULL;
     UmiInstrument instrument = test_instrument();
     UmiQuote quote = {0};
+    UmiBar bar = {0};
+    UmiUiViewModel *chart = NULL;
     UmiUiViewModel *ticket = NULL;
     UmiUiCommandViewAction action;
 
@@ -67,6 +81,21 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_trading_workspace_set_health(workspace, 1, 0, 1) ==
            UMI_STATUS_OK);
+    /* Seed the shared history before constructing the view so this test checks
+     * the same retained chart state that a real presentation adapter receives. */
+    bar.instrument = instrument;
+    bar.start_time_ms = 1000U;
+    bar.end_time_ms = 1999U;
+    bar.open = 25000.0;
+    bar.high = 25010.0;
+    bar.low = 24990.0;
+    bar.close = 25005.0;
+    bar.volume = 12.0;
+    assert(umi_trading_workspace_update_bar(workspace, &bar) ==
+           UMI_STATUS_OK);
+    assert(umi_trading_workspace_set_chart_study(
+               workspace, UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE, 12U) ==
+           UMI_STATUS_OK);
 
     verify_view(umi_trading_ui_dashboard_view_create, "dashboard",
                 "trading-dashboard", workspace);
@@ -76,6 +105,15 @@ int main(void)
                 workspace);
     verify_view(umi_trading_ui_chart_view_create, "chart", "trading-chart",
                 workspace);
+    /* Inspect the chart directly as well as through the general factory check
+     * to prove that adapter-neutral history and study properties are present. */
+    assert(umi_trading_ui_chart_view_create(
+               "chart.properties", workspace, &chart) == UMI_STATUS_OK);
+    assert(integer_property(chart, "chart.bar-count") == 1);
+    assert(integer_property(chart, "chart.study") ==
+           UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE);
+    assert(integer_property(chart, "chart.study-period") == 12);
+    umi_ui_view_model_destroy(chart);
     verify_view(umi_trading_ui_order_ticket_view_create, "ticket",
                 "trading-order-ticket", workspace);
     verify_view(umi_trading_ui_orders_view_create, "orders", "trading-orders",

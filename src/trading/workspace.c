@@ -28,6 +28,7 @@
 #include <string.h>
 
 #include "umicom/finance/identifier.h"
+#include "umicom/trading/bar.h"
 #include "umicom/trading/depth.h"
 #include "umicom/trading/environment.h"
 #include "umicom/trading/execution_report.h"
@@ -46,11 +47,19 @@
 #include "umicom/trading/risk_limit.h"
 #include "umicom/trading/time_in_force.h"
 
+/* Retain a bounded chronological candle series beside each market snapshot.
+ * Keeping this private avoids copying all chart history with every quote row. */
+typedef struct UmiTradingBarHistory {
+    UmiBar bars[UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY];
+    size_t count;
+} UmiTradingBarHistory;
+
 struct UmiTradingWorkspace {
     UmiFinancialId account_id;
     UmiTradingEnvironment environment;
     UmiWatchlist watchlist;
     UmiTradingMarketSnapshot markets[UMI_TRADING_MAX_WATCHLIST];
+    UmiTradingBarHistory bar_histories[UMI_TRADING_MAX_WATCHLIST];
     size_t market_count;
     UmiOms oms;
     UmiExecutionStore executions;
@@ -61,6 +70,8 @@ struct UmiTradingWorkspace {
     UmiRiskDecision draft_risk;
     char instrument_filter[UMI_TRADING_WORKSPACE_FILTER_CAPACITY];
     UmiTradingWorkspaceOrderFilter order_filter;
+    UmiTradingChartStudy chart_study;
+    size_t chart_study_period;
     char selected_instrument_id[UMI_FINANCE_ID_CAPACITY];
     char selected_order_id[UMI_FINANCE_ID_CAPACITY];
     uint64_t next_order_sequence;
@@ -419,6 +430,10 @@ UmiStatus umi_trading_workspace_create(
     umi_position_book_init(&workspace->positions);
     umi_trading_alert_book_init(&workspace->alerts);
     initialise_draft(workspace);
+    /* A neutral candle view is the least surprising default; the period is
+     * retained now so selecting a study later does not require another choice. */
+    workspace->chart_study = UMI_TRADING_CHART_STUDY_NONE;
+    workspace->chart_study_period = 20U;
     status = umi_chart_workspace_create(&workspace->charts);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -467,8 +482,14 @@ UmiStatus umi_trading_workspace_add_instrument(
     status = umi_watchlist_add(&workspace->watchlist, instrument);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-    market = &workspace->markets[workspace->market_count++];
+    market = &workspace->markets[workspace->market_count];
     memset(market, 0, sizeof(*market));
+    /* A removed market can leave bytes beyond the active count, so reset the
+     * matching history slot before it is assigned to another instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
+    workspace->market_count += 1U;
     market->structure_size = (uint32_t)sizeof(*market);
     market->api_version = UMI_TRADING_WORKSPACE_API_VERSION;
     market->instrument = *instrument;
@@ -522,6 +543,10 @@ UmiStatus umi_trading_workspace_remove_instrument(
         memmove(&workspace->markets[index], &workspace->markets[index + 1U],
                 (workspace->market_count - index - 1U) *
                     sizeof(workspace->markets[0]));
+        memmove(&workspace->bar_histories[index],
+                &workspace->bar_histories[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->bar_histories[0]));
         memmove(&workspace->watchlist.instruments[index],
                 &workspace->watchlist.instruments[index + 1U],
                 (workspace->watchlist.count - index - 1U) *
@@ -529,6 +554,11 @@ UmiStatus umi_trading_workspace_remove_instrument(
     }
     workspace->market_count -= 1U;
     workspace->watchlist.count -= 1U;
+    /* Clear the inactive tail so removed market data cannot be observed if the
+     * slot is reused by a later instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
     workspace->revision += 1U;
     reconcile_selections(workspace);
     return UMI_STATUS_OK;
@@ -591,16 +621,39 @@ UmiStatus umi_trading_workspace_update_bar(
     double previous_close)
 {
     size_t index;
+    UmiTradingBarHistory *history;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workspace == NULL || bar == NULL || bar->close <= 0.0 ||
-        bar->high < bar->low || previous_close < 0.0)
+    if (workspace == NULL || bar == NULL || !umi_bar_valid(bar) ||
+        previous_close < 0.0)
         return UMI_STATUS_INVALID_ARGUMENT;
     index = market_index(workspace, bar->instrument.instrument_id.value);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    history = &workspace->bar_histories[index];
+    /* A repeated start time updates the still-forming candle. Older completed
+     * candles are rejected because silently reordering them would make live
+     * studies and visual history disagree. */
+    if (history->count > 0U &&
+        bar->start_time_ms < history->bars[history->count - 1U].start_time_ms) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (history->count > 0U &&
+        bar->start_time_ms == history->bars[history->count - 1U].start_time_ms) {
+        history->bars[history->count - 1U] = *bar;
+    } else {
+        /* Once capacity is reached, discard only the oldest candle and keep
+         * the most recent fixed-size window needed by interactive charts. */
+        if (history->count == UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY) {
+            memmove(&history->bars[0],
+                    &history->bars[1],
+                    (history->count - 1U) * sizeof(history->bars[0]));
+            history->count -= 1U;
+        }
+        history->bars[history->count++] = *bar;
+    }
     workspace->markets[index].bar = *bar;
     workspace->markets[index].previous_close = previous_close;
     workspace->markets[index].has_bar = 1;
@@ -703,6 +756,29 @@ UmiStatus umi_trading_workspace_set_order_filter(
     workspace->order_filter = order_filter;
     workspace->revision += 1U;
     reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
+
+/* Persist a bounded study choice in toolkit-neutral workspace state. */
+UmiStatus umi_trading_workspace_set_chart_study(
+    UmiTradingWorkspace *workspace,
+    UmiTradingChartStudy study,
+    size_t period)
+{
+    if (workspace == NULL ||
+        (study != UMI_TRADING_CHART_STUDY_NONE &&
+         study != UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE &&
+         study != UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE) ||
+        period < 2U || period > 200U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (workspace->chart_study == study &&
+        workspace->chart_study_period == period) {
+        return UMI_STATUS_OK;
+    }
+    workspace->chart_study = study;
+    workspace->chart_study_period = period;
+    workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
 
@@ -1271,6 +1347,8 @@ UmiStatus umi_trading_workspace_snapshot(
               sizeof(out_snapshot->instrument_filter),
               workspace->instrument_filter);
     out_snapshot->order_filter = workspace->order_filter;
+    out_snapshot->chart_study = workspace->chart_study;
+    out_snapshot->chart_study_period = workspace->chart_study_period;
     copy_text(out_snapshot->selected_instrument_id,
               sizeof(out_snapshot->selected_instrument_id),
               workspace->selected_instrument_id);
@@ -1293,6 +1371,8 @@ UmiStatus umi_trading_workspace_snapshot(
         umi_trading_alert_book_active_count(&workspace->alerts);
     out_snapshot->unacknowledged_alert_count =
         umi_trading_alert_book_unacknowledged_count(&workspace->alerts);
+    out_snapshot->selected_bar_count =
+        umi_trading_workspace_selected_bar_count(workspace);
     out_snapshot->gross_position_quantity =
         umi_portfolio_gross_quantity(&workspace->positions);
     out_snapshot->realised_pnl = realised_pnl(workspace);
@@ -1412,6 +1492,42 @@ UmiStatus umi_trading_workspace_selected_market(
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_market = workspace->markets[index];
+    return UMI_STATUS_OK;
+}
+
+/* Return the selected series length without exposing its mutable storage. */
+size_t umi_trading_workspace_selected_bar_count(
+    const UmiTradingWorkspace *workspace)
+{
+    size_t index;
+
+    if (workspace == NULL) return 0U;
+    index = market_index(
+        workspace,
+        workspace->selected_instrument_id);
+    return index != SIZE_MAX ? workspace->bar_histories[index].count : 0U;
+}
+
+/* Copy one selected candle in oldest-to-newest order for deterministic plots,
+ * exports, studies, and automation clients. */
+UmiStatus umi_trading_workspace_selected_bar_at(
+    const UmiTradingWorkspace *workspace,
+    size_t index,
+    UmiBar *out_bar)
+{
+    size_t market_position;
+
+    if (workspace == NULL || out_bar == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    market_position = market_index(
+        workspace,
+        workspace->selected_instrument_id);
+    if (market_position == SIZE_MAX ||
+        index >= workspace->bar_histories[market_position].count) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    *out_bar = workspace->bar_histories[market_position].bars[index];
     return UMI_STATUS_OK;
 }
 

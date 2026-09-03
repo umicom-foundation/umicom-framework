@@ -30,6 +30,7 @@ int main(void)
     UmiInstrument instrument = test_instrument();
     UmiQuote quote = {0};
     UmiBar bar = {0};
+    UmiBar retained_bar = {0};
     UmiMarketDepth depth = {0};
     UmiTradingWorkspaceSnapshot snapshot;
     UmiTradingMarketSnapshot market;
@@ -60,6 +61,36 @@ int main(void)
     bar.end_time_ms = 1000;
     assert(umi_trading_workspace_update_bar(workspace, &bar, 24950.0) ==
            UMI_STATUS_OK);
+    assert(umi_trading_workspace_selected_bar_count(workspace) == 1U);
+
+    /* A completed next candle extends chronological history, while an update
+     * for its same start time replaces that forming candle in place. */
+    bar.open = 25000.0;
+    bar.high = 25080.0;
+    bar.low = 24970.0;
+    bar.close = 25060.0;
+    bar.start_time_ms = 1000;
+    bar.end_time_ms = 2000;
+    assert(umi_trading_workspace_update_bar(workspace, &bar, 24950.0) ==
+           UMI_STATUS_OK);
+    bar.close = 25070.0;
+    assert(umi_trading_workspace_update_bar(workspace, &bar, 24950.0) ==
+           UMI_STATUS_OK);
+    assert(umi_trading_workspace_selected_bar_count(workspace) == 2U);
+    assert(umi_trading_workspace_selected_bar_at(
+        workspace, 1U, &retained_bar) == UMI_STATUS_OK);
+    assert(retained_bar.close == 25070.0);
+    assert(umi_trading_workspace_set_chart_study(
+        workspace,
+        UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE,
+        12U) == UMI_STATUS_OK);
+
+    /* Older history cannot silently reorder a live chart after newer evidence
+     * has already been accepted. */
+    bar.start_time_ms = 500;
+    bar.end_time_ms = 900;
+    assert(umi_trading_workspace_update_bar(workspace, &bar, 24950.0) ==
+           UMI_STATUS_INVALID_STATE);
 
     depth.instrument = instrument;
     depth.bid_count = 2U;
@@ -105,6 +136,10 @@ int main(void)
     assert(umi_trading_workspace_snapshot(workspace, &snapshot) ==
            UMI_STATUS_OK);
     assert(snapshot.order_count == 1U);
+    assert(snapshot.selected_bar_count == 2U);
+    assert(snapshot.chart_study ==
+        UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE);
+    assert(snapshot.chart_study_period == 12U);
     assert(snapshot.can_cancel_order);
 
     (void)snprintf(execution.execution_id.value,

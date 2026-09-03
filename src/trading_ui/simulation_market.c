@@ -98,7 +98,10 @@ static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
     bar.high = (bar.open > bar.close ? bar.open : bar.close) + state->tick_size;
     bar.low = (bar.open < bar.close ? bar.open : bar.close) - state->tick_size;
     bar.volume = 1000.0 + (double)(market->sequence % 250U) * 25.0;
-    bar.start_time_ms = event_time_ms - 60000;
+    /* The simulator publishes one completed event candle for every step.
+     * Giving it the event timestamp avoids overlapping rolling windows;
+     * provider adapters can aggregate real ticks into their chosen interval. */
+    bar.start_time_ms = event_time_ms;
     bar.end_time_ms = event_time_ms;
 
     (void)memset(&depth, 0, sizeof(depth));

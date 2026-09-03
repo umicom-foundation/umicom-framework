@@ -19,9 +19,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "umicom/chart/indicator.h"
+#include "umicom/chart/plot.h"
 #include "umicom/trading_ui/trading_ui.h"
 #include "umicom/ui/gtk4/drop_down.h"
+#include "umicom/ui/gtk4/workstation/chart_surface.h"
 #include "umicom/ui/gtk4/workstation/view_model_panel.h"
+#include "umicom/ui/workstation/chart_surface.h"
 
 #define UMI_GTK4_TRADING_TEXT_CAPACITY 384U
 
@@ -45,6 +49,10 @@ typedef struct UmiGtk4TradingPanelState {
     GtkWidget *limit_spin;
     GtkWidget *stop_spin;
     GtkWidget *risk_label;
+    GtkWidget *chart_widget;
+    GtkWidget *chart_study_dropdown;
+    GtkWidget *chart_period_spin;
+    GtkWidget *chart_status_label;
     char instrument_ids[UMI_TRADING_MAX_WATCHLIST][UMI_FINANCE_ID_CAPACITY];
     size_t instrument_count;
     char alert_ids[UMI_TRADING_MAX_ALERTS][UMI_FINANCE_ID_CAPACITY];
@@ -93,6 +101,127 @@ static GtkWidget *new_dropdown(const char *const *labels,
     return dropdown;
 }
 
+/* Build a toolkit-neutral scene from the selected instrument's retained bar
+ * history. The GTK adapter chooses controls, while all plotting and indicator
+ * calculations remain reusable Framework services. */
+static UmiStatus build_selected_chart_scene(
+    UmiTradingWorkspace *workspace,
+    guint study,
+    size_t period,
+    UmiChartRenderScene **out_scene)
+{
+    UmiChartCandle candles[UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY];
+    UmiChartPlotViewport viewport;
+    UmiChartPlotStyle style;
+    UmiChartRenderScene *scene = NULL;
+    UmiChartSeries *input = NULL;
+    UmiChartSeries *output = NULL;
+    size_t count;
+    size_t index;
+    UmiStatus status = UMI_STATUS_OK;
+
+    if (workspace == NULL || out_scene == NULL || study > 2U || period == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_scene = NULL;
+    count = umi_trading_workspace_selected_bar_count(workspace);
+    if (count == 0U ||
+        count > UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    for (index = 0U; index < count; ++index) {
+        UmiBar bar;
+
+        status = umi_trading_workspace_selected_bar_at(
+            workspace,
+            index,
+            &bar);
+        if (status != UMI_STATUS_OK) return status;
+        candles[index] = (UmiChartCandle){
+            bar.start_time_ms,
+            bar.open,
+            bar.high,
+            bar.low,
+            bar.close,
+            bar.volume};
+    }
+
+    /* Each candle needs at most two commands and a study needs one segment per
+     * point; the fixed margin safely covers the frame and grid commands. */
+    status = umi_chart_render_scene_create(count * 3U + 160U, &scene);
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_render_scene_set_coordinate_size(
+            scene,
+            960.0,
+            480.0);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_plot_viewport_from_candles(
+            candles,
+            count,
+            (UmiChartRenderRectangle){24.0, 20.0, 912.0, 432.0},
+            0.08,
+            &viewport);
+    }
+    umi_chart_plot_style_dark(&style);
+    style.background_color.alpha = 0.0;
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_plot_add_frame(scene, &viewport, &style);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_chart_plot_add_candlesticks(
+            scene,
+            candles,
+            count,
+            &viewport,
+            &style);
+    }
+
+    /* Allocate large fixed-capacity series only when a study is visible. This
+     * avoids consuming GUI-thread stack space for the common candle-only view. */
+    if (status == UMI_STATUS_OK && study != 0U) {
+        input = (UmiChartSeries *)calloc(1U, sizeof(*input));
+        output = (UmiChartSeries *)calloc(1U, sizeof(*output));
+        if (input == NULL || output == NULL) {
+            status = UMI_STATUS_OUT_OF_MEMORY;
+        }
+    }
+    if (status == UMI_STATUS_OK && study != 0U) {
+        status = umi_chart_series_init(input, "close", UMI_CHART_LINE);
+        for (index = 0U; status == UMI_STATUS_OK && index < count; ++index) {
+            status = umi_chart_series_add(
+                input,
+                (UmiChartPoint){candles[index].time_ms, candles[index].close});
+        }
+        if (status == UMI_STATUS_OK && study == 1U) {
+            status = umi_chart_indicator_sma(input, period, output);
+        } else if (status == UMI_STATUS_OK) {
+            status = umi_chart_indicator_ema(input, period, output);
+        }
+        if (status == UMI_STATUS_OK && output->point_count > 0U) {
+            /* A warm accent keeps the study distinguishable from both positive
+             * and negative candle bodies in dark and high-contrast themes. */
+            style.line_color = (UmiChartColor){0.98, 0.72, 0.20, 1.0};
+            style.series_stroke_width = 2.0;
+            status = umi_chart_plot_add_line_series(
+                scene,
+                output->points,
+                output->point_count,
+                &viewport,
+                &style);
+        }
+    }
+
+    free(output);
+    free(input);
+    if (status != UMI_STATUS_OK) {
+        umi_chart_render_scene_destroy(scene);
+        return status;
+    }
+    *out_scene = scene;
+    return UMI_STATUS_OK;
+}
+
 /* Provide the set feedback operation used by this module and its client applications. */
 static void set_feedback(UmiGtk4TradingPanelState *state,
                          const char *fallback)
@@ -109,6 +238,205 @@ static void set_feedback(UmiGtk4TradingPanelState *state,
         snapshot.last_message[0] != '\0'
             ? snapshot.last_message
             : (fallback != NULL ? fallback : ""));
+}
+
+/* Rebuild the chart scene after either study control changes. The chart widget
+ * clones the scene, so temporary render commands are released immediately. */
+static void refresh_chart_panel(UmiGtk4TradingPanelState *state)
+{
+    UmiChartRenderScene *scene = NULL;
+    guint study;
+    size_t period;
+    UmiStatus status;
+
+    if (state == NULL || state->context == NULL ||
+        state->context->workspace == NULL || state->chart_widget == NULL ||
+        state->chart_study_dropdown == NULL ||
+        state->chart_period_spin == NULL) {
+        return;
+    }
+    study = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(state->chart_study_dropdown));
+    period = (size_t)gtk_spin_button_get_value_as_int(
+        GTK_SPIN_BUTTON(state->chart_period_spin));
+    status = build_selected_chart_scene(
+        state->context->workspace,
+        study,
+        period,
+        &scene);
+    if (status == UMI_STATUS_NOT_FOUND) {
+        /* No market history is a normal start-up state, represented by the
+         * chart surface's empty frame rather than by synthetic prices. */
+        status = umi_gtk4_ws_chart_surface_set_scene(
+            state->chart_widget,
+            NULL);
+    } else if (status == UMI_STATUS_OK) {
+        status = umi_gtk4_ws_chart_surface_set_scene(
+            state->chart_widget,
+            scene);
+    }
+    if (state->chart_status_label != NULL) {
+        char message[160];
+        size_t count = umi_trading_workspace_selected_bar_count(
+            state->context->workspace);
+
+        if (status == UMI_STATUS_OK && study == 0U) {
+            (void)snprintf(
+                message,
+                sizeof(message),
+                "%zu retained candle%s · candles only",
+                count,
+                count == 1U ? "" : "s");
+        } else if (status == UMI_STATUS_OK) {
+            (void)snprintf(
+                message,
+                sizeof(message),
+                "%zu retained candle%s · study period %zu",
+                count,
+                count == 1U ? "" : "s",
+                period);
+        } else {
+            (void)snprintf(
+                message,
+                sizeof(message),
+                "Chart unavailable: %.112s",
+                umi_status_text(status));
+        }
+        gtk_label_set_text(GTK_LABEL(state->chart_status_label), message);
+    }
+    umi_chart_render_scene_destroy(scene);
+}
+
+/* React to a study selection without changing the selected market or retained
+ * evidence held by the trading workspace. */
+static void on_chart_study_selected(
+    GObject *object,
+    GParamSpec *parameter,
+    gpointer user_data)
+{
+    UmiGtk4TradingPanelState *state =
+        (UmiGtk4TradingPanelState *)user_data;
+    guint study;
+    size_t period;
+
+    (void)parameter;
+    if (state == NULL || state->context == NULL ||
+        state->chart_period_spin == NULL) return;
+    study = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
+    period = (size_t)gtk_spin_button_get_value_as_int(
+        GTK_SPIN_BUTTON(state->chart_period_spin));
+    if (umi_trading_workspace_set_chart_study(
+            state->context->workspace,
+            (UmiTradingChartStudy)study,
+            period) == UMI_STATUS_OK) {
+        refresh_chart_panel(state);
+    }
+}
+
+/* Recalculate the selected study when its bounded period control changes. */
+static void on_chart_period_changed(
+    GtkSpinButton *button,
+    gpointer user_data)
+{
+    UmiGtk4TradingPanelState *state =
+        (UmiGtk4TradingPanelState *)user_data;
+    guint study;
+
+    if (state == NULL || state->context == NULL ||
+        state->chart_study_dropdown == NULL) return;
+    study = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(state->chart_study_dropdown));
+    if (umi_trading_workspace_set_chart_study(
+            state->context->workspace,
+            (UmiTradingChartStudy)study,
+            (size_t)gtk_spin_button_get_value_as_int(button)) ==
+        UMI_STATUS_OK) {
+        refresh_chart_panel(state);
+    }
+}
+
+/* Build the native chart panel with real retained candles and local study
+ * controls instead of presenting the latest candle as an isolated snapshot. */
+static GtkWidget *create_chart_panel(UmiGtk4TradingPanelContext *context)
+{
+    static const char *const study_labels[] = {
+        "Candles only", "Simple moving average", "Exponential moving average"
+    };
+    UmiGtk4TradingPanelState *state;
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiWsChartSurface surface = {0};
+    GtkWidget *root;
+    GtkWidget *controls;
+    char title[UMI_UI_TEXT_CAPACITY];
+
+    if (context == NULL || context->workspace == NULL ||
+        umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
+            UMI_STATUS_OK) {
+        return NULL;
+    }
+    state = (UmiGtk4TradingPanelState *)calloc(1U, sizeof(*state));
+    if (state == NULL) return NULL;
+    state->context = context;
+    root = new_section("Chart Analytics");
+    if (root == NULL) {
+        free(state);
+        return NULL;
+    }
+    g_object_set_data_full(
+        G_OBJECT(root),
+        "umicom-trading-panel-state",
+        state,
+        free);
+    controls = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    state->chart_study_dropdown = new_dropdown(
+        study_labels,
+        3U,
+        (size_t)snapshot.chart_study);
+    state->chart_period_spin = gtk_spin_button_new_with_range(2.0, 200.0, 1.0);
+    gtk_spin_button_set_value(
+        GTK_SPIN_BUTTON(state->chart_period_spin),
+        (double)snapshot.chart_study_period);
+    gtk_box_append(GTK_BOX(controls), new_text_label("Study", 0));
+    gtk_box_append(GTK_BOX(controls), state->chart_study_dropdown);
+    gtk_box_append(GTK_BOX(controls), new_text_label("Period", 0));
+    gtk_box_append(GTK_BOX(controls), state->chart_period_spin);
+    gtk_box_append(GTK_BOX(root), controls);
+
+    (void)snprintf(
+        title,
+        sizeof(title),
+        "%s price history",
+        snapshot.has_selected_instrument
+            ? snapshot.selected_instrument_id
+            : "Selected instrument");
+    if (umi_ws_chart_surface_init(&surface, "trader-price-chart", title) !=
+        UMI_STATUS_OK) {
+        return root;
+    }
+    surface.show_grid = true;
+    surface.sync_symbol = true;
+    surface.sync_time = true;
+    surface.sync_crosshair = true;
+    state->chart_widget = umi_gtk4_ws_chart_surface_create(&surface);
+    state->chart_status_label = new_text_label("", 0);
+    if (state->chart_widget != NULL) {
+        gtk_widget_set_hexpand(state->chart_widget, TRUE);
+        gtk_widget_set_vexpand(state->chart_widget, TRUE);
+        gtk_box_append(GTK_BOX(root), state->chart_widget);
+    }
+    gtk_box_append(GTK_BOX(root), state->chart_status_label);
+    g_signal_connect(
+        state->chart_study_dropdown,
+        "notify::selected",
+        G_CALLBACK(on_chart_study_selected),
+        state);
+    g_signal_connect(
+        state->chart_period_spin,
+        "value-changed",
+        G_CALLBACK(on_chart_period_changed),
+        state);
+    refresh_chart_panel(state);
+    return root;
 }
 
 /*
@@ -1217,5 +1545,9 @@ GtkWidget *umi_gtk4_trading_panel_create(
     /* Alerts need native creation and acknowledgement controls, not only rows. */
     if (strcmp(window->tool_id, "alerts") == 0)
         return create_alerts_panel(context);
+    /* Charts receive retained candles and study controls through the native
+     * reusable adapter instead of the single-record property renderer. */
+    if (strcmp(window->tool_id, "chart") == 0)
+        return create_chart_panel(context);
     return create_generic_panel(window, context);
 }

@@ -24,15 +24,21 @@
 extern "C" {
 #endif
 /**
- * Provide the chart indicator sma operation used by this module and its client
- * applications.
+ * Calculate a simple moving average after each complete period. Input and
+ * output must be separate records because initialization clears the output.
  */
-UmiStatus umi_chart_indicator_sma(const UmiChartSeries *input,size_t period,UmiChartSeries *output);
+UmiStatus umi_chart_indicator_sma(
+    const UmiChartSeries *input,
+    size_t period,
+    UmiChartSeries *output);
 /**
- * Provide the chart indicator ema operation used by this module and its client
- * applications.
+ * Calculate an exponential moving average beginning with the first value.
+ * Input and output must be separate records.
  */
-UmiStatus umi_chart_indicator_ema(const UmiChartSeries *input,size_t period,UmiChartSeries *output);
+UmiStatus umi_chart_indicator_ema(
+    const UmiChartSeries *input,
+    size_t period,
+    UmiChartSeries *output);
 #ifdef __cplusplus
 }
 #endif
