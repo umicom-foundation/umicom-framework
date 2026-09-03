@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.security.identities", "security", "Identity Centre", "umicom.identity",
          "Users, services, agents, roles and sessions.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "security threat access secrets"),

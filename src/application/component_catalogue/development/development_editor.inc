@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.development.editor", "development", "Code Editor", "umicom.documents",
          "Language-aware editing, navigation, diagnostics and refactoring.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "code build debug test project"),

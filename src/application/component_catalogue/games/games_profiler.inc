@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.games.profiler", "games", "Game Profiler", "umicom.games",
          "Frame, render, memory, physics and script performance.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "game scene multiplayer assets"),

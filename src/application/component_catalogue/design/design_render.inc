@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.design.render", "design", "Render Studio", "umicom.cad",
          "Lighting, camera, environment and render jobs.", UMI_APPLICATION_COMPONENT_EDITOR,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "visual designer properties"),

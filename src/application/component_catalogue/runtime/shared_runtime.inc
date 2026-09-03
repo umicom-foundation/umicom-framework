@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.runtime", "runtime", "Runtime Manager", "umicom.runtime",
          "Runtime discovery, lifecycle, health, resources and diagnostics.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "runtime services lifecycle"),

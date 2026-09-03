@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.creator.storyboard", "creator", "Storyboard", "umicom.ai.media-generation",
          "Shots, continuity, camera direction and generation state.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "media generation storyboard"),

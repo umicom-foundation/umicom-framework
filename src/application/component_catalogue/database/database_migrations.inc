@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.database.migrations", "database", "Migration Centre", "umicom.data.migrations",
          "Plan, validate, apply and evidence schema changes.", UMI_APPLICATION_COMPONENT_DASHBOARD,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "sql nosql data query"),

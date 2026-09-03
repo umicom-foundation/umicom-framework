@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.diagnostics", "quality", "Diagnostics Centre", "umicom.diagnostics",
          "Problems, diagnostics, logs, fixes and correlated evidence.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "quality testing diagnostics review"),

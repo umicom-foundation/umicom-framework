@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.media.program-monitor", "media", "Program Monitor", "umicom.media",
          "Preview the active edit, composite or delivery output.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "video audio image timeline"),

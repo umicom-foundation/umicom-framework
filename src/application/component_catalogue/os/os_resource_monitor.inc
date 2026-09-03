@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.os.resource-monitor", "os", "Resource Monitor", "umicom.os",
          "Processes, CPU, memory, storage, network and accelerators.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "operating system services desktop"),

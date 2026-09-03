@@ -16,4 +16,5 @@ WINDOW_SPEC("org.umicom.workspace.security-centre.focus", "org.umicom.window.sec
             UMI_APPLICATION_PRESENTATION_DENSITY_COMPACT,
             UMI_APPLICATION_PRESENTATION_NAVIGATION_RAIL,
             1220U, 760U, 72U, 300U, 220U,
-            1, 1, 1, 1),
+            1, 1, 1, 1,
+                 640U, 480U),

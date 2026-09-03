@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.trading.executions", "trading", "Executions", "umicom.trading",
          "Fills, allocations, fees and execution-quality evidence.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "market order portfolio chart"),

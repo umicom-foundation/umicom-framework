@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.trading.risk", "trading", "Trading Risk", "umicom.trading",
          "Limits, exposure, scenarios, kill switch and readiness gates.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "market order portfolio chart"),

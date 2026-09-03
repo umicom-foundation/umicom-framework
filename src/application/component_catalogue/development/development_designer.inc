@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.development.designer", "development", "Visual Designer", "umicom.designer",
          "Declarative component palette, canvas and property editing.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "code build debug test project"),

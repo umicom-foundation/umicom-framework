@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.music.stems", "music", "Stem Mixer", "umicom.music",
          "Separate, arrange, process and export generated or recorded stems.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "audio song arrangement"),

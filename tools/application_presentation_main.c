@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "umicom/application/component/recipe_catalogue.h"
+#include "umicom/application/component_catalogue.h"
 
 /* Provide the print help operation used by this module and its client applications. */
 static void print_help(void)
@@ -26,6 +27,7 @@ static void print_help(void)
     (void)puts(
         "Usage:\n"
         "  umicom-application-presentation list [application-id]\n"
+        "  umicom-application-presentation search <words>\n"
         "  umicom-application-presentation show <recipe-id>\n"
         "  umicom-application-presentation validate");
 }
@@ -60,12 +62,54 @@ static int list_windows(const char *application_id)
             strcmp(recipe->application_id, application_id) != 0) {
             continue;
         }
-        (void)printf("%s | %s | %s | %ux%u\n",
+        (void)printf("%s | %s | %s | preferred %ux%u | minimum %ux%u\n",
                      window->recipe_id,
                      recipe->application_id,
                      umi_application_presentation_density_text(window->density),
                      window->initial_width,
-                     window->initial_height);
+                     window->initial_height,
+                     window->minimum_width,
+                     window->minimum_height);
+    }
+    return 0;
+}
+
+/* Search the canonical component catalogue and show the presentation policies
+ * a frontend would apply when it creates each matching surface. */
+static int search_components(const char *query)
+{
+    size_t index;
+    size_t count = umi_application_component_search_count(query);
+
+    (void)printf("%zu component(s) match '%s'.\n", count, query);
+    for (index = 0U; index < count; ++index) {
+        const UmiApplicationComponentDefinition *definition =
+            umi_application_component_search_at(query, index);
+        const UmiApplicationPresentationPanelSpec *panel;
+        const UmiApplicationPresentationSurfaceBehavior *behavior;
+
+        if (definition == NULL)
+            return 3;
+        panel = umi_application_presentation_panel_catalogue_find(
+            definition->component_id);
+        behavior = umi_application_presentation_surface_behavior_catalogue_find(
+            definition->component_id);
+        (void)printf("%s | %s | %s | compact=%s | connectivity=%s | data=%s\n",
+                     definition->component_id,
+                     definition->title,
+                     definition->description,
+                     panel != NULL
+                         ? umi_application_presentation_compact_policy_text(
+                               panel->compact_policy)
+                         : "unknown",
+                     behavior != NULL
+                         ? umi_application_presentation_connectivity_text(
+                               behavior->connectivity)
+                         : "unknown",
+                     behavior != NULL
+                         ? umi_application_presentation_data_classification_text(
+                               behavior->data_classification)
+                         : "unknown");
     }
     return 0;
 }
@@ -91,6 +135,9 @@ static int show_plan(const char *recipe_id)
     (void)printf("Size: %ux%u\n",
                  plan.window->initial_width,
                  plan.window->initial_height);
+    (void)printf("Minimum size: %ux%u\n",
+                 plan.window->minimum_width,
+                 plan.window->minimum_height);
     (void)printf("Panels: %zu (%zu visible, %zu locked)\n",
                  plan.placement_count,
                  plan.visible_count,
@@ -99,14 +146,16 @@ static int show_plan(const char *recipe_id)
     for (index = 0U; index < plan.placement_count; ++index) {
         const UmiApplicationPresentationPanelPlacement *placement =
             &plan.placements[index];
-        (void)printf("  %zu. %s | %s | %s | %s\n",
+        (void)printf("  %zu. %s | %s | %s | %s | compact=%s\n",
                      index + 1U,
                      placement->panel->component_id,
                      umi_application_presentation_surface_kind_text(
                          placement->panel->surface_kind),
                      umi_application_component_region_text(
                          placement->slot->region),
-                     placement->slot->visible ? "visible" : "hidden");
+                     placement->slot->visible ? "visible" : "hidden",
+                     umi_application_presentation_compact_policy_text(
+                         placement->panel->compact_policy));
     }
     return 0;
 }
@@ -124,6 +173,11 @@ int main(int argc, char **argv)
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (argc == 3 && strcmp(argv[1], "show") == 0) {
         return show_plan(argv[2]);
+    }
+    /* Search is kept separate from list so a multi-word query can address
+     * component purpose without being mistaken for an application ID. */
+    if (argc == 3 && strcmp(argv[1], "search") == 0) {
+        return search_components(argv[2]);
     }
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (argc == 2 && strcmp(argv[1], "validate") == 0) {

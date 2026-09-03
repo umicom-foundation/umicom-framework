@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.llm.model-lab", "llm", "Model Lab", "umicom.llm",
          "Datasets, tokenisation, tuning, quantisation and evaluation.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "language model prompt inference"),

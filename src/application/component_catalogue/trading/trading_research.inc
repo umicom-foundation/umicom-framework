@@ -18,4 +18,5 @@
 COMP("umicom.trading.research", "trading", "Trading Research",
      "umicom.trading.research",
      "Scanners, backtests, replay, events, fundamentals and performance.",
-     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_FOUNDATION, 1, 1),
+     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "market order portfolio chart"),

@@ -91,7 +91,9 @@ int main(void)
     bar.low = 24990.0;
     bar.close = 25005.0;
     bar.volume = 12.0;
-    assert(umi_trading_workspace_update_bar(workspace, &bar) ==
+    /* Supply the preceding session close with the candle because the shared
+     * workspace uses it to calculate change values for every trading view. */
+    assert(umi_trading_workspace_update_bar(workspace, &bar, 24995.0) ==
            UMI_STATUS_OK);
     assert(umi_trading_workspace_set_chart_study(
                workspace, UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE, 12U) ==

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.cad.properties", "cad", "CAD Properties", "umicom.cad",
          "Parametric feature, material and manufacturing properties.",
-         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "design modelling geometry"),

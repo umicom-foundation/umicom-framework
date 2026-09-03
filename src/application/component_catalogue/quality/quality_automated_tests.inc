@@ -17,4 +17,5 @@
 COMP("umicom.quality.automated-tests", "quality", "Umicom Automated Tests",
          "umicom.ui.automation",
          "Desktop user journeys, control wiring, assertions and acceptance evidence.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "quality testing diagnostics review"),

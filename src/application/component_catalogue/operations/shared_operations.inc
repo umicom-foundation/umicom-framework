@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.operations", "operations", "Operations Centre", "umicom.operations",
          "Operational queues, controls, incidents and recovery actions.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "workflow task monitoring"),

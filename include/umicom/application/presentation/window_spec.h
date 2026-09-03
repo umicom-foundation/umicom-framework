@@ -30,6 +30,19 @@ extern "C" {
 UmiStatus umi_application_presentation_window_spec_validate(
     const UmiApplicationPresentationWindowSpec *spec);
 
+/**
+ * Fit a governed window size inside the available desktop area. The function
+ * never returns dimensions below the window's readable minimum and reports
+ * whether the frontend should apply compact panel policies.
+ */
+UmiStatus umi_application_presentation_window_spec_fit(
+    const UmiApplicationPresentationWindowSpec *spec,
+    uint32_t available_width,
+    uint32_t available_height,
+    uint32_t *out_width,
+    uint32_t *out_height,
+    int *out_compact);
+
 #ifdef __cplusplus
 }
 #endif

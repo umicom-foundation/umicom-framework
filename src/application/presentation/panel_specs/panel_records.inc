@@ -45,6 +45,7 @@
 #include "development/development_engine_explorer.inc"
 #include "development/development_explorer.inc"
 #include "development/development_extensions.inc"
+#include "development/development_live_preview.inc"
 #include "development/development_notebook.inc"
 #include "development/development_profiler.inc"
 #include "development/development_remote.inc"

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.trading.strategy", "trading", "Strategy Lab", "umicom.trading",
          "Code, backtest, replay, compare and deploy governed strategies.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "market order portfolio chart"),

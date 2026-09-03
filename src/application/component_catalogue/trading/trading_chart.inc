@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.trading.chart", "trading", "Advanced Chart", "umicom.chart",
          "Multi-series charting, indicators, drawings and strategy overlays.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "market order portfolio chart"),

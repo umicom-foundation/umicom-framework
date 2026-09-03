@@ -37,6 +37,8 @@ int main(void) {
     const UmiApplicationComponentDefinition *definition =
         umi_application_component_catalogue_at(index);
     assert(definition != NULL);
+    assert(definition->search_terms != NULL);
+    assert(definition->search_terms[0] != '\0');
     assert(umi_application_component_definition_validate(definition) == UMI_STATUS_OK);
     assert(umi_application_component_catalogue_find(definition->component_id) == definition);
     assert(umi_application_component_domain_at(definition->domain_id, 0U) != NULL);
@@ -58,6 +60,13 @@ int main(void) {
   assert(umi_application_component_catalogue_find("umicom.treasury.settlement") != NULL);
   assert(umi_application_component_catalogue_find("umicom.media.timeline") != NULL);
   assert(umi_application_component_catalogue_find("umicom.cad.viewport") != NULL);
+  /* Search accepts plain-language words and returns canonical borrowed records,
+   * allowing one catalogue to power menus, palettes and assistant tools. */
+  assert(umi_application_component_search_count("trading chart") >= 1U);
+  assert(umi_application_component_search_at("trading chart", 0U) != NULL);
+  assert(umi_application_component_search_count("words that cannot match") == 0U);
+  assert(umi_application_component_search_at("words that cannot match", 0U) == NULL);
+  assert(umi_application_component_search_count(NULL) == 0U);
   /* The final valid record and the first out-of-range record define the
    * catalogue boundary without freezing the test at an old component count. */
   trading_count = umi_application_component_domain_count("trading");

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.llm.runtime", "llm", "Runtime Manager", "umicom.llm",
          "Load, unload, schedule and monitor inference runtimes.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "language model prompt inference"),

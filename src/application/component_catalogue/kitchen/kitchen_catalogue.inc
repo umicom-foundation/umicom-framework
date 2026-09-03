@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.kitchen.catalogue", "kitchen", "Kitchen Catalogue", "umicom.kitchen",
          "Cabinets, doors, worktops, appliances and accessories.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "room cabinet appliance planner"),

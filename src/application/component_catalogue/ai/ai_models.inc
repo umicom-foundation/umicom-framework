@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.ai.models", "ai", "Model Catalogue", "umicom.ai.provider",
          "Discover local and remote models and policy constraints.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "assistant model chat generation"),

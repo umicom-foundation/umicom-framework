@@ -47,6 +47,10 @@ UmiStatus umi_application_presentation_surface_behavior_validate(
         behavior->persistence_policy > UMI_APPLICATION_PRESENTATION_PERSISTENCE_WORKSPACE ||
         behavior->command_mode < UMI_APPLICATION_PRESENTATION_COMMAND_READ_ONLY ||
         behavior->command_mode > UMI_APPLICATION_PRESENTATION_COMMAND_GUARDED ||
+        behavior->connectivity < UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OFFLINE ||
+        behavior->connectivity > UMI_APPLICATION_PRESENTATION_CONNECTIVITY_STREAMING ||
+        behavior->data_classification < UMI_APPLICATION_PRESENTATION_DATA_PUBLIC ||
+        behavior->data_classification > UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED ||
         behavior->context_group_id == NULL ||
         !boolean_valid(behavior->lazy_data) ||
         !boolean_valid(behavior->retain_when_hidden) ||
@@ -131,4 +135,54 @@ const char *umi_application_presentation_command_mode_text(
     case UMI_APPLICATION_PRESENTATION_COMMAND_GUARDED: return "guarded";
     default: return "unknown";
     }
+}
+
+/* Give diagnostics and settings a stable description of network needs. */
+const char *umi_application_presentation_connectivity_text(
+    UmiApplicationPresentationConnectivity connectivity)
+{
+    switch (connectivity) {
+    case UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OFFLINE: return "offline";
+    case UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OPTIONAL: return "optional";
+    case UMI_APPLICATION_PRESENTATION_CONNECTIVITY_REQUIRED: return "required";
+    case UMI_APPLICATION_PRESENTATION_CONNECTIVITY_STREAMING: return "streaming";
+    default: return "unknown";
+    }
+}
+
+/* Give audit reports a stable description of the data boundary. */
+const char *umi_application_presentation_data_classification_text(
+    UmiApplicationPresentationDataClassification classification)
+{
+    switch (classification) {
+    case UMI_APPLICATION_PRESENTATION_DATA_PUBLIC: return "public";
+    case UMI_APPLICATION_PRESENTATION_DATA_INTERNAL: return "internal";
+    case UMI_APPLICATION_PRESENTATION_DATA_CONFIDENTIAL: return "confidential";
+    case UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED: return "restricted";
+    default: return "unknown";
+    }
+}
+
+/* Apply connectivity and information-sensitivity rules before a frontend
+ * creates a live panel or asks its backing service for data. */
+UmiStatus umi_application_presentation_surface_behavior_can_activate(
+    const UmiApplicationPresentationSurfaceBehavior *behavior,
+    int network_available,
+    UmiApplicationPresentationDataClassification maximum_classification)
+{
+    UmiStatus status = umi_application_presentation_surface_behavior_validate(behavior);
+
+    if (status != UMI_STATUS_OK)
+        return status;
+    if (!boolean_valid(network_available) ||
+        maximum_classification < UMI_APPLICATION_PRESENTATION_DATA_PUBLIC ||
+        maximum_classification > UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if ((behavior->connectivity == UMI_APPLICATION_PRESENTATION_CONNECTIVITY_REQUIRED ||
+         behavior->connectivity == UMI_APPLICATION_PRESENTATION_CONNECTIVITY_STREAMING) &&
+        !network_available)
+        return UMI_STATUS_UNAVAILABLE;
+    if (behavior->data_classification > maximum_classification)
+        return UMI_STATUS_PERMISSION_DENIED;
+    return UMI_STATUS_OK;
 }

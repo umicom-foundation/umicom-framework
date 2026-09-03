@@ -18,4 +18,5 @@
 COMP("umicom.development.extensions", "development", "Extensions",
      "umicom.plugin",
      "Discover, verify, install, update and quarantine extensions.",
-     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 0),
+     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 0,
+                 "code build debug test project"),

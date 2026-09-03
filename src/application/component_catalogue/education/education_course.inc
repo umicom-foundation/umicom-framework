@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.education.course", "education", "Course Designer", "umicom.education",
          "Outcomes, modules, lessons, resources and delivery sequence.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "learning lessons courses"),

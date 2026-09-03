@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.author.editor", "author", "Author Editor", "umicom.ai.authorengine",
          "Long-form structured writing with citations and reusable media.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "writing document book publishing"),

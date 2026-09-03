@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.media.effects", "media", "Effects", "umicom.media",
          "Search and apply Framework-owned effects and transitions.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "video audio image timeline"),

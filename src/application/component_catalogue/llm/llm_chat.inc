@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.llm.chat", "llm", "Model Chat", "umicom.llm",
          "Token-streaming local and remote model interaction.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "language model prompt inference"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.development.terminal", "development", "Terminal", "umicom.process",
          "Supervised terminal sessions and task output.", UMI_APPLICATION_COMPONENT_TOOL,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "code build debug test project"),

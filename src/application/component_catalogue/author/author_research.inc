@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.author.research", "author", "Research Board", "umicom.ai.authorengine",
          "Sources, notes, citations, claims and research plans.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "writing document book publishing"),

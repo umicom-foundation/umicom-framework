@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.media.timeline", "media", "Timeline", "umicom.media",
          "Track-based non-linear editing with clips, transitions and keyframes.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "video audio image timeline"),

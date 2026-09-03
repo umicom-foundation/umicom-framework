@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.terminal", "development", "Terminal Sessions", "umicom.terminal",
          "Supervised command shells, process sessions and task output.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "code build debug test project"),

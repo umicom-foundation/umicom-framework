@@ -40,6 +40,11 @@ static void print_behavior(
         behavior->context_group_id,
         behavior->publish_context ? "yes" : "no",
         behavior->accept_context ? "yes" : "no");
+    (void)printf("  Connectivity: %s\n  Data classification: %s\n",
+        umi_application_presentation_connectivity_text(
+            behavior->connectivity),
+        umi_application_presentation_data_classification_text(
+            behavior->data_classification));
 }
 
 /* Provide the print workspace operation used by this module and its client applications. */

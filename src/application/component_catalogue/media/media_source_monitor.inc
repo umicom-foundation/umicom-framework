@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.media.source-monitor", "media", "Source Monitor", "umicom.media",
          "Inspect, mark and trim source media.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "video audio image timeline"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.development.debug", "development", "Debug Workspace", "umicom.debug",
          "Sessions, call stacks, variables, watches, breakpoints and console.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "code build debug test project"),

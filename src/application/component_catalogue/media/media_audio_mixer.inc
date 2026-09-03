@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.media.audio-mixer", "media", "Audio Mixer", "umicom.media",
          "Track, bus, effect, automation and loudness control.", UMI_APPLICATION_COMPONENT_TOOL,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "video audio image timeline"),

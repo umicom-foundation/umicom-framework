@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shell.layout-tabs", "shell", "Layout Tabs", "umicom.ui",
          "Bottom tabs for named user and task layouts.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 1),
+         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 1,
+                 "desktop window launcher navigation"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.abi", "development", "ABI Inspector", "umicom.abi",
          "Binary contracts, symbols, compatibility and conformance evidence.",
-         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "code build debug test project"),

@@ -17,8 +17,9 @@
 
 #include <string.h>
 
-#define COMP(id, domain, label, capability, detail, component_role, state, multi, context)         \
-  {(id), (domain), (label), (capability), (detail), (component_role), (state), (multi), (context)}
+#define COMP(id, domain, label, capability, detail, component_role, state, multi, context, terms)  \
+  {(id), (domain), (label), (capability), (detail), (component_role), (state), (multi), (context), \
+   (terms)}
 
 static const UmiApplicationComponentDefinition COMPONENTS[] = {
 #include "component_catalogue/records.inc"
@@ -204,6 +205,107 @@ const UmiApplicationComponentDefinition *umi_application_component_domain_at(con
                        : NULL;
 }
 
+/* Compare ASCII catalogue text without making search results depend on the
+ * process locale. Product names and stable identifiers use this character set. */
+static int search_character_equal(char left, char right) {
+  unsigned char left_value = (unsigned char)left;
+  unsigned char right_value = (unsigned char)right;
+
+  /* Catalogue IDs and aliases are ASCII. Folding this small range directly
+   * keeps results stable even when the process uses a different locale. */
+  if (left_value >= (unsigned char)'A' && left_value <= (unsigned char)'Z')
+    left_value = (unsigned char)(left_value - (unsigned char)'A' + (unsigned char)'a');
+  if (right_value >= (unsigned char)'A' && right_value <= (unsigned char)'Z')
+    right_value = (unsigned char)(right_value - (unsigned char)'A' + (unsigned char)'a');
+  return left_value == right_value;
+}
+
+/* Find one bounded query word inside a catalogue field without allocating a
+ * temporary lowercase copy of either string. */
+static int search_field_contains(const char *field, const char *word, size_t word_length) {
+  size_t field_index;
+
+  if (field == NULL || word == NULL || word_length == 0U)
+    return 0;
+  for (field_index = 0U; field[field_index] != '\0'; ++field_index) {
+    size_t word_index = 0U;
+    while (word_index < word_length && field[field_index + word_index] != '\0' &&
+           search_character_equal(field[field_index + word_index], word[word_index])) {
+      word_index += 1U;
+    }
+    if (word_index == word_length)
+      return 1;
+  }
+  return 0;
+}
+
+/* Require every query word to appear in at least one useful component field.
+ * This makes queries such as "trading chart" precise without a separate index. */
+static int component_matches_query(const UmiApplicationComponentDefinition *definition,
+                                   const char *query) {
+  const char *cursor = query;
+
+  if (definition == NULL || query == NULL)
+    return 0;
+  while (*cursor != '\0') {
+    const char *word;
+    size_t word_length;
+
+    /* Treat the ordinary ASCII spacing characters as word separators because
+     * catalogue queries are portable command and menu text. */
+    while (*cursor == ' ' || *cursor == '\t' || *cursor == '\r' || *cursor == '\n')
+      cursor += 1;
+    if (*cursor == '\0')
+      break;
+    word = cursor;
+    while (*cursor != '\0' && *cursor != ' ' && *cursor != '\t' &&
+           *cursor != '\r' && *cursor != '\n')
+      cursor += 1;
+    word_length = (size_t)(cursor - word);
+    if (!search_field_contains(definition->component_id, word, word_length) &&
+        !search_field_contains(definition->domain_id, word, word_length) &&
+        !search_field_contains(definition->title, word, word_length) &&
+        !search_field_contains(definition->description, word, word_length) &&
+        !search_field_contains(definition->search_terms, word, word_length)) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+/* Count matching catalogue records without creating a second owned result list. */
+size_t umi_application_component_search_count(const char *query) {
+  size_t index;
+  size_t count = 0U;
+
+  if (query == NULL)
+    return 0U;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (component_matches_query(&COMPONENTS[index], query))
+      count += 1U;
+  }
+  return count;
+}
+
+/* Return results in canonical catalogue order so menus and tests are stable
+ * even when two components have the same display title. */
+const UmiApplicationComponentDefinition *
+umi_application_component_search_at(const char *query, size_t result_index) {
+  size_t index;
+  size_t match_index = 0U;
+
+  if (query == NULL)
+    return NULL;
+  for (index = 0U; index < umi_application_component_catalogue_count(); ++index) {
+    if (!component_matches_query(&COMPONENTS[index], query))
+      continue;
+    if (match_index == result_index)
+      return &COMPONENTS[index];
+    match_index += 1U;
+  }
+  return NULL;
+}
+
 /*
  * Provide the application component domain exists operation used by this module and its
  * client applications.
@@ -275,9 +377,11 @@ umi_application_component_definition_validate(const UmiApplicationComponentDefin
    */
   if (definition == NULL || definition->component_id == NULL || definition->domain_id == NULL ||
       definition->title == NULL || definition->capability_id == NULL ||
-      definition->description == NULL || definition->component_id[0] == '\0' ||
+      definition->description == NULL || definition->search_terms == NULL ||
+      definition->component_id[0] == '\0' ||
       definition->domain_id[0] == '\0' || definition->title[0] == '\0' ||
-      definition->capability_id[0] == '\0' || definition->description[0] == '\0') {
+      definition->capability_id[0] == '\0' || definition->description[0] == '\0' ||
+      definition->search_terms[0] == '\0') {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   /* Use the stable identifier comparison to choose the matching record or policy. */

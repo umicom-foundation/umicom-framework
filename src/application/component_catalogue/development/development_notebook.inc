@@ -18,4 +18,5 @@
 COMP("umicom.development.notebook", "development", "Notebook",
      "umicom.language.notebook",
      "Executable cells, outputs, diagnostics and linked document context.",
-     UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+     UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "code build debug test project"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.design.materials", "design", "Materials", "umicom.cad",
          "Reusable material, texture, finish and sustainability catalogue.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "visual designer properties"),

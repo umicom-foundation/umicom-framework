@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.games.scene", "games", "Scene Editor", "umicom.games",
          "Entity hierarchy, transforms, components and world composition.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "game scene multiplayer assets"),

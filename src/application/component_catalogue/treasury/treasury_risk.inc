@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.treasury.risk", "treasury", "Treasury Risk", "umicom.tms",
          "Market, credit, liquidity and counterparty exposure.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "cash liquidity settlement payments"),

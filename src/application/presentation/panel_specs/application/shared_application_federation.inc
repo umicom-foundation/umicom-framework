@@ -17,4 +17,5 @@ PANEL_SPEC("umicom.shared.application-federation", "umicom.icon.shared.applicati
            UMI_APPLICATION_PRESENTATION_CHROME_SERVICE,
            UMI_APPLICATION_COMPONENT_REGION_PRIMARY, 480U, 300U,
            UMI_APPLICATION_PRESENTATION_EMPTY_CONNECT,
-           1, 1, 1, 1),
+           1, 1, 1, 1,
+                 UMI_APPLICATION_PRESENTATION_COMPACT_KEEP),

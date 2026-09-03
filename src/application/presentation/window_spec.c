@@ -48,6 +48,9 @@ UmiStatus umi_application_presentation_window_spec_validate(
         spec->navigation < UMI_APPLICATION_PRESENTATION_NAVIGATION_EXPANDED ||
         spec->navigation > UMI_APPLICATION_PRESENTATION_NAVIGATION_HIDDEN ||
         spec->initial_width < 640U || spec->initial_height < 480U ||
+        spec->minimum_width < 480U || spec->minimum_height < 320U ||
+        spec->minimum_width > spec->initial_width ||
+        spec->minimum_height > spec->initial_height ||
         spec->navigation_width > spec->initial_width ||
         spec->side_panel_width > spec->initial_width ||
         spec->bottom_panel_height > spec->initial_height ||
@@ -60,4 +63,31 @@ UmiStatus umi_application_presentation_window_spec_validate(
     return umi_application_component_recipe_catalogue_find(spec->recipe_id) != NULL
         ? UMI_STATUS_OK
         : UMI_STATUS_NOT_FOUND;
+}
+
+/* Choose the largest comfortable size that fits the current monitor while
+ * keeping the minimum readable size as an explicit contract. */
+UmiStatus umi_application_presentation_window_spec_fit(
+    const UmiApplicationPresentationWindowSpec *spec,
+    uint32_t available_width,
+    uint32_t available_height,
+    uint32_t *out_width,
+    uint32_t *out_height,
+    int *out_compact)
+{
+    UmiStatus status;
+
+    if (out_width == NULL || out_height == NULL || out_compact == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_application_presentation_window_spec_validate(spec);
+    if (status != UMI_STATUS_OK)
+        return status;
+    /* A frontend cannot make a governed workspace readable when its available
+     * area is smaller than the declared minimum, so report that clearly. */
+    if (available_width < spec->minimum_width || available_height < spec->minimum_height)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    *out_width = available_width < spec->initial_width ? available_width : spec->initial_width;
+    *out_height = available_height < spec->initial_height ? available_height : spec->initial_height;
+    *out_compact = *out_width < spec->initial_width || *out_height < spec->initial_height;
+    return UMI_STATUS_OK;
 }

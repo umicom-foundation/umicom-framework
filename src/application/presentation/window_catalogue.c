@@ -19,11 +19,11 @@
 
 #include "umicom/application/component/recipe_catalogue.h"
 
-#define WINDOW_SPEC(recipe, window, window_density, window_navigation, width, height, navigation_width, side_width, bottom_height, command_bar, status_bar, restore, multiple) \
+#define WINDOW_SPEC(recipe, window, window_density, window_navigation, width, height, navigation_width, side_width, bottom_height, command_bar, status_bar, restore, multiple, min_width, min_height) \
     {sizeof(UmiApplicationPresentationWindowSpec), UMI_APPLICATION_PRESENTATION_API_VERSION,        \
      (recipe), (window), (window_density), (window_navigation), (width), (height),                   \
      (navigation_width), (side_width), (bottom_height), (command_bar), (status_bar),                 \
-     (restore), (multiple)}
+     (restore), (multiple), (min_width), (min_height)}
 
 static const UmiApplicationPresentationWindowSpec WINDOWS[] = {
 #include "window_specs/window_records.inc"

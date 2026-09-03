@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.trading.orders", "trading", "Orders", "umicom.trading",
          "Order lifecycle, amendments, cancellations and audit state.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "market order portfolio chart"),

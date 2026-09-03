@@ -18,4 +18,5 @@
 COMP("umicom.trading.options", "trading", "Options Analysis",
      "umicom.trading.options",
      "Chains, sensitivities, volatility, scenarios and strategy review.",
-     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_PLANNED, 1, 1),
+     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "market order portfolio chart"),

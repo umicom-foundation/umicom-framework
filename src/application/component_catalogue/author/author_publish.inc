@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.author.publish", "author", "Publishing Centre", "umicom.delivery",
          "Generate, review and deliver books, sites, courses and video packages.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "writing document book publishing"),

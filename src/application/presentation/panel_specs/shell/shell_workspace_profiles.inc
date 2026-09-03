@@ -17,4 +17,5 @@ PANEL_SPEC("umicom.shell.workspace-profiles", "umicom.icon.shell.workspace-profi
            UMI_APPLICATION_PRESENTATION_CHROME_INSPECTOR,
            UMI_APPLICATION_COMPONENT_REGION_LEFT, 320U, 360U,
            UMI_APPLICATION_PRESENTATION_EMPTY_SELECT,
-           1, 1, 0, 1),
+           1, 1, 0, 1,
+                 UMI_APPLICATION_PRESENTATION_COMPACT_AUTO_HIDE),

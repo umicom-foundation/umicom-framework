@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.games.assets", "games", "Game Assets", "umicom.games",
          "Models, materials, animation, audio and import pipelines.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "game scene multiplayer assets"),

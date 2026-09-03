@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.development.source-control", "development", "Source Control", "umicom.vcs",
          "Changes, commits, branches, history, remotes and conflicts.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "code build debug test project"),

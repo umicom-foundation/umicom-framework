@@ -25,7 +25,7 @@
 extern "C" {
 #endif
 
-#define UMI_APPLICATION_PRESENTATION_API_VERSION 1U
+#define UMI_APPLICATION_PRESENTATION_API_VERSION 2U
 #define UMI_APPLICATION_PRESENTATION_PLAN_CAPACITY 64U
 
 /**
@@ -85,6 +85,14 @@ typedef enum UmiApplicationPresentationNavigation {
     UMI_APPLICATION_PRESENTATION_NAVIGATION_HIDDEN = 3
 } UmiApplicationPresentationNavigation;
 
+/** Describe how a panel should respond when the available window becomes narrow. */
+typedef enum UmiApplicationPresentationCompactPolicy {
+    UMI_APPLICATION_PRESENTATION_COMPACT_KEEP = 1,
+    UMI_APPLICATION_PRESENTATION_COMPACT_TAB = 2,
+    UMI_APPLICATION_PRESENTATION_COMPACT_AUTO_HIDE = 3,
+    UMI_APPLICATION_PRESENTATION_COMPACT_DEFER = 4
+} UmiApplicationPresentationCompactPolicy;
+
 /**
  * Represent the application presentation panel spec data shared with callers of this
  * public contract.
@@ -104,6 +112,7 @@ typedef struct UmiApplicationPresentationPanelSpec {
     int allow_closing;
     int allow_multiple;
     int default_visible;
+    UmiApplicationPresentationCompactPolicy compact_policy;
 } UmiApplicationPresentationPanelSpec;
 
 /**
@@ -126,6 +135,8 @@ typedef struct UmiApplicationPresentationWindowSpec {
     int show_status_bar;
     int restore_session;
     int allow_multiple_windows;
+    uint32_t minimum_width;
+    uint32_t minimum_height;
 } UmiApplicationPresentationWindowSpec;
 
 /**
@@ -182,6 +193,9 @@ const char *umi_application_presentation_density_text(
  */
 const char *umi_application_presentation_navigation_text(
     UmiApplicationPresentationNavigation navigation);
+/** Return stable compact-policy text for diagnostics and generated documentation. */
+const char *umi_application_presentation_compact_policy_text(
+    UmiApplicationPresentationCompactPolicy policy);
 
 #ifdef __cplusplus
 }

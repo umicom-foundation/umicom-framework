@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.kitchen.costing", "kitchen", "Kitchen Costing", "umicom.kitchen",
          "Bill of materials, prices, alternatives and quotation.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "room cabinet appliance planner"),

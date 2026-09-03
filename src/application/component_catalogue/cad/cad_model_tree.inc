@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.cad.model-tree", "cad", "Model Tree", "umicom.cad",
          "Features, bodies, components, assemblies and references.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "design modelling geometry"),

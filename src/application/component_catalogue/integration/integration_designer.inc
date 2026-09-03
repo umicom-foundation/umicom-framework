@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.integration.designer", "integration", "Integration Designer", "umicom.integration",
          "Connectors, mappings, routes, workflows and error handling.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "messaging workflow connector"),

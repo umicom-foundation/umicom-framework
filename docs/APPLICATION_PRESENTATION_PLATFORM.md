@@ -77,7 +77,8 @@ Every panel record includes:
 - an empty-state intent such as create, open, select, refresh or connect;
 - floating and closing policy;
 - multiple-instance policy; and
-- default visibility.
+- default visibility; and
+- the compact-mode action used when the available window becomes smaller.
 
 The multiple-instance value must agree with the canonical component
 definition. Validation rejects a presentation record that changes that
@@ -96,7 +97,37 @@ A window record belongs to one workspace recipe. It describes:
 - expanded, rail or hidden navigation;
 - command bar and status bar visibility;
 - session restoration; and
-- whether multiple top-level windows are allowed.
+- whether multiple top-level windows are allowed; and
+- minimum readable width and height.
+
+`umi_application_presentation_window_spec_fit` compares a governed window with
+the desktop area offered by a frontend. It returns fitted dimensions and tells
+the adapter when compact panel policies must be applied. If the area is below
+the declared readable minimum, it returns a capacity error instead of silently
+creating an unusable layout.
+
+## Discoverability and activation policy
+
+Every component record includes plain-language search terms. Menus, command
+palettes and assistant tools can call `umi_application_component_search_count`
+and `umi_application_component_search_at` to find canonical components without
+maintaining a second application-private search index. All query words must
+match the component identity, domain, title, description or aliases.
+
+Every surface behaviour record also states its connectivity requirement and
+data classification. Before creating a live surface, an adapter can call
+`umi_application_presentation_surface_behavior_can_activate`. The check keeps
+a network-dependent surface closed while offline and prevents a surface from
+crossing the caller's permitted data boundary. This policy does not store
+credentials or grant access; it is an early, consistent safety gate.
+
+Compact policies have four clear meanings:
+
+- **Keep** preserves the panel because it is central to the task.
+- **Tab** groups the panel with other tools instead of consuming another row.
+- **Auto-hide** keeps the panel reachable from its edge while giving the main
+  work area more space.
+- **Defer** leaves an optional panel closed until the user requests it.
 
 Umicom Desk and Umicom OS use a single top-level workspace policy. Other
 professional applications allow multiple windows so users can spread work
@@ -139,10 +170,14 @@ After building Framework tools:
 
 & ".\build\windows-ucrt64-debug\bin\umicom-application-presentation.exe" `
     show "org.umicom.workspace.studio.standard"
+
+& ".\build\windows-ucrt64-debug\bin\umicom-application-presentation.exe" `
+    search "visual design"
 ~~~
 
 The `show` command prints window policy and every ordered panel without opening
-a graphical desktop session.
+a graphical desktop session. The `search` command explains matching component,
+compact, connectivity and data policies in the same source-only view.
 
 ## Adding a future component
 

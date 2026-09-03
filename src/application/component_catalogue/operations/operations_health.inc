@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.operations.health", "operations", "Health Dashboard",
          "umicom.observability.readiness", "Readiness, dependencies, incidents and recovery state.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "workflow task monitoring"),

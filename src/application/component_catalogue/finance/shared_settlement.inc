@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.settlement", "finance", "Settlement Monitor", "umicom.settlement",
          "Instructions, matching, settlement status and exception queues.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "banking accounting payments risk"),

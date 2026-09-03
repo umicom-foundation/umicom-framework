@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.os.control-centre", "os", "Control Centre", "umicom.os",
          "Devices, network, displays, storage, identity and updates.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 0, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_PLANNED, 0, 1,
+                 "operating system services desktop"),

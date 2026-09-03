@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shell.context-links", "shell", "Context Link Groups", "umicom.application.context",
          "Colour-linked windows share symbols, documents, assets or subjects through Framework.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 1),
+         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 1,
+                 "desktop window launcher navigation"),

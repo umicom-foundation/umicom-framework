@@ -18,4 +18,5 @@
 COMP("umicom.development.engine-explorer", "development", "Engine Explorer",
      "umicom.engine",
      "Discover reusable engines, maturity and project requirements.",
-     UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 0, 1),
+     UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 0, 1,
+                 "code build debug test project"),

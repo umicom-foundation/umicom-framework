@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.treasury.trade-blotter", "treasury", "Trade Blotter", "umicom.tms",
          "Search, filter and act on treasury transactions.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "cash liquidity settlement payments"),

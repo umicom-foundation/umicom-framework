@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.cad.constraints", "cad", "Constraints", "umicom.cad",
          "Dimensional and geometric constraints with solver evidence.",
-         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "design modelling geometry"),

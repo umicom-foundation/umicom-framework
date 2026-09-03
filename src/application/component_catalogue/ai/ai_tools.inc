@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.ai.tools", "ai", "AI Tools", "umicom.ai.tools",
          "Inspect permissions, inputs, approvals and outcomes.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "assistant model chat generation"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.treasury.settlement", "treasury", "Settlement", "umicom.tms",
          "Cashflows, instructions, matching, settlement and exceptions.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "cash liquidity settlement payments"),

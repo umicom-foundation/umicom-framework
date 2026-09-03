@@ -18,4 +18,5 @@
 COMP("umicom.development.collaboration", "development", "Collaboration",
      "umicom.workbench.collaboration",
      "Presence, shared review context, comments and session permissions.",
-     UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 0, 1),
+     UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 0, 1,
+                 "code build debug test project"),

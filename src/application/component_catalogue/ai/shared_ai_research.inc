@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.ai-research", "ai", "Research Workspace", "umicom.ai.research",
          "Research plans, sources, claims, evidence and governed synthesis.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "assistant model chat generation"),

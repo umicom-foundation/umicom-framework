@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.education.assessment", "education", "Assessment Designer", "umicom.education",
          "Questions, rubrics, simulations, feedback and evidence.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "learning lessons courses"),

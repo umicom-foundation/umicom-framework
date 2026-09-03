@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.ai.context", "ai", "AI Context", "umicom.ai",
          "Inspect the governed context assembled for a request.",
-         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "assistant model chat generation"),

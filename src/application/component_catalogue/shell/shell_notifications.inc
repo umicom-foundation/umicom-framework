@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shell.notifications", "shell", "Notification Centre", "umicom.ui",
          "Unified non-blocking information, warning and approval notifications.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 0, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 0, 1,
+                 "desktop window launcher navigation"),

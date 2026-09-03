@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.database.query", "database", "Query Editor", "umicom.data",
          "Safe queries, parameters, plans, results and history.", UMI_APPLICATION_COMPONENT_EDITOR,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "sql nosql data query"),

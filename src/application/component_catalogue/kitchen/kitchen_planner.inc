@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.kitchen.planner", "kitchen", "Kitchen Planner", "umicom.kitchen",
          "Room capture, parametric placement and rule validation.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "room cabinet appliance planner"),

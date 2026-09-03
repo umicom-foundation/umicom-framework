@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.author.outline", "author", "Structure and Outline", "umicom.ai.authorengine",
          "Hierarchical books, courses, sites and media programmes.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "writing document book publishing"),

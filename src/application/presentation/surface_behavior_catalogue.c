@@ -19,11 +19,11 @@
 
 #include "umicom/application/presentation/panel_catalogue.h"
 
-#define SURFACE_BEHAVIOR(component, initial, refresh, interval, selection, persistence, command, context_group, lazy, retain, publish, accept) \
+#define SURFACE_BEHAVIOR(component, initial, refresh, interval, selection, persistence, command, context_group, lazy, retain, publish, accept, connectivity, classification) \
     {sizeof(UmiApplicationPresentationSurfaceBehavior),                                \
      UMI_APPLICATION_PRESENTATION_BEHAVIOR_API_VERSION, (component), (initial),         \
      (refresh), (interval), (selection), (persistence), (command), (context_group),      \
-     (lazy), (retain), (publish), (accept)}
+     (lazy), (retain), (publish), (accept), (connectivity), (classification)}
 
 static const UmiApplicationPresentationSurfaceBehavior BEHAVIORS[] = {
 #include "behavior_profiles/behavior_records.inc"

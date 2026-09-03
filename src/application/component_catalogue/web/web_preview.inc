@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.web.preview", "web", "Web Preview", "umicom.frontend",
          "Live responsive preview with logs and reload state.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "browser html css javascript"),

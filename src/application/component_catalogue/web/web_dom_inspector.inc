@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.web.dom-inspector", "web", "DOM Inspector", "umicom.frontend",
          "Structure, accessibility, style and event inspection.",
-         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "browser html css javascript"),

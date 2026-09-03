@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.creator.canvas", "creator", "Generation Canvas", "umicom.ai.media-generation",
          "Masking, inpainting, outpainting, layers and region controls.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "media generation storyboard"),

@@ -27,6 +27,7 @@ int main(void)
     const UmiApplicationPresentationSurfaceBehavior *editor;
     const UmiApplicationPresentationSurfaceBehavior *chart;
     const UmiApplicationPresentationSurfaceBehavior *ticket;
+    const UmiApplicationPresentationSurfaceBehavior *live_preview;
 
     assert(umi_application_presentation_surface_behavior_catalogue_validate() ==
            UMI_STATUS_OK);
@@ -48,11 +49,29 @@ int main(void)
     assert(chart->refresh_policy == UMI_APPLICATION_PRESENTATION_REFRESH_STREAMING);
     assert(chart->refresh_interval_seconds == 1U);
     assert(chart->command_mode == UMI_APPLICATION_PRESENTATION_COMMAND_READ_ONLY);
+    assert(chart->connectivity == UMI_APPLICATION_PRESENTATION_CONNECTIVITY_STREAMING);
+    assert(chart->data_classification == UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED);
+    /* A live restricted panel remains closed until both network and data
+     * clearance rules are satisfied. */
+    assert(umi_application_presentation_surface_behavior_can_activate(
+               chart, 0, UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED) ==
+           UMI_STATUS_UNAVAILABLE);
+    assert(umi_application_presentation_surface_behavior_can_activate(
+               chart, 1, UMI_APPLICATION_PRESENTATION_DATA_INTERNAL) ==
+           UMI_STATUS_PERMISSION_DENIED);
+    assert(umi_application_presentation_surface_behavior_can_activate(
+               chart, 1, UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED) ==
+           UMI_STATUS_OK);
 
     ticket = umi_application_presentation_surface_behavior_catalogue_find(
         "umicom.trading.order-ticket");
     assert(ticket != NULL);
     assert(ticket->command_mode == UMI_APPLICATION_PRESENTATION_COMMAND_GUARDED);
     assert(ticket->accept_context);
+    live_preview = umi_application_presentation_surface_behavior_catalogue_find(
+        "umicom.development.live-preview");
+    assert(live_preview != NULL);
+    assert(live_preview->connectivity == UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OPTIONAL);
+    assert(live_preview->accept_context);
     return 0;
 }

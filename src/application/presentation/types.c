@@ -103,3 +103,17 @@ const char *umi_application_presentation_navigation_text(
         default: return "unknown";
     }
 }
+
+/* Convert the adaptive panel policy to text that menus, reports and generated
+ * documentation can present without duplicating enum knowledge. */
+const char *umi_application_presentation_compact_policy_text(
+    UmiApplicationPresentationCompactPolicy policy)
+{
+    switch (policy) {
+        case UMI_APPLICATION_PRESENTATION_COMPACT_KEEP: return "keep";
+        case UMI_APPLICATION_PRESENTATION_COMPACT_TAB: return "tab";
+        case UMI_APPLICATION_PRESENTATION_COMPACT_AUTO_HIDE: return "auto-hide";
+        case UMI_APPLICATION_PRESENTATION_COMPACT_DEFER: return "defer";
+        default: return "unknown";
+    }
+}

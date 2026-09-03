@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.games.behaviour", "games", "Behaviour Graph", "umicom.games",
          "Visual state, event, AI and gameplay logic composition.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "game scene multiplayer assets"),

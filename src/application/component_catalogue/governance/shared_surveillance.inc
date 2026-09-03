@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.surveillance", "governance", "Surveillance Centre", "umicom.surveillance",
          "Alerts, patterns, investigations, cases and regulatory evidence.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "audit compliance surveillance"),

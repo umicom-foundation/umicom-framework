@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.rag.source-reader", "rag", "Source Reader", "umicom.knowledge",
          "Inspect cited ranges alongside generated answers.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "knowledge retrieval documents search"),

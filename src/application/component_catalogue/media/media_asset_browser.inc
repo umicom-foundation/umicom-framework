@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.media.asset-browser", "media", "Asset Browser", "umicom.media",
          "Indexed video, audio, image, proxy and metadata assets.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "video audio image timeline"),

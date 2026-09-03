@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.music.prompt", "music", "Song Prompt", "umicom.music",
          "Style, lyrics, structure, voice and reference guidance.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "audio song arrangement"),

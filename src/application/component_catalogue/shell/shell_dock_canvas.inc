@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shell.dock-canvas", "shell", "Dock Canvas", "umicom.ui",
          "Dock, split, tab, float and restore reusable component instances.",
-         UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "desktop window launcher navigation"),

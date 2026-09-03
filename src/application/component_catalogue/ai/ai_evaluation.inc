@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.ai.evaluation", "ai", "AI Evaluation", "umicom.ai",
          "Datasets, tests, quality, safety and regression evidence.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "assistant model chat generation"),

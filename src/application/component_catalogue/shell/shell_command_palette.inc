@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shell.command-palette", "shell", "Command Palette", "umicom.ui",
          "Search and invoke permission-filtered Framework commands.",
-         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 1),
+         UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_IMPLEMENTED, 0, 1,
+                 "desktop window launcher navigation"),

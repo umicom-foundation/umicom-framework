@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.games.viewport", "games", "Game Viewport", "umicom.games",
          "Interactive rendering, selection, gizmos and play mode.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "game scene multiplayer assets"),

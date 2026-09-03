@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#define UMI_APPLICATION_PRESENTATION_BEHAVIOR_API_VERSION 1U
+#define UMI_APPLICATION_PRESENTATION_BEHAVIOR_API_VERSION 2U
 
 /**
  * List the named application presentation refresh policy values accepted by this public
@@ -67,6 +67,22 @@ typedef enum UmiApplicationPresentationCommandMode {
     UMI_APPLICATION_PRESENTATION_COMMAND_GUARDED = 4
 } UmiApplicationPresentationCommandMode;
 
+/** Describe the network access a surface needs before it can become active. */
+typedef enum UmiApplicationPresentationConnectivity {
+    UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OFFLINE = 1,
+    UMI_APPLICATION_PRESENTATION_CONNECTIVITY_OPTIONAL = 2,
+    UMI_APPLICATION_PRESENTATION_CONNECTIVITY_REQUIRED = 3,
+    UMI_APPLICATION_PRESENTATION_CONNECTIVITY_STREAMING = 4
+} UmiApplicationPresentationConnectivity;
+
+/** Describe the most sensitive data a surface is designed to display. */
+typedef enum UmiApplicationPresentationDataClassification {
+    UMI_APPLICATION_PRESENTATION_DATA_PUBLIC = 1,
+    UMI_APPLICATION_PRESENTATION_DATA_INTERNAL = 2,
+    UMI_APPLICATION_PRESENTATION_DATA_CONFIDENTIAL = 3,
+    UMI_APPLICATION_PRESENTATION_DATA_RESTRICTED = 4
+} UmiApplicationPresentationDataClassification;
+
 /**
  * Represent the application presentation surface behavior data shared with callers of this
  * public contract.
@@ -86,6 +102,8 @@ typedef struct UmiApplicationPresentationSurfaceBehavior {
     int retain_when_hidden;
     int publish_context;
     int accept_context;
+    UmiApplicationPresentationConnectivity connectivity;
+    UmiApplicationPresentationDataClassification data_classification;
 } UmiApplicationPresentationSurfaceBehavior;
 
 /**
@@ -118,6 +136,20 @@ const char *umi_application_presentation_persistence_policy_text(
  */
 const char *umi_application_presentation_command_mode_text(
     UmiApplicationPresentationCommandMode mode);
+/** Return stable text for settings, audit reports and generated documentation. */
+const char *umi_application_presentation_connectivity_text(
+    UmiApplicationPresentationConnectivity connectivity);
+/** Return stable text for settings, audit reports and generated documentation. */
+const char *umi_application_presentation_data_classification_text(
+    UmiApplicationPresentationDataClassification classification);
+/**
+ * Decide whether runtime conditions permit a surface to activate. A surface
+ * cannot silently cross either its network or data-sensitivity boundary.
+ */
+UmiStatus umi_application_presentation_surface_behavior_can_activate(
+    const UmiApplicationPresentationSurfaceBehavior *behavior,
+    int network_available,
+    UmiApplicationPresentationDataClassification maximum_classification);
 
 #ifdef __cplusplus
 }

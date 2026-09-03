@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.rag.search", "rag", "Semantic Search", "umicom.ai.retrieval",
          "Hybrid retrieval, ranking, filters and citations.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "knowledge retrieval documents search"),

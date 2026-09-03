@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.creator.prompt", "creator", "Generation Prompt", "umicom.ai.media-generation",
          "Structured text, image, video and motion conditioning.", UMI_APPLICATION_COMPONENT_EDITOR,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "media generation storyboard"),

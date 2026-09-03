@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.database.explorer", "database", "Database Explorer", "umicom.data",
          "Connections, schemas, tables, views and routines.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "sql nosql data query"),

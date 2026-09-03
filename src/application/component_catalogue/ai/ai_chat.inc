@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.ai.chat", "ai", "AI Chat", "umicom.ai",
          "Provider-neutral conversations, tools, citations and approvals.",
-         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "assistant model chat generation"),

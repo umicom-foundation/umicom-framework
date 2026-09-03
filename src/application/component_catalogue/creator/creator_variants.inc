@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.creator.variants", "creator", "Variant Gallery", "umicom.ai.media-generation",
          "Compare seeds, models, prompts, quality and provenance.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "media generation storyboard"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.web", "web", "Web Workbench", "umicom.web",
          "Pages, routes, requests, responsive preview and browser diagnostics.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "browser html css javascript"),

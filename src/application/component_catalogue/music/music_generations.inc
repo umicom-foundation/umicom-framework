@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.music.generations", "music", "Song Generations", "umicom.music",
          "Versioned generated takes with lineage and comparison.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "audio song arrangement"),

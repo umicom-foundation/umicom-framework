@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.web.page-canvas", "web", "Page Canvas", "umicom.frontend",
          "Responsive semantic layout and component composition.", UMI_APPLICATION_COMPONENT_EDITOR,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "browser html css javascript"),

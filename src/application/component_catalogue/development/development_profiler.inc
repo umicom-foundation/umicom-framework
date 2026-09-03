@@ -18,4 +18,5 @@
 COMP("umicom.development.profiler", "development", "Performance Profiler",
      "umicom.observability.performance",
      "CPU, memory, call-tree, hotspot and regression evidence.",
-     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_FOUNDATION, 0, 1),
+     UMI_APPLICATION_COMPONENT_TOOL, UMI_CAPABILITY_FOUNDATION, 0, 1,
+                 "code build debug test project"),

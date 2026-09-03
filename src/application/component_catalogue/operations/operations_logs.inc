@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.operations.logs", "operations", "Log Explorer", "umicom.tracing",
          "Correlated diagnostics, events, traces and redaction.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "workflow task monitoring"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shared.collateral", "finance", "Collateral Manager", "umicom.collateral",
          "Agreements, inventory, calls, substitutions and optimisation.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "banking accounting payments risk"),

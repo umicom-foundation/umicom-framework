@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.security.policy", "security", "Policy Centre", "umicom.security.policy",
          "Capabilities, decisions, approvals and audit evidence.", UMI_APPLICATION_COMPONENT_EDITOR,
-         UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "security threat access secrets"),

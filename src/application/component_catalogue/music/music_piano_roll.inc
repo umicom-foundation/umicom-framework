@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.music.piano-roll", "music", "Piano Roll", "umicom.music",
          "Note, expression, timing and quantisation editing.", UMI_APPLICATION_COMPONENT_EDITOR,
-         UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_CAPABILITY_PLANNED, 1, 1,
+                 "audio song arrangement"),

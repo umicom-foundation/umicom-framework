@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.shell.workspace-profiles", "shell", "Workspace Profiles", "umicom.workspace",
          "Save, restore, import and export application-agnostic layouts.",
-         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 0, 1),
+         UMI_APPLICATION_COMPONENT_INSPECTOR, UMI_CAPABILITY_IMPLEMENTED, 0, 1,
+                 "desktop window launcher navigation"),

@@ -16,4 +16,5 @@ WINDOW_SPEC("org.umicom.workspace.accountant.standard", "org.umicom.window.accou
             UMI_APPLICATION_PRESENTATION_DENSITY_BALANCED,
             UMI_APPLICATION_PRESENTATION_NAVIGATION_EXPANDED,
             1440U, 900U, 260U, 340U, 260U,
-            1, 1, 1, 1),
+            1, 1, 1, 1,
+                 800U, 600U),

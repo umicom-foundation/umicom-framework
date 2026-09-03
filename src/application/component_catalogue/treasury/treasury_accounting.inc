@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.treasury.accounting", "treasury", "Accounting", "umicom.tms",
          "Events, postings, reconciliation and ledger interfaces.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "cash liquidity settlement payments"),

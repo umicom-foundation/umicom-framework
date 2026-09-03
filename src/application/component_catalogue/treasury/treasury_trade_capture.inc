@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.treasury.trade-capture", "treasury", "Trade Capture", "umicom.tms",
          "Product-aware capture with validation, enrichment and lifecycle events.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "cash liquidity settlement payments"),

@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.integration.monitor", "integration", "Integration Monitor", "umicom.integration",
          "Throughput, failures, replay, dead letters and lineage.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "messaging workflow connector"),

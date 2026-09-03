@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.rag.collections", "rag", "Knowledge Collections", "umicom.knowledge",
          "Governed collections, access and lifecycle.", UMI_APPLICATION_COMPONENT_VIEW,
-         UMI_CAPABILITY_FOUNDATION, 1, 1),
+         UMI_CAPABILITY_FOUNDATION, 1, 1,
+                 "knowledge retrieval documents search"),

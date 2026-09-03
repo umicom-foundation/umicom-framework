@@ -48,6 +48,7 @@ typedef struct UmiApplicationComponentDefinition {
   UmiCapabilityMaturity maturity; /* Truthful implementation maturity. */
   int multi_instance;             /* Non-zero permits multiple independent copies. */
   int context_aware;              /* Non-zero permits linked-selection updates. */
+  const char *search_terms;       /* Plain-language aliases used by menus and catalogues. */
 } UmiApplicationComponentDefinition;
 
 /* Return the total number of reusable Framework component definitions. */
@@ -67,6 +68,11 @@ size_t umi_application_component_domain_count(const char *domain_id);
 /* Borrow the requested component within a domain-filtered view. */
 const UmiApplicationComponentDefinition *umi_application_component_domain_at(const char *domain_id,
                                                                              size_t domain_index);
+/* Count components whose identity, title, description or aliases contain every query word. */
+size_t umi_application_component_search_count(const char *query);
+/* Borrow one result from the deterministic catalogue-order search projection. */
+const UmiApplicationComponentDefinition *
+umi_application_component_search_at(const char *query, size_t result_index);
 /* Return non-zero when the domain or a supported domain alias exists. */
 int umi_application_component_domain_exists(const char *domain_id);
 /* Return non-zero when callers supplied a historical domain alias. */

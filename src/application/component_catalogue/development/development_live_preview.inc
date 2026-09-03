@@ -16,4 +16,5 @@
 COMP("umicom.development.live-preview", "development", "Live Preview",
      "umicom.browser",
      "Revision-aware active-document preview with provider and trust gates.",
-     UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+     UMI_APPLICATION_COMPONENT_VIEW, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "code build debug test project"),

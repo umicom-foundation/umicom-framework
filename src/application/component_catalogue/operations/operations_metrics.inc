@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.operations.metrics", "operations", "Metrics", "umicom.metrics",
          "Time-series counters, gauges, alerts and service objectives.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "workflow task monitoring"),

@@ -17,10 +17,10 @@
 
 #include <string.h>
 
-#define PANEL_SPEC(id, icon, kind, panel_chrome, region, width, height, action, floating, closing, multiple, visible) \
+#define PANEL_SPEC(id, icon, kind, panel_chrome, region, width, height, action, floating, closing, multiple, visible, compact) \
     {sizeof(UmiApplicationPresentationPanelSpec), UMI_APPLICATION_PRESENTATION_API_VERSION,       \
      (id), (icon), (kind), (panel_chrome), (region), (width), (height), (action),                  \
-     (floating), (closing), (multiple), (visible)}
+     (floating), (closing), (multiple), (visible), (compact)}
 
 static const UmiApplicationPresentationPanelSpec PANELS[] = {
 #include "panel_specs/panel_records.inc"

@@ -16,4 +16,5 @@
 COMP("umicom.shared.application-federation", "application", "Application Federation",
          "umicom.application.federation",
          "Cross-application discovery, selection, context and lifecycle projection.",
-         UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_SERVICE_SURFACE, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "application suite workspace"),

@@ -54,6 +54,8 @@ UmiStatus umi_application_presentation_panel_spec_validate(
         spec->minimum_width == 0U || spec->minimum_height == 0U ||
         spec->empty_action < UMI_APPLICATION_PRESENTATION_EMPTY_NONE ||
         spec->empty_action > UMI_APPLICATION_PRESENTATION_EMPTY_CONNECT ||
+        spec->compact_policy < UMI_APPLICATION_PRESENTATION_COMPACT_KEEP ||
+        spec->compact_policy > UMI_APPLICATION_PRESENTATION_COMPACT_DEFER ||
         !umi_application_presentation_boolean_valid(spec->allow_floating) ||
         !umi_application_presentation_boolean_valid(spec->allow_closing) ||
         !umi_application_presentation_boolean_valid(spec->allow_multiple) ||

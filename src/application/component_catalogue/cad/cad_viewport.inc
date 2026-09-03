@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.cad.viewport", "cad", "CAD Viewport", "umicom.cad",
          "2D and 3D geometry, selection, snapping and navigation.",
-         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1),
+         UMI_APPLICATION_COMPONENT_EDITOR, UMI_CAPABILITY_PLANNED, 1, 1,
+                 "design modelling geometry"),

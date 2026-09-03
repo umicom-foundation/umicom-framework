@@ -15,4 +15,5 @@
  *---------------------------------------------------------------------------*/
 COMP("umicom.rag.pipeline", "rag", "Ingestion Pipeline", "umicom.ai.retrieval",
          "Chunking, metadata, embeddings, indexing and failures.",
-         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1),
+         UMI_APPLICATION_COMPONENT_DASHBOARD, UMI_CAPABILITY_IMPLEMENTED, 1, 1,
+                 "knowledge retrieval documents search"),
