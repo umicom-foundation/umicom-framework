@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/gtk4/trading_panels.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +54,8 @@ typedef struct UmiGtk4TradingPanelState {
     GtkWidget *chart_study_dropdown;
     GtkWidget *chart_period_spin;
     GtkWidget *chart_status_label;
+    GtkWidget *trade_tape_filter_dropdown;
+    GtkWidget *trade_tape_minimum_size_spin;
     char instrument_ids[UMI_TRADING_MAX_WATCHLIST][UMI_FINANCE_ID_CAPACITY];
     size_t instrument_count;
     char alert_ids[UMI_TRADING_MAX_ALERTS][UMI_FINANCE_ID_CAPACITY];
@@ -1417,6 +1420,220 @@ static GtkWidget *create_orders_panel(UmiGtk4TradingPanelContext *context)
     return root;
 }
 
+/* Apply both tape filter controls as one atomic Framework request so linked
+ * Time and Sales panels never observe a direction from one edit and a size
+ * threshold from another edit. */
+static void on_apply_trade_tape_filter_clicked(
+    GtkButton *button,
+    gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    guint selected;
+    double minimum_size;
+
+    (void)button;
+    if (state == NULL || state->context == NULL ||
+        state->trade_tape_filter_dropdown == NULL ||
+        state->trade_tape_minimum_size_spin == NULL) {
+        return;
+    }
+    selected = gtk_drop_down_get_selected(
+        GTK_DROP_DOWN(state->trade_tape_filter_dropdown));
+    if (selected > (guint)UMI_TRADING_TRADE_TAPE_UNKNOWN) return;
+    minimum_size = gtk_spin_button_get_value(
+        GTK_SPIN_BUTTON(state->trade_tape_minimum_size_spin));
+    (void)umi_trading_ui_controller_set_trade_tape_filter(
+        state->context->controller,
+        (UmiTradingTradeTapeFilter)selected,
+        minimum_size);
+}
+
+/* Toggle the visible tape cursor. The Framework continues ingesting new
+ * trades while paused and the surrounding workstation rebuilds after change. */
+static void on_trade_tape_pause_clicked(GtkButton *button, gpointer data)
+{
+    UmiGtk4TradingPanelState *state = data;
+    UmiTradingWorkspaceSnapshot snapshot;
+
+    (void)button;
+    if (state == NULL || state->context == NULL ||
+        state->context->workspace == NULL) {
+        return;
+    }
+    if (umi_trading_workspace_snapshot(
+            state->context->workspace, &snapshot) != UMI_STATUS_OK) {
+        return;
+    }
+    (void)umi_trading_ui_controller_set_trade_tape_paused(
+        state->context->controller, !snapshot.trade_tape.paused);
+}
+
+/* Add one left-aligned cell to the native Time and Sales table. Keeping this
+ * helper local ensures headers and data rows use the same alignment. */
+static void attach_trade_tape_cell(
+    GtkWidget *grid,
+    const char *text,
+    int column,
+    int row,
+    int heading)
+{
+    GtkWidget *label = new_text_label(text, 0);
+
+    /* A failed presentation allocation must not turn a recoverable missing
+     * cell into a null dereference while the trading service stays active. */
+    if (grid == NULL || label == NULL) return;
+    if (heading) gtk_widget_add_css_class(label, "heading");
+    gtk_widget_set_hexpand(label, column == 0);
+    gtk_grid_attach(GTK_GRID(grid), label, column, row, 1, 1);
+}
+
+/* Render a native reusable Time and Sales panel over the Framework tape. It
+ * contains no provider or execution logic and is safe to reuse in Studio. */
+static GtkWidget *create_time_and_sales_panel(
+    UmiGtk4TradingPanelContext *context)
+{
+    static const char *const filter_labels[] = {
+        "All trades", "Buyer initiated", "Seller initiated", "Unknown"
+    };
+    UmiTradingWorkspaceSnapshot snapshot;
+    UmiGtk4TradingPanelState *state;
+    GtkWidget *root;
+    GtkWidget *summary;
+    GtkWidget *filter_row;
+    GtkWidget *apply_button;
+    GtkWidget *pause_button;
+    GtkWidget *scroller;
+    GtkWidget *grid;
+    char text[UMI_GTK4_TRADING_TEXT_CAPACITY];
+    size_t row_count;
+    size_t index;
+
+    if (context == NULL || context->workspace == NULL ||
+        umi_trading_workspace_snapshot(context->workspace, &snapshot) !=
+            UMI_STATUS_OK) {
+        return NULL;
+    }
+    state = calloc(1U, sizeof(*state));
+    if (state == NULL) return NULL;
+    state->context = context;
+    root = new_section("Time and Sales");
+    if (root == NULL) {
+        free(state);
+        return NULL;
+    }
+    g_object_set_data_full(
+        G_OBJECT(root), "umicom-trading-panel-state", state, free);
+
+    (void)snprintf(
+        text,
+        sizeof(text),
+        "%s  -  %zu visible  -  %zu retained  -  %" PRIu64
+        " missing sequences  -  %s",
+        snapshot.trade_tape.provider_ready ? "Feed ready" : "Feed unavailable",
+        snapshot.selected_trade_count,
+        snapshot.trade_tape.retained_count,
+        snapshot.trade_tape.missing_sequence_count,
+        snapshot.trade_tape.paused ? "display paused" : "display live");
+    summary = new_text_label(text, 0);
+    gtk_box_append(GTK_BOX(root), summary);
+
+    filter_row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    state->trade_tape_filter_dropdown = new_dropdown(
+        filter_labels, 4U, (size_t)snapshot.trade_tape.filter);
+    state->trade_tape_minimum_size_spin = gtk_spin_button_new_with_range(
+        0.0, 1000000000.0, 1.0);
+    gtk_spin_button_set_value(
+        GTK_SPIN_BUTTON(state->trade_tape_minimum_size_spin),
+        snapshot.trade_tape.minimum_size);
+    apply_button = gtk_button_new_with_label("Apply Filter");
+    pause_button = gtk_button_new_with_label(
+        snapshot.trade_tape.paused ? "Resume" : "Pause");
+    gtk_widget_set_tooltip_text(
+        pause_button,
+        "Freeze visible rows while incoming public trades remain retained");
+    g_signal_connect(
+        apply_button,
+        "clicked",
+        G_CALLBACK(on_apply_trade_tape_filter_clicked),
+        state);
+    g_signal_connect(
+        pause_button,
+        "clicked",
+        G_CALLBACK(on_trade_tape_pause_clicked),
+        state);
+    gtk_box_append(GTK_BOX(filter_row), new_text_label("Direction", 0));
+    gtk_box_append(GTK_BOX(filter_row), state->trade_tape_filter_dropdown);
+    gtk_box_append(GTK_BOX(filter_row), new_text_label("Minimum size", 0));
+    gtk_box_append(GTK_BOX(filter_row), state->trade_tape_minimum_size_spin);
+    gtk_box_append(GTK_BOX(filter_row), apply_button);
+    gtk_box_append(GTK_BOX(filter_row), pause_button);
+    gtk_box_append(GTK_BOX(root), filter_row);
+
+    grid = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 14);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 4);
+    attach_trade_tape_cell(grid, "Time", 0, 0, 1);
+    attach_trade_tape_cell(grid, "Price", 1, 0, 1);
+    attach_trade_tape_cell(grid, "Size", 2, 0, 1);
+    attach_trade_tape_cell(grid, "Direction", 3, 0, 1);
+    attach_trade_tape_cell(grid, "Condition", 4, 0, 1);
+    row_count = snapshot.selected_trade_count < UMI_TRADING_UI_VISIBLE_ROWS
+        ? snapshot.selected_trade_count : UMI_TRADING_UI_VISIBLE_ROWS;
+    for (index = 0U; index < row_count; ++index) {
+        UmiTradingTradeTapeRecord record;
+        char time_text[48U];
+        char price_text[48U];
+        char size_text[48U];
+
+        if (umi_trading_workspace_selected_trade_at(
+                context->workspace, index, &record) != UMI_STATUS_OK) {
+            continue;
+        }
+        (void)snprintf(
+            time_text, sizeof(time_text), "%" PRId64,
+            record.trade.event_time_ms);
+        (void)snprintf(
+            price_text, sizeof(price_text), "%.8g", record.trade.price);
+        (void)snprintf(
+            size_text, sizeof(size_text), "%.8g", record.trade.size);
+        attach_trade_tape_cell(grid, time_text, 0, (int)index + 1, 0);
+        attach_trade_tape_cell(grid, price_text, 1, (int)index + 1, 0);
+        attach_trade_tape_cell(grid, size_text, 2, (int)index + 1, 0);
+        attach_trade_tape_cell(
+            grid,
+            umi_trading_trade_direction_text(record.direction),
+            3,
+            (int)index + 1,
+            0);
+        attach_trade_tape_cell(
+            grid,
+            record.condition[0] != '\0' ? record.condition : "Regular",
+            4,
+            (int)index + 1,
+            0);
+    }
+    if (row_count == 0U) {
+        attach_trade_tape_cell(
+            grid,
+            snapshot.trade_tape.provider_ready
+                ? "No trades match the current filter."
+                : "No public trade provider is available.",
+            0,
+            1,
+            0);
+    }
+    scroller = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(
+        GTK_SCROLLED_WINDOW(scroller),
+        GTK_POLICY_AUTOMATIC,
+        GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), grid);
+    gtk_widget_set_vexpand(scroller, TRUE);
+    gtk_widget_set_hexpand(scroller, TRUE);
+    gtk_box_append(GTK_BOX(root), scroller);
+    return root;
+}
+
 /*
  * Provide the generic action handler operation used by this module and its client
  * applications.
@@ -1549,5 +1766,9 @@ GtkWidget *umi_gtk4_trading_panel_create(
      * reusable adapter instead of the single-record property renderer. */
     if (strcmp(window->tool_id, "chart") == 0)
         return create_chart_panel(context);
+    /* Time and Sales needs filter, pause, and table controls rather than the
+     * generic property panel used by read-only capability surfaces. */
+    if (strcmp(window->tool_id, "time-and-sales") == 0)
+        return create_time_and_sales_panel(context);
     return create_generic_panel(window, context);
 }

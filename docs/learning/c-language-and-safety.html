@@ -1,0 +1,275 @@
+<!doctype html>
+<!--
+  Umicom Framework
+  File: docs/learning/c-language-and-safety.html
+  Purpose: Provide the offline C language and safer-programming reference used
+           by Framework learning clients and Umicom Studio IDE.
+  Author: Sammy Hegab
+  Organisation: Umicom Foundation
+  Licence: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C Language and Safer Programming Reference</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 76rem; margin: 0 auto; padding: 2rem; line-height: 1.55; }
+    h1, h2, h3 { line-height: 1.2; }
+    nav, section { margin-block: 1.5rem; }
+    code, pre { font-family: ui-monospace, monospace; }
+    pre { overflow: auto; padding: 1rem; border: 1px solid #6d7785; border-radius: .4rem; }
+    .rule { border-left: .3rem solid #4d9bd6; padding-left: 1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #6d7785; padding: .55rem; text-align: left; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>C Language and Safer Programming Reference</h1>
+  <p>This offline guide explains the C language from first principles and shows
+     the checks that keep native programs predictable. Read it in order as a
+     course or use the contents as a small built-in wiki.</p>
+</header>
+
+<nav aria-label="Lesson contents">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#program">A program and its tools</a></li>
+    <li><a href="#values">Values, types and conversion</a></li>
+    <li><a href="#control">Conditions and loops</a></li>
+    <li><a href="#functions">Functions and contracts</a></li>
+    <li><a href="#arrays">Arrays and strings</a></li>
+    <li><a href="#pointers">Pointers and ownership</a></li>
+    <li><a href="#allocation">Dynamic memory</a></li>
+    <li><a href="#arithmetic">Safe size arithmetic</a></li>
+    <li><a href="#input">Text, input and formatting</a></li>
+    <li><a href="#resources">Files and other resources</a></li>
+    <li><a href="#modules">Headers, source files and libraries</a></li>
+    <li><a href="#errors">Errors and cleanup paths</a></li>
+    <li><a href="#tests">Warnings, tests and analysis</a></li>
+    <li><a href="#concurrency">Threads and shared state</a></li>
+    <li><a href="#framework">Using Framework contracts</a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="program">
+  <h2>1. A program and its tools</h2>
+  <p>A source file is text written by a developer. A compiler translates it
+     into object code, a linker joins object files and libraries, and the
+     operating system starts the resulting program. A build description records
+     which files belong together, while tests check observable behaviour.</p>
+  <pre><code>#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    puts("Hello from Umicom");
+    return 0;
+}</code></pre>
+  <p><code>#include</code> makes declarations visible. <code>main</code> is the
+     starting function. Returning zero reports success to the caller.</p>
+</section>
+
+<section id="values">
+  <h2>2. Values, types and conversion</h2>
+  <p>A type tells the compiler how a value is represented and which operations
+     make sense. Use <code>size_t</code> for object sizes and indexes, fixed-width
+     integer types when a data format requires an exact width, and
+     <code>bool</code> for true-or-false state.</p>
+  <pre><code>#include &lt;stdbool.h&gt;
+#include &lt;stddef.h&gt;
+#include &lt;stdint.h&gt;
+
+size_t item_count = 12U;
+uint32_t protocol_version = 1U;
+bool ready = true;</code></pre>
+  <p class="rule">Never assume that converting to a smaller or unsigned type is
+     harmless. Check the source value against the destination range first.</p>
+</section>
+
+<section id="control">
+  <h2>3. Conditions and loops</h2>
+  <p>An <code>if</code> statement chooses work. A loop repeats work. Braces make
+     the boundary of each block visible, and a simple condition makes review
+     easier.</p>
+  <pre><code>for (size_t index = 0U; index &lt; item_count; ++index) {
+    if (items[index].enabled) {
+        process_item(&amp;items[index]);
+    }
+}</code></pre>
+  <p>The comparison occurs before indexing, so <code>index</code> cannot name an
+     element beyond the array. A <code>while</code> loop must change the state used
+     by its condition or it may never finish.</p>
+</section>
+
+<section id="functions">
+  <h2>4. Functions and contracts</h2>
+  <p>A function should do one understandable job. Its contract explains valid
+     inputs, ownership, output and failure. Validate pointers before
+     dereferencing them and leave output in a known state when work fails.</p>
+  <pre><code>UmiStatus read_total(const Record *record, size_t *out_total)
+{
+    if (record == NULL || out_total == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_total = record-&gt;total;
+    return UMI_STATUS_OK;
+}</code></pre>
+  <p>Callers can now distinguish bad input from a valid total of zero.</p>
+</section>
+
+<section id="arrays">
+  <h2>5. Arrays and strings</h2>
+  <p>An array contains a fixed number of adjacent elements. C does not check an
+     index automatically, so carry the element count with the array. A C string
+     is a character array ending with a zero byte; its capacity and current
+     length are different facts.</p>
+  <pre><code>char label[32];
+size_t source_length = strlen(source);
+
+if (source_length &gt;= sizeof(label)) {
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+memcpy(label, source, source_length + 1U);</code></pre>
+  <p>The final copy includes the terminator only after the complete string is
+     known to fit.</p>
+</section>
+
+<section id="pointers">
+  <h2>6. Pointers and ownership</h2>
+  <p>A pointer stores an address. It may refer to an object without owning it, or
+     it may be the handle responsible for releasing an allocation. Write that
+     distinction in the API documentation.</p>
+  <table>
+    <thead><tr><th>Relationship</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td>Borrowed pointer</td><td>Use it only while the owner guarantees the object is alive.</td></tr>
+      <tr><td>Owned pointer</td><td>Release it exactly once through the matching operation.</td></tr>
+      <tr><td>Optional pointer</td><td>Check for <code>NULL</code> before use.</td></tr>
+      <tr><td>Output pointer</td><td>Validate it and document the state written on failure.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="allocation">
+  <h2>7. Dynamic memory</h2>
+  <p>Dynamic allocation is useful when size is known only at runtime. Calculate
+     the size safely, check the result, initialise the object, and make every
+     later failure follow a cleanup path.</p>
+  <pre><code>if (count &gt; SIZE_MAX / sizeof(*items)) {
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+Item *replacement = realloc(items, count * sizeof(*items));
+if (replacement == NULL) {
+    return UMI_STATUS_OUT_OF_MEMORY;
+}
+items = replacement;</code></pre>
+  <p>The temporary pointer preserves the original allocation if resizing fails.</p>
+</section>
+
+<section id="arithmetic">
+  <h2>8. Safe size arithmetic</h2>
+  <p>Integer overflow can turn a large required buffer into a small allocation.
+     Check before arithmetic rather than checking the already-overflowed result.</p>
+  <pre><code>if (left &gt; SIZE_MAX - right) {
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+size_t combined = left + right;</code></pre>
+  <p>For multiplication, check <code>count &gt; SIZE_MAX / element_size</code>. Also
+     reject zero element size when the surrounding contract requires progress.</p>
+</section>
+
+<section id="input">
+  <h2>9. Text, input and formatting</h2>
+  <p>Input is untrusted until checked for length, syntax and range. Bounded
+     formatting still reports truncation, so inspect its return value.</p>
+  <pre><code>int written = snprintf(buffer, sizeof(buffer), "%s: %u", name, value);
+if (written &lt; 0 || (size_t)written &gt;= sizeof(buffer)) {
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}</code></pre>
+  <p>For numeric text, use a conversion that reports where parsing stopped,
+     inspect its range indicator, and verify that no unexpected characters
+     remain.</p>
+</section>
+
+<section id="resources">
+  <h2>10. Files and other resources</h2>
+  <p>Files, sockets, locks, database statements and graphical objects all have a
+     lifetime. Acquire as late as practical and release in reverse order. Check
+     whether close or flush can report loss of important data.</p>
+  <pre><code>FILE *stream = fopen(path, "rb");
+if (stream == NULL) return UMI_STATUS_IO_ERROR;
+
+UmiStatus status = read_content(stream);
+if (fclose(stream) != 0 &amp;&amp; status == UMI_STATUS_OK) {
+    status = UMI_STATUS_IO_ERROR;
+}
+return status;</code></pre>
+</section>
+
+<section id="modules">
+  <h2>11. Headers, source files and libraries</h2>
+  <p>A public header describes the stable contract. A source file owns private
+     implementation. Include guards prevent repeated declarations. Keep private
+     helper functions <code>static</code>, use opaque owner types for complex
+     state, and avoid exposing toolkit objects from reusable modules.</p>
+  <p>Applications should call Framework contracts rather than copy their logic.
+     This keeps fixes, tests and documentation in one place.</p>
+</section>
+
+<section id="errors">
+  <h2>12. Errors and cleanup paths</h2>
+  <p>Use explicit result values for expected failure. Preserve the first useful
+     error instead of replacing it with a later cleanup result. Initialise owned
+     fields to zero so a destroy function can safely handle partial creation.</p>
+  <pre><code>Owner *owner = calloc(1U, sizeof(*owner));
+if (owner == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+UmiStatus status = create_first(&amp;owner-&gt;first);
+if (status == UMI_STATUS_OK) status = create_second(&amp;owner-&gt;second);
+if (status != UMI_STATUS_OK) {
+    owner_destroy(owner);
+    return status;
+}</code></pre>
+</section>
+
+<section id="tests">
+  <h2>13. Warnings, tests and analysis</h2>
+  <p>Compiler warnings are design feedback. Treat conversions, truncation,
+     shadowing and missing initialisers as issues to understand, not messages to
+     silence. Tests should cover success, invalid input, boundaries, full
+     capacity, repeated cleanup and simulated failure.</p>
+  <p>Static analysis finds suspicious paths without running the program. Runtime
+     sanitizers catch invalid memory and undefined behaviour while tests run.
+     Neither replaces clear ownership and bounds in the design.</p>
+</section>
+
+<section id="concurrency">
+  <h2>14. Threads and shared state</h2>
+  <p>Assume mutable data belongs to one thread unless the contract says
+     otherwise. Protect shared state with one documented synchronization rule.
+     Do not call unknown extension code while holding an internal lock, because
+     callbacks may re-enter the service or wait on another lock.</p>
+  <p>Use message passing and immutable snapshots when possible. They reduce the
+     number of places that can race over the same memory.</p>
+</section>
+
+<section id="framework">
+  <h2>15. Using Framework contracts</h2>
+  <p>Read the public header first. Create or initialise an owner, check every
+     returned status, borrow snapshots only for the documented lifetime, and
+     call the matching destroy function. Keep application code focused on
+     composition and presentation.</p>
+  <p>The editor can combine offline C help, project indexes, language servers and
+     optional model providers. Completion candidates identify their provider,
+     replacement range, document revision and trust needs. This prevents a stale
+     suggestion from silently editing the wrong text.</p>
+  <p class="rule">When uncertain, prefer a small explicit contract, bounded
+     storage, one owner, one cleanup path and a focused test.</p>
+</section>
+</main>
+</body>
+</html>

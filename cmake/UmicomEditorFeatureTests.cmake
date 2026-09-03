@@ -64,6 +64,7 @@
     umicom_add_framework_test(umicom-inline-suggestion-tests framework.editor.inline_suggestion tests/test_inline_suggestion.c)
     umicom_add_framework_test(umicom-inline-suggestion-session-tests framework.editor.inline_suggestion_session tests/test_inline_suggestion_session.c)
     umicom_add_framework_test(umicom-completion-command-tests framework.editor.completion_command tests/test_completion_command.c)
+    umicom_add_framework_test(umicom-c-language-assistance-tests framework.editor.c_language_assistance tests/test_c_language_assistance.c)
 
     # Professional diagnostics, Problems and SARIF platform.
     umicom_add_framework_test(umicom-diagnostic-provider-tests framework.diagnostics.provider tests/test_diagnostic_provider.c)

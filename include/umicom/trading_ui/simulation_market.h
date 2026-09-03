@@ -50,6 +50,9 @@ typedef struct UmiTradingSimulationMarket {
         instruments[UMI_TRADING_SIMULATION_MARKET_MAX_INSTRUMENTS];
     size_t instrument_count;
     uint64_t sequence;
+    /* Public trade sequence advances once per emitted instrument trade and is
+     * independent from the coarser simulation-step counter. */
+    uint64_t trade_sequence;
     int64_t event_time_ms;
     int seeded;
 } UmiTradingSimulationMarket;

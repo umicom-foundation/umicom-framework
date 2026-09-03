@@ -82,6 +82,8 @@ void test_controller_preview(void);
 void test_controller_kill_switch(void);
 /** Verify price-alert creation, market activation and acknowledgement. */
 void test_controller_alerts(void);
+/** Verify Time and Sales filtering and pause/resume controller actions. */
+void test_controller_trade_tape(void);
 /**
  * Exercise test simulation seed and return a clear result when the behaviour no longer
  * matches its contract.

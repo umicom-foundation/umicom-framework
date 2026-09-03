@@ -226,6 +226,17 @@ UmiStatus umi_trading_ui_controller_remove_price_alert(
     UmiTradingUiController *controller,
     const char *alert_id);
 
+/** Apply one shared direction and minimum-size filter to Time and Sales. */
+UmiStatus umi_trading_ui_controller_set_trade_tape_filter(
+    UmiTradingUiController *controller,
+    UmiTradingTradeTapeFilter filter,
+    double minimum_size);
+
+/** Pause or resume the visible Time and Sales sequence without stopping data. */
+UmiStatus umi_trading_ui_controller_set_trade_tape_paused(
+    UmiTradingUiController *controller,
+    int paused);
+
 /**
  * Perform trading ui controller through the module contract so client applications do not
  * duplicate its policy.

@@ -24,13 +24,13 @@ int main(void)
 {
     UmiDeveloperProjectTemplateRegistry *registry = NULL;
 
-    assert(umi_developer_project_builtin_template_count() == 17U);
+    assert(umi_developer_project_builtin_template_count() == 18U);
     assert(umi_developer_project_template_registry_create(&registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_builtin_templates_register(registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_template_registry_count(registry) ==
-           17U);
+           18U);
 
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.c23-console") != NULL);
@@ -40,6 +40,8 @@ int main(void)
         registry, "developer.template.rust-console") != NULL);
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.zig-console") != NULL);
+    assert(umi_developer_project_template_registry_find(
+        registry, "developer.template.umicom-extension") != NULL);
 
     umi_developer_project_template_registry_destroy(registry);
     return 0;

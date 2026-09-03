@@ -25,6 +25,7 @@
 #include "umicom/trading/market_state.h"
 #include "umicom/trading/quote.h"
 #include "umicom/trading/tick.h"
+#include "umicom/trading/trade_tape.h"
 #include "umicom/trading/bar.h"
 #include "umicom/trading/depth.h"
 #include "umicom/trading/order_book.h"

@@ -65,7 +65,10 @@ int main(void)
     UmiInstrument instrument = test_instrument();
     UmiQuote quote = {0};
     UmiBar bar = {0};
+    UmiTradeTick trade = {0};
+    UmiTradingTradeTapeRecord trade_record;
     UmiUiViewModel *chart = NULL;
+    UmiUiViewModel *tape = NULL;
     UmiUiViewModel *ticket = NULL;
     UmiUiCommandViewAction action;
 
@@ -94,6 +97,18 @@ int main(void)
     /* Supply the preceding session close with the candle because the shared
      * workspace uses it to calculate change values for every trading view. */
     assert(umi_trading_workspace_update_bar(workspace, &bar, 24995.0) ==
+           UMI_STATUS_OK);
+    /* Public market trades use their own tape and are not inferred from the
+     * quote, candle, or account execution histories. */
+    trade.instrument = instrument;
+    trade.price = 25005.0;
+    trade.size = 8.0;
+    trade.event_time_ms = 1999;
+    assert(umi_trading_trade_tape_record_init(
+               &trade_record, 1U, &trade,
+               UMI_TRADING_TRADE_DIRECTION_BUYER_INITIATED, "regular") ==
+           UMI_STATUS_OK);
+    assert(umi_trading_workspace_update_trade(workspace, &trade_record) ==
            UMI_STATUS_OK);
     assert(umi_trading_workspace_set_chart_study(
                workspace, UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE, 12U) ==
@@ -140,6 +155,13 @@ int main(void)
                 "trading-research-output", workspace);
     verify_view(umi_trading_ui_time_and_sales_view_create, "tape",
                 "trading-time-and-sales", workspace);
+    assert(umi_trading_ui_time_and_sales_view_create(
+               "tape.properties", workspace, &tape) == UMI_STATUS_OK);
+    assert(integer_property(tape, "trading.row-count") == 1);
+    assert(umi_ui_command_view_action_at(tape, 0U, &action) == UMI_STATUS_OK);
+    assert(strcmp(action.action_id,
+                  UMI_TRADING_UI_ACTION_PAUSE_TRADE_TAPE) == 0);
+    umi_ui_view_model_destroy(tape);
     verify_view(umi_trading_ui_economic_calendar_view_create, "events",
                 "trading-economic-calendar", workspace);
     verify_view(umi_trading_ui_fundamentals_view_create, "fundamentals",

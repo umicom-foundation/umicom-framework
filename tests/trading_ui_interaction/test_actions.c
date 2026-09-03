@@ -27,6 +27,9 @@ void test_actions(void)
            UMI_TRADING_UI_ACTION_KIND_REFRESH);
     assert(umi_trading_ui_action_kind(UMI_TRADING_UI_ACTION_SUBMIT_ORDER) ==
            UMI_TRADING_UI_ACTION_KIND_SUBMIT_ORDER);
+    assert(umi_trading_ui_action_kind(
+               UMI_TRADING_UI_ACTION_FILTER_TRADE_TAPE) ==
+           UMI_TRADING_UI_ACTION_KIND_FILTER_TRADE_TAPE);
     assert(umi_trading_ui_action_kind("unknown") ==
            UMI_TRADING_UI_ACTION_KIND_UNKNOWN);
     assert(strcmp(umi_trading_ui_action_id(
@@ -36,4 +39,8 @@ void test_actions(void)
                UMI_TRADING_UI_ACTION_KIND_SET_QUANTITY));
     assert(!umi_trading_ui_action_requires_payload(
                UMI_TRADING_UI_ACTION_KIND_REFRESH));
+    assert(umi_trading_ui_action_requires_payload(
+               UMI_TRADING_UI_ACTION_KIND_FILTER_TRADE_TAPE));
+    assert(!umi_trading_ui_action_requires_payload(
+               UMI_TRADING_UI_ACTION_KIND_PAUSE_TRADE_TAPE));
 }

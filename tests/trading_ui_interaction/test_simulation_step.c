@@ -26,11 +26,14 @@ void test_simulation_step(void)
     UmiTradingMarketSnapshot before;
     UmiTradingMarketSnapshot after;
     size_t bars_before;
+    size_t trades_before;
     uint64_t sequence;
     umi_trading_ui_test_fixture_init(&fixture, 1);
     assert(umi_trading_workspace_selected_market(fixture.workspace, &before) ==
            UMI_STATUS_OK);
     bars_before = umi_trading_workspace_selected_bar_count(fixture.workspace);
+    trades_before = umi_trading_workspace_selected_trade_count(
+        fixture.workspace);
     sequence = umi_trading_simulation_market_sequence(&fixture.simulation);
     assert(umi_trading_simulation_market_step(&fixture.simulation, 1000) ==
            UMI_STATUS_OK);
@@ -45,5 +48,9 @@ void test_simulation_step(void)
      * must advance instead of repeatedly overwriting an overlapping window. */
     assert(umi_trading_workspace_selected_bar_count(fixture.workspace) ==
            bars_before + 1U);
+    /* The public-trade tape advances with the same deterministic market step
+     * but remains separate from simulated account executions. */
+    assert(umi_trading_workspace_selected_trade_count(fixture.workspace) ==
+           trades_before + 1U);
     umi_trading_ui_test_fixture_destroy(&fixture);
 }

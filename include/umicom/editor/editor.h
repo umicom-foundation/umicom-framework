@@ -97,6 +97,7 @@
 #include "umicom/editor/inline_suggestion.h"
 #include "umicom/editor/inline_suggestion_session.h"
 #include "umicom/editor/completion_command.h"
+#include "umicom/editor/providers/c_language_assistance.h"
 #include "umicom/editor/text_scan.h"
 #include "umicom/editor/document.h"
 #include "umicom/editor/cursor.h"

@@ -32,5 +32,6 @@
 #include "umicom/developer_project/templates/integration_worker.h"
 #include "umicom/developer_project/templates/cmake_meta_project.h"
 #include "umicom/developer_project/templates/python_tool.h"
+#include "umicom/developer_project/templates/umicom_extension.h"
 
 #endif

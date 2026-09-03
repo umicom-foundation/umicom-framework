@@ -605,6 +605,53 @@ UmiStatus umi_trading_ui_controller_remove_price_alert(
         1);
 }
 
+/* Route tape filters through the workspace and notify every linked view after
+ * the complete direction and size policy has been accepted. */
+UmiStatus umi_trading_ui_controller_set_trade_tape_filter(
+    UmiTradingUiController *controller,
+    UmiTradingTradeTapeFilter filter,
+    double minimum_size)
+{
+    UmiStatus status;
+
+    if (controller == NULL || controller->workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_workspace_set_trade_tape_filter(
+        controller->workspace, filter, minimum_size);
+    return finish_action(
+        controller,
+        status,
+        NULL,
+        status == UMI_STATUS_OK ? "Time and Sales filter updated." : NULL,
+        1);
+}
+
+/* A pause freezes the visible cursor only. The message makes it clear that
+ * incoming provider trades continue to be retained for a later resume. */
+UmiStatus umi_trading_ui_controller_set_trade_tape_paused(
+    UmiTradingUiController *controller,
+    int paused)
+{
+    UmiStatus status;
+
+    if (controller == NULL || controller->workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = umi_trading_workspace_set_trade_tape_paused(
+        controller->workspace, paused);
+    return finish_action(
+        controller,
+        status,
+        NULL,
+        status == UMI_STATUS_OK
+            ? (paused
+                ? "Time and Sales display paused; ingestion continues."
+                : "Time and Sales display resumed.")
+            : NULL,
+        1);
+}
+
 /*
  * Perform trading ui controller through the module contract so client applications do not
  * duplicate its policy.
@@ -671,6 +718,15 @@ UmiStatus umi_trading_ui_controller_dispatch(
             controller, payload != NULL ? payload->text : NULL);
     case UMI_TRADING_UI_ACTION_KIND_RESET_KILL_SWITCH:
         return umi_trading_ui_controller_reset_kill_switch(controller);
+    case UMI_TRADING_UI_ACTION_KIND_FILTER_TRADE_TAPE:
+        return umi_trading_ui_controller_set_trade_tape_filter(
+            controller,
+            (UmiTradingTradeTapeFilter)payload->primary_value,
+            payload->primary_number);
+    case UMI_TRADING_UI_ACTION_KIND_PAUSE_TRADE_TAPE:
+        return umi_trading_ui_controller_set_trade_tape_paused(controller, 1);
+    case UMI_TRADING_UI_ACTION_KIND_RESUME_TRADE_TAPE:
+        return umi_trading_ui_controller_set_trade_tape_paused(controller, 0);
     default:
         return finish_action(controller, UMI_STATUS_NOT_FOUND, NULL,
             "Unknown trading workstation action.", 0);

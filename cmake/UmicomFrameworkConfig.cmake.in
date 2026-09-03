@@ -6,8 +6,15 @@ find_dependency(Threads)
 @UMICOM_FRAMEWORK_FIND_CAIRO@
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFrameworkTargets.cmake")
+# Expose the installed contract version so generated extensions do not copy a
+# numeric ABI value that can drift away from the Framework headers.
+set(UMICOM_FRAMEWORK_ABI_VERSION 2)
 set(UMICOM_FRAMEWORK_RESOURCE_ROOT
     "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/umicom/framework/resources")
+# Give documentation-aware applications one portable installed location for
+# the offline learning library and future generated reference pages.
+set(UMICOM_FRAMEWORK_DOCUMENTATION_ROOT
+    "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/umicom/docs")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
 
 # Components map directly to exported Umicom::<component> targets. This keeps

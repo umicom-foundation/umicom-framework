@@ -17,6 +17,7 @@
 
 #include "umicom/trading_ui/trading_ui.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -1194,8 +1195,56 @@ UmiStatus umi_trading_ui_research_output_view_create(
     return status;
 }
 
+/* Format retained public trades as normal row properties understood by every
+ * existing view-model renderer. The source record remains strongly typed in
+ * the workspace; only this presentation boundary creates readable text. */
+static UmiStatus set_trade_tape_rows(
+    UmiUiViewModel *view,
+    UmiTradingWorkspace *workspace,
+    size_t count)
+{
+    size_t row_count = visible_rows(count);
+    size_t index;
+
+    for (index = 0U; index < row_count; ++index) {
+        UmiTradingTradeTapeRecord record;
+        char key[48U];
+        char text[256U];
+        int written;
+        UmiStatus status = umi_trading_workspace_selected_trade_at(
+            workspace, index, &record);
+
+        if (status != UMI_STATUS_OK) return status;
+        written = snprintf(
+            text,
+            sizeof(text),
+            "%.*s  %.8g x %.8g  %.*s  sequence %llu%.*s%.*s",
+            (int)(UMI_TRADING_SYMBOL_CAPACITY - 1U),
+            record.trade.instrument.symbol,
+            record.trade.price,
+            record.trade.size,
+            24,
+            umi_trading_trade_direction_text(record.direction),
+            (unsigned long long)record.sequence,
+            record.condition[0] != '\0' ? 3 : 0,
+            " - ",
+            (int)(UMI_TRADING_TRADE_CONDITION_CAPACITY - 1U),
+            record.condition);
+        if (written < 0 || (size_t)written >= sizeof(text)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        written = snprintf(key, sizeof(key), "trading.row.%zu", index);
+        if (written < 0 || (size_t)written >= sizeof(key)) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        status = set_string(view, key, text);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
+
 /* Build a truthful trade-tape panel which never substitutes account fills for
- * public market trades when no accepted consolidated trade feed is attached. */
+ * public market trades when an accepted public feed is unavailable. */
 UmiStatus umi_trading_ui_time_and_sales_view_create(
     const char *view_id,
     UmiTradingWorkspace *workspace,
@@ -1218,31 +1267,87 @@ UmiStatus umi_trading_ui_time_and_sales_view_create(
     if (status == UMI_STATUS_OK) {
         status = set_workspace_properties(*out_view, &snapshot);
     }
-    /* The current workspace owns quotes, bars and depth but does not yet own a
-     * public trade tape; expose that capability state instead of fake rows. */
     if (status == UMI_STATUS_OK) {
-        status = set_boolean(*out_view, "tape.provider-ready", 0);
+        status = set_boolean(
+            *out_view,
+            "tape.provider-ready",
+            snapshot.trade_tape.provider_ready);
     }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
-        status = set_integer(*out_view, "trading.row-count", 0);
+        status = set_boolean(
+            *out_view, "tape.paused", snapshot.trade_tape.paused);
     }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string(
             *out_view,
-            "tape.empty-state",
-            "No accepted public trade feed is attached. Quotes and account "
-            "executions are kept separate from market trades.");
+            "tape.filter",
+            umi_trading_trade_tape_filter_text(snapshot.trade_tape.filter));
     }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = set_number(
+            *out_view, "tape.minimum-size", snapshot.trade_tape.minimum_size);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(
+            *out_view,
+            "tape.retained-count",
+            (int64_t)snapshot.trade_tape.retained_count);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(
+            *out_view,
+            "tape.missing-sequence-count",
+            snapshot.trade_tape.missing_sequence_count > (uint64_t)INT64_MAX
+                ? INT64_MAX
+                : (int64_t)snapshot.trade_tape.missing_sequence_count);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(
+            *out_view,
+            "tape.dropped-trade-count",
+            snapshot.trade_tape.dropped_trade_count > (uint64_t)INT64_MAX
+                ? INT64_MAX
+                : (int64_t)snapshot.trade_tape.dropped_trade_count);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_integer(
+            *out_view,
+            "trading.row-count",
+            (int64_t)snapshot.selected_trade_count);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_trade_tape_rows(
+            *out_view, workspace, snapshot.selected_trade_count);
+    }
+    if (status == UMI_STATUS_OK && snapshot.selected_trade_count == 0U) {
+        status = set_string(
+            *out_view,
+            "tape.empty-state",
+            snapshot.trade_tape.provider_ready
+                ? "No public trades match the selected instrument and filter."
+                : "No accepted public trade feed is attached. Quotes and "
+                  "account executions remain separate from market trades.");
+    }
     if (status == UMI_STATUS_OK) {
         status = set_action(
             *out_view,
             0U,
-            "studio.action.trading.refresh",
+            snapshot.trade_tape.paused
+                ? UMI_TRADING_UI_ACTION_RESUME_TRADE_TAPE
+                : UMI_TRADING_UI_ACTION_PAUSE_TRADE_TAPE,
+            snapshot.trade_tape.paused ? "Resume Tape" : "Pause Tape",
+            snapshot.trade_tape.paused
+                ? "Show retained trades received while the display was paused"
+                : "Freeze visible rows while trade ingestion continues",
+            1);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = set_action(
+            *out_view,
+            1U,
+            UMI_TRADING_UI_ACTION_REFRESH,
             "Refresh Tape",
-            "Recheck the public market trade capability",
+            "Refresh Time and Sales from current Framework state",
             1);
     }
     return finish_view(status, out_view);

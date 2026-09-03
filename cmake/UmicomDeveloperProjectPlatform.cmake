@@ -87,6 +87,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/python_tool.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/rust_console.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/thin_desktop_application.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/umicom_extension.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/web_service_c23.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/zig_console.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tree.c"
@@ -388,6 +389,11 @@ if(BUILD_TESTING)
         umicom-developer-project-template-thin-desktop-application-test
         framework.developer_project.template-thin-desktop-application
         tests/developer_project/test_template_thin_desktop_application.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-umicom-extension-test
+        framework.developer_project.template-umicom-extension
+        tests/developer_project/test_template_umicom_extension.c
     )
     umicom_add_developer_project_test(
         umicom-developer-project-template-web-service-c23-test

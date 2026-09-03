@@ -33,13 +33,14 @@
 #include "umicom/trading/execution_store.h"
 #include "umicom/trading/oms.h"
 #include "umicom/trading/position_book.h"
+#include "umicom/trading/trade_tape.h"
 #include "umicom/trading/watchlist.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define UMI_TRADING_WORKSPACE_API_VERSION 3U
+#define UMI_TRADING_WORKSPACE_API_VERSION 4U
 #define UMI_TRADING_WORKSPACE_FILTER_CAPACITY 96U
 #define UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY 256U
 
@@ -77,6 +78,12 @@ typedef struct UmiTradingMarketSnapshot {
     int has_bar;
     int has_depth;
     uint64_t revision;
+    /* The latest public market trade is separate from account executions and
+     * allows quote rows or charts to show truthful last-sale information. */
+    UmiTradeTick trade;
+    uint64_t trade_sequence;
+    UmiTradingTradeDirection trade_direction;
+    int has_trade;
 } UmiTradingMarketSnapshot;
 
 /**
@@ -148,6 +155,12 @@ typedef struct UmiTradingWorkspaceSnapshot {
     int can_submit_order;
     int can_cancel_order;
     int can_reset_kill_switch;
+    /* Time and Sales state is appended so existing fields retain their order
+     * while new clients can inspect feed quality and visible selected rows. */
+    UmiTradingTradeTapeSnapshot trade_tape;
+    size_t selected_trade_count;
+    UmiTradingTradeTapeRecord selected_latest_trade;
+    int has_selected_trade;
 } UmiTradingWorkspaceSnapshot;
 
 /**
@@ -209,6 +222,23 @@ UmiStatus umi_trading_workspace_update_bar(
 UmiStatus umi_trading_workspace_update_depth(
     UmiTradingWorkspace *workspace,
     const UmiMarketDepth *depth);
+/** Accept one sequence-checked public market trade from a provider or replay. */
+UmiStatus umi_trading_workspace_update_trade(
+    UmiTradingWorkspace *workspace,
+    const UmiTradingTradeTapeRecord *record);
+/** Report whether a public market trade provider is currently connected. */
+UmiStatus umi_trading_workspace_set_trade_tape_provider_ready(
+    UmiTradingWorkspace *workspace,
+    int ready);
+/** Apply Time and Sales direction and minimum-size filters. */
+UmiStatus umi_trading_workspace_set_trade_tape_filter(
+    UmiTradingWorkspace *workspace,
+    UmiTradingTradeTapeFilter filter,
+    double minimum_size);
+/** Freeze or resume the visible Time and Sales sequence. */
+UmiStatus umi_trading_workspace_set_trade_tape_paused(
+    UmiTradingWorkspace *workspace,
+    int paused);
 /**
  * Provide the trading workspace set market state operation used by this module and its
  * client applications.
@@ -417,6 +447,16 @@ UmiStatus umi_trading_workspace_selected_bar_at(
     const UmiTradingWorkspace *workspace,
     size_t index,
     UmiBar *out_bar);
+
+/** Return the filtered public-trade count for the selected instrument. */
+size_t umi_trading_workspace_selected_trade_count(
+    const UmiTradingWorkspace *workspace);
+
+/** Copy one selected public trade in newest-first order. */
+UmiStatus umi_trading_workspace_selected_trade_at(
+    const UmiTradingWorkspace *workspace,
+    size_t newest_first_index,
+    UmiTradingTradeTapeRecord *out_record);
 
 /** Copy one price alert by position for presentation or persistence. */
 UmiStatus umi_trading_workspace_price_alert_at(

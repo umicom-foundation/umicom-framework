@@ -65,6 +65,7 @@ struct UmiTradingWorkspace {
     UmiExecutionStore executions;
     UmiPositionBook positions;
     UmiTradingAlertBook alerts;
+    UmiTradingTradeTape *trade_tape;
     UmiChartWorkspace *charts;
     UmiOrderRequest draft_order;
     UmiRiskDecision draft_risk;
@@ -440,6 +441,13 @@ UmiStatus umi_trading_workspace_create(
         umi_trading_workspace_destroy(workspace);
         return status;
     }
+    /* Allocate the public trade tape separately because its fixed history is
+     * deliberately much larger than the frequently copied workspace state. */
+    status = umi_trading_trade_tape_create(&workspace->trade_tape);
+    if (status != UMI_STATUS_OK) {
+        umi_trading_workspace_destroy(workspace);
+        return status;
+    }
     *out_workspace = workspace;
     return UMI_STATUS_OK;
 }
@@ -455,7 +463,10 @@ void umi_trading_workspace_destroy(UmiTradingWorkspace *workspace)
      * used.
      */
     if (workspace == NULL) return;
+    umi_trading_trade_tape_destroy(workspace->trade_tape);
+    workspace->trade_tape = NULL;
     umi_chart_workspace_destroy(workspace->charts);
+    workspace->charts = NULL;
     free(workspace);
 }
 
@@ -522,6 +533,12 @@ UmiStatus umi_trading_workspace_remove_instrument(
     index = market_index(workspace, instrument_id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Purge retained public prints before removing the market identity so a
+     * later instrument cannot inherit the removed symbol's Time and Sales. */
+    if (umi_trading_trade_tape_remove_instrument(
+            workspace->trade_tape, instrument_id) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_STATE;
+    }
     /*
      * Remove dependent alerts first so the workspace cannot retain rules for
      * an instrument that is no longer available. Reverse iteration remains
@@ -687,6 +704,81 @@ UmiStatus umi_trading_workspace_update_depth(
     workspace->market_data_ready = 1;
     workspace->revision += 1U;
     return UMI_STATUS_OK;
+}
+
+/* Accept one public market trade through the sequence-checked shared tape and
+ * mirror only its latest value into the matching lightweight market row. */
+UmiStatus umi_trading_workspace_update_trade(
+    UmiTradingWorkspace *workspace,
+    const UmiTradingTradeTapeRecord *record)
+{
+    size_t index;
+    UmiStatus status;
+
+    if (workspace == NULL || record == NULL ||
+        !umi_trade_tick_valid(&record->trade) ||
+        !umi_instrument_valid(&record->trade.instrument)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = market_index(
+        workspace, record->trade.instrument.instrument_id.value);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    status = umi_trading_trade_tape_append(workspace->trade_tape, record);
+    if (status != UMI_STATUS_OK) return status;
+    workspace->markets[index].trade = record->trade;
+    workspace->markets[index].trade_sequence = record->sequence;
+    workspace->markets[index].trade_direction = record->direction;
+    workspace->markets[index].has_trade = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Keep feed availability separate from general quote health so an application
+ * can honestly show a missing trade provider while charts still receive bars. */
+UmiStatus umi_trading_workspace_set_trade_tape_provider_ready(
+    UmiTradingWorkspace *workspace,
+    int ready)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_trading_trade_tape_set_provider_ready(
+        workspace->trade_tape, ready);
+    if (status == UMI_STATUS_OK) workspace->revision += 1U;
+    return status;
+}
+
+/* Store Time and Sales filters in Framework state so all open panels and
+ * frontend technologies present exactly the same selected rows. */
+UmiStatus umi_trading_workspace_set_trade_tape_filter(
+    UmiTradingWorkspace *workspace,
+    UmiTradingTradeTapeFilter filter,
+    double minimum_size)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_trading_trade_tape_set_filter(
+        workspace->trade_tape, filter, minimum_size);
+    if (status == UMI_STATUS_OK) workspace->revision += 1U;
+    return status;
+}
+
+/* Pause only the visible trade sequence; provider ingestion remains active so
+ * a user can inspect a stable row and later resume without a data gap. */
+UmiStatus umi_trading_workspace_set_trade_tape_paused(
+    UmiTradingWorkspace *workspace,
+    int paused)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_trading_trade_tape_set_paused(
+        workspace->trade_tape, paused);
+    if (status == UMI_STATUS_OK) workspace->revision += 1U;
+    return status;
 }
 
 /*
@@ -1373,6 +1465,21 @@ UmiStatus umi_trading_workspace_snapshot(
         umi_trading_alert_book_unacknowledged_count(&workspace->alerts);
     out_snapshot->selected_bar_count =
         umi_trading_workspace_selected_bar_count(workspace);
+    /* The tape snapshot reports whole-feed health while selected count and
+     * latest trade describe the instrument followed by linked panels. */
+    if (umi_trading_trade_tape_snapshot(
+            workspace->trade_tape, &out_snapshot->trade_tape) !=
+        UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    out_snapshot->selected_trade_count =
+        umi_trading_workspace_selected_trade_count(workspace);
+    if (out_snapshot->selected_trade_count > 0U &&
+        umi_trading_workspace_selected_trade_at(
+            workspace, 0U, &out_snapshot->selected_latest_trade) ==
+            UMI_STATUS_OK) {
+        out_snapshot->has_selected_trade = 1;
+    }
     out_snapshot->gross_position_quantity =
         umi_portfolio_gross_quantity(&workspace->positions);
     out_snapshot->realised_pnl = realised_pnl(workspace);
@@ -1386,7 +1493,7 @@ UmiStatus umi_trading_workspace_snapshot(
     out_snapshot->kill_switch_engaged = workspace->oms.kill_switch.engaged;
     out_snapshot->has_draft_risk = workspace->has_draft_risk;
     out_snapshot->revision = workspace->revision +
-        out_snapshot->charts.revision;
+        out_snapshot->charts.revision + out_snapshot->trade_tape.revision;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_trading_workspace_selected_market(workspace, &market) ==
@@ -1529,6 +1636,38 @@ UmiStatus umi_trading_workspace_selected_bar_at(
     }
     *out_bar = workspace->bar_histories[market_position].bars[index];
     return UMI_STATUS_OK;
+}
+
+/* Count filtered Time and Sales rows for the selected instrument without
+ * exposing the tape's internal bounded storage. */
+size_t umi_trading_workspace_selected_trade_count(
+    const UmiTradingWorkspace *workspace)
+{
+    if (workspace == NULL || workspace->selected_instrument_id[0] == '\0') {
+        return 0U;
+    }
+    return umi_trading_trade_tape_visible_count(
+        workspace->trade_tape, workspace->selected_instrument_id);
+}
+
+/* Copy one selected Time and Sales row in newest-first order so table, export,
+ * automation, and accessibility clients all observe the same ordering. */
+UmiStatus umi_trading_workspace_selected_trade_at(
+    const UmiTradingWorkspace *workspace,
+    size_t newest_first_index,
+    UmiTradingTradeTapeRecord *out_record)
+{
+    if (workspace == NULL || out_record == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (workspace->selected_instrument_id[0] == '\0') {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    return umi_trading_trade_tape_visible_at(
+        workspace->trade_tape,
+        workspace->selected_instrument_id,
+        newest_first_index,
+        out_record);
 }
 
 /* Copy one price alert by position for presentation or persistence. */

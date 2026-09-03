@@ -162,6 +162,7 @@ set(UMICOM_EDITOR_FEATURE_SOURCES
     src/editor/inline_suggestion.c
     src/editor/inline_suggestion_session.c
     src/editor/completion_command.c
+    src/editor/providers/c_language_assistance.c
 
     # Professional navigation, peek and hierarchy experience.
     src/editor/navigation_provider.c

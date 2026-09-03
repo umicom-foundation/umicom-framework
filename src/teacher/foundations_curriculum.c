@@ -55,7 +55,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-hello", "A tiny C program",
         "Read main, include a header, print a message and return a success code.",
         "Create, compile and run a program that prints Hello from Umicom.",
-        "docs/learning/05-first-c-program.md", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_FOUNDATION,
         5U, 45U, 75U, 1, 0, 0
     },
@@ -63,7 +63,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-data", "Names, values and decisions in C",
         "Use meaningful variables, basic data types, if statements and loops.",
         "Write a loop that labels scores as ready or needs more practice.",
-        "docs/learning/06-c-data-and-decisions.md", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         6U, 60U, 75U, 1, 0, 0
     },
@@ -71,7 +71,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-functions", "Functions and clear contracts",
         "Split work into small functions with inputs, outputs and useful names.",
         "Extract score validation into a function and test three inputs.",
-        "docs/learning/07-c-functions.md", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         7U, 60U, 75U, 1, 0, 0
     },
@@ -79,7 +79,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-memory", "Pointers, arrays and memory safety",
         "Understand addresses, NULL, array bounds, ownership and cleanup.",
         "Find and repair three deliberately unsafe pointer examples.",
-        "docs/learning/08-c-memory.md", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         8U, 75U, 80U, 1, 0, 0
     },
@@ -87,7 +87,7 @@ static const UmiTeacherFoundationsLesson FOUNDATIONS_LESSONS[] = {
         "foundations.c-modules", "Headers, source files and tests",
         "Create a small public contract, keep implementation private and verify behavior.",
         "Build one header, one source file and one focused test without warnings.",
-        "docs/learning/09-c-modules-and-tests.md", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
+        "framework/docs/learning/c-language-and-safety.html", UMI_TEACHER_FOUNDATIONS_C_PROGRAMMING,
         UMI_TEACHER_LANGUAGE_C23, UMI_TEACHER_LEVEL_BEGINNER,
         9U, 75U, 80U, 1, 0, 0
     },

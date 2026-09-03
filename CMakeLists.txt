@@ -2992,6 +2992,7 @@ add_library(umicom_trading STATIC
     src/trading/support_resistance.c
     src/trading/surveillance.c
     src/trading/tick.c
+    src/trading/trade_tape.c
     src/trading/time_in_force.c
     src/trading/trade_capture.c
     src/trading/trading_profile.c
@@ -4403,6 +4404,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-trading-risk-engine-test framework.trading_risk_engine tests/trading/test_risk_engine.c)
     umicom_add_framework_test(umicom-trading-simulated-broker-test framework.trading_simulated_broker tests/trading/test_simulated_broker.c)
     umicom_add_framework_test(umicom-trading-surveillance-test framework.trading_surveillance tests/trading/test_surveillance.c)
+    umicom_add_framework_test(umicom-trading-trade-tape-test framework.trading_trade_tape tests/trading/test_trade_tape.c)
     umicom_add_framework_test(umicom-trading-trading-profile-test framework.trading_trading_profile tests/trading/test_trading_profile.c)
     umicom_add_framework_test(umicom-trading-watchlist-alerts-test framework.trading_watchlist_alerts tests/trading/test_watchlist_alerts.c)
     umicom_add_framework_test(umicom-trading-workspace-test framework.trading_workspace tests/trading/test_trading_workspace.c)
@@ -4431,6 +4433,7 @@ if(BUILD_TESTING)
         umicom-trading-risk-engine-test
         umicom-trading-simulated-broker-test
         umicom-trading-surveillance-test
+        umicom-trading-trade-tape-test
         umicom-trading-trading-profile-test
         umicom-trading-watchlist-alerts-test
         umicom-trading-workspace-test
@@ -4867,6 +4870,11 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates)
 install(DIRECTORY examples/sdk_consumer/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/sdk_consumer)
+# Install the offline learning reference with the Framework so packaged IDEs
+# can expose the same lessons as source-tree builds.
+install(DIRECTORY docs/learning/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/docs/learning
+    COMPONENT Framework)
 
 install(TARGETS
     umicom_base

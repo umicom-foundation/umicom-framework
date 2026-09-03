@@ -79,6 +79,8 @@ static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
     UmiQuote quote;
     UmiBar bar;
     UmiMarketDepth depth;
+    UmiTradeTick trade;
+    UmiTradingTradeTapeRecord tape_record;
     UmiStatus status;
     size_t level;
     const double half_spread = state->spread * 0.5;
@@ -132,6 +134,32 @@ static UmiStatus publish_instrument(UmiTradingSimulationMarket *market,
             market->workspace,
             state->instrument.instrument_id.value,
             UMI_MARKET_OPEN);
+    /* Publish a separate public trade after the quote, candle, depth, and
+     * market-state update are all accepted. This prevents partial simulation
+     * steps from advancing the tape sequence before their market is usable. */
+    if (status == UMI_STATUS_OK) {
+        if (market->trade_sequence == UINT64_MAX) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        (void)memset(&trade, 0, sizeof(trade));
+        trade.instrument = state->instrument;
+        trade.price = state->mid_price;
+        trade.size = 25.0 + (double)(market->sequence % 20U) * 5.0;
+        trade.event_time_ms = event_time_ms;
+        status = umi_trading_trade_tape_record_init(
+            &tape_record,
+            market->trade_sequence + 1U,
+            &trade,
+            state->mid_price >= open_price
+                ? UMI_TRADING_TRADE_DIRECTION_BUYER_INITIATED
+                : UMI_TRADING_TRADE_DIRECTION_SELLER_INITIATED,
+            "simulation");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_trading_workspace_update_trade(
+            market->workspace, &tape_record);
+    }
+    if (status == UMI_STATUS_OK) market->trade_sequence += 1U;
     return status;
 }
 
