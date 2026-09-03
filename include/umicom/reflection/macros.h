@@ -32,8 +32,8 @@
     {                                                                        \
         .field_id = #MEMBER,                                                 \
         .display_name = #MEMBER,                                             \
-        .type_id = (TYPE_ID),                                                \
-        .description = (TEXT),                                               \
+        .type_id = TYPE_ID,                                                  \
+        .description = TEXT,                                                 \
         .value_kind = (VALUE_KIND),                                          \
         .offset = offsetof(TYPE, MEMBER),                                    \
         .size = sizeof(((TYPE *)0)->MEMBER),                                 \
@@ -50,8 +50,8 @@
     {                                                                        \
         .field_id = #MEMBER,                                                 \
         .display_name = #MEMBER,                                             \
-        .type_id = (TYPE_ID),                                                \
-        .description = (TEXT),                                               \
+        .type_id = TYPE_ID,                                                  \
+        .description = TEXT,                                                 \
         .value_kind = (VALUE_KIND),                                          \
         .offset = offsetof(TYPE, MEMBER),                                    \
         .size = sizeof(((TYPE *)0)->MEMBER),                                 \

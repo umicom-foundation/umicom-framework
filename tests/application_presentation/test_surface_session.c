@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include <assert.h>
 
+#include "umicom/application/component/recipe_catalogue.h"
 #include "umicom/application/presentation/presentation.h"
 
 /*
