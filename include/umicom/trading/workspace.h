@@ -33,6 +33,7 @@
 #include "umicom/trading/execution_store.h"
 #include "umicom/trading/oms.h"
 #include "umicom/trading/position_book.h"
+#include "umicom/trading/tick.h"
 #include "umicom/trading/trade_tape.h"
 #include "umicom/trading/watchlist.h"
 
