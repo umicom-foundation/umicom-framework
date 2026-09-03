@@ -97,8 +97,9 @@ static UmiStatus set_boolean_property(
         : status;
 }
 
-/* Build one portable view from the projection. The GTK renderer only reads
- * these properties and does not learn about Bank, TMS or Music structures. */
+/* Build one portable view from the projection. User-facing state remains in
+ * the normal panel body while diagnostic facts use a reserved technical
+ * namespace which native renderers place behind an explicit disclosure. */
 static UmiStatus create_product_panel_view(
     const UmiApplicationProductPanelProjection *projection,
     UmiUiViewModel **out_view)
@@ -129,15 +130,17 @@ static UmiStatus create_product_panel_view(
         status = set_string_property(
             view, "umicom.view-kind", "product-panel");
     }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Technical identity remains available for diagnostics without occupying
+     * the ordinary product experience. */
     if (status == UMI_STATUS_OK) {
         status = set_string_property(
-            view, "Component", projection->component_id);
+            view, "umicom.technical.Component", projection->component_id);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_string_property(
-            view, "Capability", projection->required_capability);
+            view, "umicom.technical.Capability",
+            projection->required_capability);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
@@ -157,15 +160,18 @@ static UmiStatus create_product_panel_view(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = set_boolean_property(
-            view, "Runtime connected", projection->component_bound);
+            view, "umicom.technical.Runtime connected",
+            projection->component_bound);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
-        status = set_boolean_property(view, "Focused", projection->focused);
+        status = set_boolean_property(
+            view, "umicom.technical.Focused", projection->focused);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
-        status = set_boolean_property(view, "Unsaved changes", projection->dirty);
+        status = set_boolean_property(
+            view, "umicom.technical.Unsaved changes", projection->dirty);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK && projection->has_progress) {

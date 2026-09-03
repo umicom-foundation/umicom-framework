@@ -4,8 +4,8 @@
  *
  * PURPOSE:
  *   Render the reusable application identity shown in an Umicom workstation
- *   header. The component keeps the product name as accessible native text
- *   and selects a contrast-aware SVG mark from the active appearance profile.
+ *   header and the reusable startup surface shown while a workstation is
+ *   preparing its Framework-owned services.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -70,6 +70,45 @@ typedef struct UmiGtk4WorkstationShellHeaderSnapshot {
     uint64_t revision;
 } UmiGtk4WorkstationShellHeaderSnapshot;
 
+/**
+ * Framework-owned startup surface shown before a workstation is ready.
+ *
+ * The controller stores only presentation state. Product startup, security,
+ * connectivity and service initialisation remain with their owning services.
+ */
+typedef struct UmiGtk4WorkstationStartupSplash
+    UmiGtk4WorkstationStartupSplash;
+
+/**
+ * Values used to create one branded Umicom startup surface.
+ *
+ * All strings are borrowed during creation and copied where they become part
+ * of observable state. `resource_root` and `icon_resource` are optional.
+ */
+typedef struct UmiGtk4WorkstationStartupSplashConfig {
+    const char *application_id;
+    const char *title;
+    const char *subtitle;
+    const char *status;
+    const char *mode_badge;
+    const char *resource_root;
+    const char *icon_resource;
+} UmiGtk4WorkstationStartupSplashConfig;
+
+/** Copied startup state suitable for tests and application diagnostics. */
+typedef struct UmiGtk4WorkstationStartupSplashSnapshot {
+    char application_id[UMI_UI_ID_CAPACITY];
+    char title[UMI_UI_TEXT_CAPACITY];
+    char subtitle[UMI_UI_TEXT_CAPACITY];
+    char status[UMI_UI_TEXT_CAPACITY];
+    char mode_badge[UMI_UI_TEXT_CAPACITY];
+    char icon_resource[UMI_UI_APPEARANCE_RESOURCE_CAPACITY];
+    double progress;
+    int icon_visible;
+    int progress_visible;
+    uint64_t revision;
+} UmiGtk4WorkstationStartupSplashSnapshot;
+
 /** Return safe creation values for one named Umicom application. */
 UmiGtk4WorkstationShellHeaderConfig
 umi_gtk4_ws_shell_header_config_default(
@@ -127,6 +166,53 @@ GtkWidget *umi_gtk4_ws_shell_header_create(
     const char *subtitle,
     const char *mode_badge,
     bool compact);
+
+/** Return safe startup values for one named Umicom application. */
+UmiGtk4WorkstationStartupSplashConfig
+umi_gtk4_ws_startup_splash_config_default(
+    const char *application_id,
+    const char *title);
+
+/**
+ * Create the reusable startup presentation and its update controller.
+ *
+ * The returned root is borrowed. A normal GTK parent presents the widget
+ * tree, while the small controller retains the reference required for safe
+ * startup-to-workspace replacement and is later destroyed by the caller.
+ */
+UmiStatus umi_gtk4_ws_startup_splash_create(
+    const UmiGtk4WorkstationStartupSplashConfig *config,
+    UmiGtk4WorkstationStartupSplash **out_splash);
+
+/** Release the startup controller and its retained widget reference. */
+void umi_gtk4_ws_startup_splash_destroy(
+    UmiGtk4WorkstationStartupSplash *splash);
+
+/** Borrow the startup root for placement in an application window. */
+GtkWidget *umi_gtk4_ws_startup_splash_widget(
+    UmiGtk4WorkstationStartupSplash *splash);
+
+/** Update readable startup status without rebuilding the widget tree. */
+UmiStatus umi_gtk4_ws_startup_splash_set_status(
+    UmiGtk4WorkstationStartupSplash *splash,
+    const char *status,
+    const char *mode_badge);
+
+/**
+ * Update bounded startup progress.
+ *
+ * `progress` is clamped to the inclusive range zero to one. Set
+ * `show_progress` to zero when startup has no meaningful measurable progress.
+ */
+UmiStatus umi_gtk4_ws_startup_splash_set_progress(
+    UmiGtk4WorkstationStartupSplash *splash,
+    double progress,
+    int show_progress);
+
+/** Copy startup presentation state without exposing mutable GTK objects. */
+UmiGtk4WorkstationStartupSplashSnapshot
+umi_gtk4_ws_startup_splash_snapshot(
+    const UmiGtk4WorkstationStartupSplash *splash);
 
 #ifdef __cplusplus
 }

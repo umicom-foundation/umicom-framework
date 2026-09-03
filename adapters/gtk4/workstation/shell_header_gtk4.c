@@ -3,9 +3,9 @@
  * File: adapters/gtk4/workstation/shell_header_gtk4.c
  *
  * PURPOSE:
- *   Present one reusable, SVG-aware application identity in native GTK4
- *   workstation headers. Studio, Trader and future applications can therefore
- *   share the same branding, accessibility and appearance-change behaviour.
+ *   Present reusable, SVG-aware application identity and startup surfaces in
+ *   native GTK4 workstations. All Umicom applications therefore share the
+ *   same branding, accessibility and appearance-change behaviour.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -33,6 +33,19 @@ struct UmiGtk4WorkstationShellHeader {
     GtkWidget *badge;
     char *resource_root;
     UmiGtk4WorkstationShellHeaderSnapshot state;
+};
+
+struct UmiGtk4WorkstationStartupSplash {
+    GtkWidget *root;
+    GtkWidget *icon;
+    GtkWidget *fallback_icon;
+    GtkWidget *title;
+    GtkWidget *subtitle;
+    GtkWidget *status;
+    GtkWidget *badge;
+    GtkWidget *progress;
+    char *resource_root;
+    UmiGtk4WorkstationStartupSplashSnapshot state;
 };
 
 /* Copy public text into a bounded snapshot field and reject silent truncation. */
@@ -79,11 +92,11 @@ static char *executable_directory(void)
 #endif
 }
 
-/* Resolve a logical appearance resource in a predictable order. A direct path
- * helps development trees, an explicit root helps embedders, and the executable
+/* Resolve a logical resource in a predictable order. A direct path helps
+ * development trees, an explicit root helps embedders, and the executable
  * directory is the normal installed-application location. */
-static char *resolve_resource(
-    const UmiGtk4WorkstationShellHeader *header,
+static char *resolve_resource_from_root(
+    const char *resource_root,
     const char *resource)
 {
     char *directory;
@@ -93,7 +106,7 @@ static char *resolve_resource(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (header == NULL || resource == NULL || resource[0] == '\0') {
+    if (resource == NULL || resource[0] == '\0') {
         return NULL;
     }
     /* Apply this branch only when its contract condition is satisfied. */
@@ -104,8 +117,8 @@ static char *resolve_resource(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (header->resource_root != NULL && header->resource_root[0] != '\0') {
-        candidate = g_build_filename(header->resource_root, resource, NULL);
+    if (resource_root != NULL && resource_root[0] != '\0') {
+        candidate = g_build_filename(resource_root, resource, NULL);
         /*
          * Protect caller-owned memory by checking that required state is available before it is
          * used.
@@ -132,6 +145,16 @@ static char *resolve_resource(
     }
     g_free(candidate);
     return NULL;
+}
+
+/* Resolve one appearance resource using the header's configured root. */
+static char *resolve_header_resource(
+    const UmiGtk4WorkstationShellHeader *header,
+    const char *resource)
+{
+    return header != NULL
+        ? resolve_resource_from_root(header->resource_root, resource)
+        : NULL;
 }
 
 /* Update a label and hide it when its optional text is empty. Hiding empty
@@ -174,7 +197,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     UmiGtk4WorkstationShellHeader **out_header)
 {
     UmiGtk4WorkstationShellHeader *header;
-    GtkWidget *titles;
+    GtkWidget *titles = NULL;
     UmiStatus status;
 
     /*
@@ -381,7 +404,7 @@ UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 
-    resolved = resolve_resource(header, profile->icon_resource);
+    resolved = resolve_header_resource(header, profile->icon_resource);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -494,4 +517,341 @@ GtkWidget *umi_gtk4_ws_shell_header_create(
     widget = umi_gtk4_ws_shell_header_widget(header);
     umi_gtk4_ws_shell_header_destroy(header);
     return widget;
+}
+
+/* Return consistent startup defaults while allowing every application to
+ * provide product-specific status and mode text. */
+UmiGtk4WorkstationStartupSplashConfig
+umi_gtk4_ws_startup_splash_config_default(
+    const char *application_id,
+    const char *title)
+{
+    UmiGtk4WorkstationStartupSplashConfig config;
+
+    config.application_id = application_id;
+    config.title = title;
+    config.subtitle = "Preparing your workspace";
+    config.status = "Starting Umicom services…";
+    config.mode_badge = "";
+    config.resource_root = NULL;
+    config.icon_resource = "branding/umicom-icon-on-dark.svg";
+    return config;
+}
+
+/* Resolve and present the packaged mark, retaining a readable text mark when
+ * an installation has no image resource. */
+static void startup_splash_apply_icon(
+    UmiGtk4WorkstationStartupSplash *splash,
+    const char *icon_resource)
+{
+    char *resolved;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash == NULL) return;
+    resolved = resolve_resource_from_root(
+        splash->resource_root,
+        icon_resource);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (resolved != NULL) {
+        gtk_picture_set_filename(GTK_PICTURE(splash->icon), resolved);
+        gtk_widget_set_visible(splash->icon, TRUE);
+        gtk_widget_set_visible(splash->fallback_icon, FALSE);
+        splash->state.icon_visible = 1;
+        g_free(resolved);
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        gtk_picture_set_paintable(GTK_PICTURE(splash->icon), NULL);
+        gtk_widget_set_visible(splash->icon, FALSE);
+        gtk_widget_set_visible(splash->fallback_icon, TRUE);
+        splash->state.icon_visible = 1;
+    }
+}
+
+/* Build one calm, centred startup surface. The window may be shown before
+ * product services are constructed, ensuring visible feedback during startup. */
+UmiStatus umi_gtk4_ws_startup_splash_create(
+    const UmiGtk4WorkstationStartupSplashConfig *config,
+    UmiGtk4WorkstationStartupSplash **out_splash)
+{
+    UmiGtk4WorkstationStartupSplash *splash;
+    GtkWidget *hero;
+    GtkWidget *identity;
+    GtkWidget *status_group;
+    GtkWidget *separator;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (config == NULL || out_splash == NULL ||
+        config->application_id == NULL || config->application_id[0] == '\0' ||
+        config->title == NULL || config->title[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_splash = NULL;
+    splash = (UmiGtk4WorkstationStartupSplash *)calloc(
+        1U, sizeof(*splash));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
+    status = copy_text(
+        splash->state.application_id,
+        sizeof(splash->state.application_id),
+        config->application_id);
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            splash->state.title,
+            sizeof(splash->state.title),
+            config->title);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            splash->state.subtitle,
+            sizeof(splash->state.subtitle),
+            config->subtitle != NULL ? config->subtitle : "");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            splash->state.status,
+            sizeof(splash->state.status),
+            config->status != NULL ? config->status : "");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            splash->state.mode_badge,
+            sizeof(splash->state.mode_badge),
+            config->mode_badge != NULL ? config->mode_badge : "");
+    }
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            splash->state.icon_resource,
+            sizeof(splash->state.icon_resource),
+            config->icon_resource != NULL ? config->icon_resource : "");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        free(splash);
+        return status;
+    }
+
+    splash->resource_root = config->resource_root != NULL
+        ? g_strdup(config->resource_root)
+        : NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (config->resource_root != NULL && splash->resource_root == NULL) {
+        free(splash);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+
+    splash->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    hero = gtk_box_new(GTK_ORIENTATION_VERTICAL, 18);
+    identity = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
+    status_group = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    splash->icon = gtk_picture_new();
+    splash->fallback_icon = gtk_label_new("<>");
+    splash->title = gtk_label_new(splash->state.title);
+    splash->subtitle = gtk_label_new(splash->state.subtitle);
+    splash->status = gtk_label_new(splash->state.status);
+    splash->badge = gtk_label_new(splash->state.mode_badge);
+    splash->progress = gtk_progress_bar_new();
+    separator = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash->root == NULL || hero == NULL || identity == NULL ||
+        status_group == NULL || splash->icon == NULL ||
+        splash->fallback_icon == NULL || splash->title == NULL ||
+        splash->subtitle == NULL || splash->status == NULL ||
+        splash->badge == NULL || splash->progress == NULL ||
+        separator == NULL) {
+        g_free(splash->resource_root);
+        /* Root owns any children already appended below; at this point none
+         * have been appended, so release the created root and controller. */
+        if (splash->root != NULL) g_object_unref(splash->root);
+        free(splash);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+
+    /* Keep an owning reference so the controller remains safe while the root
+     * is swapped out of an application window. */
+    g_object_ref_sink(splash->root);
+    gtk_widget_add_css_class(splash->root, "umicom-startup-splash");
+    gtk_widget_add_css_class(hero, "umicom-startup-hero");
+    gtk_widget_add_css_class(identity, "umicom-startup-identity");
+    gtk_widget_add_css_class(splash->icon, "umicom-startup-icon");
+    gtk_widget_add_css_class(splash->fallback_icon, "title-1");
+    gtk_widget_add_css_class(splash->title, "title-1");
+    gtk_widget_add_css_class(splash->subtitle, "title-4");
+    gtk_widget_add_css_class(splash->status, "dim-label");
+    gtk_widget_add_css_class(splash->badge, "umicom-mode-badge");
+
+    gtk_widget_set_halign(hero, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(hero, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand(hero, TRUE);
+    gtk_widget_set_vexpand(hero, TRUE);
+    gtk_widget_set_halign(identity, GTK_ALIGN_CENTER);
+    gtk_widget_set_size_request(splash->icon, 88, 88);
+    gtk_picture_set_can_shrink(GTK_PICTURE(splash->icon), TRUE);
+    gtk_label_set_wrap(GTK_LABEL(splash->subtitle), TRUE);
+    gtk_label_set_wrap(GTK_LABEL(splash->status), TRUE);
+    gtk_label_set_justify(GTK_LABEL(splash->subtitle), GTK_JUSTIFY_CENTER);
+    gtk_label_set_justify(GTK_LABEL(splash->status), GTK_JUSTIFY_CENTER);
+    gtk_label_set_xalign(GTK_LABEL(splash->subtitle), 0.5F);
+    gtk_label_set_xalign(GTK_LABEL(splash->status), 0.5F);
+    gtk_widget_set_halign(splash->badge, GTK_ALIGN_CENTER);
+    gtk_widget_set_size_request(splash->progress, 360, -1);
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(splash->progress), 0.0);
+    gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(splash->progress), FALSE);
+
+    gtk_box_append(GTK_BOX(identity), splash->icon);
+    gtk_box_append(GTK_BOX(identity), splash->fallback_icon);
+    gtk_box_append(GTK_BOX(identity), splash->title);
+    gtk_box_append(GTK_BOX(hero), identity);
+    update_optional_label(splash->subtitle, splash->state.subtitle);
+    gtk_box_append(GTK_BOX(hero), splash->subtitle);
+    gtk_box_append(GTK_BOX(status_group), separator);
+    update_optional_label(splash->status, splash->state.status);
+    gtk_box_append(GTK_BOX(status_group), splash->status);
+    gtk_box_append(GTK_BOX(status_group), splash->progress);
+    update_optional_label(splash->badge, splash->state.mode_badge);
+    gtk_box_append(GTK_BOX(status_group), splash->badge);
+    gtk_box_append(GTK_BOX(hero), status_group);
+    gtk_box_append(GTK_BOX(splash->root), hero);
+
+    startup_splash_apply_icon(splash, splash->state.icon_resource);
+    splash->state.progress = 0.0;
+    splash->state.progress_visible = 1;
+    splash->state.revision = 1U;
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(splash->root),
+        GTK_ACCESSIBLE_PROPERTY_LABEL,
+        splash->state.title,
+        GTK_ACCESSIBLE_PROPERTY_DESCRIPTION,
+        splash->state.status,
+        -1);
+    *out_splash = splash;
+    return UMI_STATUS_OK;
+}
+
+/* Release the controller and its owning root reference. A parent keeps the
+ * widget alive when it still belongs to a visible application window. */
+void umi_gtk4_ws_startup_splash_destroy(
+    UmiGtk4WorkstationStartupSplash *splash)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash == NULL) return;
+    g_free(splash->resource_root);
+    splash->resource_root = NULL;
+    if (splash->root != NULL) {
+        g_object_unref(splash->root);
+        splash->root = NULL;
+    }
+    splash->icon = NULL;
+    splash->fallback_icon = NULL;
+    splash->title = NULL;
+    splash->subtitle = NULL;
+    splash->status = NULL;
+    splash->badge = NULL;
+    splash->progress = NULL;
+    free(splash);
+}
+
+/* Return the borrowed root for normal application-window composition. */
+GtkWidget *umi_gtk4_ws_startup_splash_widget(
+    UmiGtk4WorkstationStartupSplash *splash)
+{
+    return splash != NULL ? splash->root : NULL;
+}
+
+/* Update status and mode as one operation so the accessibility description and
+ * copied state always describe the same startup phase. */
+UmiStatus umi_gtk4_ws_startup_splash_set_status(
+    UmiGtk4WorkstationStartupSplash *splash,
+    const char *status_text,
+    const char *mode_badge)
+{
+    UmiStatus status;
+    const char *safe_badge = mode_badge != NULL ? mode_badge : "";
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash == NULL || status_text == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = copy_text(
+        splash->state.status,
+        sizeof(splash->state.status),
+        status_text);
+    if (status == UMI_STATUS_OK) {
+        status = copy_text(
+            splash->state.mode_badge,
+            sizeof(splash->state.mode_badge),
+            safe_badge);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    update_optional_label(splash->status, splash->state.status);
+    update_optional_label(splash->badge, splash->state.mode_badge);
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(splash->root),
+        GTK_ACCESSIBLE_PROPERTY_DESCRIPTION,
+        splash->state.status,
+        -1);
+    splash->state.revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Clamp progress rather than accepting an invalid fraction from a partial
+ * service initialisation path. */
+UmiStatus umi_gtk4_ws_startup_splash_set_progress(
+    UmiGtk4WorkstationStartupSplash *splash,
+    double progress,
+    int show_progress)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (progress < 0.0) progress = 0.0;
+    if (progress > 1.0) progress = 1.0;
+    gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(splash->progress), progress);
+    gtk_widget_set_visible(splash->progress, show_progress != 0);
+    splash->state.progress = progress;
+    splash->state.progress_visible = show_progress != 0 ? 1 : 0;
+    splash->state.revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Copy startup presentation state by value for tests and diagnostics. */
+UmiGtk4WorkstationStartupSplashSnapshot
+umi_gtk4_ws_startup_splash_snapshot(
+    const UmiGtk4WorkstationStartupSplash *splash)
+{
+    UmiGtk4WorkstationStartupSplashSnapshot snapshot;
+
+    (void)memset(&snapshot, 0, sizeof(snapshot));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (splash != NULL) snapshot = splash->state;
+    return snapshot;
 }
