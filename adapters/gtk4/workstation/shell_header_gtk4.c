@@ -28,6 +28,7 @@
 struct UmiGtk4WorkstationShellHeader {
     GtkWidget *root;
     GtkWidget *icon;
+    GtkWidget *fallback_icon;
     GtkWidget *title;
     GtkWidget *subtitle;
     GtkWidget *badge;
@@ -239,6 +240,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
         GTK_ORIENTATION_HORIZONTAL,
         config->compact ? 6 : 10);
     header->icon = gtk_picture_new();
+    header->fallback_icon = gtk_label_new("<>");
     titles = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
     header->title = gtk_label_new("");
     header->subtitle = gtk_label_new("");
@@ -247,7 +249,8 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (header->root == NULL || header->icon == NULL || titles == NULL ||
+    if (header->root == NULL || header->icon == NULL ||
+        header->fallback_icon == NULL || titles == NULL ||
         header->title == NULL || header->subtitle == NULL ||
         header->badge == NULL) {
         status = UMI_STATUS_OUT_OF_MEMORY;
@@ -259,6 +262,9 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     gtk_widget_add_css_class(header->root, "umicom-workstation-header");
     gtk_widget_add_css_class(header->root, "umicom-workstation-identity");
     gtk_widget_add_css_class(header->icon, "umicom-workstation-identity-icon");
+    gtk_widget_add_css_class(
+        header->fallback_icon, "umicom-workstation-identity-fallback");
+    gtk_widget_add_css_class(header->fallback_icon, "heading");
     gtk_widget_add_css_class(header->title, "umicom-workstation-identity-title");
     gtk_widget_add_css_class(header->subtitle, "dim-label");
     gtk_widget_add_css_class(header->badge, "umicom-mode-badge");
@@ -273,6 +279,9 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
         config->compact ? 18 : 24);
     gtk_picture_set_can_shrink(GTK_PICTURE(header->icon), TRUE);
     gtk_widget_set_visible(header->icon, FALSE);
+    gtk_widget_set_visible(header->fallback_icon, TRUE);
+    gtk_widget_set_tooltip_text(
+        header->fallback_icon, "Umicom application identity");
     gtk_label_set_xalign(GTK_LABEL(header->title), 0.0F);
     gtk_label_set_xalign(GTK_LABEL(header->subtitle), 0.0F);
     gtk_label_set_ellipsize(
@@ -281,6 +290,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     gtk_box_append(GTK_BOX(titles), header->title);
     gtk_box_append(GTK_BOX(titles), header->subtitle);
     gtk_box_append(GTK_BOX(header->root), header->icon);
+    gtk_box_append(GTK_BOX(header->root), header->fallback_icon);
     gtk_box_append(GTK_BOX(header->root), titles);
     gtk_box_append(GTK_BOX(header->root), header->badge);
 
@@ -308,6 +318,14 @@ fail:
     if (header->icon != NULL &&
         gtk_widget_get_parent(header->icon) == NULL) {
         g_object_unref(header->icon);
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (header->fallback_icon != NULL &&
+        gtk_widget_get_parent(header->fallback_icon) == NULL) {
+        g_object_unref(header->fallback_icon);
     }
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -363,6 +381,7 @@ void umi_gtk4_ws_shell_header_destroy(
     header->resource_root = NULL;
     header->root = NULL;
     header->icon = NULL;
+    header->fallback_icon = NULL;
     header->title = NULL;
     header->subtitle = NULL;
     header->badge = NULL;
@@ -413,12 +432,14 @@ UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
         gtk_picture_set_filename(GTK_PICTURE(header->icon), resolved);
         gtk_widget_set_tooltip_text(header->icon, header->state.title);
         gtk_widget_set_visible(header->icon, TRUE);
+        gtk_widget_set_visible(header->fallback_icon, FALSE);
         header->state.icon_visible = 1;
         g_free(resolved);
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         gtk_picture_set_paintable(GTK_PICTURE(header->icon), NULL);
         gtk_widget_set_visible(header->icon, FALSE);
-        header->state.icon_visible = 0;
+        gtk_widget_set_visible(header->fallback_icon, TRUE);
+        header->state.icon_visible = 1;
     }
     header->state.revision += 1U;
     return UMI_STATUS_OK;

@@ -831,9 +831,11 @@ GtkWidget *umi_gtk4_view_model_panel_create(
     gtk_grid_set_row_spacing(GTK_GRID(technical_metrics), 4);
     gtk_widget_set_hexpand(content, TRUE);
     gtk_widget_set_vexpand(content, TRUE);
+    /* Generic panel content starts at its logical left edge. Tables and
+     * specialist canvases own any horizontal navigation they require. */
     gtk_scrolled_window_set_policy(
         GTK_SCROLLED_WINDOW(scroller),
-        GTK_POLICY_AUTOMATIC,
+        GTK_POLICY_NEVER,
         GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroller), content);
     if (umi_ui_view_model_snapshot(view, &snapshot) == UMI_STATUS_OK) {
