@@ -37,5 +37,11 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     GtkWidget *child,
     UmiGtk4WsPanelActionHandler action_handler,
     void *user_data);
+/**
+ * Apply the current linked-context colour to an existing Framework panel frame.
+ */
+void umi_gtk4_ws_panel_frame_set_context_colour(
+    GtkWidget *frame,
+    const char *colour_token);
 
 #endif

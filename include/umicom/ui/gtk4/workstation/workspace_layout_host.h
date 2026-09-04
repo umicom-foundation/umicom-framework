@@ -16,6 +16,9 @@
 #ifndef UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_LAYOUT_HOST_H
 #define UMICOM_UI_GTK4_WORKSTATION_WORKSPACE_LAYOUT_HOST_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <gtk/gtk.h>
 
 #include "umicom/application/suite_layout/render_plan.h"
@@ -79,6 +82,12 @@ UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
 void umi_gtk4_workspace_layout_host_destroy(
     UmiGtk4WorkspaceLayoutHost *host);
 /**
+ * Set the optional native parent used by subsequently created floating panel windows.
+ */
+void umi_gtk4_workspace_layout_host_set_transient_parent(
+    UmiGtk4WorkspaceLayoutHost *host,
+    GtkWindow *parent);
+/**
  * Provide the gtk4 workspace layout host rebuild operation used by this module and its
  * client applications.
  */
@@ -96,6 +105,11 @@ GtkWidget *umi_gtk4_workspace_layout_host_widget(
  * client applications.
  */
 UmiGtk4WorkspaceLayoutHostSnapshot umi_gtk4_workspace_layout_host_snapshot(
+    const UmiGtk4WorkspaceLayoutHost *host);
+/**
+ * Return the number of portable layout-window records represented by the host.
+ */
+size_t umi_gtk4_workspace_layout_host_window_count(
     const UmiGtk4WorkspaceLayoutHost *host);
 /**
  * Initialise gtk4 workspace layout placeholder from caller-provided values so later

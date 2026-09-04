@@ -24,13 +24,13 @@
 typedef struct UmiGtk4WorkstationTabCloseData {
     UmiGtk4WorkstationTabCloseHandler handler;
     void *user_data;
-    char tab_id[UMI_WS_ID_CAPACITY];
+    char tab_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4WorkstationTabCloseData;
 
 typedef struct UmiGtk4WorkstationPendingTabClose {
     UmiGtk4WorkstationTabCloseHandler handler;
     void *user_data;
-    char tab_id[UMI_WS_ID_CAPACITY];
+    char tab_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4WorkstationPendingTabClose;
 
 
@@ -76,11 +76,13 @@ static void on_close_clicked(GtkButton *button, gpointer user_data)
     pending->user_data = data->user_data;
     (void)snprintf(
         pending->tab_id, sizeof(pending->tab_id), "%s", data->tab_id);
-    (void)g_idle_add_full(
-        G_PRIORITY_DEFAULT_IDLE,
-        dispatch_close_from_idle,
-        pending,
-        g_free);
+    if (g_idle_add_full(
+            G_PRIORITY_DEFAULT_IDLE,
+            dispatch_close_from_idle,
+            pending,
+            g_free) == 0U) {
+        g_free(pending);
+    }
 }
 
 /* Build one readable tab label, with the close action placed beside its title
@@ -96,7 +98,7 @@ static GtkWidget *create_tab_label(
     GtkWidget *label;
     GtkWidget *close_button;
     UmiGtk4WorkstationTabCloseData *close_data;
-    char automation_id[UMI_WS_ID_CAPACITY + 32U];
+    char automation_id[UMI_UI_ID_CAPACITY + 32U];
 
     box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
     label = gtk_label_new(title);
@@ -139,7 +141,7 @@ static GtkWidget *create_tab_label(
         0);
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.tab.close", tab_id);
-    (void)umi_gtk4_automation_set_id(close_button, automation_id);
+    (void)umi_gtk4_automation_tag_widget(close_button, automation_id);
     gtk_box_append(GTK_BOX(box), close_button);
     return box;
 }
@@ -156,7 +158,7 @@ GtkWidget *umi_gtk4_ws_tab_host_create(const UmiWsTabStack *stack)
         gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
         gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
         gtk_widget_add_css_class(notebook, "umicom-workstation-tab-host");
-        if (stack != NULL && stack->active_index < stack->tab_count) {
+        if (stack != NULL && stack->active_index < stack->count) {
             gtk_notebook_set_current_page(
                 GTK_NOTEBOOK(notebook), (int)stack->active_index);
         }
@@ -175,7 +177,7 @@ UmiStatus umi_gtk4_ws_tab_host_append_managed(
 {
     GtkWidget *tab_label;
     int page_index;
-    char automation_id[UMI_WS_ID_CAPACITY + 32U];
+    char automation_id[UMI_UI_ID_CAPACITY + 32U];
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -199,7 +201,7 @@ UmiStatus umi_gtk4_ws_tab_host_append_managed(
     if (page_index < 0) return UMI_STATUS_INVALID_STATE;
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.tab", tab_id);
-    (void)umi_gtk4_automation_set_id(child, automation_id);
+    (void)umi_gtk4_automation_tag_widget(child, automation_id);
     return UMI_STATUS_OK;
 }
 

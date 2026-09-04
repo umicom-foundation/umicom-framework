@@ -25,18 +25,18 @@
 
 /* Per-button action data owned by its GTK widget. */
 typedef struct PanelActionData {
-    UmiGtk4PanelFrameActionHandler handler;
+    UmiGtk4WsPanelActionHandler handler;
     void *user_data;
     UmiWsPanelAction action;
-    char panel_id[UMI_UI_ID_CAPACITY];
+    UmiWsPanelChrome chrome;
 } PanelActionData;
 
 /* Deferred copy used while a panel action may rebuild its owning widget tree. */
 typedef struct PanelPendingAction {
-    UmiGtk4PanelFrameActionHandler handler;
+    UmiGtk4WsPanelActionHandler handler;
     void *user_data;
     UmiWsPanelAction action;
-    char panel_id[UMI_UI_ID_CAPACITY];
+    UmiWsPanelChrome chrome;
 } PanelPendingAction;
 
 /* Release one signal closure using GTK's exact notifier signature. */
@@ -54,7 +54,7 @@ static gboolean dispatch_action_from_idle(gpointer user_data)
 
     if (pending != NULL && pending->handler != NULL) {
         pending->handler(
-            pending->panel_id, pending->action, pending->user_data);
+            pending->action, &pending->chrome, pending->user_data);
     }
     return G_SOURCE_REMOVE;
 }
@@ -92,14 +92,14 @@ static void on_action_clicked(GtkButton *button, gpointer user_data)
     pending->handler = data->handler;
     pending->user_data = data->user_data;
     pending->action = data->action;
-    (void)snprintf(
-        pending->panel_id, sizeof(pending->panel_id), "%s",
-        data->panel_id);
-    (void)g_idle_add_full(
-        G_PRIORITY_DEFAULT_IDLE,
-        dispatch_action_from_idle,
-        pending,
-        g_free);
+    pending->chrome = data->chrome;
+    if (g_idle_add_full(
+            G_PRIORITY_DEFAULT_IDLE,
+            dispatch_action_from_idle,
+            pending,
+            g_free) == 0U) {
+        g_free(pending);
+    }
 }
 
 /* Create common action data and attach it to one button. */
@@ -107,7 +107,7 @@ static bool bind_action(
     GtkWidget *button,
     const UmiWsPanelChrome *chrome,
     UmiWsPanelAction action,
-    UmiGtk4PanelFrameActionHandler handler,
+    UmiGtk4WsPanelActionHandler handler,
     void *user_data)
 {
     PanelActionData *data;
@@ -117,6 +117,7 @@ static bool bind_action(
      * used.
      */
     if (button == NULL || chrome == NULL) return false;
+    if (handler == NULL) return true;
     data = g_new0(PanelActionData, 1);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -126,8 +127,7 @@ static bool bind_action(
     data->handler = handler;
     data->user_data = user_data;
     data->action = action;
-    (void)snprintf(
-        data->panel_id, sizeof(data->panel_id), "%s", chrome->panel_id);
+    data->chrome = *chrome;
     g_signal_connect_data(
         button, "clicked", G_CALLBACK(on_action_clicked), data,
         panel_action_data_destroy, 0);
@@ -141,11 +141,11 @@ static GtkWidget *make_action_button(
     const UmiWsPanelChrome *chrome,
     UmiWsPanelAction action,
     bool enabled,
-    UmiGtk4PanelFrameActionHandler handler,
+    UmiGtk4WsPanelActionHandler handler,
     void *user_data)
 {
     GtkWidget *button = gtk_button_new_from_icon_name(icon_name);
-    char automation_id[UMI_UI_ID_CAPACITY + 32U];
+    char automation_id[UMI_UI_TEXT_CAPACITY + 32U];
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -155,11 +155,11 @@ static GtkWidget *make_action_button(
     gtk_widget_add_css_class(button, "flat");
     gtk_widget_add_css_class(button, "umicom-panel-action");
     gtk_widget_set_tooltip_text(button, umi_ws_panel_action_text(action));
-    gtk_widget_set_sensitive(button, enabled);
+    gtk_widget_set_sensitive(button, enabled && handler != NULL);
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.action.%s",
         chrome->panel_id, action_token(action));
-    (void)umi_gtk4_automation_set_id(button, automation_id);
+    (void)umi_gtk4_automation_tag_widget(button, automation_id);
     (void)bind_action(
         button, chrome, action, handler, user_data);
     return button;
@@ -172,14 +172,14 @@ static GtkWidget *make_menu_action_button(
     const UmiWsPanelChrome *chrome,
     UmiWsPanelAction action,
     bool enabled,
-    UmiGtk4PanelFrameActionHandler handler,
+    UmiGtk4WsPanelActionHandler handler,
     void *user_data)
 {
     GtkWidget *button = gtk_button_new();
     GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     GtkWidget *icon = gtk_image_new_from_icon_name(icon_name);
     GtkWidget *label = gtk_label_new(umi_ws_panel_action_text(action));
-    char automation_id[UMI_UI_ID_CAPACITY + 32U];
+    char automation_id[UMI_UI_TEXT_CAPACITY + 32U];
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -198,11 +198,11 @@ static GtkWidget *make_menu_action_button(
     gtk_box_append(GTK_BOX(row), label);
     gtk_button_set_child(GTK_BUTTON(button), row);
     gtk_widget_set_tooltip_text(button, umi_ws_panel_action_text(action));
-    gtk_widget_set_sensitive(button, enabled);
+    gtk_widget_set_sensitive(button, enabled && handler != NULL);
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.menu.%s",
         chrome->panel_id, action_token(action));
-    (void)umi_gtk4_automation_set_id(button, automation_id);
+    (void)umi_gtk4_automation_tag_widget(button, automation_id);
     (void)bind_action(
         button, chrome, action, handler, user_data);
     return button;
@@ -216,7 +216,7 @@ static size_t append_menu_action(
     UmiWsPanelAction action,
     bool visible,
     bool enabled,
-    UmiGtk4PanelFrameActionHandler handler,
+    UmiGtk4WsPanelActionHandler handler,
     void *user_data)
 {
     GtkWidget *button;
@@ -243,14 +243,14 @@ static size_t append_menu_action(
 static GtkWidget *make_overflow_menu(
     const UmiWsPanelChrome *chrome,
     bool editing_enabled,
-    UmiGtk4PanelFrameActionHandler handler,
+    UmiGtk4WsPanelActionHandler handler,
     void *user_data)
 {
     GtkWidget *button;
     GtkWidget *popover;
     GtkWidget *menu_box;
     size_t action_count = 0U;
-    char automation_id[UMI_UI_ID_CAPACITY + 32U];
+    char automation_id[UMI_UI_TEXT_CAPACITY + 32U];
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -310,8 +310,45 @@ static GtkWidget *make_overflow_menu(
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.action.menu",
         chrome->panel_id);
-    (void)umi_gtk4_automation_set_id(button, automation_id);
+    (void)umi_gtk4_automation_tag_widget(button, automation_id);
     return button;
+}
+
+/* Only known semantic colour names may become CSS classes. This avoids
+ * treating untrusted layout text as a GTK selector while still showing linked
+ * panel groups with a consistent colour stripe. */
+static const char *context_colour_css_class(const char *colour_token)
+{
+    static const char *const colours[] = {
+        "red", "orange", "yellow", "green",
+        "cyan", "blue", "purple", "magenta"
+    };
+    static const char *const classes[] = {
+        "umicom-context-red", "umicom-context-orange",
+        "umicom-context-yellow", "umicom-context-green",
+        "umicom-context-cyan", "umicom-context-blue",
+        "umicom-context-purple", "umicom-context-magenta"
+    };
+    size_t index;
+
+    if (colour_token == NULL || colour_token[0] == '\0') return NULL;
+    for (index = 0U; index < sizeof(colours) / sizeof(colours[0]); ++index) {
+        char class_token[64U];
+        char semantic_token[64U];
+
+        (void)snprintf(
+            class_token, sizeof(class_token), "umicom-context-%s",
+            colours[index]);
+        (void)snprintf(
+            semantic_token, sizeof(semantic_token),
+            "umicom.context.colour.%s", colours[index]);
+        if (strcmp(colour_token, colours[index]) == 0 ||
+            strcmp(colour_token, class_token) == 0 ||
+            strcmp(colour_token, semantic_token) == 0) {
+            return classes[index];
+        }
+    }
+    return NULL;
 }
 
 /* Update linked-context colour after creation without exposing GTK details to
@@ -321,13 +358,12 @@ void umi_gtk4_ws_panel_frame_set_context_colour(
     const char *colour_token)
 {
     static const char *const classes[] = {
-        "context-red",
-        "context-green",
-        "context-blue",
-        "context-yellow",
-        "context-purple"
+        "umicom-context-red", "umicom-context-orange",
+        "umicom-context-yellow", "umicom-context-green",
+        "umicom-context-cyan", "umicom-context-blue",
+        "umicom-context-purple", "umicom-context-magenta"
     };
-    const char *selected = colour_token != NULL ? colour_token : "";
+    const char *selected;
     size_t index;
 
     /*
@@ -336,18 +372,28 @@ void umi_gtk4_ws_panel_frame_set_context_colour(
      */
     if (frame == NULL) return;
     /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < sizeof(classes) / sizeof(classes[0]); ++index)
+    for (index = 0U; index < sizeof(classes) / sizeof(classes[0]); ++index) {
         gtk_widget_remove_css_class(frame, classes[index]);
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (selected[0] != '\0') gtk_widget_add_css_class(frame, selected);
+    }
+    selected = context_colour_css_class(colour_token);
+    if (selected != NULL) gtk_widget_add_css_class(frame, selected);
 }
 
 /* Build reusable chrome around caller-supplied content. The content becomes
  * parent-owned by the returned frame. */
 GtkWidget *umi_gtk4_ws_panel_frame_create(
     const UmiWsPanelChrome *chrome,
+    GtkWidget *content)
+{
+    return umi_gtk4_ws_panel_frame_create_interactive(
+        chrome, content, NULL, NULL);
+}
+
+/* Build reusable interactive chrome around caller-supplied content. */
+GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
+    const UmiWsPanelChrome *chrome,
     GtkWidget *content,
-    UmiGtk4PanelFrameActionHandler action_handler,
+    UmiGtk4WsPanelActionHandler action_handler,
     void *user_data)
 {
     GtkWidget *frame;
@@ -358,7 +404,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
     GtkWidget *button;
     GtkWidget *overflow;
     bool editing_enabled;
-    char automation_id[UMI_UI_ID_CAPACITY + 32U];
+    char automation_id[UMI_UI_TEXT_CAPACITY + 32U];
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -392,7 +438,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
 
     /* Keep the linked-context control visible because it changes the panel's
      * operational context rather than its geometry. */
-    if (chrome->show_context) {
+    if (action_handler != NULL && chrome->show_context) {
         context = make_action_button(
             "view-filter-symbolic",
             chrome,
@@ -406,7 +452,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
 
     /* Normal mode uses one overflow control. Edit mode expands all geometry
      * actions so panel movement remains direct and discoverable. */
-    if (chrome->show_menu) {
+    if (action_handler != NULL && chrome->show_menu) {
         overflow = make_overflow_menu(
             chrome, editing_enabled, action_handler, user_data);
         /*
@@ -414,7 +460,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
          * used.
          */
         if (overflow != NULL) gtk_box_append(GTK_BOX(header), overflow);
-    } else {
+    } else if (action_handler != NULL) {
         /* Apply this branch only when its contract condition is satisfied. */
         if (chrome->show_pin) {
             button = make_action_button(
@@ -458,7 +504,7 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
     }
     /* Closing changes layout membership and is therefore enabled only while
      * the layout owns an active edit transaction. */
-    if (chrome->show_close) {
+    if (action_handler != NULL && chrome->show_close) {
         button = make_action_button(
             "window-close-symbolic", chrome,
             UMI_WS_PANEL_ACTION_CLOSE, editing_enabled,
@@ -473,6 +519,6 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.frame",
         chrome->panel_id);
-    (void)umi_gtk4_automation_set_id(frame, automation_id);
+    (void)umi_gtk4_automation_tag_widget(frame, automation_id);
     return frame;
 }

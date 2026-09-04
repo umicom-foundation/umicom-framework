@@ -56,12 +56,16 @@ typedef struct PendingHostAction {
 struct UmiGtk4WorkspaceLayoutHost {
     GtkWidget *root;
     UmiUiWorkspaceLayout layout;
+    UmiApplicationSuiteLayoutRenderPlan plan;
     UmiGtk4WorkspaceLayoutPanelFactory panel_factory;
-    UmiGtk4WorkspaceLayoutPanelActionHandler action_handler;
-    void *user_data;
+    void *panel_user_data;
+    UmiGtk4WorkspaceLayoutActionHandler action_handler;
+    void *action_user_data;
     GtkWindow *transient_parent;
     GPtrArray *floating_windows;
     guint pending_action_id;
+    size_t placeholder_count;
+    uint64_t revision;
 };
 
 /* Dispatch a native-window request only after its current signal has returned,
@@ -76,7 +80,7 @@ static gboolean dispatch_host_action_from_idle(gpointer user_data)
             pending->host->action_handler(
                 pending->panel_id,
                 pending->action,
-                pending->host->user_data);
+                pending->host->action_user_data);
         }
     }
     return G_SOURCE_REMOVE;
@@ -156,8 +160,8 @@ static void floating_window_entry_destroy(gpointer data)
 
 /* Forward semantic panel actions to the owning workstation. */
 static void on_panel_action(
-    const char *panel_id,
     UmiWsPanelAction action,
+    const UmiWsPanelChrome *chrome,
     void *user_data)
 {
     UmiGtk4WorkspaceLayoutHost *host =
@@ -167,16 +171,25 @@ static void on_panel_action(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (host != NULL && host->action_handler != NULL)
-        host->action_handler(panel_id, action, host->user_data);
+    if (host != NULL && host->action_handler != NULL && chrome != NULL &&
+        chrome->panel_id[0] != '\0') {
+        host->action_handler(
+            chrome->panel_id, action, host->action_user_data);
+    }
 }
 
 /* A docked tab close button uses the same semantic action as a floating panel
  * header, keeping GTK state subordinate to the portable workspace model. */
 static void on_tab_close(const char *tab_id, void *user_data)
 {
-    on_panel_action(
-        tab_id, UMI_WS_PANEL_ACTION_CLOSE, user_data);
+    UmiGtk4WorkspaceLayoutHost *host =
+        (UmiGtk4WorkspaceLayoutHost *)user_data;
+
+    if (host != NULL && host->action_handler != NULL &&
+        tab_id != NULL && tab_id[0] != '\0') {
+        host->action_handler(
+            tab_id, UMI_WS_PANEL_ACTION_CLOSE, host->action_user_data);
+    }
 }
 
 /* Remove every current docked child without destroying the stable host root. */
@@ -273,6 +286,33 @@ static size_t visible_floating_window_count(
     return count;
 }
 
+/*
+ * Initialise gtk4 workspace layout placeholder from caller-provided values so later
+ * operations receive a known state.
+ */
+GtkWidget *umi_gtk4_workspace_layout_placeholder_create(
+    const char *title,
+    const char *message)
+{
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    GtkWidget *heading = gtk_label_new(title != NULL ? title : "Panel");
+    GtkWidget *body = gtk_label_new(
+        message != NULL ? message : "No frontend renderer is available.");
+
+    if (box == NULL || heading == NULL || body == NULL) return box;
+    gtk_widget_add_css_class(box, "umicom-workspace-placeholder");
+    gtk_widget_add_css_class(heading, "title-4");
+    gtk_widget_add_css_class(body, "dim-label");
+    gtk_label_set_xalign(GTK_LABEL(heading), 0.0F);
+    gtk_label_set_xalign(GTK_LABEL(body), 0.0F);
+    gtk_label_set_wrap(GTK_LABEL(body), TRUE);
+    gtk_widget_set_hexpand(box, TRUE);
+    gtk_widget_set_vexpand(box, TRUE);
+    gtk_box_append(GTK_BOX(box), heading);
+    gtk_box_append(GTK_BOX(box), body);
+    return box;
+}
+
 /* Create a calm full-canvas empty state only when the entire host has no
  * docked content. Individual empty regions remain absent and consume no room. */
 static GtkWidget *create_workspace_empty_state(
@@ -358,23 +398,15 @@ static GtkWidget *create_content(
     const UmiUiWorkspaceWindow *window)
 {
     GtkWidget *content = host->panel_factory != NULL
-        ? host->panel_factory(window, host->user_data)
+        ? host->panel_factory(window, host->panel_user_data)
         : NULL;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (content == NULL) {
-        char text[UMI_UI_TEXT_CAPACITY + 32U];
-
-        (void)snprintf(
-            text, sizeof(text), "%s\nThis panel has no active provider.",
-            window->title);
-        content = gtk_label_new(text);
-        gtk_label_set_wrap(GTK_LABEL(content), TRUE);
-        gtk_widget_add_css_class(content, "dim-label");
-        gtk_widget_set_margin_top(content, 12);
-        gtk_widget_set_margin_bottom(content, 12);
-        gtk_widget_set_margin_start(content, 12);
-        gtk_widget_set_margin_end(content, 12);
+        content = umi_gtk4_workspace_layout_placeholder_create(
+            window->title,
+            "This panel has no active provider.");
+        host->placeholder_count += 1U;
     }
     gtk_widget_set_hexpand(content, TRUE);
     gtk_widget_set_vexpand(content, TRUE);
@@ -415,8 +447,11 @@ static GtkWidget *create_panel(
     chrome.show_maximise = true;
     chrome.show_settings = true;
     chrome.compact = true;
+    chrome.pinned = window->pinned;
     chrome.locked = host->layout.locked;
-    return umi_gtk4_ws_panel_frame_create(
+    chrome.floating = window->floating;
+    chrome.maximised = window->maximised;
+    return umi_gtk4_ws_panel_frame_create_interactive(
         &chrome, content, on_panel_action, host);
 }
 
@@ -426,7 +461,7 @@ static GtkWidget *build_stack(
     UmiGtk4WorkspaceLayoutHost *host,
     const char *placement_id)
 {
-    StackEntry entries[UMI_UI_WORKSPACE_MAX_WINDOWS];
+    StackEntry entries[UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS];
     size_t entry_count = 0U;
     size_t visible_stack_count = 0U;
     size_t index;
@@ -447,7 +482,7 @@ static GtkWidget *build_stack(
         stack_id = window_stack_id(window);
         entry = find_stack(entries, entry_count, stack_id);
         if (entry == NULL) {
-            if (entry_count >= UMI_UI_WORKSPACE_MAX_WINDOWS) continue;
+            if (entry_count >= UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS) continue;
             entry = &entries[entry_count++];
             (void)snprintf(
                 entry->stack_id, sizeof(entry->stack_id), "%s", stack_id);
@@ -570,18 +605,39 @@ static void build_floating_windows(UmiGtk4WorkspaceLayoutHost *host)
 
 /* Create the stable host widget and retain model callbacks. */
 UmiStatus umi_gtk4_workspace_layout_host_create(
+    const UmiUiWorkspaceLayout *layout,
     UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
-    UmiGtk4WorkspaceLayoutPanelActionHandler action_handler,
     void *user_data,
     UmiGtk4WorkspaceLayoutHost **out_host)
 {
+    return umi_gtk4_workspace_layout_host_create_interactive(
+        layout,
+        panel_factory,
+        user_data,
+        NULL,
+        NULL,
+        out_host);
+}
+
+/* Create an interactive host while preserving distinct panel and action data. */
+UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
+    const UmiUiWorkspaceLayout *layout,
+    UmiGtk4WorkspaceLayoutPanelFactory panel_factory,
+    void *panel_user_data,
+    UmiGtk4WorkspaceLayoutActionHandler action_handler,
+    void *action_user_data,
+    UmiGtk4WorkspaceLayoutHost **out_host)
+{
     UmiGtk4WorkspaceLayoutHost *host;
+    UmiStatus status;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (out_host == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout == NULL || out_host == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     *out_host = NULL;
     host = (UmiGtk4WorkspaceLayoutHost *)calloc(1U, sizeof(*host));
     /*
@@ -589,6 +645,7 @@ UmiStatus umi_gtk4_workspace_layout_host_create(
      * used.
      */
     if (host == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+
     host->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     host->floating_windows = g_ptr_array_new_with_free_func(
         floating_window_entry_destroy);
@@ -600,14 +657,23 @@ UmiStatus umi_gtk4_workspace_layout_host_create(
         umi_gtk4_workspace_layout_host_destroy(host);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
+    g_object_ref_sink(host->root);
     host->panel_factory = panel_factory;
+    host->panel_user_data = panel_user_data;
     host->action_handler = action_handler;
-    host->user_data = user_data;
+    host->action_user_data = action_user_data;
     gtk_widget_set_hexpand(host->root, TRUE);
     gtk_widget_set_vexpand(host->root, TRUE);
     gtk_widget_add_css_class(host->root, "umicom-workspace-layout-host");
-    (void)umi_gtk4_automation_set_id(
+    (void)umi_gtk4_automation_tag_widget(
         host->root, "workstation.workspace-layout");
+
+    status = umi_gtk4_workspace_layout_host_rebuild(host, layout);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        umi_gtk4_workspace_layout_host_destroy(host);
+        return status;
+    }
     *out_host = host;
     return UMI_STATUS_OK;
 }
@@ -633,7 +699,10 @@ void umi_gtk4_workspace_layout_host_destroy(
     if (host->floating_windows != NULL)
         g_ptr_array_free(host->floating_windows, TRUE);
     host->floating_windows = NULL;
-    host->root = NULL;
+    if (host->root != NULL) {
+        g_object_unref(host->root);
+        host->root = NULL;
+    }
     free(host);
 }
 
@@ -668,11 +737,18 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    UmiStatus status;
+
     if (host == NULL || layout == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-    if (layout->window_count > UMI_UI_WORKSPACE_MAX_WINDOWS)
+    if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_application_suite_layout_render_plan_build(
+        layout, &host->plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
     host->layout = *layout;
+    host->placeholder_count = 0U;
     clear_floating_windows(host);
     clear_root(host->root);
 
@@ -729,6 +805,7 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     gtk_box_append(GTK_BOX(host->root), workspace);
 
     build_floating_windows(host);
+    host->revision += 1U;
     return UMI_STATUS_OK;
 }
 
@@ -737,6 +814,28 @@ GtkWidget *umi_gtk4_workspace_layout_host_widget(
     UmiGtk4WorkspaceLayoutHost *host)
 {
     return host != NULL ? host->root : NULL;
+}
+
+/*
+ * Provide the gtk4 workspace layout host snapshot operation used by this module and its
+ * client applications.
+ */
+UmiGtk4WorkspaceLayoutHostSnapshot umi_gtk4_workspace_layout_host_snapshot(
+    const UmiGtk4WorkspaceLayoutHost *host)
+{
+    UmiGtk4WorkspaceLayoutHostSnapshot snapshot;
+
+    (void)memset(&snapshot, 0, sizeof(snapshot));
+    if (host == NULL) return snapshot;
+    (void)snprintf(
+        snapshot.layout_id, sizeof(snapshot.layout_id), "%s",
+        host->layout.layout_id);
+    snapshot.stack_count = host->plan.stack_count;
+    snapshot.panel_count = host->plan.visible_window_count;
+    snapshot.placeholder_count = host->placeholder_count;
+    snapshot.floating_count = host->plan.floating_window_count;
+    snapshot.revision = host->revision;
+    return snapshot;
 }
 
 /* Count model windows represented by the current native host. */
