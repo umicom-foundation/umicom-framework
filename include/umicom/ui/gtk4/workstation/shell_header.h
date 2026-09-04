@@ -37,6 +37,28 @@ typedef struct UmiGtk4WorkstationShellHeader
     UmiGtk4WorkstationShellHeader;
 
 /**
+ * Describe how a Framework host should open a selected Umicom application.
+ *
+ * STANDARD delegates placement to the active host policy. NEW_WINDOW asks for
+ * an independent top-level application window. The default GTK4 handler starts
+ * the application executable recorded by the canonical Framework portfolio.
+ */
+typedef enum UmiGtk4WorkstationApplicationOpenMode {
+    UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD = 1,
+    UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW = 2
+} UmiGtk4WorkstationApplicationOpenMode;
+
+/**
+ * Receive a stable application identifier selected from the Framework
+ * portfolio. A universal host may replace the default process launcher with an
+ * application-surface-session implementation without changing the header UI.
+ */
+typedef UmiStatus (*UmiGtk4WorkstationApplicationOpenHandler)(
+    const char *application_id,
+    UmiGtk4WorkstationApplicationOpenMode mode,
+    void *user_data);
+
+/**
  * Text and resource values used while creating one application identity.
  *
  * All strings are borrowed during creation and copied into Framework-owned
@@ -136,8 +158,8 @@ GtkWidget *umi_gtk4_ws_shell_header_widget(
 /**
  * Select the SVG mark described by a validated appearance profile.
  *
- * A missing packaged image hides only the image. The native application name
- * remains visible, so a packaging problem never removes the whole identity.
+ * A missing packaged image presents the shared `<>` fallback beside the native
+ * application name, so a packaging problem never removes the whole identity.
  */
 UmiStatus umi_gtk4_ws_shell_header_apply_appearance(
     UmiGtk4WorkstationShellHeader *header,
@@ -149,6 +171,30 @@ UmiStatus umi_gtk4_ws_shell_header_set_text(
     const char *title,
     const char *subtitle,
     const char *mode_badge);
+
+/**
+ * Replace the default executable launcher with a Framework host callback.
+ *
+ * Passing NULL restores the default process launcher. The callback is borrowed
+ * and must remain valid until it is replaced or the header is destroyed.
+ */
+UmiStatus umi_gtk4_ws_shell_header_set_application_open_handler(
+    UmiGtk4WorkstationShellHeader *header,
+    UmiGtk4WorkstationApplicationOpenHandler handler,
+    void *user_data);
+
+/**
+ * Select which universal application controls are visible.
+ *
+ * This operation changes presentation only. Application authorisation and
+ * launch availability remain governed by the canonical portfolio and caller
+ * policy.
+ */
+UmiStatus umi_gtk4_ws_shell_header_set_application_controls(
+    UmiGtk4WorkstationShellHeader *header,
+    bool show_catalogue,
+    bool show_new_window,
+    bool show_close);
 
 /** Copy observable identity state without exposing mutable GTK objects. */
 UmiGtk4WorkstationShellHeaderSnapshot

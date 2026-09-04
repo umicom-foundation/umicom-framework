@@ -17,6 +17,9 @@
 
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 
+#include "umicom/application/portfolio.h"
+#include "umicom/ui/gtk4/automation.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,11 +30,21 @@
 
 struct UmiGtk4WorkstationShellHeader {
     GtkWidget *root;
+    GtkWidget *application_tab;
     GtkWidget *icon;
     GtkWidget *fallback_icon;
     GtkWidget *title;
     GtkWidget *subtitle;
     GtkWidget *badge;
+    GtkWidget *application_catalogue_button;
+    GtkWidget *application_catalogue_popover;
+    GtkWidget *application_catalogue_search;
+    GtkWidget *application_catalogue_list;
+    GtkWidget *application_catalogue_status;
+    GtkWidget *new_window_button;
+    GtkWidget *close_button;
+    UmiGtk4WorkstationApplicationOpenHandler application_open_handler;
+    void *application_open_user_data;
     char *resource_root;
     UmiGtk4WorkstationShellHeaderSnapshot state;
 };
@@ -173,6 +186,636 @@ static void update_optional_label(GtkWidget *label, const char *text)
     gtk_widget_set_visible(label, safe_text[0] != '\0');
 }
 
+/* Present one bounded launch result inside the application catalogue. */
+static void set_application_catalogue_status(
+    UmiGtk4WorkstationShellHeader *header,
+    const char *message,
+    bool error)
+{
+    const char *safe_message = message != NULL ? message : "";
+
+    if (header == NULL || header->application_catalogue_status == NULL) return;
+    gtk_label_set_text(
+        GTK_LABEL(header->application_catalogue_status), safe_message);
+    gtk_widget_set_visible(
+        header->application_catalogue_status, safe_message[0] != '\0');
+    if (error) {
+        gtk_widget_add_css_class(
+            header->application_catalogue_status, "error");
+        if (header->application_catalogue_button != NULL) {
+            gtk_menu_button_popup(
+                GTK_MENU_BUTTON(header->application_catalogue_button));
+        }
+    } else {
+        gtk_widget_remove_css_class(
+            header->application_catalogue_status, "error");
+    }
+}
+
+/* Return whether a UTF-8 catalogue record contains the current query. */
+static bool application_search_matches(
+    const char *search_text,
+    const char *query)
+{
+    char *folded_search;
+    char *folded_query;
+    bool matches;
+
+    if (query == NULL || query[0] == '\0') return true;
+    if (search_text == NULL || search_text[0] == '\0') return false;
+    folded_search = g_utf8_casefold(search_text, -1);
+    folded_query = g_utf8_casefold(query, -1);
+    if (folded_search == NULL || folded_query == NULL) {
+        g_free(folded_search);
+        g_free(folded_query);
+        return false;
+    }
+    matches = strstr(folded_search, folded_query) != NULL;
+    g_free(folded_search);
+    g_free(folded_query);
+    return matches;
+}
+
+/* Filter the Framework-owned application catalogue without changing its data. */
+static void on_application_catalogue_search_changed(
+    GtkSearchEntry *entry,
+    gpointer user_data)
+{
+    UmiGtk4WorkstationShellHeader *header =
+        (UmiGtk4WorkstationShellHeader *)user_data;
+    const char *query;
+    GtkWidget *row;
+    size_t visible_count = 0U;
+
+    if (header == NULL || header->application_catalogue_list == NULL) return;
+    query = gtk_editable_get_text(GTK_EDITABLE(entry));
+    for (row = gtk_widget_get_first_child(header->application_catalogue_list);
+         row != NULL;
+         row = gtk_widget_get_next_sibling(row)) {
+        GtkWidget *button = GTK_IS_LIST_BOX_ROW(row)
+            ? gtk_list_box_row_get_child(GTK_LIST_BOX_ROW(row))
+            : row;
+        const char *search_text = button != NULL
+            ? (const char *)g_object_get_data(
+                  G_OBJECT(button), "umicom-application-search")
+            : NULL;
+        bool visible = application_search_matches(search_text, query);
+
+        gtk_widget_set_visible(row, visible);
+        if (visible) visible_count += 1U;
+    }
+    if (visible_count == 0U) {
+        set_application_catalogue_status(
+            header, "No Umicom application matches this search.", false);
+    } else {
+        set_application_catalogue_status(header, "", false);
+    }
+}
+
+/* Resolve one executable name beside the current application or on PATH. */
+static char *find_application_executable(const char *executable_name)
+{
+    char *directory;
+    char *candidate;
+
+    if (executable_name == NULL || executable_name[0] == '\0') return NULL;
+    if (g_path_is_absolute(executable_name) &&
+        g_file_test(executable_name, G_FILE_TEST_IS_REGULAR)) {
+        return g_strdup(executable_name);
+    }
+
+    directory = executable_directory();
+    candidate = directory != NULL
+        ? g_build_filename(directory, executable_name, NULL)
+        : NULL;
+    if (candidate != NULL &&
+        g_file_test(candidate, G_FILE_TEST_IS_REGULAR)) {
+        g_free(directory);
+        return candidate;
+    }
+    g_free(candidate);
+#ifdef G_OS_WIN32
+    if (!g_str_has_suffix(executable_name, ".exe")) {
+        char *windows_name = g_strconcat(executable_name, ".exe", NULL);
+
+        candidate = directory != NULL && windows_name != NULL
+            ? g_build_filename(directory, windows_name, NULL)
+            : NULL;
+        g_free(windows_name);
+        if (candidate != NULL &&
+            g_file_test(candidate, G_FILE_TEST_IS_REGULAR)) {
+            g_free(directory);
+            return candidate;
+        }
+        g_free(candidate);
+    }
+#endif
+    g_free(directory);
+    return g_find_program_in_path(executable_name);
+}
+
+/* Resolve the canonical name and supported packaged executable conventions. */
+static char *resolve_application_executable(
+    const UmiApplicationDefinition *application)
+{
+    const char *base_name;
+    char *candidate_name;
+    char *resolved;
+
+    if (application == NULL) return NULL;
+    if (application->executable_name != NULL &&
+        !g_str_has_suffix(application->executable_name, "-console")) {
+        resolved = find_application_executable(application->executable_name);
+        if (resolved != NULL) return resolved;
+    }
+
+    base_name = application->repository_slug;
+    if (base_name == NULL || base_name[0] == '\0') return NULL;
+    resolved = find_application_executable(base_name);
+    if (resolved != NULL) return resolved;
+
+    candidate_name = g_strdup_printf("%s-gtk", base_name);
+    resolved = find_application_executable(candidate_name);
+    g_free(candidate_name);
+    if (resolved != NULL) return resolved;
+
+    candidate_name = g_strdup_printf("%s-ide", base_name);
+    resolved = find_application_executable(candidate_name);
+    g_free(candidate_name);
+    if (resolved != NULL) return resolved;
+
+    resolved = find_application_executable(application->executable_name);
+    if (resolved != NULL) return resolved;
+
+    candidate_name = g_strdup_printf("%s-console", base_name);
+    resolved = find_application_executable(candidate_name);
+    g_free(candidate_name);
+    return resolved;
+}
+
+/* Start one independently runnable application from the canonical portfolio. */
+static UmiStatus launch_portfolio_application(
+    UmiGtk4WorkstationShellHeader *header,
+    const UmiApplicationDefinition *application,
+    UmiGtk4WorkstationApplicationOpenMode mode)
+{
+    GError *error = NULL;
+    char *arguments[2];
+    char *executable;
+    char *message;
+    UmiStatus status;
+    gboolean started;
+
+    if (header == NULL || application == NULL ||
+        application->application_id == NULL ||
+        application->display_name == NULL ||
+        application->executable_name == NULL ||
+        application->executable_name[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (header->application_open_handler != NULL) {
+        status = header->application_open_handler(
+            application->application_id,
+            mode,
+            header->application_open_user_data);
+        if (status != UMI_STATUS_OK) {
+            message = g_strdup_printf(
+                "Unable to open %s: the active host declined the request.",
+                application->display_name);
+            set_application_catalogue_status(
+                header,
+                message != NULL
+                    ? message
+                    : "The application could not be opened.",
+                true);
+            g_free(message);
+            return status;
+        }
+        if (header->application_catalogue_button != NULL) {
+            gtk_menu_button_popdown(
+                GTK_MENU_BUTTON(header->application_catalogue_button));
+        }
+        return UMI_STATUS_OK;
+    }
+
+    executable = resolve_application_executable(application);
+    if (executable == NULL) {
+        message = g_strdup_printf(
+            "Unable to open %s: %s was not found beside this application or on PATH.",
+            application->display_name,
+            application->executable_name);
+        set_application_catalogue_status(
+            header,
+            message != NULL ? message : "The application executable was not found.",
+            true);
+        g_free(message);
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    arguments[0] = executable;
+    arguments[1] = NULL;
+    started = g_spawn_async(
+        NULL,
+        arguments,
+        NULL,
+        G_SPAWN_DEFAULT,
+        NULL,
+        NULL,
+        NULL,
+        &error);
+    if (!started) {
+        message = g_strdup_printf(
+            "Unable to open %s: %s",
+            application->display_name,
+            error != NULL ? error->message : "the executable is unavailable");
+        set_application_catalogue_status(
+            header,
+            message != NULL ? message : "The application could not be opened.",
+            true);
+        g_free(message);
+        g_free(executable);
+        if (error != NULL) g_error_free(error);
+        return UMI_STATUS_UNAVAILABLE;
+    }
+
+    message = g_strdup_printf("Opening %s…", application->display_name);
+    set_application_catalogue_status(
+        header, message != NULL ? message : "Opening application…", false);
+    g_free(message);
+    g_free(executable);
+    if (header->application_catalogue_button != NULL) {
+        gtk_menu_button_popdown(
+            GTK_MENU_BUTTON(header->application_catalogue_button));
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Open a catalogue selection through the host callback or default launcher. */
+static void on_application_catalogue_item_clicked(
+    GtkButton *button,
+    gpointer user_data)
+{
+    UmiGtk4WorkstationShellHeader *header =
+        (UmiGtk4WorkstationShellHeader *)user_data;
+    const char *application_id;
+    const UmiApplicationDefinition *application;
+
+    if (header == NULL || button == NULL) return;
+    application_id = (const char *)g_object_get_data(
+        G_OBJECT(button), "umicom-application-id");
+    application = application_id != NULL
+        ? umi_application_portfolio_find(application_id)
+        : NULL;
+    if (application == NULL) {
+        set_application_catalogue_status(
+            header, "The selected application is no longer available.", true);
+        return;
+    }
+    (void)launch_portfolio_application(
+        header,
+        application,
+        UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD);
+}
+
+/* Open another independent window for the current application. */
+static void on_new_application_window_clicked(
+    GtkButton *button,
+    gpointer user_data)
+{
+    UmiGtk4WorkstationShellHeader *header =
+        (UmiGtk4WorkstationShellHeader *)user_data;
+    const UmiApplicationDefinition *application;
+
+    (void)button;
+    if (header == NULL) return;
+    application = umi_application_portfolio_find(header->state.application_id);
+    if (application == NULL) {
+        set_application_catalogue_status(
+            header, "This application has no runnable portfolio entry.", true);
+        return;
+    }
+    (void)launch_portfolio_application(
+        header,
+        application,
+        UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW);
+}
+
+/* Close the top-level native application window which owns this header. */
+static void on_close_application_clicked(
+    GtkButton *button,
+    gpointer user_data)
+{
+    UmiGtk4WorkstationShellHeader *header =
+        (UmiGtk4WorkstationShellHeader *)user_data;
+    GtkRoot *root;
+
+    (void)button;
+    if (header == NULL || header->root == NULL) return;
+    root = gtk_widget_get_root(header->root);
+    if (root != NULL && GTK_IS_WINDOW(root)) {
+        gtk_window_close(GTK_WINDOW(root));
+    }
+}
+
+/* Create a readable catalogue row from one canonical portfolio definition. */
+static GtkWidget *create_application_catalogue_item(
+    UmiGtk4WorkstationShellHeader *header,
+    const UmiApplicationDefinition *application)
+{
+    GtkWidget *button;
+    GtkWidget *content;
+    GtkWidget *title;
+    GtkWidget *purpose;
+    char *search_text;
+    char *automation_id;
+
+    if (header == NULL || application == NULL ||
+        application->application_id == NULL ||
+        application->display_name == NULL) {
+        return NULL;
+    }
+    button = gtk_button_new();
+    content = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    title = gtk_label_new(application->display_name);
+    purpose = gtk_label_new(
+        application->purpose != NULL ? application->purpose : "");
+    if (button == NULL || content == NULL || title == NULL || purpose == NULL) {
+        return NULL;
+    }
+
+    gtk_widget_add_css_class(button, "flat");
+    gtk_widget_add_css_class(button, "umicom-application-catalogue-item");
+    gtk_widget_set_hexpand(button, TRUE);
+    gtk_widget_set_halign(content, GTK_ALIGN_FILL);
+    gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
+    gtk_label_set_xalign(GTK_LABEL(purpose), 0.0F);
+    gtk_label_set_wrap(GTK_LABEL(purpose), TRUE);
+    gtk_label_set_wrap_mode(GTK_LABEL(purpose), PANGO_WRAP_WORD_CHAR);
+    gtk_widget_add_css_class(title, "heading");
+    gtk_widget_add_css_class(purpose, "dim-label");
+    gtk_box_append(GTK_BOX(content), title);
+    if (application->purpose != NULL && application->purpose[0] != '\0') {
+        gtk_box_append(GTK_BOX(content), purpose);
+    }
+    gtk_button_set_child(GTK_BUTTON(button), content);
+
+    search_text = g_strconcat(
+        application->display_name,
+        " ",
+        application->purpose != NULL ? application->purpose : "",
+        " ",
+        application->application_id,
+        NULL);
+    g_object_set_data_full(
+        G_OBJECT(button),
+        "umicom-application-id",
+        g_strdup(application->application_id),
+        g_free);
+    g_object_set_data_full(
+        G_OBJECT(button),
+        "umicom-application-search",
+        search_text,
+        g_free);
+    automation_id = g_strdup_printf(
+        "workstation.application.%s", application->application_id);
+    if (automation_id != NULL) {
+        (void)umi_gtk4_automation_tag_widget(button, automation_id);
+        g_free(automation_id);
+    }
+    gtk_widget_set_tooltip_text(
+        button,
+        application->purpose != NULL && application->purpose[0] != '\0'
+            ? application->purpose
+            : application->display_name);
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(button),
+        GTK_ACCESSIBLE_PROPERTY_LABEL,
+        application->display_name,
+        -1);
+    g_signal_connect(
+        button,
+        "clicked",
+        G_CALLBACK(on_application_catalogue_item_clicked),
+        header);
+    return button;
+}
+
+/* Populate the catalogue from the one canonical Framework application list. */
+static UmiStatus populate_application_catalogue(
+    UmiGtk4WorkstationShellHeader *header)
+{
+    size_t index;
+    size_t added = 0U;
+
+    if (header == NULL || header->application_catalogue_list == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < umi_application_portfolio_count(); ++index) {
+        const UmiApplicationDefinition *application =
+            umi_application_portfolio_at(index);
+        GtkWidget *item;
+
+        if (application == NULL) continue;
+        if (umi_application_definition_validate(application) !=
+            UMI_STATUS_OK) {
+            set_application_catalogue_status(
+                header,
+                "The Framework application portfolio is invalid.",
+                true);
+            return UMI_STATUS_INVALID_STATE;
+        }
+        if ((application->flags & UMI_APPLICATION_STANDALONE) == 0U) {
+            continue;
+        }
+        item = create_application_catalogue_item(header, application);
+        if (item == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        gtk_list_box_append(
+            GTK_LIST_BOX(header->application_catalogue_list), item);
+        added += 1U;
+    }
+    if (added == 0U) {
+        set_application_catalogue_status(
+            header, "No runnable Umicom applications are registered.", true);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Create the Framework-owned searchable application catalogue and controls. */
+static UmiStatus create_application_controls(
+    UmiGtk4WorkstationShellHeader *header)
+{
+    GtkWidget *catalogue_content;
+    GtkWidget *catalogue_title;
+    GtkWidget *scroll;
+    UmiStatus status;
+
+    if (header == NULL || header->root == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    header->application_catalogue_button = gtk_menu_button_new();
+    header->application_catalogue_popover = gtk_popover_new();
+    header->application_catalogue_search = gtk_search_entry_new();
+    header->application_catalogue_list = gtk_list_box_new();
+    header->application_catalogue_status = gtk_label_new("");
+    header->new_window_button = gtk_button_new_from_icon_name(
+        "window-new-symbolic");
+    header->close_button = gtk_button_new_from_icon_name(
+        "window-close-symbolic");
+    catalogue_content = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    catalogue_title = gtk_label_new("Umicom Applications");
+    scroll = gtk_scrolled_window_new();
+    if (header->application_catalogue_button == NULL ||
+        header->application_catalogue_popover == NULL ||
+        header->application_catalogue_search == NULL ||
+        header->application_catalogue_list == NULL ||
+        header->application_catalogue_status == NULL ||
+        header->new_window_button == NULL || header->close_button == NULL ||
+        catalogue_content == NULL || catalogue_title == NULL || scroll == NULL) {
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+
+    gtk_menu_button_set_icon_name(
+        GTK_MENU_BUTTON(header->application_catalogue_button),
+        "list-add-symbolic");
+    gtk_widget_set_tooltip_text(
+        header->application_catalogue_button,
+        "Open an Umicom application");
+    gtk_widget_set_tooltip_text(
+        header->new_window_button,
+        "Open another window for this application");
+    gtk_widget_set_tooltip_text(
+        header->close_button,
+        "Close this application window");
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(header->application_catalogue_button),
+        GTK_ACCESSIBLE_PROPERTY_LABEL,
+        "Open Umicom application",
+        -1);
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(header->application_catalogue_search),
+        GTK_ACCESSIBLE_PROPERTY_LABEL,
+        "Search Umicom applications",
+        -1);
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(header->new_window_button),
+        GTK_ACCESSIBLE_PROPERTY_LABEL,
+        "Open another application window",
+        -1);
+    gtk_accessible_update_property(
+        GTK_ACCESSIBLE(header->close_button),
+        GTK_ACCESSIBLE_PROPERTY_LABEL,
+        "Close application window",
+        -1);
+    gtk_widget_add_css_class(
+        header->application_catalogue_button, "flat");
+    gtk_widget_add_css_class(header->new_window_button, "flat");
+    gtk_widget_add_css_class(header->close_button, "flat");
+    gtk_widget_add_css_class(
+        header->application_catalogue_button,
+        "umicom-application-catalogue-button");
+    gtk_widget_add_css_class(
+        header->new_window_button, "umicom-application-window-button");
+    gtk_widget_add_css_class(
+        header->close_button, "umicom-application-close-button");
+    gtk_widget_add_css_class(catalogue_title, "heading");
+    gtk_widget_add_css_class(
+        header->application_catalogue_status, "dim-label");
+    gtk_label_set_xalign(GTK_LABEL(catalogue_title), 0.0F);
+    gtk_label_set_xalign(
+        GTK_LABEL(header->application_catalogue_status), 0.0F);
+    gtk_label_set_wrap(
+        GTK_LABEL(header->application_catalogue_status), TRUE);
+    g_object_set(
+        G_OBJECT(header->application_catalogue_search),
+        "placeholder-text",
+        "Search applications",
+        NULL);
+    gtk_list_box_set_selection_mode(
+        GTK_LIST_BOX(header->application_catalogue_list),
+        GTK_SELECTION_NONE);
+    gtk_scrolled_window_set_policy(
+        GTK_SCROLLED_WINDOW(scroll),
+        GTK_POLICY_NEVER,
+        GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_min_content_width(
+        GTK_SCROLLED_WINDOW(scroll), 360);
+    gtk_scrolled_window_set_min_content_height(
+        GTK_SCROLLED_WINDOW(scroll), 320);
+    gtk_scrolled_window_set_child(
+        GTK_SCROLLED_WINDOW(scroll),
+        header->application_catalogue_list);
+    gtk_box_append(GTK_BOX(catalogue_content), catalogue_title);
+    gtk_box_append(
+        GTK_BOX(catalogue_content),
+        header->application_catalogue_search);
+    gtk_box_append(GTK_BOX(catalogue_content), scroll);
+    gtk_box_append(
+        GTK_BOX(catalogue_content),
+        header->application_catalogue_status);
+    gtk_popover_set_child(
+        GTK_POPOVER(header->application_catalogue_popover),
+        catalogue_content);
+    gtk_menu_button_set_popover(
+        GTK_MENU_BUTTON(header->application_catalogue_button),
+        header->application_catalogue_popover);
+
+    g_signal_connect(
+        header->application_catalogue_search,
+        "search-changed",
+        G_CALLBACK(on_application_catalogue_search_changed),
+        header);
+    g_signal_connect(
+        header->new_window_button,
+        "clicked",
+        G_CALLBACK(on_new_application_window_clicked),
+        header);
+    g_signal_connect(
+        header->close_button,
+        "clicked",
+        G_CALLBACK(on_close_application_clicked),
+        header);
+    (void)umi_gtk4_automation_tag_widget(
+        header->application_catalogue_button,
+        "workstation.application.catalogue");
+    (void)umi_gtk4_automation_tag_widget(
+        header->application_catalogue_search,
+        "workstation.application.search");
+    (void)umi_gtk4_automation_tag_widget(
+        header->new_window_button,
+        "workstation.application.new-window");
+    (void)umi_gtk4_automation_tag_widget(
+        header->close_button,
+        "workstation.application.close");
+
+    status = populate_application_catalogue(header);
+    if (status == UMI_STATUS_NOT_FOUND) {
+        gtk_widget_set_sensitive(
+            header->application_catalogue_button, FALSE);
+        status = UMI_STATUS_OK;
+    }
+    gtk_widget_set_sensitive(
+        header->new_window_button,
+        umi_application_portfolio_find(header->state.application_id) != NULL);
+    return status;
+}
+
+/* Disconnect callbacks which borrow a controller before releasing it. */
+static void disconnect_header_callbacks(
+    GtkWidget *widget,
+    UmiGtk4WorkstationShellHeader *header)
+{
+    GtkWidget *child;
+
+    if (widget == NULL || header == NULL) return;
+    g_signal_handlers_disconnect_by_data(widget, header);
+    for (child = gtk_widget_get_first_child(widget);
+         child != NULL;
+         child = gtk_widget_get_next_sibling(child)) {
+        disconnect_header_callbacks(child, header);
+    }
+}
+
 /* Return common creation values. Callers only need to provide a stable
  * application identifier and the name that people should see. */
 UmiGtk4WorkstationShellHeaderConfig
@@ -238,6 +881,9 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
 
     header->root = gtk_box_new(
         GTK_ORIENTATION_HORIZONTAL,
+        config->compact ? 4 : 8);
+    header->application_tab = gtk_box_new(
+        GTK_ORIENTATION_HORIZONTAL,
         config->compact ? 6 : 10);
     header->icon = gtk_picture_new();
     header->fallback_icon = gtk_label_new("<>");
@@ -249,8 +895,9 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (header->root == NULL || header->icon == NULL ||
-        header->fallback_icon == NULL || titles == NULL ||
+    if (header->root == NULL || header->application_tab == NULL ||
+        header->icon == NULL || header->fallback_icon == NULL ||
+        titles == NULL ||
         header->title == NULL || header->subtitle == NULL ||
         header->badge == NULL) {
         status = UMI_STATUS_OUT_OF_MEMORY;
@@ -260,7 +907,11 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     /* Generic class names let every product inherit one shared visual rule.
      * Applications may add a local class to the root for spacing only. */
     gtk_widget_add_css_class(header->root, "umicom-workstation-header");
-    gtk_widget_add_css_class(header->root, "umicom-workstation-identity");
+    gtk_widget_add_css_class(header->root, "umicom-application-header");
+    gtk_widget_add_css_class(
+        header->application_tab, "umicom-application-active-tab");
+    gtk_widget_add_css_class(
+        header->application_tab, "umicom-workstation-identity");
     gtk_widget_add_css_class(header->icon, "umicom-workstation-identity-icon");
     gtk_widget_add_css_class(
         header->fallback_icon, "umicom-workstation-identity-fallback");
@@ -271,6 +922,7 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     /* Apply this branch only when its contract condition is satisfied. */
     if (config->compact) {
         gtk_widget_add_css_class(header->root, "compact");
+        gtk_widget_add_css_class(header->application_tab, "compact");
     }
 
     gtk_widget_set_size_request(
@@ -286,13 +938,23 @@ UmiStatus umi_gtk4_ws_shell_header_create_managed(
     gtk_label_set_xalign(GTK_LABEL(header->subtitle), 0.0F);
     gtk_label_set_ellipsize(
         GTK_LABEL(header->subtitle), PANGO_ELLIPSIZE_END);
-    gtk_widget_set_hexpand(titles, !config->compact);
+    gtk_widget_set_hexpand(titles, TRUE);
+    gtk_widget_set_hexpand(header->application_tab, TRUE);
+    gtk_widget_set_halign(header->application_tab, GTK_ALIGN_FILL);
     gtk_box_append(GTK_BOX(titles), header->title);
     gtk_box_append(GTK_BOX(titles), header->subtitle);
-    gtk_box_append(GTK_BOX(header->root), header->icon);
-    gtk_box_append(GTK_BOX(header->root), header->fallback_icon);
-    gtk_box_append(GTK_BOX(header->root), titles);
-    gtk_box_append(GTK_BOX(header->root), header->badge);
+    gtk_box_append(GTK_BOX(header->application_tab), header->icon);
+    gtk_box_append(GTK_BOX(header->application_tab), header->fallback_icon);
+    gtk_box_append(GTK_BOX(header->application_tab), titles);
+    gtk_box_append(GTK_BOX(header->application_tab), header->badge);
+    gtk_box_append(GTK_BOX(header->root), header->application_tab);
+
+    status = create_application_controls(header);
+    if (status != UMI_STATUS_OK) goto fail;
+    gtk_box_append(
+        GTK_BOX(header->root), header->application_catalogue_button);
+    gtk_box_append(GTK_BOX(header->root), header->new_window_button);
+    gtk_box_append(GTK_BOX(header->root), header->close_button);
 
     header->state.compact = config->compact ? 1 : 0;
     header->state.revision = 1U;
@@ -315,6 +977,22 @@ fail:
     /* Constructors normally succeed together, but an allocation failure may
      * leave an individual widget unparented. Release those widgets first, then
      * release the root and any children that were already appended to it. */
+    if (header->application_tab != NULL &&
+        gtk_widget_get_parent(header->application_tab) == NULL) {
+        g_object_unref(header->application_tab);
+    }
+    if (header->application_catalogue_button != NULL &&
+        gtk_widget_get_parent(header->application_catalogue_button) == NULL) {
+        g_object_unref(header->application_catalogue_button);
+    }
+    if (header->new_window_button != NULL &&
+        gtk_widget_get_parent(header->new_window_button) == NULL) {
+        g_object_unref(header->new_window_button);
+    }
+    if (header->close_button != NULL &&
+        gtk_widget_get_parent(header->close_button) == NULL) {
+        g_object_unref(header->close_button);
+    }
     if (header->icon != NULL &&
         gtk_widget_get_parent(header->icon) == NULL) {
         g_object_unref(header->icon);
@@ -377,14 +1055,27 @@ void umi_gtk4_ws_shell_header_destroy(
      * used.
      */
     if (header == NULL) return;
+    disconnect_header_callbacks(
+        header->application_catalogue_popover, header);
+    disconnect_header_callbacks(header->root, header);
     g_free(header->resource_root);
     header->resource_root = NULL;
+    header->application_open_handler = NULL;
+    header->application_open_user_data = NULL;
     header->root = NULL;
+    header->application_tab = NULL;
     header->icon = NULL;
     header->fallback_icon = NULL;
     header->title = NULL;
     header->subtitle = NULL;
     header->badge = NULL;
+    header->application_catalogue_button = NULL;
+    header->application_catalogue_popover = NULL;
+    header->application_catalogue_search = NULL;
+    header->application_catalogue_list = NULL;
+    header->application_catalogue_status = NULL;
+    header->new_window_button = NULL;
+    header->close_button = NULL;
     free(header);
 }
 
@@ -484,6 +1175,8 @@ UmiStatus umi_gtk4_ws_shell_header_set_text(
     if (status != UMI_STATUS_OK) return status;
 
     gtk_label_set_text(GTK_LABEL(header->title), header->state.title);
+    gtk_widget_set_tooltip_text(
+        header->application_tab, header->state.title);
     update_optional_label(header->subtitle, header->state.subtitle);
     update_optional_label(header->badge, header->state.mode_badge);
     gtk_accessible_update_property(
@@ -491,6 +1184,38 @@ UmiStatus umi_gtk4_ws_shell_header_set_text(
         GTK_ACCESSIBLE_PROPERTY_LABEL,
         header->state.title,
         -1);
+    header->state.revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Replace the default process launcher with a Framework host callback. */
+UmiStatus umi_gtk4_ws_shell_header_set_application_open_handler(
+    UmiGtk4WorkstationShellHeader *header,
+    UmiGtk4WorkstationApplicationOpenHandler handler,
+    void *user_data)
+{
+    if (header == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    header->application_open_handler = handler;
+    header->application_open_user_data = user_data;
+    header->state.revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Show or conceal universal application controls without changing state. */
+UmiStatus umi_gtk4_ws_shell_header_set_application_controls(
+    UmiGtk4WorkstationShellHeader *header,
+    bool show_catalogue,
+    bool show_new_window,
+    bool show_close)
+{
+    if (header == NULL || header->application_catalogue_button == NULL ||
+        header->new_window_button == NULL || header->close_button == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    gtk_widget_set_visible(
+        header->application_catalogue_button, show_catalogue);
+    gtk_widget_set_visible(header->new_window_button, show_new_window);
+    gtk_widget_set_visible(header->close_button, show_close);
     header->state.revision += 1U;
     return UMI_STATUS_OK;
 }
@@ -536,6 +1261,8 @@ GtkWidget *umi_gtk4_ws_shell_header_create(
         return NULL;
     }
     widget = umi_gtk4_ws_shell_header_widget(header);
+    (void)umi_gtk4_ws_shell_header_set_application_controls(
+        header, false, false, false);
     umi_gtk4_ws_shell_header_destroy(header);
     return widget;
 }

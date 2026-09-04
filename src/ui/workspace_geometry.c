@@ -40,38 +40,38 @@ UmiUiWorkspaceRect umi_ui_workspace_region_rect(UmiUiPlacement placement)
         case UMI_UI_PLACEMENT_LEFT:
             rectangle.x = 0.0;
             rectangle.y = 0.0;
-            rectangle.width = 0.22;
-            rectangle.height = 0.72;
+            rectangle.width = 0.18;
+            rectangle.height = 0.76;
             break;
         case UMI_UI_PLACEMENT_RIGHT:
-            rectangle.x = 0.76;
+            rectangle.x = 0.82;
             rectangle.y = 0.0;
-            rectangle.width = 0.24;
-            rectangle.height = 0.72;
+            rectangle.width = 0.18;
+            rectangle.height = 0.76;
             break;
         case UMI_UI_PLACEMENT_TOP:
             rectangle.x = 0.0;
             rectangle.y = 0.0;
             rectangle.width = 1.0;
-            rectangle.height = 0.18;
+            rectangle.height = 0.14;
             break;
         case UMI_UI_PLACEMENT_BOTTOM:
             rectangle.x = 0.0;
-            rectangle.y = 0.72;
+            rectangle.y = 0.76;
             rectangle.width = 1.0;
-            rectangle.height = 0.28;
+            rectangle.height = 0.24;
             break;
         case UMI_UI_PLACEMENT_CENTRE:
-            rectangle.x = 0.22;
+            rectangle.x = 0.18;
             rectangle.y = 0.0;
-            rectangle.width = 0.54;
-            rectangle.height = 0.72;
+            rectangle.width = 0.64;
+            rectangle.height = 0.76;
             break;
         case UMI_UI_PLACEMENT_FLOATING:
-            rectangle.x = 0.20;
-            rectangle.y = 0.12;
-            rectangle.width = 0.60;
-            rectangle.height = 0.64;
+            rectangle.x = 0.14;
+            rectangle.y = 0.10;
+            rectangle.width = 0.72;
+            rectangle.height = 0.78;
             break;
         default:
             /* Unknown values retain a safe full-workspace rectangle. */
