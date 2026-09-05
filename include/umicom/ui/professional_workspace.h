@@ -27,4 +27,5 @@
 #include "umicom/ui/layout_persistence.h"
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_customisation_persistence.h"
+#include "umicom/ui/workbench_canvas.h"
 #endif

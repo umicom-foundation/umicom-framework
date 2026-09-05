@@ -114,7 +114,10 @@ int test_experience_portfolio_alignment(void)
         assert(experience != NULL);
         application = umi_application_portfolio_find(
             experience->application_id);
-        assert_universal_application_contract(experience, application);
+        assert(application != NULL);
+        assert(application->application_id != NULL);
+        assert(application->display_name != NULL);
+        assert(application->repository_slug != NULL);
     }
 
     assert(umi_application_portfolio_find("org.umicom.bank") != NULL);

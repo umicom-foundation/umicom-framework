@@ -24,6 +24,7 @@
 #include "umicom/application/suite_layout/geometry.h"
 #include "umicom/application/suite_layout/customisation.h"
 #include "umicom/desktop/ui_bridge.h"
+#include "umicom/ui/workbench_canvas.h"
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_geometry.h"
 
@@ -31,6 +32,7 @@ struct UmiApplicationSuiteGtk4Workstation {
     UmiApplicationSuiteLayoutRuntime runtime;
     UmiApplicationSuiteLayoutSelectorModel selector;
     UmiUiWorkspaceCustomisation customisation;
+    UmiUiWorkbenchCanvas canvas;
     UmiGtk4WorkspaceLayoutHost *host;
     UmiGtk4AppearanceEditor *appearance;
     UmiGtk4WorkstationShellHeader *identity;
@@ -60,6 +62,8 @@ struct UmiApplicationSuiteGtk4Workstation {
     GtkWidget *panel_editor_apply;
     GtkWidget *panel_editor_status;
     char panel_editor_window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    /* Keep the canvas host key so shutdown can unregister only this workstation. */
+    char canvas_host_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
     char *saved_layout_text;
     uint64_t saved_layout_at_ns;
     int changing_selection;
@@ -1996,6 +2000,7 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     UmiGtk4WorkstationShellHeaderConfig identity_config;
     UmiGtk4WorkstationCommandBarConfig command_bar_config;
     size_t index;
+    int written;
     UmiStatus status;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -2012,6 +2017,10 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
      * used.
      */
     if (workstation == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Every graphical application receives one Framework-owned canvas registry
+     * before GTK widgets are created; future adapters can detach panels or open
+     * another host without inventing a second layout owner. */
+    umi_ui_workbench_canvas_init(&workstation->canvas);
     umi_application_suite_layout_runtime_init(&workstation->runtime);
     status = umi_application_suite_layout_runtime_load(
         &workstation->runtime, config->application_id);
@@ -2042,6 +2051,26 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
             &workstation->customisation.windows);
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) goto fail;
+    /* Derive a stable host identity from the canonical application identity so
+     * multiple products can coexist without sharing routing state. */
+    written = snprintf(
+        workstation->canvas_host_id,
+        sizeof(workstation->canvas_host_id),
+        "%s.host",
+        config->application_id);
+    if (written < 0 || (size_t)written >= sizeof(workstation->canvas_host_id)) {
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+        goto fail;
+    }
+    /* Register the already-loaded customisation model without loading it a
+     * second time; the GTK host and the portable canvas now share one layout. */
+    status = umi_ui_workbench_canvas_add_host(
+        &workstation->canvas,
+        workstation->canvas_host_id,
+        config->application_id,
+        "primary",
+        &workstation->customisation);
     if (status != UMI_STATUS_OK) goto fail;
     layout = active_layout(workstation);
     /*
@@ -2280,6 +2309,14 @@ void umi_application_suite_gtk4_workstation_destroy(
      * used.
      */
     if (workstation == NULL) return;
+    /* Unregister the borrowed customisation before the workstation storage is released.
+     * This keeps the shared canvas from retaining a pointer to an object that is about
+     * to disappear and also repairs the active-host selection for other windows. */
+    if (workstation->canvas_host_id[0] != '\0') {
+        (void)umi_ui_workbench_canvas_remove_host(
+            &workstation->canvas, workstation->canvas_host_id);
+        workstation->canvas_host_id[0] = '\0';
+    }
     /* Release the driver's retained root before dismantling child services. */
     umi_gtk4_automation_driver_destroy(workstation->automation);
     workstation->automation = NULL;

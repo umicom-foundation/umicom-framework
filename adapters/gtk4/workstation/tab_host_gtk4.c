@@ -149,7 +149,9 @@ static GtkWidget *create_tab_label(
 GtkWidget *umi_gtk4_ws_tab_host_create(const UmiWsTabStack *stack)
 {
     GtkWidget *notebook = gtk_notebook_new();
-
+    gtk_widget_add_css_class(notebook, "umicom-tab-host");
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
+    gtk_notebook_popup_enable(GTK_NOTEBOOK(notebook));
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.

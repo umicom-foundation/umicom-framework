@@ -120,6 +120,12 @@ static void write_direct_change_reason(char *destination,
                                  offset,
                                  changed_text,
                                  sizeof(changed_text) - 1U);
+    /* A caller may provide a deliberately tiny buffer; avoid subtracting one
+     * from an exhausted offset before calculating the remaining path space. */
+    if (offset >= capacity) {
+        destination[capacity - 1U] = '\0';
+        return;
+    }
     available = capacity - offset - 1U;
 
     /* A path that fits is copied completely so ordinary diagnostics stay exact. */

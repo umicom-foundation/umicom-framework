@@ -43,16 +43,21 @@
 /* Provide the exists operation used by this module and its client applications. */
 static int exists(const char *path) { return UMI_ACCESS(path, 0) == 0; }
 
-/* Provide the join path operation used by this module and its client applications. */
-static void join_path(char *out, size_t capacity, const char *left, const char *right)
+/* Join two path fragments and report truncation instead of silently producing
+ * a path that points at a different file. */
+static int join_path(char *out, size_t capacity, const char *left, const char *right)
 {
-    size_t length = strlen(left);
+    int written;
+    size_t length;
+    if (out == NULL || capacity == 0U || left == NULL || right == NULL) return 0;
+    length = strlen(left);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (length > 0U && (left[length - 1U] == '/' || left[length - 1U] == '\\'))
-        (void)snprintf(out, capacity, "%s%s", left, right);
+        written = snprintf(out, capacity, "%s%s", left, right);
     /* Use this fallback path when the earlier condition does not apply. */
     else
-        (void)snprintf(out, capacity, "%s/%s", left, right);
+        written = snprintf(out, capacity, "%s/%s", left, right);
+    return written >= 0 && (size_t)written < capacity;
 }
 
 /* Provide the find root operation used by this module and its client applications. */
@@ -64,19 +69,27 @@ static int find_root(char *root, size_t capacity)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (UMI_GETCWD(current, sizeof(current)) == NULL) return 0;
+    if (root == NULL || capacity == 0U ||
+        UMI_GETCWD(current, sizeof(current)) == NULL) return 0;
     /* Visit each bounded item once so every record receives the same rule. */
     for (;;) {
-        join_path(marker, sizeof(marker), current, ".umicom-root");
+        if (!join_path(marker, sizeof(marker), current, ".umicom-root")) {
+            return 0;
+        }
         /* Use the optional file only when it is present in this checkout. */
         if (exists(marker)) {
-            (void)snprintf(root, capacity, "%s", current);
-            return 1;
+            int written = snprintf(root, capacity, "%s", current);
+            return written >= 0 && (size_t)written < capacity;
         }
         {
             char *slash1 = strrchr(current, '/');
             char *slash2 = strrchr(current, '\\');
-            char *slash = slash1 > slash2 ? slash1 : slash2;
+            char *slash = slash1;
+            /* Compare pointers only when both point inside current.  A null
+             * result from strrchr must never participate in pointer ordering. */
+            if (slash == NULL || (slash2 != NULL && slash2 > slash)) {
+                slash = slash2;
+            }
             /*
              * Protect caller-owned memory by checking that required state is available before it is
              * used.
@@ -255,7 +268,7 @@ static int print_tree(const char *root)
     char path[PATH_CAPACITY];
     FILE *file;
     char line[1024];
-    join_path(path, sizeof(path), root, "TREE.txt");
+    if (!join_path(path, sizeof(path), root, "TREE.txt")) return 1;
     file = fopen(path, "rb");
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -349,7 +362,10 @@ int main(int argc, char **argv)
              * used.
              */
             if (UMI_GETCWD(current, sizeof(current)) == NULL) return 1;
-            join_path(current, sizeof(current), root, "install/windows-debug");
+            if (!join_path(current, sizeof(current), root,
+                           "install/windows-debug")) {
+                return 1;
+            }
             prefix = current;
         }
         return command_install(root, prefix);

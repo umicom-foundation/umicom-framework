@@ -331,20 +331,27 @@ static const char *context_colour_css_class(const char *colour_token)
     };
     size_t index;
 
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
     if (colour_token == NULL || colour_token[0] == '\0') return NULL;
-    for (index = 0U; index < sizeof(colours) / sizeof(colours[0]); ++index) {
-        char class_token[64U];
-        char semantic_token[64U];
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < G_N_ELEMENTS(colours); ++index) {
+        const char *colour = colours[index];
+        char css_class[64U];
+        char token_id[64U];
 
-        (void)snprintf(
-            class_token, sizeof(class_token), "umicom-context-%s",
-            colours[index]);
-        (void)snprintf(
-            semantic_token, sizeof(semantic_token),
-            "umicom.context.colour.%s", colours[index]);
-        if (strcmp(colour_token, colours[index]) == 0 ||
-            strcmp(colour_token, class_token) == 0 ||
-            strcmp(colour_token, semantic_token) == 0) {
+        (void)g_snprintf(
+            css_class, sizeof(css_class), "umicom-context-%s", colour);
+        (void)g_snprintf(
+            token_id, sizeof(token_id), "umicom.context.colour.%s", colour);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (strcmp(colour_token, colour) == 0 ||
+            strcmp(colour_token, css_class) == 0 ||
+            strcmp(colour_token, token_id) == 0) {
+            /* GTK copies class names when they are added, so returning the
+             * stable literal is safe and requires no caller-owned allocation. */
             return classes[index];
         }
     }
@@ -392,17 +399,20 @@ GtkWidget *umi_gtk4_ws_panel_frame_create(
 /* Build reusable interactive chrome around caller-supplied content. */
 GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
     const UmiWsPanelChrome *chrome,
-    GtkWidget *content,
+    GtkWidget *child,
     UmiGtk4WsPanelActionHandler action_handler,
     void *user_data)
 {
-    GtkWidget *frame;
-    GtkWidget *header;
+    UmiGtk4WsPanelFrameState *state =
+        g_new0(UmiGtk4WsPanelFrameState, 1U);
+    GtkWidget *frame = gtk_frame_new(NULL);
+    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    GtkWidget *header = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    GtkWidget *titles = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     GtkWidget *title;
+    GtkWidget *subtitle;
     GtkWidget *badge;
-    GtkWidget *context;
-    GtkWidget *button;
-    GtkWidget *overflow;
+    const char *context_class;
     bool editing_enabled;
     char automation_id[UMI_UI_TEXT_CAPACITY + 32U];
 
@@ -410,24 +420,54 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (chrome == NULL || content == NULL) return NULL;
-    frame = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    header = gtk_box_new(
-        GTK_ORIENTATION_HORIZONTAL, chrome->compact ? 2 : 6);
-    title = gtk_label_new(chrome->title);
-    badge = gtk_label_new(chrome->badge);
+    if (state == NULL || frame == NULL || root == NULL || header == NULL ||
+        titles == NULL) {
+        g_free(state);
+        return frame;
+    }
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (frame == NULL || header == NULL || title == NULL || badge == NULL)
-        return NULL;
+    if (chrome != NULL) state->chrome = *chrome;
+    state->action_handler = action_handler;
+    state->user_data = user_data;
+    g_object_set_data_full(G_OBJECT(frame), "umicom-panel-frame-state", state,
+                           g_free);
+    if (chrome != NULL && umi_ui_id_is_valid(chrome->panel_id)) {
+        /* The whole frame is addressable for visibility and evidence checks. */
+        (void)umi_gtk4_automation_tag_widget(frame, chrome->panel_id);
+    }
 
-    editing_enabled = !chrome->locked;
-    gtk_widget_add_css_class(frame, "umicom-panel-frame");
+    title = gtk_label_new(chrome != NULL ? chrome->title : "Panel");
+    subtitle = gtk_label_new(chrome != NULL ? chrome->subtitle : "");
+    badge = gtk_label_new(chrome != NULL ? chrome->badge : "");
+    gtk_widget_add_css_class(frame, "umicom-workstation-panel");
     gtk_widget_add_css_class(header, "umicom-panel-header");
-    gtk_widget_add_css_class(title, "umicom-panel-title");
-    gtk_widget_add_css_class(badge, "umicom-panel-badge");
+    context_class = chrome != NULL
+        ? context_colour_css_class(chrome->context_colour_token)
+        : NULL;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (context_class != NULL) {
+        /* The group colour is presentation metadata only; linked selection and
+         * routing continue to be owned by the toolkit-neutral context model. */
+        gtk_widget_add_css_class(frame, context_class);
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (chrome != NULL && chrome->compact)
+        gtk_widget_add_css_class(header, "umicom-panel-header-compact");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (chrome != NULL && chrome->locked)
+        gtk_widget_add_css_class(header, "umicom-panel-header-locked");
     gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
     gtk_label_set_ellipsize(
         GTK_LABEL(title), PANGO_ELLIPSIZE_END);
@@ -521,4 +561,15 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
         chrome->panel_id);
     (void)umi_gtk4_automation_tag_widget(frame, automation_id);
     return frame;
+}
+
+/*
+ * Initialise gtk4 ws panel frame from caller-provided values so later operations receive a
+ * known state.
+ */
+GtkWidget *umi_gtk4_ws_panel_frame_create(const UmiWsPanelChrome *chrome,
+                                          GtkWidget *child)
+{
+    return umi_gtk4_ws_panel_frame_create_interactive(
+        chrome, child, NULL, NULL);
 }

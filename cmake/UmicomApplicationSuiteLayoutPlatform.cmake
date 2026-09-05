@@ -22,12 +22,25 @@ endif()
 
 set(UMICOM_APPLICATION_SUITE_LAYOUT_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
+# The application-side canvas bridge calls the UI canvas mechanics.  Declare
+# that direction here so static archives resolve in the same order on every
+# platform; the lower-level Umicom::ui target never links back to the
+# application archive.  Fail during configuration when the required target is
+# absent instead of allowing
+# an avoidable undefined reference to appear much later at link time.
+if(NOT TARGET Umicom::ui)
+    message(FATAL_ERROR
+        "Application Suite Layout requires the canonical Umicom::ui target")
+endif()
+target_link_libraries(umicom_application PUBLIC Umicom::ui)
+
 target_sources(umicom_application PRIVATE
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/geometry.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/layout_summary.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/descriptor.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/catalogue.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/customisation.c"
+    "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/workbench_canvas_application_host.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/projection.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/profile_projection.c"
     "${UMICOM_APPLICATION_SUITE_LAYOUT_ROOT}/src/application/suite_layout/workbench_bridge.c"

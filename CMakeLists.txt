@@ -667,6 +667,7 @@ add_library(umicom_ui STATIC
     src/ui/layout_persistence.c
     src/ui/workspace_customisation.c
     src/ui/workspace_customisation_persistence.c
+    src/ui/workbench_canvas.c
 )
 add_library(Umicom::ui ALIAS umicom_ui)
 set_target_properties(umicom_ui PROPERTIES EXPORT_NAME ui)
@@ -3320,6 +3321,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-window-catalogue-recommendations-test framework.window_catalogue.recommendations tests/test_window_catalogue_recommendations.c)
     umicom_add_framework_test(umicom-workspace-customisation-edit-session-test framework.workspace_customisation.edit_session tests/test_workspace_customisation_edit_session.c)
     umicom_add_framework_test(umicom-workspace-customisation-suite-test framework.workspace_customisation.application_suite tests/test_workspace_customisation_suite.c)
+    umicom_add_framework_test(umicom-workbench-canvas-test framework.ui.workbench_canvas tests/test_workbench_canvas.c)
 
     # Unified immutable diagnostics, Problems and Output pipeline.
     umicom_add_framework_test(umicom-diagnostic-snapshot-test framework.diagnostic_snapshot tests/test_diagnostic_snapshot.c)
