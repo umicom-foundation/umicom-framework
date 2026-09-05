@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_customisation.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1084,3 +1085,250 @@ void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < customisation->layout_count; ++index) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(customisation->layouts[index].layout_id,customisation->active_layout_id) == 0) out_snapshot->active_layout_locked = customisation->layouts[index].locked;
 }
+
+/* Reject malformed bounded records before existing lookup operations can walk
+ * them. Canvas commands are synchronous and require exclusive controller
+ * ownership, as do the established customisation operations. */
+static UmiStatus canvas_records_validate(
+    const UmiUiWorkspaceCustomisation *customisation)
+{
+    size_t index;
+    size_t member;
+
+    if (customisation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (customisation->layout_count > UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        customisation->groups.count > UMI_UI_WINDOW_GROUP_MAX ||
+        memchr(customisation->active_layout_id, '\0',
+               sizeof(customisation->active_layout_id)) == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    for (index = 0U; index < customisation->layout_count; ++index) {
+        const UmiUiWorkspaceLayout *layout = &customisation->layouts[index];
+        char reason[192U];
+        if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS ||
+            layout->layout_id[0] == '\0' ||
+            memchr(layout->layout_id, '\0', sizeof(layout->layout_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        for (member = 0U; member < index; ++member) {
+            if (strcmp(layout->layout_id,
+                       customisation->layouts[member].layout_id) == 0)
+                return UMI_STATUS_INVALID_STATE;
+        }
+        for (member = 0U; member < layout->window_count; ++member) {
+            const UmiUiWorkspaceWindow *window = &layout->windows[member];
+            size_t earlier;
+            if (window->window_id[0] == '\0' ||
+                memchr(window->window_id, '\0', sizeof(window->window_id)) == NULL)
+                return UMI_STATUS_INVALID_STATE;
+            for (earlier = 0U; earlier < member; ++earlier) {
+                if (strcmp(window->window_id,
+                           layout->windows[earlier].window_id) == 0)
+                    return UMI_STATUS_INVALID_STATE;
+            }
+        }
+        if (umi_ui_workspace_layout_validate(layout, reason, sizeof(reason)) !=
+            UMI_STATUS_OK)
+            return UMI_STATUS_INVALID_STATE;
+    }
+    for (index = 0U; index < customisation->groups.count; ++index) {
+        const UmiUiWindowGroup *group = &customisation->groups.items[index];
+        if (group->member_count > UMI_UI_WINDOW_GROUP_MAX_MEMBERS)
+            return UMI_STATUS_INVALID_STATE;
+        for (member = 0U; member < group->member_count; ++member) {
+            size_t earlier;
+            if (group->members[member].window_id[0] == '\0' ||
+                memchr(group->members[member].window_id, '\0',
+                       sizeof(group->members[member].window_id)) == NULL)
+                return UMI_STATUS_INVALID_STATE;
+            for (earlier = 0U; earlier < member; ++earlier) {
+                if (strcmp(group->members[member].window_id,
+                           group->members[earlier].window_id) == 0)
+                    return UMI_STATUS_INVALID_STATE;
+            }
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Keep another saved layout's context links when legacy layouts reuse the
+ * same instance ID. Only an ID absent from every surviving layout is orphaned. */
+static bool canvas_window_still_referenced(
+    const UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id)
+{
+    size_t index;
+    for (index = 0U; index < customisation->layout_count; ++index) {
+        if (umi_ui_workspace_layout_find_window(
+                &customisation->layouts[index], window_id) != NULL)
+            return true;
+    }
+    return false;
+}
+
+/* Build an empty candidate through the existing layout API. Publish the
+ * complete result once, so activation failure never leaves a hidden new tab. */
+UmiStatus umi_ui_workspace_customisation_create_blank_layout(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *layout_id,
+    const char *name)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLayout *layout;
+    UmiStatus status;
+    size_t index;
+
+    if (customisation == NULL || layout_id == NULL || name == NULL ||
+        layout_id[0] == '\0' || name[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = canvas_records_validate(customisation);
+    if (status != UMI_STATUS_OK) return status;
+    if (customisation->edit_active) return UMI_STATUS_BUSY;
+    if (customisation->layout_count >= UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS ||
+        customisation->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (index = 0U; index < customisation->layout_count; ++index) {
+        if (strcmp(customisation->layouts[index].layout_id, layout_id) == 0)
+            return UMI_STATUS_ALREADY_EXISTS;
+    }
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = *customisation;
+    layout = &candidate->layouts[candidate->layout_count];
+    status = umi_ui_workspace_layout_init(layout, layout_id, name);
+    if (status == UMI_STATUS_OK) {
+        status = customisation_copy_text(
+            candidate->active_layout_id, sizeof(candidate->active_layout_id),
+            layout->layout_id);
+    }
+    if (status == UMI_STATUS_OK) {
+        candidate->layout_count += 1U;
+        candidate->revision += 1U;
+        *customisation = *candidate;
+    }
+    free(candidate);
+    return status;
+}
+
+/* Clear the candidate, not the live layout. The caller's outer edit baseline
+ * is deliberately preserved, including the reverse context membership. */
+UmiStatus umi_ui_workspace_customisation_clear_canvas(
+    UmiUiWorkspaceCustomisation *customisation,
+    UmiUiWorkspaceCanvasClearResult *out_result)
+{
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceCanvasClearResult result = {0U, 0U};
+    UmiStatus status = canvas_records_validate(customisation);
+    size_t index;
+
+    if (status != UMI_STATUS_OK) return status;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    for (index = 0U; index < layout->window_count; ++index) {
+        const UmiUiWorkspaceWindow *window = &layout->windows[index];
+        if (window->closable && !window->pinned) result.removed += 1U;
+        else result.retained += 1U;
+    }
+    if (result.removed == 0U) {
+        if (out_result != NULL) *out_result = result;
+        return UMI_STATUS_OK;
+    }
+    if (customisation->revision == UINT64_MAX ||
+        layout->revision > UINT64_MAX - (uint64_t)result.removed ||
+        customisation->groups.revision > UINT64_MAX - (uint64_t)result.removed)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (index = 0U; index < customisation->groups.count; ++index) {
+        if (customisation->groups.items[index].revision >
+            UINT64_MAX - (uint64_t)result.removed)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = *customisation;
+    layout = umi_ui_workspace_customisation_active(candidate);
+    /* Reverse traversal preserves relative order and avoids shifted indexes. */
+    for (index = layout->window_count; index > 0U; --index) {
+        const UmiUiWorkspaceWindow *window = &layout->windows[index - 1U];
+        char window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+        if (!window->closable || window->pinned) continue;
+        /* Copy before remove: window_id must survive the array compaction. */
+        (void)memcpy(window_id, window->window_id, sizeof(window_id));
+        status = umi_ui_workspace_layout_remove_window(layout, window_id);
+        if (status != UMI_STATUS_OK) break;
+        if (!canvas_window_still_referenced(candidate, window_id)) {
+            status = umi_ui_window_group_unassign(&candidate->groups, window_id);
+            if (status == UMI_STATUS_NOT_FOUND) status = UMI_STATUS_OK;
+            if (status != UMI_STATUS_OK) break;
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        /* Erase inactive slots so removed instance metadata is not retained in
+         * a later whole-record checkpoint. Product storage is not accessed. */
+        (void)memset(&layout->windows[layout->window_count], 0,
+            (UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS - layout->window_count) *
+            sizeof(layout->windows[0]));
+        candidate->revision += 1U;
+        *customisation = *candidate;
+        if (out_result != NULL) *out_result = result;
+    }
+    free(candidate);
+    return status;
+}
+
+/* Record free placement without changing the existing detached-window flag.
+ * The complete window value is prepared locally and published in one step. */
+UmiStatus umi_ui_workspace_customisation_place_canvas_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    double x,
+    double y,
+    double width,
+    double height)
+{
+    UmiUiWorkspaceLayout *layout;
+    UmiUiWorkspaceWindow *window;
+    UmiUiWorkspaceWindow candidate;
+    UmiStatus status;
+
+    if (customisation == NULL || window_id == NULL || window_id[0] == '\0' ||
+        !isfinite(x) || !isfinite(y) || !isfinite(width) || !isfinite(height) ||
+        x < 0.0 || y < 0.0 || width <= 0.0 || height <= 0.0 ||
+        width > 1.0 || height > 1.0 || x > 1.0 - width || y > 1.0 - height)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = canvas_records_validate(customisation);
+    if (status != UMI_STATUS_OK) return status;
+    if (!customisation->edit_active) return UMI_STATUS_INVALID_STATE;
+    layout = umi_ui_workspace_customisation_active(customisation);
+    if (layout == NULL) return UMI_STATUS_NOT_FOUND;
+    if (layout->locked) return UMI_STATUS_PERMISSION_DENIED;
+    window = umi_ui_workspace_layout_find_window_mutable(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    if (window->pinned || (!window->resizable &&
+        (window->width != width || window->height != height)))
+        return UMI_STATUS_PERMISSION_DENIED;
+    if (customisation->revision == UINT64_MAX || layout->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    candidate = *window;
+    status = customisation_copy_text(candidate.placement_id,
+        sizeof(candidate.placement_id), UMI_UI_WORKSPACE_CANVAS_PLACEMENT);
+    if (status == UMI_STATUS_OK)
+        status = customisation_copy_text(candidate.stack_id,
+            sizeof(candidate.stack_id), candidate.window_id);
+    if (status == UMI_STATUS_OK)
+        status = customisation_copy_text(candidate.group_id,
+            sizeof(candidate.group_id), candidate.window_id);
+    if (status != UMI_STATUS_OK) return status;
+    candidate.x = x;
+    candidate.y = y;
+    candidate.width = width;
+    candidate.height = height;
+    candidate.floating = false;
+    candidate.visible = true;
+    candidate.maximised = false;
+    *window = candidate;
+    layout->revision += 1U;
+    customisation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+

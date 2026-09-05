@@ -211,4 +211,49 @@ UmiStatus umi_ui_workspace_customisation_set_theme(UmiUiWorkspaceCustomisation *
  * client applications.
  */
 void umi_ui_workspace_customisation_snapshot(const UmiUiWorkspaceCustomisation *customisation,UmiUiWorkspaceCustomisationSnapshot *out_snapshot);
+
+/* In-canvas floating is distinct from floating=true, which existing adapters
+ * interpret as a detached native window. No existing record or enum changes. */
+#define UMI_UI_WORKSPACE_CANVAS_PLACEMENT "canvas"
+
+/* A clear operation reports protected instances instead of silently removing
+ * them. Counts are written only on success; this object must not alias the
+ * customisation object. Definitions and product data are never removed. */
+typedef struct UmiUiWorkspaceCanvasClearResult {
+    size_t removed;
+    size_t retained;
+} UmiUiWorkspaceCanvasClearResult;
+
+/* Create and activate a locked, empty layout without replacing any existing
+ * layout. Rejects duplicate IDs, empty/overlong names or IDs, full capacity and an
+ * active edit. On failure the customisation is unchanged. Borrowed strings
+ * may reference the customisation. Call begin_edit separately to arrange it. */
+UmiStatus umi_ui_workspace_customisation_create_blank_layout(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *layout_id,
+    const char *name);
+
+/* Within the existing edit transaction, remove every closable, unpinned
+ * instance from the active layout, including its detached instances. Keep
+ * protected instances and all catalogue entries. Remove only orphaned context
+ * membership: an instance ID referenced in another stored layout retains its
+ * membership. Cancel restores the layout and groups using the existing
+ * baselines. out_result is optional. Failure publishes no state or result. */
+UmiStatus umi_ui_workspace_customisation_clear_canvas(
+    UmiUiWorkspaceCustomisation *customisation,
+    UmiUiWorkspaceCanvasClearResult *out_result);
+
+/* Place an existing instance freely inside the canvas, in normalised units.
+ * Requires an active edit and an unpinned instance. A non-resizable instance
+ * may move but may not change size. Invalid, non-finite or out-of-bounds
+ * rectangles fail without mutation. Preserves linked context and instance ID.
+ * This records canvas placement; adapters must explicitly render that mode. */
+UmiStatus umi_ui_workspace_customisation_place_canvas_window(
+    UmiUiWorkspaceCustomisation *customisation,
+    const char *window_id,
+    double x,
+    double y,
+    double width,
+    double height);
+
 #endif
