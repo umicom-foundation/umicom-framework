@@ -14,15 +14,20 @@ add_executable(umicom-workspace-canvas-test
     "${UMICOM_FRAMEWORK_ROOT}/src/ui/workspace_customisation.c"
     "${UMICOM_FRAMEWORK_ROOT}/src/ui/workspace_layout.c"
     "${UMICOM_FRAMEWORK_ROOT}/src/ui/window_group.c"
+    "${UMICOM_FRAMEWORK_ROOT}/src/ui/window_catalogue.c"
+    "${UMICOM_FRAMEWORK_ROOT}/src/ui/theme_profile.c"
+    "${UMICOM_FRAMEWORK_ROOT}/src/ui/brand_palette.c"
+    "${UMICOM_FRAMEWORK_ROOT}/src/ui/types.c"
+    "${UMICOM_FRAMEWORK_ROOT}/src/ui/workspace_geometry.c"
 )
 target_include_directories(umicom-workspace-canvas-test PRIVATE
     "${UMICOM_FRAMEWORK_ROOT}/include")
-# Section collection deliberately limits this isolated link to the portable
-# operations under test. It does not verify linkage of the complete UI target.
+# Link the complete dependency set of these production translation units.
+# Do not depend on discarded sections to hide missing Framework symbols:
+# ELF and PE/COFF linkers need not retain the same set of functions.
+# This verifies the portable workspace subset, not the complete UI target.
 target_compile_options(umicom-workspace-canvas-test PRIVATE
-    -std=c2x -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror
-    -ffunction-sections -fdata-sections)
-target_link_options(umicom-workspace-canvas-test PRIVATE -Wl,--gc-sections)
+    -std=c2x -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
 
 option(UMICOM_CANVAS_TEST_SANITIZERS "Run isolated tests with address and undefined-behaviour sanitizers" OFF)
 option(UMICOM_CANVAS_TEST_ALLOCATION_FAILURES "Inject candidate-allocation failures using the GNU linker" OFF)

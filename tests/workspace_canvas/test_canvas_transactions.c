@@ -14,6 +14,9 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/workspace_customisation.h"
+#include "umicom/ui/theme_profile.h"
+#include "umicom/ui/window_catalogue.h"
+#include "umicom/ui/workspace_geometry.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -413,8 +416,86 @@ static void testAllocationFailure(void)
 }
 #endif
 
+/* Exercise the real initialisation and catalogue-to-layout path so a partial
+ * link cannot hide the dependencies of the production translation units. */
+static void testProductionDependencyClosure(void)
+{
+    UmiUiWorkspaceCustomisation *workspace = calloc(1U, sizeof(*workspace));
+    UmiUiWindowDescriptor descriptor = {
+        .tool_id = "canvas.tool",
+        .title = "Canvas tool",
+        .category = UMI_UI_WINDOW_CATEGORY_DEVELOPMENT,
+        .supports_multiple = true,
+        .default_width = 0.5,
+        .default_height = 0.5
+    };
+    UmiUiThemeProfile theme;
+    UmiUiWorkspacePanelSettings settings;
+    UmiUiWorkspaceRect bounds;
+    const UmiUiWorkspaceWindow *window;
+    UmiUiWorkspaceCanvasClearResult result;
+    char windowId[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char reason[192U];
+
+    CHECK(workspace != NULL);
+    umi_ui_workspace_customisation_init(workspace);
+    CHECK(workspace->revision == 1U);
+    CHECK(workspace->windows.revision == 1U);
+    CHECK(workspace->windows.count == 0U);
+    CHECK(workspace->layout_count == 0U);
+    CHECK(strcmp(workspace->theme.theme_id, "umicom-dark") == 0);
+    CHECK(umi_ui_theme_profile_validate(
+        &workspace->theme, reason, sizeof(reason)) == UMI_STATUS_OK);
+
+    CHECK(umi_ui_window_catalogue_register(
+        &workspace->windows, &descriptor) == UMI_STATUS_OK);
+    CHECK(umi_ui_workspace_customisation_create_blank_layout(
+        workspace, "integration", "Integration") == UMI_STATUS_OK);
+    CHECK(umi_ui_workspace_customisation_begin_edit(workspace) == UMI_STATUS_OK);
+    CHECK(umi_ui_workspace_customisation_open_window(workspace,
+        descriptor.tool_id, "left", false, UINT64_C(42),
+        windowId, sizeof(windowId)) == UMI_STATUS_OK);
+
+    window = umi_ui_workspace_layout_find_window(
+        umi_ui_workspace_customisation_active_const(workspace), windowId);
+    CHECK(window != NULL);
+    CHECK(strcmp(window->placement_id, "left") == 0);
+    bounds = umi_ui_workspace_region_rect(UMI_UI_PLACEMENT_LEFT);
+    CHECK(window->x == bounds.x && window->width == bounds.width);
+    CHECK(workspace->windows.recent_count == 1U);
+    CHECK(workspace->windows.recent[0].last_opened_at_ms == UINT64_C(42));
+    CHECK(workspace->windows.recent[0].open_count == 1U);
+
+    CHECK(umi_ui_workspace_customisation_dock_window(
+        workspace, windowId, "right", "right") == UMI_STATUS_OK);
+    window = umi_ui_workspace_layout_find_window(
+        umi_ui_workspace_customisation_active_const(workspace), windowId);
+    CHECK(window != NULL);
+    CHECK(strcmp(window->placement_id, "right") == 0);
+    bounds = umi_ui_workspace_region_rect(UMI_UI_PLACEMENT_RIGHT);
+    CHECK(window->x == bounds.x && window->width == bounds.width);
+
+    settings = umi_ui_workspace_panel_settings_default(windowId);
+    bounds = umi_ui_workspace_region_rect(UMI_UI_PLACEMENT_CENTRE);
+    CHECK(settings.x == bounds.x && settings.width == bounds.width);
+    CHECK(umi_ui_theme_profile_init(&theme, "canvas-light", "Canvas light",
+        UMI_UI_THEME_MODE_LIGHT, UMI_UI_DENSITY_COMFORTABLE) == UMI_STATUS_OK);
+    CHECK(umi_ui_workspace_customisation_set_theme(workspace, &theme) ==
+        UMI_STATUS_OK);
+    CHECK(strcmp(workspace->theme.theme_id, "canvas-light") == 0);
+
+    CHECK(umi_ui_workspace_customisation_clear_canvas(workspace, &result) ==
+        UMI_STATUS_OK);
+    CHECK(result.removed == 1U && result.retained == 0U);
+    CHECK(umi_ui_window_catalogue_find(
+        &workspace->windows, descriptor.tool_id) != NULL);
+    CHECK(umi_ui_workspace_customisation_commit_edit(workspace) == UMI_STATUS_OK);
+    free(workspace);
+}
+
 int main(void)
 {
+    testProductionDependencyClosure();
     testBlankCreation();
     testBlankFailureAtomicity();
     testBlankCapacity();
@@ -429,9 +510,9 @@ int main(void)
     testFullCanvasCapacity();
 #ifdef UMICOM_TEST_WRAP_MALLOC
     testAllocationFailure();
-    (void)puts("PASS: 13 canvas transaction test groups, including allocation failure");
+    (void)puts("PASS: 14 canvas transaction test groups, including allocation failure");
 #else
-    (void)puts("PASS: 12 canvas transaction test groups");
+    (void)puts("PASS: 13 canvas transaction test groups");
 #endif
     return EXIT_SUCCESS;
 }
