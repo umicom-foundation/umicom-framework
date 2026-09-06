@@ -37,6 +37,7 @@ function(umicom_application_suite_attach_gtk4)
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/workstation/view_model_panel_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_suite_workstation_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_product_workstation_gtk4.c"
+        "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_product_application_gtk4.c"
     )
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::application)
     set_property(

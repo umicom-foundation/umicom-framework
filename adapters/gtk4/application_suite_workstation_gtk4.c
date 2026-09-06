@@ -257,8 +257,9 @@ static void refresh_heading(UmiApplicationSuiteGtk4Workstation *workstation)
      */
     if (choice == NULL) return;
 
-    /* The product name remains stable while the smaller second line explains
-     * which workspace layout is currently active. */
+    /* The product name remains stable while the copied subtitle identifies
+     * the active layout. Compact headers expose it through the tooltip and
+     * accessible description; the layout dropdown also keeps it visible. */
     identity = umi_gtk4_ws_shell_header_snapshot(workstation->identity);
     (void)umi_gtk4_ws_shell_header_set_text(
         workstation->identity,

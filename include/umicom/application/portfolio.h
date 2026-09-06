@@ -39,6 +39,14 @@ const UmiApplicationDefinition *umi_application_portfolio_at(size_t index);
 const UmiApplicationDefinition *umi_application_portfolio_find(
     const char *application_id);
 /**
+ * Return the native GUI executable basename for a supported product, without
+ * a platform suffix or directory. The immutable string is Framework-owned.
+ * NULL means this ID has no native GUI build mapping; console commands are
+ * never returned as a fallback. A mapping does not prove installation or
+ * product feature completeness: the host must discover the executable first.
+ */
+const char *umi_application_portfolio_gui_executable(const char *application_id);
+/**
  * Return the number of records represented by application portfolio family without
  * changing their state.
  */

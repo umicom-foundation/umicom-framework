@@ -167,6 +167,25 @@ static char *profile_css(const UmiUiAppearanceProfile *profile) {
       " margin-right: 2px; opacity: 0.94; }"
       ".umicom-appearance-scope .umicom-mode-badge {"
       " color: %s; background: %s; border-radius: 3px; padding: 1px 5px; }"
+      /* Compact product identity is part of the toolbar, not a second card.
+       * Keep the configured font size: only decoration and spacing change. */
+      ".umicom-appearance-scope .umicom-workstation-header.compact {"
+      " padding: 0; margin: 0; }"
+      ".umicom-appearance-scope .umicom-workstation-header.compact"
+      " .umicom-workstation-identity {"
+      " min-height: 0; padding: 0 3px; margin: 0; border: 0;"
+      " border-radius: 0; background: transparent; box-shadow: none; }"
+      ".umicom-appearance-scope .umicom-workstation-header.compact"
+      " .umicom-workstation-identity-title { font-weight: 600; text-shadow: none; }"
+      ".umicom-appearance-scope .umicom-workstation-header.compact"
+      " .umicom-mode-badge { min-height: 0; min-width: 0;"
+      " padding: 1px 4px; margin: 0; box-shadow: none; }"
+      /* These are minimum sizes, not fixed heights. Large user fonts can still
+       * grow controls, while platform default padding no longer inflates them. */
+      ".umicom-appearance-scope .umicom-workstation-header.compact > button,"
+      ".umicom-appearance-scope .umicom-workstation-header.compact > menubutton > button {"
+      " min-height: 20px; min-width: 20px; padding: 2px 4px; margin: 0;"
+      " border-radius: 3px; box-shadow: none; }"
       ".umicom-appearance-scope .umicom-workstation-panel {"
       " background: %s; color: %s; border-color: %s; }"
       ".umicom-appearance-scope .umicom-panel-header {"

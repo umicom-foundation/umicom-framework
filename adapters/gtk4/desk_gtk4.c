@@ -19,6 +19,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/desk.h"
+#include "umicom/ui/gtk4/workstation/shell_header.h"
+#include "umicom/ui/gtk4/workstation/window_fit.h"
 
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -671,7 +673,10 @@ UmiStatus umi_gtk4_desk_create(
     desk->runtime = runtime;
     desk->window = gtk_application_window_new(desk->application);
     gtk_window_set_title(GTK_WINDOW(desk->window), "Umicom Desk");
-    gtk_window_set_default_size(GTK_WINDOW(desk->window), 1480, 900);
+    (void)umi_gtk4_ws_apply_window_identity(GTK_WINDOW(desk->window));
+    /* Keep Desk's roomy default within the same monitor bounds as its apps. */
+    (void)umi_gtk4_ws_window_fit(
+        GTK_WINDOW(desk->window), 1480, 900, 960, 600);
 
     root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_add_css_class(root, "umicom-desk-root");

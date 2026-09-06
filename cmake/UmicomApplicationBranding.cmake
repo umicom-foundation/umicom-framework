@@ -155,6 +155,13 @@ function(umicom_apply_application_branding)
             NEWLINE_STYLE WIN32)
         target_sources("${UMICOM_BRAND_TARGET}" PRIVATE
             "${_umicom_brand_binary_dir}/${UMICOM_BRAND_INTERNAL_NAME}.rc")
+        # Recompile embedded artwork even when the resource compiler does not
+        # report its input files in generated dependency information.
+        set_property(SOURCE
+            "${_umicom_brand_binary_dir}/${UMICOM_BRAND_INTERNAL_NAME}.rc"
+            APPEND PROPERTY OBJECT_DEPENDS
+            "${_umicom_brand_root}/brand/umicom.ico"
+            "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg")
         # Apply this branch only when its contract condition is satisfied.
         if(UMICOM_BRAND_WINDOWS_GUI)
             set_property(TARGET "${UMICOM_BRAND_TARGET}"
@@ -162,24 +169,11 @@ function(umicom_apply_application_branding)
         endif()
     endif()
 
-    # Keep both contrast-aware vectors beside every GUI executable so runtime
-    # title bars and splash screens remain sharp at every display scale.
-    add_custom_command(TARGET "${UMICOM_BRAND_TARGET}" POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E make_directory
-            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${_umicom_brand_root}/brand/umicom-icon.svg"
-            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-icon.svg"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg"
-            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-icon-on-dark.svg"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${_umicom_brand_root}/brand/umicom-logo.svg"
-            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-logo.svg"
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${_umicom_brand_root}/brand/umicom-logo-on-dark.svg"
-            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/umicom-logo-on-dark.svg"
-        COMMENT "Applying shared Umicom identity to ${UMICOM_BRAND_PRODUCT_NAME}")
+    set(_umicom_runtime_brand_files
+        "${_umicom_brand_root}/brand/umicom-icon.svg"
+        "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg"
+        "${_umicom_brand_root}/brand/umicom-logo.svg"
+        "${_umicom_brand_root}/brand/umicom-logo-on-dark.svg")
 
     # A product can explicitly request raster fallbacks for an older frontend.
     # They are never the master artwork and are not required by modern Umicom
@@ -195,14 +189,37 @@ function(umicom_apply_application_branding)
                     "Requested Umicom raster fallback is missing: "
                     "${_umicom_brand_root}/brand/${_umicom_raster_file}")
             endif()
-            add_custom_command(TARGET "${UMICOM_BRAND_TARGET}" POST_BUILD
-                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                    "${_umicom_brand_root}/brand/${_umicom_raster_file}"
-                    "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding/${_umicom_raster_file}"
-                COMMENT
-                    "Copying optional raster fallback for ${UMICOM_BRAND_PRODUCT_NAME}")
+            list(APPEND _umicom_runtime_brand_files
+                "${_umicom_brand_root}/brand/${_umicom_raster_file}")
         endforeach()
     endif()
+
+    # Stage on every requested product build, including when only artwork has
+    # changed or a staged file was removed. copy_if_different avoids unnecessary
+    # writes, and the executable need not relink to refresh its branding.
+    # TARGET_FILE_DIR adds no executable dependency under CMP0112 NEW.
+    add_custom_target("${UMICOM_BRAND_TARGET}-branding"
+        COMMAND "${CMAKE_COMMAND}" -E make_directory
+            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            ${_umicom_runtime_brand_files}
+            "$<TARGET_FILE_DIR:${UMICOM_BRAND_TARGET}>/branding"
+        DEPENDS ${_umicom_runtime_brand_files}
+        COMMENT "Applying shared Umicom identity to ${UMICOM_BRAND_PRODUCT_NAME}"
+        VERBATIM)
+    # Several products share bin/branding. Serialize their staging commands so
+    # Windows never opens the same destination file for two writes at once.
+    # This chain contains staging targets only; it does not build other products.
+    get_property(_umicom_previous_branding_target GLOBAL PROPERTY
+        UMICOM_RUNTIME_BRANDING_LAST_TARGET)
+    if(_umicom_previous_branding_target)
+        add_dependencies("${UMICOM_BRAND_TARGET}-branding"
+            "${_umicom_previous_branding_target}")
+    endif()
+    set_property(GLOBAL PROPERTY UMICOM_RUNTIME_BRANDING_LAST_TARGET
+        "${UMICOM_BRAND_TARGET}-branding")
+    add_dependencies("${UMICOM_BRAND_TARGET}"
+        "${UMICOM_BRAND_TARGET}-branding")
 
     # Installed applications share the canonical scalable icon. A generated
     # desktop entry supplies the product's native text and executable name.

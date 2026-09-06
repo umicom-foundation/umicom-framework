@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "umicom/ui/gtk4/workstation/panel_frame.h"
+#include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/tab_host.h"
 #include "umicom/ui/gtk4/automation.h"
 
@@ -595,6 +596,9 @@ static void build_floating_windows(UmiGtk4WorkspaceLayoutHost *host)
             entry);
 
         gtk_window_set_title(window, model->title);
+        /* Detached panels inherit the same canonical native identity as their
+         * product window without replacing caller-controlled decorations. */
+        (void)umi_gtk4_ws_apply_window_identity(window);
         width = model->width > 1.0
             ? (int)model->width
             : (int)(model->width * 1440.0);

@@ -86,6 +86,7 @@ static UmiStatus umi_repository_workflow_run_git(
     UmiProcessResult *process_result;
     UmiStatus status;
     int exit_code;
+    int expected_difference;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -123,14 +124,29 @@ static UmiStatus umi_repository_workflow_run_git(
         report->output_truncated || process_result->output_truncated;
     (void)umi_repository_workflow_append_output(report, process_result->output);
     exit_code = process_result->exit_code;
-    free(process_result);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (!accept_nonzero && exit_code != 0) {
-        return UMI_STATUS_IO_ERROR;
+    /* Git diff --quiet returns 1 when changes exist. The process abstraction
+     * reports a normally completed nonzero child as INTERNAL_ERROR, so honor
+     * that expected Git result before propagating process failures. Never
+     * accept launch errors, cancellation, timeout, or another exit code. */
+    expected_difference = accept_nonzero && exit_code == 1 &&
+        process_result->launched && !process_result->cancelled &&
+        !process_result->timed_out && !process_result->termination_requested;
+    if (expected_difference && status == UMI_STATUS_INTERNAL_ERROR) {
+        status = UMI_STATUS_OK;
     }
-    return UMI_STATUS_OK;
+    free(process_result);
+    if (status == UMI_STATUS_OK && exit_code != 0 && !expected_difference) {
+        status = UMI_STATUS_IO_ERROR;
+    }
+    if (status != UMI_STATUS_OK) {
+        char diagnostic[160];
+        /* Identify the failed step without echoing messages or remote URLs. */
+        (void)snprintf(diagnostic, sizeof(diagnostic),
+                       "Git command failed: %s (exit %d; %s).",
+                       arguments[0], exit_code, umi_status_text(status));
+        (void)umi_repository_workflow_append_output(report, diagnostic);
+    }
+    return status;
 }
 
 /* Capture one successful Git query without mixing its machine-readable output

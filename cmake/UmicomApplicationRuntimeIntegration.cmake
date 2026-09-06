@@ -96,6 +96,28 @@ if(BUILD_TESTING)
         framework.application.launch_selection
         tests/application/test_launch_selection.c
     )
+    # Native C regressions exercise host callbacks without opening any GUI or
+    # process, and verify every supported product resolves to its GUI target.
+    umicom_add_application_runtime_test(
+        umicom-application-launch-dispatch-test
+        framework.application.launch_dispatch
+        tests/application/test_launch_dispatch.c
+    )
+    umicom_add_application_runtime_test(
+        umicom-application-portfolio-gui-executables-test
+        framework.application.portfolio.gui_executables
+        tests/application/test_portfolio_gui_executables.c
+    )
+    set_tests_properties(
+        framework.application.launch_dispatch
+        framework.application.portfolio.gui_executables
+        PROPERTIES LABELS "application;framework;launcher;native;regression")
+    # Include both native regressions when the parent builds its validation
+    # target, so CTest does not find missing executables after a focused build.
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-application-launch-dispatch-test)
+        umicom_register_validation_target(umicom-application-portfolio-gui-executables-test)
+    endif()
     umicom_add_application_runtime_test(
         umicom-application-feature-pack-test
         framework.application.feature_packs

@@ -168,12 +168,12 @@ static const UmiApplicationDefinition APPLICATIONS[] = {
         UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
         FRONTENDS_DESKTOP | UMI_FRONTEND_WEB, CAP_TRADING, OPTIONAL_AI,
         DOMAIN_TRADING, PROFILE_TRADER),
-    APP("org.umicom.tms", "Umicom TMS", "umicom-tms", "umicom-tms-console",
+    APP("org.umicom.tms", "Umicom TMS", "umicom-tms", "umicom-tms",
         "Treasury management across trade capture, workflows, risk, settlement and accounting.",
         UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
         FRONTENDS_DESKTOP | UMI_FRONTEND_WEB, CAP_TMS, OPTIONAL_AI,
         DOMAIN_TMS, PROFILE_TMS),
-    APP("org.umicom.bank", "Umicom Bank", "umicom-bank", "umicom-bank-console",
+    APP("org.umicom.bank", "Umicom Bank", "umicom-bank", "umicom-bank",
         "Digital banking, multi-currency money, payments and governed digital assets.",
         UMI_APPLICATION_FAMILY_FINANCE, UMI_APPLICATION_FOUNDATION,
         FRONTENDS_DESKTOP | UMI_FRONTEND_WEB | UMI_FRONTEND_MOBILE,
@@ -268,7 +268,7 @@ static const UmiApplicationDefinition APPLICATIONS[] = {
         UMI_APPLICATION_FAMILY_PLATFORM, UMI_APPLICATION_FOUNDATION,
         FRONTENDS_DESKTOP | UMI_FRONTEND_WEB, CAP_PLATFORM, OPTIONAL_NONE,
         DOMAIN_PLATFORM, PROFILE_PLATFORM),
-    APP("org.umicom.os", "Umicom OS", "umicom-os", "umicom-os-shell",
+    APP("org.umicom.os", "Umicom OS", "umicom-os", "umicom-os-control-centre-gtk",
         "Portable Umicom desktop and runtime for hosted, x86-64 and RISC-V environments.",
         UMI_APPLICATION_FAMILY_OPERATING_SYSTEM, UMI_APPLICATION_ROADMAP,
         FRONTENDS_DESKTOP, CAP_OS, OPTIONAL_NONE, DOMAIN_OS, PROFILE_PLATFORM),
@@ -334,6 +334,51 @@ size_t umi_application_portfolio_family_count(UmiApplicationFamily family)
         if (APPLICATIONS[index].family == family) count += 1U;
     }
     return count;
+}
+
+/* Keep native frontends distinct from historic command-line executable names.
+ * Explicit mappings also prevent future roadmap-only entries from appearing
+ * installed merely because their portfolio definition has an executable field. */
+const char *umi_application_portfolio_gui_executable(const char *application_id)
+{
+    static const struct {
+        const char *application_id;
+        const char *executable;
+    } native_products[] = {
+        {"org.umicom.desktop", "umicom-desk"},
+        {"org.umicom.studio", "umicom-studio-ide"},
+        {"org.umicom.trader", "umicom-trader"},
+        {"org.umicom.bank", "umicom-bank"},
+        {"org.umicom.tms", "umicom-tms"},
+        {"org.umicom.music-studio", "umicom-music-studio"},
+        {"org.umicom.accountant", "umicom-accountant"},
+        {"org.umicom.cad", "umicom-cad"},
+        {"org.umicom.creator", "umicom-ai-creator"},
+        {"org.umicom.database-studio", "umicom-database-studio"},
+        {"org.umicom.education", "umicom-education"},
+        {"org.umicom.exchange", "umicom-exchange"},
+        {"org.umicom.games", "umicom-games"},
+        {"org.umicom.integration-studio", "umicom-integration-studio"},
+        {"org.umicom.kitchen-designer", "umicom-kitchen-designer"},
+        {"org.umicom.llm", "umicom-llm"},
+        {"org.umicom.marketplace", "umicom-marketplace"},
+        {"org.umicom.media-studio", "umicom-media-studio"},
+        {"org.umicom.mobile-studio", "umicom-mobile-studio"},
+        {"org.umicom.operations", "umicom-operations"},
+        {"org.umicom.os", "umicom-os-control-centre-gtk"},
+        {"org.umicom.rag", "umicom-rag"},
+        {"org.umicom.security-centre", "umicom-security-centre"},
+        {"org.umicom.web-studio", "umicom-web-studio"}
+    };
+    size_t index;
+    /* Unknown IDs never become executable paths assembled from user input. */
+    if (application_id == NULL || application_id[0] == '\0') return NULL;
+    for (index = 0U; index < COUNT_OF(native_products); ++index) {
+        if (strcmp(application_id, native_products[index].application_id) == 0) {
+            return native_products[index].executable;
+        }
+    }
+    return NULL;
 }
 
 /*

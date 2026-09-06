@@ -113,11 +113,52 @@ typedef struct UmiApplicationLaunchSelectionCheckpoint {
 typedef struct UmiApplicationLaunchSelection UmiApplicationLaunchSelection;
 
 /**
+ * Ask the active host to open one application. The ID is borrowed until this
+ * call returns; a host that queues work must copy it. OK means that the host
+ * accepted the request, not that a process started or a workspace is ready.
+ * The caller owns context and keeps it alive throughout the dispatch.
+ */
+typedef UmiStatus (*UmiApplicationLaunchDispatchFn)(
+    const char *application_id, void *context);
+
+/** Record one host decision without inventing a running process or launch action. */
+typedef struct UmiApplicationLaunchDispatchResult {
+    char application_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
+    UmiStatus status;
+} UmiApplicationLaunchDispatchResult;
+
+/**
+ * Describe every selected request in catalogue order. These copied values are
+ * caller-owned and remain valid after the selection is changed or destroyed.
+ */
+typedef struct UmiApplicationLaunchDispatchReport {
+    UmiApplicationLaunchDispatchResult results[
+        UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS];
+    size_t result_count;
+    size_t accepted_count;
+    size_t failed_count;
+    UmiStatus first_failure;
+    uint64_t revision;
+} UmiApplicationLaunchDispatchReport;
+
+/**
  * Initialise application launch selection from caller-provided values so later operations
  * receive a known state.
  */
 UmiStatus umi_application_launch_selection_create(
     UmiApplicationRuntimeCatalogue *catalogue,
+    UmiApplicationLaunchSelection **out_selection);
+/**
+ * Create a picker for any host application, hiding only that host's own entry.
+ * A nonempty host ID must exist in the borrowed catalogue; NULL or an empty ID
+ * includes every product. The older create operation continues to hide Desk.
+ * The catalogue must outlive the selection. Calls use one owner thread.
+ * Explicit selections survive a temporary loss of eligibility during refresh,
+ * so failed requests remain visible for retry when the product is available.
+ */
+UmiStatus umi_application_launch_selection_create_for_host(
+    UmiApplicationRuntimeCatalogue *catalogue,
+    const char *host_application_id,
     UmiApplicationLaunchSelection **out_selection);
 /**
  * Release or reset state held by application launch selection so the same storage can be
@@ -202,6 +243,25 @@ UmiStatus umi_application_launch_selection_execute(
     UmiApplicationLaunchSelection *selection,
     UmiApplicationLauncher *launcher,
     UmiApplicationLaunchSelectionReport *out_report);
+
+/**
+ * Dispatch selected requests to a host-owned opener on the calling thread.
+ * Each success clears that selection so Retry cannot open it again; failures
+ * remain selected. Every selected item is reported, including CANCELLED, and
+ * later items are still attempted. An empty selection returns INVALID_STATE
+ * with an empty report. The first failed request is the overall return value.
+ *
+ * This model is single-threaded. Callbacks may inspect copied choices but may
+ * not mutate, refresh, execute or recursively dispatch the selection: these
+ * operations return BUSY until dispatch finishes. Neither the selection nor
+ * its borrowed catalogue/context may be destroyed inside a callback. No
+ * runtime state or process token is changed by an accepted host request.
+ */
+UmiStatus umi_application_launch_selection_dispatch(
+    UmiApplicationLaunchSelection *selection,
+    UmiApplicationLaunchDispatchFn callback,
+    void *context,
+    UmiApplicationLaunchDispatchReport *out_report);
 
 #ifdef __cplusplus
 }

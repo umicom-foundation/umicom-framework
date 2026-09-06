@@ -24,10 +24,28 @@
 #include <gtk/gtk.h>
 
 #include "umicom/ui/appearance.h"
+#include "umicom/application/launch_selection.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * Request canonical themed and operating-system icons for this native window.
+ *
+ * The shared resolver finds branding/umicom-icon.svg beside the executable
+ * (or in a development working directory). Its directory is added to the
+ * display's icon theme, and the window requests the name "umicom-icon".
+ * On Windows, resource 101 from the shared branding template supplies both
+ * HWND icon sizes after realization and mapping, without replacing a custom
+ * titlebar. Calling this repeatedly is safe and never presents the window.
+ * Returns OK when either themed identity or native assignment is configured
+ * (an unrealized Windows window receives its icon later), INVALID_ARGUMENT for
+ * an invalid window, UNAVAILABLE without the backend, or NOT_FOUND without a
+ * usable canonical resource. Missing assets leave existing icons unchanged.
+ * The operating system may choose not to display GTK window icons.
+ */
+UmiStatus umi_gtk4_ws_apply_window_identity(GtkWindow *window);
 
 /**
  * Represent the gtk4 workstation shell header data shared with callers of this public
@@ -41,7 +59,8 @@ typedef struct UmiGtk4WorkstationShellHeader
  *
  * STANDARD delegates placement to the active host policy. NEW_WINDOW asks for
  * an independent top-level application window. The default GTK4 handler starts
- * the application executable recorded by the canonical Framework portfolio.
+ * the canonical native GUI companion recorded by the Framework portfolio;
+ * console verification tools are never graphical-launch fallbacks.
  */
 typedef enum UmiGtk4WorkstationApplicationOpenMode {
     UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD = 1,
@@ -65,6 +84,10 @@ typedef UmiStatus (*UmiGtk4WorkstationApplicationOpenHandler)(
  * storage. `resource_root` is optional. When it is empty, relative resources
  * are looked up beside the running executable so installed applications do
  * not depend on the terminal's current directory.
+ * A compact header shows one title line with an 18-logical-pixel SVG mark.
+ * Its subtitle is retained in the snapshot, tooltip and accessible description
+ * rather than adding another visible line. Noncompact headers show the subtitle
+ * below the title and use a 24-logical-pixel mark.
  */
 typedef struct UmiGtk4WorkstationShellHeaderConfig {
     const char *application_id;
@@ -142,12 +165,18 @@ umi_gtk4_ws_shell_header_config_default(
  *
  * The returned controller stores no business state. The GTK widget becomes
  * owned by its normal GTK parent after the caller appends it to a container.
+ * The controller retains an independent reference until it is destroyed.
  */
 UmiStatus umi_gtk4_ws_shell_header_create_managed(
     const UmiGtk4WorkstationShellHeaderConfig *config,
     UmiGtk4WorkstationShellHeader **out_header);
 
-/** Release the controller after, or immediately before, its widget tree. */
+/** Release the controller after, or immediately before, its widget tree.
+ * May be called from an application-open callback on the GTK owning thread.
+ * The caller must immediately stop using the header. An active request may
+ * finish; later batch requests are cancelled, and storage is released only
+ * after the active dispatch has completed its report and unwound.
+ */
 void umi_gtk4_ws_shell_header_destroy(
     UmiGtk4WorkstationShellHeader *header);
 
@@ -179,11 +208,45 @@ UmiStatus umi_gtk4_ws_shell_header_set_text(
  *
  * Passing NULL restores the default process launcher. The callback is borrowed
  * and must remain valid until it is replaced or the header is destroyed.
+ * Replacement refreshes availability and returns BUSY during batch dispatch.
  */
 UmiStatus umi_gtk4_ws_shell_header_set_application_open_handler(
     UmiGtk4WorkstationShellHeader *header,
     UmiGtk4WorkstationApplicationOpenHandler handler,
     void *user_data);
+
+/** Refresh native GUI discovery, or availability delegated to the active host.
+ * All picker operations must run on the header's GTK owning thread.
+ * Executable discovery does not establish startup health or feature readiness.
+ * Existing selections survive availability changes so failed requests can be
+ * retried after an application becomes available, or cleared explicitly.
+ * Returns BUSY during batch dispatch.
+ */
+UmiStatus umi_gtk4_ws_shell_header_catalogue_refresh(
+    UmiGtk4WorkstationShellHeader *header);
+
+/** Select one application through the shared launch-selection model.
+ * Filtering changes only row visibility and never changes this selection.
+ * Returns BUSY during batch dispatch.
+ */
+UmiStatus umi_gtk4_ws_shell_header_catalogue_set_selected(
+    UmiGtk4WorkstationShellHeader *header,
+    const char *application_id,
+    bool selected);
+
+/** Copy the complete selection, including applications hidden by the search. */
+UmiStatus umi_gtk4_ws_shell_header_catalogue_snapshot(
+    const UmiGtk4WorkstationShellHeader *header,
+    UmiApplicationLaunchSelectionSnapshot *out_snapshot);
+
+/** Dispatch every selected request without closing the picker.
+ * Accepted requests are deselected; failed requests remain selected for retry.
+ * Acceptance does not imply a running process or a ready application window.
+ * Reentrant calls return BUSY without changing the caller's report.
+ */
+UmiStatus umi_gtk4_ws_shell_header_catalogue_dispatch(
+    UmiGtk4WorkstationShellHeader *header,
+    UmiApplicationLaunchDispatchReport *out_report);
 
 /**
  * Select which universal application controls are visible.
@@ -207,7 +270,8 @@ umi_gtk4_ws_shell_header_snapshot(
  * Create the original label-only header API retained for source compatibility.
  *
  * New application workstations should use `create_managed` so their icon can
- * follow appearance changes. Existing callers keep the same ownership rules.
+ * follow appearance changes. The returned widget has a floating GTK reference
+ * which a normal GTK parent consumes, preserving the original ownership rules.
  */
 GtkWidget *umi_gtk4_ws_shell_header_create(
     const char *title,

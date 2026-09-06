@@ -20,10 +20,17 @@
 
 struct UmiApplicationLaunchSelection {
     UmiApplicationRuntimeCatalogue *catalogue;
+    /* Only the active host is hidden; another application may still open Desk. */
+    char excluded_application_id[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
+    /* Shared pickers retain failed requests through a temporary outage.
+     * The original Desk constructor keeps its established refresh behaviour. */
+    bool retain_unavailable_selection;
     UmiApplicationLaunchChoice choices[
         UMI_APPLICATION_RUNTIME_MAX_APPLICATIONS];
     size_t count;
     uint64_t revision;
+    /* A callback may inspect choices, but cannot change the active iteration. */
+    bool dispatching;
 };
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -145,8 +152,10 @@ static bool previous_selection(
  * Initialise application launch selection from caller-provided values so later operations
  * receive a known state.
  */
-UmiStatus umi_application_launch_selection_create(
+static UmiStatus create_selection(
     UmiApplicationRuntimeCatalogue *catalogue,
+    const char *excluded_application_id,
+    bool retain_unavailable_selection,
     UmiApplicationLaunchSelection **out_selection)
 {
     UmiApplicationLaunchSelection *selection;
@@ -167,8 +176,15 @@ UmiStatus umi_application_launch_selection_create(
      */
     if (selection == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     selection->catalogue = catalogue;
+    selection->retain_unavailable_selection = retain_unavailable_selection;
     selection->revision = 1U;
-    status = umi_application_launch_selection_refresh(selection);
+    status = copy_text(selection->excluded_application_id,
+                       sizeof(selection->excluded_application_id),
+                       excluded_application_id, true);
+    /* Invalid or overlong host IDs never produce a partially usable picker. */
+    if (status == UMI_STATUS_OK) {
+        status = umi_application_launch_selection_refresh(selection);
+    }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(selection);
@@ -178,6 +194,37 @@ UmiStatus umi_application_launch_selection_create(
     return UMI_STATUS_OK;
 }
 
+/* Preserve the original Desk-specific constructor for existing callers. */
+UmiStatus umi_application_launch_selection_create(
+    UmiApplicationRuntimeCatalogue *catalogue,
+    UmiApplicationLaunchSelection **out_selection)
+{
+    return create_selection(catalogue, "org.umicom.desktop", false, out_selection);
+}
+
+/* A shared shell identifies its own host instead of always hiding Desk. */
+UmiStatus umi_application_launch_selection_create_for_host(
+    UmiApplicationRuntimeCatalogue *catalogue,
+    const char *host_application_id,
+    UmiApplicationLaunchSelection **out_selection)
+{
+    UmiApplicationRuntimeRecord record;
+    UmiStatus status;
+    /* Reject unknown hosts without handing the caller an uninitialised owner. */
+    if (out_selection == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_selection = NULL;
+    if (catalogue == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (host_application_id != NULL && host_application_id[0] != '\0') {
+        if (strlen(host_application_id) >= UMI_APPLICATION_RUNTIME_ID_CAPACITY) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        status = umi_application_runtime_catalogue_find(
+            catalogue, host_application_id, &record);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return create_selection(catalogue, host_application_id, true, out_selection);
+}
+
 /*
  * Release or reset state held by application launch selection so the same storage can be
  * reused safely.
@@ -185,6 +232,9 @@ UmiStatus umi_application_launch_selection_create(
 void umi_application_launch_selection_destroy(
     UmiApplicationLaunchSelection *selection)
 {
+    /* Destruction during a host callback would invalidate the active iterator.
+     * The owner must call destroy again after dispatch has returned. */
+    if (selection != NULL && selection->dispatching) return;
     free(selection);
 }
 
@@ -195,8 +245,7 @@ void umi_application_launch_selection_destroy(
 UmiStatus umi_application_launch_selection_refresh(
     UmiApplicationLaunchSelection *selection)
 {
-    UmiApplicationLaunchChoice previous[
-        UMI_APPLICATION_RUNTIME_MAX_APPLICATIONS];
+    UmiApplicationLaunchSelection *next;
     const size_t catalogue_count = selection != NULL
         ? umi_application_runtime_catalogue_count(selection->catalogue)
         : 0U;
@@ -204,15 +253,20 @@ UmiStatus umi_application_launch_selection_refresh(
         ? selection->count
         : 0U;
     size_t index;
+    UmiStatus refresh_status = UMI_STATUS_OK;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (selection == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A host callback cannot replace the choices being dispatched. */
+    if (selection->dispatching) return UMI_STATUS_BUSY;
 
-    /* Preserve explicit user choices while refreshing mutable runtime state. */
-    (void)memcpy(previous, selection->choices, sizeof(previous));
-    selection->count = 0U;
+    /* Preserve explicit user choices while refreshing mutable runtime state.
+     * Build a replacement on the heap: errors leave the old snapshot intact,
+     * and a GUI callback does not need a large fixed array on its stack. */
+    next = (UmiApplicationLaunchSelection *)calloc(1U, sizeof(*next));
+    if (next == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < catalogue_count; ++index) {
         UmiApplicationRuntimeRecord record;
@@ -221,17 +275,22 @@ UmiStatus umi_application_launch_selection_refresh(
         UmiStatus status = umi_application_runtime_catalogue_at(
             selection->catalogue, index, &record);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) {
+            refresh_status = status;
+            goto finish_refresh;
+        }
 
-        /* Umicom Desk is the host, so it must not offer to launch itself. */
-        if (strcmp(record.application_id, "org.umicom.desktop") == 0) {
+        /* The host must not offer to launch itself. Legacy Desk callers still
+         * use Desk here, while other shells name their own application. */
+        if (strcmp(record.application_id, selection->excluded_application_id) == 0) {
             continue;
         }
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (selection->count >= UMI_APPLICATION_RUNTIME_MAX_APPLICATIONS) {
-            return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (next->count >= UMI_APPLICATION_RUNTIME_MAX_APPLICATIONS) {
+            refresh_status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto finish_refresh;
         }
-        choice = &selection->choices[selection->count];
+        choice = &next->choices[next->count];
         (void)memset(choice, 0, sizeof(*choice));
         status = copy_text(choice->application_id,
                            sizeof(choice->application_id),
@@ -260,7 +319,10 @@ UmiStatus umi_application_launch_selection_refresh(
                 record.application_id, &readiness);
         }
         /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) {
+            refresh_status = status;
+            goto finish_refresh;
+        }
         choice->state = record.state;
         choice->readiness_state = readiness.state;
         choice->readiness_percent = readiness.feature_readiness_percent;
@@ -268,18 +330,29 @@ UmiStatus umi_application_launch_selection_refresh(
                            sizeof(choice->readiness_reason),
                            readiness.reason, true);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
-        if (status != UMI_STATUS_OK) return status;
+        if (status != UMI_STATUS_OK) {
+            refresh_status = status;
+            goto finish_refresh;
+        }
         choice->eligible = record.installed && record.compatible &&
                            record.enabled && record.visible &&
                            readiness.launchable;
         choice->running = record.running;
-        choice->selected = choice->eligible && previous_selection(
-            previous, previous_count, record.application_id);
+        /* A failed request stays checked in a shared picker even if Refresh
+         * discovers an outage. Dispatch still checks current eligibility; the
+         * retained flag records user intent, not permission to bypass policy. */
+        choice->selected = (choice->eligible || selection->retain_unavailable_selection) &&
+            previous_selection(selection->choices, previous_count, record.application_id);
         choice->revision = record.revision;
-        selection->count += 1U;
+        next->count += 1U;
     }
+    /* Publish a complete replacement only after every entry was validated. */
+    (void)memcpy(selection->choices, next->choices, sizeof(selection->choices));
+    selection->count = next->count;
     selection->revision += 1U;
-    return UMI_STATUS_OK;
+finish_refresh:
+    free(next);
+    return refresh_status;
 }
 
 /*
@@ -291,8 +364,13 @@ UmiStatus umi_application_launch_selection_set_selected(
     const char *application_id,
     bool selected)
 {
-    UmiApplicationLaunchChoice *choice = find_mutable(
-        selection, application_id);
+    UmiApplicationLaunchChoice *choice;
+    /* Validate the owner before lookup, and keep an active dispatch stable. */
+    if (selection == NULL || application_id == NULL || application_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (selection->dispatching) return UMI_STATUS_BUSY;
+    choice = find_mutable(selection, application_id);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -321,6 +399,8 @@ UmiStatus umi_application_launch_selection_select_all(
      * used.
      */
     if (selection == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reentrant callbacks cannot add work to the currently dispatched set. */
+    if (selection->dispatching) return UMI_STATUS_BUSY;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < selection->count; ++index) {
         selection->choices[index].selected =
@@ -343,6 +423,8 @@ UmiStatus umi_application_launch_selection_clear(
      * used.
      */
     if (selection == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep per-request reporting stable while a host callback is active. */
+    if (selection->dispatching) return UMI_STATUS_BUSY;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < selection->count; ++index) {
         selection->choices[index].selected = false;
@@ -501,6 +583,8 @@ UmiStatus umi_application_launch_selection_checkpoint_restore(
         checkpoint->selected_count > UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Restoring replaces the request set and must wait until dispatch ends. */
+    if (selection->dispatching) return UMI_STATUS_BUSY;
     /* Validate all IDs and detect duplicates before changing the live selection. */
     for (index = 0U; index < checkpoint->selected_count; ++index) {
         const UmiApplicationLaunchChoice *choice;
@@ -568,6 +652,8 @@ UmiStatus umi_application_launch_selection_execute(
     if (selection == NULL || launcher == NULL || out_report == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* A host callback must not start another execution over these choices. */
+    if (selection->dispatching) return UMI_STATUS_BUSY;
     (void)memset(out_report, 0, sizeof(*out_report));
     out_report->first_failure = UMI_STATUS_OK;
 
@@ -637,6 +723,97 @@ UmiStatus umi_application_launch_selection_execute(
             refresh_status != UMI_STATUS_OK) {
             out_report->first_failure = refresh_status;
         }
+    }
+    out_report->revision = selection->revision;
+    return out_report->first_failure;
+}
+
+/* Recheck current catalogue policy immediately before asking a host to open.
+ * A previous callback may have changed availability of a later application. */
+static UmiStatus dispatch_eligibility(
+    const UmiApplicationLaunchSelection *selection,
+    const UmiApplicationLaunchChoice *choice)
+{
+    UmiApplicationRuntimeRecord record;
+    UmiApplicationLaunchReadiness readiness;
+    UmiStatus status;
+    /* A stale selection cannot bypass either the saved or current gate. */
+    if (!choice->eligible) return UMI_STATUS_UNAVAILABLE;
+    status = umi_application_runtime_catalogue_find(
+        selection->catalogue, choice->application_id, &record);
+    if (status != UMI_STATUS_OK) return status;
+    if (!record.installed || !record.compatible || !record.enabled || !record.visible) {
+        return UMI_STATUS_UNAVAILABLE;
+    }
+    status = umi_application_launch_readiness_check(
+        choice->application_id, &readiness);
+    if (status != UMI_STATUS_OK) return status;
+    return readiness.launchable ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
+}
+
+/* Keep request selection separate from process ownership. The host may accept
+ * asynchronous work without having a process token or a ready window yet. */
+UmiStatus umi_application_launch_selection_dispatch(
+    UmiApplicationLaunchSelection *selection,
+    UmiApplicationLaunchDispatchFn callback,
+    void *context,
+    UmiApplicationLaunchDispatchReport *out_report)
+{
+    size_t index;
+    /* A nested call may reuse the outer report pointer. Do not clear that
+     * caller-owned evidence before refusing the reentrant operation. */
+    if (selection != NULL && selection->dispatching) return UMI_STATUS_BUSY;
+    if (out_report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)memset(out_report, 0, sizeof(*out_report));
+    if (selection == NULL || callback == NULL) {
+        out_report->first_failure = UMI_STATUS_INVALID_ARGUMENT;
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    out_report->revision = selection->revision;
+    /* Validate capacity before invoking any callback, so no accepted request
+     * can disappear from a partial report. Internal choices have the same bound. */
+    if (selection->count > UMI_APPLICATION_LAUNCH_SELECTION_MAX_RESULTS) {
+        out_report->first_failure = UMI_STATUS_CAPACITY_EXCEEDED;
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    selection->dispatching = true;
+    /* No early return is allowed in this loop: even a failed or cancelled
+     * request must leave the model unlocked and the remaining requests reported. */
+    for (index = 0U; index < selection->count; ++index) {
+        UmiApplicationLaunchChoice *choice = &selection->choices[index];
+        UmiApplicationLaunchDispatchResult *result;
+        UmiStatus status;
+        if (!choice->selected) continue;
+        result = &out_report->results[out_report->result_count];
+        status = copy_text(result->application_id, sizeof(result->application_id),
+                           choice->application_id, false);
+        if (status == UMI_STATUS_OK) {
+            status = dispatch_eligibility(selection, choice);
+        }
+        /* The callback receives identity only; it owns actual launch/activation
+         * and can reject a request without the model changing runtime state. */
+        if (status == UMI_STATUS_OK) {
+            status = callback(choice->application_id, context);
+        }
+        result->status = status;
+        out_report->result_count += 1U;
+        if (status == UMI_STATUS_OK) {
+            choice->selected = false;
+            selection->revision += 1U;
+            out_report->accepted_count += 1U;
+        } else {
+            /* Failed requests stay checked, so Retry addresses only failures. */
+            out_report->failed_count += 1U;
+            if (out_report->first_failure == UMI_STATUS_OK) {
+                out_report->first_failure = status;
+            }
+        }
+    }
+    selection->dispatching = false;
+    /* An empty click is not a successful launch and must be distinguishable
+     * from a completed group of accepted requests. */
+    if (out_report->result_count == 0U) {
+        out_report->first_failure = UMI_STATUS_INVALID_STATE;
     }
     out_report->revision = selection->revision;
     return out_report->first_failure;

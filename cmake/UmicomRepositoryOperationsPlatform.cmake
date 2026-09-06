@@ -108,6 +108,10 @@ umicom_add_framework_completion_test(
     umicom-repository-operations-workflow-dry-run-test
     framework.repository_operations.workflow.dry_run
     tests/repository_operations/test_repository_workflow_dry_run.c)
+umicom_add_framework_completion_test(
+    umicom-repository-operations-workflow-execution-test
+    framework.repository_operations.workflow.execution
+    tests/repository_operations/test_repository_workflow_execution.c)
 endif()
 
 message(STATUS "Framework repository operation backend enabled")

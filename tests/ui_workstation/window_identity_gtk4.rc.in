@@ -1,0 +1,5 @@
+/* Umicom Framework: native window identity regression resource.
+ * Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
+ * Reuse the canonical ICO unchanged at the production template's resource ID. */
+#include <windows.h>
+101 ICON "@UMICOM_TEST_WINDOW_ICON@"

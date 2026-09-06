@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4.h"
+#include "umicom/ui/gtk4/workstation/shell_header.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -183,6 +184,9 @@ UmiStatus umi_gtk4_adapter_present(
         status = umi_gtk4_build_shell(adapter);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* The common Studio/workbench path needs the same native identity as
+         * dedicated product entry points, before GTK presents the new window. */
+        (void)umi_gtk4_ws_apply_window_identity(adapter->window);
     }
     status = umi_gtk4_adapter_refresh(adapter);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

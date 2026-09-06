@@ -86,6 +86,11 @@ target_sources(umicom_ui PRIVATE
 
 # Native GTK4 renderers are attached only when the optional canonical adapter exists.
 if(TARGET umicom_ui_gtk4)
+    # The Windows identity bridge uses LoadImageW and WM_SETICON directly;
+    # propagate its platform dependency to every static-adapter consumer.
+    if(WIN32)
+        target_link_libraries(umicom_ui_gtk4 PUBLIC user32)
+    endif()
     # The native chart surface consumes the same core scene and optional Cairo
     # adapter used by other GTK4 applications, keeping product code thin.
     target_link_libraries(umicom_ui_gtk4 PUBLIC
@@ -111,6 +116,7 @@ if(TARGET umicom_ui_gtk4)
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/timeline_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tool_rail_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/window_fit_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/workspace_strip_gtk4.c"
     )
     # Use the stable identifier comparison to choose the matching record or policy.
@@ -134,6 +140,7 @@ if(TARGET umicom_ui_gtk4)
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/timeline_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tool_rail_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/window_fit_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/workspace_strip_gtk4.c"
             PROPERTIES COMPILE_OPTIONS "-Werror=deprecated-declarations")
     endif()
@@ -141,6 +148,60 @@ endif()
 
 # Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # This native acceptance test creates widgets but never presents a window
+    # or starts a real application. No display means skipped, not successful.
+    if(TARGET umicom_ui_gtk4)
+        add_executable(umicom-gtk4-application-catalogue-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_application_catalogue_gtk4.c")
+        target_link_libraries(umicom-gtk4-application-catalogue-test PRIVATE
+            Umicom::ui_gtk4)
+        target_compile_definitions(umicom-gtk4-application-catalogue-test PRIVATE
+            UMICOM_TEST_BRAND_ICON_PATH="${UMICOM_GTK4_WORKSTATION_ROOT}/resources/brand/umicom-icon-on-dark.svg")
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-application-catalogue-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-application-catalogue-test)
+        endif()
+        add_test(NAME framework.ui_workstation.application.catalogue.gtk4
+            COMMAND umicom-gtk4-application-catalogue-test)
+        set_tests_properties(framework.ui_workstation.application.catalogue.gtk4
+            PROPERTIES SKIP_RETURN_CODE 77
+            LABELS "framework;ui-workstation;gtk4;application;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-application-catalogue-test)
+        endif()
+        # Inspect HWND icon slots using the production ICO resource identifier.
+        # This test has no installed artefacts and never presents its GTK window.
+        if(WIN32)
+            set(UMICOM_TEST_WINDOW_ICON
+                "${UMICOM_GTK4_WORKSTATION_ROOT}/resources/brand/umicom.ico")
+            configure_file(
+                "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/window_identity_gtk4.rc.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/umicom-window-identity-test.rc" @ONLY)
+            add_executable(umicom-gtk4-window-identity-test
+                "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_window_identity_gtk4.c"
+                "${CMAKE_CURRENT_BINARY_DIR}/umicom-window-identity-test.rc")
+            set_property(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/umicom-window-identity-test.rc"
+                APPEND PROPERTY OBJECT_DEPENDS "${UMICOM_TEST_WINDOW_ICON}")
+            target_link_libraries(umicom-gtk4-window-identity-test PRIVATE
+                Umicom::ui_gtk4 gdi32)
+            if(COMMAND umicom_apply_warnings)
+                umicom_apply_warnings(umicom-gtk4-window-identity-test)
+            endif()
+            if(COMMAND umicom_apply_sanitizers)
+                umicom_apply_sanitizers(umicom-gtk4-window-identity-test)
+            endif()
+            add_test(NAME framework.ui_workstation.window.identity.gtk4
+                COMMAND umicom-gtk4-window-identity-test)
+            set_tests_properties(framework.ui_workstation.window.identity.gtk4 PROPERTIES
+                SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;windows;identity")
+            if(COMMAND umicom_register_validation_target)
+                umicom_register_validation_target(umicom-gtk4-window-identity-test)
+            endif()
+        endif()
+    endif()
+
     # Define the add ui workstation test build helper so parent and application projects apply
     # one consistent rule.
     function(umicom_add_ui_workstation_test target test_name source)
