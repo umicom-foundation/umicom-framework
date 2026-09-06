@@ -19,6 +19,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+#include <math.h>
+#include <stdlib.h>
 
 /* Provide the safe field operation used by this module and its client applications. */
 static bool safe_field(const char *text)
@@ -119,7 +122,9 @@ static UmiStatus append_window_v3(const UmiUiWorkspaceWindow *window,
         return UMI_STATUS_INVALID_ARGUMENT;
     length = snprintf(
         line, sizeof(line),
-        "W\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%.8f\t%.8f\t%.8f\t%.8f"
+        /* Seventeen significant digits preserve every finite double when
+         * a saved panel touches the normalized right or bottom boundary. */
+        "W\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%.17g\t%.17g\t%.17g\t%.17g"
         "\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
         window->window_id, window->title, window->tool_id,
         field_or_dash(window->group_id),
@@ -190,71 +195,143 @@ UmiStatus umi_ui_layout_persistence_encode(
     return status;
 }
 
-/* Provide the decode window v2 operation used by this module and its client applications. */
+/* Split literal tabs, not scanf whitespace, and require the exact schema
+ * field count. Empty fields are not emitted by either supported encoder. */
+static bool split_fields(char *line, char **fields, size_t count)
+{
+    size_t index;
+    for (index = 0U; index < count; ++index) {
+        char *separator;
+        fields[index] = line;
+        separator = strchr(line, '\t');
+        if (index + 1U == count) {
+            if (separator != NULL) return false;
+        } else {
+            if (separator == NULL) return false;
+            *separator = '\0';
+        }
+        if (line[0] == '\0' || strchr(line, '\r') != NULL) return false;
+        if (separator != NULL) line = separator + 1;
+    }
+    return true;
+}
+
+/* Validate text capacity before copying required and dash-encoded optional
+ * fields. Historical fixed-decimal records keep the same field meanings. */
+static bool decode_text(char *destination, size_t capacity, const char *field, bool optional)
+{
+    const size_t length = strlen(field);
+    if (length == 0U || length >= capacity) return false;
+    if (optional) restore_optional_field(destination, capacity, field);
+    else memcpy(destination, field, length + 1U);
+    return true;
+}
+
+/* Unsigned metadata accepts digits only and rejects overflow before a cast;
+ * negative revisions and signed counts are not valid checkpoint identities. */
+static bool decode_u64(const char *field, uint64_t *value)
+{
+    const unsigned char *scan = (const unsigned char *)field;
+    unsigned long long parsed;
+    char *end;
+    if (*scan == 0U) return false;
+    for (; *scan != 0U; ++scan) if (*scan < '0' || *scan > '9') return false;
+    errno = 0;
+    parsed = strtoull(field, &end, 10);
+    if (errno == ERANGE || *end != '\0' || parsed > UINT64_MAX) return false;
+    *value = (uint64_t)parsed;
+    return true;
+}
+
+/* Boolean flags have exactly two representations, avoiding silent policy
+ * changes when a malformed producer writes arbitrary nonzero values. */
+static bool decode_bool(const char *field, bool *value)
+{
+    if (strcmp(field, "0") == 0) { *value = false; return true; }
+    if (strcmp(field, "1") == 0) { *value = true; return true; }
+    return false;
+}
+
+/* Keep negative z-order valid, but reject whitespace, trailing suffixes and
+ * values which cannot be represented by the public signed 32-bit field. */
+static bool decode_z_order(const char *field, int32_t *value)
+{
+    const unsigned char *scan = (const unsigned char *)field;
+    long long parsed;
+    char *end;
+    if (*scan == '-') ++scan;
+    if (*scan == 0U) return false;
+    for (; *scan != 0U; ++scan) if (*scan < '0' || *scan > '9') return false;
+    errno = 0;
+    parsed = strtoll(field, &end, 10);
+    if (errno == ERANGE || *end != '\0' || parsed < INT32_MIN || parsed > INT32_MAX) return false;
+    *value = (int32_t)parsed;
+    return true;
+}
+
+/* Accept old fixed decimals and round-trip exponent notation equally. NaN,
+ * infinity, hexadecimal and overflow never become native window geometry. */
+static bool decode_coordinate(const char *field, double *value)
+{
+    const unsigned char *scan = (const unsigned char *)field;
+    char *end;
+    double parsed;
+    if (*scan == 0U) return false;
+    for (; *scan != 0U; ++scan)
+        if (!((*scan >= '0' && *scan <= '9') || *scan == '.' || *scan == '-' ||
+              *scan == '+' || *scan == 'e' || *scan == 'E')) return false;
+    errno = 0;
+    parsed = strtod(field, &end);
+    if (errno == ERANGE || end == field || *end != '\0' || !isfinite(parsed)) return false;
+    *value = parsed;
+    return true;
+}
+
+/* Decode the older schema without interpreting its single group as a modern
+ * independent placement or linked-context field. */
 static UmiStatus decode_window_v2(char *line,
                                   UmiUiWorkspaceWindow *window)
 {
-    char group[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
-    int visible;
-    int floating;
-    int maximised;
-    int closable;
-    int matched = sscanf(
-        line,
-        "W\t%127[^\t]\t%191[^\t]\t%127[^\t]\t%127[^\t]"
-        "\t%lf\t%lf\t%lf\t%lf\t%d\t%d\t%d\t%d\t%d",
-        window->window_id, window->title, window->tool_id, group,
-        &window->x, &window->y, &window->width, &window->height,
-        &visible, &floating, &maximised, &closable, &window->z_order);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (matched != 13) return UMI_STATUS_PARSE_ERROR;
-    restore_optional_field(window->group_id, sizeof(window->group_id), group);
-    restore_optional_field(window->stack_id, sizeof(window->stack_id), group);
-    window->visible = visible != 0;
-    window->floating = floating != 0;
-    window->maximised = maximised != 0;
-    window->closable = closable != 0;
+    char *fields[14];
+    /* Reject the complete row on any failed conversion; no truncated field
+     * or partially consumed number becomes an apparently valid panel. */
+    if (!split_fields(line, fields, 14U) || strcmp(fields[0], "W") != 0 ||
+        !decode_text(window->window_id, sizeof(window->window_id), fields[1], false) ||
+        !decode_text(window->title, sizeof(window->title), fields[2], false) ||
+        !decode_text(window->tool_id, sizeof(window->tool_id), fields[3], false) ||
+        !decode_text(window->group_id, sizeof(window->group_id), fields[4], true) ||
+        !decode_text(window->stack_id, sizeof(window->stack_id), fields[4], true) ||
+        !decode_coordinate(fields[5], &window->x) || !decode_coordinate(fields[6], &window->y) ||
+        !decode_coordinate(fields[7], &window->width) || !decode_coordinate(fields[8], &window->height) ||
+        !decode_bool(fields[9], &window->visible) || !decode_bool(fields[10], &window->floating) ||
+        !decode_bool(fields[11], &window->maximised) || !decode_bool(fields[12], &window->closable) ||
+        !decode_z_order(fields[13], &window->z_order)) return UMI_STATUS_PARSE_ERROR;
     window->resizable = true;
     return UMI_STATUS_OK;
 }
 
-/* Provide the decode window v3 operation used by this module and its client applications. */
+/* Decode all modern placement, context and policy fields without requiring
+ * the old and new encoder's decimal formatting to be byte-for-byte equal. */
 static UmiStatus decode_window_v3(char *line,
                                   UmiUiWorkspaceWindow *window)
 {
-    char group[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
-    char placement[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
-    char stack[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
-    char context[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
-    int visible;
-    int floating;
-    int maximised;
-    int closable;
-    int pinned;
-    int resizable;
-    int matched = sscanf(
-        line,
-        "W\t%127[^\t]\t%191[^\t]\t%127[^\t]\t%127[^\t]"
-        "\t%127[^\t]\t%127[^\t]\t%127[^\t]"
-        "\t%lf\t%lf\t%lf\t%lf\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
-        window->window_id, window->title, window->tool_id, group,
-        placement, stack, context, &window->x, &window->y,
-        &window->width, &window->height, &visible, &floating,
-        &maximised, &closable, &pinned, &resizable, &window->z_order);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (matched != 18) return UMI_STATUS_PARSE_ERROR;
-    restore_optional_field(window->group_id, sizeof(window->group_id), group);
-    restore_optional_field(window->placement_id,
-                           sizeof(window->placement_id), placement);
-    restore_optional_field(window->stack_id, sizeof(window->stack_id), stack);
-    restore_optional_field(window->context_group_id,
-                           sizeof(window->context_group_id), context);
-    window->visible = visible != 0;
-    window->floating = floating != 0;
-    window->maximised = maximised != 0;
-    window->closable = closable != 0;
-    window->pinned = pinned != 0;
-    window->resizable = resizable != 0;
+    char *fields[19];
+    /* Each index follows the existing schema3 field order; the parser only
+     * tightens validation and adds no second layout representation. */
+    if (!split_fields(line, fields, 19U) || strcmp(fields[0], "W") != 0 ||
+        !decode_text(window->window_id, sizeof(window->window_id), fields[1], false) ||
+        !decode_text(window->title, sizeof(window->title), fields[2], false) ||
+        !decode_text(window->tool_id, sizeof(window->tool_id), fields[3], false) ||
+        !decode_text(window->group_id, sizeof(window->group_id), fields[4], true) ||
+        !decode_text(window->placement_id, sizeof(window->placement_id), fields[5], true) ||
+        !decode_text(window->stack_id, sizeof(window->stack_id), fields[6], true) ||
+        !decode_text(window->context_group_id, sizeof(window->context_group_id), fields[7], true) ||
+        !decode_coordinate(fields[8], &window->x) || !decode_coordinate(fields[9], &window->y) ||
+        !decode_coordinate(fields[10], &window->width) || !decode_coordinate(fields[11], &window->height) ||
+        !decode_bool(fields[12], &window->visible) || !decode_bool(fields[13], &window->floating) ||
+        !decode_bool(fields[14], &window->maximised) || !decode_bool(fields[15], &window->closable) ||
+        !decode_bool(fields[16], &window->pinned) || !decode_bool(fields[17], &window->resizable) ||
+        !decode_z_order(fields[18], &window->z_order)) return UMI_STATUS_PARSE_ERROR;
     return UMI_STATUS_OK;
 }
 
@@ -267,15 +344,10 @@ UmiStatus umi_ui_layout_persistence_decode(
     UmiUiLayoutPersistenceRecord *out_record)
 {
     char buffer[UMI_UI_LAYOUT_ENCODED_CAPACITY];
-    char magic[16U];
     char *line;
-    size_t expected;
+    uint64_t expected;
     size_t parsed = 0U;
-    unsigned schema;
-    unsigned long long saved;
-    unsigned long long revision;
-    int locked;
-    int matched;
+    uint64_t schema;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -293,22 +365,21 @@ UmiStatus umi_ui_layout_persistence_decode(
          */
         if (end == NULL) return UMI_STATUS_PARSE_ERROR;
         *end = '\0';
-        matched = sscanf(
-            line, "%15[^\t]\t%u\t%llu\t%127[^\t]\t%191[^\t]"
-                  "\t%d\t%zu\t%llu",
-            magic, &schema, &saved, out_record->layout.layout_id,
-            out_record->layout.name, &locked, &expected, &revision);
-        /* Use the stable identifier comparison to choose the matching record or policy. */
-        if (matched != 8 ||
-            !((schema == 2U && strcmp(magic, "UMILAYOUT2") == 0) ||
+        /* Header conversions are bounded before assigning narrower public
+         * fields. Literal separators and complete numbers prevent ambiguity. */
+        char *fields[8];
+        if (!split_fields(line, fields, 8U) || !decode_u64(fields[1], &schema) ||
+            !decode_u64(fields[2], &out_record->saved_at_ns) ||
+            !decode_text(out_record->layout.layout_id, sizeof(out_record->layout.layout_id), fields[3], false) ||
+            !decode_text(out_record->layout.name, sizeof(out_record->layout.name), fields[4], false) ||
+            !decode_bool(fields[5], &out_record->layout.locked) ||
+            !decode_u64(fields[6], &expected) || !decode_u64(fields[7], &out_record->layout.revision) ||
+            !((schema == 2U && strcmp(fields[0], "UMILAYOUT2") == 0) ||
               (schema == UMI_UI_LAYOUT_PERSISTENCE_SCHEMA_VERSION &&
-               strcmp(magic, "UMILAYOUT3") == 0)) ||
+               strcmp(fields[0], "UMILAYOUT3") == 0)) ||
             expected > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
             return UMI_STATUS_PARSE_ERROR;
-        out_record->schema_version = schema;
-        out_record->saved_at_ns = (uint64_t)saved;
-        out_record->layout.locked = locked != 0;
-        out_record->layout.revision = (uint64_t)revision;
+        out_record->schema_version = (uint32_t)schema;
         line = end + 1;
     }
     /*
@@ -329,6 +400,10 @@ UmiStatus umi_ui_layout_persistence_decode(
             : decode_window_v3(line, window);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
+        /* A window identity denotes exactly one instance in either schema. */
+        for (size_t previous = 0U; previous < parsed; ++previous)
+            if (strcmp(out_record->layout.windows[previous].window_id, window->window_id) == 0)
+                return UMI_STATUS_PARSE_ERROR;
         parsed += 1U;
         line = had_newline ? end + 1 : end;
     }

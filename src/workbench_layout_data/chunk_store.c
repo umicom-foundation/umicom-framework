@@ -27,6 +27,19 @@
 
 #define UMI_WORKBENCH_LAYOUT_CHUNK_PAYLOAD 3600U
 
+/* Pair each payload namespace with its own manifest; codecs must never be
+ * selected accidentally from a different document or native-workspace kind. */
+static bool valid_chunk_pair(UmiWorkbenchLayoutDataRecordKind manifest_kind,
+                             UmiWorkbenchLayoutDataRecordKind chunk_kind)
+{
+    return (manifest_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST &&
+            chunk_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK) ||
+           (manifest_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST &&
+            chunk_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK) ||
+           (manifest_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST &&
+            chunk_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK);
+}
+
 /*
  * Write workbench layout chunk manifest in its stable representation and report capacity
  * or input failures to the caller.
@@ -154,7 +167,12 @@ UmiStatus umi_workbench_layout_chunk_manifest_decode(
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_data_field_set_get_u64(
             &fields, "byte_count", &count);
-        out_manifest->byte_count = (size_t)count;
+        /* Validate before narrowing to size_t or allocating. The public
+         * chunk limit bounds hostile metadata equally on 32- and 64-bit hosts. */
+        if (count > (uint64_t)UMI_WORKBENCH_LAYOUT_DATA_MAX_CHUNKS *
+                UMI_WORKBENCH_LAYOUT_CHUNK_PAYLOAD)
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else out_manifest->byte_count = (size_t)count;
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
@@ -171,6 +189,13 @@ UmiStatus umi_workbench_layout_chunk_manifest_decode(
         status = umi_workbench_layout_data_field_set_get_u64(
             &fields, "modified_at_ms", &out_manifest->modified_at_ms);
     }
+    if (status == UMI_STATUS_OK &&
+        (!valid_chunk_pair(out_manifest->manifest_kind, out_manifest->chunk_kind) ||
+         out_manifest->revision == 0U || out_manifest->chunk_count == 0U ||
+         out_manifest->byte_count > out_manifest->chunk_count * UMI_WORKBENCH_LAYOUT_CHUNK_PAYLOAD ||
+         (out_manifest->chunk_count > 1U && out_manifest->byte_count <=
+             (out_manifest->chunk_count - 1U) * UMI_WORKBENCH_LAYOUT_CHUNK_PAYLOAD)))
+        status = UMI_STATUS_PARSE_ERROR;
     return status;
 }
 
@@ -192,14 +217,7 @@ UmiStatus umi_workbench_layout_chunk_store_init(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Apply this branch only when its contract condition is satisfied. */
-    if (!((manifest_kind ==
-               UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST &&
-           chunk_kind ==
-               UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK) ||
-          (manifest_kind ==
-               UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST &&
-           chunk_kind ==
-               UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK))) {
+    if (!valid_chunk_pair(manifest_kind, chunk_kind)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     (void)memset(store, 0, sizeof(*store));
@@ -253,6 +271,11 @@ static UmiStatus load_manifest(
     if (status == UMI_STATUS_OK) {
         status = umi_workbench_layout_chunk_manifest_decode(
             value, out_manifest);
+        if (status == UMI_STATUS_OK &&
+            (out_manifest->manifest_kind != store->manifest_kind ||
+             out_manifest->chunk_kind != store->chunk_kind ||
+             strcmp(out_manifest->aggregate_id, aggregate_id) != 0))
+            status = UMI_STATUS_PARSE_ERROR;
     }
     free(value);
     return status;

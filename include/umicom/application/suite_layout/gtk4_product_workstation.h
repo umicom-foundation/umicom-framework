@@ -72,6 +72,12 @@ umi_application_product_gtk4_workstation_config_default(
 UmiStatus umi_application_product_gtk4_workstation_create(
     const UmiApplicationProductGtk4WorkstationConfig *config,
     UmiApplicationProductGtk4Workstation **out_workstation);
+/** Explicitly enable shared user-local SQLite layout checkpoints.
+ * Native launchers opt in after construction; constructors do no checkpoint I/O.
+ * A failed restore leaves the current layout visible and reports its error. */
+UmiStatus umi_application_product_gtk4_workstation_enable_checkpoint_storage(
+    UmiApplicationProductGtk4Workstation *workstation, int restore_saved);
+
 /** Release widgets, presentation state and all owned memory. */
 void umi_application_product_gtk4_workstation_destroy(
     UmiApplicationProductGtk4Workstation *workstation);

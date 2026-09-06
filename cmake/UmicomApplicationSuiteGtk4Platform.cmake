@@ -34,12 +34,13 @@ function(umicom_application_suite_attach_gtk4)
     endif()
     target_sources(umicom_ui_gtk4 PRIVATE
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/workstation/workspace_layout_host_gtk4.c"
+        "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/workstation/workspace_storage_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/workstation/view_model_panel_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_suite_workstation_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_product_workstation_gtk4.c"
         "${UMICOM_APPLICATION_SUITE_GTK4_ROOT}/adapters/gtk4/application_product_application_gtk4.c"
     )
-    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::application)
+    target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::application Umicom::data Umicom::ui_workspace_checkpoint)
     set_property(
         TARGET umicom_ui_gtk4
         PROPERTY UMICOM_APPLICATION_SUITE_GTK4_ATTACHED TRUE)

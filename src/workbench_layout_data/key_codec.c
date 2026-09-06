@@ -57,6 +57,10 @@ static const char *record_segment(UmiWorkbenchLayoutDataRecordKind kind)
         return "migration";
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA:
         return "metadata";
+    case UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST:
+        return "workspace-manifest";
+    case UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK:
+        return "workspace-chunk";
     default:
         return NULL;
     }
@@ -68,7 +72,7 @@ static UmiWorkbenchLayoutDataRecordKind parse_segment(const char *segment)
     UmiWorkbenchLayoutDataRecordKind kind;
     /* Visit each bounded item once so every record receives the same rule. */
     for (kind = UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_MANIFEST;
-         kind <= UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA;
+         kind <= UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK;
          kind = (UmiWorkbenchLayoutDataRecordKind)((int)kind + 1)) {
         const char *candidate = record_segment(kind);
         /*
@@ -156,7 +160,8 @@ UmiStatus umi_workbench_layout_data_key_build(
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK ||
-        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK) {
+        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK ||
+        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK) {
         written = snprintf(buffer, capacity, "%s/%s/%s/%zu",
                            UMI_WORKBENCH_LAYOUT_DATA_KEY_ROOT,
                            segment,
@@ -291,7 +296,8 @@ UmiStatus umi_workbench_layout_data_key_parse(
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK ||
-        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK) {
+        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK ||
+        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK) {
         char *end = NULL;
         unsigned long parsed;
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */

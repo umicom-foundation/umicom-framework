@@ -389,7 +389,19 @@ fail:
     return status;
 }
 
+/* Delegate explicit persistence to the existing shared layout owner. */
+UmiStatus umi_application_product_gtk4_workstation_enable_checkpoint_storage(
+    UmiApplicationProductGtk4Workstation *workstation, int restore_saved)
+{
+    return workstation != NULL
+        ? umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
+            workstation->layout, restore_saved)
+        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+
 /* Remove deferred work, then release widgets before the state they reference. */
+/* Release this composition after its layout-owned storage and widgets. */
 void umi_application_product_gtk4_workstation_destroy(
     UmiApplicationProductGtk4Workstation *workstation)
 {

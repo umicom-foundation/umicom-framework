@@ -415,7 +415,7 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     const UmiUiWindowDescriptor *descriptor;
     UmiUiWorkspaceLayout *active;
     UmiUiWorkspaceWindow window;
-    UmiUiWorkspaceLayout before;
+    UmiUiWorkspaceLayout *before;
     size_t instance_count;
     int written;
     UmiStatus status;
@@ -436,6 +436,14 @@ UmiStatus umi_ui_workspace_customisation_open_window(
      * used.
      */
     if (active == NULL || descriptor == NULL) return UMI_STATUS_NOT_FOUND;
+    /* The instance count and z-order both rely on the fixed window array. */
+    if (active->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
+        return UMI_STATUS_INVALID_STATE;
+    /* An opened panel changes both layout and catalogue revisions. Reject a
+     * locked or exhausted layout before creating any new instance metadata. */
+    if (active->locked) return UMI_STATUS_PERMISSION_DENIED;
+    if (customisation->revision == UINT64_MAX || active->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     instance_count = umi_ui_workspace_layout_count_tool(active, tool_id);
     /* Apply this branch only when its contract condition is satisfied. */
     if (!descriptor->supports_multiple && instance_count != 0U)
@@ -488,7 +496,20 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     if (window.height > 1.0) window.height = 1.0;
     window.x = (1.0 - window.width) / 2.0;
     window.y = (1.0 - window.height) / 2.0;
-    {
+    /* Canvas is a free-placement mode, not another dock enum value. Preserve
+     * the descriptor's centered default rectangle and give each instance its
+     * own stack identity so independent panels never become a tab group. */
+    if (!floating && strcmp(group_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0) {
+        status = customisation_copy_text(window.placement_id,
+            sizeof(window.placement_id), UMI_UI_WORKSPACE_CANVAS_PLACEMENT);
+        if (status == UMI_STATUS_OK)
+            status = customisation_copy_text(window.stack_id,
+                sizeof(window.stack_id), window.window_id);
+        if (status == UMI_STATUS_OK)
+            status = customisation_copy_text(window.group_id,
+                sizeof(window.group_id), window.window_id);
+        if (status != UMI_STATUS_OK) return status;
+    } else {
         UmiUiPlacement placement;
         /* Apply this branch only when its contract condition is satisfied. */
         if (floating) {
@@ -521,7 +542,11 @@ UmiStatus umi_ui_workspace_customisation_open_window(
 
     /* Opening is transactional: a catalogue failure must not leave a window
      * in the layout without matching recent-window metadata. */
-    before = *active;
+    /* The rollback record contains every panel. Keep it off the native stack
+     * so opening a panel does not require a large temporary stack frame. */
+    before = (UmiUiWorkspaceLayout *)malloc(sizeof(*before));
+    if (before == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *before = *active;
     status = umi_ui_workspace_layout_add_window(active, &window);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
@@ -530,8 +555,9 @@ UmiStatus umi_ui_workspace_customisation_open_window(
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
-        *active = before;
+        *active = *before;
     }
+    free(before);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) customisation->revision += 1U;
     return status;
@@ -758,7 +784,10 @@ UmiStatus umi_ui_workspace_customisation_set_auto_hidden(
         return UMI_STATUS_NOT_FOUND;
     }
     /* Apply this branch only when its contract condition is satisfied. */
-    if (auto_hidden && window->floating) {
+    /* Auto-hide needs a dock edge. A free canvas panel has no such edge and
+     * must stay visible until it is closed or explicitly docked. */
+    if (auto_hidden && (window->floating ||
+        strcmp(window->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0)) {
         return UMI_STATUS_INVALID_STATE;
     }
     /* Apply this branch only when its contract condition is satisfied. */
@@ -874,6 +903,7 @@ UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
 {
     UmiUiWorkspaceCustomisation *candidate;
     UmiStatus status;
+    bool canvas;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -890,6 +920,11 @@ UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
     if (!customisation->edit_active) {
         return UMI_STATUS_INVALID_STATE;
     }
+    /* Reject a contradictory request before allocating or changing a panel.
+     * Native floating remains authoritative when its explicit flag is set. */
+    canvas = !settings->floating &&
+        strcmp(settings->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0;
+    if (canvas && settings->auto_hidden) return UMI_STATUS_INVALID_ARGUMENT;
 
     /* Work on a heap-backed candidate because a customisation object contains
      * many complete layouts and is intentionally too large for a safe stack
@@ -905,8 +940,9 @@ UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
     }
     *candidate = *customisation;
 
-    /* Floating panels use the caller's bounded geometry; docked panels use the
-     * semantic region and stack so every frontend can choose its own pixels. */
+    /* Floating and canvas panels use the caller's bounded geometry; docked
+     * panels use the semantic region and stack so every frontend can choose
+     * its own pixels. The candidate keeps context and placement atomic. */
     if (settings->floating) {
         status = umi_ui_workspace_customisation_float_window(
             candidate,
@@ -915,6 +951,12 @@ UmiStatus umi_ui_workspace_customisation_apply_panel_settings(
             settings->y,
             settings->width,
             settings->height);
+    } else if (canvas) {
+        /* Reuse the canonical edit/pin/resize checks rather than maintaining
+         * a second copy of free-placement rules in the settings layer. */
+        status = umi_ui_workspace_customisation_place_canvas_window(
+            candidate, settings->window_id, settings->x, settings->y,
+            settings->width, settings->height);
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_ui_workspace_customisation_dock_window(
             candidate,

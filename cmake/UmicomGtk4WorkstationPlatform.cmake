@@ -171,6 +171,61 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-application-catalogue-test)
         endif()
+        # Native canvas checks allocate widgets without presenting a window.
+        # Their fake panel provider never starts applications or external tools.
+        add_executable(umicom-gtk4-workspace-canvas-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_workspace_canvas_gtk4.c")
+        target_link_libraries(umicom-gtk4-workspace-canvas-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-workspace-canvas-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-workspace-canvas-test)
+        endif()
+        add_test(NAME framework.ui_workstation.workspace.canvas.gtk4
+            COMMAND umicom-gtk4-workspace-canvas-test)
+        set_tests_properties(framework.ui_workstation.workspace.canvas.gtk4 PROPERTIES
+            SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;canvas;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-workspace-canvas-test)
+        endif()
+        # Retained provider bodies are tested with unpresented GTK entries;
+        # no file, repository, compiler or product service is started.
+        add_executable(umicom-gtk4-workspace-content-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_workspace_content_gtk4.c")
+        target_link_libraries(umicom-gtk4-workspace-content-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-workspace-content-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-workspace-content-test)
+        endif()
+        add_test(NAME framework.ui_workstation.workspace.content.gtk4
+            COMMAND umicom-gtk4-workspace-content-test)
+        set_tests_properties(framework.ui_workstation.workspace.content.gtk4 PROPERTIES
+            SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;canvas;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-workspace-content-test)
+        endif()
+        # Explicit Suite checkpoints use borrowed fixtures, never user-config
+        # storage. SQLite restart coverage is conditional on that backend.
+        add_executable(umicom-gtk4-workspace-checkpoint-test
+            "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_workspace_checkpoint_gtk4.c")
+        target_link_libraries(umicom-gtk4-workspace-checkpoint-test PRIVATE
+            Umicom::ui_gtk4 Umicom::data Umicom::ui_workspace_checkpoint)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-gtk4-workspace-checkpoint-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-gtk4-workspace-checkpoint-test)
+        endif()
+        add_test(NAME framework.ui_workstation.workspace.checkpoint.gtk4
+            COMMAND umicom-gtk4-workspace-checkpoint-test)
+        set_tests_properties(framework.ui_workstation.workspace.checkpoint.gtk4 PROPERTIES
+            SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;canvas;persistence;acceptance")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-gtk4-workspace-checkpoint-test)
+        endif()
         # Inspect HWND icon slots using the production ICO resource identifier.
         # This test has no installed artefacts and never presents its GTK window.
         if(WIN32)

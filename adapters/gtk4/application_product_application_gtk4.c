@@ -97,6 +97,14 @@ static gboolean product_complete_startup(gpointer data)
     if (state->window == NULL) return G_SOURCE_REMOVE;
     status = umi_application_product_gtk4_workstation_create(
         &state->config, &state->workstation);
+    /* Native launch explicitly opts in; no controller constructor creates storage. */
+    if (status == UMI_STATUS_OK) {
+        UmiStatus storage_status =
+            umi_application_product_gtk4_workstation_enable_checkpoint_storage(state->workstation, 1);
+        if (storage_status != UMI_STATUS_OK)
+            (void)fprintf(stderr, "%s layout storage: %s\n",
+                state->config.title, umi_status_text(storage_status));
+    }
     content = status == UMI_STATUS_OK
         ? umi_application_product_gtk4_workstation_widget(state->workstation) : NULL;
     if (content == NULL) {

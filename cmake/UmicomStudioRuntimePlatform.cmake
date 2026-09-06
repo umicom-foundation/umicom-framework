@@ -118,6 +118,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/host_sync.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_catalogue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_preset.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/workspace_canvas.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_presets/ai_development.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_presets/debugging.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_presets/default.c"
@@ -1517,6 +1518,27 @@ if(BUILD_TESTING)
         NAME framework.studio_runtime.document-link-closure
         COMMAND umicom-studio-runtime-document-link-closure-test
     )
+endif()
+
+if(BUILD_TESTING)
+    # Exercise real native surface ownership without a display or external tool.
+    add_executable(umicom-studio-runtime-workspace-canvas-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/studio_runtime/test_workspace_canvas.c")
+    target_link_libraries(umicom-studio-runtime-workspace-canvas-test
+        PRIVATE Umicom::Framework)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-studio-runtime-workspace-canvas-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-studio-runtime-workspace-canvas-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-studio-runtime-workspace-canvas-test)
+    endif()
+    add_test(NAME framework.studio_runtime.workspace-canvas
+        COMMAND umicom-studio-runtime-workspace-canvas-test)
+    set_tests_properties(framework.studio_runtime.workspace-canvas PROPERTIES
+        LABELS "studio;framework;layout;canvas;regression")
 endif()
 
 message(STATUS

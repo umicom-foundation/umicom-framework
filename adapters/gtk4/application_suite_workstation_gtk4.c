@@ -22,11 +22,13 @@
 #include <string.h>
 
 #include "umicom/application/suite_layout/geometry.h"
+#include "umicom/application/suite_layout/render_plan.h"
 #include "umicom/application/suite_layout/customisation.h"
 #include "umicom/desktop/ui_bridge.h"
 #include "umicom/ui/workbench_canvas.h"
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_geometry.h"
+#include "umicom/ui/gtk4/workstation/workspace_storage.h"
 
 struct UmiApplicationSuiteGtk4Workstation {
     UmiApplicationSuiteLayoutRuntime runtime;
@@ -61,23 +63,43 @@ struct UmiApplicationSuiteGtk4Workstation {
     GtkWidget *panel_editor_auto_hide;
     GtkWidget *panel_editor_apply;
     GtkWidget *panel_editor_status;
+    /* Percentage controls provide the same placement operation without a mouse. */
+    GtkWidget *panel_editor_geometry;
+    GtkWidget *panel_editor_bounds[4];
+    GtkWidget *new_layout_button;
+    GtkWidget *new_layout_name;
+    GtkWidget *new_layout_popover;
+    GtkWidget *clear_canvas_button;
     char panel_editor_window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
     /* Keep the canvas host key so shutdown can unregister only this workstation. */
     char canvas_host_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
     char *saved_layout_text;
     uint64_t saved_layout_at_ns;
+    UmiDataServer *checkpoint_server;
+    UmiDataServer *owned_checkpoint_server;
+    UmiUiWorkspaceCheckpointReport checkpoint_report;
+    UmiStatus checkpoint_storage_status;
+    int checkpoint_storage_requested;
     int changing_selection;
     uint64_t revision;
 };
 
+/* A corrupt manifest must never be overwritten without a known compare revision. */
+static int checkpoint_save_enabled(const UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    return !workstation->checkpoint_storage_requested ||
+        (workstation->checkpoint_server != NULL &&
+         workstation->checkpoint_report.storage_revision_known);
+}
+
 static const char *WINDOW_REGIONS[] = {
-    "centre", "left", "right", "bottom", "top"
+    "centre", "left", "right", "bottom", "top", "canvas"
 };
 
 /* The panel editor also offers Floating as an explicit placement rather than
  * hiding detachment behind an icon whose result is difficult to predict. */
 static const char *PANEL_EDITOR_REGIONS[] = {
-    "centre", "left", "right", "bottom", "top", "floating"
+    "centre", "left", "right", "bottom", "top", "floating", "canvas"
 };
 
 static const UmiUiWindowCategory WINDOW_CATEGORIES[] = {
@@ -208,11 +230,12 @@ static void refresh_command_model(
     (void)umi_ws_command_bar_model_set_enabled(
         &workstation->command_model, "suite.window.open", editing != 0);
     (void)umi_ws_command_bar_model_set_enabled(
-        &workstation->command_model, "suite.layout.save", editing == 0);
+        &workstation->command_model, "suite.layout.save",
+        editing == 0 && checkpoint_save_enabled(workstation));
     (void)umi_ws_command_bar_model_set_enabled(
         &workstation->command_model,
         "suite.layout.restore",
-        editing == 0 && workstation->saved_layout_text != NULL);
+        editing == 0 && (workstation->checkpoint_server != NULL || workstation->saved_layout_text != NULL));
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -238,10 +261,33 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
         ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
 }
 
+/* Join a product ID and preset ID only when the complete name fits. Checking
+ * lengths before copying avoids truncated names that could select another
+ * layout, and leaves the caller's buffer unchanged when space is insufficient. */
+static UmiStatus qualify_layout_id(char *destination, size_t capacity,
+                                  const char *application_id, const char *preset_id)
+{
+    size_t prefix_length;
+    size_t suffix_length;
+    if (destination == NULL || application_id == NULL || preset_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    prefix_length = strlen(application_id);
+    suffix_length = strlen(preset_id);
+    /* Subtract only after each bound is checked, so small buffers cannot make
+     * unsigned lengths wrap around and appear to have more room. */
+    if (prefix_length >= capacity || capacity - prefix_length <= 1U ||
+        suffix_length >= capacity - prefix_length - 1U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(destination, application_id, prefix_length);
+    destination[prefix_length] = '.';
+    memcpy(destination + prefix_length + 1U, preset_id, suffix_length + 1U);
+    return UMI_STATUS_OK;
+}
+
 /* Provide the refresh heading operation used by this module and its client applications. */
 static void refresh_heading(UmiApplicationSuiteGtk4Workstation *workstation)
 {
-    const UmiApplicationSuiteLayoutChoice *choice;
+    const UmiUiWorkspaceLayout *layout;
     UmiGtk4WorkstationShellHeaderSnapshot identity;
 
     /*
@@ -249,13 +295,13 @@ static void refresh_heading(UmiApplicationSuiteGtk4Workstation *workstation)
      * used.
      */
     if (workstation == NULL || workstation->identity == NULL) return;
-    choice = umi_application_suite_layout_selector_current(
-        &workstation->selector);
+    layout = umi_ui_workspace_customisation_active_const(
+        &workstation->customisation);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (choice == NULL) return;
+    if (layout == NULL) return;
 
     /* The product name remains stable while the copied subtitle identifies
      * the active layout. Compact headers expose it through the tooltip and
@@ -264,7 +310,7 @@ static void refresh_heading(UmiApplicationSuiteGtk4Workstation *workstation)
     (void)umi_gtk4_ws_shell_header_set_text(
         workstation->identity,
         identity.title,
-        choice->title,
+        layout->name,
         identity.mode_badge);
 }
 
@@ -315,6 +361,77 @@ static UmiStatus rebuild_active_layout(
     return umi_gtk4_workspace_layout_host_rebuild(workstation->host, layout);
 }
 
+/* Rebuild the visible choices from the same model that owns named layouts.
+ * Canonical presets and user-created canvases can then be selected together. */
+static void refresh_layout_choices(UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    GtkStringList *choices;
+    size_t index;
+    guint selected = GTK_INVALID_LIST_POSITION;
+
+    if (workstation == NULL || workstation->layout_dropdown == NULL) return;
+    choices = gtk_string_list_new(NULL);
+    for (index = 0U; index < workstation->customisation.layout_count; ++index) {
+        const UmiUiWorkspaceLayout *layout =
+            &workstation->customisation.layouts[index];
+        gtk_string_list_append(choices, layout->name);
+        if (strcmp(layout->layout_id,
+                   workstation->customisation.active_layout_id) == 0)
+            selected = (guint)index;
+    }
+    /* Replacing the list emits selection notifications; they must not activate
+     * another layout while the new list is still being installed. */
+    workstation->changing_selection = 1;
+    gtk_drop_down_set_model(GTK_DROP_DOWN(workstation->layout_dropdown),
+                            G_LIST_MODEL(choices));
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(workstation->layout_dropdown), selected);
+    workstation->changing_selection = 0;
+    g_object_unref(choices);
+}
+
+/* A completed gesture changes the current edit, not its rollback baseline.
+ * The adapter defers this call until GTK has finished the pointer callback. */
+static UmiStatus on_canvas_geometry(
+    const char *window_id,
+    const UmiApplicationSuiteLayoutRect *rect,
+    uint64_t expected_layout_revision,
+    void *user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = user_data;
+    const UmiUiWorkspaceLayout *layout = active_layout(workstation);
+    UmiStatus status;
+    const UmiUiWorkspaceWindow *window;
+    const UmiExperiencePanelDefinition *panel;
+
+    if (workstation == NULL || rect == NULL || window_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (layout == NULL || layout->revision != expected_layout_revision)
+        return UMI_STATUS_INVALID_STATE;
+    window = umi_ui_workspace_layout_find_window(layout, window_id);
+    if (window == NULL) return UMI_STATUS_NOT_FOUND;
+    panel = workstation->runtime.experience != NULL
+        ? umi_application_experience_panel_find(workstation->runtime.experience, window->tool_id)
+        : NULL;
+    /* Imported layouts cannot grant a gesture capability that the product
+     * denied in its canonical descriptor. Match the panel-settings boundary. */
+    if (panel != NULL && (panel->flags & UMI_EXPERIENCE_PANEL_DOCKABLE) == 0U)
+        return UMI_STATUS_PERMISSION_DENIED;
+    status = umi_ui_workspace_customisation_place_canvas_window(
+        &workstation->customisation, window_id,
+        rect->x, rect->y, rect->width, rect->height);
+    if (status == UMI_STATUS_OK) {
+        status = rebuild_active_layout(workstation);
+        workstation->revision += 1U;
+    }
+    if (workstation->layout_status != NULL) {
+        gtk_label_set_text(GTK_LABEL(workstation->layout_status),
+            status == UMI_STATUS_OK
+                ? "Panel arranged. Apply and Lock to keep it, or Cancel."
+                : "Panel could not be arranged. Check the layout and panel locks.");
+    }
+    return status;
+}
+
 /*
  * Provide the refresh edit controls operation used by this module and its client
  * applications.
@@ -329,6 +446,10 @@ static void refresh_edit_controls(
      */
     if (workstation == NULL) return;
     editing = workstation->customisation.edit_active ? 1 : 0;
+    if (workstation->new_layout_button != NULL)
+        gtk_widget_set_sensitive(workstation->new_layout_button, !editing);
+    if (workstation->clear_canvas_button != NULL)
+        gtk_widget_set_sensitive(workstation->clear_canvas_button, editing);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -362,7 +483,16 @@ static void refresh_edit_controls(
     /* Checkpoints represent committed layouts, so saving and restoring pause
      * while the user owns an editable rollback session. */
     if (workstation->save_layout_button != NULL) {
-        gtk_widget_set_sensitive(workstation->save_layout_button, !editing);
+        gtk_widget_set_sensitive(workstation->save_layout_button,
+            !editing && checkpoint_save_enabled(workstation));
+        gtk_widget_set_tooltip_text(workstation->save_layout_button,
+            workstation->checkpoint_server != NULL && !workstation->checkpoint_report.storage_revision_known
+                ? "Save is disabled until Restore establishes a trustworthy storage revision; damaged manifests need repair"
+                : workstation->checkpoint_server != NULL && workstation->checkpoint_report.durable
+                ? "Save this committed active layout to disk for the next launch"
+                : workstation->checkpoint_storage_requested && workstation->checkpoint_server == NULL
+                    ? "Persistent storage is unavailable; this request will not silently save to memory"
+                    : "Save this committed active layout for this session only");
     }
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -371,7 +501,11 @@ static void refresh_edit_controls(
     if (workstation->restore_layout_button != NULL) {
         gtk_widget_set_sensitive(
             workstation->restore_layout_button,
-            !editing && workstation->saved_layout_text != NULL);
+            !editing && (workstation->checkpoint_server != NULL || workstation->saved_layout_text != NULL));
+        gtk_widget_set_tooltip_text(workstation->restore_layout_button,
+            workstation->checkpoint_server != NULL && workstation->checkpoint_report.durable
+                ? "Validate and restore the last explicitly saved active layout from disk"
+                : "Restore the last checkpoint saved in this session");
     }
     refresh_command_model(workstation);
 }
@@ -386,6 +520,9 @@ UmiStatus umi_application_suite_gtk4_workstation_select_layout(
 {
     UmiStatus status;
     size_t index;
+    size_t canonical_index = UMI_APPLICATION_SUITE_LAYOUT_SELECTOR_MAX;
+    char qualified_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    const char *selected_id = layout_id;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -394,37 +531,83 @@ UmiStatus umi_application_suite_gtk4_workstation_select_layout(
         return UMI_STATUS_INVALID_ARGUMENT;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
-    status = umi_application_suite_layout_runtime_select(
-        &workstation->runtime, layout_id);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
-    status = umi_application_suite_layout_selector_select(
-        &workstation->selector, layout_id);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
+    /* Existing callers use short preset IDs. Accept those and their saved
+     * qualified forms while keeping user layout IDs unchanged. */
+    for (index = 0U; index < workstation->selector.count; ++index) {
+        const char *short_id = workstation->selector.choices[index].layout_id;
+        status = qualify_layout_id(qualified_id, sizeof(qualified_id),
+            workstation->runtime.experience->application_id, short_id);
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(layout_id, short_id) == 0 || strcmp(layout_id, qualified_id) == 0) {
+            selected_id = qualified_id;
+            canonical_index = index;
+            break;
+        }
+    }
     status = umi_ui_workspace_customisation_activate(
-        &workstation->customisation,
-        workstation->runtime.active_layout.layout_id);
+        &workstation->customisation, selected_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = rebuild_active_layout(workstation);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
-    workstation->changing_selection = 1;
-    /* Visit each bounded item once so every record receives the same rule. */
-    for (index = 0U; index < workstation->selector.count; ++index) {
-        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
-        if (workstation->selector.choices[index].selected) {
-            gtk_drop_down_set_selected(GTK_DROP_DOWN(workstation->layout_dropdown),
-                                       (guint)index);
-            break;
-        }
+    /* Keep canonical catalogue metadata in step when this is a preset. A user
+     * canvas has no canonical definition and remains owned by customisation. */
+    if (canonical_index < workstation->selector.count) {
+        const char *short_id = workstation->selector.choices[canonical_index].layout_id;
+        (void)umi_application_suite_layout_runtime_select(&workstation->runtime, short_id);
+        (void)umi_application_suite_layout_selector_select(&workstation->selector, short_id);
     }
-    workstation->changing_selection = 0;
+    refresh_layout_choices(workstation);
     refresh_heading(workstation);
     refresh_edit_controls(workstation);
     workstation->revision += 1U;
     return UMI_STATUS_OK;
+}
+
+/* Create a named empty layout without clearing or replacing an existing one.
+ * It starts locked; Edit Layout opens the normal reversible transaction. */
+UmiStatus umi_application_suite_gtk4_workstation_create_blank_layout(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *layout_id, const char *name)
+{
+    UmiStatus status;
+    size_t prefix_length;
+    if (workstation == NULL || layout_id == NULL ||
+        workstation->runtime.experience == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* The qualified application prefix also selects the canonical panel
+     * permissions. A custom name must not accidentally bypass those rules. */
+    prefix_length = strlen(workstation->runtime.experience->application_id);
+    if (strncmp(layout_id, workstation->runtime.experience->application_id,
+                prefix_length) != 0 || layout_id[prefix_length] != '.' ||
+        layout_id[prefix_length + 1U] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_ui_workspace_customisation_create_blank_layout(
+        &workstation->customisation, layout_id, name);
+    if (status != UMI_STATUS_OK) return status;
+    status = rebuild_active_layout(workstation);
+    refresh_layout_choices(workstation);
+    refresh_heading(workstation);
+    refresh_edit_controls(workstation);
+    workstation->revision += 1U;
+    return status;
+}
+
+/* Clear only removable view instances inside the current edit. Product data,
+ * pinned panels and essential non-closable panels are not deleted. */
+UmiStatus umi_application_suite_gtk4_workstation_clear_canvas(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiWorkspaceCanvasClearResult *out_result)
+{
+    UmiStatus status;
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_ui_workspace_customisation_clear_canvas(
+        &workstation->customisation, out_result);
+    if (status == UMI_STATUS_OK) {
+        status = rebuild_active_layout(workstation);
+        workstation->revision += 1U;
+    }
+    return status;
 }
 
 /* Forward appearance selection to the Framework-owned editor so applications
@@ -611,7 +794,8 @@ UmiStatus umi_application_suite_gtk4_workstation_export_layout(
         &workstation->customisation, saved_at_ns, out_text, capacity);
 }
 
-/* Import an existing canonical layout and synchronise model, selector and GTK. */
+/* Import a canonical or user-created layout belonging to this application.
+ * Stage the complete model first so rejected files cannot change live state. */
 UmiStatus umi_application_suite_gtk4_workstation_import_layout(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *text,
@@ -621,115 +805,340 @@ UmiStatus umi_application_suite_gtk4_workstation_import_layout(
     UmiUiWorkspaceImportOptions options =
         umi_ui_workspace_import_options_default();
     UmiUiWorkspaceImportReport local_report;
+    UmiUiWorkspaceCustomisation *candidate;
+    UmiApplicationSuiteLayoutRenderPlan *render_plan;
+    const UmiUiWorkspaceLayout *imported_layout = NULL;
+    const UmiUiWorkspaceLayout *candidate_active;
+    const UmiUiWorkspaceLayout *previous_active;
+    size_t prefix_length;
+    size_t index;
+    int redraw;
     UmiStatus status;
 
+    /* Clear stale success evidence even if decoding or product checks fail. */
+    if (out_report != NULL) (void)memset(out_report, 0, sizeof(*out_report));
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workstation == NULL || text == NULL) {
+    if (workstation == NULL || text == NULL ||
+        workstation->runtime.experience == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
-    /* A suite selector contains application-defined canonical layouts. Saved
-     * text may replace one of them but cannot inject an unknown selector item. */
+    /* An import must not replace the rollback baseline of an active edit. */
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    candidate = (UmiUiWorkspaceCustomisation *)malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = workstation->customisation;
+    /* New named canvases must survive a fresh application instance. Permit
+     * additions on the private candidate, then enforce the product prefix
+     * before either the live model or its native presentation can change. */
     options.conflict_policy = UMI_UI_WORKSPACE_IMPORT_REPLACE_CONFLICT;
     options.activate_imported_layout = activate != 0;
-    options.allow_new_layout = false;
+    options.allow_new_layout = true;
     status = umi_ui_workspace_customisation_import(
-        &workstation->customisation, text, &options, &local_report);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) {
-        return status;
-    }
-    /* Apply this branch only when its contract condition is satisfied. */
-    if (activate != 0) {
-        /* Selection updates runtime metadata, the dropdown and native panels
-         * while retaining the imported customisation layout by identifier. */
-        status = umi_application_suite_gtk4_workstation_select_layout(
-            workstation, local_report.layout_id);
-    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (strcmp(workstation->customisation.active_layout_id,
-                      local_report.layout_id) == 0) {
-        /* A non-activating replacement still needs redrawing when it replaced
-         * the layout which was already visible. */
-        status = rebuild_active_layout(workstation);
-    }
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        workstation->revision += 1U;
-        /*
-         * Protect caller-owned memory by checking that required state is available before it is
-         * used.
-         */
-        if (out_report != NULL) {
-            *out_report = local_report;
-        }
-    }
-    return status;
-}
-
-/* Save an atomic in-memory checkpoint used by the workstation header buttons. */
-UmiStatus umi_application_suite_gtk4_workstation_save_checkpoint(
-    UmiApplicationSuiteGtk4Workstation *workstation,
-    uint64_t saved_at_ns)
-{
-    char *candidate;
-    UmiStatus status;
-
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (workstation == NULL) {
-        return UMI_STATUS_INVALID_ARGUMENT;
-    }
-    candidate = (char *)calloc(UMI_UI_LAYOUT_ENCODED_CAPACITY, sizeof(char));
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (candidate == NULL) {
-        return UMI_STATUS_OUT_OF_MEMORY;
-    }
-    status = umi_application_suite_gtk4_workstation_export_layout(
-        workstation,
-        saved_at_ns,
-        candidate,
-        UMI_UI_LAYOUT_ENCODED_CAPACITY);
+        candidate, text, &options, &local_report);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         free(candidate);
         return status;
     }
-    /* Publish the complete new text only after encoding succeeds, preserving
-     * the previous usable checkpoint if allocation or encoding fails. */
+    prefix_length = strlen(workstation->runtime.experience->application_id);
+    /* A similarly named product is not the same owner. Require the complete
+     * ID, a separator and a non-empty layout suffix within the decoded field. */
+    if (prefix_length + 1U >= sizeof(local_report.layout_id) ||
+        strncmp(local_report.layout_id,
+            workstation->runtime.experience->application_id, prefix_length) != 0 ||
+        local_report.layout_id[prefix_length] != '.' ||
+        local_report.layout_id[prefix_length + 1U] == '\0') {
+        free(candidate);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Validate inactive imports too, so selecting a saved layout later cannot
+     * reveal a rendering error that import silently accepted. */
+    for (index = 0U; index < candidate->layout_count; ++index) {
+        if (strcmp(candidate->layouts[index].layout_id, local_report.layout_id) == 0) {
+            imported_layout = &candidate->layouts[index];
+            break;
+        }
+    }
+    if (imported_layout == NULL) {
+        free(candidate);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    render_plan = (UmiApplicationSuiteLayoutRenderPlan *)malloc(sizeof(*render_plan));
+    if (render_plan == NULL) {
+        free(candidate);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    status = umi_application_suite_layout_render_plan_build(imported_layout, render_plan);
+    free(render_plan);
+    if (status != UMI_STATUS_OK) {
+        free(candidate);
+        return status;
+    }
+    previous_active = active_layout(workstation);
+    candidate_active = umi_ui_workspace_customisation_active_const(candidate);
+    redraw = activate != 0 || (previous_active != NULL &&
+        strcmp(previous_active->layout_id, local_report.layout_id) == 0);
+    /* An inactive addition leaves the visible widgets untouched. A visible
+     * import is rendered before publishing its model; an allocation failure
+     * keeps live state and attempts to restore its previous presentation. */
+    if (redraw) {
+        status = candidate_active != NULL
+            ? umi_gtk4_workspace_layout_host_rebuild(workstation->host, candidate_active)
+            : UMI_STATUS_INVALID_STATE;
+        if (status != UMI_STATUS_OK) {
+            if (previous_active != NULL)
+                (void)umi_gtk4_workspace_layout_host_rebuild(workstation->host, previous_active);
+            free(candidate);
+            return status;
+        }
+    }
+    /* This is the only publication point for decoded layouts and contexts. */
+    workstation->customisation = *candidate;
+    free(candidate);
+    /* The staged renderer used the old live group store. Resolve any newly
+     * imported colours only after the complete routing model is published. */
+    (void)umi_gtk4_workspace_layout_host_set_context_groups(
+        workstation->host, &workstation->customisation.groups);
+    /* Canonical metadata keeps its established short IDs. A named canvas has
+     * no canonical selector entry; its qualified ID stays in customisation. */
+    if (activate != 0) {
+        for (index = 0U; index < workstation->selector.count; ++index) {
+            char qualified[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+            const char *short_id = workstation->selector.choices[index].layout_id;
+            if (qualify_layout_id(qualified, sizeof(qualified),
+                    workstation->runtime.experience->application_id, short_id) == UMI_STATUS_OK &&
+                strcmp(local_report.layout_id, qualified) == 0) {
+                (void)umi_application_suite_layout_runtime_select(&workstation->runtime, short_id);
+                (void)umi_application_suite_layout_selector_select(&workstation->selector, short_id);
+                break;
+            }
+        }
+    }
+    refresh_layout_choices(workstation);
+    refresh_heading(workstation);
+    refresh_edit_controls(workstation);
+    workstation->revision += 1U;
+    if (out_report != NULL) *out_report = local_report;
+    return UMI_STATUS_OK;
+}
+
+/* Build the shared product namespace without inventing an independent store. */
+static UmiStatus checkpoint_scope(
+    const UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiWorkspaceCheckpointScope *scope, char *prefix, size_t capacity)
+{
+    int written;
+    if (workstation == NULL || workstation->runtime.experience == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    written = snprintf(prefix, capacity, "%s.",
+        workstation->runtime.experience->application_id);
+    if (written < 0 || (size_t)written >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    scope->application_id = workstation->runtime.experience->application_id;
+    scope->workspace_id = "desktop";
+    scope->layout_prefix = prefix;
+    return UMI_STATUS_OK;
+}
+
+/* Explain persistence outcomes beside the actual Save/Restore controls. */
+static void checkpoint_feedback(UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiStatus status, const char *success)
+{
+    char message[256];
+    if (workstation == NULL || workstation->layout_status == NULL) return;
+    if (status == UMI_STATUS_OK) {
+        gtk_label_set_text(GTK_LABEL(workstation->layout_status), success);
+        gtk_widget_set_tooltip_text(workstation->layout_status, success);
+    } else {
+        (void)snprintf(message, sizeof(message),
+            "Layout storage: %s. Current layout is unchanged; no checkpoint was overwritten.",
+            umi_status_text(status));
+        gtk_label_set_text(GTK_LABEL(workstation->layout_status), message);
+        /* Compact headers may ellipsize this label; keep the complete storage
+         * result available without widening the application window. */
+        gtk_widget_set_tooltip_text(workstation->layout_status, message);
+    }
+}
+
+/* Attach only after existing bytes pass codec, dependency and ownership checks.
+ * Binding never restores a layout or changes an active edit behind the caller. */
+UmiStatus umi_application_suite_gtk4_workstation_bind_checkpoint_storage(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiDataServer *server)
+{
+    UmiUiWorkspaceCheckpointScope scope;
+    UmiUiWorkspaceCheckpointReport report = {0};
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char *candidate = NULL;
+    UmiStatus status = UMI_STATUS_OK;
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    if (server != NULL) {
+        candidate = (char *)calloc(UMI_UI_LAYOUT_ENCODED_CAPACITY, 1U);
+        if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+        if (status == UMI_STATUS_OK)
+            status = umi_ui_workspace_checkpoint_load_validated(server, &scope,
+                &workstation->customisation, candidate, UMI_UI_LAYOUT_ENCODED_CAPACITY, &report);
+        if (status == UMI_STATUS_NOT_FOUND) {
+            free(candidate);
+            candidate = NULL;
+            status = UMI_STATUS_OK;
+        }
+        if (status != UMI_STATUS_OK) {
+            free(candidate);
+            return status;
+        }
+    }
+    if (workstation->owned_checkpoint_server != server) {
+        umi_data_server_destroy(workstation->owned_checkpoint_server);
+        workstation->owned_checkpoint_server = NULL;
+    }
+    workstation->checkpoint_server = server;
+    workstation->checkpoint_storage_requested = server != NULL;
+    workstation->checkpoint_storage_status = UMI_STATUS_OK;
+    workstation->checkpoint_report = report;
     free(workstation->saved_layout_text);
     workstation->saved_layout_text = candidate;
-    workstation->saved_layout_at_ns = saved_at_ns;
+    workstation->saved_layout_at_ns = candidate != NULL ? report.saved_at_ns : 0U;
     refresh_edit_controls(workstation);
     workstation->revision += 1U;
     return UMI_STATUS_OK;
 }
 
-/* Restore the last in-memory checkpoint through the same validated importer. */
+/* Native launchers opt into durable storage; constructors remain I/O-free. */
+UmiStatus umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
+    UmiApplicationSuiteGtk4Workstation *workstation, int restore_saved)
+{
+    UmiDataServer *server = NULL;
+    UmiStatus status;
+    if (workstation == NULL || workstation->runtime.experience == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    status = umi_gtk4_workspace_storage_open(
+        workstation->runtime.experience->application_id, &server);
+    if (status == UMI_STATUS_OK)
+        status = umi_application_suite_gtk4_workstation_bind_checkpoint_storage(workstation, server);
+    if (status == UMI_STATUS_OK) {
+        workstation->owned_checkpoint_server = server;
+        if (restore_saved && workstation->saved_layout_text != NULL)
+            status = umi_application_suite_gtk4_workstation_restore_checkpoint(workstation);
+    } else {
+        umi_data_server_destroy(server);
+        /* Do not pretend the legacy memory checkpoint fulfilled this explicit
+         * durable request. Preserve any previously bound valid backend. */
+        if (workstation->checkpoint_server == NULL)
+            workstation->checkpoint_storage_requested = 1;
+    }
+    workstation->checkpoint_storage_status = status;
+    refresh_edit_controls(workstation);
+    checkpoint_feedback(workstation, status,
+        workstation->checkpoint_report.recovered_last_good
+            ? restore_saved
+                ? "Recovered last-known-good saved layout; review before saving."
+                : "Last-known-good checkpoint available; choose Restore to review it."
+            : restore_saved && workstation->saved_layout_text != NULL
+                ? "Saved layout restored from disk."
+                : "Disk layout storage ready. Save keeps the active layout for next launch.");
+    return status;
+}
+
+/* Save only committed layouts and retain the previous checkpoint on failure. */
+UmiStatus umi_application_suite_gtk4_workstation_save_checkpoint(
+    UmiApplicationSuiteGtk4Workstation *workstation, uint64_t saved_at_ns)
+{
+    UmiUiWorkspaceCheckpointScope scope;
+    UmiUiWorkspaceCheckpointReport report = {0};
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char *candidate;
+    UmiStatus status;
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    if (!checkpoint_save_enabled(workstation))
+        return workstation->checkpoint_storage_status != UMI_STATUS_OK
+            ? workstation->checkpoint_storage_status : UMI_STATUS_INVALID_STATE;
+    candidate = (char *)calloc(UMI_UI_LAYOUT_ENCODED_CAPACITY, 1U);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_application_suite_gtk4_workstation_export_layout(
+        workstation, saved_at_ns, candidate, UMI_UI_LAYOUT_ENCODED_CAPACITY);
+    if (status == UMI_STATUS_OK && workstation->checkpoint_server != NULL) {
+        status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+        if (status == UMI_STATUS_OK)
+            status = umi_ui_workspace_checkpoint_save(workstation->checkpoint_server,
+                &scope, &workstation->customisation, saved_at_ns,
+                workstation->checkpoint_report.storage_revision, &report);
+        workstation->checkpoint_storage_status = status;
+        /* A damaged manifest is not permission to overwrite storage. Keep the
+         * old CAS revision on conflicts; never adopt another writer's revision.
+         * Early BUSY/OOM keeps default NOT_FOUND evidence and permits retry. */
+        if (status != UMI_STATUS_OK && !report.storage_revision_known &&
+            report.primary_status != UMI_STATUS_NOT_FOUND)
+            workstation->checkpoint_report.storage_revision_known = false;
+    }
+    if (status != UMI_STATUS_OK) {
+        free(candidate);
+        refresh_edit_controls(workstation);
+        return status;
+    }
+    /* Only successful persistent acceptance advances the cache and CAS evidence. */
+    free(workstation->saved_layout_text);
+    workstation->saved_layout_text = candidate;
+    workstation->saved_layout_at_ns = saved_at_ns;
+    if (workstation->checkpoint_server != NULL) workstation->checkpoint_report = report;
+    refresh_edit_controls(workstation);
+    workstation->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Reload storage for every explicit Restore, then use the existing staged
+ * native importer so corrupt or incompatible data cannot replace live panels. */
 UmiStatus umi_application_suite_gtk4_workstation_restore_checkpoint(
     UmiApplicationSuiteGtk4Workstation *workstation)
 {
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (workstation == NULL) {
-        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiUiWorkspaceCheckpointScope scope;
+    UmiUiWorkspaceCheckpointReport report = {0};
+    char prefix[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+    char *candidate;
+    UmiStatus status;
+    if (workstation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workstation->customisation.edit_active) return UMI_STATUS_BUSY;
+    if (workstation->checkpoint_server == NULL) {
+        if (workstation->checkpoint_storage_requested)
+            return workstation->checkpoint_storage_status;
+        return workstation->saved_layout_text != NULL
+            ? umi_application_suite_gtk4_workstation_import_layout(
+                workstation, workstation->saved_layout_text, 1, NULL)
+            : UMI_STATUS_NOT_FOUND;
     }
-    /*
-     * Protect caller-owned memory by checking that required state is available before it is
-     * used.
-     */
-    if (workstation->saved_layout_text == NULL) {
-        return UMI_STATUS_NOT_FOUND;
+    candidate = (char *)calloc(UMI_UI_LAYOUT_ENCODED_CAPACITY, 1U);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = checkpoint_scope(workstation, &scope, prefix, sizeof(prefix));
+    if (status == UMI_STATUS_OK)
+        status = umi_ui_workspace_checkpoint_load_validated(workstation->checkpoint_server,
+            &scope, &workstation->customisation, candidate, UMI_UI_LAYOUT_ENCODED_CAPACITY, &report);
+    if (status == UMI_STATUS_OK)
+        status = umi_application_suite_gtk4_workstation_import_layout(workstation, candidate, 1, NULL);
+    workstation->checkpoint_storage_status = status;
+    if (status == UMI_STATUS_OK) {
+        free(workstation->saved_layout_text);
+        workstation->saved_layout_text = candidate;
+        workstation->saved_layout_at_ns = report.saved_at_ns;
+        workstation->checkpoint_report = report;
+        candidate = NULL;
+    } else if (status == UMI_STATUS_NOT_FOUND && report.storage_revision_known) {
+        /* An explicitly observed absent primary permits a first Save again;
+         * the in-memory cache and visible layout are still left unchanged. */
+        workstation->checkpoint_report = report;
+    } else if (!report.storage_revision_known &&
+               report.primary_status != UMI_STATUS_NOT_FOUND) {
+        /* Early BUSY/OOM reports have not inspected the manifest and cannot
+         * revoke previously trusted CAS evidence. Explicit damage can. */
+        workstation->checkpoint_report.storage_revision_known = false;
     }
-    return umi_application_suite_gtk4_workstation_import_layout(
-        workstation, workstation->saved_layout_text, 1, NULL);
+    free(candidate);
+    refresh_edit_controls(workstation);
+    return status;
 }
 
 /*
@@ -1207,13 +1616,19 @@ static void refresh_panel_editor(
         GTK_CHECK_BUTTON(workstation->panel_editor_auto_hide),
         umi_ui_workspace_customisation_window_is_auto_hidden(
             &workstation->customisation, window_id));
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[0]), window->x * 100.0);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[1]), window->y * 100.0);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[2]), window->width * 100.0);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[3]), window->height * 100.0);
+    gtk_widget_set_visible(workstation->panel_editor_geometry,
+        !window->floating && strcmp(window->placement_id, "canvas") == 0);
     gtk_widget_set_sensitive(
         workstation->panel_editor_apply,
         workstation->customisation.edit_active);
     gtk_label_set_text(
         GTK_LABEL(workstation->panel_editor_status),
         workstation->customisation.edit_active
-            ? "Choose a region and linked context, then apply."
+            ? "Choose a placement and context. Canvas bounds use percentages."
             : "Unlock the layout before changing panel settings.");
 }
 
@@ -1250,8 +1665,8 @@ static void on_panel_editor_cancel(GtkButton *button, gpointer user_data)
     }
 }
 
-/* Disable auto-hide whenever Floating is selected because a detached panel
- * has no dock edge on which an auto-hide strip could be rendered. */
+/* Only docked panels have an edge for auto-hide. Internal canvas geometry is
+ * edited in percentages; detached windows remain a separate placement. */
 static void on_panel_editor_region_changed(
     GObject *object,
     GParamSpec *property,
@@ -1260,6 +1675,8 @@ static void on_panel_editor_region_changed(
     UmiApplicationSuiteGtk4Workstation *workstation =
         (UmiApplicationSuiteGtk4Workstation *)user_data;
     guint region_index;
+    gboolean docked;
+    gboolean canvas;
     (void)object;
     (void)property;
     /*
@@ -1269,11 +1686,15 @@ static void on_panel_editor_region_changed(
     if (workstation == NULL) return;
     region_index = gtk_drop_down_get_selected(
         GTK_DROP_DOWN(workstation->panel_editor_region));
+    canvas = region_index < G_N_ELEMENTS(PANEL_EDITOR_REGIONS) &&
+        strcmp(PANEL_EDITOR_REGIONS[region_index], "canvas") == 0;
+    docked = region_index < 5U;
     gtk_widget_set_sensitive(
         workstation->panel_editor_auto_hide,
-        region_index + 1U < G_N_ELEMENTS(PANEL_EDITOR_REGIONS));
+        docked);
+    gtk_widget_set_visible(workstation->panel_editor_geometry, canvas);
     /* Apply this branch only when its contract condition is satisfied. */
-    if (region_index + 1U == G_N_ELEMENTS(PANEL_EDITOR_REGIONS)) {
+    if (!docked) {
         gtk_check_button_set_active(
             GTK_CHECK_BUTTON(workstation->panel_editor_auto_hide), FALSE);
     }
@@ -1333,6 +1754,15 @@ static void on_panel_editor_apply(GtkButton *button, gpointer user_data)
     settings.y = rectangle.y;
     settings.width = rectangle.width;
     settings.height = rectangle.height;
+    /* The Framework validates all four values as one candidate, so a width
+     * extending past the right edge cannot partially change the placement. */
+    if (strcmp(settings.placement_id, "canvas") == 0) {
+        settings.auto_hidden = false;
+        settings.x = gtk_spin_button_get_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[0])) / 100.0;
+        settings.y = gtk_spin_button_get_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[1])) / 100.0;
+        settings.width = gtk_spin_button_get_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[2])) / 100.0;
+        settings.height = gtk_spin_button_get_value(GTK_SPIN_BUTTON(workstation->panel_editor_bounds[3])) / 100.0;
+    }
 
     status = umi_application_suite_gtk4_workstation_apply_panel_settings(
         workstation, &settings);
@@ -1355,10 +1785,12 @@ static GtkWidget *build_panel_editor(
     UmiApplicationSuiteGtk4Workstation *workstation)
 {
     static const char *REGION_LABELS[] = {
-        "Centre", "Left", "Right", "Bottom", "Top", "Floating", NULL
+        "Centre", "Left", "Right", "Bottom", "Top", "Detached Window", "Canvas", NULL
     };
     GtkWidget *revealer = gtk_revealer_new();
-    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    GtkWidget *options = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *scroll = gtk_scrolled_window_new();
     GtkWidget *cancel = gtk_button_new_with_label("Close");
     GtkStringList *contexts = gtk_string_list_new(NULL);
     size_t index;
@@ -1395,6 +1827,24 @@ static GtkWidget *build_panel_editor(
     workstation->panel_editor_apply =
         gtk_button_new_with_label("Apply");
     workstation->panel_editor_status = gtk_label_new("");
+    workstation->panel_editor_geometry = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
+    /* Short labelled number fields are also usable with Tab and arrow keys.
+     * The horizontal viewport keeps a large font from widening the host. */
+    for (index = 0U; index < 4U; ++index) {
+        static const char *labels[] = {"X %", "Y %", "Width %", "Height %"};
+        static const char *ids[] = {"umicom.panel.canvas.x", "umicom.panel.canvas.y",
+                                    "umicom.panel.canvas.width", "umicom.panel.canvas.height"};
+        GtkWidget *field = gtk_spin_button_new_with_range(index < 2U ? 0.0 : 0.1, 100.0, 1.0);
+        workstation->panel_editor_bounds[index] = field;
+        gtk_spin_button_set_digits(GTK_SPIN_BUTTON(field), 1U);
+        gtk_widget_set_tooltip_text(field, labels[index]);
+        gtk_accessible_update_property(GTK_ACCESSIBLE(field),
+            GTK_ACCESSIBLE_PROPERTY_LABEL, labels[index], -1);
+        (void)umi_gtk4_automation_tag_widget(field, ids[index]);
+        gtk_box_append(GTK_BOX(workstation->panel_editor_geometry), gtk_label_new(labels[index]));
+        gtk_box_append(GTK_BOX(workstation->panel_editor_geometry), field);
+    }
+    gtk_widget_set_visible(workstation->panel_editor_geometry, FALSE);
 
     gtk_widget_add_css_class(root, "umicom-panel-settings-editor");
     gtk_widget_add_css_class(workstation->panel_editor_title, "heading");
@@ -1402,15 +1852,19 @@ static GtkWidget *build_panel_editor(
     gtk_widget_set_hexpand(workstation->panel_editor_status, TRUE);
     gtk_label_set_xalign(GTK_LABEL(workstation->panel_editor_status), 0.0F);
     gtk_box_append(GTK_BOX(root), workstation->panel_editor_title);
-    gtk_box_append(GTK_BOX(root), gtk_label_new("Dock"));
-    gtk_box_append(GTK_BOX(root), workstation->panel_editor_region);
-    gtk_box_append(GTK_BOX(root), gtk_label_new("Context"));
-    gtk_box_append(GTK_BOX(root), workstation->panel_editor_context);
-    gtk_box_append(GTK_BOX(root), workstation->panel_editor_auto_hide);
+    gtk_box_append(GTK_BOX(options), gtk_label_new("Placement"));
+    gtk_box_append(GTK_BOX(options), workstation->panel_editor_region);
+    gtk_box_append(GTK_BOX(options), gtk_label_new("Context"));
+    gtk_box_append(GTK_BOX(options), workstation->panel_editor_context);
+    gtk_box_append(GTK_BOX(options), workstation->panel_editor_auto_hide);
+    gtk_box_append(GTK_BOX(options), cancel);
+    gtk_box_append(GTK_BOX(options), workstation->panel_editor_apply);
+    gtk_box_append(GTK_BOX(root), options);
+    gtk_box_append(GTK_BOX(root), workstation->panel_editor_geometry);
     gtk_box_append(GTK_BOX(root), workstation->panel_editor_status);
-    gtk_box_append(GTK_BOX(root), cancel);
-    gtk_box_append(GTK_BOX(root), workstation->panel_editor_apply);
-    gtk_revealer_set_child(GTK_REVEALER(revealer), root);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), root);
+    gtk_revealer_set_child(GTK_REVEALER(revealer), scroll);
     gtk_revealer_set_reveal_child(GTK_REVEALER(revealer), FALSE);
     g_signal_connect(
         workstation->panel_editor_region,
@@ -1488,7 +1942,6 @@ static void on_layout_selected(GObject *object,
     UmiApplicationSuiteGtk4Workstation *workstation =
         (UmiApplicationSuiteGtk4Workstation *)data;
     guint selected;
-    const UmiApplicationSuiteLayoutChoice *choice;
     (void)pspec;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -1496,15 +1949,13 @@ static void on_layout_selected(GObject *object,
      */
     if (workstation == NULL || workstation->changing_selection) return;
     selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(object));
-    choice = umi_application_suite_layout_selector_at(
-        &workstation->selector, (size_t)selected);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (choice != NULL)
+    if ((size_t)selected < workstation->customisation.layout_count)
         (void)umi_application_suite_gtk4_workstation_select_layout(
-            workstation, choice->layout_id);
+            workstation, workstation->customisation.layouts[selected].layout_id);
 }
 
 /*
@@ -1715,7 +2166,7 @@ static GtkWidget *build_new_window_popover(
     UmiApplicationSuiteGtk4Workstation *workstation)
 {
     static const char *REGION_LABELS[] = {
-        "Centre", "Left", "Right", "Bottom", "Top", NULL
+        "Centre", "Left", "Right", "Bottom", "Top", "Canvas", NULL
     };
     static const char *CATEGORY_LABELS[] = {
         "All categories", "Development", "Navigation", "Operations",
@@ -1921,20 +2372,19 @@ static void on_save_layout_clicked(GtkButton *button, gpointer user_data)
         return;
     }
     now_us = g_get_real_time();
-    status = umi_application_suite_gtk4_workstation_save_checkpoint(
-        workstation,
-        now_us > 0 ? (uint64_t)now_us * UINT64_C(1000) : UINT64_C(0));
+    status = now_us > 0 && (uint64_t)now_us > UINT64_MAX / UINT64_C(1000)
+        ? UMI_STATUS_CAPACITY_EXCEEDED
+        : umi_application_suite_gtk4_workstation_save_checkpoint(
+            workstation,
+            now_us > 0 ? (uint64_t)now_us * UINT64_C(1000) : UINT64_C(0));
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workstation->layout_status != NULL) {
-        gtk_label_set_text(
-            GTK_LABEL(workstation->layout_status),
-            status == UMI_STATUS_OK
-                ? "Layout saved"
-                : "Layout could not be saved");
-    }
+    checkpoint_feedback(workstation, status,
+        workstation->checkpoint_report.durable && workstation->checkpoint_server != NULL
+            ? "Layout saved to disk."
+            : "Layout saved for this session only.");
 }
 
 /* Restore the last checkpoint through the validated Framework importer. */
@@ -1958,13 +2408,54 @@ static void on_restore_layout_clicked(GtkButton *button, gpointer user_data)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workstation->layout_status != NULL) {
-        gtk_label_set_text(
-            GTK_LABEL(workstation->layout_status),
-            status == UMI_STATUS_OK
-                ? "Saved layout restored"
-                : "No saved layout is available");
-    }
+    checkpoint_feedback(workstation, status,
+        workstation->checkpoint_report.recovered_last_good
+            ? "Recovered last-known-good saved layout; review before saving."
+            : workstation->checkpoint_report.durable && workstation->checkpoint_server != NULL
+                ? "Saved layout restored from disk." : "Session layout restored.");
+}
+
+/* A random stable ID separates identity from the editable display name. No
+ * existing preset, saved file or product document is removed by this action. */
+static void on_create_blank_layout_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = user_data;
+    gchar *id;
+    gchar *name;
+    gchar *qualified_id;
+    UmiStatus status;
+    (void)button;
+    if (workstation == NULL) return;
+    name = g_strdup(gtk_editable_get_text(GTK_EDITABLE(workstation->new_layout_name)));
+    g_strstrip(name);
+    id = g_uuid_string_random();
+    qualified_id = g_strdup_printf("%s.%s",
+        workstation->runtime.experience->application_id, id);
+    status = umi_application_suite_gtk4_workstation_create_blank_layout(workstation, qualified_id, name);
+    g_free(qualified_id);
+    g_free(id);
+    g_free(name);
+    gtk_label_set_text(GTK_LABEL(workstation->layout_status),
+        status == UMI_STATUS_OK ? "Empty layout created. Choose Edit Layout to add panels."
+            : "Layout could not be created. Enter a name and finish any active edit.");
+    if (status == UMI_STATUS_OK)
+        gtk_popover_popdown(GTK_POPOVER(workstation->new_layout_popover));
+}
+
+/* Clearing is part of Edit Layout, so Cancel restores removed view instances.
+ * The result explains why protected panels may remain on the canvas. */
+static void on_clear_canvas_clicked(GtkButton *button, gpointer user_data)
+{
+    UmiApplicationSuiteGtk4Workstation *workstation = user_data;
+    UmiUiWorkspaceCanvasClearResult result = {0U, 0U};
+    UmiStatus status;
+    (void)button;
+    if (workstation == NULL) return;
+    status = umi_application_suite_gtk4_workstation_clear_canvas(workstation, &result);
+    gtk_label_set_text(GTK_LABEL(workstation->layout_status),
+        status != UMI_STATUS_OK ? "Canvas could not be cleared. Unlock the layout first."
+            : result.retained != 0U ? "Removable panels cleared; protected panels remain. Cancel restores them."
+            : "Panels cleared. Apply and Lock to keep this layout, or Cancel to restore them.");
 }
 
 /* Route one shared command-bar item to the same validated operations used by
@@ -2143,6 +2634,17 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) goto fail;
 
+    /* The renderer owns gesture previews; the existing customisation model
+     * remains the only owner of accepted layout changes and Cancel history. */
+    status = umi_gtk4_workspace_layout_host_set_canvas_geometry_handler(
+        workstation->host, on_canvas_geometry, workstation);
+    if (status != UMI_STATUS_OK) goto fail;
+    /* Resolve colour from the same group store that owns context routing;
+     * group IDs such as development.blue are not themselves CSS colours. */
+    status = umi_gtk4_workspace_layout_host_set_context_groups(
+        workstation->host, &workstation->customisation.groups);
+    if (status != UMI_STATUS_OK) goto fail;
+
     workstation->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -2232,6 +2734,35 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     g_signal_connect(workstation->layout_dropdown, "notify::selected",
                      G_CALLBACK(on_layout_selected), workstation);
     gtk_box_append(GTK_BOX(header), workstation->layout_dropdown);
+    refresh_layout_choices(workstation);
+
+    /* Keep layout creation reachable even on a completely empty canvas. */
+    {
+        GtkWidget *content = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+        GtkWidget *create = gtk_button_new_with_label("Create empty layout");
+        workstation->new_layout_button = gtk_menu_button_new();
+        workstation->new_layout_popover = gtk_popover_new();
+        workstation->new_layout_name = gtk_entry_new();
+        gtk_entry_set_placeholder_text(GTK_ENTRY(workstation->new_layout_name), "Layout name");
+        gtk_entry_set_max_length(GTK_ENTRY(workstation->new_layout_name),
+                                 UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY - 1);
+        gtk_widget_set_margin_start(content, 10);
+        gtk_widget_set_margin_end(content, 10);
+        gtk_widget_set_margin_top(content, 10);
+        gtk_widget_set_margin_bottom(content, 10);
+        gtk_box_append(GTK_BOX(content), gtk_label_new("Create your own arrangement"));
+        gtk_box_append(GTK_BOX(content), workstation->new_layout_name);
+        gtk_box_append(GTK_BOX(content), create);
+        gtk_popover_set_child(GTK_POPOVER(workstation->new_layout_popover), content);
+        gtk_menu_button_set_label(GTK_MENU_BUTTON(workstation->new_layout_button), "New Layout");
+        gtk_menu_button_set_popover(GTK_MENU_BUTTON(workstation->new_layout_button),
+                                    workstation->new_layout_popover);
+        (void)umi_gtk4_automation_tag_widget(workstation->new_layout_button, "umicom.layout.new");
+        (void)umi_gtk4_automation_tag_widget(workstation->new_layout_name, "umicom.layout.name");
+        (void)umi_gtk4_automation_tag_widget(create, "umicom.layout.create-blank");
+        g_signal_connect(create, "clicked", G_CALLBACK(on_create_blank_layout_clicked), workstation);
+        gtk_box_append(GTK_BOX(header), workstation->new_layout_button);
+    }
 
     /* Appearance belongs beside layout selection because both controls alter
      * presentation without changing any application data or business logic. */
@@ -2258,6 +2789,9 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
     workstation->save_layout_button = gtk_button_new_with_label("Save");
     workstation->restore_layout_button = gtk_button_new_with_label("Restore");
     workstation->layout_status = gtk_label_new("");
+    /* Long status messages must not increase the shell's minimum width. */
+    gtk_label_set_ellipsize(GTK_LABEL(workstation->layout_status), PANGO_ELLIPSIZE_END);
+    gtk_label_set_max_width_chars(GTK_LABEL(workstation->layout_status), 34);
     (void)umi_gtk4_automation_tag_widget(
         workstation->save_layout_button,
         "umicom.layout.save");
@@ -2310,6 +2844,12 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
         workstation);
     gtk_box_append(GTK_BOX(header), workstation->cancel_edit_button);
     gtk_box_append(GTK_BOX(header), workstation->edit_layout_button);
+    workstation->clear_canvas_button = gtk_button_new_with_label("Clear Panels");
+    gtk_widget_set_tooltip_text(workstation->clear_canvas_button,
+        "Remove unpinned, closable panel instances from this edit; Cancel restores them. Product data is not deleted.");
+    (void)umi_gtk4_automation_tag_widget(workstation->clear_canvas_button, "umicom.layout.clear-canvas");
+    g_signal_connect(workstation->clear_canvas_button, "clicked", G_CALLBACK(on_clear_canvas_clicked), workstation);
+    gtk_box_append(GTK_BOX(header), workstation->clear_canvas_button);
     /* A narrow laptop window may not fit every layout command. Horizontal
      * scrolling preserves each command and avoids forcing the application
      * wider than the monitor. */
@@ -2352,6 +2892,19 @@ fail:
     return status;
 }
 
+/* Invalidate the workstation's borrowed signal targets before releasing its
+ * storage, even when a parent window or automation retains the old widgets. */
+static void disconnect_workstation_signals(
+    GtkWidget *root, UmiApplicationSuiteGtk4Workstation *workstation)
+{
+    GtkWidget *child;
+    if (root == NULL) return;
+    g_signal_handlers_disconnect_by_data(root, workstation);
+    for (child = gtk_widget_get_first_child(root); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        disconnect_workstation_signals(child, workstation);
+}
+
 /*
  * Release or reset state held by application suite gtk4 workstation so the same storage
  * can be reused safely.
@@ -2364,6 +2917,7 @@ void umi_application_suite_gtk4_workstation_destroy(
      * used.
      */
     if (workstation == NULL) return;
+    disconnect_workstation_signals(workstation->root, workstation);
     /* Unregister the borrowed customisation before the workstation storage is released.
      * This keeps the shared canvas from retaining a pointer to an object that is about
      * to disappear and also repairs the active-host selection for other windows. */
@@ -2392,11 +2946,21 @@ void umi_application_suite_gtk4_workstation_destroy(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (workstation->root != NULL) g_object_unref(workstation->root);
+    if (workstation->root != NULL) {
+        GtkWidget *child;
+        /* A caller may keep the stable root parented. Leave it empty instead
+         * of leaving visible controls that refer to released controllers. */
+        while ((child = gtk_widget_get_first_child(workstation->root)) != NULL)
+            gtk_box_remove(GTK_BOX(workstation->root), child);
+        g_object_unref(workstation->root);
+    }
     workstation->root = NULL;
     /* The checkpoint owns its encoded buffer independently of GTK widgets. */
     free(workstation->saved_layout_text);
     workstation->saved_layout_text = NULL;
+    umi_data_server_destroy(workstation->owned_checkpoint_server);
+    workstation->owned_checkpoint_server = NULL;
+    workstation->checkpoint_server = NULL;
     free(workstation);
 }
 
@@ -2456,14 +3020,14 @@ umi_application_suite_gtk4_workstation_snapshot(
 {
     UmiApplicationSuiteGtk4WorkstationSnapshot snapshot;
     UmiGtk4WorkspaceLayoutHostSnapshot host_snapshot;
-    const UmiApplicationSuiteLayoutChoice *choice;
+    const UmiUiWorkspaceLayout *layout;
     (void)memset(&snapshot, 0, sizeof(snapshot));
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
     if (workstation == NULL) return snapshot;
-    choice = umi_application_suite_layout_selector_current(&workstation->selector);
+    layout = active_layout(workstation);
     host_snapshot = umi_gtk4_workspace_layout_host_snapshot(workstation->host);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -2476,13 +3040,28 @@ umi_application_suite_gtk4_workstation_snapshot(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (choice != NULL) {
+    if (layout != NULL) {
         (void)copy_text(snapshot.active_layout_id,
-                        sizeof(snapshot.active_layout_id), choice->layout_id);
+                        sizeof(snapshot.active_layout_id), layout->layout_id);
         (void)copy_text(snapshot.active_layout_name,
-                        sizeof(snapshot.active_layout_name), choice->title);
+                        sizeof(snapshot.active_layout_name), layout->name);
+        /* Keep the established short ID for canonical snapshots. Custom
+         * canvases have only their qualified stable ID and expose that. */
+        for (size_t index = 0U; index < workstation->selector.count; ++index) {
+            char qualified[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
+            const char *short_id = workstation->selector.choices[index].layout_id;
+            if (qualify_layout_id(qualified, sizeof(qualified),
+                    workstation->runtime.experience->application_id, short_id) == UMI_STATUS_OK &&
+                strcmp(layout->layout_id, qualified) == 0) {
+                (void)copy_text(snapshot.active_layout_id,
+                    sizeof(snapshot.active_layout_id), short_id);
+                break;
+            }
+        }
     }
-    snapshot.layout_count = workstation->selector.count;
+    snapshot.layout_count = workstation->customisation.layout_count;
+    snapshot.canvas_panel_count = host_snapshot.canvas_count;
+    snapshot.source_layout_revision = host_snapshot.source_layout_revision;
     snapshot.rendered_panel_count = host_snapshot.panel_count;
     snapshot.placeholder_count = host_snapshot.placeholder_count;
     snapshot.available_window_count = workstation->customisation.windows.count;
@@ -2499,6 +3078,11 @@ umi_application_suite_gtk4_workstation_snapshot(
     snapshot.editing_layout = workstation->customisation.edit_active;
     snapshot.has_saved_layout = workstation->saved_layout_text != NULL;
     snapshot.saved_layout_at_ns = workstation->saved_layout_at_ns;
+    snapshot.checkpoint_storage_bound = workstation->checkpoint_server != NULL;
+    snapshot.checkpoint_storage_durable = workstation->checkpoint_server != NULL &&
+        workstation->checkpoint_report.durable;
+    snapshot.checkpoint_storage_status = workstation->checkpoint_storage_status;
+    snapshot.checkpoint_storage_revision = workstation->checkpoint_report.storage_revision;
     snapshot.revision = workstation->revision + host_snapshot.revision +
         snapshot.identity.revision + snapshot.appearance.revision +
         snapshot.command_bar.revision;

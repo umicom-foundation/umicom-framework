@@ -16,6 +16,7 @@
 #include "umicom/workbench_layout_data/reconciliation.h"
 #include "umicom/workbench_layout_data/key_codec.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "internal.h"
 
@@ -33,6 +34,10 @@ typedef struct ReconcileScan {
     UmiWorkbenchLayoutDataChunkManifest
         session_manifests[UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES];
     size_t session_manifest_count;
+    UmiWorkbenchLayoutDataChunkManifest
+        workspace_manifests[UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES];
+    size_t workspace_manifest_count;
+    bool inventory_incomplete;
     char chunk_keys[UMI_WORKBENCH_LAYOUT_DATA_MAX_RECONCILIATION_ISSUES]
                    [UMI_WORKBENCH_LAYOUT_DATA_KEY_CAPACITY];
     size_t chunk_key_count;
@@ -100,6 +105,7 @@ UmiStatus umi_workbench_layout_reconciliation_add_issue(
 static UmiStatus remember_manifest(
     UmiWorkbenchLayoutDataChunkManifest *manifests,
     size_t *count,
+    const UmiWorkbenchLayoutDataKeyParts *parts,
     const char *value)
 {
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -110,6 +116,12 @@ static UmiStatus remember_manifest(
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_workbench_layout_chunk_manifest_decode(
             value, &manifests[*count]) != UMI_STATUS_OK) {
+        return UMI_STATUS_PARSE_ERROR;
+    }
+    /* A valid payload must also belong to this key. Otherwise orphan repair
+     * could delete recoverable chunks because a manifest named another owner. */
+    if (manifests[*count].manifest_kind != parts->kind ||
+        strcmp(manifests[*count].aggregate_id, parts->aggregate_id) != 0) {
         return UMI_STATUS_PARSE_ERROR;
     }
     *count += 1U;
@@ -133,6 +145,7 @@ static UmiStatus scan_accept(
     status = umi_workbench_layout_data_key_parse(key, &parts);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        scan->inventory_incomplete = true;
         (void)umi_workbench_layout_reconciliation_add_issue(
             scan->report, key, status, false,
             "The Data Server key is not a recognised layout record.",
@@ -148,16 +161,23 @@ static UmiStatus scan_accept(
         scan->report->manifest_count += 1U;
         status = remember_manifest(
             scan->layout_manifests,
-            &scan->layout_manifest_count, value);
+            &scan->layout_manifest_count, &parts, value);
         break;
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST:
         scan->report->manifest_count += 1U;
         status = remember_manifest(
             scan->session_manifests,
-            &scan->session_manifest_count, value);
+            &scan->session_manifest_count, &parts, value);
+        break;
+    case UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST:
+        scan->report->manifest_count += 1U;
+        status = remember_manifest(
+            scan->workspace_manifests,
+            &scan->workspace_manifest_count, &parts, value);
         break;
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK:
     case UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_CHUNK:
+    case UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK:
         scan->report->chunk_count += 1U;
         /* Apply this branch only when its contract condition is satisfied. */
         if (scan->chunk_key_count <
@@ -177,6 +197,7 @@ static UmiStatus scan_accept(
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
+        scan->inventory_incomplete = true;
         (void)umi_workbench_layout_reconciliation_add_issue(
             scan->report, key, status, false,
             "The layout record could not be decoded during reconciliation.",
@@ -200,6 +221,9 @@ static const UmiWorkbenchLayoutDataChunkManifest *find_manifest(
         UMI_WORKBENCH_LAYOUT_DATA_RECORD_LAYOUT_CHUNK) {
         manifests = scan->layout_manifests;
         count = scan->layout_manifest_count;
+    } else if (chunk_kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK) {
+        manifests = scan->workspace_manifests;
+        count = scan->workspace_manifest_count;
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         manifests = scan->session_manifests;
         count = scan->session_manifest_count;
@@ -244,6 +268,25 @@ static UmiStatus verify_payloads(ReconcileScan *scan)
                 status = UMI_STATUS_OK;
             }
         }
+        /* Native workspace chunks use the portable UI layout codec rather
+         * than semantic document JSON. Verify their common chunk integrity
+         * here; the host validates product scope and tool permissions later. */
+        status = umi_workbench_layout_chunk_store_init(
+            &store, scan->server,
+            UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST,
+            UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK);
+        if (status != UMI_STATUS_OK) return status;
+        for (index = 0U; index < scan->workspace_manifest_count; ++index) {
+            const char *id = scan->workspace_manifests[index].aggregate_id;
+            status = umi_workbench_layout_chunk_store_verify(&store, id, NULL);
+            if (status != UMI_STATUS_OK) {
+                (void)umi_workbench_layout_reconciliation_add_issue(
+                    scan->report, id, status, false,
+                    "The persisted workspace payload failed integrity verification.",
+                    scan->now_ms);
+                status = UMI_STATUS_OK;
+            }
+        }
     }
     /* Apply this branch only when its contract condition is satisfied. */
     if (scan->policy.verify_session_payloads) {
@@ -279,6 +322,10 @@ static UmiStatus detect_orphans(ReconcileScan *scan)
     UmiStatus status = UMI_STATUS_OK;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (!scan->policy.detect_orphan_chunks) return UMI_STATUS_OK;
+    /* Missing or undecodable inventory is not proof that a chunk is orphaned.
+     * Keep all chunks for recovery instead of converting scan errors into
+     * destructive repairs, even when the caller requested automatic repair. */
+    if (scan->inventory_incomplete) return UMI_STATUS_OK;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < scan->chunk_key_count; ++index) {
         UmiWorkbenchLayoutDataKeyParts parts;
@@ -327,7 +374,7 @@ UmiStatus umi_workbench_layout_reconcile(
     uint64_t now_ms,
     UmiWorkbenchLayoutReconciliationReport *out_report)
 {
-    ReconcileScan scan;
+    ReconcileScan *scan;
     UmiWorkbenchLayoutReconciliationPolicy effective;
     UmiStatus status;
     /*
@@ -347,16 +394,20 @@ UmiStatus umi_workbench_layout_reconcile(
     out_report->structure_size = sizeof(*out_report);
     out_report->consistent = true;
     out_report->started_at_ms = now_ms;
-    (void)memset(&scan, 0, sizeof(scan));
-    scan.server = server;
-    scan.policy = effective;
-    scan.report = out_report;
-    scan.now_ms = now_ms;
-    status = umi_data_server_visit(server, scan_accept, &scan);
+    /* Manifest and chunk inventories are bounded but large. Allocate them
+     * away from conservative native callback stacks, then release together. */
+    scan = (ReconcileScan *)calloc(1U, sizeof(*scan));
+    if (scan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    scan->server = server;
+    scan->policy = effective;
+    scan->report = out_report;
+    scan->now_ms = now_ms;
+    status = umi_data_server_visit(server, scan_accept, scan);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) status = verify_payloads(&scan);
+    if (status == UMI_STATUS_OK) status = verify_payloads(scan);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) status = detect_orphans(&scan);
+    if (status == UMI_STATUS_OK) status = detect_orphans(scan);
+    free(scan);
     out_report->completed_at_ms = now_ms;
     return status;
 }

@@ -25,6 +25,8 @@
 
 /* Per-button action data owned by its GTK widget. */
 typedef struct PanelActionData {
+    /* The button cancels its queued action before its borrowed owner expires. */
+    guint pending_id;
     UmiGtk4WsPanelActionHandler handler;
     void *user_data;
     UmiWsPanelAction action;
@@ -33,6 +35,7 @@ typedef struct PanelActionData {
 
 /* Deferred copy used while a panel action may rebuild its owning widget tree. */
 typedef struct PanelPendingAction {
+    PanelActionData *owner;
     UmiGtk4WsPanelActionHandler handler;
     void *user_data;
     UmiWsPanelAction action;
@@ -61,11 +64,32 @@ static void release_unparented_widget(GtkWidget *widget)
     if (widget != NULL) g_object_unref(widget);
 }
 
-/* Release one signal closure using GTK's exact notifier signature. */
-static void panel_action_data_destroy(gpointer data, GClosure *closure)
+/* Widget data owns the signal's borrowed action record and pending request. */
+static void panel_action_data_destroy(gpointer data)
 {
-    (void)closure;
+    PanelActionData *action = data;
+    if (action != NULL && action->pending_id != 0U)
+        g_source_remove(action->pending_id);
     g_free(data);
+}
+
+/* Invalidate before removing a tree, even if automation retains an old button.
+ * Retained controls then cannot dispatch into a replacement or destroyed owner. */
+void umi_gtk4_ws_panel_frame_invalidate_actions(GtkWidget *root)
+{
+    GtkWidget *child;
+    PanelActionData *data;
+    if (root == NULL) return;
+    data = g_object_get_data(G_OBJECT(root), "umicom-panel-action-data");
+    if (data != NULL) {
+        if (data->pending_id != 0U) g_source_remove(data->pending_id);
+        data->pending_id = 0U;
+        data->handler = NULL;
+        data->user_data = NULL;
+    }
+    for (child = gtk_widget_get_first_child(root); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        umi_gtk4_ws_panel_frame_invalidate_actions(child);
 }
 
 /* Dispatch after the button signal returns so layout rebuilding never destroys
@@ -73,6 +97,11 @@ static void panel_action_data_destroy(gpointer data, GClosure *closure)
 static gboolean dispatch_action_from_idle(gpointer user_data)
 {
     PanelPendingAction *pending = (PanelPendingAction *)user_data;
+
+    /* Clear before dispatch: the callback may rebuild and destroy the button
+     * and its closure. The copied request remains alive until this idle ends. */
+    if (pending != NULL && pending->owner != NULL)
+        pending->owner->pending_id = 0U;
 
     if (pending != NULL && pending->handler != NULL) {
         pending->handler(
@@ -108,18 +137,20 @@ static void on_action_clicked(GtkButton *button, gpointer user_data)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (data == NULL || data->handler == NULL) return;
+    if (data == NULL || data->handler == NULL || data->pending_id != 0U) return;
     pending = g_new0(PanelPendingAction, 1);
     if (pending == NULL) return;
     pending->handler = data->handler;
+    pending->owner = data;
     pending->user_data = data->user_data;
     pending->action = data->action;
     pending->chrome = data->chrome;
-    if (g_idle_add_full(
+    data->pending_id = g_idle_add_full(
             G_PRIORITY_DEFAULT_IDLE,
             dispatch_action_from_idle,
             pending,
-            g_free) == 0U) {
+            g_free);
+    if (data->pending_id == 0U) {
         g_free(pending);
     }
 }
@@ -150,9 +181,9 @@ static bool bind_action(
     data->user_data = user_data;
     data->action = action;
     data->chrome = *chrome;
-    g_signal_connect_data(
-        button, "clicked", G_CALLBACK(on_action_clicked), data,
-        panel_action_data_destroy, 0);
+    g_object_set_data_full(G_OBJECT(button), "umicom-panel-action-data", data,
+                           panel_action_data_destroy);
+    g_signal_connect(button, "clicked", G_CALLBACK(on_action_clicked), data);
     return true;
 }
 

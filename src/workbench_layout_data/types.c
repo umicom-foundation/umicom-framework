@@ -53,6 +53,8 @@ const char *umi_workbench_layout_data_record_kind_text(
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_RECORD_PRESENCE, "presence");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_RECORD_MIGRATION, "migration");
     UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA, "metadata");
+    UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST, "workspace-manifest");
+    UMI_TEXT_CASE(UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK, "workspace-chunk");
     default: return "invalid";
     }
 }

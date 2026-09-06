@@ -27,6 +27,7 @@
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 #include "umicom/ui/workspace_customisation.h"
 #include "umicom/ui/workspace_customisation_persistence.h"
+#include "umicom/ui/workspace_checkpoint.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,8 +71,19 @@ typedef struct UmiApplicationSuiteGtk4WorkstationSnapshot {
     int has_saved_layout;
     uint64_t saved_layout_at_ns;
     uint64_t revision;
-    /* Appended for ABI-safe discovery of the shared command centre. */
+    /* Discover the shared command centre. Rebuild consumers when this public
+     * structure changes; an appended field still changes its binary size. */
     UmiGtk4WorkstationCommandBarSnapshot command_bar;
+    /* Canvas panels are independent rectangles, not dock tabs or native windows.
+     * Rebuild clients with this header whenever the public snapshot grows. */
+    size_t canvas_panel_count;
+    uint64_t source_layout_revision;
+    /* Storage evidence is separate from an in-memory recovery checkpoint.
+     * Rebuild callers when this copied public structure changes. */
+    int checkpoint_storage_bound;
+    int checkpoint_storage_durable;
+    UmiStatus checkpoint_storage_status;
+    uint64_t checkpoint_storage_revision;
 } UmiApplicationSuiteGtk4WorkstationSnapshot;
 
 /**
@@ -100,15 +112,35 @@ UmiStatus umi_application_suite_gtk4_workstation_create(
 void umi_application_suite_gtk4_workstation_destroy(
     UmiApplicationSuiteGtk4Workstation *workstation);
 /**
- * Selects and renders one canonical layout.
+ * Selects and renders a product preset or a named user layout.
  *
  * @param workstation Live workstation to update.
- * @param layout_id Stable identifier offered by its selector model.
+ * @param layout_id A preset's short or application-qualified ID, or a named
+ * layout's complete application-qualified ID from the layout list.
  * @return `UMI_STATUS_OK` when projection and rendering both succeed.
  */
 UmiStatus umi_application_suite_gtk4_workstation_select_layout(
     UmiApplicationSuiteGtk4Workstation *workstation,
     const char *layout_id);
+/**
+ * Add and select a locked, empty user layout without changing existing presets.
+ * The ID must start with the application ID followed by a dot, so the layout
+ * retains its product's panel permissions. The ID and name are copied.
+ * An active edit returns BUSY. Rendering errors are
+ * reported without deleting the new model, which remains available for retry.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_create_blank_layout(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    const char *layout_id,
+    const char *name);
+/**
+ * Remove unpinned, closable panel instances during Edit Layout. Product data is
+ * untouched; Cancel restores the previous arrangement. The optional result
+ * reports removed and retained instance counts. No files are deleted.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_clear_canvas(
+    UmiApplicationSuiteGtk4Workstation *workstation,
+    UmiUiWorkspaceCanvasClearResult *out_result);
 /**
  * Selects one Framework appearance preset for the whole workstation.
  *
@@ -201,8 +233,27 @@ UmiStatus umi_application_suite_gtk4_workstation_import_layout(
     const char *text,
     int activate,
     UmiUiWorkspaceImportReport *out_report);
+/** Bind a borrowed Data Server for the last explicitly saved active layout.
+ * Reads and validates any existing checkpoint without changing the live model.
+ * The server must outlive this workstation or be unbound with NULL. Binding
+ * memory storage is supported for tests and is never reported as durable.
+ * Active edits reject binding with BUSY. Existing constructors perform no
+ * checkpoint storage I/O. An unknown storage revision disables Save.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_bind_checkpoint_storage(
+    UmiApplicationSuiteGtk4Workstation *workstation, UmiDataServer *server);
+
+/** Explicitly open user-config SQLite storage through the shared GTK helper.
+ * The workstation owns that server until destruction. If restore_saved is
+ * nonzero, restore the last explicitly saved active checkpoint after validation.
+ * No saved checkpoint is a normal first run. Errors never fall back to a
+ * successful memory save; defaults remain visible and the status is displayed.
+ */
+UmiStatus umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
+    UmiApplicationSuiteGtk4Workstation *workstation, int restore_saved);
+
 /**
- * Saves an in-memory checkpoint from the visible workstation state.
+ * Saves the committed active layout to bound storage, or memory when unbound.
  *
  * @param workstation Live workstation to checkpoint.
  * @param saved_at_ns Caller-provided checkpoint time in nanoseconds.
@@ -212,7 +263,7 @@ UmiStatus umi_application_suite_gtk4_workstation_save_checkpoint(
     UmiApplicationSuiteGtk4Workstation *workstation,
     uint64_t saved_at_ns);
 /**
- * Restores the last in-memory checkpoint and rebuilds visible panels.
+ * Restores the validated stored checkpoint, or in-memory checkpoint when unbound.
  *
  * @param workstation Live workstation with an existing checkpoint.
  * @return `UMI_STATUS_OK` when restoration and rendering succeed.

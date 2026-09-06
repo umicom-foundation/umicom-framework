@@ -146,6 +146,13 @@ UmiSourceControlHistoryEntryRegistry *umi_source_control_service_history_entry(U
  */
 UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *owner, const char *root);
 /**
+ * Open empty source-control models without probing tools or the repository.
+ * Availability is false, not evidence of a clean repository. Operations remain
+ * unavailable until the owner explicitly opens a discovered workspace.
+ */
+UmiStatus umi_source_control_service_open_workspace_unavailable(
+    UmiSourceControlService *owner, const char *root);
+/**
  * Provide the source control service close workspace operation used by this module and its
  * client applications.
  */

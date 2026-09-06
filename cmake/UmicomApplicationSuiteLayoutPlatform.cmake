@@ -150,6 +150,12 @@ if(BUILD_TESTING)
         umicom-application-suite-layout-render-plan-test
         framework.application_suite.layouts.render.plan
         test_render_plan.c)
+    # The same headless C test checks blank/free canvases and shared pointer
+    # geometry. The helper also includes it in validation-target closure.
+    umicom_add_application_suite_layout_test(
+        umicom-application-suite-layout-canvas-projection-test
+        framework.application_suite.layouts.canvas.projection
+        test_canvas_render_projection.c)
     umicom_add_application_suite_layout_test(
         umicom-application-suite-layout-render-all-test
         framework.application_suite.layouts.render.all

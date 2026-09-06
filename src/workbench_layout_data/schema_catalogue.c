@@ -168,6 +168,12 @@ UmiStatus umi_workbench_layout_data_schema_catalogue_seed(
         "layout-migrations", true, true, false, false);
     ADD(UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA,
         "layout-metadata", true, true, true, false);
+    /* Native workspace snapshots use their existing UI codec, not the
+     * semantic-node document codec, within the same Data Server authority. */
+    ADD(UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST,
+        "workspace-manifests", true, true, false, false);
+    ADD(UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK,
+        "workspace-chunks", true, true, false, false);
 #undef ADD
     return umi_workbench_layout_data_schema_catalogue_validate(catalogue);
 }

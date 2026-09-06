@@ -120,6 +120,11 @@ id_ecdsa*
 id_ed25519*
 
 # Private working areas and batch-delivery material do not belong in source.
+/tmp/
+/temp/
+/analysis/
+/research/
+/notes/
 /private/
 !/secrets/
 /secrets/*

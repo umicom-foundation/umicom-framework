@@ -159,6 +159,16 @@ if(BUILD_TESTING)
         framework.workbench_layout_data.chunk_store
         tests/workbench_layout_data/test_chunk_store.c
     )
+    # Native workspace records remain distinct from semantic documents while
+    # sharing transactional backup, integrity checking and safe reconciliation.
+    umicom_add_workbench_layout_data_test(
+        umicom-workbench-layout-data-workspace-namespace-test
+        framework.workbench_layout_data.workspace_namespace
+        tests/workbench_layout_data/test_workspace_namespace.c
+    )
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-workbench-layout-data-workspace-namespace-test)
+    endif()
     umicom_add_workbench_layout_data_test(
         umicom-workbench-layout-data-conflict-store-test
         framework.workbench_layout_data.conflict_store
@@ -375,6 +385,10 @@ install(FILES
 # layout targets declared above. Keeping this include here makes Framework
 # independently buildable without a product repository patching its targets.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWorkbenchDesignerPlatform.cmake")
+
+# Native canvas checkpoints reuse these stores without converting the native
+# layout into a second semantic document or introducing a private database.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomUiWorkspaceCheckpointPlatform.cmake")
 
 message(STATUS
     "Umicom Data Server workbench layout persistence enabled")

@@ -22,24 +22,46 @@
 #include "umicom/ui/gtk4/automation.h"
 
 typedef struct UmiGtk4WorkstationTabCloseData {
+    /* A stale tab must not close a panel in a newly rebuilt layout. */
+    guint pending_id;
     UmiGtk4WorkstationTabCloseHandler handler;
     void *user_data;
     char tab_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4WorkstationTabCloseData;
 
 typedef struct UmiGtk4WorkstationPendingTabClose {
+    UmiGtk4WorkstationTabCloseData *owner;
     UmiGtk4WorkstationTabCloseHandler handler;
     void *user_data;
     char tab_id[UMI_UI_ID_CAPACITY];
 } UmiGtk4WorkstationPendingTabClose;
 
 
-/* Release one signal closure using the exact callback signature required by
- * GTK instead of casting a one-argument allocator function. */
-static void close_data_destroy(gpointer data, GClosure *closure)
+/* Widget data owns the signal's borrowed close record and pending request. */
+static void close_data_destroy(gpointer data)
 {
-    (void)closure;
+    UmiGtk4WorkstationTabCloseData *close_data = data;
+    if (close_data != NULL && close_data->pending_id != 0U)
+        g_source_remove(close_data->pending_id);
     g_free(data);
+}
+
+/* Old retained tab buttons must not close a new layout's matching instance. */
+void umi_gtk4_ws_tab_host_invalidate_actions(GtkWidget *root)
+{
+    GtkWidget *child;
+    UmiGtk4WorkstationTabCloseData *data;
+    if (root == NULL) return;
+    data = g_object_get_data(G_OBJECT(root), "umicom-tab-close-data");
+    if (data != NULL) {
+        if (data->pending_id != 0U) g_source_remove(data->pending_id);
+        data->pending_id = 0U;
+        data->handler = NULL;
+        data->user_data = NULL;
+    }
+    for (child = gtk_widget_get_first_child(root); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        umi_gtk4_ws_tab_host_invalidate_actions(child);
 }
 
 /* Dispatch after the button signal returns so rebuilding the owning layout
@@ -48,6 +70,11 @@ static gboolean dispatch_close_from_idle(gpointer user_data)
 {
     UmiGtk4WorkstationPendingTabClose *pending =
         (UmiGtk4WorkstationPendingTabClose *)user_data;
+
+    /* The owner may disappear during its callback. Do not access it after
+     * dispatch, and do not try to cancel the idle that is already executing. */
+    if (pending != NULL && pending->owner != NULL)
+        pending->owner->pending_id = 0U;
 
     if (pending != NULL && pending->handler != NULL) {
         pending->handler(pending->tab_id, pending->user_data);
@@ -69,18 +96,20 @@ static void on_close_clicked(GtkButton *button, gpointer user_data)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (data == NULL || data->handler == NULL) return;
+    if (data == NULL || data->handler == NULL || data->pending_id != 0U) return;
     pending = g_new0(UmiGtk4WorkstationPendingTabClose, 1);
     if (pending == NULL) return;
     pending->handler = data->handler;
+    pending->owner = data;
     pending->user_data = data->user_data;
     (void)snprintf(
         pending->tab_id, sizeof(pending->tab_id), "%s", data->tab_id);
-    if (g_idle_add_full(
+    data->pending_id = g_idle_add_full(
             G_PRIORITY_DEFAULT_IDLE,
             dispatch_close_from_idle,
             pending,
-            g_free) == 0U) {
+            g_free);
+    if (data->pending_id == 0U) {
         g_free(pending);
     }
 }
@@ -132,13 +161,9 @@ static GtkWidget *create_tab_label(
     close_data->user_data = user_data;
     (void)snprintf(
         close_data->tab_id, sizeof(close_data->tab_id), "%s", tab_id);
-    g_signal_connect_data(
-        close_button,
-        "clicked",
-        G_CALLBACK(on_close_clicked),
-        close_data,
-        close_data_destroy,
-        0);
+    g_object_set_data_full(G_OBJECT(close_button), "umicom-tab-close-data",
+                           close_data, close_data_destroy);
+    g_signal_connect(close_button, "clicked", G_CALLBACK(on_close_clicked), close_data);
     (void)snprintf(
         automation_id, sizeof(automation_id), "%s.tab.close", tab_id);
     (void)umi_gtk4_automation_tag_widget(close_button, automation_id);

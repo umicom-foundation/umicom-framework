@@ -43,5 +43,10 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
 void umi_gtk4_ws_panel_frame_set_context_colour(
     GtkWidget *frame,
     const char *colour_token);
+/** Permanently disconnect semantic actions in this widget subtree before its
+ * borrowed controller is released or its model is replaced. Cancels queued
+ * actions even when a caller retains old widgets. GTK owning thread only;
+ * does not destroy widgets or change product data. NULL is harmless. */
+void umi_gtk4_ws_panel_frame_invalidate_actions(GtkWidget *root);
 
 #endif

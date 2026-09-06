@@ -20,6 +20,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/** Disconnect borrowed host callbacks from a live control tree before its
+ * service or old controls are released. Retained controls become insensitive
+ * and cannot call the closed host. This does not free widgets or the host;
+ * call on the GTK thread. NULL arguments are ignored. Invalidation is final;
+ * create new controls to bind another host. */
+void umi_workbench_context_host_gtk4_invalidate(
+    GtkWidget *root, UmiWorkbenchContextHost *host);
 /**
  * Provide the workbench context host gtk4 strip new operation used by this module and its
  * client applications.

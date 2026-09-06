@@ -257,6 +257,73 @@ UmiStatus umi_source_control_service_open_workspace(UmiSourceControlService *own
     return UMI_STATUS_OK;
 }
 
+/* Disabled discovery has no backend instance and never invokes a process.
+ * These required provider entries fail closed even if called directly. */
+static UmiStatus unavailable_status(void *instance, const char *root,
+    UmiVcsChangeList *changes, UmiVcsBranch *branch)
+{
+    (void)instance; (void)root; (void)changes; (void)branch;
+    return UMI_STATUS_UNAVAILABLE;
+}
+
+/* An undiscovered workspace cannot provide authoritative commit history. */
+static UmiStatus unavailable_history(void *instance, const char *root,
+    size_t limit, UmiVcsHistory *history)
+{
+    (void)instance; (void)root; (void)limit; (void)history;
+    return UMI_STATUS_UNAVAILABLE;
+}
+
+/* Reject both staging directions without reading or changing any file. */
+static UmiStatus unavailable_path_action(void *instance, const char *root,
+    const char *path)
+{
+    (void)instance; (void)root; (void)path;
+    return UMI_STATUS_UNAVAILABLE;
+}
+
+/* Never produce a success-shaped commit identifier while discovery is off. */
+static UmiStatus unavailable_commit(void *instance, const char *root,
+    const char *message, char *commit_id, size_t capacity)
+{
+    (void)instance; (void)root; (void)message;
+    if (commit_id != NULL && capacity != 0U) commit_id[0] = '\0';
+    return UMI_STATUS_UNAVAILABLE;
+}
+
+/* Build the existing provider-neutral models in unavailable mode. Publish
+ * them only after their coordinator has been constructed successfully. */
+UmiStatus umi_source_control_service_open_workspace_unavailable(
+    UmiSourceControlService *owner, const char *root)
+{
+    UmiVcsProvider provider = {0};
+    UmiVcsWorkspace *workspace = NULL;
+    UmiVcsWorkspaceCoordinator *coordinator = NULL;
+    UmiStatus status;
+    if (owner == NULL || root == NULL || root[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    provider.structure_size = (uint32_t)sizeof(provider);
+    provider.provider_id = "umicom.vcs.unavailable";
+    provider.status = unavailable_status;
+    provider.history = unavailable_history;
+    provider.stage = unavailable_path_action;
+    provider.unstage = unavailable_path_action;
+    provider.commit = unavailable_commit;
+    status = umi_vcs_workspace_create(root, &provider, 0, &workspace);
+    if (status == UMI_STATUS_OK)
+        status = umi_vcs_workspace_coordinator_create(workspace, &coordinator);
+    if (status != UMI_STATUS_OK) {
+        umi_vcs_workspace_destroy(workspace);
+        return status;
+    }
+    umi_vcs_workspace_coordinator_destroy(owner->workspace_coordinator);
+    umi_vcs_workspace_destroy(owner->workspace);
+    owner->workspace = workspace;
+    owner->workspace_coordinator = coordinator;
+    owner->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the source control service close workspace operation used by this module and its
  * client applications.

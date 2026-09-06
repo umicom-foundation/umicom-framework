@@ -30,6 +30,24 @@ static int test_seeded_catalogue(void)
         &catalogue));
     TEST_REQUIRE(catalogue.count > 10U,
                  "all persistence collections seeded");
+    /* Native canvas records share the Data Server authority but must never be
+     * interpreted as semantic document nodes or removed by session retention. */
+    {
+        const UmiWorkbenchLayoutDataCollectionDescriptor *manifest =
+            umi_workbench_layout_data_schema_catalogue_find(&catalogue,
+                UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST);
+        const UmiWorkbenchLayoutDataCollectionDescriptor *chunks =
+            umi_workbench_layout_data_schema_catalogue_find(&catalogue,
+                UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK);
+        TEST_REQUIRE(manifest != NULL && chunks != NULL,
+                     "native canvas collections registered");
+        TEST_REQUIRE(manifest->durable && manifest->authoritative &&
+                     !manifest->retention_managed && !manifest->replicated,
+                     "native manifest durability does not imply replication");
+        TEST_REQUIRE(chunks->durable && chunks->authoritative &&
+                     !chunks->retention_managed && !chunks->replicated,
+                     "native canvas chunks are not transient session data");
+    }
     TEST_REQUIRE(catalogue.current_version ==
         UMI_WORKBENCH_LAYOUT_DATA_SCHEMA_VERSION,
         "catalogue schema version");

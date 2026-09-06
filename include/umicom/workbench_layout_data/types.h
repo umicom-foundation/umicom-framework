@@ -66,7 +66,11 @@ typedef enum UmiWorkbenchLayoutDataRecordKind {
     UMI_WORKBENCH_LAYOUT_DATA_RECORD_OFFLINE_OPERATION = 12,
     UMI_WORKBENCH_LAYOUT_DATA_RECORD_PRESENCE = 13,
     UMI_WORKBENCH_LAYOUT_DATA_RECORD_MIGRATION = 14,
-    UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA = 15
+    UMI_WORKBENCH_LAYOUT_DATA_RECORD_METADATA = 15,
+    /* Native UI codec records are separate from semantic-node documents.
+     * They still use the same chunk, transaction and integrity mechanisms. */
+    UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST = 16,
+    UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK = 17
 } UmiWorkbenchLayoutDataRecordKind;
 
 /**

@@ -61,6 +61,11 @@ UmiStatus umi_gtk4_ws_tab_host_append_managed(
     UmiGtk4WorkstationTabCloseHandler close_handler,
     void *user_data);
 
+/** Invalidate managed close actions in a widget subtree before its borrowed
+ * owner is released or replaced. Cancels queued calls and disables future
+ * dispatch from retained old buttons. GTK owning thread only; NULL is safe. */
+void umi_gtk4_ws_tab_host_invalidate_actions(GtkWidget *root);
+
 #ifdef __cplusplus
 }
 #endif

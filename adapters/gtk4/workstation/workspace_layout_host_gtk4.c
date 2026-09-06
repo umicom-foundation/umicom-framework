@@ -4,7 +4,8 @@
  *
  * PURPOSE:
  *   Render a complete portable workspace layout as GTK4 paned regions, tab
- *   groups, floating windows and reusable Framework panel frames.
+ *   groups, free-positioned canvas panels, floating windows and reusable
+ *   Framework panel frames.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -40,6 +41,7 @@ typedef struct StackEntry {
 typedef struct FloatingWindowEntry {
     UmiGtk4WorkspaceLayoutHost *host;
     GtkWindow *window;
+    GtkWidget *frame;
     gulong close_handler_id;
     gulong destroy_handler_id;
     char window_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
@@ -55,6 +57,9 @@ typedef struct PendingHostAction {
     char panel_id[UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY];
 } PendingHostAction;
 
+/* Canvas gesture records are view-owned and never replace the layout model. */
+typedef struct CanvasEntry CanvasEntry;
+
 struct UmiGtk4WorkspaceLayoutHost {
     GtkWidget *root;
     UmiUiWorkspaceLayout layout;
@@ -66,9 +71,26 @@ struct UmiGtk4WorkspaceLayoutHost {
     GtkWindow *transient_parent;
     GPtrArray *floating_windows;
     guint pending_action_id;
+    GtkWidget *canvas_layer;
+    GPtrArray *canvas_entries;
+    CanvasEntry *active_canvas_entry;
+    UmiGtk4WorkspaceCanvasGeometryHandler canvas_geometry_handler;
+    void *canvas_geometry_user_data;
+    guint pending_geometry_id;
     size_t placeholder_count;
     uint64_t revision;
+    /* Optional body ownership keeps drafts alive while placement wrappers
+     * change. Ordinary suite hosts keep their existing refresh behaviour. */
+    GPtrArray *retained_content;
+    int retain_content;
+    int content_invalidated;
+    const UmiUiWindowGroupStore *context_groups;
 };
+
+/* Defined with content ownership helpers below; native destruction must
+ * separate a retained body from its disappearing frame before invalidation. */
+static void retained_content_unmount_window(
+    UmiGtk4WorkspaceLayoutHost *host, const char *window_id);
 
 /* Dispatch a native-window request only after its current signal has returned,
  * allowing the model owner to rebuild or destroy GTK content safely. */
@@ -97,7 +119,14 @@ static void on_floating_window_destroy(
     FloatingWindowEntry *entry = (FloatingWindowEntry *)user_data;
 
     (void)widget;
-    if (entry != NULL) entry->destroyed = 1;
+    if (entry != NULL) {
+        retained_content_unmount_window(entry->host, entry->window_id);
+        /* The retained frame is still traversable even when GTK has already
+         * removed it from an externally destroyed native window. */
+        umi_gtk4_ws_panel_frame_invalidate_actions(entry->frame);
+        umi_gtk4_ws_tab_host_invalidate_actions(entry->frame);
+        entry->destroyed = 1;
+    }
 }
 
 /* A native title-bar close is a model command, not an unmanaged widget
@@ -111,7 +140,7 @@ static gboolean on_floating_window_close_request(
     PendingHostAction *pending;
 
     (void)window;
-    if (entry == NULL || entry->host == NULL ||
+    if (entry == NULL || entry->host == NULL || entry->destroyed ||
         entry->host->layout.locked || !entry->closable ||
         entry->pinned || entry->host->pending_action_id != 0U) {
         return TRUE;
@@ -142,21 +171,25 @@ static void floating_window_entry_destroy(gpointer data)
     FloatingWindowEntry *entry = (FloatingWindowEntry *)data;
 
     if (entry == NULL) return;
+    umi_gtk4_ws_panel_frame_invalidate_actions(entry->frame);
+    umi_gtk4_ws_tab_host_invalidate_actions(entry->frame);
     if (entry->window != NULL) {
+        if (entry->close_handler_id != 0U) {
+            g_signal_handler_disconnect(
+                entry->window, entry->close_handler_id);
+        }
+        if (entry->destroy_handler_id != 0U) {
+            g_signal_handler_disconnect(
+                entry->window, entry->destroy_handler_id);
+        }
         if (!entry->destroyed) {
-            if (entry->close_handler_id != 0U) {
-                g_signal_handler_disconnect(
-                    entry->window, entry->close_handler_id);
-            }
-            if (entry->destroy_handler_id != 0U) {
-                g_signal_handler_disconnect(
-                    entry->window, entry->destroy_handler_id);
-            }
             gtk_window_destroy(entry->window);
         }
         g_object_unref(entry->window);
         entry->window = NULL;
     }
+    if (entry->frame != NULL) g_object_unref(entry->frame);
+    entry->frame = NULL;
     g_free(entry);
 }
 
@@ -204,6 +237,10 @@ static void clear_root(GtkWidget *root)
      * used.
      */
     if (root == NULL) return;
+    /* Explicitly invalidate before removal: callers may retain old action
+     * buttons beyond their former host's lifetime. */
+    umi_gtk4_ws_panel_frame_invalidate_actions(root);
+    umi_gtk4_ws_tab_host_invalidate_actions(root);
     child = gtk_widget_get_first_child(root);
     /* Continue until every requested item has been processed. */
     while (child != NULL) {
@@ -259,14 +296,8 @@ static bool window_matches_placement(
 {
     if (window == NULL || placement_id == NULL) return false;
     if (strcmp(window->placement_id, placement_id) == 0) return true;
-    /* Canvas-managed panels use one portable placement token while GTK renders
-     * them in the centre workspace; keeping this mapping explicit prevents the
-     * token from being treated as an arbitrary extension placement. */
-    if (strcmp(placement_id, "centre") == 0 &&
-        strcmp(window->placement_id,
-               UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0) {
-        return true;
-    }
+    /* Free-positioned canvas records have a dedicated renderer and must not
+     * become centre tabs, even when a layout contains both kinds of panel. */
     return strcmp(placement_id, "centre") == 0 &&
            !is_known_placement(window->placement_id);
 }
@@ -403,14 +434,14 @@ static StackEntry *find_stack(
     return NULL;
 }
 
+#include "workspace_content_gtk4.inc"
+
 /* Create content through the application factory or a truthful placeholder. */
 static GtkWidget *create_content(
     UmiGtk4WorkspaceLayoutHost *host,
     const UmiUiWorkspaceWindow *window)
 {
-    GtkWidget *content = host->panel_factory != NULL
-        ? host->panel_factory(window, host->panel_user_data)
-        : NULL;
+    GtkWidget *content = retained_content_create(host, window);
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (content == NULL) {
@@ -422,6 +453,25 @@ static GtkWidget *create_content(
     gtk_widget_set_hexpand(content, TRUE);
     gtk_widget_set_vexpand(content, TRUE);
     return content;
+}
+
+/* Resolve group identity through the existing routing store. A group ID is
+ * not a colour token; using it as both previously hid most group stripes. */
+static const char *window_context_colour(const UmiGtk4WorkspaceLayoutHost *host,
+                                        const UmiUiWorkspaceWindow *window)
+{
+    const UmiUiWindowGroupStore *groups = host->context_groups;
+    if (groups == NULL) return window->context_group_id;
+    if (groups->count > UMI_UI_WINDOW_GROUP_MAX) return "";
+    for (size_t index = 0U; index < groups->count; ++index) {
+        const UmiUiWindowGroup *group = &groups->items[index];
+        if (memchr(group->group_id, '\0', sizeof(group->group_id)) == NULL ||
+            memchr(group->colour_token, '\0', sizeof(group->colour_token)) == NULL)
+            continue;
+        if (strcmp(group->group_id, window->context_group_id) == 0)
+            return group->colour_token;
+    }
+    return "";
 }
 
 /* Wrap one panel with Framework chrome. Normal mode hides placement metadata
@@ -440,11 +490,31 @@ static GtkWidget *create_panel(
      */
     if (host == NULL || window == NULL) return NULL;
     content = create_content(host, window);
+    if (!window->floating &&
+        (host->retain_content ||
+         strcmp(window->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0) &&
+        !GTK_IS_SCROLLED_WINDOW(content)) {
+        GtkWidget *viewport = gtk_scrolled_window_new();
+
+        /* Keep oversized provider minima from moving the panel chrome outside
+         * its canvas or retained dock bounds. The provider remains available by scrolling;
+         * providers that already own a scroller keep that existing viewport. */
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(viewport),
+            GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+        gtk_scrolled_window_set_propagate_natural_width(
+            GTK_SCROLLED_WINDOW(viewport), FALSE);
+        gtk_scrolled_window_set_propagate_natural_height(
+            GTK_SCROLLED_WINDOW(viewport), FALSE);
+        gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(viewport), content);
+        gtk_widget_set_hexpand(viewport, TRUE);
+        gtk_widget_set_vexpand(viewport, TRUE);
+        content = viewport;
+    }
     (void)umi_ws_panel_chrome_init(&chrome, window->title);
     (void)umi_ws_panel_chrome_set_identity(
         &chrome, window->window_id, window->placement_id);
     (void)umi_ws_panel_chrome_set_context(
-        &chrome, window->context_group_id, window->context_group_id);
+        &chrome, window->context_group_id, window_context_colour(host, window));
     (void)umi_ws_panel_chrome_set_badge(
         &chrome,
         host->layout.locked ? "" : window->placement_id);
@@ -455,15 +525,23 @@ static GtkWidget *create_panel(
     chrome.show_context = true;
     chrome.show_move = true;
     chrome.show_float = true;
-    chrome.show_maximise = true;
+    /* Only native detached windows currently apply maximisation. Do not offer
+     * an internal-panel action that merely changes a flag without resizing. */
+    chrome.show_maximise = window->floating;
     chrome.show_settings = true;
     chrome.compact = true;
     chrome.pinned = window->pinned;
     chrome.locked = host->layout.locked;
     chrome.floating = window->floating;
     chrome.maximised = window->maximised;
-    return umi_gtk4_ws_panel_frame_create_interactive(
+    GtkWidget *frame = umi_gtk4_ws_panel_frame_create_interactive(
         &chrome, content, on_panel_action, host);
+    /* A copied identity lets commands find the live frame after any rebuild,
+     * without holding a pointer into an old notebook or canvas. */
+    if (frame != NULL)
+        g_object_set_data_full(G_OBJECT(frame), "umicom-workspace-window-id",
+            g_strdup(window->window_id), g_free);
+    return frame;
 }
 
 /* Create one notebook for every distinct tab stack in a dock region. Empty
@@ -547,6 +625,11 @@ static GtkWidget *build_stack(
     return visible_stack_count > 0U ? container : NULL;
 }
 
+/* Keep the private native canvas implementation beside this adapter. It uses
+ * the same panel factory, chrome and portable model rather than a second
+ * layout engine. */
+#include "workspace_canvas_gtk4.inc"
+
 /* Create all detached windows after the dock tree is available. */
 static void build_floating_windows(UmiGtk4WorkspaceLayoutHost *host)
 {
@@ -578,6 +661,8 @@ static void build_floating_windows(UmiGtk4WorkspaceLayoutHost *host)
 
         entry->host = host;
         entry->window = window;
+        entry->frame = frame;
+        g_object_ref_sink(frame);
         entry->closable = model->closable ? 1 : 0;
         entry->pinned = model->pinned ? 1 : 0;
         (void)snprintf(
@@ -663,11 +748,14 @@ UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
     host->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     host->floating_windows = g_ptr_array_new_with_free_func(
         floating_window_entry_destroy);
+    host->canvas_entries = g_ptr_array_new_with_free_func(canvas_entry_destroy);
+    host->retained_content = g_ptr_array_new_with_free_func(retained_content_destroy);
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (host->root == NULL || host->floating_windows == NULL) {
+    if (host->root == NULL || host->floating_windows == NULL ||
+        host->canvas_entries == NULL || host->retained_content == NULL) {
         umi_gtk4_workspace_layout_host_destroy(host);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
@@ -701,6 +789,15 @@ void umi_gtk4_workspace_layout_host_destroy(
      * used.
      */
     if (host == NULL) return;
+    cancel_canvas_geometry(host);
+    /* Detach bodies before invalidating wrapper actions. A body can contain
+     * its own controls, which are not part of the retired outer frame. */
+    retained_content_unmount(host);
+    if (host->retained_content != NULL) {
+        g_ptr_array_free(host->retained_content, TRUE);
+        host->retained_content = NULL;
+    }
+    clear_canvas_entries(host);
     if (host->pending_action_id != 0U) {
         (void)g_source_remove(host->pending_action_id);
         host->pending_action_id = 0U;
@@ -713,7 +810,13 @@ void umi_gtk4_workspace_layout_host_destroy(
     if (host->floating_windows != NULL)
         g_ptr_array_free(host->floating_windows, TRUE);
     host->floating_windows = NULL;
+    if (host->canvas_entries != NULL)
+        g_ptr_array_free(host->canvas_entries, TRUE);
+    host->canvas_entries = NULL;
     if (host->root != NULL) {
+        /* A caller may still parent or retain the stable root. Empty its old
+         * action widgets before freeing the callback owner. */
+        clear_root(host->root);
         g_object_unref(host->root);
         host->root = NULL;
     }
@@ -746,6 +849,7 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     GtkWidget *middle;
     GtkWidget *main_bottom;
     GtkWidget *workspace;
+    UmiApplicationSuiteLayoutRenderPlan *candidate_plan;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -757,10 +861,36 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (!workspace_layout_text_valid(layout)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Invalid replacement layouts must not overwrite counters belonging to
+     * the currently rendered tree. Keep the bounded plan off the GTK stack
+     * and publish it only after every input record has been validated. */
+    candidate_plan = g_try_new0(UmiApplicationSuiteLayoutRenderPlan, 1);
+    if (candidate_plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     status = umi_application_suite_layout_render_plan_build(
-        layout, &host->plan);
+        layout, candidate_plan);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status != UMI_STATUS_OK) return status;
+    if (status != UMI_STATUS_OK) {
+        g_free(candidate_plan);
+        return status;
+    }
+    status = retained_content_check_capacity(host, layout);
+    if (status != UMI_STATUS_OK) {
+        g_free(candidate_plan);
+        return status;
+    }
+    host->plan = *candidate_plan;
+    g_free(candidate_plan);
+    cancel_canvas_geometry(host);
+    if (host->pending_action_id != 0U) {
+        (void)g_source_remove(host->pending_action_id);
+        host->pending_action_id = 0U;
+    }
+    if (!host->content_invalidated && refresh_canvas_geometry_without_rebuild(host, layout))
+        return UMI_STATUS_OK;
+    retained_content_unmount(host);
+    retained_content_prune(host, layout);
+    clear_canvas_entries(host);
     host->layout = *layout;
     host->placeholder_count = 0U;
     clear_floating_windows(host);
@@ -801,7 +931,7 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
         false,
         true);
 
-    if (workspace == NULL) {
+    if (workspace == NULL && host->plan.canvas_item_count == 0U) {
         const size_t floating_count =
             visible_floating_window_count(layout);
 
@@ -813,6 +943,7 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
                   "No visible panels",
                   "Use Edit Layout to add or restore workspace panels.");
     }
+    workspace = build_canvas_layer(host, workspace);
     if (workspace == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     gtk_widget_set_hexpand(workspace, TRUE);
     gtk_widget_set_vexpand(workspace, TRUE);
@@ -849,6 +980,14 @@ UmiGtk4WorkspaceLayoutHostSnapshot umi_gtk4_workspace_layout_host_snapshot(
     snapshot.placeholder_count = host->placeholder_count;
     snapshot.floating_count = host->plan.floating_window_count;
     snapshot.revision = host->revision;
+    snapshot.canvas_count = host->plan.canvas_item_count;
+    snapshot.canvas_editable = !host->layout.locked &&
+        host->canvas_geometry_handler != NULL;
+    snapshot.geometry_pending = host->pending_geometry_id != 0U;
+    snapshot.source_layout_revision = host->layout.revision;
+    snapshot.content_retention_enabled = host->retain_content;
+    snapshot.retained_content_count = host->retained_content != NULL
+        ? host->retained_content->len : 0U;
     return snapshot;
 }
 
@@ -857,4 +996,106 @@ size_t umi_gtk4_workspace_layout_host_window_count(
     const UmiGtk4WorkspaceLayoutHost *host)
 {
     return host != NULL ? host->layout.window_count : 0U;
+}
+
+/* Find only live frames below the current root. A retained old frame outside
+ * this tree must never become the target of a later menu command. */
+static GtkWidget *find_live_window_frame(GtkWidget *widget, const char *window_id)
+{
+    GtkWidget *child;
+    const char *identity;
+    if (widget == NULL) return NULL;
+    identity = g_object_get_data(G_OBJECT(widget), "umicom-workspace-window-id");
+    if (identity != NULL && strcmp(identity, window_id) == 0) return widget;
+    for (child = gtk_widget_get_first_child(widget); child != NULL;
+         child = gtk_widget_get_next_sibling(child)) {
+        GtkWidget *found = find_live_window_frame(child, window_id);
+        if (found != NULL) return found;
+    }
+    return NULL;
+}
+
+/* Apply semantic group colours without rebuilding provider bodies or using
+ * a saved group ID as an arbitrary CSS selector. The frame accepts only its
+ * established palette tokens, including when layout data is user supplied. */
+UmiStatus umi_gtk4_workspace_layout_host_set_context_groups(
+    UmiGtk4WorkspaceLayoutHost *host, const UmiUiWindowGroupStore *groups)
+{
+    if (host == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (groups != NULL) {
+        if (groups->count > UMI_UI_WINDOW_GROUP_MAX) return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t index = 0U; index < groups->count; ++index) {
+            if (memchr(groups->items[index].group_id, '\0', sizeof(groups->items[index].group_id)) == NULL ||
+                memchr(groups->items[index].colour_token, '\0', sizeof(groups->items[index].colour_token)) == NULL)
+                return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    host->context_groups = groups;
+    for (size_t index = 0U; index < host->layout.window_count; ++index) {
+        const UmiUiWorkspaceWindow *window = &host->layout.windows[index];
+        GtkWidget *frame;
+        if (!window->visible) continue;
+        frame = find_live_window_frame(host->root, window->window_id);
+        if (window->floating) {
+            for (guint floating = 0U; floating < host->floating_windows->len; ++floating) {
+                FloatingWindowEntry *entry = g_ptr_array_index(host->floating_windows, floating);
+                if (!entry->destroyed && strcmp(entry->window_id, window->window_id) == 0) {
+                    frame = entry->frame;
+                    break;
+                }
+            }
+        }
+        if (frame != NULL)
+            umi_gtk4_ws_panel_frame_set_context_colour(frame, window_context_colour(host, window));
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Activate the actual panel view without reopening hidden model instances or
+ * changing its saved rectangle. This is also used by keyboard/menu navigation. */
+UmiStatus umi_gtk4_workspace_layout_host_focus_window(
+    UmiGtk4WorkspaceLayoutHost *host, const char *window_id)
+{
+    const UmiUiWorkspaceWindow *window;
+    GtkWidget *frame;
+    GtkWidget *notebook;
+    if (host == NULL || window_id == NULL || window_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    window = umi_ui_workspace_layout_find_window(&host->layout, window_id);
+    if (window == NULL || !window->visible) return UMI_STATUS_NOT_FOUND;
+    frame = find_live_window_frame(host->root, window_id);
+    if (window->floating) {
+        for (guint index = 0U; index < host->floating_windows->len; ++index) {
+            FloatingWindowEntry *entry = g_ptr_array_index(host->floating_windows, index);
+            if (!entry->destroyed && strcmp(entry->window_id, window_id) == 0) {
+                frame = entry->frame;
+                gtk_window_present(entry->window);
+                break;
+            }
+        }
+    }
+    if (frame == NULL) return UMI_STATUS_NOT_FOUND;
+    /* A notebook page is the frame supplied at construction, even though GTK
+     * uses private containers between that frame and the notebook itself. */
+    notebook = gtk_widget_get_ancestor(frame, GTK_TYPE_NOTEBOOK);
+    if (notebook != NULL) {
+        int page = gtk_notebook_page_num(GTK_NOTEBOOK(notebook), frame);
+        if (page >= 0) gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), page);
+    }
+    for (guint index = 0U; index < host->canvas_entries->len; ++index) {
+        CanvasEntry *entry = g_ptr_array_index(host->canvas_entries, index);
+        if (strcmp(entry->window_id, window_id) == 0 && host->canvas_layer != NULL) {
+            GtkWidget *last = gtk_widget_get_last_child(host->canvas_layer);
+            if (last != entry->panel)
+                gtk_widget_insert_after(entry->panel, host->canvas_layer, last);
+            break;
+        }
+    }
+    /* Prefer a real editor or control. Read-only panels still expose a focus
+     * target so keyboard users can tell which panel was selected. */
+    if (!gtk_widget_child_focus(frame, GTK_DIR_TAB_FORWARD)) {
+        gtk_widget_set_focusable(frame, TRUE);
+        (void)gtk_widget_grab_focus(frame);
+    }
+    return UMI_STATUS_OK;
 }

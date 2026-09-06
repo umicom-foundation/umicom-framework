@@ -76,6 +76,12 @@ umi_gtk4_trading_suite_workstation_config_default(
 UmiStatus umi_gtk4_trading_suite_workstation_create(
     const UmiGtk4TradingSuiteWorkstationConfig *config,
     UmiGtk4TradingSuiteWorkstation **out_workstation);
+/** Explicitly enable shared user-local SQLite layout checkpoints.
+ * Native launchers opt in after construction; constructors do no checkpoint I/O.
+ * A failed restore leaves the current layout visible and reports its error. */
+UmiStatus umi_gtk4_trading_suite_workstation_enable_checkpoint_storage(
+    UmiGtk4TradingSuiteWorkstation *workstation, int restore_saved);
+
 /**
  * Release or reset state held by gtk4 trading suite workstation so the same storage can be
  * reused safely.

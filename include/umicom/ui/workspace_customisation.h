@@ -67,15 +67,15 @@ typedef struct UmiUiWorkspaceCustomisationSnapshot {
  * for the duration of the apply call, so callers may safely use local buffers. */
 typedef struct UmiUiWorkspacePanelSettings {
     const char *window_id;         /* Existing layout window to edit. */
-    const char *placement_id;      /* Semantic dock region or floating. */
+    const char *placement_id;      /* Semantic dock region, canvas or floating. */
     const char *stack_id;          /* Tab stack used when the panel is docked. */
     const char *context_group_id;  /* Empty text selects no linked context. */
     UmiUiWindowGroupRole context_role; /* Source/destination routing role. */
-    double x;                      /* Normalised floating left position. */
-    double y;                      /* Normalised floating top position. */
-    double width;                  /* Normalised floating width. */
-    double height;                 /* Normalised floating height. */
-    bool floating;                 /* True detaches; false docks. */
+    double x;                      /* Normalised canvas or floating left position. */
+    double y;                      /* Normalised canvas or floating top position. */
+    double width;                  /* Normalised canvas or floating width. */
+    double height;                 /* Normalised canvas or floating height. */
+    bool floating;                 /* True detaches; false follows placement_id. */
     bool auto_hidden;              /* True collapses a supported docked panel. */
 } UmiUiWorkspacePanelSettings;
 

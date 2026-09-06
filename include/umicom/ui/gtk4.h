@@ -124,6 +124,14 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter);
  */
 UmiUiAdapter umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter);
 /**
+ * Build and refresh the native widget tree without presenting its window.
+ * This supports embedding and native acceptance checks without stealing focus.
+ * An already presented window is not hidden. The adapter retains its normal
+ * ownership, and native_window returns the prepared window on success.
+ */
+UmiStatus umi_gtk4_adapter_prepare(UmiGtk4Adapter *adapter,
+                                   UmiUiApplicationShell *shell);
+/**
  * Provide the gtk4 adapter present operation used by this module and its client
  * applications.
  */

@@ -68,6 +68,10 @@ static bool kind_included(
     const BackupWriter *writer,
     UmiWorkbenchLayoutDataRecordKind kind)
 {
+    /* Native arrangements are layout records, not running application sessions.
+     * Preserve their raw chunks even when session backup is disabled. */
+    if (kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST ||
+        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK) return true;
     /* Apply this branch only when its contract condition is satisfied. */
     if ((kind ==
              UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST ||

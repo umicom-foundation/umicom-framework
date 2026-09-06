@@ -112,6 +112,9 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
      * composition while window teardown is in progress.
      */
     umi_gtk4_context_interaction_unbind(adapter);
+    /* Retained text buffers and retired tab controls must not borrow this
+     * adapter after its owning application has been destroyed. */
+    umi_gtk4_release_document_bindings(adapter);
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -160,10 +163,10 @@ UmiUiAdapter umi_gtk4_adapter_interface(UmiGtk4Adapter *adapter)
 }
 
 /*
- * Provide the gtk4 adapter present operation used by this module and its client
- * applications.
+ * Build the real native tree without mapping a top-level window. Presentation
+ * remains a separate caller choice, so embedded and test hosts keep focus.
  */
-UmiStatus umi_gtk4_adapter_present(
+UmiStatus umi_gtk4_adapter_prepare(
     UmiGtk4Adapter *adapter,
     UmiUiApplicationShell *shell)
 {
@@ -188,11 +191,16 @@ UmiStatus umi_gtk4_adapter_present(
          * dedicated product entry points, before GTK presents the new window. */
         (void)umi_gtk4_ws_apply_window_identity(adapter->window);
     }
-    status = umi_gtk4_adapter_refresh(adapter);
-    /* Preserve the original failure result so the caller can respond to the correct cause. */
-    if (status == UMI_STATUS_OK) {
-        gtk_window_present(adapter->window);
-    }
+    return umi_gtk4_adapter_refresh(adapter);
+}
+
+/* Preserve the established present operation for ordinary application hosts. */
+UmiStatus umi_gtk4_adapter_present(
+    UmiGtk4Adapter *adapter,
+    UmiUiApplicationShell *shell)
+{
+    UmiStatus status = umi_gtk4_adapter_prepare(adapter, shell);
+    if (status == UMI_STATUS_OK) gtk_window_present(adapter->window);
     return status;
 }
 

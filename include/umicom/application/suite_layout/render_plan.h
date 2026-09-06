@@ -29,6 +29,9 @@ extern "C" {
 #define UMI_APPLICATION_SUITE_LAYOUT_MAX_STACKS 16U
 #define UMI_APPLICATION_SUITE_LAYOUT_STACK_MAX_WINDOWS \
     UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS
+/* Free-positioned panels use their own capacity, not the docked-stack limit. */
+#define UMI_APPLICATION_SUITE_LAYOUT_MAX_CANVAS_ITEMS \
+    UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS
 
 /**
  * One renderable tab stack and the workspace-window records assigned to it.
@@ -45,6 +48,19 @@ typedef struct UmiApplicationSuiteLayoutRenderStack {
 } UmiApplicationSuiteLayoutRenderStack;
 
 /**
+ * One free-positioned panel inside the host canvas, not a native window.
+ *
+ * window_index identifies the source layout record without owning a pointer.
+ * rect is relative to the available canvas viewport. Render lower z_order
+ * values first so higher values appear on top; retain source order for ties.
+ */
+typedef struct UmiApplicationSuiteLayoutCanvasItem {
+    size_t window_index;
+    UmiApplicationSuiteLayoutRect rect;
+    int32_t z_order;
+} UmiApplicationSuiteLayoutCanvasItem;
+
+/**
  * Bounded frontend-neutral instructions for rendering one workspace layout.
  *
  * Native adapters read this value and create toolkit widgets. The plan owns
@@ -59,14 +75,20 @@ typedef struct UmiApplicationSuiteLayoutRenderPlan {
     size_t visible_window_count;
     size_t floating_window_count;
     uint64_t source_revision;
+    /* Canvas items retain source order and never consume a docked stack. */
+    UmiApplicationSuiteLayoutCanvasItem
+        canvas_items[UMI_APPLICATION_SUITE_LAYOUT_MAX_CANVAS_ITEMS];
+    size_t canvas_item_count;
 } UmiApplicationSuiteLayoutRenderPlan;
 
 /**
- * Builds region and tab-stack instructions from a workspace layout.
+ * Builds docked stacks, native floating stacks and free canvas panels.
+ * A valid blank layout also succeeds, allowing the host to show an empty
+ * canvas. visible_window_count includes all three presentation kinds.
  *
  * @param layout Borrowed source layout containing window placement state.
  * @param out_plan Receives an owned bounded render plan.
- * @return `UMI_STATUS_OK` when every visible window fits a valid stack.
+ * @return `UMI_STATUS_OK` when every visible window has a valid presentation.
  */
 UmiStatus umi_application_suite_layout_render_plan_build(
     const UmiUiWorkspaceLayout *layout,

@@ -283,10 +283,22 @@ fail:
     return status;
 }
 
+/* Delegate explicit persistence to the existing shared layout owner. */
+UmiStatus umi_gtk4_trading_suite_workstation_enable_checkpoint_storage(
+    UmiGtk4TradingSuiteWorkstation *workstation, int restore_saved)
+{
+    return workstation != NULL
+        ? umi_application_suite_gtk4_workstation_enable_checkpoint_storage(
+            workstation->suite, restore_saved)
+        : UMI_STATUS_INVALID_ARGUMENT;
+}
+
+
 /*
  * Release or reset state held by gtk4 trading suite workstation so the same storage can be
  * reused safely.
  */
+/* Release this composition after its layout-owned storage and widgets. */
 void umi_gtk4_trading_suite_workstation_destroy(
     UmiGtk4TradingSuiteWorkstation *workstation)
 {

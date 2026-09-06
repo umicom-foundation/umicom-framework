@@ -50,6 +50,10 @@ static bool restore_kind_allowed(
     UmiWorkbenchLayoutDataRecordKind kind,
     const UmiWorkbenchLayoutRestoreOptions *options)
 {
+    /* A saved native arrangement contains no running process or document
+     * session. Its chunks remain eligible under layout-only restore policy. */
+    if (kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_MANIFEST ||
+        kind == UMI_WORKBENCH_LAYOUT_DATA_RECORD_WORKSPACE_CHUNK) return true;
     /* Apply this branch only when its contract condition is satisfied. */
     if ((kind ==
              UMI_WORKBENCH_LAYOUT_DATA_RECORD_SESSION_MANIFEST ||

@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/application/suite_layout/render_plan.h"
+#include "umicom/ui/workspace_customisation.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -125,6 +126,26 @@ UmiStatus umi_application_suite_layout_render_plan_build(
      * before the projection loop could index beyond that array. */
     if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
         return UMI_STATUS_INVALID_STATE;
+    /* Fixed arrays loaded from saved state must contain terminated strings.
+     * A blank canvas still needs a stable identity before it can be saved. */
+    if (layout->layout_id[0] == '\0' ||
+        memchr(layout->layout_id, '\0', sizeof(layout->layout_id)) == NULL ||
+        memchr(layout->name, '\0', sizeof(layout->name)) == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    /* An instance identity must resolve to one record, including hidden
+     * records. Duplicates could otherwise select the wrong panel or mount a
+     * retained provider widget in two different parents at the same time. */
+    for (index = 0U; index < layout->window_count; ++index) {
+        const UmiUiWorkspaceWindow *window = &layout->windows[index];
+        if (memchr(window->window_id, '\0', sizeof(window->window_id)) == NULL ||
+            memchr(window->tool_id, '\0', sizeof(window->tool_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        if (window->window_id[0] == '\0') continue;
+        for (size_t previous = 0U; previous < index; ++previous) {
+            if (strcmp(layout->windows[previous].window_id, window->window_id) == 0)
+                return UMI_STATUS_INVALID_STATE;
+        }
+    }
     (void)memset(out_plan, 0, sizeof(*out_plan));
     status = copy_text(out_plan->layout_id, sizeof(out_plan->layout_id),
                        layout->layout_id);
@@ -147,6 +168,37 @@ UmiStatus umi_application_suite_layout_render_plan_build(
         /* Renderable windows require both instance and reusable tool identity. */
         if (window->window_id[0] == '\0' || window->tool_id[0] == '\0')
             return UMI_STATUS_INVALID_STATE;
+        /* Validate bounded text before any placement comparison or copy can
+         * read past a malformed saved record's fixed-capacity fields. */
+        if (memchr(window->window_id, '\0', sizeof(window->window_id)) == NULL ||
+            memchr(window->tool_id, '\0', sizeof(window->tool_id)) == NULL ||
+            memchr(window->placement_id, '\0', sizeof(window->placement_id)) == NULL ||
+            memchr(window->stack_id, '\0', sizeof(window->stack_id)) == NULL ||
+            memchr(window->group_id, '\0', sizeof(window->group_id)) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        /* Free-positioned panels belong directly to the canvas. Native
+         * floating state takes precedence when a previously free panel has
+         * been detached into its own operating-system window. */
+        if (!window->floating &&
+            strcmp(window->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0) {
+            UmiApplicationSuiteLayoutRect rect = {
+                window->x, window->y, window->width, window->height
+            };
+            UmiApplicationSuiteLayoutCanvasItem *item;
+            /* Normalized geometry must be finite, positive and fully inside
+             * the viewport before any adapter converts it into pixels. */
+            if (!umi_application_suite_layout_canvas_rect_valid(&rect))
+                return UMI_STATUS_INVALID_STATE;
+            if (out_plan->canvas_item_count >=
+                UMI_APPLICATION_SUITE_LAYOUT_MAX_CANVAS_ITEMS)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            item = &out_plan->canvas_items[out_plan->canvas_item_count++];
+            item->window_index = index;
+            item->rect = rect;
+            item->z_order = window->z_order;
+            out_plan->visible_window_count += 1U;
+            continue;
+        }
         status = resolve_placement(window, &placement);
         /* A window without a reliable region cannot enter a deterministic UI. */
         if (status != UMI_STATUS_OK) return status;
@@ -189,9 +241,8 @@ UmiStatus umi_application_suite_layout_render_plan_build(
         if (placement == UMI_UI_PLACEMENT_FLOATING)
             out_plan->floating_window_count += 1U;
     }
-    /* An empty visible plan cannot create a usable application workspace. */
-    if (out_plan->visible_window_count == 0U)
-        return UMI_STATUS_INVALID_STATE;
+    /* Empty and all-hidden layouts are deliberate blank canvases. The host
+     * can show its add-panel affordance without inventing a docked window. */
     out_plan->source_revision = layout->revision;
     return UMI_STATUS_OK;
 }

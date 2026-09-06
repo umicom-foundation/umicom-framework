@@ -81,6 +81,13 @@ struct UmiGtk4Adapter {
     int applying_layout_state;
     int applying_dock_state;
     int applying_document_state;
+    /* Borrowed closure records are invalidated before adapter destruction,
+     * even if a caller retains an old editor buffer or tab button. */
+    GPtrArray *editor_bindings;
+    /* Weak notebook handles let teardown disconnect signals even when a
+     * containing window was already disposed by the native host. */
+    GWeakRef editor_notebooks[2];
+    int editor_notebooks_initialised;
     UmiUiApplicationShell *shell;
     UmiDesktopShellModel *desktop_shell;
 
@@ -144,6 +151,8 @@ UmiStatus umi_gtk4_build_view_widget(UmiGtk4Adapter *adapter,
  * applications.
  */
 UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter, UmiUiWorkbench *workbench);
+/* Disconnect document signals and invalidate their borrowed adapter owner. */
+void umi_gtk4_release_document_bindings(UmiGtk4Adapter *adapter);
 /**
  * Provide the gtk4 refresh menu operation used by this module and its client applications.
  */
